@@ -1,0 +1,21 @@
+image: pretty-docker-image/dockerized
+services: 
+  - service1
+  - service2
+before_stages:
+  - sh echo "hello"
+after_stages:
+  - sh echo "goodbye"
+
+build: 
+  env:
+    - BUILD_DEBUG=1
+    - SEARCH_URL=https://google.com
+  script:
+    - echo "hello1"
+test:
+  script:
+    - echo "goodbye"
+deploy:
+  script:
+    - echo "fly away"
