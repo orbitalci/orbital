@@ -1,11 +1,15 @@
-image: pretty-docker-image/dockerized
-services: 
-  - service1
-  - service2
+image: test
+docker_packages: # apt-get install
+  - maven<v>
+  - blah
 before_stages:
-  - sh echo "hello"
+  script:
+    - sh echo "hello"
 after_stages:
-  - sh echo "goodbye"
+  env:
+    - BUILD_DEBUG=0
+  script:
+    - sh echo "goodbye"
 
 build: 
   env:

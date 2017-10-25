@@ -21,8 +21,8 @@ type Stage struct {
 type RunConfig struct {
     Image string
     Services []string
-    BeforeStages []string `yaml:"before_stages"`
-    AfterStages []string  `yaml:"after_stages"`
+    BeforeStages Stage `yaml:"before_stages"`
+    AfterStages Stage  `yaml:"after_stages"`
     Build Stage
     Test Stage
     Deploy Stage
