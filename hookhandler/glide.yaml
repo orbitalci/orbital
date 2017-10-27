@@ -1,0 +1,11 @@
+package: github.com/shankj3/hookhandler
+import:
+- package: github.com/gorilla/mux
+  version: 7625a85c14e615274a4ee4bc8654f72310a563e4
+- package: github.com/urfave/negroni
+  version: 079cf0c7a6b0145ebcf4103ec90380370cd89917
+- package: gopkg.in/go-playground/webhooks.v3
+  version: ^3.4.0
+  subpackages:
+  - bitbucket
+- package: github.com/lib/pq
