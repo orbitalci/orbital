@@ -6,8 +6,8 @@ import (
     "github.com/julienschmidt/httprouter"
     // for pretty printing objects:
     // "github.com/davecgh/go-spew/spew"
-    "github.com/shankj3/go-build/configure"
-    "github.com/shankj3/go-build/work"
+    "github.com/shankj3/ocelot/configure"
+    "github.com/shankj3/ocelot/work"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
     // "os"
     "log"
     "os/exec"
-    "github.com/shankj3/go-build/configure"
+    "github.com/shankj3/ocelot/configure"
 )
 
 func RunStage(stage configure.Stage) {

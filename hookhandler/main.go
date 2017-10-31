@@ -12,7 +12,7 @@ import (
     "github.com/gorilla/mux"
     "gopkg.in/go-playground/webhooks.v3/bitbucket"
 
-    "github.com/shankj3/hookhandler/database"
+    "github.com/shankj3/ocelot/hookhandler/database"
     // for pretty printing objects:
     // "github.com/davecgh/go-spew/spew"
 )
