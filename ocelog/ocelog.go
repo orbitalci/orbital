@@ -1,3 +1,10 @@
+/* Package ocelog
+Way to have one style of logging for the project. Initialize in your service w/ InitializeOcelog(), uses a JSONFormatter.
+use ocelog.Log to log with extra field of the function called.
+
+todo: add common log functions, right now there is only LogErrField which adds the error: <error text> to the json log.
+
+*/
 package ocelog
 
 import (
@@ -13,6 +20,11 @@ var DefaultFields = log.Fields{
 }
 
 var Log = log.WithFields(DefaultFields)
+
+// Add the 'error' field w/ the error object to the Log Entry.
+func LogErrField(err error) *log.Entry {
+    return Log.WithField("error", err)
+}
 
 func InitializeOcelog(log_level log.Level) {
     log.SetFormatter(&log.JSONFormatter{})
@@ -32,11 +44,6 @@ func getPackageName(f string) string {
     }
 
     return f
-}
-
-// Add the 'error' field w/ the error object to the Log Entry.
-func LogErrField(err error) *log.Entry {
-    return Log.WithField("error", err)
 }
 
 var LogrusPackage string
