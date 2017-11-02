@@ -1,0 +1,11 @@
+syntax = "proto3";
+package protohooks;
+
+message RepoPush {
+    string User = 1;
+    string RepoLink = 2;
+    string LastHash = 3;
+    string IdentifierType = 4; // branch, etc
+    string IdentifierString = 5; // branch name, tag name, etc
+    int64  CommitTime = 6; // unix timestamp
+}

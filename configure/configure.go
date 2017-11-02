@@ -2,7 +2,6 @@ package configure
 
 import (
     "io/ioutil"
-    "log"
     "gopkg.in/yaml.v2"
 )
 
@@ -36,15 +35,14 @@ func readConfig(filePath string) []byte {
 
 }
 
-
-func GetRunConfig(filePath string) RunConfig {
+// Get build configuration of job by string of config
+// unmarshals contents to RunConfig struct.
+// returns struct and any error from unmarshaling
+func GetRunConfig(filePath string) (RunConfig, error) {
     config_bytes := readConfig(filePath)
     runConf := RunConfig{}
     err := yaml.Unmarshal(config_bytes, &runConf)
-    if err != nil {
-        log.Fatalf("error: %v", err)
-    }
-    return runConf
+    return runConf, err
 }
 
 
