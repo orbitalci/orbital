@@ -55,6 +55,8 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 
 type HookHandlerFlags struct {
     log_level string
+    // make enum
+    //
 }
 
 //write flags for this service. Add your flag here

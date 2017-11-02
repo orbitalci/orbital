@@ -9,6 +9,7 @@ import (
 )
 
 func ConvertHookToProto(repopush bitbucket.RepoPushPayload) pb.RepoPush {
+    // todo: this is dumb, just unmarshall directly to protobuf
     ocelog.Log.Debug("Converting Repo Push to pb.Repopush proto struct")
     latestChange := repopush.Push.Changes[0]
     pushHook := pb.RepoPush{
