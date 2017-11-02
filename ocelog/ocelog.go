@@ -56,7 +56,7 @@ const maximumCallerDepth int = 25
 const knownLogrusFrames int = 4
 
 // I took and modified this from an ummerged PR for logrus
-// getCaller retrieves the name of the first non-logrus calling function
+// getCaller retrieves the name of the first non-logrus / ocelog calling function
 func getCaller() (method string) {
     // Restrict the lookback frames to avoid runaway lookups
     pcs := make([]uintptr, maximumCallerDepth)
