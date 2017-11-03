@@ -3,7 +3,7 @@ package main
 import (
     // "github.com/golang/protobuf/proto"
     "github.com/shankj3/ocelot/ocelog"
-    pb "github.com/shankj3/ocelot/protohooks"
+    pb "github.com/shankj3/ocelot/protos"
     "gopkg.in/go-playground/webhooks.v3/bitbucket"
     // "time"
 )

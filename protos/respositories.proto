@@ -1,0 +1,60 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+package protos;
+message PaginatedRepository {
+    double pagelen = 1;
+    double size = 2;
+
+    message RepositoryValues {
+        string name = 1;
+
+        message RepositoryLinks {
+
+            LinkUrl watchers = 1;
+            LinkUrl branches = 2;
+            LinkUrl tags = 3;
+            LinkUrl commits = 4;
+            repeated LinkAndName clone = 5;
+            LinkUrl self = 6;
+            LinkUrl source = 7;
+            LinkUrl hooks = 8;
+            LinkUrl forks = 9;
+            LinkUrl downloads = 10;
+            LinkUrl pullrequests = 11;
+        }
+
+        RepositoryLinks links = 2;
+
+        message Project {
+            string key = 1;
+            string type = 2;
+            string uuid = 3;
+            RepositoryLinks links = 4;
+            string name = 5;
+        }
+
+        Project project = 3;
+        google.protobuf.Timestamp created_on = 4;
+
+        message MainBranch {
+            string type = 1;
+            string name = 2;
+        }
+
+        MainBranch mainbranch = 5;
+        string full_name = 6;
+
+        google.protobuf.Timestamp updated_on = 7;
+        double size = 8;
+        string type = 9;
+        string slug = 10;
+        bool is_private = 11;
+        string description = 12;
+    }
+
+    repeated RepositoryValues values = 3;
+    double page = 4;
+    string next = 5;
+}

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package protohooks;
+package protos;
 
 message RepoPush {
     string User = 1;
