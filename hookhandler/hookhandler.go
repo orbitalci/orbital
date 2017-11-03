@@ -76,7 +76,7 @@ func main() {
     logLevel, _ := log.ParseLevel(h.log_level)
     // initialize logger
     ocelog.InitializeOcelog(logLevel)
-    ocelog.Log.Debug("Log Level Debug")
+    ocelog.Log.Debug()
     port := os.Getenv("PORT")
     if port == "" {
         ocelog.Log.Fatal("$PORT must be set")
