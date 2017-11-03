@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package protos;
+//common response objects returned by bitbucket api
+
+message LinkUrl {
+    string href = 1;
+}
+
+message LinkAndName {
+    string href = 1;
+    string name = 2;
+}

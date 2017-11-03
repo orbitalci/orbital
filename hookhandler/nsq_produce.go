@@ -5,7 +5,7 @@ import (
     "github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
     "github.com/shankj3/ocelot/ocelog"
-    pb "github.com/shankj3/ocelot/protohooks"
+    pb "github.com/shankj3/ocelot/protos"
     "os"
 )
 
