@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package protos;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+// Common Event Entites used for building the webhook payloads
+
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_userOwner
+message Owner {
+    string Type = 1;
+    string Username = 2;
+    Links Links = 3;
+}
+
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_repositoryRepository
+message Repository {
+    Links Links = 1;
+    Project Project = 2;
+    string FullName = 3  [json_name="full_name"];
+    string Website = 4;
+    Owner Owner = 5;
+    // omitted is_private and scm json tags.
+
+}
+
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_projectProject
+message Project {
+    string Name = 1;
+    string Uuid = 2;
+    Links Links = 3;
+}
+
+
+message Changeset {
+    message Head { // git head
+        string Type = 1;
+        string Name = 2;
+        Commit Target = 3;
+    } 
+    Head New = 1;
+    Head Old = 2;
+    Links Links = 3;
+    bool Closed = 4;
+    bool Created = 5;
+    bool Forced = 6;
+    repeated Commit Commits = 7;
+}
+
+message Commit {
+    string Hash = 1;
+    Owner Author = 2;
+    string Message = 3;
+    google.protobuf.Timestamp Date = 4;
+    // ignoring the "parents" field
+    Links Links = 5;
+}

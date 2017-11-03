@@ -1,39 +1,34 @@
 package main
 
 import (
-    "encoding/json"
     "flag"
-    "io/ioutil"
-    "net/http"
-    "os"
-    "time"
-
+    "github.com/golang/protobuf/jsonpb"
     "github.com/gorilla/mux"
     "github.com/meatballhat/negroni-logrus"
-    // "github.com/shankj3/ocelot/hookhandler/database"
     "github.com/shankj3/ocelot/ocelog"
+    pb "github.com/shankj3/ocelot/protos"
     log "github.com/sirupsen/logrus"
     "github.com/urfave/negroni"
-    "gopkg.in/go-playground/webhooks.v3/bitbucket"
-    // for pretty printing objects:
-    // "github.com/davecgh/go-spew/spew"
+    "net/http"
+    "os"
 )
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
 func RepoPush(w http.ResponseWriter, r *http.Request) {
-    b, err := ioutil.ReadAll(r.Body)
-    if err != nil {
-        ocelog.LogErrField(err).Fatal("error reading http request body")
+    // b, err := ioutil.ReadAll(r.Body)
+    // if err != nil {
+    //     ocelog.LogErrField(err).Fatal("error reading http request body")
+    // }
+    unmarshaler := &jsonpb.Unmarshaler{
+        AllowUnknownFields: true,
     }
-    repopush := bitbucket.RepoPushPayload{}
-    err = json.Unmarshal(b, &repopush)
-    if err != nil {
+    repopush := &pb.RepoPush{}
+    if err := unmarshaler.Unmarshal(r.Body, repopush); err != nil {
         ocelog.LogErrField(err).Fatal("could not unmarshal bitbucket repo push to struct")
     }
-    protoMsg := ConvertHookToProto(repopush)
+
     // err = database.AddToPostgres(repopush.Repository.Links.HTML.Href, latestChange.New.Target.Hash)
-    err = WriteToNsq(&protoMsg)
-    if err != nil {
+    if err := WriteToNsq(repopush); err != nil {
         ocelog.LogErrField(err).Warn("nsq insert webhook error")
     }
 }
@@ -72,10 +67,8 @@ func (self *HookHandlerFlags) parseFlags() {
 func main() {
     h := HookHandlerFlags{}
     h.parseFlags()
-    //
-    logLevel, _ := log.ParseLevel(h.log_level)
     // initialize logger
-    ocelog.InitializeOcelog(logLevel)
+    ocelog.InitializeOcelog(h.log_level)
     ocelog.Log.Debug()
     port := os.Getenv("PORT")
     if port == "" {
@@ -83,10 +76,10 @@ func main() {
     }
     mux := mux.NewRouter()
     mux.HandleFunc("/test", RepoPush).Methods("POST")
-    mux.HandleFunc("/", ViewWebhooks).Methods("GET")
+    // mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 
     n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))
-    n.Use(negronilogrus.NewCustomMiddleware(logLevel, &log.JSONFormatter{}, "web"))
+    n.Use(negronilogrus.NewCustomMiddleware(ocelog.GetLogLevel(), &log.JSONFormatter{}, "web"))
     n.UseHandler(mux)
     n.Run(":" + port)
 }

@@ -11,3 +11,9 @@ message LinkAndName {
     string href = 1;
     string name = 2;
 }
+
+message Links {
+    LinkUrl Self = 1;
+    LinkUrl Html = 2;
+    LinkUrl Avatar = 3;
+}

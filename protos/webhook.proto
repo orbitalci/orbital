@@ -1,11 +1,25 @@
 syntax = "proto3";
 package protos;
 
+import "commonevententities.proto";
+
+
+/* Modeling event payloads
+Source:
+https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html
+*/
+
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push
 message RepoPush {
-    string User = 1;
-    string RepoLink = 2;
-    string LastHash = 3;
-    string IdentifierType = 4; // branch, etc
-    string IdentifierString = 5; // branch name, tag name, etc
-    int64  CommitTime = 6; // unix timestamp
+    Owner Actor = 1;
+    Repository Repository = 2;
+
+    message PushDetail {
+        repeated Changeset Changes = 1;
+    }
+
+    PushDetail Push = 3;
 }
+
+
+// todo: add PR

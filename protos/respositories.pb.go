@@ -24,7 +24,7 @@ type PaginatedRepository struct {
 func (m *PaginatedRepository) Reset()                    { *m = PaginatedRepository{} }
 func (m *PaginatedRepository) String() string            { return proto.CompactTextString(m) }
 func (*PaginatedRepository) ProtoMessage()               {}
-func (*PaginatedRepository) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
+func (*PaginatedRepository) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
 
 func (m *PaginatedRepository) GetPagelen() float64 {
 	if m != nil {
@@ -80,7 +80,7 @@ func (m *PaginatedRepository_RepositoryValues) Reset()         { *m = PaginatedR
 func (m *PaginatedRepository_RepositoryValues) String() string { return proto.CompactTextString(m) }
 func (*PaginatedRepository_RepositoryValues) ProtoMessage()    {}
 func (*PaginatedRepository_RepositoryValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor2, []int{0, 0}
+	return fileDescriptor3, []int{0, 0}
 }
 
 func (m *PaginatedRepository_RepositoryValues) GetName() string {
@@ -189,7 +189,7 @@ func (m *PaginatedRepository_RepositoryValues_RepositoryLinks) String() string {
 }
 func (*PaginatedRepository_RepositoryValues_RepositoryLinks) ProtoMessage() {}
 func (*PaginatedRepository_RepositoryValues_RepositoryLinks) Descriptor() ([]byte, []int) {
-	return fileDescriptor2, []int{0, 0, 0}
+	return fileDescriptor3, []int{0, 0, 0}
 }
 
 func (m *PaginatedRepository_RepositoryValues_RepositoryLinks) GetWatchers() *LinkUrl {
@@ -285,7 +285,7 @@ func (m *PaginatedRepository_RepositoryValues_Project) String() string {
 }
 func (*PaginatedRepository_RepositoryValues_Project) ProtoMessage() {}
 func (*PaginatedRepository_RepositoryValues_Project) Descriptor() ([]byte, []int) {
-	return fileDescriptor2, []int{0, 0, 1}
+	return fileDescriptor3, []int{0, 0, 1}
 }
 
 func (m *PaginatedRepository_RepositoryValues_Project) GetKey() string {
@@ -336,7 +336,7 @@ func (m *PaginatedRepository_RepositoryValues_MainBranch) String() string {
 }
 func (*PaginatedRepository_RepositoryValues_MainBranch) ProtoMessage() {}
 func (*PaginatedRepository_RepositoryValues_MainBranch) Descriptor() ([]byte, []int) {
-	return fileDescriptor2, []int{0, 0, 2}
+	return fileDescriptor3, []int{0, 0, 2}
 }
 
 func (m *PaginatedRepository_RepositoryValues_MainBranch) GetType() string {
@@ -361,9 +361,9 @@ func init() {
 	proto.RegisterType((*PaginatedRepository_RepositoryValues_MainBranch)(nil), "protos.PaginatedRepository.RepositoryValues.MainBranch")
 }
 
-func init() { proto.RegisterFile("respositories.proto", fileDescriptor2) }
+func init() { proto.RegisterFile("respositories.proto", fileDescriptor3) }
 
-var fileDescriptor2 = []byte{
+var fileDescriptor3 = []byte{
 	// 640 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x5f, 0x6b, 0xd4, 0x40,
 	0x10, 0x27, 0xbd, 0xbf, 0x99, 0x14, 0x5a, 0xb6, 0x2f, 0x21, 0x22, 0x1e, 0x8a, 0x78, 0x45, 0xbd,

@@ -19,6 +19,9 @@ var DefaultFields = log.Fields{
     "function": getCaller(),
 }
 
+// tODO: add NewLog() function that returns a logger w/ the default fields, if
+// a service wants a special logger.
+
 var Log = log.WithFields(DefaultFields)
 
 // Add the 'error' field w/ the error object to the Log Entry.
@@ -26,10 +29,19 @@ func LogErrField(err error) *log.Entry {
     return Log.WithField("error", err)
 }
 
-func InitializeOcelog(log_level log.Level) {
+// return current level of standard logger
+func GetLogLevel() log.Level {
+    return log.GetLevel()
+}
+
+func InitializeOcelog(log_level string) {
+    if loglevel, err := log.ParseLevel(log_level); err != nil {
+        LogErrField(err).Fatal()
+    } else {
+        log.SetLevel(loglevel)
+    }
     log.SetFormatter(&log.JSONFormatter{})
     log.SetOutput(os.Stdout)
-    log.SetLevel(log_level)
 }
 
 func getPackageName(f string) string {
