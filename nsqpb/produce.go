@@ -1,4 +1,4 @@
-package main
+package nsqpb
 
 import (
     "fmt"
@@ -8,11 +8,16 @@ import (
     "os"
 )
 
+// Write Protobuf Message to an NSQ topic with name topicName
+// Gets the ip of the NSQ daemon from either the environment variable
+//  `NSQD_IP` or sets it to 127.0.0.1. the NSQ daemon should run alongside
+// any service that produces messages, so this will work usually.
 func WriteToNsq(message proto.Message, topicName string) error {
     config := nsq.NewConfig()
     ip_address := os.Getenv("NSQD_IP")
     // there *should* be a nsqd running at same place as service posting.
     if ip_address == "" {
+        // todo: this wouldn't work with docker-compose
         ip_address = "127.0.0.1"
     }
     p, err := nsq.NewProducer(fmt.Sprintf("%s:4150", ip_address), config)

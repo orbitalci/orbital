@@ -7,6 +7,7 @@ import (
     "github.com/golang/protobuf/proto"
     "github.com/gorilla/mux"
     "github.com/meatballhat/negroni-logrus"
+    "github.com/shankj3/ocelot/nsqpb"
     "github.com/shankj3/ocelot/ocelog"
     pb "github.com/shankj3/ocelot/protos"
     log "github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
     repopush := pb.RepoPush{}
     HandleUnmarshal(r.Body, &repopush)
     queue_topic := "repo_push"
-    if err := WriteToNsq(&repopush, queue_topic); err != nil {
+    if err := nsqpb.WriteToNsq(&repopush, queue_topic); err != nil {
         ocelog.LogErrField(err).Warn("nsq insert webhook error")
     } else {
         ocelog.Log.Info("added to nsq ", queue_topic)
