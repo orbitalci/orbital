@@ -13,7 +13,7 @@ message LinkAndName {
 }
 
 message Links {
-    LinkUrl Self = 1;
-    LinkUrl Html = 2;
-    LinkUrl Avatar = 3;
+    LinkUrl self = 1;
+    LinkUrl html = 2;
+    LinkUrl avatar = 3;
 }
