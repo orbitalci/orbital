@@ -11,14 +11,14 @@ https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push
 message RepoPush {
-    Owner Actor = 1;
-    Repository Repository = 2;
+    Owner actor = 1;
+    Repository repository = 2;
 
     message PushDetail {
-        repeated Changeset Changes = 1;
+        repeated Changeset changes = 1;
     }
 
-    PushDetail Push = 3;
+    PushDetail push = 3;
 }
 
 

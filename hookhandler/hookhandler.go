@@ -1,14 +1,17 @@
 package main
 
 import (
+    // "bufio"
     "flag"
     "github.com/golang/protobuf/jsonpb"
+    "github.com/golang/protobuf/proto"
     "github.com/gorilla/mux"
     "github.com/meatballhat/negroni-logrus"
     "github.com/shankj3/ocelot/ocelog"
     pb "github.com/shankj3/ocelot/protos"
     log "github.com/sirupsen/logrus"
     "github.com/urfave/negroni"
+    "io"
     "net/http"
     "os"
 )
@@ -19,56 +22,38 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
     // if err != nil {
     //     ocelog.LogErrField(err).Fatal("error reading http request body")
     // }
+    repopush := pb.RepoPush{}
+    HandleUnmarshal(r.Body, &repopush)
+    queue_topic := "repo_push"
+    if err := WriteToNsq(&repopush, queue_topic); err != nil {
+        ocelog.LogErrField(err).Warn("nsq insert webhook error")
+    } else {
+        ocelog.Log.Info("added to nsq ", queue_topic)
+    }
+}
+
+func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) {
     unmarshaler := &jsonpb.Unmarshaler{
         AllowUnknownFields: true,
     }
-    repopush := &pb.RepoPush{}
-    if err := unmarshaler.Unmarshal(r.Body, repopush); err != nil {
-        ocelog.LogErrField(err).Fatal("could not unmarshal bitbucket repo push to struct")
+    if err := unmarshaler.Unmarshal(requestBody, unmarshalObj); err != nil {
+        ocelog.LogErrField(err).Fatal("could not parse repo push")
     }
-
-    // err = database.AddToPostgres(repopush.Repository.Links.HTML.Href, latestChange.New.Target.Hash)
-    if err := WriteToNsq(repopush); err != nil {
-        ocelog.LogErrField(err).Warn("nsq insert webhook error")
-    }
+    defer requestBody.Close()
 }
 
-// func ViewWebhooks(w http.ResponseWriter, r *http.Request) {
-//     rows := database.PullWebhookFromPostgres()
-//     defer rows.Close()
-//     for rows.Next() {
-//         var repourl string
-//         var githash string
-//         var hook_time time.Time
-//         _ = rows.Scan(&repourl, &githash, &hook_time)
-//         w.Write([]byte(database.WriteWebhookString(repourl, githash, hook_time)))
-//     }
-// }
-
-// Adding in the flags struct now because i'm sure I'll be adding more flags and it would
-// become unruly otherwise
-
-type HookHandlerFlags struct {
-    log_level string
-    // make enum
-    //
-}
-
-//write flags for this service. Add your flag here
-func (self *HookHandlerFlags) writeFlags() {
-    flag.StringVar(&self.log_level, "log_level", "warn", "set log level")
-}
-
-func (self *HookHandlerFlags) parseFlags() {
-    self.writeFlags()
+func GetFlags() string {
+    // write flag
+    var log_level string
+    flag.StringVar(&log_level, "log_level", "warn", "set log level")
     flag.Parse()
+    return log_level
 }
 
 func main() {
-    h := HookHandlerFlags{}
-    h.parseFlags()
     // initialize logger
-    ocelog.InitializeOcelog(h.log_level)
+    // log_level := GetFlags()
+    ocelog.InitializeOcelog(GetFlags())
     ocelog.Log.Debug()
     port := os.Getenv("PORT")
     if port == "" {

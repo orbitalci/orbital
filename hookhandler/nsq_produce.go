@@ -5,11 +5,10 @@ import (
     "github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
     "github.com/shankj3/ocelot/ocelog"
-    pb "github.com/shankj3/ocelot/protos"
     "os"
 )
 
-func WriteToNsq(pushObj *pb.RepoPush) error {
+func WriteToNsq(message proto.Message, topicName string) error {
     config := nsq.NewConfig()
     ip_address := os.Getenv("NSQD_IP")
     // there *should* be a nsqd running at same place as service posting.
@@ -21,10 +20,10 @@ func WriteToNsq(pushObj *pb.RepoPush) error {
         ocelog.LogErrField(err).Fatal("Producer Create Error")
     }
     var data []byte
-    data, err = proto.Marshal(pushObj)
+    data, err = proto.Marshal(message)
     if err != nil {
         ocelog.LogErrField(err).Warn("proto marshal error")
     }
-    err = p.Publish("jobs", data)
+    err = p.Publish(topicName, data)
     return err
 }

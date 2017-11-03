@@ -9,50 +9,50 @@ import "google/protobuf/timestamp.proto";
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_userOwner
 message Owner {
-    string Type = 1;
-    string Username = 2;
-    Links Links = 3;
+    string type = 1;
+    string username = 2;
+    Links links = 3;
 }
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_repositoryRepository
 message Repository {
-    Links Links = 1;
-    Project Project = 2;
-    string FullName = 3  [json_name="full_name"];
-    string Website = 4;
-    Owner Owner = 5;
+    Links links = 1;
+    Project project = 2;
+    string fullName = 3 [json_name="full_name"];
+    string website = 4;
+    Owner owner = 5;
     // omitted is_private and scm json tags.
 
 }
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_projectProject
 message Project {
-    string Name = 1;
-    string Uuid = 2;
-    Links Links = 3;
+    string name = 1;
+    string uuid = 2;
+    Links links = 3;
 }
 
 
 message Changeset {
     message Head { // git head
-        string Type = 1;
-        string Name = 2;
-        Commit Target = 3;
+        string type = 1;
+        string name = 2;
+        Commit target = 3;
     } 
-    Head New = 1;
-    Head Old = 2;
-    Links Links = 3;
-    bool Closed = 4;
-    bool Created = 5;
-    bool Forced = 6;
-    repeated Commit Commits = 7;
+    Head new = 1;
+    Head old = 2;
+    Links links = 3;
+    bool closed = 4;
+    bool created = 5;
+    bool forced = 6;
+    repeated Commit commits = 7;
 }
 
 message Commit {
-    string Hash = 1;
-    Owner Author = 2;
-    string Message = 3;
-    google.protobuf.Timestamp Date = 4;
+    string hash = 1;
+    Owner author = 2;
+    string message = 3;
+    google.protobuf.Timestamp date = 4;
     // ignoring the "parents" field
-    Links Links = 5;
+    Links links = 5;
 }
