@@ -21,5 +21,12 @@ message RepoPush {
     PushDetail push = 3;
 }
 
+message CreateWebhook {
+    string description = 1;
+    string url = 2;
+    bool active = 3;
+    repeated string events = 4;
+}
+
 
 // todo: add PR
