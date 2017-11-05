@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/shankj3/ocelot/ocelog"
-	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/admin/handler"
-	"github.com/gorilla/mux"
-	"os"
-	"net/http"
 	"encoding/json"
+	"github.com/gorilla/mux"
+	"github.com/shankj3/ocelot/admin/handler"
+	"github.com/shankj3/ocelot/admin/models"
+	"github.com/shankj3/ocelot/ocelog"
+	"net/http"
+	"os"
 )
 
-
+//TODO: write the part that parses config file
 //TODO: this will eventually get moved to secrets and/or consul and not be in memory map
 var creds = map[string]models.AdminConfig{}
 var configChannel = make(chan models.AdminConfig)
@@ -25,11 +25,11 @@ func main() {
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", ConfigHandler).Methods("POST")
-	ocelog.Log.Fatal(http.ListenAndServe(":" + port, mux))
+	ocelog.Log.Fatal(http.ListenAndServe(":"+port, mux))
 
 	//TODO: CREATE CLIENTS FOR CONFIG AND RUN IN SEPARATE THREAD - look into thread safety
 	for {
-		go handler.Bitbucket{}.Subscribe(<- configChannel)
+		go handler.Bitbucket{}.Subscribe(<-configChannel)
 	}
 
 	//TODO: close channel when finished
@@ -37,7 +37,7 @@ func main() {
 }
 
 func ConfigHandler(w http.ResponseWriter, r *http.Request) {
-	var adminConfig	models.AdminConfig
+	var adminConfig models.AdminConfig
 	_ = json.NewDecoder(r.Body).Decode(&adminConfig)
 	//TODO: validate config here
 	creds[adminConfig.ConfigId] = adminConfig
@@ -45,6 +45,3 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	//publish config creds to listener
 	configChannel <- adminConfig
 }
-
-
-

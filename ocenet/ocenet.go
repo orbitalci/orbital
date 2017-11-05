@@ -2,12 +2,12 @@ package ocenet
 
 import (
 	"bufio"
+	"bytes"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/ocelot/ocelog"
-	"net/http"
-	"bytes"
 	"io/ioutil"
+	"net/http"
 )
 
 type HttpClient struct {

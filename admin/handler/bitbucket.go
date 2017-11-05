@@ -2,24 +2,22 @@ package handler
 
 //TODO: could be interface once we have more than just bitbucket
 import (
-	"github.com/shankj3/ocelot/admin/models"
-	"golang.org/x/oauth2/clientcredentials"
-	"github.com/shankj3/ocelot/ocelog"
-	"github.com/shankj3/ocelot/ocenet"
-	"github.com/golang/protobuf/jsonpb"
-	pb "github.com/shankj3/ocelot/protos"
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/shankj3/ocelot/admin/models"
+	"github.com/shankj3/ocelot/ocelog"
+	"github.com/shankj3/ocelot/ocenet"
+	pb "github.com/shankj3/ocelot/protos"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 type Bitbucket struct {
-	Client 	ocenet.HttpClient
-	Marshaler	jsonpb.Marshaler
+	Client    ocenet.HttpClient
+	Marshaler jsonpb.Marshaler
 }
 
-//TODO: if this is camelcase, how will it be clear this is constant?
-const BITBUCKET_REPO_BASE string = "https://api.bitbucket.org/2.0/repositories/%v"
-
+const BitbucketRepoBase string = "https://api.bitbucket.org/2.0/repositories/%v"
 
 func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
 
@@ -48,10 +46,10 @@ func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
 	bb.Client = bitbucketClient
 	bb.Marshaler = jsonpb.Marshaler{}
 
-	bb.recurseOverRepos(fmt.Sprintf(BITBUCKET_REPO_BASE, adminConfig.AcctName))
+	bb.recurseOverRepos(fmt.Sprintf(BitbucketRepoBase, adminConfig.AcctName))
 }
 
-func (bb Bitbucket)	recurseOverRepos(repoUrl string) {
+func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	if repoUrl == "" {
 		return
 	}
@@ -71,13 +69,13 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) {
 	repositories := &pb.PaginatedRootDirs{}
 	bb.Client.GetUrl(sourceFileUrl, repositories)
 	for _, v := range repositories.GetValues() {
-		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == models.BUILD_FILE_NAME {
+		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == models.BuildFileName {
 			//found file, subscribe to webhook
 			fmt.Printf("Contains %v\n", v.GetPath())
 
 			newWebhook := &pb.CreateWebhook{
 				Description: "marianne did this",
-				Url:         models.WEBHOOK_CALLBACK_URL,
+				Url:         models.WebhookCallbackURL,
 				Active:      true,
 				Events:      []string{"repo:push"},
 			}
