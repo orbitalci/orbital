@@ -1,3 +1,4 @@
+//Package ocenet contains HTTP related utility tools
 package ocenet
 
 import (
@@ -10,12 +11,14 @@ import (
 	"net/http"
 )
 
+//HttpClient is a client containing a pre-authenticated http client as returned by
+//golang's oauth2 clientcredentials package as well as a protobuf json unmarshaler
 type HttpClient struct {
 	AuthClient  *http.Client
 	Unmarshaler *jsonpb.Unmarshaler
 }
 
-//TODO: write proper docs for how to use this class
+//GetUrl will perform a GET on the specified URL and return the appropriate protobuf response
 func (hu HttpClient) GetUrl(url string, unmarshalObj proto.Message) {
 	resp, err := hu.AuthClient.Get(url)
 	if err != nil {
@@ -29,6 +32,8 @@ func (hu HttpClient) GetUrl(url string, unmarshalObj proto.Message) {
 	defer resp.Body.Close()
 }
 
+//PostUrl will perform a post on the specified URL. It takes in a json formatted body
+//and returns an (optional) protobuf response
 func (hu HttpClient) PostUrl(url string, body string, unmarshalObj proto.Message) {
 	bodyBytes := []byte(body)
 	resp, err := hu.AuthClient.Post(url, "application/json", bytes.NewBuffer(bodyBytes))
