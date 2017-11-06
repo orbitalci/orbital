@@ -1,6 +1,6 @@
 package handler
 
-//TODO: could be interface once we have more than just bitbucket
+//TODO: add interface once we have more than just bitbucket
 import (
 	"context"
 	"fmt"
@@ -24,15 +24,16 @@ type Bitbucket struct {
 //Subscribe takes in a set of configurations and will kick off
 //iterating over repositories
 func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
+	ocelog.Log.Debug("inside of subscribe", adminConfig)
 	var conf = clientcredentials.Config{
-		ClientID:     adminConfig.ConfigId,
+		ClientID:     adminConfig.ClientId,
 		ClientSecret: adminConfig.ClientSecret,
 		TokenURL:     adminConfig.TokenURL,
 	}
 
 	var ctx = context.Background()
 	token, err := conf.Token(ctx)
-	ocelog.Log.Debug("access token: ", token.AccessToken)
+	ocelog.Log.Debug("access token: ", token)
 	if err != nil {
 		ocelog.LogErrField(err).Fatal("well shit we can't get a token")
 	}
