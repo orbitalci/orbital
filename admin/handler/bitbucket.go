@@ -8,7 +8,7 @@ import (
 	"github.com/shankj3/ocelot/admin/models"
 	"github.com/shankj3/ocelot/ocelog"
 	"github.com/shankj3/ocelot/ocenet"
-	pb "github.com/shankj3/ocelot/protos"
+	pb "github.com/shankj3/ocelot/protos/out"
 	"golang.org/x/oauth2/clientcredentials"
 )
 

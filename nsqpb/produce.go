@@ -13,22 +13,23 @@ import (
 //  `NSQD_IP` or sets it to 127.0.0.1. the NSQ daemon should run alongside
 // any service that produces messages, so this will work usually.
 func WriteToNsq(message proto.Message, topicName string) error {
-	config := nsq.NewConfig()
-	ip_address := os.Getenv("NSQD_IP")
-	// there *should* be a nsqd running at same place as service posting.
-	if ip_address == "" {
-		// todo: this wouldn't work with docker-compose
-		ip_address = "127.0.0.1"
-	}
-	p, err := nsq.NewProducer(fmt.Sprintf("%s:4150", ip_address), config)
-	if err != nil {
-		ocelog.LogErrField(err).Fatal("Producer Create Error")
-	}
-	var data []byte
-	data, err = proto.Marshal(message)
-	if err != nil {
-		ocelog.LogErrField(err).Warn("proto marshal error")
-	}
-	err = p.Publish(topicName, data)
-	return err
+    config := nsq.NewConfig()
+    // there *should* be a nsqd running at same place as service posting.
+    var ip_address string
+    if ip_address = os.Getenv("NSQD_IP"); ip_address == "" {
+        // todo: this wouldn't work with docker-compose, hsould they just have to set
+        // the NSQD_IP?
+        ip_address = "127.0.0.1"
+    }
+    p, err := nsq.NewProducer(fmt.Sprintf("%s:4150", ip_address), config)
+    if err != nil {
+        ocelog.LogErrField(err).Fatal("Producer Create Error")
+    }
+    var data []byte
+    data, err = proto.Marshal(message)
+    if err != nil {
+        ocelog.LogErrField(err).Warn("proto marshal error")
+    }
+    err = p.Publish(topicName, data)
+    return err
 }

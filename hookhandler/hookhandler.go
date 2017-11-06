@@ -1,20 +1,18 @@
 package main
 
 import (
-	// "bufio"
-	"flag"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"github.com/gorilla/mux"
-	"github.com/meatballhat/negroni-logrus"
-	"github.com/shankj3/ocelot/nsqpb"
-	"github.com/shankj3/ocelot/ocelog"
-	pb "github.com/shankj3/ocelot/protos"
-	log "github.com/sirupsen/logrus"
-	"github.com/urfave/negroni"
-	"io"
-	"net/http"
-	"os"
+    "github.com/golang/protobuf/jsonpb"
+    "github.com/golang/protobuf/proto"
+    "github.com/gorilla/mux"
+    "github.com/meatballhat/negroni-logrus"
+    "github.com/shankj3/ocelot/nsqpb"
+    "github.com/shankj3/ocelot/ocelog"
+    pb "github.com/shankj3/ocelot/protos/out"
+    log "github.com/sirupsen/logrus"
+    "github.com/urfave/negroni"
+    "io"
+    "net/http"
+    "os"
 )
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
@@ -43,26 +41,18 @@ func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) {
 	defer requestBody.Close()
 }
 
-func GetFlags() string {
-	// write flag
-	var log_level string
-	flag.StringVar(&log_level, "log_level", "warn", "set log level")
-	flag.Parse()
-	return log_level
-}
-
 func main() {
-	// initialize logger
-	// log_level := GetFlags()
-	ocelog.InitializeOcelog(GetFlags())
-	ocelog.Log.Debug()
-	port := os.Getenv("PORT")
-	if port == "" {
-		ocelog.Log.Fatal("$PORT must be set")
-	}
-	mux := mux.NewRouter()
-	mux.HandleFunc("/test", RepoPush).Methods("POST")
-	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
+    // initialize logger
+    // log_level := GetFlags()
+    ocelog.InitializeOcelog(ocelog.GetFlags())
+    ocelog.Log.Debug()
+    port := os.Getenv("PORT")
+    if port == "" {
+        ocelog.Log.Fatal("$PORT must be set")
+    }
+    mux := mux.NewRouter()
+    mux.HandleFunc("/test", RepoPush).Methods("POST")
+    // mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 
 	n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))
 	n.Use(negronilogrus.NewCustomMiddleware(ocelog.GetLogLevel(), &log.JSONFormatter{}, "web"))
