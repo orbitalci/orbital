@@ -11,6 +11,7 @@ import (
 )
 
 //TODO: write the part that parses config file
+
 //TODO: this will eventually get moved to secrets and/or consul and not be in memory map
 var creds = map[string]models.AdminConfig{}
 var configChannel = make(chan models.AdminConfig)
@@ -25,14 +26,18 @@ func main() {
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", ConfigHandler).Methods("POST")
+	mux.HandleFunc("/", ListConfigHandler).Methods("GET")
 	ocelog.Log.Fatal(http.ListenAndServe(":"+port, mux))
 
 	//TODO: CREATE CLIENTS FOR CONFIG AND RUN IN SEPARATE THREAD - look into thread safety
 	for {
 		go handler.Bitbucket{}.Subscribe(<-configChannel)
 	}
-
 	//TODO: close channel when finished
+
+}
+
+func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 

@@ -12,24 +12,25 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
+const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
+
+//Bitbucket is a bitbucket handler responsible for finding build files and
+//registering webhooks for necessary repositories
 type Bitbucket struct {
 	Client    ocenet.HttpClient
 	Marshaler jsonpb.Marshaler
 }
 
-const BitbucketRepoBase string = "https://api.bitbucket.org/2.0/repositories/%v"
-
+//Subscribe takes in a set of configurations and will kick off
+//iterating over repositories
 func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
-
 	var conf = clientcredentials.Config{
 		ClientID:     adminConfig.ConfigId,
 		ClientSecret: adminConfig.ClientSecret,
 		TokenURL:     adminConfig.TokenURL,
 	}
 
-	//TODO: what the fuck is context
 	var ctx = context.Background()
-
 	token, err := conf.Token(ctx)
 	ocelog.Log.Debug("access token: ", token.AccessToken)
 	if err != nil {
@@ -48,6 +49,8 @@ func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
 
 	bb.recurseOverRepos(fmt.Sprintf(BitbucketRepoBase, adminConfig.AcctName))
 }
+
+//// helper functions for walking repositories and source files ////
 
 func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	if repoUrl == "" {
@@ -71,8 +74,6 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) {
 	for _, v := range repositories.GetValues() {
 		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == models.BuildFileName {
 			//found file, subscribe to webhook
-			fmt.Printf("Contains %v\n", v.GetPath())
-
 			newWebhook := &pb.CreateWebhook{
 				Description: "marianne did this",
 				Url:         models.WebhookCallbackURL,

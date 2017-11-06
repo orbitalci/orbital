@@ -10,5 +10,5 @@ provide results endpoint, way for server to access data
 package main
 
 func main() {
-    return
+	return
 }
