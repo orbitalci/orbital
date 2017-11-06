@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
-	pb "github.com/shankj3/ocelot/protos"
+	pb "github.com/shankj3/ocelot/protos/out"
 	"golang.org/x/oauth2/clientcredentials"
 	"log"
 	"net/http"

@@ -8,6 +8,7 @@ todo: add common log functions, right now there is only LogErrField which adds t
 package ocelog
 
 import (
+    "flag"
     "os"
     "runtime"
     "strings"
@@ -44,6 +45,18 @@ func InitializeOcelog(log_level string) {
     log.SetOutput(os.Stdout)
 }
 
+func GetFlags() string {
+    // write flag
+    var log_level string
+    flag.StringVar(&log_level, "log_level", "warn", "set log level")
+    flag.Parse()
+    return log_level
+}
+
+/*
+---------
+this is for the fancy function call stuff
+*/
 func getPackageName(f string) string {
     for {
         lastPeriod := strings.LastIndex(f, ".")

@@ -2,14 +2,13 @@ package main
 
 import (
     // "bufio"
-    "flag"
     "github.com/golang/protobuf/jsonpb"
     "github.com/golang/protobuf/proto"
     "github.com/gorilla/mux"
     "github.com/meatballhat/negroni-logrus"
     "github.com/shankj3/ocelot/nsqpb"
     "github.com/shankj3/ocelot/ocelog"
-    pb "github.com/shankj3/ocelot/protos"
+    pb "github.com/shankj3/ocelot/protos/out"
     log "github.com/sirupsen/logrus"
     "github.com/urfave/negroni"
     "io"
@@ -43,18 +42,10 @@ func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) {
     defer requestBody.Close()
 }
 
-func GetFlags() string {
-    // write flag
-    var log_level string
-    flag.StringVar(&log_level, "log_level", "warn", "set log level")
-    flag.Parse()
-    return log_level
-}
-
 func main() {
     // initialize logger
     // log_level := GetFlags()
-    ocelog.InitializeOcelog(GetFlags())
+    ocelog.InitializeOcelog(ocelog.GetFlags())
     ocelog.Log.Debug()
     port := os.Getenv("PORT")
     if port == "" {

@@ -14,10 +14,11 @@ import (
 // any service that produces messages, so this will work usually.
 func WriteToNsq(message proto.Message, topicName string) error {
     config := nsq.NewConfig()
-    ip_address := os.Getenv("NSQD_IP")
     // there *should* be a nsqd running at same place as service posting.
-    if ip_address == "" {
-        // todo: this wouldn't work with docker-compose
+    var ip_address string
+    if ip_address = os.Getenv("NSQD_IP"); ip_address == "" {
+        // todo: this wouldn't work with docker-compose, hsould they just have to set
+        // the NSQD_IP?
         ip_address = "127.0.0.1"
     }
     p, err := nsq.NewProducer(fmt.Sprintf("%s:4150", ip_address), config)

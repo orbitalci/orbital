@@ -1,8 +1,8 @@
 package configure
 
 import (
-    "io/ioutil"
     "gopkg.in/yaml.v2"
+    "io/ioutil"
 )
 
 func check(e error) {
@@ -11,21 +11,19 @@ func check(e error) {
     }
 }
 
-
 type Stage struct {
     Script []string
-    Env []string
+    Env    []string
 }
 
 type RunConfig struct {
-    Image string
-    Services []string
+    Image        string
+    Services     []string
     BeforeStages Stage `yaml:"before_stages"`
-    AfterStages Stage  `yaml:"after_stages"`
-    Build Stage
-    Test Stage
-    Deploy Stage
-
+    AfterStages  Stage `yaml:"after_stages"`
+    Build        Stage
+    Test         Stage
+    Deploy       Stage
 }
 
 func readConfig(filePath string) []byte {
@@ -45,8 +43,7 @@ func GetRunConfig(filePath string) (RunConfig, error) {
     return runConf, err
 }
 
-
 // func main() {
 //     run_config := getRunConfig("./test/test.yml")
-//     fmt.Println(run_config)    
+//     fmt.Println(run_config)
 // }
