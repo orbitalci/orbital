@@ -51,8 +51,8 @@ func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
 	bb.recurseOverRepos(fmt.Sprintf(BitbucketRepoBase, adminConfig.AcctName))
 }
 
-//// helper functions for walking repositories and source files ////
 
+//recursively iterates over all repositories
 func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	if repoUrl == "" {
 		return
@@ -66,6 +66,7 @@ func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	bb.recurseOverRepos(repositories.GetNext())
 }
 
+//recursively iterates over all source files trying to find build file
 func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) {
 	if sourceFileUrl == "" {
 		return
@@ -73,8 +74,12 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) {
 	repositories := &pb.PaginatedRootDirs{}
 	bb.Client.GetUrl(sourceFileUrl, repositories)
 	for _, v := range repositories.GetValues() {
-		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == models.BuildFileName {
-			//found file, subscribe to webhook
+		if v.GetType() == "commit_file" &&
+			len(v.GetAttributes()) == 0 &&
+			v.GetPath() == models.BuildFileName &&
+			!bb.doesWebhookExist(webhookUrl) {
+
+			//create webhook if one does not already exist and there is a ocelot.yml file in source directory
 			newWebhook := &pb.CreateWebhook{
 				Description: "marianne did this",
 				Url:         models.WebhookCallbackURL,
@@ -91,4 +96,19 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) {
 		}
 	}
 	bb.recurseOverFiles(repositories.GetNext(), webhookUrl)
+}
+
+//recursively iterates over all webhooks and returns true if one already exists
+func (bb Bitbucket) doesWebhookExist(getWebhookURL string) bool {
+	if getWebhookURL == "" {
+		return false
+	}
+	webhooks := &pb.GetWebhooks{}
+	bb.Client.GetUrl(getWebhookURL, webhooks)
+	for _, wh := range webhooks.GetValues() {
+		if wh.GetUrl() == models.WebhookCallbackURL {
+			return true
+		}
+	}
+	return bb.doesWebhookExist(webhooks.GetNext())
 }

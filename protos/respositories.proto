@@ -1,8 +1,10 @@
 syntax = "proto3";
+
 import "google/protobuf/timestamp.proto";
 import "common.proto";
 
 package protos;
+
 message PaginatedRepository {
     double pagelen = 1;
     double size = 2;

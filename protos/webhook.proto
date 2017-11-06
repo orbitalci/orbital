@@ -2,7 +2,8 @@ syntax = "proto3";
 package protos;
 
 import "commonevententities.proto";
-
+import "google/protobuf/timestamp.proto";
+import "common.proto";
 
 /* Modeling event payloads
 Source:
@@ -28,5 +29,20 @@ message CreateWebhook {
     repeated string events = 4;
 }
 
+message GetWebhooks {
+    double pagelen = 1;
+    double page = 2;
+    double size = 3;
+    repeated Webhooks values = 4;
+    string next = 5;
+}
+
+message Webhooks {
+    string description = 1;
+    Links links = 2;
+    string url = 3;
+    google.protobuf.Timestamp createdAt = 4 [json_name="created_at"];
+    bool active = 5;
+}
 
 // todo: add PR

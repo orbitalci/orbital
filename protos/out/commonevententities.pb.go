@@ -24,6 +24,8 @@ It has these top-level messages:
 	PaginatedRepository
 	RepoPush
 	CreateWebhook
+	GetWebhooks
+	Webhooks
 */
 package protos
 
