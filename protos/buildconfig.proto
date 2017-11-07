@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package protos;
+
+message BuildConfig {
+    string image = 1;
+    repeated string dockerPackages = 2;
+    Stage beforeStages = 3;
+    Stage afterStages = 4;
+    Stage build = 5;
+    Stage test = 6;
+    Stage deploy = 7;
+}
+
+message Stage {
+    repeated string env = 1;
+    repeated string script = 2;
+}

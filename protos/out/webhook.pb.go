@@ -23,7 +23,7 @@ type RepoPush struct {
 func (m *RepoPush) Reset()                    { *m = RepoPush{} }
 func (m *RepoPush) String() string            { return proto.CompactTextString(m) }
 func (*RepoPush) ProtoMessage()               {}
-func (*RepoPush) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
+func (*RepoPush) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0} }
 
 func (m *RepoPush) GetActor() *Owner {
 	if m != nil {
@@ -53,7 +53,7 @@ type RepoPush_PushDetail struct {
 func (m *RepoPush_PushDetail) Reset()                    { *m = RepoPush_PushDetail{} }
 func (m *RepoPush_PushDetail) String() string            { return proto.CompactTextString(m) }
 func (*RepoPush_PushDetail) ProtoMessage()               {}
-func (*RepoPush_PushDetail) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0, 0} }
+func (*RepoPush_PushDetail) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0, 0} }
 
 func (m *RepoPush_PushDetail) GetChanges() []*Changeset {
 	if m != nil {
@@ -72,7 +72,7 @@ type CreateWebhook struct {
 func (m *CreateWebhook) Reset()                    { *m = CreateWebhook{} }
 func (m *CreateWebhook) String() string            { return proto.CompactTextString(m) }
 func (*CreateWebhook) ProtoMessage()               {}
-func (*CreateWebhook) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{1} }
+func (*CreateWebhook) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{1} }
 
 func (m *CreateWebhook) GetDescription() string {
 	if m != nil {
@@ -113,7 +113,7 @@ type GetWebhooks struct {
 func (m *GetWebhooks) Reset()                    { *m = GetWebhooks{} }
 func (m *GetWebhooks) String() string            { return proto.CompactTextString(m) }
 func (*GetWebhooks) ProtoMessage()               {}
-func (*GetWebhooks) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{2} }
+func (*GetWebhooks) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{2} }
 
 func (m *GetWebhooks) GetPagelen() float64 {
 	if m != nil {
@@ -161,7 +161,7 @@ type Webhooks struct {
 func (m *Webhooks) Reset()                    { *m = Webhooks{} }
 func (m *Webhooks) String() string            { return proto.CompactTextString(m) }
 func (*Webhooks) ProtoMessage()               {}
-func (*Webhooks) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{3} }
+func (*Webhooks) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{3} }
 
 func (m *Webhooks) GetDescription() string {
 	if m != nil {
@@ -206,9 +206,9 @@ func init() {
 	proto.RegisterType((*Webhooks)(nil), "protos.Webhooks")
 }
 
-func init() { proto.RegisterFile("webhook.proto", fileDescriptor4) }
+func init() { proto.RegisterFile("webhook.proto", fileDescriptor5) }
 
-var fileDescriptor4 = []byte{
+var fileDescriptor5 = []byte{
 	// 425 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x52, 0xc1, 0x8e, 0xd3, 0x40,
 	0x0c, 0xd5, 0x90, 0xb6, 0xdb, 0x3a, 0x54, 0x5a, 0xe6, 0x80, 0x42, 0x39, 0x50, 0x75, 0x2f, 0x95,

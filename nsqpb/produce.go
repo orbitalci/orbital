@@ -1,11 +1,11 @@
 package nsqpb
 
 import (
-	"fmt"
-	"github.com/golang/protobuf/proto"
-	"github.com/nsqio/go-nsq"
-	"github.com/shankj3/ocelot/ocelog"
-	"os"
+    "fmt"
+    "github.com/golang/protobuf/proto"
+    "github.com/nsqio/go-nsq"
+    "github.com/shankj3/ocelot/ocelog"
+    "os"
 )
 
 // Write Protobuf Message to an NSQ topic with name topicName
@@ -24,11 +24,14 @@ func WriteToNsq(message proto.Message, topicName string) error {
     p, err := nsq.NewProducer(fmt.Sprintf("%s:4150", ip_address), config)
     if err != nil {
         ocelog.LogErrField(err).Fatal("Producer Create Error")
+        return err
     }
+
     var data []byte
     data, err = proto.Marshal(message)
     if err != nil {
         ocelog.LogErrField(err).Warn("proto marshal error")
+        return err
     }
     err = p.Publish(topicName, data)
     return err
