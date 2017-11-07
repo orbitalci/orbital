@@ -8,9 +8,9 @@ import (
     "sync"
 )
 
-/* Consume messages on a given topic / channel in NSQ protoconsume's UnmarshalProtoFunc will be added with a wrapper as a
-handler for the consumer. The ip address of the NSQLookupd instance can be set by the environment
-variable NSQLOOKUPD_IP, but will default to 127.0.0.1 */
+// Consume messages on a given topic / channel in NSQ protoconsume's UnmarshalProtoFunc will be added with
+// a wrapper as a handler for the consumer. The ip address of the NSQLookupd instance
+// can be set by the environment variable NSQLOOKUPD_IP, but will default to 127.0.0.1
 func ConsumeMessages(p ProtoConsume, topicName string, channelName string) error {
     wg := &sync.WaitGroup{}
     wg.Add(1)
@@ -40,8 +40,10 @@ func ConsumeMessages(p ProtoConsume, topicName string, channelName string) error
     return nil
 }
 
-/* Class for essentially wrapping the nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
-that doesn't require messing with nsq fields. just write a function that unmarshals to your proto object and does work */
+// Class for essentially wrapping the nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
+// that doesn't require messing with nsq fields. just write a function that unmarshals to your proto object
+// and does work
+// ...put in WORK.
 type ProtoConsume struct {
     UnmarshalProtoFunc func([]byte) error
 }
