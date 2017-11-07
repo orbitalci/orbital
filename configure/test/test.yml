@@ -1,11 +1,11 @@
 image: test
-docker_packages: # apt-get install
+dockerPackages: # apt-get install
   - maven<v>
   - blah
-before_stages:
+beforeStages:
   script:
     - sh echo "hello"
-after_stages:
+afterStages:
   env:
     - BUILD_DEBUG=0
   script:
