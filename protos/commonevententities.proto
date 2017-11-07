@@ -56,3 +56,11 @@ message Commit {
     // ignoring the "parents" field
     Links links = 5;
 }
+
+// bitbucket api 1.0 
+// https://confluence.atlassian.com/bitbucket/src-resources-296095214.html
+message RepoSourceFile {
+    string node = 1;
+    string path = 2;
+    string data = 3;
+}

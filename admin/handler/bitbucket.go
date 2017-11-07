@@ -3,6 +3,7 @@ package handler
 //TODO: add interface once we have more than just bitbucket
 import (
 	"context"
+	//"errors"
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/shankj3/ocelot/admin/models"
@@ -13,6 +14,7 @@ import (
 )
 
 const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
+const BitbucketRepoBaseV1 = "https://api.bitbucket.org/1.0/repositories/%s"
 
 //Bitbucket is a bitbucket handler responsible for finding build files and
 //registering webhooks for necessary repositories
@@ -21,19 +23,16 @@ type Bitbucket struct {
 	Marshaler jsonpb.Marshaler
 }
 
-//Subscribe takes in a set of configurations and will kick off
-//iterating over repositories
-func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
-	ocelog.Log.Debug("inside of subscribe", adminConfig)
+// Takes in admin config creds, sets Client and Marshaler Attributes
+func (bb *Bitbucket) SetMeUP(adminConfig *models.AdminConfig) {
 	var conf = clientcredentials.Config{
 		ClientID:     adminConfig.ClientId,
 		ClientSecret: adminConfig.ClientSecret,
 		TokenURL:     adminConfig.TokenURL,
 	}
-
 	var ctx = context.Background()
 	token, err := conf.Token(ctx)
-	ocelog.Log.Debug("access token: ", token)
+	ocelog.Log().Debug("access token: ", token)
 	if err != nil {
 		ocelog.LogErrField(err).Fatal("well shit we can't get a token")
 	}
@@ -47,10 +46,38 @@ func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
 
 	bb.Client = bitbucketClient
 	bb.Marshaler = jsonpb.Marshaler{}
+}
 
+//Subscribe takes in a set of configurations and will kick off
+//iterating over repositories
+func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
+	ocelog.Log().Debug("inside of subscribe", adminConfig)
+	bb.SetMeUP(&adminConfig)
 	bb.recurseOverRepos(fmt.Sprintf(BitbucketRepoBase, adminConfig.AcctName))
 }
 
+// Get File in repo at a certain commit.
+// filepath: string filepath relative to root of repo
+// fullRepoName: string account_name/repo_name as it is returned in the Bitbucket api Repo Source `full_name`
+// commitHash: string git hash for revision number
+func (bb Bitbucket) GetFile(filePath string, fullRepoName string, commitHash string) (yamlString string, err error) {
+	ocelog.Log().Debug("inside GetFile")
+	//if bb.notSetUP() == true {
+	//	err_str := "cannot get file without cred initialization"
+	//	err = errors.New(err_str)
+	//	ocelog.Log().Debug(err_str)
+	//	return
+	//}
+	fileResp := &pb.RepoSourceFile{}
+	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
+	bb.Client.GetUrl(fmt.Sprintf(BitbucketRepoBaseV1, path), fileResp)
+	yamlString = fileResp.GetData()
+	return
+}
+
+func (bb Bitbucket) notSetUP() bool {
+	return bb.Client == (ocenet.HttpClient{}) || bb.Marshaler == (jsonpb.Marshaler{})
+}
 
 //recursively iterates over all repositories
 func (bb Bitbucket) recurseOverRepos(repoUrl string) {
@@ -91,7 +118,7 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) {
 				ocelog.LogErrField(err).Fatal("failed to convert webhook to json string")
 			}
 			bb.Client.PostUrl(webhookUrl, webhookStr, nil)
-			ocelog.Log.Debug("subscribed to webhook for ", webhookUrl)
+			ocelog.Log().Debug("subscribed to webhook for ", webhookUrl)
 
 		}
 	}

@@ -19,17 +19,17 @@ import (
 
 func HandleRepoPushMessage(message []byte) error {
     push := &pb.RepoPush{}
-    ocelog.Log.Debug("hit HandleRepoPush")
+    ocelog.Log().Debug("hit HandleRepoPush")
     if err := proto.Unmarshal(message, push); err != nil {
         ocelog.LogErrField(err).Warning("unmarshal error")
         return err
     }
-    Build(push)
+    go Build(push)
     return nil
 }
 
 func Build(buildjob *pb.RepoPush) error {
-    ocelog.Log.Info(buildjob.GetActor().GetUsername())
+    ocelog.Log().Info(buildjob.GetActor().GetUsername())
     return nil
 }
 

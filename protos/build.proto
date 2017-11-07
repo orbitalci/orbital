@@ -1,6 +1,7 @@
 syntax = "proto3";
-
 package protos;
+
+import "webhook.proto";
 
 message BuildConfig {
     string image = 1;
@@ -15,4 +16,10 @@ message BuildConfig {
 message Stage {
     repeated string env = 1;
     repeated string script = 2;
+}
+
+message BuildBundle {
+    BuildConfig config = 1;
+    RepoPush pushData = 2;
+    string vaultToken = 3;
 }

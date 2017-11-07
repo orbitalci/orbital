@@ -14,10 +14,10 @@ import (
 func ConvertYAMLtoProtobuf(yml []byte, msg proto.Message) error {
     json_bytes, err := yaml.YAMLToJSON(yml)
     if err != nil {
-        lg.Log.Warn("couldn't marshal yml to json")
+        lg.Log().Warn("couldn't marshal yml to json")
         return err
     }
     HandleUnmarshal(ioutil.NopCloser(bytes.NewReader(json_bytes)), msg)
-    lg.Log.Debug(msg)
+    lg.Log().Debug(msg)
     return nil
 }

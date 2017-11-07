@@ -1,6 +1,6 @@
 /* Package ocelog
 Way to have one style of logging for the project. Initialize in your service w/ InitializeOcelog(), uses a JSONFormatter.
-use ocelog.Log to log with extra field of the function called.
+use ocelog.Log() to log with extra field of the function called.
 
 todo: add common log functions, right now there is only LogErrField which adds the error: <error text> to the json log.
 
@@ -15,19 +15,23 @@ import (
 	"strings"
 )
 
-var DefaultFields = log.Fields{
-	"function": getCaller(),
-}
-
 // tODO: add NewLog() function that returns a logger w/ the default fields, if
 // a service wants a special logger.
 
 // default logger for Ocelog. Includes extra field `"function": <name>`
-var Log = log.WithFields(DefaultFields)
+func Log() *log.Entry {
+	return log.WithFields(GetDefaultFields())
+}
 
 // Add the 'error' field w/ the error object to the Log Entry.
 func LogErrField(err error) *log.Entry {
-	return Log.WithField("error", err)
+	return Log().WithField("error", err)
+}
+
+func GetDefaultFields() log.Fields {
+	return log.Fields{
+		"function": getCaller(),
+	}
 }
 
 // return current level of standard logger
@@ -46,9 +50,9 @@ func InitializeOcelog(log_level string) {
 	log.SetOutput(os.Stdout)
 }
 
-// get log level flags from command line.
-// ex:
-// `hookhandler --log_level=debug`
+/* get log level flags from command line.
+ex:
+`hookhandler --log_level=debug` */
 func GetFlags() string {
 	// write flag
 	var log_level string

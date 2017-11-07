@@ -8,14 +8,13 @@ import (
     "sync"
 )
 
-/* Consume messages on a given topic / channel in NSQ
-protoconsume's UnmarshalProtoFunc will be added with a wrapper as a
-handler for the consumer. The ip address of the NSQLookupd instance can be set by the
-environment variable NSQLOOKUPD_IP, but will default to 127.0.0.1 */
+/* Consume messages on a given topic / channel in NSQ protoconsume's UnmarshalProtoFunc will be added with a wrapper as a
+handler for the consumer. The ip address of the NSQLookupd instance can be set by the environment
+variable NSQLOOKUPD_IP, but will default to 127.0.0.1 */
 func ConsumeMessages(p ProtoConsume, topicName string, channelName string) error {
     wg := &sync.WaitGroup{}
     wg.Add(1)
-    ocelog.Log.Debug("hit CONSUME MESSAGES")
+
     decodeConfig := nsq.NewConfig()
     c, err := nsq.NewConsumer(topicName, channelName, decodeConfig)
     if err != nil {
@@ -23,13 +22,16 @@ func ConsumeMessages(p ProtoConsume, topicName string, channelName string) error
         return err
     }
 
+    c.SetLogger(NewNSQLoggerAtLevel(ocelog.GetLogLevel()))
     c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
+
     // NSQLOOKUPD_IP may have to be looked up more than nsqd_ip, since nsqlookupd
     // likely isn't running everywhere.
     var ip_address string
     if ip_address = os.Getenv("NSQLOOKUPD_IP"); ip_address == "" {
         ip_address = "127.0.0.1"
     }
+
     if err = c.ConnectToNSQLookupd(fmt.Sprintf("%s:4161", ip_address)); err != nil {
         ocelog.LogErrField(err).Warn("cannot connect to nsq")
         return err
@@ -38,10 +40,8 @@ func ConsumeMessages(p ProtoConsume, topicName string, channelName string) error
     return nil
 }
 
-/* Class for essentially wrapping the nsq.Message so that code outside the
-package can just add a UnmarshalProtoFunc that doesn't require messing with
-nsq fields. just write a function that unmarshals to your proto object
-and does work */
+/* Class for essentially wrapping the nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
+that doesn't require messing with nsq fields. just write a function that unmarshals to your proto object and does work */
 type ProtoConsume struct {
     UnmarshalProtoFunc func([]byte) error
 }

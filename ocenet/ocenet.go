@@ -49,7 +49,7 @@ func (hu HttpClient) PostUrl(url string, body string, unmarshalObj proto.Message
 		}
 	} else {
 		respBody, _ := ioutil.ReadAll(resp.Body)
-		ocelog.Log.Debug(string(respBody))
+		ocelog.Log().Debug(string(respBody))
 	}
 
 	defer resp.Body.Close()

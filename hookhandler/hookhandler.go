@@ -5,30 +5,37 @@ import (
     "github.com/golang/protobuf/proto"
     "github.com/gorilla/mux"
     "github.com/meatballhat/negroni-logrus"
+    "github.com/shankj3/ocelot/admin/models"
+    "github.com/shankj3/ocelot/admin/handler"
     "github.com/shankj3/ocelot/nsqpb"
     "github.com/shankj3/ocelot/ocelog"
     pb "github.com/shankj3/ocelot/protos/out"
     log "github.com/sirupsen/logrus"
     "github.com/urfave/negroni"
     "io"
-    // "io/ioutil"
     "net/http"
     "os"
 )
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
 func RepoPush(w http.ResponseWriter, r *http.Request) {
-    // b, err := ioutil.ReadAll(r.Body)
-    // if err != nil {
-    //     ocelog.LogErrField(err).Fatal("error reading http request body")
-    // }
-    repopush := pb.RepoPush{}
-    HandleUnmarshal(r.Body, &repopush)
+    repopush := &pb.RepoPush{}
+    HandleUnmarshal(r.Body, repopush)
+    buildConf, err := GetBuildConfig(repopush)
+    if err != nil {
+        ocelog.LogErrField(err).Fatal("unable to get build conf")
+    }
+    bundle := &pb.BuildBundle{
+        Config: buildConf,
+        PushData: repopush,
+        VaultToken: "",
+    }
+    // send to queue
     queue_topic := "repo_push"
-    if err := nsqpb.WriteToNsq(&repopush, queue_topic); err != nil {
-        ocelog.LogErrField(err).Warn("nsq insert webhook error")
+    if err := nsqpb.WriteToNsq(bundle, queue_topic); err != nil {
+        ocelog.LogErrField(err).Error("nsq insert webhook error")
     } else {
-        ocelog.Log.Info("added to nsq ", queue_topic)
+        ocelog.Log().Info("added repo:push event to nsq", queue_topic)
     }
 }
 
@@ -42,12 +49,39 @@ func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) {
     defer requestBody.Close()
 }
 
+func getCredConfig() models.AdminConfig {
+    // for testing
+    // irl... use vault
+    return models.AdminConfig{
+        ConfigId: "jessishank",
+        ClientId: "QEBYwP5cKAC3ykhau4",
+        ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
+        TokenURL: "https://bitbucket.org/site/oauth2/access_token",
+        AcctName: "jessishank",
+    }
+}
+
+func GetBuildConfig(rp *pb.RepoPush) (conf *pb.BuildConfig, err error) {
+    cfg := getCredConfig()
+    bb := handler.Bitbucket{}
+    bb.SetMeUP(&cfg)
+    confstr, err := bb.GetFile("ocelot.yml", rp.Repository.FullName, rp.Push.Changes[0].New.Target.Hash)
+    if err != nil {
+        return
+    }
+    conf = &pb.BuildConfig{}
+    if err = ConvertYAMLtoProtobuf([]byte(confstr), conf); err != nil {
+        return
+    }
+    return
+}
+
 func main() {
     ocelog.InitializeOcelog(ocelog.GetFlags())
-    ocelog.Log.Debug()
+    ocelog.Log().Debug()
     port := os.Getenv("PORT")
     if port == "" {
-        ocelog.Log.Fatal("$PORT must be set")
+        ocelog.Log().Fatal("$PORT must be set")
     }
     mux := mux.NewRouter()
     mux.HandleFunc("/test", RepoPush).Methods("POST")

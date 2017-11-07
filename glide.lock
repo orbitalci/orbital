@@ -1,20 +1,28 @@
-hash: ea6547004e3c68a8cd13cc0a8e3d7b6d1a79956bff59b4e10166e62ad6bf2ab1
-updated: 2017-11-01T13:00:07.40176504-07:00
+hash: 50515c016e8d934e998bd842ae016e3766a7ac86fd43ee1dda32cfae0e4c5c86
+updated: 2017-11-06T09:47:39.83325729-08:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
+- name: github.com/docker/docker
+  version: 90d35abf7b3535c1c319c872900fbd76374e521c
+  subpackages:
+  - client
+- name: github.com/golang/protobuf
+  version: 8616e8ee5e20a1704615e6c8d7afcdac06087a67
+  subpackages:
+  - jsonpb
+  - proto
+  - ptypes/timestamp
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 24fca303ac6da784b9e8269f724ddeb0b2eea5e7
-- name: github.com/lib/pq
-  version: b609790bd85edf8e9ab7e0f8912750a786177bcf
-  subpackages:
-  - oid
+- name: github.com/meatballhat/negroni-logrus
+  version: 31067281800f66f57548a7a32d9c6c5f963fef83
 - name: github.com/nsqio/go-nsq
   version: eee57a3ac4174c55924125bb15eeeda8cffb6e6f
 - name: github.com/sirupsen/logrus
@@ -25,10 +33,29 @@ imports:
   version: b8a2a83acfe6e6770b75de42d5ff4c67596675c0
   subpackages:
   - ssh/terminal
+- name: golang.org/x/net
+  version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
+  subpackages:
+  - context
+- name: golang.org/x/oauth2
+  version: 3c3a985cb79f52a3190fbc056984415ca6763d01
+  subpackages:
+  - clientcredentials
+  - internal
 - name: golang.org/x/sys
   version: d75a52659825e75fff6158388dddc6a5b04f9ba5
   subpackages:
   - unix
+- name: google.golang.org/appengine
+  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
+  subpackages:
+  - internal
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
 - name: gopkg.in/go-playground/webhooks.v3
   version: ced2e979bc7419d571930126aaf053abd54db4f2
   subpackages:
