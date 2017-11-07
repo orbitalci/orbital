@@ -11,39 +11,38 @@ import (
     log "github.com/sirupsen/logrus"
     "github.com/urfave/negroni"
     "io"
+    // "io/ioutil"
     "net/http"
     "os"
 )
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
 func RepoPush(w http.ResponseWriter, r *http.Request) {
-	// b, err := ioutil.ReadAll(r.Body)
-	// if err != nil {
-	//     ocelog.LogErrField(err).Fatal("error reading http request body")
-	// }
-	repopush := pb.RepoPush{}
-	HandleUnmarshal(r.Body, &repopush)
-	queue_topic := "repo_push"
-	if err := nsqpb.WriteToNsq(&repopush, queue_topic); err != nil {
-		ocelog.LogErrField(err).Warn("nsq insert webhook error")
-	} else {
-		ocelog.Log.Info("added to nsq ", queue_topic)
-	}
+    // b, err := ioutil.ReadAll(r.Body)
+    // if err != nil {
+    //     ocelog.LogErrField(err).Fatal("error reading http request body")
+    // }
+    repopush := pb.RepoPush{}
+    HandleUnmarshal(r.Body, &repopush)
+    queue_topic := "repo_push"
+    if err := nsqpb.WriteToNsq(&repopush, queue_topic); err != nil {
+        ocelog.LogErrField(err).Warn("nsq insert webhook error")
+    } else {
+        ocelog.Log.Info("added to nsq ", queue_topic)
+    }
 }
 
 func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) {
-	unmarshaler := &jsonpb.Unmarshaler{
-		AllowUnknownFields: true,
-	}
-	if err := unmarshaler.Unmarshal(requestBody, unmarshalObj); err != nil {
-		ocelog.LogErrField(err).Fatal("could not parse repo push")
-	}
-	defer requestBody.Close()
+    unmarshaler := &jsonpb.Unmarshaler{
+        AllowUnknownFields: true,
+    }
+    if err := unmarshaler.Unmarshal(requestBody, unmarshalObj); err != nil {
+        ocelog.LogErrField(err).Fatal("could not parse repo push")
+    }
+    defer requestBody.Close()
 }
 
 func main() {
-    // initialize logger
-    // log_level := GetFlags()
     ocelog.InitializeOcelog(ocelog.GetFlags())
     ocelog.Log.Debug()
     port := os.Getenv("PORT")
@@ -54,8 +53,8 @@ func main() {
     mux.HandleFunc("/test", RepoPush).Methods("POST")
     // mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 
-	n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))
-	n.Use(negronilogrus.NewCustomMiddleware(ocelog.GetLogLevel(), &log.JSONFormatter{}, "web"))
-	n.UseHandler(mux)
-	n.Run(":" + port)
+    n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))
+    n.Use(negronilogrus.NewCustomMiddleware(ocelog.GetLogLevel(), &log.JSONFormatter{}, "web"))
+    n.UseHandler(mux)
+    n.Run(":" + port)
 }
