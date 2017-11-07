@@ -37,7 +37,7 @@ func main() {
 }
 
 func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
-
+	json.NewEncoder(w).Encode(creds)
 }
 
 func ConfigHandler(w http.ResponseWriter, r *http.Request) {
