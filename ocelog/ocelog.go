@@ -15,8 +15,7 @@ import (
 	"strings"
 )
 
-// tODO: add NewLog() function that returns a logger w/ the default fields, if
-// a service wants a special logger.
+// TODO: add NewLog() function that returns a logger w/ the default fields, if  a service wants a special logger.
 
 // default logger for Ocelog. Includes extra field `"function": <name>`
 func Log() *log.Entry {
@@ -28,6 +27,7 @@ func LogErrField(err error) *log.Entry {
 	return Log().WithField("error", err)
 }
 
+// Adds "function" field
 func GetDefaultFields() log.Fields {
 	return log.Fields{
 		"function": getCaller(),
@@ -62,10 +62,7 @@ func GetFlags() string {
 	return logLevel
 }
 
-/*
----------
-this is for the fancy function call stuff
-*/
+//Get Package Name of Calling Function
 func getPackageName(f string) string {
 	for {
 		lastPeriod := strings.LastIndex(f, ".")
@@ -80,12 +77,13 @@ func getPackageName(f string) string {
 	return f
 }
 
+// for caching of Logrus package when searching for calling function
 var LogrusPackage string
-var RuntimePackage string
 
 // Positions in the call stack when tracing to report the calling method
 var minimumCallerDepth int
 
+// limit to search depth
 const maximumCallerDepth int = 25
 const knownLogrusFrames int = 4
 
