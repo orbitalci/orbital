@@ -39,9 +39,10 @@ func GetLogLevel() log.Level {
 	return log.GetLevel()
 }
 
+
 // configure default Logger to log in JSON format.
-func InitializeOcelog(log_level string) {
-	if loglevel, err := log.ParseLevel(log_level); err != nil {
+func InitializeOcelog(logLevel string) {
+	if loglevel, err := log.ParseLevel(logLevel); err != nil {
 		LogErrField(err).Fatal()
 	} else {
 		log.SetLevel(loglevel)
@@ -55,10 +56,10 @@ ex:
 `hookhandler --log_level=debug` */
 func GetFlags() string {
 	// write flag
-	var log_level string
-	flag.StringVar(&log_level, "log_level", "warn", "set log level")
+	var logLevel string
+	flag.StringVar(&logLevel, "log_level", "warn", "set log level")
 	flag.Parse()
-	return log_level
+	return logLevel
 }
 
 /*
