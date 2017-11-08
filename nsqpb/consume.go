@@ -11,7 +11,8 @@ import (
 // Consume messages on a given topic / channel in NSQ protoconsume's UnmarshalProtoFunc will be added with
 // a wrapper as a handler for the consumer. The ip address of the NSQLookupd instance
 // can be set by the environment variable NSQLOOKUPD_IP, but will default to 127.0.0.1
-func ConsumeMessages(p ProtoConsume, topicName string, channelName string) error {
+func ConsumeMessages(p *ProtoConsume, topicName string, channelName string) error {
+    // todo: change this to be func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) {}
     wg := &sync.WaitGroup{}
     wg.Add(1)
 
