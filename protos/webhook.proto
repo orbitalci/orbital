@@ -22,6 +22,26 @@ message RepoPush {
     PushDetail push = 3;
 }
 
+// same for created and updated
+message PullRequest {
+    Owner actor = 1;
+    PullRequestEntity pullrequest = 2;
+    Repository repository = 3;
+}
+
+// approved adds timestamp and approving owner's info
+message PullRequestApproved {
+    Owner actor = 1;
+    PullRequestEntity pullrequest = 2;
+    Repository repository = 3;
+    message approve {
+        google.protobuf.Timestamp date = 1;
+        Owner user = 2;
+    }
+    approve approval = 4;
+}
+
+
 message CreateWebhook {
     string description = 1;
     string url = 2;

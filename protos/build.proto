@@ -18,8 +18,14 @@ message Stage {
     repeated string script = 2;
 }
 
-message BuildBundle {
+message PushBuildBundle {
     BuildConfig config = 1;
     RepoPush pushData = 2;
+    string vaultToken = 3;
+}
+
+message PRBuildBundle {
+    BuildConfig config = 1;
+    PullRequest prData = 2;
     string vaultToken = 3;
 }

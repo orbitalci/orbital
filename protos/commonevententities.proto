@@ -25,6 +25,35 @@ message Repository {
 
 }
 
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Pullrequestevents
+message PullRequestEntity {
+    int64 id = 1;
+    string title = 2;
+    string description = 3;
+    string state = 4;
+    Owner author = 5;
+    PRInfo source = 6;
+    PRInfo destination = 7;
+    Commit mergeCommit = 8 [json_name="merge_commit"];
+    repeated Owner participants = 9;
+    repeated Owner reviewers = 10;
+    bool closeSourceBranch = 11 [json_name="close_source_branch"];
+    Owner closedBy = 12 [json_name="closed_by"];
+    string reason = 13;
+    google.protobuf.Timestamp createdAt = 14 [json_name="created_at"];
+    google.protobuf.Timestamp updatedOn = 15 [json_name="updated_on"];
+    Links links = 16;
+}
+
+message PRInfo {
+    message br {
+        string name = 1;
+    }
+    br branch = 1;
+    Commit commit = 2;
+    Repository repository = 3;
+}
+
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_projectProject
 message Project {
     string name = 1;

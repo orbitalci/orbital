@@ -1,17 +1,17 @@
 package main
 
 import (
-    "github.com/golang/protobuf/jsonpb"
-    "github.com/golang/protobuf/proto"
-    "github.com/gorilla/mux"
-    "github.com/meatballhat/negroni-logrus"
-    "github.com/shankj3/ocelot/admin/models"
-    "github.com/shankj3/ocelot/admin/handler"
-    "github.com/shankj3/ocelot/nsqpb"
-    "github.com/shankj3/ocelot/ocelog"
-    pb "github.com/shankj3/ocelot/protos/out"
-    log "github.com/sirupsen/logrus"
-    "github.com/urfave/negroni"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	"github.com/gorilla/mux"
+	"github.com/meatballhat/negroni-logrus"
+	"github.com/shankj3/ocelot/admin/handler"
+	"github.com/shankj3/ocelot/admin/models"
+	"github.com/shankj3/ocelot/nsqpb"
+	"github.com/shankj3/ocelot/ocelog"
+	pb "github.com/shankj3/ocelot/protos/out"
+	log "github.com/sirupsen/logrus"
+	"github.com/urfave/negroni"
     "io"
     "net/http"
     "os"
@@ -21,14 +21,15 @@ import (
 func RepoPush(w http.ResponseWriter, r *http.Request) {
     repopush := &pb.RepoPush{}
     HandleUnmarshal(r.Body, repopush)
-    buildConf, err := GetBuildConfig(repopush)
+    buildConf, err := GetBuildConfig(repopush.Repository.FullName, repopush.Push.Changes[0].New.Target.Hash)
     if err != nil {
-        ocelog.LogErrField(err).Fatal("unable to get build conf")
+		// todo: return error message
+        ocelog.LogErrField(err).Error("unable to get build conf")
     }
-    bundle := &pb.BuildBundle{
+    bundle := &pb.PushBuildBundle{
         Config: buildConf,
         PushData: repopush,
-        VaultToken: "",
+        VaultToken: "", // todo: this.
     }
     // send to queue
     queue_topic := "repo_push"
@@ -39,19 +40,43 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+
+func PullRequest(w http.ResponseWriter, r *http.Request) {
+	pr := &pb.PullRequest{}
+	HandleUnmarshal(r.Body, pr)
+	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Repository.FullName)
+	if err != nil {
+		// todo: return error message
+		ocelog.LogErrField(err).Error("unable to get build conf")
+	}
+
+	bundle := &pb.PRBuildBundle{
+		Config: buildConf,
+		PrData: pr,
+		VaultToken: "",
+	}
+	queue_topic := "repo_pr"
+	if err := nsqpb.WriteToNsq(bundle, queue_topic); err != nil {
+		ocelog.LogErrField(err).Error("nsq insert webhook error")
+	} else {
+		ocelog.Log().Info("added pullrequest:created event to nsq", queue_topic)
+	}
+
+}
+
 func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) {
     unmarshaler := &jsonpb.Unmarshaler{
         AllowUnknownFields: true,
     }
     if err := unmarshaler.Unmarshal(requestBody, unmarshalObj); err != nil {
-        ocelog.LogErrField(err).Fatal("could not parse repo push")
+        ocelog.LogErrField(err).Fatal("could not parse request body into proto.Message")
     }
     defer requestBody.Close()
 }
 
+// for testing
+// irl... use vault
 func getCredConfig() models.AdminConfig {
-    // for testing
-    // irl... use vault
     return models.AdminConfig{
         ConfigId: "jessishank",
         ClientId: "QEBYwP5cKAC3ykhau4",
@@ -61,11 +86,11 @@ func getCredConfig() models.AdminConfig {
     }
 }
 
-func GetBuildConfig(rp *pb.RepoPush) (conf *pb.BuildConfig, err error) {
+func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
     cfg := getCredConfig()
     bb := handler.Bitbucket{}
     bb.SetMeUP(&cfg)
-    confstr, err := bb.GetFile("ocelot.yml", rp.Repository.FullName, rp.Push.Changes[0].New.Target.Hash)
+    confstr, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
     if err != nil {
         return
     }
