@@ -78,7 +78,7 @@ func validateConfig(adminConfig *models.AdminConfig) ([]byte, error) {
 		var errorMsg string
 		for _, nestedErr := range err.(validator.ValidationErrors) {
 			errorMsg = nestedErr.Field() + " is " + nestedErr.Tag()
-			ocelog.Log.Warn(errorMsg)
+			ocelog.Log().Warn(errorMsg)
 		}
 
 		errJson := &ocenet.HttpError{
