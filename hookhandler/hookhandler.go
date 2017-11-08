@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
@@ -17,35 +18,49 @@ import (
 	"os"
 )
 
+const BuildTopic = "repo_build"
+
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
 func RepoPush(w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
-	HandleUnmarshal(r.Body, repopush)
+	if err := HandleUnmarshal(r.Body, repopush); err != nil {
+		SetHttpError(w, "could not parse request body into proto.Message", err)
+	}
+
 	buildConf, err := GetBuildConfig(repopush.Repository.FullName, repopush.Push.Changes[0].New.Target.Hash)
 	if err != nil {
-		// todo: return error message
-		ocelog.LogErrField(err).Error("unable to get build conf")
+		//ocelog.LogErrField(err).Error("unable to get build conf")
+		SetHttpError(w, "unable to get build conf", err)
+		return
 	}
 	bundle := &pb.PushBuildBundle{
 		Config:     buildConf,
 		PushData:   repopush,
 		VaultToken: "", // todo: this.
 	}
+
 	// send to queue
-	if err := nsqpb.WriteToNsq(bundle, nsqpb.PUSH_QUEUE); err != nil {
-		ocelog.LogErrField(err).Error("nsq insert webhook error")
+	if err := nsqpb.WriteToNsq(bundle, BuildTopic); err != nil {
+		//ocelog.LogErrField(err).Error("nsq insert webhook error")
+		SetHttpError(w, "nsq insert webhook error", err)
+		return
+
 	} else {
-		ocelog.Log().Info("added repo:push event to nsq", nsqpb.PUSH_QUEUE)
+		ocelog.Log().Info("added repo:push event to nsq", BuildTopic)
 	}
 }
 
 func PullRequest(w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
-	HandleUnmarshal(r.Body, pr)
+	if err := HandleUnmarshal(r.Body, pr); err != nil {
+		SetHttpError(w, "could not parse request body into proto.Message", err)
+		return
+	}
 	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Repository.FullName)
 	if err != nil {
-		// todo: return error message
-		ocelog.LogErrField(err).Error("unable to get build conf")
+		//ocelog.LogErrField(err).Error("unable to get build conf")
+		SetHttpError(w, "unable to get build conf", err)
+		return
 	}
 
 	bundle := &pb.PRBuildBundle{
@@ -53,22 +68,26 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		PrData:     pr,
 		VaultToken: "",
 	}
-	if err := nsqpb.WriteToNsq(bundle, nsqpb.PULL_REQUEST_QUEUE); err != nil {
-		ocelog.LogErrField(err).Error("nsq insert webhook error")
+	if err := nsqpb.WriteToNsq(bundle, BuildTopic); err != nil {
+		//ocelog.LogErrField(err).Error("nsq insert webhook error")
+		SetHttpError(w, "nsq insert webhook error", err)
+		return
 	} else {
-		ocelog.Log().Info("added pullrequest:created event to nsq", nsqpb.PULL_REQUEST_QUEUE)
+		ocelog.Log().Info("added pullrequest:created event to nsq", BuildTopic)
 	}
 
 }
 
-func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) {
+func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) (err error){
 	unmarshaler := &jsonpb.Unmarshaler{
 		AllowUnknownFields: true,
 	}
 	if err := unmarshaler.Unmarshal(requestBody, unmarshalObj); err != nil {
-		ocelog.LogErrField(err).Fatal("could not parse request body into proto.Message")
+		//ocelog.LogErrField(err).Fatal("could not parse request body into proto.Message")
+		return
 	}
 	defer requestBody.Close()
+	return
 }
 
 // for testing
@@ -98,19 +117,36 @@ func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildC
 	return
 }
 
+type RESTError struct {
+	err error
+	errorDescription string
+}
+
+func SetHttpError(w http.ResponseWriter, error_desc string, err error) {
+	w.WriteHeader(http.StatusBadRequest)
+	w.Header().Set("Content-Type", "application/json")
+	resterr := RESTError{
+		err: err,
+		errorDescription: error_desc,
+	}
+	json.NewEncoder(w).Encode(resterr)
+}
+
+
 func main() {
 	ocelog.InitializeOcelog(ocelog.GetFlags())
 	ocelog.Log().Debug()
 	port := os.Getenv("PORT")
 	if port == "" {
-		ocelog.Log().Fatal("$PORT must be set")
+		port = "8088"
+		ocelog.Log().Warning("running on default port :8088")
 	}
-	mux := mux.NewRouter()
-	mux.HandleFunc("/test", RepoPush).Methods("POST")
+	muxi := mux.NewRouter()
+	muxi.HandleFunc("/test", RepoPush).Methods("POST")
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 
 	n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))
 	n.Use(negronilogrus.NewCustomMiddleware(ocelog.GetLogLevel(), &log.JSONFormatter{}, "web"))
-	n.UseHandler(mux)
+	n.UseHandler(muxi)
 	n.Run(":" + port)
 }
