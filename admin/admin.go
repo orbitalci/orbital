@@ -16,7 +16,6 @@ import (
 )
 
 //TODO: write the part that talks to consul
-//TODO: creates webhoook for every single repo that it knows about
 //TODO: hook admin code into vault
 //TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
 
