@@ -10,6 +10,7 @@ import (
 	"github.com/shankj3/ocelot/admin/models"
 	"github.com/shankj3/ocelot/nsqpb"
 	"github.com/shankj3/ocelot/ocelog"
+	"github.com/shankj3/ocelot/ocenet"
 	pb "github.com/shankj3/ocelot/protos/out"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
@@ -24,13 +25,13 @@ const BuildTopic = "repo_build"
 func RepoPush(w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
 	if err := HandleUnmarshal(r.Body, repopush); err != nil {
-		SetHttpError(w, "could not parse request body into proto.Message", err)
+		ocenet.JSONApiError(w, "could not parse request body into proto.Message", err)
 	}
 
 	buildConf, err := GetBuildConfig(repopush.Repository.FullName, repopush.Push.Changes[0].New.Target.Hash)
 	if err != nil {
 		//ocelog.LogErrField(err).Error("unable to get build conf")
-		SetHttpError(w, "unable to get build conf", err)
+		ocenet.JSONApiError(w, "unable to get build conf", err)
 		return
 	}
 	// instead, add to topic. each worker gets a topic off a channel,
@@ -40,28 +41,19 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		PushData:   repopush,
 		VaultToken: "", // todo: this.
 	}
-
-	// send to queue
-	if err := nsqpb.WriteToNsq(bundle, BuildTopic); err != nil {
-		//ocelog.LogErrField(err).Error("nsq insert webhook error")
-		SetHttpError(w, "nsq insert webhook error", err)
-		return
-
-	} else {
-		ocelog.Log().Info("added repo:push event to nsq", BuildTopic)
-	}
+	go nsqpb.WriteToNsq(bundle, BuildTopic)
 }
 
 func PullRequest(w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
 	if err := HandleUnmarshal(r.Body, pr); err != nil {
-		SetHttpError(w, "could not parse request body into proto.Message", err)
+		ocenet.JSONApiError(w, "could not parse request body into proto.Message", err)
 		return
 	}
 	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Repository.FullName)
 	if err != nil {
 		//ocelog.LogErrField(err).Error("unable to get build conf")
-		SetHttpError(w, "unable to get build conf", err)
+		ocenet.JSONApiError(w, "unable to get build conf", err)
 		return
 	}
 
@@ -70,13 +62,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		PrData:     pr,
 		VaultToken: "",
 	}
-	if err := nsqpb.WriteToNsq(bundle, BuildTopic); err != nil {
-		//ocelog.LogErrField(err).Error("nsq insert webhook error")
-		SetHttpError(w, "nsq insert webhook error", err)
-		return
-	} else {
-		ocelog.Log().Info("added pullrequest:created event to nsq", BuildTopic)
-	}
+	go nsqpb.WriteToNsq(bundle, BuildTopic)
 
 }
 
@@ -117,21 +103,6 @@ func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildC
 		return
 	}
 	return
-}
-
-type RESTError struct {
-	err error
-	errorDescription string
-}
-
-func SetHttpError(w http.ResponseWriter, error_desc string, err error) {
-	w.WriteHeader(http.StatusBadRequest)
-	w.Header().Set("Content-Type", "application/json")
-	resterr := RESTError{
-		err: err,
-		errorDescription: error_desc,
-	}
-	json.NewEncoder(w).Encode(resterr)
 }
 
 
