@@ -15,7 +15,6 @@ import (
 	"github.com/google/uuid"
 )
 
-//TODO: write the part that parses config file
 //TODO: write the part that talks to consul
 //TODO: creates webhoook for every single repo that it knows about
 //TODO: hook admin code into vault
@@ -50,6 +49,7 @@ func main() {
 	ocelog.Log().Fatal(http.ListenAndServe(":" + port, mux))
 }
 
+//TODO: change this to stop returning passwords (BLOCKED till vault + consul is done)
 func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(creds)
@@ -78,29 +78,39 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //TODO: possibly take this out into a util class where it can convert data from any file into struct? What about protobuf?
-//reads config file in current directory if it exists
+//reads config file in current directory if it exists, exits if file is unparseable or doesn't exist
 func ReadConfig() {
 	config := &models.ConfigYaml{}
 	configFile, err := ioutil.ReadFile(models.ConfigFileName)
 	if err != nil {
 		ocelog.LogErrField(err)
+		return
 	}
 	err = yaml.Unmarshal(configFile, config)
 	if err != nil {
 		ocelog.LogErrField(err)
+		return
 	}
 	for configKey, configVal := range config.Credentials {
 		configVal.ConfigId = configKey
-		creds[configKey] = configVal
 		configChannel <- configVal
 	}
 }
 
-//when new configurations are added to the config channel, create bitbucket client
+//when new configurations are added to the config channel, create bitbucket client and webhooks
 func ListenForConfig() {
 	for config := range configChannel {
 		ocelog.Log().Debug("received new config", config)
-		go handler.Bitbucket{}.Subscribe(config)
+		handler := handler.Bitbucket{}
+		ok := handler.SetMeUP(&config)
+
+		if !ok {
+			ocelog.Log().Error("could not setup bitbucket client")
+			continue
+		}
+
+		go handler.Walk()
+		creds[config.ConfigId] = config
 	}
 }
 

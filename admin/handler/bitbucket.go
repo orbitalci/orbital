@@ -11,6 +11,7 @@ import (
 	"github.com/shankj3/ocelot/util/ocenet"
 	pb "github.com/shankj3/ocelot/protos/out"
 	"golang.org/x/oauth2/clientcredentials"
+	"errors"
 )
 
 const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
@@ -21,21 +22,24 @@ const BitbucketRepoBaseV1 = "https://api.bitbucket.org/1.0/repositories/%s"
 type Bitbucket struct {
 	Client    ocenet.HttpClient
 	Marshaler jsonpb.Marshaler
+
+	credConfig	*models.AdminConfig
+	isInitialized	bool
 }
 
-// Takes in admin config creds, sets Client and Marshaler Attributes
-func (bb *Bitbucket) SetMeUP(adminConfig *models.AdminConfig) {
-	var conf = clientcredentials.Config{
+//TODO: why is up in all lowercase?
+// Takes in admin config creds, return true if successful, false if fails
+func (bb *Bitbucket) SetMeUP(adminConfig *models.AdminConfig) bool {
+	var conf = clientcredentials.Config {
 		ClientID:     adminConfig.ClientId,
 		ClientSecret: adminConfig.ClientSecret,
 		TokenURL:     adminConfig.TokenURL,
 	}
 	var ctx = context.Background()
-	token, err := conf.Token(ctx)
-	ocelog.Log().Debug("access token: ", token)
+	_, err := conf.Token(ctx)
 	if err != nil {
-		//TODO: change so that invalid token doesn't crash the whole program
-		ocelog.LogErrField(err).Fatal("well shit we can't get a token")
+		ocelog.LogErrField(err).Error("well shit we can't get a token")
+		return false
 	}
 
 	bitbucketClient := ocenet.HttpClient{}
@@ -45,16 +49,22 @@ func (bb *Bitbucket) SetMeUP(adminConfig *models.AdminConfig) {
 		AllowUnknownFields: true,
 	}
 
+	//populate fields
 	bb.Client = bitbucketClient
 	bb.Marshaler = jsonpb.Marshaler{}
+	bb.credConfig = adminConfig
+	bb.isInitialized = true
+	return true
 }
 
-//Subscribe takes in a set of configurations and will kick off
-//iterating over repositories
-func (bb Bitbucket) Subscribe(adminConfig models.AdminConfig) {
-	ocelog.Log().Debug("inside of subscribe", adminConfig)
-	bb.SetMeUP(&adminConfig)
-	bb.recurseOverRepos(fmt.Sprintf(BitbucketRepoBase, adminConfig.AcctName))
+//Walk iterates over all repositories and creates webhook if one doesn't
+//exist. Will only work if client has been setup
+func (bb Bitbucket) Walk() error {
+	if !bb.isInitialized {
+		return errors.New("client has not yet been initialized, please call SetMeUP() before walking")
+	}
+	bb.recurseOverRepos(fmt.Sprintf(BitbucketRepoBase, bb.credConfig.AcctName))
+	return nil
 }
 
 // Get File in repo at a certain commit.
@@ -80,7 +90,7 @@ func (bb Bitbucket) notSetUP() bool {
 	return bb.Client == (ocenet.HttpClient{}) || bb.Marshaler == (jsonpb.Marshaler{})
 }
 
-//recursively iterates over all repositories
+//recursively iterates over all repositories and creates webhook
 func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	if repoUrl == "" {
 		return
@@ -89,25 +99,8 @@ func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	bb.Client.GetUrl(repoUrl, repositories)
 	for _, v := range repositories.GetValues() {
 		fmt.Printf("found repo %v\n", v.GetFullName())
-		bb.recurseOverFiles(v.GetLinks().GetSource().GetHref(), v.GetLinks().GetHooks().GetHref())
-	}
-	bb.recurseOverRepos(repositories.GetNext())
-}
-
-//recursively iterates over all source files trying to find build file
-func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) {
-	if sourceFileUrl == "" {
-		return
-	}
-	repositories := &pb.PaginatedRootDirs{}
-	bb.Client.GetUrl(sourceFileUrl, repositories)
-	for _, v := range repositories.GetValues() {
-		if v.GetType() == "commit_file" &&
-			len(v.GetAttributes()) == 0 &&
-			v.GetPath() == models.BuildFileName &&
-			!bb.doesWebhookExist(webhookUrl) {
-
-			//create webhook if one does not already exist and there is a ocelot.yml file in source directory
+		if !bb.doesWebhookExist(v.GetLinks().GetHooks().GetHref()) {
+			//create webhook if one does not already exist
 			newWebhook := &pb.CreateWebhook{
 				Description: "marianne did this",
 				Url:         models.WebhookCallbackURL,
@@ -118,15 +111,14 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) {
 			if err != nil {
 				ocelog.LogErrField(err).Fatal("failed to convert webhook to json string")
 			}
-			bb.Client.PostUrl(webhookUrl, webhookStr, nil)
-			ocelog.Log().Debug("subscribed to webhook for ", webhookUrl)
-
+			bb.Client.PostUrl(v.GetLinks().GetHooks().GetHref(), webhookStr, nil)
+			ocelog.Log().Debug("subscribed to webhook for ", v.GetLinks().GetHooks().GetHref())
 		}
 	}
-	bb.recurseOverFiles(repositories.GetNext(), webhookUrl)
+	bb.recurseOverRepos(repositories.GetNext())
 }
 
-//recursively iterates over all webhooks and returns true if one already exists
+//recursively iterates over all webhooks and returns true (matches our callback url) if one already exists
 func (bb Bitbucket) doesWebhookExist(getWebhookURL string) bool {
 	if getWebhookURL == "" {
 		return false

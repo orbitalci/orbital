@@ -1,11 +1,6 @@
 credentials:
   marianne:
-      clientId: abc
+      clientId: wSfJHcfpHP4dzHv8ak
       clientSecret: jQqXJmn52wupDzqSheckKu62NqpvnFuR
       tokenURL: https://bitbucket.org/site/oauth2/access_token
       acctName: mariannefeng
-  l11:
-      clientId: DEF
-      clientSecret: xGYhTtrDJx46kghMHujQhRSZBhHJZtwt
-      tokenURL: https://bitbucket.org/site/oauth2/access_token
-      acctName: level11consulting
