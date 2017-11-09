@@ -130,7 +130,7 @@ func SetupCredentials(config *models.AdminConfig) ([]byte, error) {
 		ocelog.Log().Error("could not setup bitbucket client")
 
 		errJson := &ocenet.HttpError{
-			Status: http.StatusBadRequest,
+			Status: http.StatusUnprocessableEntity,
 			Error: "Could not setup bitbucket client for " + config.ConfigId,
 			ErrorDetail: err.Error(),
 		}
@@ -146,7 +146,7 @@ func SetupCredentials(config *models.AdminConfig) ([]byte, error) {
 	if err != nil {
 
 		errJson := &ocenet.HttpError{
-			Status: http.StatusBadRequest,
+			Status: http.StatusUnprocessableEntity,
 			Error: "Could not traverse repositories and create necessary webhooks for " + config.ConfigId,
 			ErrorDetail: err.Error(),
 		}
