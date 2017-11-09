@@ -27,7 +27,7 @@ type Bitbucket struct {
 	isInitialized	bool
 }
 
-// Takes in admin config creds, return true if successful, false if fails
+// Takes in admin config creds, returns any errors that may happen during setup
 func (bb *Bitbucket) SetMeUp(adminConfig *models.AdminConfig) error {
 	var conf = clientcredentials.Config {
 		ClientID:     adminConfig.ClientId,
