@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/ocelog"
-	"github.com/shankj3/ocelot/ocenet"
+	"github.com/shankj3/ocelot/util/ocelog"
+	"github.com/shankj3/ocelot/util/ocenet"
 	pb "github.com/shankj3/ocelot/protos/out"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -34,6 +34,7 @@ func (bb *Bitbucket) SetMeUP(adminConfig *models.AdminConfig) {
 	token, err := conf.Token(ctx)
 	ocelog.Log().Debug("access token: ", token)
 	if err != nil {
+		//TODO: change so that invalid token doesn't crash the whole program
 		ocelog.LogErrField(err).Fatal("well shit we can't get a token")
 	}
 

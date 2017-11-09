@@ -2,18 +2,24 @@ package main
 
 import (
 	"encoding/json"
+	"gopkg.in/yaml.v2"
 	"github.com/gorilla/mux"
 	"gopkg.in/go-playground/validator.v9"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/google/uuid"
-	"github.com/shankj3/ocelot/ocelog"
+	"github.com/shankj3/ocelot/util/ocenet"
+	"github.com/shankj3/ocelot/util/ocelog"
 	"net/http"
 	"os"
-	"github.com/shankj3/ocelot/ocenet"
+	"io/ioutil"
+	"github.com/google/uuid"
 )
 
 //TODO: write the part that parses config file
+//TODO: write the part that talks to consul
+//TODO: creates webhoook for every single repo that it knows about
+//TODO: hook admin code into vault
+//TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
 
 //TODO: this will eventually get moved to secrets and/or consul and not be in memory map
 var creds = map[string]models.AdminConfig{}
@@ -29,8 +35,16 @@ func main() {
 	}
 
 	go ListenForConfig()
+	ReadConfig()
+
 
 	mux := mux.NewRouter()
+	//TODO: seems like maybe this should be command line tool instead - wait for Abby
+		//list all configs
+		//list all repos + 'tracked' repos vs. 'untracked' repos
+		//add new repo
+		//configure whether or not you want admin to discover new ocelot.yaml files for you
+
 	mux.HandleFunc("/", ConfigHandler).Methods("POST")
 	mux.HandleFunc("/", ListConfigHandler).Methods("GET")
 	ocelog.Log().Fatal(http.ListenAndServe(":" + port, mux))
@@ -60,11 +74,29 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	creds[adminConfig.ConfigId] = adminConfig
-	go func() {
-		configChannel <- adminConfig
-	}()
+	configChannel <- adminConfig
 }
 
+//TODO: possibly take this out into a util class where it can convert data from any file into struct? What about protobuf?
+//reads config file in current directory if it exists
+func ReadConfig() {
+	config := &models.ConfigYaml{}
+	configFile, err := ioutil.ReadFile(models.ConfigFileName)
+	if err != nil {
+		ocelog.LogErrField(err)
+	}
+	err = yaml.Unmarshal(configFile, config)
+	if err != nil {
+		ocelog.LogErrField(err)
+	}
+	for configKey, configVal := range config.Credentials {
+		configVal.ConfigId = configKey
+		creds[configKey] = configVal
+		configChannel <- configVal
+	}
+}
+
+//when new configurations are added to the config channel, create bitbucket client
 func ListenForConfig() {
 	for config := range configChannel {
 		ocelog.Log().Debug("received new config", config)
@@ -72,6 +104,7 @@ func ListenForConfig() {
 	}
 }
 
+//validates config and returns json formatted error
 func validateConfig(adminConfig *models.AdminConfig) ([]byte, error) {
 	err := validate.Struct(adminConfig)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
     "time"
 
     _ "github.com/lib/pq"
-    "github.com/shankj3/ocelot/ocelog"
+    "github.com/shankj3/ocelot/util/ocelog"
     // for pretty printing objects:
     // "github.com/davecgh/go-spew/spew"
 )

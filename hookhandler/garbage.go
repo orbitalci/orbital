@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/ghodss/yaml"
 	"github.com/golang/protobuf/proto"
-	lg "github.com/shankj3/ocelot/ocelog"
+	lg "github.com/shankj3/ocelot/util/ocelog"
 	"io/ioutil"
 )
 

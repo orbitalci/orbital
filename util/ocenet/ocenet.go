@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
-	"github.com/shankj3/ocelot/ocelog"
+	"github.com/shankj3/ocelot/util/ocelog"
 	"io/ioutil"
 	"net/http"
 )

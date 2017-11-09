@@ -4,7 +4,7 @@ import (
     "fmt"
     "github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
-    "github.com/shankj3/ocelot/ocelog"
+    "github.com/shankj3/ocelot/util/ocelog"
     "os"
 )
 
