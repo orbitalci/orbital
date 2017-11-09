@@ -9,8 +9,9 @@ import (
 	"github.com/shankj3/ocelot/admin/models"
 	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/ocelog"
+	"github.com/shankj3/ocelot/util/consulet"
+	"github.com/namsral/flag"
 	"net/http"
-	"os"
 	"io/ioutil"
 	"github.com/google/uuid"
 )
@@ -23,19 +24,35 @@ import (
 var creds = map[string]models.AdminConfig{}
 var configChannel = make(chan models.AdminConfig)
 var validate = validator.New()
+var consul = consulet.Default()
 
 func main() {
-	ocelog.InitializeOcelog("debug")
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-		ocelog.Log().Warn("Running on default port 8080")
+	//load properties
+	var port string
+	var consulHost string
+	var consulPort int
+	var logLevel string
+
+	flag.StringVar(&port, "port", "8080", "admin server port")
+	flag.StringVar(&consulHost, "consul-host", "localhost", "consul host")
+	flag.IntVar(&consulPort, "consul-port", 8500, "consul port")
+	flag.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
+	flag.Parse()
+
+	ocelog.InitializeOcelog(logLevel)
+
+	//register to consul
+	err := consul.RegisterService("localhost", 8080, "ocelot-admin")
+	if err != nil {
+		ocelog.LogErrField(err)
 	}
 
+	//check for config on load
 	go ListenForConfig()
 	ReadConfig()
 
 
+	//start http server
 	mux := mux.NewRouter()
 	//TODO: seems like maybe this should be command line tool instead - wait for Abby
 		//list all configs
