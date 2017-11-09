@@ -85,12 +85,30 @@ func (bb Bitbucket) GetFile(filePath string, fullRepoName string, commitHash str
 	return
 }
 
+//CreateWebhook will create webhook at specified webhook url
+func (bb Bitbucket) CreateWebhook(webhookURL string) {
+	if !bb.doesWebhookExist(webhookURL) {
+		//create webhook if one does not already exist
+		newWebhook := &pb.CreateWebhook{
+			Description: "marianne did this",
+			Url:         models.WebhookCallbackURL,
+			Active:      true,
+			Events:      []string{"repo:push"},
+		}
+		webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
+		if err != nil {
+			ocelog.LogErrField(err).Fatal("failed to convert webhook to json string")
+		}
+		bb.Client.PostUrl(webhookURL, webhookStr, nil)
+		ocelog.Log().Debug("subscribed to webhook for ", webhookURL)
+	}
+}
+
 func (bb Bitbucket) notSetUP() bool {
 	return bb.Client == (ocenet.HttpClient{}) || bb.Marshaler == (jsonpb.Marshaler{})
 }
 
 //recursively iterates over all repositories and creates webhook
-//TODO: create function that creates webhooks
 func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	if repoUrl == "" {
 		return
@@ -99,21 +117,7 @@ func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	bb.Client.GetUrl(repoUrl, repositories)
 	for _, v := range repositories.GetValues() {
 		fmt.Printf("found repo %v\n", v.GetFullName())
-		if !bb.doesWebhookExist(v.GetLinks().GetHooks().GetHref()) {
-			//create webhook if one does not already exist
-			newWebhook := &pb.CreateWebhook{
-				Description: "marianne did this",
-				Url:         models.WebhookCallbackURL,
-				Active:      true,
-				Events:      []string{"repo:push"},
-			}
-			webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
-			if err != nil {
-				ocelog.LogErrField(err).Fatal("failed to convert webhook to json string")
-			}
-			bb.Client.PostUrl(v.GetLinks().GetHooks().GetHref(), webhookStr, nil)
-			ocelog.Log().Debug("subscribed to webhook for ", v.GetLinks().GetHooks().GetHref())
-		}
+		bb.CreateWebhook(v.GetLinks().GetHooks().GetHref())
 	}
 	bb.recurseOverRepos(repositories.GetNext())
 }
