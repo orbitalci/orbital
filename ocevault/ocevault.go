@@ -9,15 +9,15 @@ import (
 )
 
 // VaultCIPath is the base path for vault. Will be formatted to include the user or group when
-// setting or retrieving credentials. 
+// setting or retrieving credentials.
 var VaultCIPath = "secrets/ci/%s"
 var Token = "04eeeacd-5846-36cb-f885-cf9700d84f45"
 
 // NewEnvAuthedClient will set the Client token based on the environment variable `$VAULT_TOKEN`.
 // Will return error if it is not set.
 func NewEnvAuthClient() (*api.Client, error) {
-	token := os.Getenv("VAULT_TOKEN")
-	if token == "" {
+	var token string
+	if token = os.Getenv("VAULT_TOKEN"); token == "" {
 		return &api.Client{}, errors.New("$VAULT_TOKEN not set")
 	}
 	return NewAuthedClient(token)
@@ -35,14 +35,12 @@ func NewAuthedClient(token string) (cli *api.Client, err error) {
 	return
 }
 
-
 // AddUserAuthData will add the values of the data map to the path of the CI user creds
 // CI vault path set off of base path VaultCIPath
 // Expects that the Client is already initialized properly, will error out if not.
 func AddUserAuthData(cli *api.Client, user string, data map[string]interface{}) (*api.Secret, error){
 	return cli.Logical().Write(fmt.Sprintf(VaultCIPath, user), data)
 }
-
 
 // GetSecretData will return the Data attribute of the secret you get at the path of the CI user creds, ie all the
 // key-value fields that were set on it. Expects that the Client is already initialized properly (has the
