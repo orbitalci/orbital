@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"gopkg.in/yaml.v2"
 	"github.com/gorilla/mux"
 	"gopkg.in/go-playground/validator.v9"
 	"github.com/shankj3/ocelot/admin/handler"
@@ -10,6 +9,7 @@ import (
 	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/consulet"
+	"github.com/shankj3/ocelot/util/deserialize"
 	"github.com/namsral/flag"
 	"net/http"
 	"io/ioutil"
@@ -20,11 +20,13 @@ import (
 //TODO: hook admin code into vault
 //TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
 
+
 //TODO: this will eventually get moved to secrets and/or consul and not be in memory map
 var creds = map[string]models.AdminConfig{}
 var configChannel = make(chan models.AdminConfig)
 var validate = validator.New()
 var consul = consulet.Default()
+var deserializer = deserialize.New()
 
 func main() {
 	//load properties
@@ -71,6 +73,7 @@ func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(creds)
 }
 
+//TODO: think about how to return errors back from bitbucket's set me up method
 func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	var adminConfig models.AdminConfig
 	_ = json.NewDecoder(r.Body).Decode(&adminConfig)
@@ -93,7 +96,6 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	configChannel <- adminConfig
 }
 
-//TODO: possibly take this out into a util class where it can convert data from any file into struct? What about protobuf?
 //reads config file in current directory if it exists, exits if file is unparseable or doesn't exist
 func ReadConfig() {
 	config := &models.ConfigYaml{}
@@ -102,7 +104,7 @@ func ReadConfig() {
 		ocelog.LogErrField(err)
 		return
 	}
-	err = yaml.Unmarshal(configFile, config)
+	err = deserializer.YAMLToStruct(configFile, config)
 	if err != nil {
 		ocelog.LogErrField(err)
 		return
@@ -118,7 +120,7 @@ func ListenForConfig() {
 	for config := range configChannel {
 		ocelog.Log().Debug("received new config", config)
 		handler := handler.Bitbucket{}
-		ok := handler.SetMeUP(&config)
+		ok := handler.SetMeUp(&config)
 
 		if !ok {
 			ocelog.Log().Error("could not setup bitbucket client")

@@ -27,9 +27,8 @@ type Bitbucket struct {
 	isInitialized	bool
 }
 
-//TODO: why is up in all lowercase?
 // Takes in admin config creds, return true if successful, false if fails
-func (bb *Bitbucket) SetMeUP(adminConfig *models.AdminConfig) bool {
+func (bb *Bitbucket) SetMeUp(adminConfig *models.AdminConfig) bool {
 	var conf = clientcredentials.Config {
 		ClientID:     adminConfig.ClientId,
 		ClientSecret: adminConfig.ClientSecret,
@@ -61,7 +60,7 @@ func (bb *Bitbucket) SetMeUP(adminConfig *models.AdminConfig) bool {
 //exist. Will only work if client has been setup
 func (bb Bitbucket) Walk() error {
 	if !bb.isInitialized {
-		return errors.New("client has not yet been initialized, please call SetMeUP() before walking")
+		return errors.New("client has not yet been initialized, please call SetMeUp() before walking")
 	}
 	bb.recurseOverRepos(fmt.Sprintf(BitbucketRepoBase, bb.credConfig.AcctName))
 	return nil
@@ -91,6 +90,7 @@ func (bb Bitbucket) notSetUP() bool {
 }
 
 //recursively iterates over all repositories and creates webhook
+//TODO: create function that creates webhooks
 func (bb Bitbucket) recurseOverRepos(repoUrl string) {
 	if repoUrl == "" {
 		return
