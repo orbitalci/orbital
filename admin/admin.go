@@ -48,9 +48,7 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	errorMsg, err := validateConfig(&adminConfig)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(errorMsg)
+		ocenet.JSONApiError(w, errorMsg, err)
 		return
 	}
 
@@ -72,7 +70,7 @@ func ListenForConfig() {
 	}
 }
 
-func validateConfig(adminConfig *models.AdminConfig) ([]byte, error) {
+func validateConfig(adminConfig *models.AdminConfig) (string, error) {
 	err := validate.Struct(adminConfig)
 	if err != nil {
 		var errorMsg string
@@ -80,17 +78,7 @@ func validateConfig(adminConfig *models.AdminConfig) ([]byte, error) {
 			errorMsg = nestedErr.Field() + " is " + nestedErr.Tag()
 			ocelog.Log().Warn(errorMsg)
 		}
-
-		errJson := &ocenet.HttpError{
-			Status: http.StatusBadRequest,
-			Error: errorMsg,
-		}
-
-		convertedError, nestedErr := json.Marshal(errJson)
-		if nestedErr != nil {
-			ocelog.LogErrField(err)
-		}
-		return convertedError, err
+		return errorMsg, err
 	}
-	return nil, nil
+	return "", nil
 }
