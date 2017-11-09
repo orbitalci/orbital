@@ -13,6 +13,20 @@ import (
 var VaultCIPath = "secrets/ci/%s"
 var Token = "04eeeacd-5846-36cb-f885-cf9700d84f45"
 
+// Some blog said that changing any *api.Client functions to take in a n interface instead
+// will make testing easier. I agree, just have to figure out how to do this properly without
+// wasting memory
+
+//type ApiClient interface {
+//	Logical() *ApiLo
+//
+//}
+//
+//type ApiLogical interface {
+//	Read(path string) (*api.Secret, error)
+//	Write(path string, data map[string]interface{}) (*api.Secret, error)
+//}
+
 // NewEnvAuthedClient will set the Client token based on the environment variable `$VAULT_TOKEN`.
 // Will return error if it is not set.
 func NewEnvAuthClient() (*api.Client, error) {
