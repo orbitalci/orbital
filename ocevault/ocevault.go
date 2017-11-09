@@ -10,8 +10,8 @@ import (
 
 // VaultCIPath is the base path for vault. Will be formatted to include the user or group when
 // setting or retrieving credentials.
-var VaultCIPath = "secrets/ci/%s"
-var Token = "04eeeacd-5846-36cb-f885-cf9700d84f45"
+var VaultCIPath = "secrets/ci/creds/%s"
+var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
 
 // Some blog said that changing any *api.Client functions to take in a n interface instead
 // will make testing easier. I agree, just have to figure out how to do this properly without
