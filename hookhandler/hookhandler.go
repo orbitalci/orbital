@@ -33,6 +33,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		SetHttpError(w, "unable to get build conf", err)
 		return
 	}
+	// instead, add to topic. each worker gets a topic off a channel
 	bundle := &pb.PushBuildBundle{
 		Config:     buildConf,
 		PushData:   repopush,

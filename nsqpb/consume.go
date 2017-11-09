@@ -41,7 +41,7 @@ func ConsumeMessages(p *ProtoConsume, topicName string, channelName string) erro
     return nil
 }
 
-// Class for essentially wrapping the nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
+// ProtoConsume wraps nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
 // that doesn't require messing with nsq fields. just write a function that unmarshals to your proto object
 // and does work
 // ...put in WORK.
