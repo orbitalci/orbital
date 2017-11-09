@@ -34,7 +34,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// instead, add to topic. each worker gets a topic off a channel,
-	// so one worker to one channel 
+	// so one worker to one channel
 	bundle := &pb.PushBuildBundle{
 		Config:     buildConf,
 		PushData:   repopush,

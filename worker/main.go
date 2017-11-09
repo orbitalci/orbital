@@ -37,5 +37,5 @@ func main() {
     ocelog.InitializeOcelog(ocelog.GetFlags())
     protoConsume := &nsqpb.ProtoConsume{}
     protoConsume.UnmarshalProtoFunc = HandleRepoPushMessage
-    nsqpb.ConsumeMessages(protoConsume, "repo_push", "one")
+    protoConsume.ConsumeMessages("repo_push", "one")
 }
