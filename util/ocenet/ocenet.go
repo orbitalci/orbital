@@ -19,26 +19,33 @@ type HttpClient struct {
 }
 
 //GetUrl will perform a GET on the specified URL and return the appropriate protobuf response
-func (hu HttpClient) GetUrl(url string, unmarshalObj proto.Message) {
+func (hu HttpClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	resp, err := hu.AuthClient.Get(url)
+	defer resp.Body.Close()
 	if err != nil {
 		ocelog.LogErrField(err).Error("can't get url ", url)
+		return err
 	}
 	reader := bufio.NewReader(resp.Body)
 
 	if err := hu.Unmarshaler.Unmarshal(reader, unmarshalObj); err != nil {
 		ocelog.LogErrField(err).Error("failed to parse response from ", url)
+		return err
 	}
-	defer resp.Body.Close()
+
+	return nil
 }
 
 //PostUrl will perform a post on the specified URL. It takes in a json formatted body
 //and returns an (optional) protobuf response
-func (hu HttpClient) PostUrl(url string, body string, unmarshalObj proto.Message) {
+func (hu HttpClient) PostUrl(url string, body string, unmarshalObj proto.Message) error {
 	bodyBytes := []byte(body)
 	resp, err := hu.AuthClient.Post(url, "application/json", bytes.NewBuffer(bodyBytes))
+	defer resp.Body.Close()
+
 	if err != nil {
 		ocelog.LogErrField(err).Error("can't post to url ", url)
+		return err
 	}
 
 	if unmarshalObj != nil {
@@ -46,11 +53,12 @@ func (hu HttpClient) PostUrl(url string, body string, unmarshalObj proto.Message
 
 		if err := hu.Unmarshaler.Unmarshal(reader, unmarshalObj); err != nil {
 			ocelog.LogErrField(err).Error("failed to parse response from ", url)
+			return err
 		}
 	} else {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		ocelog.Log().Debug(string(respBody))
 	}
 
-	defer resp.Body.Close()
+	return nil
 }
