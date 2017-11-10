@@ -14,6 +14,14 @@ import (
 // ...put in WORK.
 type ProtoConsume struct {
     UnmarshalProtoFunc func([]byte) error
+    DecodeConfig *nsq.Config
+}
+
+func NewProtoConsume() *ProtoConsume {
+    config := nsq.NewConfig()
+    return &ProtoConsume{
+        DecodeConfig: config,
+    }
 }
 
 // Actual wrapper for UnmarshalProtoFunc --> nsq.HandlerFunc
@@ -32,8 +40,7 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
     wg := &sync.WaitGroup{}
     wg.Add(1)
 
-    decodeConfig := nsq.NewConfig()
-    c, err := nsq.NewConsumer(topicName, channelName, decodeConfig)
+    c, err := nsq.NewConsumer(topicName, channelName, p.DecodeConfig)
     if err != nil {
         ocelog.IncludeErrField(err).Warn("cannot create nsq consumer")
         return err
