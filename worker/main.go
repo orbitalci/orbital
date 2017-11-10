@@ -12,8 +12,8 @@ package main
 import (
     "github.com/golang/protobuf/proto"
     // "github.com/shankj3/ocelot/dockering"
-    "github.com/shankj3/ocelot/nsqpb"
-    "github.com/shankj3/ocelot/ocelog"
+    "github.com/shankj3/ocelot/util/nsqpb"
+    "github.com/shankj3/ocelot/util/ocelog"
     pb "github.com/shankj3/ocelot/protos/out"
 )
 

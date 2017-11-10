@@ -1,0 +1,51 @@
+{
+  "pagelen": 10,
+  "values": [
+    {
+      "scm": "git",
+      "website": "",
+      "has_wiki": false,
+      "name": "test-ocelot",
+      "links": {
+        "hooks": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mariannefeng/test-ocelot/hooks"
+        }
+      },
+      "fork_policy": "no_public_forks",
+      "uuid": "{c654b6c9-5cf1-4e27-8803-76efc6f70a6b}",
+      "language": "",
+      "created_on": "2017-11-03T23:08:16.268860+00:00",
+      "mainbranch": {
+        "type": "branch",
+        "name": "master"
+      },
+      "full_name": "mariannefeng/test-ocelot",
+      "has_issues": false,
+      "owner": {
+        "username": "mariannefeng",
+        "display_name": "Marianne Feng",
+        "type": "user",
+        "uuid": "{f968b81f-2e08-4f48-a400-c8141afa6d10}",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/users/mariannefeng"
+          },
+          "html": {
+            "href": "https://bitbucket.org/mariannefeng/"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/account/mariannefeng/avatar/32/"
+          }
+        }
+      },
+      "updated_on": "2017-11-03T23:09:57.891659+00:00",
+      "size": 62962,
+      "type": "repository",
+      "slug": "test-ocelot",
+      "is_private": true,
+      "description": ""
+    }
+  ],
+  "page": 1,
+  "size": 1
+}

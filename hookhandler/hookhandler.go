@@ -1,30 +1,28 @@
 package main
 
 import (
-	"encoding/json"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/nsqpb"
-	"github.com/shankj3/ocelot/ocelog"
+	"github.com/shankj3/ocelot/util/nsqpb"
+	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/ocenet"
+	"github.com/shankj3/ocelot/util/deserialize"
 	pb "github.com/shankj3/ocelot/protos/out"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
-	"io"
 	"net/http"
 	"os"
 )
 
 const BuildTopic = "repo_build"
+var deserializer = deserialize.New()
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
 func RepoPush(w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
-	if err := HandleUnmarshal(r.Body, repopush); err != nil {
+	if deserializer.JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, "could not parse request body into proto.Message", err)
 	}
 
@@ -46,7 +44,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 
 func PullRequest(w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
-	if err := HandleUnmarshal(r.Body, pr); err != nil {
+	if err := deserializer.JSONToProto(r.Body, pr); err != nil {
 		ocenet.JSONApiError(w, "could not parse request body into proto.Message", err)
 		return
 	}
@@ -66,18 +64,6 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func HandleUnmarshal(requestBody io.ReadCloser, unmarshalObj proto.Message) (err error){
-	unmarshaler := &jsonpb.Unmarshaler{
-		AllowUnknownFields: true,
-	}
-	if err := unmarshaler.Unmarshal(requestBody, unmarshalObj); err != nil {
-		//ocelog.LogErrField(err).Fatal("could not parse request body into proto.Message")
-		return
-	}
-	defer requestBody.Close()
-	return
-}
-
 // for testing
 // irl... use vault
 func getCredConfig() models.AdminConfig {
@@ -93,13 +79,13 @@ func getCredConfig() models.AdminConfig {
 func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	cfg := getCredConfig()
 	bb := handler.Bitbucket{}
-	bb.SetMeUP(&cfg)
+	bb.SetMeUp(&cfg)
 	confstr, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return
 	}
 	conf = &pb.BuildConfig{}
-	if err = ConvertYAMLtoProtobuf([]byte(confstr), conf); err != nil {
+	if err = deserializer.YAMLToProto([]byte(confstr), conf); err != nil {
 		return
 	}
 	return

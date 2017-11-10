@@ -1,0 +1,6 @@
+credentials:
+  marianne:
+      clientId: abc
+      clientSecret: abcd
+      tokenURL: abcdef
+      acctName: abcdefg
