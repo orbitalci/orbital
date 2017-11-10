@@ -11,7 +11,7 @@ func JSONApiError(w http.ResponseWriter, statusCode int, errorDesc string, err e
 	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
 	resterr := ApiHttpError{
-		Error: err,
+		Error: err.Error(),
 		ErrorDescription: errorDesc,
 	}
 	json.NewEncoder(w).Encode(resterr)
