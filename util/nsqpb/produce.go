@@ -8,12 +8,13 @@ import (
     "os"
 )
 
+var config = nsq.NewConfig()
+
 // Write Protobuf Message to an NSQ topic with name topicName
 // Gets the ip of the NSQ daemon from either the environment variable
 //  `NSQD_IP` or sets it to 127.0.0.1. the NSQ daemon should run alongside
 // any service that produces messages, so this will work usually.
 func WriteToNsq(message proto.Message, topicName string) error {
-    config := nsq.NewConfig()
     // there *should* be a nsqd running at same place as service posting.
     var ip_address string
     if ip_address = os.Getenv("NSQD_IP"); ip_address == "" {
@@ -23,7 +24,7 @@ func WriteToNsq(message proto.Message, topicName string) error {
     }
     p, err := nsq.NewProducer(fmt.Sprintf("%s:4150", ip_address), config)
     if err != nil {
-        ocelog.LogErrField(err).Fatal("producer create error")
+        ocelog.IncludeErrField(err).Fatal("producer create error")
         return err
     }
     p.SetLogger(NewNSQLoggerAtLevel(ocelog.GetLogLevel()))
@@ -31,7 +32,7 @@ func WriteToNsq(message proto.Message, topicName string) error {
     var data []byte
     data, err = proto.Marshal(message)
     if err != nil {
-        ocelog.LogErrField(err).Warn("proto marshal error")
+        ocelog.IncludeErrField(err).Warn("proto marshal error")
         return err
     }
     err = p.Publish(topicName, data)

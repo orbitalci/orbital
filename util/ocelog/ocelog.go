@@ -2,7 +2,7 @@
 Way to have one style of logging for the project. Initialize in your service w/ InitializeOcelog(), uses a JSONFormatter.
 use ocelog.Log() to log with extra field of the function called.
 
-todo: add common log functions, right now there is only LogErrField which adds the error: <error text> to the json log.
+todo: add common log functions, right now there is only IncludeErrField which adds the error: <error text> to the json log.
 
 */
 package ocelog
@@ -22,8 +22,11 @@ func Log() *log.Entry {
 	return log.WithFields(GetDefaultFields())
 }
 
-// Add the 'error' field w/ the error object to the Log Entry.
-func LogErrField(err error) *log.Entry {
+// Add the 'error' field w/ the error object to the Log Entry. This still requires setting a
+// Info/warning/w/e message
+// Example:
+//   ocelog.IncludeErrField(err).Error("booo code made an error")
+func IncludeErrField(err error) *log.Entry {
 	return Log().WithField("error", err)
 }
 
@@ -43,7 +46,7 @@ func GetLogLevel() log.Level {
 // configure default Logger to log in JSON format.
 func InitializeOcelog(logLevel string) {
 	if loglevel, err := log.ParseLevel(logLevel); err != nil {
-		LogErrField(err).Fatal()
+		IncludeErrField(err).Fatal()
 	} else {
 		log.SetLevel(loglevel)
 	}

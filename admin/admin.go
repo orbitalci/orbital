@@ -23,7 +23,6 @@ import (
 
 //TODO: this will eventually get moved to secrets and/or consul and not be in memory map
 var creds = map[string]*models.AdminConfig{}
-var configChannel = make(chan models.AdminConfig)
 var validate = validator.New()
 var consul = consulet.Default()
 var deserializer = deserialize.New()
@@ -46,7 +45,7 @@ func main() {
 	//register to consul
 	err := consul.RegisterService("localhost", 8080, "ocelot-admin")
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 	}
 
 	//check for config on load
@@ -79,9 +78,7 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	errorMsg, err := validateConfig(&adminConfig)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(errorMsg)
+		ocenet.JSONApiError(w, http.StatusBadRequest, errorMsg, err)
 		return
 	}
 
@@ -92,9 +89,7 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	errorMsg, err = SetupCredentials(&adminConfig)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		w.Write(errorMsg)
+		ocenet.JSONApiError(w, http.StatusUnprocessableEntity, errorMsg, err)
 		return
 	}
 
@@ -105,65 +100,43 @@ func ReadConfig() {
 	config := &models.ConfigYaml{}
 	configFile, err := ioutil.ReadFile(models.ConfigFileName)
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 		return
 	}
 	err = deserializer.YAMLToStruct(configFile, config)
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 		return
 	}
 	for configKey, configVal := range config.Credentials {
 		configVal.ConfigId = configKey
 
 		_, err = SetupCredentials(&configVal)
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 	}
 }
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
-func SetupCredentials(config *models.AdminConfig) ([]byte, error) {
+func SetupCredentials(config *models.AdminConfig) (string, error) {
 	handler := handler.Bitbucket{}
 	err := handler.SetMeUp(config)
 
 	if err != nil {
 		ocelog.Log().Error("could not setup bitbucket client")
-
-		errJson := &ocenet.HttpError{
-			Status: http.StatusUnprocessableEntity,
-			Error: "Could not setup bitbucket client for " + config.ConfigId,
-			ErrorDetail: err.Error(),
-		}
-
-		convertedError, nestedErr := json.Marshal(errJson)
-		if nestedErr != nil {
-			ocelog.LogErrField(err)
-		}
-		return convertedError, err
+		return "Could not setup bitbucket client for " + config.ConfigId, err
 	}
 
 	err = handler.Walk()
 	if err != nil {
-
-		errJson := &ocenet.HttpError{
-			Status: http.StatusUnprocessableEntity,
-			Error: "Could not traverse repositories and create necessary webhooks for " + config.ConfigId,
-			ErrorDetail: err.Error(),
-		}
-
-		convertedError, nestedErr := json.Marshal(errJson)
-		if nestedErr != nil {
-			ocelog.LogErrField(err)
-		}
-		return convertedError, err
+		return "Could not traverse repositories and create necessary webhooks for " + config.ConfigId, err
 	}
 
 	creds[config.ConfigId] = config
-	return nil, nil
+	return "", nil
 }
 
 //validates config and returns json formatted error
-func validateConfig(adminConfig *models.AdminConfig) ([]byte, error) {
+func validateConfig(adminConfig *models.AdminConfig) (string, error) {
 	err := validate.Struct(adminConfig)
 	if err != nil {
 		var errorMsg string
@@ -171,18 +144,7 @@ func validateConfig(adminConfig *models.AdminConfig) ([]byte, error) {
 			errorMsg = nestedErr.Field() + " is " + nestedErr.Tag()
 			ocelog.Log().Warn(errorMsg)
 		}
-
-		errJson := &ocenet.HttpError{
-			Status: http.StatusBadRequest,
-			Error: errorMsg,
-			ErrorDetail: err.Error(),
-		}
-
-		convertedError, nestedErr := json.Marshal(errJson)
-		if nestedErr != nil {
-			ocelog.LogErrField(err)
-		}
-		return convertedError, err
+		return errorMsg, err
 	}
-	return nil, nil
+	return "", nil
 }

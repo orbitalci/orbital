@@ -23,13 +23,13 @@ func (hu HttpClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	resp, err := hu.AuthClient.Get(url)
 	defer resp.Body.Close()
 	if err != nil {
-		ocelog.LogErrField(err).Error("can't get url ", url)
+		ocelog.IncludeErrField(err).Error("can't get url ", url)
 		return err
 	}
 	reader := bufio.NewReader(resp.Body)
 
 	if err := hu.Unmarshaler.Unmarshal(reader, unmarshalObj); err != nil {
-		ocelog.LogErrField(err).Error("failed to parse response from ", url)
+		ocelog.IncludeErrField(err).Error("failed to parse response from ", url)
 		return err
 	}
 
@@ -44,7 +44,7 @@ func (hu HttpClient) PostUrl(url string, body string, unmarshalObj proto.Message
 	defer resp.Body.Close()
 
 	if err != nil {
-		ocelog.LogErrField(err).Error("can't post to url ", url)
+		ocelog.IncludeErrField(err).Error("can't post to url ", url)
 		return err
 	}
 
@@ -52,7 +52,7 @@ func (hu HttpClient) PostUrl(url string, body string, unmarshalObj proto.Message
 		reader := bufio.NewReader(resp.Body)
 
 		if err := hu.Unmarshaler.Unmarshal(reader, unmarshalObj); err != nil {
-			ocelog.LogErrField(err).Error("failed to parse response from ", url)
+			ocelog.IncludeErrField(err).Error("failed to parse response from ", url)
 			return err
 		}
 	} else {

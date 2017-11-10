@@ -36,7 +36,7 @@ Will return filepath of Dockerfile or any error generated
 func BuildImageFromDockerFile(filePath string) ([]byte, error) {
     cli, err := client.NewEnvClient()
     if err != nil {
-        ocelog.LogErrField(err).Warn("unable to init docker client")
+        ocelog.IncludeErrField(err).Warn("unable to init docker client")
         return nil, err
     }
     buf := new(bytes.Buffer)
@@ -47,7 +47,7 @@ func BuildImageFromDockerFile(filePath string) ([]byte, error) {
     dockerFileReader, err := os.Open(filePath)
     dockerfileContents, readerr := ioutil.ReadAll(dockerFileReader)
     if err != nil || readerr != nil {
-        ocelog.LogErrField(err).WithField("filePath", filePath).Warn("unable to open or read Dockerfile")
+        ocelog.IncludeErrField(err).WithField("filePath", filePath).Warn("unable to open or read Dockerfile")
         return nil, err
     }
     tarHeader := &tar.Header{
@@ -55,11 +55,11 @@ func BuildImageFromDockerFile(filePath string) ([]byte, error) {
         Size: int64(len(dockerfileContents)),
     }
     if err = tw.WriteHeader(tarHeader); err != nil {
-        ocelog.LogErrField(err).Warn("Unable to write tar header")
+        ocelog.IncludeErrField(err).Warn("Unable to write tar header")
         return nil, err
     }
     if _, err = tw.Write(dockerfileContents); err != nil {
-        ocelog.LogErrField(err).Warn("unable to write tar body")
+        ocelog.IncludeErrField(err).Warn("unable to write tar body")
         return nil, err
     }
     dockerFileTarReader := bytes.NewReader(buf.Bytes())
@@ -74,7 +74,7 @@ func BuildImageFromDockerFile(filePath string) ([]byte, error) {
         },
     )
     if err != nil {
-        ocelog.LogErrField(err).Warn("unable to build docker image")
+        ocelog.IncludeErrField(err).Warn("unable to build docker image")
         return nil, err
     }
     defer imageBuildResponse.Body.Close()
