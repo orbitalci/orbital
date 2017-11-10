@@ -88,14 +88,25 @@ func (oce *Ocevault) CreateToken(request *api.TokenCreateRequest) (token string,
 }
 
 // CreateThrowawayToken creates a single use token w/ same privileges as client.
-// todo: add ocevault role for reading the secrets/ci/user path
+// todo: add ocevault policy for reading the secrets/ci/user path
 func (oce *Ocevault) CreateThrowawayToken() (token string, err error) {
 	tokenReq := &api.TokenCreateRequest{
+		Policies: 		[]string{"ocevault"},
 		TTL:            "30m",
 		NumUses:		1,
 	}
 	//oce.Client.Auth().Token().Create(&api.})
 	return oce.CreateToken(tokenReq)
+}
+
+// CreateOcevaultPolicy creates a policy for r/w ops on only the path that credentials are on, which is `secret/ci/creds`.
+// Tokens that are one-off and passed to the workers for building will get this access.
+func (oce *Ocevault) CreateOcevaultPolicy() error {
+	err := oce.Client.Sys().PutPolicy("ocevault", "path \"secret/ci/creds\" {\n capabilities = [\"read\", \"create\", \"update\", \"delete\", \"list\"]\n}")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //

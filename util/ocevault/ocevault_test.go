@@ -1,10 +1,10 @@
 package ocevault
 
 
-////
+//
 //import (
-//	"fmt"
-//	"testing"
+//"fmt"
+//"testing"
 //)
 ////
 //// THESE TESTS ARE DEPENDENT ON VAULT INSTANCE BEING UP, VAULT_ADDR BEING SET APPROPRIATELY,
@@ -33,4 +33,14 @@ package ocevault
 //	}
 //	fmt.Println("ayyyy: ", sec)
 //
+//}
+//
+//func TestOcevault_CreateOcevaultPolicy(t *testing.T) {
+//	oce, err := NewEnvAuthClient()
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//	if err = oce.CreateOcevaultPolicy(); err != nil {
+//		t.Fatal(err)
+//	}
 //}
