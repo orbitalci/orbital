@@ -10,7 +10,7 @@ import (
 
 // VaultCIPath is the base path for vault. Will be formatted to include the user or group when
 // setting or retrieving credentials.
-var VaultCIPath = "secrets/ci/creds/%s"
+var VaultCIPath = "secret/ci/creds/%s"
 var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
 
 // Some blog said that changing any *api.Client functions to take in a n interface instead
@@ -65,15 +65,37 @@ func (oce *Ocevault) AddUserAuthData(user string, data map[string]interface{}) (
 // GetSecretData will return the Data attribute of the secret you get at the path of the CI user creds, ie all the
 // key-value fields that were set on it
 func (oce *Ocevault) GetUserAuthData(user string) (map[string]interface{}, error){
-	secret, err := oce.Client.Logical().Read(fmt.Sprintf(VaultCIPath, user))
+	path := fmt.Sprintf(VaultCIPath, user)
+	secret, err := oce.Client.Logical().Read(path)
 	if err != nil {
 		return nil, err
+	}
+	if secret == nil {
+		return nil, errors.New(fmt.Sprintf("User data not found, path searched: %s", path))
 	}
 	return secret.Data, nil
 }
 
-func (oce *Ocevault) CreateThrowawayToken() (*api.Secret, error) {
-	return nil, nil
+// CreateToken creates an Auth token using the oce.Client's creds. Look at api.TokenCreateRequest docs
+// for how to configure the token. Will return any errors from the create request.
+func (oce *Ocevault) CreateToken(request *api.TokenCreateRequest) (token string, err error) {
+	secret, err := oce.Client.Auth().Token().Create(request)
+	if err != nil {
+		return
+	}
+	token = secret.Auth.ClientToken
+	return
+}
+
+// CreateThrowawayToken creates a single use token w/ same privileges as client.
+// todo: add ocevault role for reading the secrets/ci/user path
+func (oce *Ocevault) CreateThrowawayToken() (token string, err error) {
+	tokenReq := &api.TokenCreateRequest{
+		TTL:            "30m",
+		NumUses:		1,
+	}
+	//oce.Client.Auth().Token().Create(&api.})
+	return oce.CreateToken(tokenReq)
 }
 
 //
