@@ -7,7 +7,7 @@ import (
 	"github.com/shankj3/ocelot/admin/models"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
-	"github.com/shankj3/ocelot/ocenet"
+	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/deserialize"
 	pb "github.com/shankj3/ocelot/protos/out"
 	log "github.com/sirupsen/logrus"
@@ -22,7 +22,7 @@ var deserializer = deserialize.New()
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
 func RepoPush(w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
-	if deserializer.JSONToProto(r.Body, repopush); err != nil {
+	if err := deserializer.JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, "could not parse request body into proto.Message", err)
 	}
 
