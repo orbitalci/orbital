@@ -10,9 +10,10 @@ import (
 func JSONApiError(w http.ResponseWriter, statusCode int, errorDesc string, err error) {
 	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
-	resterr := ApiHttpError{
+	restErr := ApiHttpError{
 		Error: err.Error(),
 		ErrorDescription: errorDesc,
+		Status: statusCode,
 	}
-	json.NewEncoder(w).Encode(resterr)
+	json.NewEncoder(w).Encode(restErr)
 }

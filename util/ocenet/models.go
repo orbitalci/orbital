@@ -4,5 +4,6 @@ package ocenet
 type ApiHttpError struct {
 	ErrorDescription string
 	Error  string
+	Status int
 }
 
