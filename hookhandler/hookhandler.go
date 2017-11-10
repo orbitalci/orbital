@@ -23,13 +23,13 @@ var deserializer = deserialize.New()
 func RepoPush(w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
 	if err := deserializer.JSONToProto(r.Body, repopush); err != nil {
-		ocenet.JSONApiError(w, "could not parse request body into proto.Message", err)
+		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
 
 	buildConf, err := GetBuildConfig(repopush.Repository.FullName, repopush.Push.Changes[0].New.Target.Hash)
 	if err != nil {
 		//ocelog.LogErrField(err).Error("unable to get build conf")
-		ocenet.JSONApiError(w, "unable to get build conf", err)
+		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
 		return
 	}
 	// instead, add to topic. each worker gets a topic off a channel,
@@ -45,13 +45,13 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 func PullRequest(w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
 	if err := deserializer.JSONToProto(r.Body, pr); err != nil {
-		ocenet.JSONApiError(w, "could not parse request body into proto.Message", err)
+		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 		return
 	}
 	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Repository.FullName)
 	if err != nil {
 		//ocelog.LogErrField(err).Error("unable to get build conf")
-		ocenet.JSONApiError(w, "unable to get build conf", err)
+		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
 		return
 	}
 
