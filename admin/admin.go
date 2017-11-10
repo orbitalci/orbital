@@ -78,7 +78,7 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	errorMsg, err := validateConfig(&adminConfig)
 
 	if err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest, string(errorMsg), err)
+		ocenet.JSONApiError(w, http.StatusBadRequest, errorMsg, err)
 		return
 	}
 
@@ -89,7 +89,7 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	errorMsg, err = SetupCredentials(&adminConfig)
 	if err != nil {
-		ocenet.JSONApiError(w, http.StatusUnprocessableEntity, string(errorMsg), err)
+		ocenet.JSONApiError(w, http.StatusUnprocessableEntity, errorMsg, err)
 		return
 	}
 
