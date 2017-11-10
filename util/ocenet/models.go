@@ -4,4 +4,5 @@ package ocenet
 type HttpError struct {
 	Status int
 	Error  string
+	ErrorDetail	string
 }

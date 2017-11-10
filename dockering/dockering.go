@@ -6,7 +6,7 @@ import (
     "context"
     "github.com/docker/docker/api/types"
     "github.com/docker/docker/client"
-    "github.com/shankj3/ocelot/ocelog"
+    "github.com/shankj3/ocelot/util/ocelog"
     "io/ioutil"
     "os"
     "regexp"

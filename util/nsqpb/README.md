@@ -5,4 +5,4 @@ Package for producing / consuming protobuf Messages with NSQ
 [NSQ Messaging](http://nsq.io/)  
 [NSQ Go Package](https://github.com/nsqio/go-nsq)  
 
-For testing with queue, run [docker-compose](./docker-compose.yml) file. It will run an image with `nsqd` and one with `nsqlookupd`
+For testing with queue, run [docker-compose](docker-compose.yml) file. It will run an image with `nsqd` and one with `nsqlookupd`

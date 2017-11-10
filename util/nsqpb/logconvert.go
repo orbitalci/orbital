@@ -1,7 +1,7 @@
 package nsqpb
 
 import (
-	"github.com/shankj3/ocelot/ocelog"
+	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
 	"strings"
