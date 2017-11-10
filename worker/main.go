@@ -35,7 +35,7 @@ func Build(buildjob *pb.RepoPush) error {
 
 func main() {
     ocelog.InitializeOcelog(ocelog.GetFlags())
-    protoConsume := &nsqpb.ProtoConsume{}
+    protoConsume := nsqpb.NewProtoConsume()
     protoConsume.UnmarshalProtoFunc = HandleRepoPushMessage
     protoConsume.ConsumeMessages("repo_push", "one")
 }
