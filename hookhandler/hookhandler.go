@@ -5,6 +5,7 @@ import (
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
+	"github.com/shankj3/ocelot/util/consulet"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
@@ -17,6 +18,7 @@ import (
 )
 
 const BuildTopic = "repo_build"
+var consul = consulet.Default()
 var deserializer = deserialize.New()
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
@@ -28,7 +30,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 
 	buildConf, err := GetBuildConfig(repopush.Repository.FullName, repopush.Push.Changes[0].New.Target.Hash)
 	if err != nil {
-		//ocelog.LogErrField(err).Error("unable to get build conf")
+		//ocelog.IncludeErrField(err).Error("unable to get build conf")
 		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
 		return
 	}
@@ -50,7 +52,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Repository.FullName)
 	if err != nil {
-		//ocelog.LogErrField(err).Error("unable to get build conf")
+		//ocelog.IncludeErrField(err).Error("unable to get build conf")
 		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
 		return
 	}

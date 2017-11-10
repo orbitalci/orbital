@@ -23,7 +23,7 @@ func WriteToNsq(message proto.Message, topicName string) error {
     }
     p, err := nsq.NewProducer(fmt.Sprintf("%s:4150", ip_address), config)
     if err != nil {
-        ocelog.LogErrField(err).Fatal("producer create error")
+        ocelog.IncludeErrField(err).Fatal("producer create error")
         return err
     }
     p.SetLogger(NewNSQLoggerAtLevel(ocelog.GetLogLevel()))
@@ -31,7 +31,7 @@ func WriteToNsq(message proto.Message, topicName string) error {
     var data []byte
     data, err = proto.Marshal(message)
     if err != nil {
-        ocelog.LogErrField(err).Warn("proto marshal error")
+        ocelog.IncludeErrField(err).Warn("proto marshal error")
         return err
     }
     err = p.Publish(topicName, data)

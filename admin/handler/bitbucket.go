@@ -37,7 +37,7 @@ func (bb *Bitbucket) SetMeUp(adminConfig *models.AdminConfig) error {
 	var ctx = context.Background()
 	token, err := conf.Token(ctx)
 	if err != nil {
-		ocelog.LogErrField(err).Error("well shit we can't get a token")
+		ocelog.IncludeErrField(err).Error("well shit we can't get a token")
 		return errors.New("Unable to retrieve token for " + adminConfig.ConfigId)
 	}
 	ocelog.Log().Debug("token: " + token.AccessToken)
@@ -97,7 +97,7 @@ func (bb Bitbucket) CreateWebhook(webhookURL string) error {
 		}
 		webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
 		if err != nil {
-			ocelog.LogErrField(err).Fatal("failed to convert webhook to json string")
+			ocelog.IncludeErrField(err).Fatal("failed to convert webhook to json string")
 			return err
 		}
 		err = bb.Client.PostUrl(webhookURL, webhookStr, nil)

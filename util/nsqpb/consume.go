@@ -19,7 +19,7 @@ type ProtoConsume struct {
 // Actual wrapper for UnmarshalProtoFunc --> nsq.HandlerFunc
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
     if err := p.UnmarshalProtoFunc(msg.Body); err != nil {
-        ocelog.LogErrField(err).Warn("nsq proto consume error")
+        ocelog.IncludeErrField(err).Warn("nsq proto consume error")
         return err
     }
     return nil
@@ -35,7 +35,7 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
     decodeConfig := nsq.NewConfig()
     c, err := nsq.NewConsumer(topicName, channelName, decodeConfig)
     if err != nil {
-        ocelog.LogErrField(err).Warn("cannot create nsq consumer")
+        ocelog.IncludeErrField(err).Warn("cannot create nsq consumer")
         return err
     }
 
@@ -50,7 +50,7 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
     }
 
     if err = c.ConnectToNSQLookupd(fmt.Sprintf("%s:4161", ip_address)); err != nil {
-        ocelog.LogErrField(err).Warn("cannot connect to nsq")
+        ocelog.IncludeErrField(err).Warn("cannot connect to nsq")
         return err
     }
     wg.Wait()

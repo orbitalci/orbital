@@ -19,7 +19,7 @@ func Default() *Consulet {
 	c, err := api.NewClient(consulet.Config)
 
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 		return nil
 	}
 	consulet.Client = c
@@ -36,7 +36,7 @@ func New(consulHost string, consulPort int) *Consulet {
 	c, err := api.NewClient(consulet.Config)
 
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 	}
 
 	consulet.Client = c
@@ -67,7 +67,7 @@ func (consul Consulet) AddKeyValue(key string, value []byte) {
 	}
 	_, err := kv.Put(kvPair, nil)
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 	}
 }
 
@@ -80,7 +80,7 @@ func (consul Consulet) GetKeyValue(key string) *api.KVPair {
 	kv := consul.Client.KV()
 	val, _, err := kv.Get(key, nil)
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 	}
 	return val
 }

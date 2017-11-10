@@ -45,7 +45,7 @@ func main() {
 	//register to consul
 	err := consul.RegisterService("localhost", 8080, "ocelot-admin")
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 	}
 
 	//check for config on load
@@ -100,19 +100,19 @@ func ReadConfig() {
 	config := &models.ConfigYaml{}
 	configFile, err := ioutil.ReadFile(models.ConfigFileName)
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 		return
 	}
 	err = deserializer.YAMLToStruct(configFile, config)
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 		return
 	}
 	for configKey, configVal := range config.Credentials {
 		configVal.ConfigId = configKey
 
 		_, err = SetupCredentials(&configVal)
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err).Error()
 	}
 }
 

@@ -21,7 +21,7 @@ func HandleRepoPushMessage(message []byte) error {
     push := &pb.RepoPush{}
     ocelog.Log().Debug("hit HandleRepoPush")
     if err := proto.Unmarshal(message, push); err != nil {
-        ocelog.LogErrField(err).Warning("unmarshal error")
+        ocelog.IncludeErrField(err).Warning("unmarshal error")
         return err
     }
     go Build(push)
