@@ -53,6 +53,9 @@ func NewAuthedClient(token string) (oce *Ocevault, err error) {
 		return
 	}
 	oce.Client.SetToken(token)
+	// this action is idempotent, and since we *need* this policy for generating tokens, might as well?
+	// i guess?
+	oce.CreateOcevaultPolicy()
 	return
 }
 
