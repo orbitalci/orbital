@@ -3,6 +3,7 @@ package ocevault
 import (
 	"errors"
 	"fmt"
+
 	//"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/vault/api"
 	"os"
@@ -91,12 +92,14 @@ func (oce *Ocevault) CreateToken(request *api.TokenCreateRequest) (token string,
 }
 
 // CreateThrowawayToken creates a single use token w/ same privileges as client.
+// *single use* really means enough uses to initialize the client and make one call to actually
+// get data
 // todo: add ocevault policy for reading the secrets/ci/user path
 func (oce *Ocevault) CreateThrowawayToken() (token string, err error) {
 	tokenReq := &api.TokenCreateRequest{
-		Policies: 		[]string{"ocevault"},
+		//Policies: 		[]string{"ocevault"}, // todo: figure out why this doesn't work...
 		TTL:            "30m",
-		NumUses:		1,
+		NumUses:		3,
 	}
 	//oce.Client.Auth().Token().Create(&api.})
 	return oce.CreateToken(tokenReq)
