@@ -42,24 +42,18 @@ func getInitVault() *ocevault.Ocevault {
 func RepoPush(w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
 	if err := deserializer.JSONToProto(r.Body, repopush); err != nil {
-		msg := "could not parse request body into proto.Message"
-		ocelog.IncludeErrField(err).Error(msg)
-		ocenet.JSONApiError(w, http.StatusBadRequest, msg, err)
+		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
 
 	buildConf, err := GetBuildConfig(repopush.Repository.FullName, repopush.Push.Changes[0].New.Target.Hash)
 	if err != nil {
-		msg := "unable to get build conf"
-		ocelog.IncludeErrField(err).Error(msg)
-		ocenet.JSONApiError(w, http.StatusBadRequest, msg, err)
+		ocenet.JSONApiError(w, http.StatusBadRequest,"unable to get build conf", err)
 		return
 	}
 	vault := getInitVault()
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
-		msg := "unable to create one-time vault token"
-		ocelog.IncludeErrField(err).Error(msg)
-		ocenet.JSONApiError(w, http.StatusBadRequest, msg, err)
+		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
 	}
 	// instead, add to topic. each worker gets a topic off a channel,
 	// so one worker to one channel
@@ -87,9 +81,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 	vault := getInitVault()
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
-		msg := "unable to create one-time vault token"
-		ocelog.IncludeErrField(err).Error(msg)
-		ocenet.JSONApiError(w, http.StatusBadRequest, msg, err)
+		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
 	}
 	// create bundle, send that s*** off!
 	bundle := &pb.PRBuildBundle{
