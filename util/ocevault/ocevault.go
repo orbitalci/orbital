@@ -108,7 +108,7 @@ func (oce *Ocevault) CreateThrowawayToken() (token string, err error) {
 // CreateOcevaultPolicy creates a policy for r/w ops on only the path that credentials are on, which is `secret/ci/creds`.
 // Tokens that are one-off and passed to the workers for building will get this access.
 func (oce *Ocevault) CreateOcevaultPolicy() error {
-	err := oce.Client.Sys().PutPolicy("ocevault", "path \"secret/ci/creds\" {\n capabilities = [\"read\", \"create\", \"update\", \"delete\", \"list\"]\n}")
+	err := oce.Client.Sys().PutPolicy("ocevault", "path \"secret/ci/creds\" {\n capabilities = [\"read\", \"list\"]\n}")
 	if err != nil {
 		return err
 	}
