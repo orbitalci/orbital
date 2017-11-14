@@ -1,10 +1,8 @@
 package nsqpb
 
 import (
-    "fmt"
     "github.com/nsqio/go-nsq"
     "github.com/shankj3/ocelot/util/ocelog"
-    "os"
     "sync"
 )
 
@@ -13,20 +11,28 @@ import (
 // and does work
 // ...put in WORK.
 type ProtoConsume struct {
-    UnmarshalProtoFunc func([]byte) error
+	Handler      HandleMessage
     DecodeConfig *nsq.Config
+    Config 		 *NsqConfig
+}
+
+// HandleMessage is an interface for unmarshalling your messages to a struct or protobuf message,
+// then processing the object. Fulfilling this interface is how you would interact w/ the nsq channels
+type HandleMessage interface {
+	UnmarshalAndProcess([]byte) error
 }
 
 func NewProtoConsume() *ProtoConsume {
     config := nsq.NewConfig()
     return &ProtoConsume{
         DecodeConfig: config,
+        Config:		  NewNsqConf(),
     }
 }
 
 // Actual wrapper for UnmarshalProtoFunc --> nsq.HandlerFunc
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
-    if err := p.UnmarshalProtoFunc(msg.Body); err != nil {
+    if err := p.Handler.UnmarshalAndProcess(msg.Body); err != nil {
         ocelog.IncludeErrField(err).Warn("nsq proto consume error")
         return err
     }
@@ -49,14 +55,7 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
     c.SetLogger(NewNSQLoggerAtLevel(ocelog.GetLogLevel()))
     c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
 
-    // NSQLOOKUPD_IP may have to be looked up more than nsqd_ip, since nsqlookupd
-    // likely isn't running everywhere.
-    var ip_address string
-    if ip_address = os.Getenv("NSQLOOKUPD_IP"); ip_address == "" {
-        ip_address = "127.0.0.1"
-    }
-
-    if err = c.ConnectToNSQLookupd(fmt.Sprintf("%s:4161", ip_address)); err != nil {
+    if err = c.ConnectToNSQLookupd(p.Config.LookupDAddress()); err != nil {
         ocelog.IncludeErrField(err).Warn("cannot connect to nsq")
         return err
     }

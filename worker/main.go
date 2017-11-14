@@ -10,32 +10,30 @@ provide results endpoint, way for server to access data
 package main
 
 import (
-    "github.com/golang/protobuf/proto"
-    // "github.com/shankj3/ocelot/dockering"
     "github.com/shankj3/ocelot/util/nsqpb"
-    "github.com/shankj3/ocelot/util/ocelog"
-    pb "github.com/shankj3/ocelot/protos/out"
+	"github.com/shankj3/ocelot/util/ocelog"
+	"os"
 )
 
-func HandleRepoPushMessage(message []byte) error {
-    push := &pb.RepoPush{}
-    ocelog.Log().Debug("hit HandleRepoPush")
-    if err := proto.Unmarshal(message, push); err != nil {
-        ocelog.IncludeErrField(err).Warning("unmarshal error")
-        return err
-    }
-    go Build(push)
-    return nil
-}
-
-func Build(buildjob *pb.RepoPush) error {
-    ocelog.Log().Info(buildjob.GetActor().GetUsername())
-    return nil
-}
 
 func main() {
     ocelog.InitializeOcelog(ocelog.GetFlags())
-    protoConsume := nsqpb.NewProtoConsume()
-    protoConsume.UnmarshalProtoFunc = HandleRepoPushMessage
-    protoConsume.ConsumeMessages("repo_push", "one")
+    hostname, err := os.Hostname()
+    if err != nil {
+    	panic("no hostname for machine!") // may not be right approach...
+	}
+    //var consumers []*nsqpb.ProtoConsume
+    for _, topic := range nsqpb.SupportedTopics {
+		protoConsume := nsqpb.NewProtoConsume()
+		if nsqpb.LookupTopic(protoConsume.Config.LookupDAddress(), topic) {
+			handler := WorkerMsgHandler{topic}
+			protoConsume.Handler = handler
+			protoConsume.ConsumeMessages(topic, hostname)
+		} else {
+			// maybe this should just error out completely if the topics we expect aren't there?
+			// or retry later?
+			// it seems to block
+			ocelog.Log().Warnf("Topic with name % not found.", topic)
+		}
+	}
 }
