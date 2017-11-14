@@ -72,15 +72,13 @@ func (bb Bitbucket) Walk() error {
 // commitHash: string git hash for revision number
 func (bb Bitbucket) GetFile(filePath string, fullRepoName string, commitHash string) (yamlString string, err error) {
 	ocelog.Log().Debug("inside GetFile")
-	//if bb.notSetUP() == true {
-	//	err_str := "cannot get file without cred initialization"
-	//	err = errors.New(err_str)
-	//	ocelog.Log().Debug(err_str)
-	//	return
-	//}
 	fileResp := &pb.RepoSourceFile{}
 	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
-	bb.Client.GetUrl(fmt.Sprintf(BitbucketRepoBaseV1, path), fileResp)
+	err = bb.Client.GetUrl(fmt.Sprintf(BitbucketRepoBaseV1, path), fileResp)
+	if err != nil {
+		yamlString = ""
+		return
+	}
 	yamlString = fileResp.GetData()
 	return
 }
