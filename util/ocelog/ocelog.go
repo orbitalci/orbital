@@ -17,12 +17,12 @@ import (
 
 // TODO: add NewLog() function that returns a logger w/ the default fields, if  a service wants a special logger.
 
-// default logger for Ocelog. Includes extra field `"function": <name>`
+// Log() is the default logger for Ocelog. Includes extra field `"function": <name>`
 func Log() *log.Entry {
 	return log.WithFields(GetDefaultFields())
 }
 
-// Add the 'error' field w/ the error object to the Log Entry. This still requires setting a
+// IncludeErrField adds the 'error' field w/ the error object to the Log Entry. This still requires setting a
 // Info/warning/w/e message
 // Example:
 //   ocelog.IncludeErrField(err).Error("booo code made an error")
@@ -37,7 +37,7 @@ func GetDefaultFields() log.Fields {
 	}
 }
 
-// return current level of standard logger
+// GetLogLevel returns the current level of standard logger.
 func GetLogLevel() log.Level {
 	return log.GetLevel()
 }
@@ -54,9 +54,9 @@ func InitializeOcelog(logLevel string) {
 	log.SetOutput(os.Stdout)
 }
 
-/* get log level flags from command line.
-ex:
-`hookhandler --log_level=debug` */
+// GetFlags() gets log level flags from command line.
+// ex:
+// `hookhandler --log_level=debug` */
 func GetFlags() string {
 	// write flag
 	var logLevel string
@@ -65,7 +65,7 @@ func GetFlags() string {
 	return logLevel
 }
 
-//Get Package Name of Calling Function
+// GetPackageName returns pkg name of calling function.
 func getPackageName(f string) string {
 	for {
 		lastPeriod := strings.LastIndex(f, ".")
