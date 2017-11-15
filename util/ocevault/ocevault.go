@@ -75,7 +75,7 @@ func (oce *Ocevault) GetUserAuthData(user string) (map[string]interface{}, error
 		return nil, err
 	}
 	if secret == nil {
-		return nil, errors.New(fmt.Sprintf("User data not found, path searched: %s", path))
+		return nil, fmt.Errorf("user data not found, path searched: %s", path)
 	}
 	return secret.Data, nil
 }

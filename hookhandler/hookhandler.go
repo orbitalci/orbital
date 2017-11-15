@@ -19,7 +19,6 @@ import (
 	"sync"
 )
 
-const BuildTopic = "repo_build"
 //var consul = consulet.Default()
 var deserializer = deserialize.New()
 
@@ -62,7 +61,8 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		PushData:   repopush,
 		VaultToken: token,
 	}
-	go nsqpb.WriteToNsq(bundle, BuildTopic)
+	ocelog.Log().Debug("added!")
+	go nsqpb.WriteToNsq(bundle, nsqpb.PushTopic)
 }
 
 func PullRequest(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +89,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		PrData:     pr,
 		VaultToken: token,
 	}
-	go nsqpb.WriteToNsq(bundle, BuildTopic)
+	go nsqpb.WriteToNsq(bundle, nsqpb.PRTopic)
 
 }
 
