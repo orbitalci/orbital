@@ -7,7 +7,7 @@ import (
 )
 
 var config = nsq.NewConfig()
-var nsqpbConf = NewNsqConf()
+var nsqpbConf = DefaultNsqConf()
 // Write Protobuf Message to an NSQ topic with name topicName
 // Gets the ip of the NSQ daemon from either the environment variable
 //  `NSQD_IP` or sets it to 127.0.0.1. the NSQ daemon should run alongside

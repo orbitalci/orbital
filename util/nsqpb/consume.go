@@ -22,15 +22,17 @@ type HandleMessage interface {
 	UnmarshalAndProcess([]byte) error
 }
 
+// NewProtoConsume returns a new ProtoConsume object with nsq configuration and
+// nsqpb configuration
 func NewProtoConsume() *ProtoConsume {
     config := nsq.NewConfig()
     return &ProtoConsume{
         DecodeConfig: config,
-        Config:		  NewNsqConf(),
+        Config:       DefaultNsqConf(),
     }
 }
 
-// Actual wrapper for UnmarshalProtoFunc --> nsq.HandlerFunc
+// NSQProtoConsume is a wrapper for `p.Handler.UnmarshalAndProcess` --> `nsq.HandlerFunc`
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
     if err := p.Handler.UnmarshalAndProcess(msg.Body); err != nil {
         ocelog.IncludeErrField(err).Warn("nsq proto consume error")
