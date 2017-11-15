@@ -14,31 +14,40 @@ type WorkerMsgHandler struct {
 }
 
 // NewWorkerMsgHandler instantiates WorkerMsgHandler with the topic name
-// and sets the infochan. atomic.
+// was going to do *something* with info chan but it has to be reset every run of UnmarshalAndProcess
 func NewWorkerMsgHandler(topic string) WorkerMsgHandler {
 	return WorkerMsgHandler{
 		topic: topic,
-		infochan: make(chan string),
 	}
 }
 
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
+	ocelog.Log().Debug("unmarshaling build obj and processing")
 	unmarshalobj := nsqpb.TopicsUnmarshalObj(w.topic)
-	//ocelog.Log().Debug("INSIDE UNMARSHAL AND PROCESS! isn't that nice!")
 	if err := proto.Unmarshal(msg, unmarshalobj); err != nil {
 		ocelog.IncludeErrField(err).Warning("unmarshal error")
 		return err
 	}
-	w.Build(unmarshalobj)
-	fmt.Println("receiving std out from channel: ")
-	for i := range w.infochan {
-		fmt.Println(i)
-	}
-
+	// channels get closed after the build finishes
+	w.infochan = make(chan string)
+	// set goroutine for watching for results and logging them (for rn)
+	go w.watchForResults()
+	// do the thing
+	go w.build(unmarshalobj)
 	return nil
 }
 
-func (w *WorkerMsgHandler) Build(psg proto.Message) {
+func (w *WorkerMsgHandler) watchForResults() {
+	ocelog.Log().Debug("oooooeee Watchin for results!!!")
+	for i := range w.infochan {
+		fmt.Println(i)
+	}
+	ocelog.Log().Debug("ooooeee finished watchin for results!!! recreating channel!f")
+}
+
+
+func (w *WorkerMsgHandler) build(psg proto.Message) {
+	ocelog.Log().Debug("How exciting! I gonna build!")
 	switch v := psg.(type) {
 	case *protos.PRBuildBundle:
 		w.runPRBundle(v)
@@ -47,9 +56,11 @@ func (w *WorkerMsgHandler) Build(psg proto.Message) {
 	default:
 		fmt.Println("why is there no timeeeeeeeeeeeeeeeeeee ", v)
 	}
+	ocelog.Log().Debug("WOWOEE ZOWEE! finished building")
 }
 
 func (w *WorkerMsgHandler) runPushBundle(bund *protos.PushBuildBundle) {
+	ocelog.Log().Debug("building building tasty tasty push bundle")
 	// run push bundle.
 	//fmt.Println(bund.PushData.Repository.FullName)
 	w.infochan <- bund.PushData.Repository.FullName
