@@ -34,6 +34,7 @@ func NewProtoConsume() *ProtoConsume {
 
 // NSQProtoConsume is a wrapper for `p.Handler.UnmarshalAndProcess` --> `nsq.HandlerFunc`
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
+	ocelog.Log().Debug("Inside wrapper for UnmarshalAndProcess")
     if err := p.Handler.UnmarshalAndProcess(msg.Body); err != nil {
         ocelog.IncludeErrField(err).Warn("nsq proto consume error")
         return err
@@ -47,7 +48,7 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) error {
     wg := &sync.WaitGroup{}
     wg.Add(1)
-
+	ocelog.Log().Debug("Inside Consume Messages")
     c, err := nsq.NewConsumer(topicName, channelName, p.DecodeConfig)
     if err != nil {
         ocelog.IncludeErrField(err).Warn("cannot create nsq consumer")
