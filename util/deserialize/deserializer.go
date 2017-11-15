@@ -47,7 +47,7 @@ func (d Deserializer) YAMLToProto(data []byte, msg proto.Message) error {
 func (d Deserializer) JSONToProto(requestBody io.ReadCloser, unmarshalObj proto.Message) (err error){
 	defer requestBody.Close()
 	if err := d.JSONUnmarshaler.Unmarshal(requestBody, unmarshalObj); err != nil {
-		ocelog.LogErrField(err).Error("could not parse request body into proto.Message")
+		ocelog.IncludeErrField(err).Error("could not parse request body into proto.Message")
 		return err
 	}
 	return

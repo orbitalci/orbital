@@ -6,6 +6,8 @@ import (
 	"os/exec"
 )
 
+//todo: use bitbucket token to clone with git
+
 // Shallow Clones Repostory at a depth of 100 commits into a temporary directory
 // If there are any errors in the clone, the temp directory is erased.
 // Returns temporary directory filepath and any errors received

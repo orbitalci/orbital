@@ -21,7 +21,7 @@ func HandleRepoPushMessage(message []byte) error {
     push := &pb.RepoPush{}
     ocelog.Log().Debug("hit HandleRepoPush")
     if err := proto.Unmarshal(message, push); err != nil {
-        ocelog.LogErrField(err).Warning("unmarshal error")
+        ocelog.IncludeErrField(err).Warning("unmarshal error")
         return err
     }
     go Build(push)
@@ -35,7 +35,7 @@ func Build(buildjob *pb.RepoPush) error {
 
 func main() {
     ocelog.InitializeOcelog(ocelog.GetFlags())
-    protoConsume := &nsqpb.ProtoConsume{}
+    protoConsume := nsqpb.NewProtoConsume()
     protoConsume.UnmarshalProtoFunc = HandleRepoPushMessage
-    nsqpb.ConsumeMessages(protoConsume, "repo_push", "one")
+    protoConsume.ConsumeMessages("repo_push", "one")
 }

@@ -2,7 +2,7 @@
 Way to have one style of logging for the project. Initialize in your service w/ InitializeOcelog(), uses a JSONFormatter.
 use ocelog.Log() to log with extra field of the function called.
 
-todo: add common log functions, right now there is only LogErrField which adds the error: <error text> to the json log.
+todo: add common log functions, right now there is only IncludeErrField which adds the error: <error text> to the json log.
 
 */
 package ocelog
@@ -17,13 +17,16 @@ import (
 
 // TODO: add NewLog() function that returns a logger w/ the default fields, if  a service wants a special logger.
 
-// default logger for Ocelog. Includes extra field `"function": <name>`
+// Log() is the default logger for Ocelog. Includes extra field `"function": <name>`
 func Log() *log.Entry {
 	return log.WithFields(GetDefaultFields())
 }
 
-// Add the 'error' field w/ the error object to the Log Entry.
-func LogErrField(err error) *log.Entry {
+// IncludeErrField adds the 'error' field w/ the error object to the Log Entry. This still requires setting a
+// Info/warning/w/e message
+// Example:
+//   ocelog.IncludeErrField(err).Error("booo code made an error")
+func IncludeErrField(err error) *log.Entry {
 	return Log().WithField("error", err)
 }
 
@@ -34,7 +37,7 @@ func GetDefaultFields() log.Fields {
 	}
 }
 
-// return current level of standard logger
+// GetLogLevel returns the current level of standard logger.
 func GetLogLevel() log.Level {
 	return log.GetLevel()
 }
@@ -43,7 +46,7 @@ func GetLogLevel() log.Level {
 // configure default Logger to log in JSON format.
 func InitializeOcelog(logLevel string) {
 	if loglevel, err := log.ParseLevel(logLevel); err != nil {
-		LogErrField(err).Fatal()
+		IncludeErrField(err).Fatal()
 	} else {
 		log.SetLevel(loglevel)
 	}
@@ -51,9 +54,9 @@ func InitializeOcelog(logLevel string) {
 	log.SetOutput(os.Stdout)
 }
 
-/* get log level flags from command line.
-ex:
-`hookhandler --log_level=debug` */
+// GetFlags() gets log level flags from command line.
+// ex:
+// `hookhandler --log_level=debug` */
 func GetFlags() string {
 	// write flag
 	var logLevel string
@@ -62,7 +65,7 @@ func GetFlags() string {
 	return logLevel
 }
 
-//Get Package Name of Calling Function
+// GetPackageName returns pkg name of calling function.
 func getPackageName(f string) string {
 	for {
 		lastPeriod := strings.LastIndex(f, ".")
