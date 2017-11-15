@@ -21,9 +21,6 @@ import (
 //TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
 
 
-//TODO: this will eventually get moved to secrets and/or consul and not be in memory map
-var creds = map[string]*models.AdminConfig{}
-var configChannel = make(chan models.AdminConfig)
 var validate = validator.New()
 var consul = consulet.Default()
 var deserializer = deserialize.New()
@@ -68,6 +65,13 @@ func main() {
 //TODO: change this to stop returning passwords (BLOCKED till vault + consul is done)
 func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	//creds := map[string]*models.AdminConfig
+
+	creds := map[string]models.AdminConfig{}
+	for _, v := range consul.GetKeyValues("creds") {
+		appName = v.Key
+	}
+
 	json.NewEncoder(w).Encode(creds)
 }
 
@@ -158,8 +162,17 @@ func SetupCredentials(config *models.AdminConfig) ([]byte, error) {
 		return convertedError, err
 	}
 
-	creds[config.ConfigId] = config
+	storeConfig(config)
 	return nil, nil
+}
+
+func storeConfig(config *models.AdminConfig) {
+	consul.AddKeyValue("creds/" + config.ConfigId + "/clientid", []byte(config.ClientId))
+	//TODO: move the secret into vault
+	consul.AddKeyValue("creds/" + config.ConfigId + "/clientsecret", []byte(config.ClientSecret))
+	consul.AddKeyValue("creds/" + config.ConfigId + "/tokenurl", []byte(config.TokenURL))
+	consul.AddKeyValue("creds/" + config.ConfigId + "/acctname", []byte(config.AcctName))
+
 }
 
 //validates config and returns json formatted error

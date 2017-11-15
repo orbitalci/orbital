@@ -71,14 +71,26 @@ func (consul Consulet) AddKeyValue(key string, value []byte) {
 	}
 }
 
+//RemoveValue removes value at specified key
 func (consul Consulet) RemoveValue(key string) {
 	kv := consul.Client.KV()
 	kv.Delete(key, nil)
 }
 
+//GetKeyValue gets key/value at specified key
 func (consul Consulet) GetKeyValue(key string) *api.KVPair {
 	kv := consul.Client.KV()
 	val, _, err := kv.Get(key, nil)
+	if err != nil {
+		ocelog.LogErrField(err)
+	}
+	return val
+}
+
+//GetKeyValue gets key/value list at specified prefix
+func (consul Consulet) GetKeyValues(prefix string) api.KVPairs {
+	kv := consul.Client.KV()
+	val, _, err := kv.List(prefix, nil)
 	if err != nil {
 		ocelog.LogErrField(err)
 	}
