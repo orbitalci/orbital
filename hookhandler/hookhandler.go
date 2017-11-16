@@ -43,8 +43,9 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 	if err := deserializer.JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
-
-	buildConf, err := GetBuildConfig(repopush.Repository.FullName, repopush.Push.Changes[0].New.Target.Hash)
+	fullName := repopush.Repository.FullName
+	hash := repopush.Push.Changes[0].New.Target.Hash
+	buildConf, err := GetBuildConfig(fullName, hash)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest,"unable to get build conf", err)
 		return
