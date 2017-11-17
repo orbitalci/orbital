@@ -39,4 +39,7 @@ func main() {
 			ocelog.Log().Warnf("Topic with name % not found.", topic)
 		}
 	}
+	for _, consumer := range consumers {
+		<-consumer.StopChan
+	}
 }

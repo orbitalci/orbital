@@ -3,7 +3,6 @@ package nsqpb
 import (
     "github.com/nsqio/go-nsq"
     "github.com/shankj3/ocelot/util/ocelog"
-    "sync"
 )
 
 // ProtoConsume wraps nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
@@ -14,6 +13,7 @@ type ProtoConsume struct {
 	Handler      HandleMessage
     DecodeConfig *nsq.Config
     Config 		 *NsqConfig
+    StopChan 	 chan int
 }
 
 // HandleMessage is an interface for unmarshalling your messages to a struct or protobuf message,
@@ -46,15 +46,13 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 // a wrapper as a handler for the consumer. The ip address of the NSQLookupd instance
 // can be set by the environment variable NSQLOOKUPD_IP, but will default to 127.0.0.1
 func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) error {
-    wg := &sync.WaitGroup{}
-    wg.Add(1)
 	ocelog.Log().Debug("Inside Consume Messages")
     c, err := nsq.NewConsumer(topicName, channelName, p.DecodeConfig)
     if err != nil {
         ocelog.IncludeErrField(err).Warn("cannot create nsq consumer")
         return err
     }
-
+	p.StopChan = c.StopChan
     c.SetLogger(NewNSQLoggerAtLevel(ocelog.GetLogLevel()))
     c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
 
@@ -62,6 +60,5 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
         ocelog.IncludeErrField(err).Warn("cannot connect to nsq")
         return err
     }
-    wg.Wait()
     return nil
 }
