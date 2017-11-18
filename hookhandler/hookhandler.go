@@ -23,20 +23,14 @@ import (
 //var consul = consulet.Default()
 var deserializer = deserialize.New()
 
+// vault singleton
 var vaultCached *ocevault.Ocevault
-var once sync.Once
+var vaultOnce sync.Once
 
-// the sync.Once() way of letting something get initialized only one time.
-func getInitVault() *ocevault.Ocevault {
-	once.Do(func() {
-		ocev, err := ocevault.NewEnvAuthClient()
-		if err != nil {
-			ocelog.IncludeErrField(err).Fatal("vault must be initialized.")
-		}
-		vaultCached = ocev
-	})
-	return vaultCached
-}
+// producer singleton
+var producerCached *nsqpb.PbProduce
+var producerOnce sync.Once
+
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
 func RepoPush(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +45,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		ocenet.JSONApiError(w, http.StatusBadRequest,"unable to get build conf", err)
 		return
 	}
-	vault := getInitVault()
+	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
@@ -64,7 +58,8 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		VaultToken: token,
 	}
 	ocelog.Log().Debug("added!")
-	go nsqpb.WriteToNsq(bundle, nsqpb.PushTopic)
+	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
+	go pbProducer.WriteToNsq(bundle, nsqpb.PushTopic)
 }
 
 func PullRequest(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +75,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// get one-time token use for access to vault
-	vault := getInitVault()
+	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
@@ -91,7 +86,8 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		PrData:     pr,
 		VaultToken: token,
 	}
-	go nsqpb.WriteToNsq(bundle, nsqpb.PRTopic)
+	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
+	go pbProducer.WriteToNsq(bundle, nsqpb.PRTopic)
 
 }
 
@@ -135,7 +131,10 @@ func main() {
 		ocelog.Log().Warning("running on default port :8088")
 	}
 	// initialize vault on startup, we want to know right away if we don't have the creds we need.
-	_ = getInitVault()
+	_ = ocevault.GetInitVault(vaultOnce, vaultCached)
+	// same goes for nsq producer
+	_ = nsqpb.GetInitProducer(producerOnce, producerCached)
+
 	muxi := mux.NewRouter()
 	muxi.HandleFunc("/test", RepoPush).Methods("POST")
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
