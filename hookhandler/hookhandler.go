@@ -6,6 +6,7 @@ import (
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
+
 	//"github.com/shankj3/ocelot/util/consulet"
 	"github.com/shankj3/ocelot/util/deserialize"
 	"github.com/shankj3/ocelot/util/nsqpb"
@@ -19,7 +20,6 @@ import (
 	"sync"
 )
 
-const BuildTopic = "repo_build"
 //var consul = consulet.Default()
 var deserializer = deserialize.New()
 
@@ -44,8 +44,9 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 	if err := deserializer.JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
-
-	buildConf, err := GetBuildConfig(repopush.Repository.FullName, repopush.Push.Changes[0].New.Target.Hash)
+	fullName := repopush.Repository.FullName
+	hash := repopush.Push.Changes[0].New.Target.Hash
+	buildConf, err := GetBuildConfig(fullName, hash)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest,"unable to get build conf", err)
 		return
@@ -62,7 +63,8 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		PushData:   repopush,
 		VaultToken: token,
 	}
-	go nsqpb.WriteToNsq(bundle, BuildTopic)
+	ocelog.Log().Debug("added!")
+	go nsqpb.WriteToNsq(bundle, nsqpb.PushTopic)
 }
 
 func PullRequest(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +91,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		PrData:     pr,
 		VaultToken: token,
 	}
-	go nsqpb.WriteToNsq(bundle, BuildTopic)
+	go nsqpb.WriteToNsq(bundle, nsqpb.PRTopic)
 
 }
 
@@ -109,12 +111,15 @@ func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildC
 	cfg := getCredConfig()
 	bb := handler.Bitbucket{}
 	bb.SetMeUp(&cfg)
-	confstr, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
+	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return
 	}
 	conf = &pb.BuildConfig{}
-	if err = deserializer.YAMLToProto([]byte(confstr), conf); err != nil {
+	if err != nil {
+		return
+	}
+	if err = deserializer.YAMLToProto(fileBitz, conf); err != nil {
 		return
 	}
 	return
