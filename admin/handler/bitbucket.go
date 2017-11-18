@@ -15,7 +15,7 @@ import (
 )
 
 const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
-const BitbucketRepoBaseV1 = "https://api.bitbucket.org/1.0/repositories/%s"
+//const BitbucketRepoBaseV1 = "https://api.bitbucket.org/1.0/repositories/%s"
 
 //Bitbucket is a bitbucket handler responsible for finding build files and
 //registering webhooks for necessary repositories
@@ -70,16 +70,13 @@ func (bb Bitbucket) Walk() error {
 // filepath: string filepath relative to root of repo
 // fullRepoName: string account_name/repo_name as it is returned in the Bitbucket api Repo Source `full_name`
 // commitHash: string git hash for revision number
-func (bb Bitbucket) GetFile(filePath string, fullRepoName string, commitHash string) (yamlString string, err error) {
+func (bb Bitbucket) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	ocelog.Log().Debug("inside GetFile")
-	fileResp := &pb.RepoSourceFile{}
 	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
-	err = bb.Client.GetUrl(fmt.Sprintf(BitbucketRepoBaseV1, path), fileResp)
+	bytez, err = bb.Client.GetUrlRawData(fmt.Sprintf(BitbucketRepoBase, path))
 	if err != nil {
-		yamlString = ""
 		return
 	}
-	yamlString = fileResp.GetData()
 	return
 }
 

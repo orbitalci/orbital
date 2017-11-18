@@ -6,6 +6,7 @@ import (
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
+
 	//"github.com/shankj3/ocelot/util/consulet"
 	"github.com/shankj3/ocelot/util/deserialize"
 	"github.com/shankj3/ocelot/util/nsqpb"
@@ -110,12 +111,15 @@ func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildC
 	cfg := getCredConfig()
 	bb := handler.Bitbucket{}
 	bb.SetMeUp(&cfg)
-	confstr, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
+	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return
 	}
 	conf = &pb.BuildConfig{}
-	if err = deserializer.YAMLToProto([]byte(confstr), conf); err != nil {
+	if err != nil {
+		return
+	}
+	if err = deserializer.YAMLToProto(fileBitz, conf); err != nil {
 		return
 	}
 	return
