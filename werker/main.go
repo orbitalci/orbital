@@ -36,7 +36,7 @@ func main() {
 			// maybe this should just error out completely if the topics we expect aren't there?
 			// or retry later?
 			// it seems to block
-			ocelog.Log().Warnf("Topic with name % not found.", topic)
+			ocelog.Log().Warnf("Topic with name %s not found.", topic)
 		}
 	}
 	for _, consumer := range consumers {
