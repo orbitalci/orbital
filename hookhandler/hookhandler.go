@@ -42,9 +42,15 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 	hash := repopush.Push.Changes[0].New.Target.Hash
 	buildConf, err := GetBuildConfig(fullName, hash)
 	if err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest,"unable to get build conf", err)
+		// if the build file just isn't there don't worry about it.
+		if err != ocenet.FileNotFound {
+			ocenet.JSONApiError(w, http.StatusBadRequest,"unable to get build conf", err)
+			return
+		}
+		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
+	ocelog.Log().Debug("found ocelot yml")
 	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
@@ -57,7 +63,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		PushData:   repopush,
 		VaultToken: token,
 	}
-	ocelog.Log().Debug("added!")
+	ocelog.Log().Debug("created push bundle")
 	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
 	go pbProducer.WriteToNsq(bundle, nsqpb.PushTopic)
 }
@@ -68,10 +74,18 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 		return
 	}
-	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Commit.Hash)
+	fullName := pr.Pullrequest.Source.Repository.FullName
+	hash := pr.Pullrequest.Source.Commit.Hash
+
+	buildConf, err := GetBuildConfig(fullName, hash)
 	if err != nil {
 		//ocelog.IncludeErrField(err).Error("unable to get build conf")
-		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
+		// if the build file just isn't there don't worry about it.
+		if err != ocenet.FileNotFound {
+			ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
+			return
+		}
+		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
 		return
 	}
 	// get one-time token use for access to vault
@@ -79,6 +93,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
+		return
 	}
 	// create bundle, send that s*** off!
 	bundle := &pb.PRBuildBundle{

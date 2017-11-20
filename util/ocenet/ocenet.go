@@ -4,13 +4,16 @@ package ocenet
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"io/ioutil"
 	"net/http"
+)
+
+var (
+	FileNotFound = errors.New("could not find raw data at url")
 )
 
 //HttpClient is a client containing a pre-authenticated http client as returned by
@@ -46,7 +49,7 @@ func (hu HttpClient) GetUrlRawData(url string) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.New(fmt.Sprintf("Could not find file at %s", url))
+		return nil, FileNotFound
 	}
 	bytez, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
