@@ -4,8 +4,10 @@ package ocenet
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/pkg/errors"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"io/ioutil"
 	"net/http"
@@ -34,6 +36,23 @@ func (hu HttpClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	}
 
 	return nil
+}
+
+func (hu HttpClient) GetUrlRawData(url string) ([]byte, error) {
+	resp, err := hu.AuthClient.Get(url)
+	defer resp.Body.Close()
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("can't get url ", url)
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, errors.New(fmt.Sprintf("Could not find file at %s", url))
+	}
+	bytez, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return bytez, nil
 }
 
 //PostUrl will perform a post on the specified URL. It takes in a json formatted body

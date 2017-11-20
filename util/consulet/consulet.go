@@ -1,15 +1,15 @@
 package consulet
 
 import (
+	"fmt"
 	"github.com/hashicorp/consul/api"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"strconv"
 )
 
-
 type Consulet struct {
-	Client	*api.Client
-	Config	*api.Config
+	Client *api.Client
+	Config *api.Config
 }
 
 //Default will assume consul is running at localhost:8500
@@ -31,7 +31,7 @@ func New(consulHost string, consulPort int) *Consulet {
 	consulet := &Consulet{}
 
 	consulet.Config = &api.Config{
-		Address: consulHost + strconv.Itoa(consulPort),
+		Address: consulHost + ":" + strconv.Itoa(consulPort),
 	}
 	c, err := api.NewClient(consulet.Config)
 
@@ -61,8 +61,8 @@ func (consul Consulet) RemoveService(name string) error {
 //TODO: should key value operations be atomic??? Can switch to use CAS
 func (consul Consulet) AddKeyValue(key string, value []byte) {
 	kv := consul.Client.KV()
-	kvPair := &api.KVPair {
-		Key: key,
+	kvPair := &api.KVPair{
+		Key:   key,
 		Value: value,
 	}
 	_, err := kv.Put(kvPair, nil)
@@ -95,4 +95,30 @@ func (consul Consulet) GetKeyValues(prefix string) api.KVPairs {
 		ocelog.IncludeErrField(err)
 	}
 	return val
+}
+
+func (consul Consulet) CreateNewSemaphore(path string, limit int) (*api.Semaphore, error) {
+	sessionName := fmt.Sprintf("semaphore_%s", path)
+	// create new session. the health check is just gossip failure detector, session will
+	// be held as long as the default serf health check hasn't declared node unhealthy.
+	// if that node is unhealthy, it probably won't be able to finish running the build so someone
+	// else can pick it up... sidenote.. we need to handle if a worker goes down.
+	sessionId, meta, err := consul.Client.Session().Create(&api.SessionEntry{
+		Name: sessionName,
+	}, nil)
+	ocelog.Log().Info("meta: ", meta)
+	if err != nil {
+		return nil, err
+	}
+	semaphoreOpts := &api.SemaphoreOptions{
+		Prefix:      path,
+		Limit:       limit,
+		Session:     sessionId,
+		SessionName: sessionName,
+	}
+	sema, err := consul.Client.SemaphoreOpts(semaphoreOpts)
+	if err != nil {
+		return nil, err
+	}
+	return sema, nil
 }
