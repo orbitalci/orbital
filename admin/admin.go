@@ -14,16 +14,20 @@ import (
 	"net/http"
 	"io/ioutil"
 	"github.com/google/uuid"
+	"github.com/shankj3/ocelot/util/ocevault"
+	"strings"
 )
 
-//TODO: write the part that talks to consul
-//TODO: hook admin code into vault
 //TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
-
+//TODO: rewrite admin code to use grpc
+//TODO: floe integration??? just putting this note here so we remember
+//TODO: add type to the config object and also post data onto vault using the path + acctname
 
 var validate = validator.New()
 var consul = consulet.Default()
 var deserializer = deserialize.New()
+//TODO: should probably not swallow error and do real initialization
+var vault, _ = ocevault.NewEnvAuthClient()
 
 func main() {
 	//load properties
@@ -40,7 +44,7 @@ func main() {
 
 	ocelog.InitializeOcelog(logLevel)
 
-	//register to consul
+	//TODO: do we really give a shit about registering to consul
 	err := consul.RegisterService("localhost", 8080, "ocelot-admin")
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
@@ -62,14 +66,31 @@ func main() {
 	ocelog.Log().Fatal(http.ListenAndServe(":" + port, mux))
 }
 
-//TODO: change this to stop returning passwords (BLOCKED till vault + consul is done)
 func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	//creds := map[string]*models.AdminConfig
 
-	creds := map[string]models.AdminConfig{}
+	creds := map[string]*models.AdminConfig{}
+
 	for _, v := range consul.GetKeyValues("creds") {
-		appName = v.Key
+		consulCreds := strings.Split(strings.TrimLeft(v.Key,"creds/"), "/")
+		config, ok := creds[consulCreds[0]]
+		if !ok {
+			config = &models.AdminConfig{
+				ConfigId: consulCreds[0],
+				ClientSecret: "**********",
+			}
+			creds[consulCreds[0]] = config
+		}
+		switch consulCreds[1] {
+			case "clientid":
+				config.ClientId = string(v.Value[:])
+			case "tokenurl":
+				config.TokenURL = string(v.Value[:])
+			case "acctname":
+				config.AcctName = string(v.Value[:])
+			default:
+				ocelog.Log().Info("unrecognized consul key")
+		}
 	}
 
 	json.NewEncoder(w).Encode(creds)
@@ -143,7 +164,7 @@ func SetupCredentials(config *models.AdminConfig) (string, error) {
 func storeConfig(config *models.AdminConfig) {
 	consul.AddKeyValue("creds/" + config.ConfigId + "/clientid", []byte(config.ClientId))
 	//TODO: move the secret into vault
-	consul.AddKeyValue("creds/" + config.ConfigId + "/clientsecret", []byte(config.ClientSecret))
+	consul.AddKeyValue("creds/" + config.ConfigId + "/ClientSecret", []byte(config.ClientSecret))
 	consul.AddKeyValue("creds/" + config.ConfigId + "/tokenurl", []byte(config.TokenURL))
 	consul.AddKeyValue("creds/" + config.ConfigId + "/acctname", []byte(config.AcctName))
 

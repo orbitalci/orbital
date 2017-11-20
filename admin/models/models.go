@@ -12,6 +12,7 @@ type AdminConfig struct {
 	ClientSecret string `yaml:"clientSecret" validate:"required"`
 	TokenURL     string `yaml:"tokenURL" validate:"required"`
 	AcctName     string `yaml:"acctName" validate:"required"`
+	Type		 string `yaml:"type" validate:"bitbucket|github"`
 }
 
 type ConfigYaml struct {

@@ -92,7 +92,7 @@ func (consul Consulet) GetKeyValues(prefix string) api.KVPairs {
 	kv := consul.Client.KV()
 	val, _, err := kv.List(prefix, nil)
 	if err != nil {
-		ocelog.LogErrField(err)
+		ocelog.IncludeErrField(err)
 	}
 	return val
 }
