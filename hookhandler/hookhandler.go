@@ -68,7 +68,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 		return
 	}
-	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Repository.FullName)
+	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Commit.Hash)
 	if err != nil {
 		//ocelog.IncludeErrField(err).Error("unable to get build conf")
 		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
@@ -89,6 +89,17 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
 	go pbProducer.WriteToNsq(bundle, nsqpb.PRTopic)
 
+}
+
+func HandleBBEvent(w http.ResponseWriter, r *http.Request) {
+	switch r.Header.Get("X-Event-Key") {
+	case "repo:push":  RepoPush(w, r)
+	case "pullrequest:created",
+	     "pullrequest:updated": PullRequest(w, r)
+	default:
+		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
+		w.WriteHeader(http.StatusUnprocessableEntity)
+	}
 }
 
 // for testing
@@ -136,7 +147,7 @@ func main() {
 	_ = nsqpb.GetInitProducer(producerOnce, producerCached)
 
 	muxi := mux.NewRouter()
-	muxi.HandleFunc("/test", RepoPush).Methods("POST")
+	muxi.HandleFunc("/test", HandleBBEvent).Methods("POST")
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 
 	n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))

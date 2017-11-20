@@ -13,8 +13,21 @@ import (
     "github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"os"
+	"time"
 )
 
+func retry(p *nsqpb.ProtoConsume, topic string, hostname string) {
+	for {
+		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
+			time.Sleep(10 * time.Second)
+		} else {
+			handler := NewWorkerMsgHandler(topic)
+			p.Handler = handler
+			p.ConsumeMessages(topic, hostname)
+			ocelog.Log().Info("Consuming messages for topic ", topic)
+		}
+	}
+}
 
 func main() {
 	ocelog.InitializeOcelog(ocelog.GetFlags())
@@ -31,13 +44,12 @@ func main() {
 			handler := NewWorkerMsgHandler(topic)
 			protoConsume.Handler = handler
 			protoConsume.ConsumeMessages(topic, hostname)
-			consumers = append(consumers, protoConsume)
+			ocelog.Log().Info("Consuming messages for topic ", topic)
 		} else {
-			// maybe this should just error out completely if the topics we expect aren't there?
-			// or retry later?
-			// it seems to block
-			ocelog.Log().Warnf("Topic with name %s not found.", topic)
+			ocelog.Log().Warnf("Topic with name %s not found. Will retry every 10 seconds.", topic)
+			retry(protoConsume, topic, hostname)
 		}
+		consumers = append(consumers, protoConsume)
 	}
 	for _, consumer := range consumers {
 		<-consumer.StopChan
