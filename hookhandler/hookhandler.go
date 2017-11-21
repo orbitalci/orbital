@@ -99,7 +99,6 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 // irl... use vault
 func getCredConfig() models.AdminConfig {
 	return models.AdminConfig{
-		ConfigId:     "jessishank",
 		ClientId:     "QEBYwP5cKAC3ykhau4",
 		ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
 		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",

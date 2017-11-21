@@ -38,7 +38,7 @@ func (bb *Bitbucket) SetMeUp(adminConfig *models.AdminConfig) error {
 	token, err := conf.Token(ctx)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("well shit we can't get a token")
-		return errors.New("Unable to retrieve token for " + adminConfig.ConfigId)
+		return errors.New("Unable to retrieve token for " + adminConfig.Type + "/" + adminConfig.AcctName)
 	}
 	ocelog.Log().Debug("token: " + token.AccessToken)
 

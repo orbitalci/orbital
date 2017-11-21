@@ -7,14 +7,13 @@ const BuildFileName = "ocelot.yml"
 const ConfigFileName = "config.yml"
 
 type AdminConfig struct {
-	ConfigId     string
 	ClientId     string `yaml:"clientId" validate:"required"`
 	ClientSecret string `yaml:"clientSecret" validate:"required"`
 	TokenURL     string `yaml:"tokenURL" validate:"required"`
 	AcctName     string `yaml:"acctName" validate:"required"`
-	Type		 string `yaml:"type" validate:"bitbucket|github"`
+	Type		 string `yaml:"type" validate:"validtype"`
 }
 
 type ConfigYaml struct {
-	Credentials map[string]AdminConfig	`yaml:"credentials"`
+	Credentials []AdminConfig	`yaml:"credentials"`
 }
