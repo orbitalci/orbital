@@ -11,7 +11,9 @@ import (
 
 var ConfigPath = "creds"
 
-//GetInstance returns a new instance of ConfigConsult
+//GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
+//this will talk to consul using reasonable defaults (localhost:8500)
+//if token is an empty string, vault will be initialized with $VAULT_TOKEN
 func GetInstance(consulHost string, consulPort int, token string) (*RemoteConfig, error) {
 	remoteConfig := &RemoteConfig{}
 

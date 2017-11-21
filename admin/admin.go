@@ -38,6 +38,7 @@ func main() {
 
 	ocelog.InitializeOcelog(logLevel)
 
+	//TODO: this is my local vault root token, too lazy to set env variable
 	configInstance, err := util.GetInstance(consulHost, consulPort, "0fd3c0f4-52ec-7d3b-d29b-4b4df1326ded")
 
 	if err != nil {
