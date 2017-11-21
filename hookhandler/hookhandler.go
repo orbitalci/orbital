@@ -59,9 +59,10 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 	// instead, add to topic. each worker gets a topic off a channel,
 	// so one worker to one channel
 	bundle := &pb.PushBuildBundle{
-		Config:     buildConf,
-		PushData:   repopush,
-		VaultToken: token,
+		Config:       buildConf,
+		PushData:     repopush,
+		VaultToken:   token,
+		CheckoutHash: hash,
 	}
 	ocelog.Log().Debug("created push bundle")
 	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
@@ -100,6 +101,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		Config:     buildConf,
 		PrData:     pr,
 		VaultToken: token,
+		CheckoutHash: hash,
 	}
 	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
 	go pbProducer.WriteToNsq(bundle, nsqpb.PRTopic)
