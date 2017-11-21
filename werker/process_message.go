@@ -36,17 +36,15 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 }
 
 func (w *WorkerMsgHandler) watchForResults() {
-	ocelog.Log().Debug("oooooeee Watchin for results!!!")
+	ocelog.Log().Debug("watchForResults thread started")
 	for i := range w.infochan {
 		fmt.Println(i)
 	}
-	ocelog.Log().Debug("ooooeee finished watchin for results!!! recreating channel!f")
 }
 
 
 func (w *WorkerMsgHandler) build(psg nsqpb.BundleProtoMessage) {
 	chanDict.CarefulPut(psg.GetCheckoutHash(), w.infochan)
-	ocelog.Log().Debug("How exciting! I gonna build!")
 	switch v := psg.(type) {
 	case *protos.PRBuildBundle:
 		w.runPRBundle(v)
@@ -55,24 +53,67 @@ func (w *WorkerMsgHandler) build(psg nsqpb.BundleProtoMessage) {
 	default:
 		fmt.Println("why is there no timeeeeeeeeeeeeeeeeeee ", v)
 	}
-	ocelog.Log().Debug("WOWOEE ZOWEE! finished building")
+	ocelog.Log().Debugf("finished building id %s", psg.GetCheckoutHash())
 }
 
+// todo: dedupe all this shit. probably just switch earlier? idk seems weird.
+
 func (w *WorkerMsgHandler) runPushBundle(bund *protos.PushBuildBundle) {
+	switch w.werkConf.werkerType {
+	case Docker:
+		w.runDockerPushBundle(bund)
+	case Kubernetes:
+		w.runK8sPushBundle(bund)
+	}
+}
+
+func (w *WorkerMsgHandler) runDockerPushBundle(bund *protos.PushBuildBundle) {
+		ocelog.Log().Debug("building building tasty tasty push bundle")
+		// run push bundle.
+		//fmt.Println(bund.PushData.Repository.FullName)
+		w.infochan <- bund.PushData.Repository.FullName
+		w.infochan <- bund.PushData.Repository.Owner.Username
+		w.infochan <- "push requeeeeeeeest DOCKER!"
+		w.infochan <- "this could be some delightful std out from builds! huzzah! I'M RUNNING W/ DOCKER!"
+		close(w.infochan)
+}
+
+
+func (w *WorkerMsgHandler) runK8sPushBundle(bund *protos.PushBuildBundle) {
 	ocelog.Log().Debug("building building tasty tasty push bundle")
 	// run push bundle.
 	//fmt.Println(bund.PushData.Repository.FullName)
 	w.infochan <- bund.PushData.Repository.FullName
 	w.infochan <- bund.PushData.Repository.Owner.Username
-	w.infochan <- "push requeeeeeeeest"
-	w.infochan <- "this could be some delightful std out from builds! huzzah!"
+	w.infochan <- "push requeeeeeeeest KUBERNETES!"
+	w.infochan <- "this could be some delightful std out from builds! huzzah! I'M RUNNING W/ k8s!!"
 	close(w.infochan)
 }
+
 
 func (w *WorkerMsgHandler) runPRBundle(bund *protos.PRBuildBundle) {
 	// run pr bundle.
 	//fmt.Println("WOW I MADE IT ALL THE WAY TO RUN PR BUNDLE!")
+	switch w.werkConf.werkerType {
+	case Docker:
+		w.runDockerPRBundle(bund)
+	case Kubernetes:
+		w.runK8sPRBundle(bund)
+
+	}
+}
+
+func (w *WorkerMsgHandler) runDockerPRBundle(bund *protos.PRBuildBundle) {
 	w.infochan <- bund.PrData.Repository.FullName
-	w.infochan <- "pulllll reqquuuueeeeeeeeeest!"
+	w.infochan <- "delightful! docker! love docker!"
+	w.infochan <- "dockeeerrr pulllll reqquuuueeeeeeeeeest!"
+	close(w.infochan)
+}
+
+
+func (w *WorkerMsgHandler) runK8sPRBundle(bund *protos.PRBuildBundle) {
+	w.infochan <- bund.PrData.Repository.FullName
+	w.infochan <- "even better! love k8s! cool cool cool!!"
+	w.infochan <- "kubernetteeees pulllll reqquuuueeeeeeeeeest!"
 	close(w.infochan)
 }
