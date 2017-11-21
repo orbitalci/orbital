@@ -6,20 +6,17 @@ import (
 	"github.com/shankj3/ocelot/protos/out"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
+	"time"
 )
+
+var chanDict = NewCD()
 
 type WorkerMsgHandler struct {
 	topic    string
+	werkConf *WerkerConf
 	infochan chan string
 }
 
-// NewWorkerMsgHandler instantiates WorkerMsgHandler with the topic name
-// was going to do *something* with info chan but it has to be reset every run of UnmarshalAndProcess
-func NewWorkerMsgHandler(topic string) WorkerMsgHandler {
-	return WorkerMsgHandler{
-		topic: topic,
-	}
-}
 
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	ocelog.Log().Debug("unmarshaling build obj and processing")
@@ -34,6 +31,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	go w.watchForResults()
 	// do the thing
 	go w.build(unmarshalobj)
+	time.Sleep(0.5*time.Second)
 	return nil
 }
 
@@ -46,7 +44,8 @@ func (w *WorkerMsgHandler) watchForResults() {
 }
 
 
-func (w *WorkerMsgHandler) build(psg proto.Message) {
+func (w *WorkerMsgHandler) build(psg nsqpb.BundleProtoMessage) {
+	chanDict.CarefulPut(psg.GetCheckoutHash(), w.infochan)
 	ocelog.Log().Debug("How exciting! I gonna build!")
 	switch v := psg.(type) {
 	case *protos.PRBuildBundle:
