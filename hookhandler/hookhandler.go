@@ -136,7 +136,9 @@ func main() {
 	// initialize vault on startup, we want to know right away if we don't have the creds we need.
 	_ = getInitVault()
 	muxi := mux.NewRouter()
-	muxi.HandleFunc("/test", RepoPush).Methods("POST")
+	muxi.HandleFunc("/bitbucket/rp", RepoPush).Methods("POST")
+	muxi.HandleFunc("/bitbucket/pr", PullRequest).Methods("POST")
+
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 
 	n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))

@@ -93,7 +93,7 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 //reads config file in current directory if it exists, exits if file is unparseable or doesn't exist
 func ReadConfig() {
 	config := &models.ConfigYaml{}
-	configFile, err := ioutil.ReadFile(models.ConfigFileName)
+	configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return
@@ -119,21 +119,24 @@ func ReadConfig() {
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
 func SetupCredentials(config *models.AdminConfig) (string, error) {
-	handler := handler.Bitbucket{}
-	err := handler.SetMeUp(config)
+	//hehe right now we only have bitbucket
+	switch config.Type {
+	case "bitbucket":
+		bbHandler := handler.Bitbucket{}
+		err := bbHandler.SetMeUp(config)
 
-	if err != nil {
-		ocelog.Log().Error("could not setup bitbucket client")
-		return "Could not setup bitbucket client for " + config.Type + "/" + config.AcctName, err
+		if err != nil {
+			ocelog.Log().Error("could not setup bitbucket client")
+			return "Could not setup bitbucket client for " + config.Type + "/" + config.AcctName, err
+		}
+
+		err = bbHandler.Walk()
+		if err != nil {
+			return "Could not traverse repositories and create necessary webhooks for " + config.Type + "/" + config.AcctName, err
+		}
 	}
-
-	err = handler.Walk()
-	if err != nil {
-		return "Could not traverse repositories and create necessary webhooks for " + config.Type + "/" + config.AcctName, err
-	}
-
 	configPath := util.ConfigPath + "/" + config.Type + "/" + config.AcctName
-	err = remoteConfig.AddCreds(configPath, config)
+	err := remoteConfig.AddCreds(configPath, config)
 	return "", err
 }
 

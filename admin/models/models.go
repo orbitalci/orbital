@@ -2,7 +2,6 @@ package models
 
 
 //TODO: get callback url from consul or something like it
-const WebhookCallbackURL = "https://radiant-mesa-23210.herokuapp.com/test"
 const BuildFileName = "ocelot.yml"
 const ConfigFileName = "config.yml"
 
@@ -16,4 +15,9 @@ type AdminConfig struct {
 
 type ConfigYaml struct {
 	Credentials []AdminConfig	`yaml:"credentials"`
+}
+
+var BitbucketEvents = map[string]string{
+	"rp" : "repo:push",
+	"pr" : "pullrequest:approved",
 }

@@ -14,6 +14,7 @@ import (
 	"errors"
 )
 
+const WebhookCallbackURL = "https://radiant-mesa-23210.herokuapp.com/bitbucket/"
 const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
 //const BitbucketRepoBaseV1 = "https://api.bitbucket.org/1.0/repositories/%s"
 
@@ -82,13 +83,13 @@ func (bb Bitbucket) GetFile(filePath string, fullRepoName string, commitHash str
 
 //CreateWebhook will create webhook at specified webhook url
 func (bb Bitbucket) CreateWebhook(webhookURL string) error {
-	if !bb.doesWebhookExist(webhookURL) {
+	for _, key := range bb.FindWebhooks(webhookURL) {
 		//create webhook if one does not already exist
 		newWebhook := &pb.CreateWebhook{
 			Description: "marianne did this",
-			Url:         models.WebhookCallbackURL,
 			Active:      true,
-			Events:      []string{"repo:push"},
+			Url: WebhookCallbackURL + "/" + key,
+			Events: []string{models.BitbucketEvents[key]},
 		}
 		webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
 		if err != nil {
@@ -104,6 +105,8 @@ func (bb Bitbucket) CreateWebhook(webhookURL string) error {
 	return nil
 }
 
+
+//TODO: comment
 func (bb Bitbucket) notSetUP() bool {
 	return bb.Client == (ocenet.HttpClient{}) || bb.Marshaler == (jsonpb.Marshaler{})
 }
@@ -130,16 +133,29 @@ func (bb Bitbucket) recurseOverRepos(repoUrl string) error {
 }
 
 //recursively iterates over all webhooks and returns true (matches our callback url) if one already exists
-func (bb Bitbucket) doesWebhookExist(getWebhookURL string) bool {
+//returns list of event keys that still needs to be created
+func (bb Bitbucket) FindWebhooks(getWebhookURL string) []string {
+	ocelog.Log().Debug(getWebhookURL)
+	needsCreation := []string{}
 	if getWebhookURL == "" {
-		return false
+		return needsCreation
 	}
 	webhooks := &pb.GetWebhooks{}
 	bb.Client.GetUrl(getWebhookURL, webhooks)
-	for _, wh := range webhooks.GetValues() {
-		if wh.GetUrl() == models.WebhookCallbackURL {
-			return true
+
+	if len(webhooks.GetValues()) > 0 {
+		for _, wh := range webhooks.GetValues() {
+			for k := range models.BitbucketEvents {
+				ocelog.Log().Debug(k)
+				if wh.GetUrl() != WebhookCallbackURL + "/" + k {
+					needsCreation = append(needsCreation, k)
+				}
+			}
 		}
 	}
-	return bb.doesWebhookExist(webhooks.GetNext())
+
+
+
+
+	return bb.FindWebhooks(webhooks.GetNext())
 }
