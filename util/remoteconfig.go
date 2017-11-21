@@ -47,7 +47,8 @@ type RemoteConfig struct {
 	Vault  *ocevault.Ocevault
 }
 
-//GetCredAt will return list of credentials stored at specified path excluding password
+//GetCredAt will return list of credentials stored at specified path.
+//if hideSecret is set to false, will return password in cleartext
 //key of map is CONFIG_TYPE/ACCTNAME. Ex: bitbucket/mariannefeng
 func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) map[string]*models.AdminConfig {
 	creds := map[string]*models.AdminConfig{}
