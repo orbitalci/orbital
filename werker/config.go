@@ -30,16 +30,19 @@ type WerkerConf struct {
 	servicePort   string
 	werkerName    string
 	werkerType    WerkType
+	logLevel 	  string
 }
 
 func GetConf() (*WerkerConf, error) {
 	werker := &WerkerConf{}
 	werkerName, _ := os.Hostname()
-	werkerTypeStr := flag.String("werker_type", defaultWerkerType, "type of werker, kubernetes or docker")
+	var werkerTypeStr string
+	flag.StringVar(&werkerTypeStr, "werker_type", defaultWerkerType, "type of werker, kubernetes or docker")
 	flag.StringVar(&werker.werkerName,"werker_name", werkerName, "if wish to identify as other than hostname")
 	flag.StringVar(&werker.servicePort, "werker_port", defaultServicePort, "port to run service on. default 9090")
+	flag.StringVar(&werker.logLevel, "log-level", "info", "log level")
 	flag.Parse()
-	werker.werkerType = StrToWerkType(*werkerTypeStr)
+	werker.werkerType = StrToWerkType(werkerTypeStr)
 	if werker.werkerType == -1 {
 		return nil, errors.New("werker type can only be: k8s, kubernetes, docker")
 	}

@@ -166,9 +166,6 @@ func main() {
 	muxi := mux.NewRouter()
 	muxi.HandleFunc("/test", HandleBBEvent).Methods("POST")
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
-
-	n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))
-	n.Use(negronilogrus.NewCustomMiddleware(ocelog.GetLogLevel(), &log.JSONFormatter{}, "web"))
-	n.UseHandler(muxi)
+	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)
 }

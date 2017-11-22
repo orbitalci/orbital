@@ -21,7 +21,8 @@ provide results endpoint, way for server to access data
 package main
 
 import (
-    "github.com/shankj3/ocelot/util/nsqpb"
+	"fmt"
+	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"time"
 )
@@ -43,12 +44,13 @@ func retry(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf) {
 }
 
 func main() {
-	ocelog.InitializeOcelog(ocelog.GetFlags())
 	conf, err := GetConf()
 	if err != nil {
-		ocelog.IncludeErrField(err).Fatal("cannot get configuration")
+		fmt.Errorf("cannot get configuration, exiting.... error: %s", err)
+		return
 	}
-
+	ocelog.InitializeOcelog(conf.logLevel)
+	tunnel := make(chan *Transport)
 	ocelog.Log().Debug("starting up worker on off channels w/ ", conf.werkerName)
 	var consumers []*nsqpb.ProtoConsume
     for _, topic := range nsqpb.SupportedTopics {
@@ -57,6 +59,7 @@ func main() {
 			handler := &WorkerMsgHandler{
 				topic:    topic,
 				werkConf: conf,
+				chanChan: tunnel,
 			}
 			protoConsume.Handler = handler
 			protoConsume.ConsumeMessages(topic, conf.werkerName)
@@ -67,6 +70,7 @@ func main() {
 		}
 		consumers = append(consumers, protoConsume)
 	}
+	go ServeMe(tunnel, conf)
 	for _, consumer := range consumers {
 		<-consumer.StopChan
 	}

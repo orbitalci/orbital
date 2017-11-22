@@ -6,15 +6,18 @@ import (
 	"github.com/shankj3/ocelot/protos/out"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
-	"time"
 )
 
-var chanDict = NewCD()
+type Transport struct {
+	Hash       string
+	InfoChan   chan []byte
+}
 
 type WorkerMsgHandler struct {
 	topic    string
 	werkConf *WerkerConf
-	infochan chan string
+	infochan chan []byte
+	chanChan chan *Transport
 }
 
 
@@ -26,29 +29,37 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 		return err
 	}
 	// channels get closed after the build finishes
-	w.infochan = make(chan string)
+	w.infochan = make(chan []byte)
 	// set goroutine for watching for results and logging them (for rn)
-	go w.watchForResults()
+	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
 	// do the thing
 	go w.build(unmarshalobj)
-	time.Sleep(0.5*time.Second)
 	return nil
 }
 
-func (w *WorkerMsgHandler) watchForResults() {
+func (w *WorkerMsgHandler) watchForResults(hash string) {
+	ocelog.Log().Debug("HASH!", hash)
+
+	ocelog.Log().Debugf("adding hash (%s) & infochan to transport channel", hash)
+	transport := &Transport{Hash: hash, InfoChan: w.infochan,}
+	w.chanChan <- transport
 	ocelog.Log().Debug("watchForResults thread started")
-	for i := range w.infochan {
-		fmt.Println(i)
-	}
+	//for i := range w.infochan {
+	//	fmt.Println(i)
+	//}
 }
 
 
 func (w *WorkerMsgHandler) build(psg nsqpb.BundleProtoMessage) {
-	chanDict.CarefulPut(psg.GetCheckoutHash(), w.infochan)
+	ocelog.Log().Debug("about to build")
 	switch v := psg.(type) {
 	case *protos.PRBuildBundle:
+		ocelog.Log().Debug("hash build ", v.PrData.Pullrequest.Source.Commit.Hash)
+		w.watchForResults(v.PrData.Pullrequest.Source.Commit.Hash)
 		w.runPRBundle(v)
 	case *protos.PushBuildBundle:
+		ocelog.Log().Debug("hash build: ", v.PushData.Push.Changes[0].New.Target.Hash)
+		w.watchForResults(v.PushData.Push.Changes[0].New.Target.Hash)
 		w.runPushBundle(v)
 	default:
 		fmt.Println("why is there no timeeeeeeeeeeeeeeeeeee ", v)
@@ -71,10 +82,10 @@ func (w *WorkerMsgHandler) runDockerPushBundle(bund *protos.PushBuildBundle) {
 		ocelog.Log().Debug("building building tasty tasty push bundle")
 		// run push bundle.
 		//fmt.Println(bund.PushData.Repository.FullName)
-		w.infochan <- bund.PushData.Repository.FullName
-		w.infochan <- bund.PushData.Repository.Owner.Username
-		w.infochan <- "push requeeeeeeeest DOCKER!"
-		w.infochan <- "this could be some delightful std out from builds! huzzah! I'M RUNNING W/ DOCKER!"
+		w.infochan <- []byte(bund.PushData.Repository.FullName)
+		w.infochan <- []byte(bund.PushData.Repository.Owner.Username)
+		w.infochan <- []byte("push requeeeeeeeest DOCKER!")
+		w.infochan <- []byte("this could be some delightful std out from builds! huzzah! I'M RUNNING W/ DOCKER!")
 		close(w.infochan)
 }
 
@@ -83,10 +94,10 @@ func (w *WorkerMsgHandler) runK8sPushBundle(bund *protos.PushBuildBundle) {
 	ocelog.Log().Debug("building building tasty tasty push bundle")
 	// run push bundle.
 	//fmt.Println(bund.PushData.Repository.FullName)
-	w.infochan <- bund.PushData.Repository.FullName
-	w.infochan <- bund.PushData.Repository.Owner.Username
-	w.infochan <- "push requeeeeeeeest KUBERNETES!"
-	w.infochan <- "this could be some delightful std out from builds! huzzah! I'M RUNNING W/ k8s!!"
+	w.infochan <- []byte(bund.PushData.Repository.FullName)
+	w.infochan <- []byte(bund.PushData.Repository.Owner.Username)
+	w.infochan <- []byte("push requeeeeeeeest KUBERNETES!")
+	w.infochan <- []byte("this could be some delightful std out from builds! huzzah! I'M RUNNING W/ k8s!!")
 	close(w.infochan)
 }
 
@@ -104,16 +115,16 @@ func (w *WorkerMsgHandler) runPRBundle(bund *protos.PRBuildBundle) {
 }
 
 func (w *WorkerMsgHandler) runDockerPRBundle(bund *protos.PRBuildBundle) {
-	w.infochan <- bund.PrData.Repository.FullName
-	w.infochan <- "delightful! docker! love docker!"
-	w.infochan <- "dockeeerrr pulllll reqquuuueeeeeeeeeest!"
+	w.infochan <- []byte(bund.PrData.Repository.FullName)
+	w.infochan <- []byte("delightful! docker! love docker!")
+	w.infochan <- []byte("dockeeerrr pulllll reqquuuueeeeeeeeeest!")
 	close(w.infochan)
 }
 
 
 func (w *WorkerMsgHandler) runK8sPRBundle(bund *protos.PRBuildBundle) {
-	w.infochan <- bund.PrData.Repository.FullName
-	w.infochan <- "even better! love k8s! cool cool cool!!"
-	w.infochan <- "kubernetteeees pulllll reqquuuueeeeeeeeeest!"
+	w.infochan <- []byte(bund.PrData.Repository.FullName)
+	w.infochan <- []byte("even better! love k8s! cool cool cool!!")
+	w.infochan <- []byte("kubernetteeees pulllll reqquuuueeeeeeeeeest!")
 	close(w.infochan)
 }
