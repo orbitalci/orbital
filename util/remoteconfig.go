@@ -7,6 +7,7 @@ import (
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocevault"
 	"strings"
+	"github.com/pkg/errors"
 )
 
 var ConfigPath = "creds"
@@ -52,47 +53,61 @@ type RemoteConfig struct {
 //GetCredAt will return list of credentials stored at specified path.
 //if hideSecret is set to false, will return password in cleartext
 //key of map is CONFIG_TYPE/ACCTNAME. Ex: bitbucket/mariannefeng
-func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) map[string]*models.AdminConfig {
+//if an error occurs while reading from vault, the most recent error will be returned from the response
+func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[string]*models.AdminConfig, error) {
 	creds := map[string]*models.AdminConfig{}
-	for _, v := range remoteConfig.Consul.GetKeyValues(path) {
-		pathKeys := strings.Split(strings.TrimLeft(v.Key, "/" + ConfigPath), "/")
+	var err error
 
-		//cred type | acct name gives us a unique id to track by in the map
-		credType := pathKeys[0]
-		acctName := pathKeys[1]
-		infoType := pathKeys[2]
+	if remoteConfig.Consul.Connected {
+		configs, err := remoteConfig.Consul.GetKeyValues(path)
+		if err != nil {
+			return creds, err
+		}
 
-		mapKey := credType + "/" + acctName
-		foundConfig, ok := creds[mapKey]
-		if !ok {
-			foundConfig = &models.AdminConfig{
-				AcctName: acctName,
-				Type:     credType,
-			}
+		for _, v := range configs {
+			pathKeys := strings.Split(strings.TrimLeft(v.Key, "/" + ConfigPath), "/")
 
-			if hideSecret {
-				foundConfig.ClientSecret = "*********"
-			} else {
-				passcode, err := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
-				if err != nil {
-					ocelog.IncludeErrField(err).Error()
-					foundConfig.ClientSecret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
-				} else {
-					foundConfig.ClientSecret = passcode
+			//cred type | acct name gives us a unique id to track by in the map
+			credType := pathKeys[0]
+			acctName := pathKeys[1]
+			infoType := pathKeys[2]
+
+			mapKey := credType + "/" + acctName
+			foundConfig, ok := creds[mapKey]
+			if !ok {
+				foundConfig = &models.AdminConfig{
+					AcctName: acctName,
+					Type:     credType,
 				}
+
+				if hideSecret {
+					foundConfig.ClientSecret = "*********"
+				} else {
+					passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
+					if passErr != nil {
+						ocelog.IncludeErrField(err).Error()
+						foundConfig.ClientSecret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
+						err = passErr
+					} else {
+						foundConfig.ClientSecret = passcode
+					}
+				}
+
+				creds[mapKey] = foundConfig
 			}
 
-			creds[mapKey] = foundConfig
+			switch infoType {
+			case "clientid":
+				foundConfig.ClientId = string(v.Value[:])
+			case "tokenurl":
+				foundConfig.TokenURL = string(v.Value[:])
+			}
 		}
-
-		switch infoType {
-		case "clientid":
-			foundConfig.ClientId = string(v.Value[:])
-		case "tokenurl":
-			foundConfig.TokenURL = string(v.Value[:])
-		}
+	} else {
+		return creds, errors.New("not connected to consul, unable to retrieve credentials")
 	}
-	return creds
+
+	return creds, err
 }
 
 //GetPassword will return to you the vault password at specified path
@@ -108,8 +123,14 @@ func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
 //AddCreds adds your adminconfig creds into both consul + vault
 func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.AdminConfig) error {
 	if remoteConfig.Consul.Connected {
-		remoteConfig.Consul.AddKeyValue(path+"/clientid", []byte(adminConfig.ClientId))
-		remoteConfig.Consul.AddKeyValue(path+"/tokenurl", []byte(adminConfig.TokenURL))
+		err := remoteConfig.Consul.AddKeyValue(path+"/clientid", []byte(adminConfig.ClientId))
+		if err != nil {
+			return err
+		}
+		err = remoteConfig.Consul.AddKeyValue(path+"/tokenurl", []byte(adminConfig.TokenURL))
+		if err != nil {
+			return err
+		}
 		if remoteConfig.Vault != nil {
 			secret := make(map[string]interface{})
 			secret["clientsecret"] = adminConfig.ClientSecret
@@ -119,7 +140,8 @@ func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.Admi
 			}
 		}
 	} else {
-		ocelog.Log().Error("NOT CONNECTED TO CONSUL")
+		return errors.New("not connected to consul, unable to add credentials")
 	}
+
 	return nil
 }

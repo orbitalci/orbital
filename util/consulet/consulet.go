@@ -68,7 +68,7 @@ func (consul *Consulet) RemoveService(name string) error {
 }
 
 //TODO: should key value operations be atomic??? Can switch to use CAS
-func (consul *Consulet) AddKeyValue(key string, value []byte) {
+func (consul *Consulet) AddKeyValue(key string, value []byte) error {
 	kv := consul.Client.KV()
 	kvPair := &api.KVPair{
 		Key:   key,
@@ -76,29 +76,31 @@ func (consul *Consulet) AddKeyValue(key string, value []byte) {
 	}
 	_, err := kv.Put(kvPair, nil)
 	consul.updateConnection(err)
+	return err
 }
 
 //RemoveValue removes value at specified key
-func (consul *Consulet) RemoveValue(key string) {
+func (consul *Consulet) RemoveValue(key string) error {
 	kv := consul.Client.KV()
 	_, err := kv.Delete(key, nil)
 	consul.updateConnection(err)
+	return err
 }
 
 //GetKeyValue gets key/value at specified key
-func (consul *Consulet) GetKeyValue(key string) *api.KVPair {
+func (consul *Consulet) GetKeyValue(key string) (*api.KVPair, error) {
 	kv := consul.Client.KV()
 	val, _, err := kv.Get(key, nil)
 	consul.updateConnection(err)
-	return val
+	return val, err
 }
 
 //GetKeyValue gets key/value list at specified prefix
-func (consul *Consulet) GetKeyValues(prefix string) api.KVPairs {
+func (consul *Consulet) GetKeyValues(prefix string) (api.KVPairs, error) {
 	kv := consul.Client.KV()
 	val, _, err := kv.List(prefix, nil)
 	consul.updateConnection(err)
-	return val
+	return val, err
 }
 
 func (consul *Consulet) CreateNewSemaphore(path string, limit int) (*api.Semaphore, error) {

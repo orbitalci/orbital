@@ -14,6 +14,22 @@ import (
 
 
 
+func TestRemoteConfig_ErrorHandling(t *testing.T) {
+	brokenRemote, _ := GetInstance("", 0, "abc")
+	if brokenRemote == nil {
+		t.Error(GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
+	}
+	err := brokenRemote.AddCreds("test", &models.AdminConfig{})
+	if err.Error() != "not connected to consul, unable to add credentials" {
+		t.Error(GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to add credentials", err))
+	}
+	_, err = brokenRemote.GetCredAt("test", false)
+	if err.Error() != "not connected to consul, unable to retrieve credentials" {
+		t.Error(GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to retrieve credentials", err))
+	}
+
+}
+
 func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	testRemoteConfig, vaultListener, consulServer := testSetupVaultAndConsul(t)
 	defer teardownVaultAndConsul(vaultListener, consulServer)
@@ -40,7 +56,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(GenericStrFormatErrors("secret from vault", "top-secret", testPassword))
 	}
 
-	creds := testRemoteConfig.GetCredAt(ConfigPath + "/github/mariannefeng", true)
+	creds, _ := testRemoteConfig.GetCredAt(ConfigPath + "/github/mariannefeng", true)
 	marianne, ok := creds["github/mariannefeng"]
 	if !ok {
 		t.Error(GenericStrFormatErrors("fake cred should exist", true, ok))
@@ -66,7 +82,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(GenericStrFormatErrors("fake cred hidden password", "*********", marianne.ClientSecret))
 	}
 
-	creds = testRemoteConfig.GetCredAt(ConfigPath + "/github/mariannefeng", false)
+	creds, _ = testRemoteConfig.GetCredAt(ConfigPath + "/github/mariannefeng", false)
 	marianne, _ = creds["github/mariannefeng"]
 
 	if marianne.ClientSecret != "top-secret" {
@@ -86,7 +102,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(GenericStrFormatErrors("adding second set of creds to consul", nil, err))
 	}
 
-	creds = testRemoteConfig.GetCredAt(ConfigPath, false)
+	creds, _ = testRemoteConfig.GetCredAt(ConfigPath, false)
 
 	_, ok = creds["github/mariannefeng"]
 	if !ok {
