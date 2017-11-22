@@ -6,6 +6,7 @@ import (
 	"github.com/shankj3/ocelot/protos/out"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
+	"time"
 )
 
 type Transport struct {
@@ -84,7 +85,11 @@ func (w *WorkerMsgHandler) runDockerPushBundle(bund *protos.PushBuildBundle) {
 		//fmt.Println(bund.PushData.Repository.FullName)
 		w.infochan <- []byte(bund.PushData.Repository.FullName)
 		w.infochan <- []byte(bund.PushData.Repository.Owner.Username)
+		w.infochan <- []byte("gonna sleep for 5 seconds now.")
+		time.Sleep(5*time.Second)
 		w.infochan <- []byte("push requeeeeeeeest DOCKER!")
+		w.infochan <- []byte("sleeping for 5 more seconds!!!!")
+		time.Sleep(5*time.Second)
 		w.infochan <- []byte("this could be some delightful std out from builds! huzzah! I'M RUNNING W/ DOCKER!")
 		close(w.infochan)
 }

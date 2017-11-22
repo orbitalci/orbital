@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
+	"io"
 	"net/http"
 	"time"
 )
@@ -42,23 +44,48 @@ func stream(a *appContext, w http.ResponseWriter, r *http.Request){
 		ocelog.Log().Debug("no info chan found")
 		return
 	}
-	go pumpBundle(ws, infochan,bundleDone)
+	infoReader, infoWriter := io.Pipe()
+	defer infoReader.Close()
+	defer infoWriter.Close()
+
+	go writeBundle(infochan, infoWriter)
+	go pumpBundle(ws, infoReader, bundleDone)
 	ocelog.Log().Debug("sending infoChan over websocket, waiting for the channel to be closed.")
 	<-bundleDone
 }
 
-func pumpBundle(ws *websocket.Conn, infoChan chan []byte, done chan int){
+// todo: need another goroutine to read off the infochan so that more than one
+// page can hit the site
+func pumpBundle(ws *websocket.Conn, infoReader io.Reader, done chan int){
 	defer func(){}()
-	for i := range infoChan {
+	s := bufio.NewScanner(infoReader)
+	for s.Scan() {
 		ws.SetWriteDeadline(time.Now().Add(10*time.Second))
-		if err := ws.WriteMessage(websocket.TextMessage, i); err != nil{
+		if err := ws.WriteMessage(websocket.TextMessage, s.Bytes()); err != nil{
 			ocelog.IncludeErrField(err).Error("could not write to web socket")
 			ws.Close()
 			break
 		}
 	}
+	if s.Err() != nil {
+		ocelog.IncludeErrField(s.Err()).Error("infoReader scan error")
+	}
 	close(done)
+	ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	ws.Close()
 }
+
+
+func writeBundle(infochan chan[]byte, w io.WriteCloser){
+	for i := range infochan {
+		newline := []byte("\n")
+		w.Write(i)
+		w.Write(newline)
+	}
+	w.Close()
+}
+
 
 func TransportToCD(tranChan chan *Transport, cd *CD){
 	for i := range tranChan {
