@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/mitchellh/go-homedir"
 	"github.com/shankj3/ocelot/util"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -27,6 +28,14 @@ var filebuildstorages = []struct{
 	{"/tmp/test/one", filepath.Join("/tmp", "test", "one", hash)},
 }
 
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil { return true, nil }
+	if os.IsNotExist(err) {return false, nil}
+	return true, err
+}
+
+
 func TestFileBuildStorage(t *testing.T) {
 	testBytes := []byte("woooooooeooooeooeeeoeo!!!!!")
 
@@ -35,7 +44,7 @@ func TestFileBuildStorage(t *testing.T) {
 			saveDirec: fb.initSaveDirec,
 		}
 		fbs.setup()
-		defer fbs.Clean()
+
 		err := fbs.Store(hash, testBytes)
 		if err != nil {
 			t.Fatal(err)
@@ -50,6 +59,11 @@ func TestFileBuildStorage(t *testing.T) {
 		}
 		if !bytes.Equal(actualData, testBytes){
 			t.Error(util.GenericStrFormatErrors("file data", string(testBytes), string(actualData)))
+		}
+		fbs.Clean()
+		exists, _ := exists(fb.actualSaveLoc)
+		if exists {
+			t.Error("save directory should not exist. path: ", fb.actualSaveLoc)
 		}
 	}
 
