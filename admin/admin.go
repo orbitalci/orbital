@@ -123,7 +123,10 @@ func SetupCredentials(config *models.AdminConfig) (string, error) {
 	switch config.Type {
 	case "bitbucket":
 		bbHandler := handler.Bitbucket{}
-		err := bbHandler.SetMeUp(config)
+		bitbucketClient := &ocenet.OAuthClient{}
+		bitbucketClient.Setup(config)
+
+		err := bbHandler.SetMeUp(config, bitbucketClient)
 
 		if err != nil {
 			ocelog.Log().Error("could not setup bitbucket client")

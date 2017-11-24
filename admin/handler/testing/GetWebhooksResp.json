@@ -1,0 +1,43 @@
+{
+  "pagelen": 10,
+  "values": [
+    {
+      "read_only": null,
+      "description": "marianne test",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/mariannefeng/test-ocelot/hooks/%7Be3ce0b63-87c8-4594-bf8e-5044e3bce0ea%7D"
+        }
+      },
+      "url": "",
+      "created_at": "2017-11-24T06:43:40.785199Z",
+      "skip_cert_verification": false,
+      "source": null,
+      "active": true,
+      "subject": {
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/mariannefeng/test-ocelot"
+          },
+          "html": {
+            "href": "https://bitbucket.org/mariannefeng/test-ocelot"
+          },
+          "avatar": {
+            "href": "https://bitbucket.org/mariannefeng/test-ocelot/avatar/32/"
+          }
+        },
+        "type": "repository",
+        "name": "test-ocelot",
+        "full_name": "mariannefeng/test-ocelot",
+        "uuid": "{c654b6c9-5cf1-4e27-8803-76efc6f70a6b}"
+      },
+      "type": "webhook_subscription",
+      "events": [
+        "repo:push"
+      ],
+      "uuid": "{e3ce0b63-87c8-4594-bf8e-5044e3bce0ea}"
+    }
+  ],
+  "page": 1,
+  "size": 1
+}

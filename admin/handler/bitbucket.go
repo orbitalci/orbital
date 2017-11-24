@@ -2,25 +2,22 @@ package handler
 
 //TODO: add interface once we have more than just bitbucket
 import (
-	"context"
-	//"errors"
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/shankj3/ocelot/admin/models"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
 	pb "github.com/shankj3/ocelot/protos/out"
-	"golang.org/x/oauth2/clientcredentials"
 	"errors"
 )
 
-const WebhookCallbackURL = "https://radiant-mesa-23210.herokuapp.com/bitbucket/"
+const DefaultCallbackURL = "https://radiant-mesa-23210.herokuapp.com/bitbucket/"
 const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
-//const BitbucketRepoBaseV1 = "https://api.bitbucket.org/1.0/repositories/%s"
 
 //Bitbucket is a bitbucket handler responsible for finding build files and
 //registering webhooks for necessary repositories
 type Bitbucket struct {
+	CallbackURL	string
 	Client    ocenet.HttpClient
 	Marshaler jsonpb.Marshaler
 
@@ -29,29 +26,8 @@ type Bitbucket struct {
 }
 
 // Takes in admin config creds, returns any errors that may happen during setup
-func (bb *Bitbucket) SetMeUp(adminConfig *models.AdminConfig) error {
-	var conf = clientcredentials.Config {
-		ClientID:     adminConfig.ClientId,
-		ClientSecret: adminConfig.ClientSecret,
-		TokenURL:     adminConfig.TokenURL,
-	}
-	var ctx = context.Background()
-	token, err := conf.Token(ctx)
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("well shit we can't get a token")
-		return errors.New("Unable to retrieve token for " + adminConfig.Type + "/" + adminConfig.AcctName)
-	}
-	ocelog.Log().Debug("token: " + token.AccessToken)
-
-	bitbucketClient := ocenet.HttpClient{}
-	bbClient := conf.Client(ctx)
-	bitbucketClient.AuthClient = bbClient
-	bitbucketClient.Unmarshaler = &jsonpb.Unmarshaler{
-		AllowUnknownFields: true,
-	}
-
-	//populate fields
-	bb.Client = bitbucketClient
+func (bb *Bitbucket) SetMeUp(adminConfig *models.AdminConfig, client ocenet.HttpClient) error {
+	bb.Client = client
 	bb.Marshaler = jsonpb.Marshaler{}
 	bb.credConfig = adminConfig
 	bb.isInitialized = true
@@ -88,7 +64,7 @@ func (bb Bitbucket) CreateWebhook(webhookURL string) error {
 		newWebhook := &pb.CreateWebhook{
 			Description: "marianne did this",
 			Active:      true,
-			Url: WebhookCallbackURL + "/" + key,
+			Url: bb.GetCallbackURL() + "/" + key,
 			Events: []string{models.BitbucketEvents[key]},
 		}
 		webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
@@ -105,10 +81,17 @@ func (bb Bitbucket) CreateWebhook(webhookURL string) error {
 	return nil
 }
 
+//GetCallbackURL is a getter for retrieving callbackURL for bitbucket webhooks
+func (bb Bitbucket) GetCallbackURL () string {
+	if len(bb.CallbackURL) > 0 {
+		return bb.CallbackURL
+	}
+	return DefaultCallbackURL
+}
 
-//TODO: comment
-func (bb Bitbucket) notSetUP() bool {
-	return bb.Client == (ocenet.HttpClient{}) || bb.Marshaler == (jsonpb.Marshaler{})
+//SetCallbackURL sets callback urls to be used for webhooks
+func (bb Bitbucket) SetCallbackURL (callbackURL string) {
+	bb.CallbackURL = callbackURL
 }
 
 //recursively iterates over all repositories and creates webhook
@@ -136,7 +119,7 @@ func (bb Bitbucket) recurseOverRepos(repoUrl string) error {
 //returns list of event keys that still needs to be created
 func (bb Bitbucket) FindWebhooks(getWebhookURL string) []string {
 	ocelog.Log().Debug(getWebhookURL)
-	needsCreation := []string{}
+	var needsCreation []string
 	if getWebhookURL == "" {
 		return needsCreation
 	}
@@ -147,15 +130,16 @@ func (bb Bitbucket) FindWebhooks(getWebhookURL string) []string {
 		for _, wh := range webhooks.GetValues() {
 			for k := range models.BitbucketEvents {
 				ocelog.Log().Debug(k)
-				if wh.GetUrl() != WebhookCallbackURL + "/" + k {
+				if wh.GetUrl() != bb.GetCallbackURL() + "/" + k {
 					needsCreation = append(needsCreation, k)
 				}
 			}
 		}
+	} else {
+		for k := range models.BitbucketEvents {
+			ocelog.Log().Debug(k)
+			needsCreation = append(needsCreation, k)
+		}
 	}
-
-
-
-
-	return bb.FindWebhooks(webhooks.GetNext())
+	return append(needsCreation, bb.FindWebhooks(webhooks.GetNext())...)
 }
