@@ -37,7 +37,7 @@ type OAuthClient struct {
 }
 
 //Setup takes in OAuth2 credentials
-func (oc OAuthClient) Setup(config *models.AdminConfig) error {
+func (oc *OAuthClient) Setup(config *models.AdminConfig) error {
 	var conf = clientcredentials.Config {
 		ClientID:     config.ClientId,
 		ClientSecret: config.ClientSecret,
@@ -59,7 +59,7 @@ func (oc OAuthClient) Setup(config *models.AdminConfig) error {
 	return err
 }
 
-func (oc OAuthClient) GetUrl(url string, unmarshalObj proto.Message) error {
+func (oc *OAuthClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	resp, err := oc.AuthClient.Get(url)
 	defer resp.Body.Close()
 	if err != nil {
@@ -76,7 +76,7 @@ func (oc OAuthClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	return nil
 }
 
-func (oc OAuthClient) GetUrlRawData(url string) ([]byte, error) {
+func (oc *OAuthClient) GetUrlRawData(url string) ([]byte, error) {
 	resp, err := oc.AuthClient.Get(url)
 	defer resp.Body.Close()
 	if err != nil {
@@ -93,7 +93,7 @@ func (oc OAuthClient) GetUrlRawData(url string) ([]byte, error) {
 	return bytez, nil
 }
 
-func (oc OAuthClient) PostUrl(url string, body string, unmarshalObj proto.Message) error {
+func (oc *OAuthClient) PostUrl(url string, body string, unmarshalObj proto.Message) error {
 	bodyBytes := []byte(body)
 	resp, err := oc.AuthClient.Post(url, "application/json", bytes.NewBuffer(bodyBytes))
 	defer resp.Body.Close()
