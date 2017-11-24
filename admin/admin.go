@@ -66,7 +66,7 @@ func main() {
 
 func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	creds := remoteConfig.GetCredAt(util.ConfigPath, true)
+	creds, _ := remoteConfig.GetCredAt(util.ConfigPath, true)
 	json.NewEncoder(w).Encode(creds)
 }
 
