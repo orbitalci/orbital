@@ -109,7 +109,10 @@ func getCredConfig() models.AdminConfig {
 func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	cfg := getCredConfig()
 	bb := handler.Bitbucket{}
-	bb.SetMeUp(&cfg)
+	bbClient := &ocenet.OAuthClient{}
+	bbClient.Setup(&cfg)
+
+	bb.SetMeUp(&cfg, bbClient)
 	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return
