@@ -6,7 +6,9 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
+	"github.com/shankj3/ocelot/util/storage"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -17,6 +19,7 @@ var upgrader = websocket.Upgrader{}
 type appContext struct {
 	chanDict      *CD
 	conf 		  *WerkerConf
+	storage 	  storage.BuildOutputStorage
 }
 
 type appHandler struct {
@@ -47,8 +50,8 @@ func stream(a *appContext, w http.ResponseWriter, r *http.Request){
 	infoReader, infoWriter := io.Pipe()
 	defer infoReader.Close()
 	defer infoWriter.Close()
-
-	go writeBundle(infochan, infoWriter)
+	// add BuildOutputStorage implementation, git hash,
+	go writeBundle(infochan, infoWriter, infoReader,)
 	go pumpBundle(ws, infoReader, bundleDone)
 	ocelog.Log().Debug("sending infoChan over websocket, waiting for the channel to be closed.")
 	<-bundleDone
@@ -77,13 +80,23 @@ func pumpBundle(ws *websocket.Conn, infoReader io.Reader, done chan int){
 }
 
 
-func writeBundle(infochan chan[]byte, w io.WriteCloser){
+func writeBundle(infochan chan[]byte, w io.WriteCloser, r io.ReadCloser, persist storage.BuildOutputStorage, hash string){
 	for i := range infochan {
 		newline := []byte("\n")
 		w.Write(i)
 		w.Write(newline)
 	}
 	w.Close()
+	defer r.Close()
+	bytes, err := ioutil.ReadAll(r)
+	if err != nil {
+		//todo: return error? set flag somewhere?
+		ocelog.IncludeErrField(err).Error("could not read build data from info Reader")
+		return
+	}
+	if err = persist.Store(hash, bytes); err != nil {
+		ocelog.IncludeErrField(err).Error("could not store build data to storage")
+	}
 }
 
 
