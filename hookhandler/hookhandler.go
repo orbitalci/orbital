@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/meatballhat/negroni-logrus"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
@@ -13,8 +12,6 @@ import (
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/ocevault"
-	log "github.com/sirupsen/logrus"
-	"github.com/urfave/negroni"
 	"net/http"
 	"os"
 	"sync"
@@ -123,7 +120,6 @@ func HandleBBEvent(w http.ResponseWriter, r *http.Request) {
 // irl... use vault
 func getCredConfig() models.AdminConfig {
 	return models.AdminConfig{
-		ConfigId:     "jessishank",
 		ClientId:     "QEBYwP5cKAC3ykhau4",
 		ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
 		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",
@@ -134,7 +130,10 @@ func getCredConfig() models.AdminConfig {
 func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	cfg := getCredConfig()
 	bb := handler.Bitbucket{}
-	bb.SetMeUp(&cfg)
+	bbClient := &ocenet.OAuthClient{}
+	bbClient.Setup(&cfg)
+
+	bb.SetMeUp(&cfg, bbClient)
 	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return
@@ -164,7 +163,12 @@ func main() {
 	_ = nsqpb.GetInitProducer(producerOnce, producerCached)
 
 	muxi := mux.NewRouter()
-	muxi.HandleFunc("/test", HandleBBEvent).Methods("POST")
+
+	// handleBBevent can take push/pull/ w/e
+	muxi.HandleFunc("/bitbucket", HandleBBEvent).Methods("POST")
+
+	muxi.HandleFunc("/bitbucket/rp", RepoPush).Methods("POST")
+	muxi.HandleFunc("/bitbucket/pr", PullRequest).Methods("POST")
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)

@@ -3,29 +3,25 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"gopkg.in/go-playground/validator.v9"
+	"github.com/namsral/flag"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/util/ocenet"
-	"github.com/shankj3/ocelot/util/ocelog"
-	"github.com/shankj3/ocelot/util/consulet"
 	"github.com/shankj3/ocelot/util/deserialize"
-	"github.com/namsral/flag"
-	"net/http"
+	"github.com/shankj3/ocelot/util/ocelog"
+	"github.com/shankj3/ocelot/util/ocenet"
 	"io/ioutil"
-	"github.com/google/uuid"
+	"net/http"
+	"github.com/shankj3/ocelot/util"
+	"gopkg.in/go-playground/validator.v9"
 )
 
-//TODO: write the part that talks to consul
-//TODO: hook admin code into vault
 //TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
+//TODO: rewrite admin code to use grpc
+//TODO: floe integration??? just putting this note here so we remember
 
-
-//TODO: this will eventually get moved to secrets and/or consul and not be in memory map
-var creds = map[string]*models.AdminConfig{}
-var validate = validator.New()
-var consul = consulet.Default()
 var deserializer = deserialize.New()
+var adminValidator = GetValidator()
+var remoteConfig *util.RemoteConfig
 
 func main() {
 	//load properties
@@ -42,11 +38,15 @@ func main() {
 
 	ocelog.InitializeOcelog(logLevel)
 
-	//register to consul
-	err := consul.RegisterService("localhost", 8080, "ocelot-admin")
+	//TODO: this is my local vault root token, too lazy to set env variable
+	configInstance, err := util.GetInstance(consulHost, consulPort, "0fd3c0f4-52ec-7d3b-d29b-4b4df1326ded")
+
 	if err != nil {
-		ocelog.IncludeErrField(err).Error()
+		ocelog.Log().Fatal("could not talk to consul or vault, bailing")
 	}
+
+	remoteConfig = configInstance
+	remoteConfig.Consul.RegisterService("localhost", 8080, "ocelot-admin")
 
 	//check for config on load
 	ReadConfig()
@@ -54,19 +54,19 @@ func main() {
 	//start http server
 	mux := mux.NewRouter()
 	//TODO: seems like maybe this should be command line tool instead - wait for Abby
-		//list all configs
-		//list all repos + 'tracked' repos vs. 'untracked' repos
-		//add new repo
-		//configure whether or not you want admin to discover new ocelot.yaml files for you
+	//list all configs
+	//list all repos + 'tracked' repos vs. 'untracked' repos
+	//add new repo
+	//configure whether or not you want admin to discover new ocelot.yaml files for you
 
 	mux.HandleFunc("/", ConfigHandler).Methods("POST")
 	mux.HandleFunc("/", ListConfigHandler).Methods("GET")
-	ocelog.Log().Fatal(http.ListenAndServe(":" + port, mux))
+	ocelog.Log().Fatal(http.ListenAndServe(":"+port, mux))
 }
 
-//TODO: change this to stop returning passwords (BLOCKED till vault + consul is done)
 func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	creds, _ := remoteConfig.GetCredAt(util.ConfigPath, true)
 	json.NewEncoder(w).Encode(creds)
 }
 
@@ -75,16 +75,11 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 	var adminConfig models.AdminConfig
 	_ = json.NewDecoder(r.Body).Decode(&adminConfig)
 
-	errorMsg, err := validateConfig(&adminConfig)
+	errorMsg, err := adminValidator.ValidateConfig(&adminConfig)
 
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, errorMsg, err)
 		return
-	}
-
-	//set the config id if it doesn't exist
-	if len(adminConfig.ConfigId) == 0 {
-		adminConfig.ConfigId = uuid.New().String()
 	}
 
 	errorMsg, err = SetupCredentials(&adminConfig)
@@ -98,7 +93,7 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 //reads config file in current directory if it exists, exits if file is unparseable or doesn't exist
 func ReadConfig() {
 	config := &models.ConfigYaml{}
-	configFile, err := ioutil.ReadFile(models.ConfigFileName)
+	configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return
@@ -108,43 +103,86 @@ func ReadConfig() {
 		ocelog.IncludeErrField(err).Error()
 		return
 	}
-	for configKey, configVal := range config.Credentials {
-		configVal.ConfigId = configKey
+	for _, configVal := range config.Credentials {
+		errMsg, err := adminValidator.ValidateConfig(&configVal)
+		if err != nil {
+			ocelog.IncludeErrField(err).Error(errMsg)
+			continue
+		}
 
 		_, err = SetupCredentials(&configVal)
-		ocelog.IncludeErrField(err).Error()
+		if err != nil {
+			ocelog.IncludeErrField(err).Error()
+		}
 	}
 }
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
 func SetupCredentials(config *models.AdminConfig) (string, error) {
-	handler := handler.Bitbucket{}
-	err := handler.SetMeUp(config)
+	//hehe right now we only have bitbucket
+	switch config.Type {
+	case "bitbucket":
+		bbHandler := handler.Bitbucket{}
+		bitbucketClient := &ocenet.OAuthClient{}
+		bitbucketClient.Setup(config)
 
-	if err != nil {
-		ocelog.Log().Error("could not setup bitbucket client")
-		return "Could not setup bitbucket client for " + config.ConfigId, err
+		err := bbHandler.SetMeUp(config, bitbucketClient)
+
+		if err != nil {
+			ocelog.Log().Error("could not setup bitbucket client")
+			return "Could not setup bitbucket client for " + config.Type + "/" + config.AcctName, err
+		}
+
+		err = bbHandler.Walk()
+		if err != nil {
+			return "Could not traverse repositories and create necessary webhooks for " + config.Type + "/" + config.AcctName, err
+		}
 	}
+	configPath := util.ConfigPath + "/" + config.Type + "/" + config.AcctName
+	err := remoteConfig.AddCreds(configPath, config)
+	return "", err
+}
 
-	err = handler.Walk()
-	if err != nil {
-		return "Could not traverse repositories and create necessary webhooks for " + config.ConfigId, err
+
+
+////everything below this is for validating/////
+
+func GetValidator() *AdminValidator {
+	adminValidator := &AdminValidator {
+		Validate: validator.New(),
 	}
+	adminValidator.Validate.RegisterValidation("validtype", typeValidation)
+	return adminValidator
+}
 
-	creds[config.ConfigId] = config
-	return "", nil
+
+//validator for all admin related stuff
+type AdminValidator struct {
+	Validate	*validator.Validate
 }
 
 //validates config and returns json formatted error
-func validateConfig(adminConfig *models.AdminConfig) (string, error) {
-	err := validate.Struct(adminConfig)
+func(adminValidator AdminValidator) ValidateConfig(adminConfig *models.AdminConfig) (string, error) {
+	err := adminValidator.Validate.Struct(adminConfig)
 	if err != nil {
 		var errorMsg string
 		for _, nestedErr := range err.(validator.ValidationErrors) {
 			errorMsg = nestedErr.Field() + " is " + nestedErr.Tag()
+			if nestedErr.Tag() == "validtype" {
+				errorMsg = "type must be one of the following: bitbucket"
+			}
+
 			ocelog.Log().Warn(errorMsg)
 		}
 		return errorMsg, err
 	}
 	return "", nil
+}
+
+func typeValidation(fl validator.FieldLevel) bool {
+	switch fl.Field().String() {
+	case "bitbucket":
+		return true
+	}
+	return false
 }
