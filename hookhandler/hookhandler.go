@@ -99,7 +99,6 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 // irl... use vault
 func getCredConfig() models.AdminConfig {
 	return models.AdminConfig{
-		ConfigId:     "jessishank",
 		ClientId:     "QEBYwP5cKAC3ykhau4",
 		ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
 		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",
@@ -110,7 +109,10 @@ func getCredConfig() models.AdminConfig {
 func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	cfg := getCredConfig()
 	bb := handler.Bitbucket{}
-	bb.SetMeUp(&cfg)
+	bbClient := &ocenet.OAuthClient{}
+	bbClient.Setup(&cfg)
+
+	bb.SetMeUp(&cfg, bbClient)
 	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return
@@ -137,7 +139,9 @@ func main() {
 	// initialize vault on startup, we want to know right away if we don't have the creds we need.
 	_ = getInitVault()
 	muxi := mux.NewRouter()
-	muxi.HandleFunc("/test", RepoPush).Methods("POST")
+	muxi.HandleFunc("/bitbucket/rp", RepoPush).Methods("POST")
+	muxi.HandleFunc("/bitbucket/pr", PullRequest).Methods("POST")
+
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 
 	n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"strings"
 	"strconv"
+	"github.com/shankj3/ocelot/util"
 )
 
 func initServerAndConsulet(t *testing.T) (*Consulet, *testutil.TestServer) {
@@ -37,4 +38,20 @@ func TestConsulet_CreateNewSemaphore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("should be able to release lock. err %s", err)
 	}
+}
+
+func TestConsulet_Connections(t *testing.T) {
+	brokenConsul := Default()
+	brokenConsul.RegisterService("abc", 1234, "")
+	if brokenConsul.Connected {
+		t.Error(util.GenericStrFormatErrors("broken connection", false, brokenConsul.Connected))
+	}
+
+	workingConsul, serv := initServerAndConsulet(t)
+	defer serv.Stop()
+	workingConsul.AddKeyValue("abc", []byte{})
+	if !workingConsul.Connected {
+		t.Error(util.GenericStrFormatErrors("working connection", true, workingConsul.Connected))
+	}
+
 }
