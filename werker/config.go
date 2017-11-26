@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/namsral/flag"
 	"github.com/shankj3/ocelot/util/storage"
+	"github.com/shankj3/ocelot/werker/processors"
 	"os"
 )
 
@@ -20,7 +21,7 @@ const (
 	defaultStorage     = "filesystem"
 )
 
-func StrToWerkType(str string) WerkType {
+func strToWerkType(str string) WerkType {
 	switch str {
 	case "k8s", "kubernetes": return Kubernetes
 	case "docker": 			  return Docker
@@ -28,7 +29,7 @@ func StrToWerkType(str string) WerkType {
 	}
 }
 
-func StrToStorageImplement(str string) storage.BuildOutputStorage {
+func strToStorageImplement(str string) storage.BuildOutputStorage {
 	switch str {
 	case "filesystem": return &storage.FileBuildStorage{}
 	// as more are written, include here
@@ -36,13 +37,19 @@ func StrToStorageImplement(str string) storage.BuildOutputStorage {
 	}
 }
 
+// WerkerConf is all the configuration for the Werker to do its job properly. this is where the
+// storage type is set (ie filesystem, etc..) and the processor is set (ie Docker, kubernetes, etc..)
 type WerkerConf struct {
-	servicePort   string
-	werkerName    string
-	werkerType    WerkType
-	logLevel 	  string
+	servicePort   	string
+	werkerName    	string
+	werkerType    	WerkType
+	werkerProcessor processors.Processor
+	storage 		storage.BuildOutputStorage
+	logLevel 	  	string
 }
 
+// GetConf sets the configuration for the Werker. Its not thread safe, but that's
+// alright because it only happens on startup of the application
 func GetConf() (*WerkerConf, error) {
 	werker := &WerkerConf{}
 	werkerName, _ := os.Hostname()
@@ -54,12 +61,21 @@ func GetConf() (*WerkerConf, error) {
 	flag.StringVar(&werker.logLevel, "log-level", "info", "log level")
 	flag.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, availabe: [filesystem")
 	flag.Parse()
-	werker.werkerType = StrToWerkType(werkerTypeStr)
+	werker.werkerType = strToWerkType(werkerTypeStr)
 	if werker.werkerType == -1 {
 		return nil, errors.New("werker type can only be: k8s, kubernetes, docker")
 	}
 	if werker.werkerName == "" {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")
 	}
+	werker.storage = strToStorageImplement(storageTypeStr)
+
+	switch werker.werkerType {
+	case Kubernetes:
+		werker.werkerProcessor = &processors.K8Proc{}
+	case Docker:
+		werker.werkerProcessor = &processors.DockProc{}
+	}
+
 	return werker, nil
 }

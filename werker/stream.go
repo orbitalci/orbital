@@ -11,10 +11,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"github.com/shankj3/ocelot/util/consulet"
+	"fmt"
 )
 
-var upgrader = websocket.Upgrader{}
-
+var (
+	upgrader = websocket.Upgrader{}
+	// todo: make sync.Once init for consulet, consul ocenet paths should all be in one file likely in consulet
+	consulDonePath = "ci/builds/%s/done" //  %s is hash
+	con = consulet.Default()
+)
 // modified from https://elithrar.github.io/article/custom-handlers-avoiding-globals/
 type appContext struct {
 	chanDict      *CD
@@ -35,7 +41,8 @@ func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func stream(a *appContext, w http.ResponseWriter, r *http.Request){
 	vars := mux.Vars(r)
-	ocelog.Log().Debug(vars["hash"])
+	hash := vars["hash"]
+	ocelog.Log().Debug(hash)
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("wtf?")
@@ -43,15 +50,15 @@ func stream(a *appContext, w http.ResponseWriter, r *http.Request){
 	}
 	defer ws.Close()
 	bundleDone := make(chan int)
-	infochan, ok := a.chanDict.CarefulValue(vars["hash"])
+	infochan, ok := a.chanDict.CarefulValue(hash)
 	if !ok {
 		ocelog.Log().Debug("no info chan found")
 		return
 	}
-	infoReader, infoWriter := getPipe(vars["hash"], a)
+	infoReader, infoWriter := getPipe(hash, a)
 	// add BuildOutputStorage implementation, git hash,
-	go writeBundle(infochan, infoWriter, infoReader, a.storage, vars["hash"])
-	go pumpBundle(ws, infoReader, bundleDone)
+	go writeBundle(infochan, infoWriter, infoReader, a.storage, hash)
+	go pumpBundle(ws, infoReader, a.storage, hash, bundleDone)
 	ocelog.Log().Debug("sending infoChan over web socket, waiting for the channel to be closed.")
 	<-bundleDone
 }
@@ -72,14 +79,23 @@ func getPipe(hash string, a *appContext) (infoReader io.ReadCloser, infoWriter i
 	}
 }
 
-// todo: need another goroutine to read off the infochan so that more than one
-// page can hit the site
-func pumpBundle(ws *websocket.Conn, infoReader io.Reader, done chan int){
-	// this needs logic to select whether or not to read off the reader, or to read from storage
-	// probably use consul to signify "doneness"?
-	defer func(){}()
-	ocelog.Log().Debug("pumping info reader data to web socket")
-	s := bufio.NewScanner(infoReader)
+// pumpBundle writes build data to web socket
+func pumpBundle(ws *websocket.Conn, infoReader io.Reader, persist storage.BuildOutputStorage, hash string, done chan int){
+	var s *bufio.Scanner
+
+	// determine whether to get from storage or off infoReader
+	if CheckIfBuildDone(hash) {
+		reader, err := persist.RetrieveReader(hash)
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("could not retrieve persisted build data")
+			return
+		}
+		s = bufio.NewScanner(reader)
+	} else {
+		ocelog.Log().Debug("pumping info reader data to web socket")
+		s = bufio.NewScanner(infoReader)
+	}
+	// write to web socket
 	for s.Scan() {
 		ws.SetWriteDeadline(time.Now().Add(10*time.Second))
 		if err := ws.WriteMessage(websocket.TextMessage, s.Bytes()); err != nil{
@@ -92,10 +108,12 @@ func pumpBundle(ws *websocket.Conn, infoReader io.Reader, done chan int){
 		ocelog.IncludeErrField(s.Err()).Error("infoReader scan error")
 	}
 	ocelog.Log().Debug("finished pumping info reader data to web socket")
-	close(done)
-	ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-	ws.Close()
+	defer func(){
+		close(done)
+		ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		ws.Close()
+	}()
 }
 
 // writeBundle writes from infoChannel to writeCloser so multiple requests can access build data.
@@ -112,16 +130,21 @@ func writeBundle(infochan chan[]byte, w io.WriteCloser, r io.ReadCloser, persist
 		}
 		w.Close()
 		defer r.Close()
-		bytes, err := ioutil.ReadAll(r)
+		bytez, err := ioutil.ReadAll(r)
 		if err != nil {
 			//todo: return error? set flag somewhere?
 			ocelog.IncludeErrField(err).Error("could not read build data from info reader")
 			return
 		}
-		if err = persist.Store(hash, bytes); err != nil {
+		if err = persist.Store(hash, bytez); err != nil {
 			ocelog.IncludeErrField(err).Error("could not store build data to storage")
 		} else {
-			// remove from cache
+			//todo: remove from cache
+
+			// set to done
+			if err := SetBuildDone(hash); err != nil {
+				ocelog.IncludeErrField(err).Error("could not set build done")
+			}
 		}
 	}
 }
@@ -137,6 +160,30 @@ func TransportToCD(tranChan chan *Transport, cd *CD){
 
 	}
 }
+
+func SetBuildDone(gitHash string) error {
+	// todo: add byte of 0/1.. have ot use binary library though and idk how to use that yet
+	// and not motivated enough to do it right now
+	err := con.AddKeyValue(fmt.Sprintf(consulDonePath, gitHash), []byte("true"))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CheckIfBuildDone(gitHash string) bool {
+	kv, err := con.GetKeyValue(fmt.Sprintf(consulDonePath, gitHash))
+	if err != nil {
+		// idk what we should be doing if the error is not nil, maybe panic? hope that never happens?
+		return false
+	}
+	if kv != nil {
+		return true
+	}
+	return false
+}
+
+
 
 func serveHome(w http.ResponseWriter, r *http.Request){
 	http.ServeFile(w, r, "test.html")

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"io"
 )
 
 // Interface for any storage type that we pick (mongo, mysql, filesystem..)
@@ -13,6 +14,7 @@ import (
 type BuildOutputStorage interface {
 	Retrieve(gitHash string) ([]byte, error)
 	Store(gitHash string, data []byte) error
+	RetrieveReader(gitHash string) (io.Reader, error)
 }
 
 // FileBuildStorage is an implementation of BuildOutputStorage that is for filesystem.
@@ -56,6 +58,13 @@ func (f *FileBuildStorage) Store(gitHash string, data []byte) (err error) {
 func (f *FileBuildStorage) Retrieve(gitHash string) (data []byte, err error) {
 	fp := f.GetTempFile(gitHash)
 	data, err = ioutil.ReadFile(fp)
+	return
+}
+
+// retrieve build data from filesystem as io.Reader
+func (f *FileBuildStorage) RetrieveReader(gitHash string) (read io.Reader, err error){
+	fp := f.GetTempFile(gitHash)
+	read, err = os.Open(fp)
 	return
 }
 
