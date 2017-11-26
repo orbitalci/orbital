@@ -18,4 +18,3 @@ Use a Queueing system (nsq? go doesn't really need a special queing system, can 
 *endpoint for getting historical data*
 *prometheus exporter for those stats (or something like that)*
 
-*test*
