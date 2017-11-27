@@ -1,35 +1,46 @@
 package main
 
 import (
-	"errors"
+	"github.com/shankj3/ocelot/util/ocelog"
+	"io"
 	"sync"
 )
 
-type CD struct {
-	dict map[string]chan []byte
+type ReaderCache struct {
+	dict map[string]*io.PipeReader
 	mux sync.Mutex
 }
 
-func (c *CD) CarefulPut(k string, v chan []byte) error{
-	_, ok := c.CarefulValue(k)
-	if ok == true {
-		return errors.New("there is already a channel for the git hash " + k)
-	}
+func (c *ReaderCache) CarefulPut(k string, v *io.PipeReader) error{
+	ocelog.Log().Debugf("put reader with address %v and hash %s", v, k)
 	c.mux.Lock()
 	c.dict[k] = v
 	c.mux.Unlock()
 	return nil
 }
 
-func (c *CD) CarefulValue(k string)  (chan []byte, bool){
+// CarefulValue returns a copy of the io.PipeReader
+func (c *ReaderCache) CarefulValue(k string) (pipeCopy io.PipeReader, ok bool){
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	elem, ok := c.dict[k]
-	return elem, ok
+	if ok {
+		ocelog.Log().Debugf("got reader with address %v and hash %s", elem, k)
+		pipeCopy = *elem
+		return
+	}
+	return
 }
 
-func NewCD() *CD {
-	return &CD{
-		dict: make(map[string]chan []byte),
+func (c *ReaderCache) CarefulRm(k string){
+	c.mux.Lock()
+	delete(c.dict, k)
+	c.mux.Unlock()
+
+}
+
+func NewReaderCache() *ReaderCache {
+	return &ReaderCache{
+		dict: make(map[string]*io.PipeReader),
 	}
 }

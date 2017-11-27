@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/shankj3/ocelot/util/consulet"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/storage"
@@ -11,33 +13,74 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-	"github.com/shankj3/ocelot/util/consulet"
-	"fmt"
 )
 
 var (
 	upgrader = websocket.Upgrader{}
-	// todo: make sync.Once init for consulet, consul ocenet paths should all be in one file likely in consulet
 	consulDonePath = "ci/builds/%s/done" //  %s is hash
-	con = consulet.Default()
 )
 // modified from https://elithrar.github.io/article/custom-handlers-avoiding-globals/
 type appContext struct {
-	chanDict      *CD
 	conf 		  *WerkerConf
 	storage 	  storage.BuildOutputStorage
-	readerCache   map[string] io.ReadCloser
+	readerCache   *ReaderCache
+	consul        *consulet.Consulet
 }
+
+// getPipe looks up the hash in the appContext "readerCache" map to see if there is already a
+// process dealing with this hash (i.e. multiple people go to build page). if there is,
+// it returns the cached infoReader and a nil infoWriter which means that this request shouldn't result
+// in writing to the Pipe.
+// if not in map, create reader / writer from io.Pipe() and add to readerCache
+func (a *appContext) getPipe(hash string) (infoReader *io.PipeReader, infoWriter *io.PipeWriter) {
+	if m, ok := a.readerCache.CarefulValue(hash); !ok {
+		ocelog.Log().Debugf("could not find %s in cache", hash)
+		var ir *io.PipeReader
+		ir, infoWriter = io.Pipe()
+		_ = a.readerCache.CarefulPut(hash, ir)
+		infoReader = ir
+		return
+	} else {
+		ocelog.Log().Debugf("found %s in reader cache", hash)
+		// make a copy
+		infoReader = &m
+		return
+	}
+}
+
+func (a *appContext)  SetBuildDone(gitHash string) error {
+	// todo: add byte of 0/1.. have ot use binary library though and idk how to use that yet
+	// and not motivated enough to do it right now
+	err := a.consul.AddKeyValue(fmt.Sprintf(consulDonePath, gitHash), []byte("true"))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *appContext) CheckIfBuildDone(gitHash string) bool {
+	kv, err := a.consul.GetKeyValue(fmt.Sprintf(consulDonePath, gitHash))
+	if err != nil {
+		// idk what we should be doing if the error is not nil, maybe panic? hope that never happens?
+		return false
+	}
+	if kv != nil {
+		return true
+	}
+	return false
+}
+
+
 
 type appHandler struct {
 	*appContext
 	H func(*appContext, http.ResponseWriter, *http.Request)
 }
 
+
 func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ah.H(ah.appContext, w, r)
 }
-
 
 func stream(a *appContext, w http.ResponseWriter, r *http.Request){
 	vars := mux.Vars(r)
@@ -50,42 +93,29 @@ func stream(a *appContext, w http.ResponseWriter, r *http.Request){
 	}
 	defer ws.Close()
 	bundleDone := make(chan int)
-	infochan, ok := a.chanDict.CarefulValue(hash)
+	infoReader, ok := a.readerCache.CarefulValue(hash)
 	if !ok {
-		ocelog.Log().Debug("no info chan found")
+		// todo, write "try later" to socket
+		ocelog.Log().Error("try again later, could not find any data")
 		return
 	}
-	infoReader, infoWriter := getPipe(hash, a)
-	// add BuildOutputStorage implementation, git hash,
-	go writeBundle(infochan, infoWriter, infoReader, a.storage, hash)
-	go pumpBundle(ws, infoReader, a.storage, hash, bundleDone)
+	if &infoReader == nil {
+		// this shouldn't happen....
+		ocelog.Log().Fatal("wtf?")
+	}
+	go pumpBundle(ws, &infoReader, a, hash, bundleDone)
 	ocelog.Log().Debug("sending infoChan over web socket, waiting for the channel to be closed.")
 	<-bundleDone
 }
 
-// getPipe looks up the hash in the appContext "readerCache" map to see if there is already a
-// process dealing with this hash (i.e. multiple people go to build page). if there is,
-// it returns the cached infoReader and a nil infoWriter which means that this request shouldn't result
-// in writing to the Pipe.
-// if not in map, create reader / writer from io.Pipe() and add to readerCache
-func getPipe(hash string, a *appContext) (infoReader io.ReadCloser, infoWriter io.WriteCloser) {
-	if m, ok := a.readerCache[hash]; !ok {
-		infoReader, infoWriter = io.Pipe()
-		a.readerCache[hash] = m
-		return
-	} else {
-		infoReader = m
-		return
-	}
-}
-
 // pumpBundle writes build data to web socket
-func pumpBundle(ws *websocket.Conn, infoReader io.Reader, persist storage.BuildOutputStorage, hash string, done chan int){
+func pumpBundle(ws *websocket.Conn, infoReader *io.PipeReader, appCtx *appContext, hash string, done chan int){
 	var s *bufio.Scanner
-
+	var copied = *infoReader
 	// determine whether to get from storage or off infoReader
-	if CheckIfBuildDone(hash) {
-		reader, err := persist.RetrieveReader(hash)
+	if appCtx.CheckIfBuildDone(hash) {
+		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
+		reader, err := appCtx.storage.RetrieveReader(hash)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error("could not retrieve persisted build data")
 			return
@@ -93,7 +123,7 @@ func pumpBundle(ws *websocket.Conn, infoReader io.Reader, persist storage.BuildO
 		s = bufio.NewScanner(reader)
 	} else {
 		ocelog.Log().Debug("pumping info reader data to web socket")
-		s = bufio.NewScanner(infoReader)
+		s = bufio.NewScanner(&copied)
 	}
 	// write to web socket
 	for s.Scan() {
@@ -116,73 +146,52 @@ func pumpBundle(ws *websocket.Conn, infoReader io.Reader, persist storage.BuildO
 	}()
 }
 
-// writeBundle writes from infoChannel to writeCloser so multiple requests can access build data.
-// when the infochan is closed, the reader is stored through the storage.BuildOutputStorage interface
-// *this function will close both sides of the Pipe (w io.WriteCloser & r io.ReadCloser) after the infochan is closed.*
-func writeBundle(infochan chan[]byte, w io.WriteCloser, r io.ReadCloser, persist storage.BuildOutputStorage, hash string){
-	// if writer is not null, that means it was never put in the cache (see getPipe.)
-	// prevents duping of readers on the same hash.
-	if w != nil {
-		for i := range infochan {
-			newline := []byte("\n")
-			w.Write(i)
-			w.Write(newline)
-		}
-		w.Close()
-		defer r.Close()
-		bytez, err := ioutil.ReadAll(r)
-		if err != nil {
-			//todo: return error? set flag somewhere?
-			ocelog.IncludeErrField(err).Error("could not read build data from info reader")
-			return
-		}
-		if err = persist.Store(hash, bytez); err != nil {
-			ocelog.IncludeErrField(err).Error("could not store build data to storage")
-		} else {
-			//todo: remove from cache
-
-			// set to done
-			if err := SetBuildDone(hash); err != nil {
-				ocelog.IncludeErrField(err).Error("could not set build done")
-			}
-		}
+// writeInfoChanToCache is what processes transport objects that come from the transport channel (objects get created
+// 	and sent when a new build is pulled off the queue). a pipe is created, and the readerCache is populated for that
+// 	git hash and the io.PipeReader
+// 	the info chan is written to the io.PipeWriter, then stored using the storage config in appCtx for persistence.
+// 	consul is updated with build done status, and readerCache entry is removed
+func writeInfoChanToCache(transport  *Transport, appCtx *appContext){
+	// create PipeReader and PipeWriter objects for handling InfoChan data
+	r, w := io.Pipe()
+	// add to readerCache
+	appCtx.readerCache.CarefulPut(transport.Hash, r)
+	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
+	for i := range transport.InfoChan {
+		newline := []byte("\n")
+		w.Write(i)
+		w.Write(newline)
 	}
+	w.Close()
+	defer r.Close()
+	// persist everything
+	ocelog.Log().Debug("storing in <>") // todo: add String() method to storage interface
+	bytez, err := ioutil.ReadAll(r)
+	if err != nil {
+		//todo: return error? set flag somewhere?
+		ocelog.IncludeErrField(err).Fatal("could not read build data from info reader")
+		return
+	}
+	err = appCtx.storage.Store(transport.Hash, bytez)
+	if err != nil {
+		ocelog.IncludeErrField(err).Fatal("could not store build data to storage")
+		return
+	}
+	// get rid of hash from cache, set build done in consul
+	if err := appCtx.SetBuildDone(transport.Hash); err != nil {
+		ocelog.IncludeErrField(err).Error("could not set build done")
+	}
+	ocelog.Log().Debugf("removing hash %s from readerCache and channelDict", transport.Hash)
+	appCtx.readerCache.CarefulRm(transport.Hash)
+
 }
 
-// TransportToCD reads off transport channel and adds the hash and infochan to the synced channel dict
-func TransportToCD(tranChan chan *Transport, cd *CD){
-	for i := range tranChan {
+func CacheProcessor(transpo chan *Transport, appCtx *appContext){
+	for i := range transpo {
 		ocelog.Log().Debugf("adding info channel for hash %s to map for streaming access.", i.Hash)
-		if err := cd.CarefulPut(i.Hash, i.InfoChan); err != nil{
-			ocelog.IncludeErrField(err).Error("could not add hash and info channel to map, " +
-														"will not be able to stream results")
-		}
-
+		writeInfoChanToCache(i, appCtx)
 	}
 }
-
-func SetBuildDone(gitHash string) error {
-	// todo: add byte of 0/1.. have ot use binary library though and idk how to use that yet
-	// and not motivated enough to do it right now
-	err := con.AddKeyValue(fmt.Sprintf(consulDonePath, gitHash), []byte("true"))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func CheckIfBuildDone(gitHash string) bool {
-	kv, err := con.GetKeyValue(fmt.Sprintf(consulDonePath, gitHash))
-	if err != nil {
-		// idk what we should be doing if the error is not nil, maybe panic? hope that never happens?
-		return false
-	}
-	if kv != nil {
-		return true
-	}
-	return false
-}
-
 
 
 func serveHome(w http.ResponseWriter, r *http.Request){
@@ -190,19 +199,19 @@ func serveHome(w http.ResponseWriter, r *http.Request){
 }
 
 func GetWerkConfig(conf *WerkerConf) *appContext{
-	cd := NewCD()
 	store := storage.NewFileBuildStorage("")
-	readCache := make(map[string] io.ReadCloser)
-	appctx := &appContext{chanDict: cd, conf: conf, storage: store, readerCache: readCache,}
-	return appctx
+	appCtx := &appContext{ conf: conf, storage: store, readerCache: NewReaderCache(), consul: consulet.Default()}
+	return appCtx
 }
 
 func ServeMe(transportChan chan *Transport, conf *WerkerConf){
+	ocelog.Log().Debug("started serving routine for streaming data")
 	appctx := GetWerkConfig(conf)
-	go TransportToCD(transportChan, appctx.chanDict)
+	go CacheProcessor(transportChan, appctx)
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", appHandler{appctx, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
 	n := ocenet.InitNegroni("werker", muxi)
 	n.Run(":"+conf.servicePort)
+	ocelog.Log().Info("QUITTING")
 }
