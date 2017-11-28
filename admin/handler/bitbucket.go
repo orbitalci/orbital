@@ -9,7 +9,6 @@ import (
 	"github.com/shankj3/ocelot/util/ocenet"
 	pb "github.com/shankj3/ocelot/protos/out"
 	"errors"
-	"strings"
 )
 
 const DefaultCallbackURL = "https://radiant-mesa-23210.herokuapp.com/bitbucket"
@@ -60,13 +59,13 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 
 //CreateWebhook will create webhook at specified webhook url
 func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
-	for _, key := range bb.FindWebhooks(webhookURL) {
+	if !bb.FindWebhooks(webhookURL) {
 		//create webhook if one does not already exist
 		newWebhook := &pb.CreateWebhook{
 			Description: "marianne did this",
 			Active:      true,
-			Url: bb.GetCallbackURL() + "/" + key,
-			Events: []string{models.BitbucketEvents[key]},
+			Url: bb.GetCallbackURL(),
+			Events: models.BitbucketEvents,
 		}
 		webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
 		if err != nil {
@@ -117,44 +116,18 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 }
 
 //recursively iterates over all webhooks and returns true (matches our callback urls) if one already exists
-//returns list of event keys that still needs to be created
-func (bb *Bitbucket) FindWebhooks(getWebhookURL string) []string {
-	var needsCreation []string
+func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {
 	if getWebhookURL == "" {
-		return needsCreation
+		return false
 	}
 	webhooks := &pb.GetWebhooks{}
 	bb.Client.GetUrl(getWebhookURL, webhooks)
 
-	if len(webhooks.GetValues()) > 0 {
-		bbEvents := bbEvents(bb.GetCallbackURL())
-
-		for _, wh := range webhooks.GetValues() {
-			_, ok := bbEvents[wh.GetUrl()]
-			if ok {
-				bbEvents[wh.GetUrl()] = true
-			}
-		}
-
-		for url, evt := range bbEvents {
-			if !evt {
-				needsCreation = append(needsCreation, strings.TrimPrefix(url, bb.GetCallbackURL() + "/"))
-			}
-		}
-	} else {
-		for k := range models.BitbucketEvents {
-			ocelog.Log().Debug(k)
-			needsCreation = append(needsCreation, k)
+	for _, wh := range webhooks.GetValues() {
+		if wh.GetUrl() == bb.GetCallbackURL() {
+			return true
 		}
 	}
-	return append(needsCreation, bb.FindWebhooks(webhooks.GetNext())...)
-}
 
-//creates a copy of the map of bitbucket events
-func bbEvents(callbackURL string) map[string]bool {
-	var bbEvents = make(map[string]bool)
-	for k, _ := range models.BitbucketEvents {
-		bbEvents[callbackURL + "/" + k] = false
-	}
-	return bbEvents
+	return bb.FindWebhooks(webhooks.GetNext())
 }
