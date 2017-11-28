@@ -9,7 +9,7 @@
           "href": "https://api.bitbucket.org/2.0/repositories/mariannefeng/test-ocelot/hooks/%7Be3ce0b63-87c8-4594-bf8e-5044e3bce0ea%7D"
         }
       },
-      "url": "webhook-exists-url/rp",
+      "url": "webhook-exists-url",
       "created_at": "2017-11-24T06:43:40.785199Z",
       "skip_cert_verification": false,
       "source": null,

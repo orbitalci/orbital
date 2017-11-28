@@ -19,6 +19,9 @@ import (
 //TODO: rewrite admin code to use grpc
 //TODO: floe integration??? just putting this note here so we remember
 
+
+//TODO: use appcontext
+
 var deserializer = deserialize.New()
 var adminValidator = GetValidator()
 var remoteConfig *util.RemoteConfig
@@ -93,7 +96,7 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 //reads config file in current directory if it exists, exits if file is unparseable or doesn't exist
 func ReadConfig() {
 	config := &models.ConfigYaml{}
-	configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
+	configFile, err := ioutil.ReadFile(models.ConfigFileName)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return

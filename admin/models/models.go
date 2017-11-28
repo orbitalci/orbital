@@ -17,7 +17,4 @@ type ConfigYaml struct {
 	Credentials []AdminConfig	`yaml:"credentials"`
 }
 
-var BitbucketEvents = map[string]string{
-	"rp" : "repo:push",
-	"pr" : "pullrequest:approved",
-}
+var BitbucketEvents = []string{"repo:push", "pullrequest:approved", "pullrequest:updated"}
