@@ -71,18 +71,8 @@ func (a *appContext) CheckIfBuildDone(gitHash string) bool {
 }
 
 
-
-type appHandler struct {
-	*appContext
-	H func(*appContext, http.ResponseWriter, *http.Request)
-}
-
-
-func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ah.H(ah.appContext, w, r)
-}
-
-func stream(a *appContext, w http.ResponseWriter, r *http.Request){
+func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
+	a := ctx.(*appContext)
 	vars := mux.Vars(r)
 	hash := vars["hash"]
 	ocelog.Log().Debug(hash)
@@ -157,6 +147,10 @@ func writeInfoChanToCache(transport  *Transport, appCtx *appContext){
 	// add to readerCache
 	appCtx.readerCache.CarefulPut(transport.Hash, r)
 	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
+	// todo: change the worker to act as grpc server
+	// to expose method that lets you get stream as commit
+	// keep in memory of output of build
+	// create a new stream @ every request
 	for i := range transport.InfoChan {
 		newline := []byte("\n")
 		w.Write(i)
@@ -209,7 +203,7 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf){
 	appctx := GetWerkConfig(conf)
 	go CacheProcessor(transportChan, appctx)
 	muxi := mux.NewRouter()
-	muxi.Handle("/ws/builds/{hash}", appHandler{appctx, stream}).Methods("GET")
+	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{appctx, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
 	n := ocenet.InitNegroni("werker", muxi)
 	n.Run(":"+conf.servicePort)

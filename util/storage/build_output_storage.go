@@ -68,11 +68,12 @@ func (f *FileBuildStorage) RetrieveReader(gitHash string) (read io.Reader, err e
 	return
 }
 
-
+// todo: privatize
 func (f FileBuildStorage) GetTempFile(gitHash string) string {
 	fp := filepath.Join(f.saveDirec, gitHash)
 	return fp
 }
+
 
 func (f FileBuildStorage) Clean() {
 	os.RemoveAll(f.saveDirec)
