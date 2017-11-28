@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"io/ioutil"
@@ -14,6 +16,7 @@ import (
 type BuildOutputStorage interface {
 	Retrieve(gitHash string) ([]byte, error)
 	Store(gitHash string, data []byte) error
+	StoreLines(gitHash string, lines [][]byte) error
 	RetrieveReader(gitHash string) (io.Reader, error)
 }
 
@@ -53,6 +56,21 @@ func (f *FileBuildStorage) Store(gitHash string, data []byte) (err error) {
 	}
 	return
 }
+
+func (f *FileBuildStorage) StoreLines(gitHash string, lines [][]byte) (err error) {
+	fp := f.getTempFile(gitHash)
+	file, err := os.Create(fp)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	w := bufio.NewWriter(file)
+	for _, line := range lines {
+		fmt.Fprintln(w, line)
+	}
+	return w.Flush()
+}
+
 
 // retrieve build data from filesystem
 func (f *FileBuildStorage) Retrieve(gitHash string) (data []byte, err error) {

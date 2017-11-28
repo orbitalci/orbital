@@ -15,16 +15,13 @@ func (d *DockProc) RunPushBundle(bund *protos.PushBuildBundle, infochan chan []b
 	// run push bundle.
 	//fmt.Println(bund.PushData.Repository.FullName)
 	infochan <- []byte(bund.PushData.Repository.FullName)
-	ocelog.Log().Error("WTF IS HAPPENING????")
 	infochan <- []byte(bund.PushData.Repository.Owner.Username)
-	ocelog.Log().Error("WTF IS HAPPENING????")
 	infochan <- []byte("gonna sleep for 5 seconds now.")
 	time.Sleep(5*time.Second)
 	infochan <- []byte("push requeeeeeeeest DOCKER!")
 	infochan <- []byte("sleeping for 5 more seconds!!!!")
-	time.Sleep(5*time.Second)
+	time.Sleep(4*time.Second)
 	infochan <- []byte("this could be some delightful std out from builds! huzzah! I'M RUNNING W/ DOCKER!")
-	ocelog.Log().Error("WTF IS HAPPENING????")
 	close(infochan)
 }
 

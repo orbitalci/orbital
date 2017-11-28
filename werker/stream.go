@@ -9,8 +9,8 @@ import (
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/storage"
-	"io"
-	"io/ioutil"
+	//"io"
+	//"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -117,18 +117,26 @@ func pumpBundle(ws *websocket.Conn, appCtx *appContext, hash string, done chan i
 
 func streamFromArray(buildInfo *buildDatum, ws *websocket.Conn) (err error){
 	var index int
+	var previousIndex int
 	for {
-		buildData := buildInfo.buildData[index:]
 		select {
 		case <-buildInfo.done:
 			return nil
 		default:
-			index, err = iterateOverBuildData(buildData, ws)
+			buildData := buildInfo.buildData[index:]
+			ind, err := iterateOverBuildData(buildData, ws)
+			previousIndex = index
+			index += ind + 1
+			fmt.Println("------------------------------------------------------------------")
+			fmt.Println("byte arrays sent   :  ", ind)
+			fmt.Println("index is at        :  ", index)
+			fmt.Println("previousIndex is at:  ", previousIndex)
+			fmt.Println("------------------------------------------------------------------")
+			time.Sleep(4*time.Second)
 			if err != nil {
 				return err
 			}
 		}
-		ocelog.Log().Debugf("idk what a good description would be for what is happening....")
 		time.Sleep(1 * time.Second)
 	}
 
@@ -137,13 +145,14 @@ func streamFromArray(buildInfo *buildDatum, ws *websocket.Conn) (err error){
 
 func iterateOverBuildData(data [][]byte, ws *websocket.Conn) (int, error) {
 	var index int
-	for index, dataLine := range data {
+	for ind, dataLine := range data {
 		ws.SetWriteDeadline(time.Now().Add(10*time.Second))
 		if err := ws.WriteMessage(websocket.TextMessage, dataLine); err != nil {
 			ocelog.IncludeErrField(err).Error("could not write to web socket")
 			ws.Close()
 			return index, err
 		}
+		index = ind
 	}
 	return index, nil
 }
@@ -155,9 +164,6 @@ func iterateOverBuildData(data [][]byte, ws *websocket.Conn) (int, error) {
 // 	the info chan is written to the io.PipeWriter, then stored using the storage config in appCtx for persistence.
 // 	consul is updated with build done status, and readerCache entry is removed
 func writeInfoChanToCache(transport  *Transport, appCtx *appContext){
-	r, w := io.Pipe()
-	defer r.Close()
-
 	var dataSlice [][]byte
 	build := &buildDatum{dataSlice, make(chan int),}
 	appCtx.buildInfo[transport.Hash] = build
@@ -167,23 +173,11 @@ func writeInfoChanToCache(transport  *Transport, appCtx *appContext){
 	// keep in memory of output of build
 	// create a new stream @ every request
 	for i := range transport.InfoChan {
-		// for streaming
-		ocelog.Log().Debug("ayy")
 		build.buildData = append(build.buildData, i)
-		// for storing
-		newline := []byte("\n")
-		w.Write(i)
-		w.Write(newline)
 	}
-	w.Close()
 	ocelog.Log().Debug("supposedly done???")
 	build.done <- 0
-	bytez, err := ioutil.ReadAll(r)
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("could not read off PipeReader")
-		return
-	}
-	err = appCtx.storage.Store(transport.Hash, bytez)
+	err := appCtx.storage.StoreLines(transport.Hash, build.buildData)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("could not store build data to storage")
 		return
