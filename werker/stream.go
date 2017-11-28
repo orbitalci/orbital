@@ -23,30 +23,16 @@ var (
 type appContext struct {
 	conf 		  *WerkerConf
 	storage 	  storage.BuildOutputStorage
-	readerCache   *ReaderCache
+	buildInfo     map[string]*buildDatum
 	consul        *consulet.Consulet
 }
 
-// getPipe looks up the hash in the appContext "readerCache" map to see if there is already a
-// process dealing with this hash (i.e. multiple people go to build page). if there is,
-// it returns the cached infoReader and a nil infoWriter which means that this request shouldn't result
-// in writing to the Pipe.
-// if not in map, create reader / writer from io.Pipe() and add to readerCache
-func (a *appContext) getPipe(hash string) (infoReader *io.PipeReader, infoWriter *io.PipeWriter) {
-	if m, ok := a.readerCache.CarefulValue(hash); !ok {
-		ocelog.Log().Debugf("could not find %s in cache", hash)
-		var ir *io.PipeReader
-		ir, infoWriter = io.Pipe()
-		_ = a.readerCache.CarefulPut(hash, ir)
-		infoReader = ir
-		return
-	} else {
-		ocelog.Log().Debugf("found %s in reader cache", hash)
-		// make a copy
-		infoReader = &m
-		return
-	}
+
+type buildDatum struct {
+	buildData [][]byte
+	done      chan int
 }
+
 
 func (a *appContext)  SetBuildDone(gitHash string) error {
 	// todo: add byte of 0/1.. have ot use binary library though and idk how to use that yet
@@ -82,26 +68,15 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
 		return
 	}
 	defer ws.Close()
-	bundleDone := make(chan int)
-	infoReader, ok := a.readerCache.CarefulValue(hash)
-	if !ok {
-		// todo, write "try later" to socket
-		ocelog.Log().Error("try again later, could not find any data")
-		return
-	}
-	if &infoReader == nil {
-		// this shouldn't happen....
-		ocelog.Log().Fatal("wtf?")
-	}
-	go pumpBundle(ws, &infoReader, a, hash, bundleDone)
+	pumpDone := make(chan int)
+
+	go pumpBundle(ws, a, hash, pumpDone)
 	ocelog.Log().Debug("sending infoChan over web socket, waiting for the channel to be closed.")
-	<-bundleDone
+	<-pumpDone
 }
 
 // pumpBundle writes build data to web socket
-func pumpBundle(ws *websocket.Conn, infoReader *io.PipeReader, appCtx *appContext, hash string, done chan int){
-	var s *bufio.Scanner
-	var copied = *infoReader
+func pumpBundle(ws *websocket.Conn, appCtx *appContext, hash string, done chan int){
 	// determine whether to get from storage or off infoReader
 	if appCtx.CheckIfBuildDone(hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
@@ -110,22 +85,26 @@ func pumpBundle(ws *websocket.Conn, infoReader *io.PipeReader, appCtx *appContex
 			ocelog.IncludeErrField(err).Error("could not retrieve persisted build data")
 			return
 		}
-		s = bufio.NewScanner(reader)
+		s := bufio.NewScanner(reader)
+		// write to web socket
+		for s.Scan() {
+			ws.SetWriteDeadline(time.Now().Add(10*time.Second))
+			if err := ws.WriteMessage(websocket.TextMessage, s.Bytes()); err != nil{
+				ocelog.IncludeErrField(err).Error("could not write to web socket")
+				ws.Close()
+				break
+			}
+		}
+		if s.Err() != nil {
+			ocelog.IncludeErrField(s.Err()).Error("infoReader scan error")
+		}
 	} else {
 		ocelog.Log().Debug("pumping info reader data to web socket")
-		s = bufio.NewScanner(&copied)
-	}
-	// write to web socket
-	for s.Scan() {
-		ws.SetWriteDeadline(time.Now().Add(10*time.Second))
-		if err := ws.WriteMessage(websocket.TextMessage, s.Bytes()); err != nil{
-			ocelog.IncludeErrField(err).Error("could not write to web socket")
-			ws.Close()
-			break
+		buildInfo := appCtx.buildInfo[hash]
+		err := streamFromArray(buildInfo, ws)
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("could not stream from array!")
 		}
-	}
-	if s.Err() != nil {
-		ocelog.IncludeErrField(s.Err()).Error("infoReader scan error")
 	}
 	ocelog.Log().Debug("finished pumping info reader data to web socket")
 	defer func(){
@@ -136,39 +115,77 @@ func pumpBundle(ws *websocket.Conn, infoReader *io.PipeReader, appCtx *appContex
 	}()
 }
 
+func streamFromArray(buildInfo *buildDatum, ws *websocket.Conn) (err error){
+	var index int
+	for {
+		buildData := buildInfo.buildData[index:]
+		select {
+		case <-buildInfo.done:
+			return nil
+		default:
+			index, err = iterateOverBuildData(buildData, ws)
+			if err != nil {
+				return err
+			}
+		}
+		ocelog.Log().Debugf("idk what a good description would be for what is happening....")
+		time.Sleep(1 * time.Second)
+	}
+
+}
+
+
+func iterateOverBuildData(data [][]byte, ws *websocket.Conn) (int, error) {
+	var index int
+	for index, dataLine := range data {
+		ws.SetWriteDeadline(time.Now().Add(10*time.Second))
+		if err := ws.WriteMessage(websocket.TextMessage, dataLine); err != nil {
+			ocelog.IncludeErrField(err).Error("could not write to web socket")
+			ws.Close()
+			return index, err
+		}
+	}
+	return index, nil
+}
+
+// todo: update docstring
 // writeInfoChanToCache is what processes transport objects that come from the transport channel (objects get created
 // 	and sent when a new build is pulled off the queue). a pipe is created, and the readerCache is populated for that
 // 	git hash and the io.PipeReader
 // 	the info chan is written to the io.PipeWriter, then stored using the storage config in appCtx for persistence.
 // 	consul is updated with build done status, and readerCache entry is removed
 func writeInfoChanToCache(transport  *Transport, appCtx *appContext){
-	// create PipeReader and PipeWriter objects for handling InfoChan data
 	r, w := io.Pipe()
-	// add to readerCache
-	appCtx.readerCache.CarefulPut(transport.Hash, r)
+	defer r.Close()
+
+	var dataSlice [][]byte
+	build := &buildDatum{dataSlice, make(chan int),}
+	appCtx.buildInfo[transport.Hash] = build
 	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
 	// todo: change the worker to act as grpc server
 	// to expose method that lets you get stream as commit
 	// keep in memory of output of build
 	// create a new stream @ every request
 	for i := range transport.InfoChan {
+		// for streaming
+		ocelog.Log().Debug("ayy")
+		build.buildData = append(build.buildData, i)
+		// for storing
 		newline := []byte("\n")
 		w.Write(i)
 		w.Write(newline)
 	}
 	w.Close()
-	defer r.Close()
-	// persist everything
-	ocelog.Log().Debug("storing in <>") // todo: add String() method to storage interface
+	ocelog.Log().Debug("supposedly done???")
+	build.done <- 0
 	bytez, err := ioutil.ReadAll(r)
 	if err != nil {
-		//todo: return error? set flag somewhere?
-		ocelog.IncludeErrField(err).Fatal("could not read build data from info reader")
+		ocelog.IncludeErrField(err).Error("could not read off PipeReader")
 		return
 	}
 	err = appCtx.storage.Store(transport.Hash, bytez)
 	if err != nil {
-		ocelog.IncludeErrField(err).Fatal("could not store build data to storage")
+		ocelog.IncludeErrField(err).Error("could not store build data to storage")
 		return
 	}
 	// get rid of hash from cache, set build done in consul
@@ -176,14 +193,14 @@ func writeInfoChanToCache(transport  *Transport, appCtx *appContext){
 		ocelog.IncludeErrField(err).Error("could not set build done")
 	}
 	ocelog.Log().Debugf("removing hash %s from readerCache and channelDict", transport.Hash)
-	appCtx.readerCache.CarefulRm(transport.Hash)
+	delete(appCtx.buildInfo, transport.Hash)
 
 }
 
-func CacheProcessor(transpo chan *Transport, appCtx *appContext){
+func cacheProcessor(transpo chan *Transport, appCtx *appContext){
 	for i := range transpo {
 		ocelog.Log().Debugf("adding info channel for hash %s to map for streaming access.", i.Hash)
-		writeInfoChanToCache(i, appCtx)
+		go writeInfoChanToCache(i, appCtx)
 	}
 }
 
@@ -194,14 +211,14 @@ func serveHome(w http.ResponseWriter, r *http.Request){
 
 func GetWerkConfig(conf *WerkerConf) *appContext{
 	store := storage.NewFileBuildStorage("")
-	appCtx := &appContext{ conf: conf, storage: store, readerCache: NewReaderCache(), consul: consulet.Default()}
+	appCtx := &appContext{ conf: conf, storage: store, buildInfo: make(map[string]*buildDatum), consul: consulet.Default()}
 	return appCtx
 }
 
 func ServeMe(transportChan chan *Transport, conf *WerkerConf){
 	ocelog.Log().Debug("started serving routine for streaming data")
 	appctx := GetWerkConfig(conf)
-	go CacheProcessor(transportChan, appctx)
+	go cacheProcessor(transportChan, appctx)
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{appctx, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
