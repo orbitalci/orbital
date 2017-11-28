@@ -47,7 +47,7 @@ func (f *FileBuildStorage) setup(){
 
 // Store build data to a file at <saveDirec>/hash
 func (f *FileBuildStorage) Store(gitHash string, data []byte) (err error) {
-	fp := f.GetTempFile(gitHash)
+	fp := f.getTempFile(gitHash)
 	if err = ioutil.WriteFile(fp, data, 0600); err != nil {
 		return
 	}
@@ -56,20 +56,19 @@ func (f *FileBuildStorage) Store(gitHash string, data []byte) (err error) {
 
 // retrieve build data from filesystem
 func (f *FileBuildStorage) Retrieve(gitHash string) (data []byte, err error) {
-	fp := f.GetTempFile(gitHash)
+	fp := f.getTempFile(gitHash)
 	data, err = ioutil.ReadFile(fp)
 	return
 }
 
 // retrieve build data from filesystem as io.Reader
 func (f *FileBuildStorage) RetrieveReader(gitHash string) (read io.Reader, err error){
-	fp := f.GetTempFile(gitHash)
+	fp := f.getTempFile(gitHash)
 	read, err = os.Open(fp)
 	return
 }
 
-// todo: privatize
-func (f FileBuildStorage) GetTempFile(gitHash string) string {
+func (f FileBuildStorage) getTempFile(gitHash string) string {
 	fp := filepath.Join(f.saveDirec, gitHash)
 	return fp
 }

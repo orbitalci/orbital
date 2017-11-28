@@ -49,7 +49,7 @@ func TestFileBuildStorage(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if filep := fbs.GetTempFile(hash); filep != fb.actualSaveLoc {
+		if filep := fbs.getTempFile(hash); filep != fb.actualSaveLoc {
 			t.Error(util.StrFormatErrors("file path", fb.actualSaveLoc, filep))
 		}
 
