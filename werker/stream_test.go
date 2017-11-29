@@ -34,7 +34,7 @@ func Test_iterateOverBuildData(t *testing.T) {
 	}
 	iterateOverBuildData(stream, ws)
 	if !util.CompareByteArrays(ws.MsgData, testData) {
-		t.Errorf("arrays not the same. expected: %v, actual: %v", testData, ws.msgData)
+		t.Errorf("arrays not the same. expected: %v, actual: %v", testData, ws.MsgData)
 	}
 }
 
@@ -112,5 +112,8 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	if !util.CompareByteArrays(testData, actualData) {
 		t.Errorf("bytes from storage not same as testdata. expected: %v, actual: %v", testData, actualData)
 	}
+	// remove stored test data
+	fbs := ctx.storage.(*storage.FileBuildStorage)
+	defer fbs.Clean()
 	// todo: check the consul stuff
 }

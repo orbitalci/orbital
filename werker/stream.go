@@ -28,7 +28,7 @@ type appContext struct {
 
 type buildDatum struct {
 	buildData [][]byte
-	done      chan int
+	done      bool
 }
 
 
@@ -139,19 +139,20 @@ func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 	var index int
 	var previousIndex int
 	for {
-		select {
-		case <-buildInfo.done:
+		if buildInfo.done {
 			return nil
-		default:
-			buildData := buildInfo.buildData[index:]
-			ind, err := iterateOverBuildData(buildData, ws)
-			previousIndex = index
+		}
+		buildData := buildInfo.buildData[index:]
+		ind, err := iterateOverBuildData(buildData, ws)
+		previousIndex = index
+		if ind > 0 {
 			index += ind + 1
 			ocelog.Log().WithField("lines_sent", ind).WithField("index", index).WithField("previousIndex", previousIndex).Debug()
-			if err != nil {
-				return err
-			}
 		}
+		if err != nil {
+			return err
+		}
+
 		time.Sleep(1 * time.Second)
 	}
 
@@ -180,7 +181,7 @@ func iterateOverBuildData(data [][]byte, ws ocenet.WebsocketEy) (int, error) {
 //  appCtx, the done flag is written to consul, and the array is removed from the map
 func writeInfoChanToInMemMap(transport  *Transport, appCtx *appContext){
 	var dataSlice [][]byte
-	build := &buildDatum{dataSlice, make(chan int),}
+	build := &buildDatum{dataSlice, false,}
 	appCtx.buildInfo[transport.Hash] = build
 	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
 	// todo: change the worker to act as grpc server
@@ -193,8 +194,8 @@ func writeInfoChanToInMemMap(transport  *Transport, appCtx *appContext){
 	ocelog.Log().Debug("done with build ", transport.Hash)
 	err := appCtx.storage.StoreLines(transport.Hash, build.buildData)
 	// even if it didn't store properly, we need to set the build in the map as "done" so
-	// that the streams that connect when the build is still happening it knows to close connection
-	build.done <- 0
+	// that the streams that connect when the build is still happening know to close the connection
+	build.done = true
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("could not store build data to storage")
 		return
