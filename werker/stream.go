@@ -73,7 +73,7 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
 	<-pumpDone
 }
 
-// what to return to socket if something went awry
+// writeWSError writes ERROR to the web socket along with a description and closes the web socket connection
 func writeWSError(ws ocenet.WebsocketEy, description []byte) {
 	ws.SetWriteDeadline(time.Now().Add(10*time.Second))
 	ws.WriteMessage(websocket.TextMessage, []byte("ERROR!\n"))
@@ -111,6 +111,7 @@ func pumpBundle(ws ocenet.WebsocketEy, appCtx *appContext, hash string, done cha
 	}()
 }
 
+// pumpFromStorage gets the buildInfo data from storage and writes the lines to the websocket connection
 func pumpFromStorage(appCtx *appContext, hash string, ws ocenet.WebsocketEy) error {
 	reader, err := appCtx.storage.RetrieveReader(hash)
 	if err != nil {
@@ -131,6 +132,9 @@ func pumpFromStorage(appCtx *appContext, hash string, ws ocenet.WebsocketEy) err
 	return s.Err()
 }
 
+// streamFromArray writes the buildData slice to a web socket. it keeps track of where the index is that it has
+// previously read and waits for more data on the buildData slice until the buildInfo done channel has been touched,
+// at which point it cancels out
 func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 	var index int
 	var previousIndex int
@@ -188,11 +192,13 @@ func writeInfoChanToInMemMap(transport  *Transport, appCtx *appContext){
 	}
 	ocelog.Log().Debug("done with build ", transport.Hash)
 	err := appCtx.storage.StoreLines(transport.Hash, build.buildData)
+	// even if it didn't store properly, we need to set the build in the map as "done" so
+	// that the streams that connect when the build is still happening it knows to close connection
+	build.done <- 0
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("could not store build data to storage")
 		return
 	}
-	build.done <- 0
 	// get rid of hash from cache, set build done in consul
 	if err := appCtx.SetBuildDone(transport.Hash); err != nil {
 		ocelog.IncludeErrField(err).Error("could not set build done")
