@@ -199,13 +199,13 @@ func writeInfoChanToInMemMap(transport  *Transport, appCtx *appContext){
 	for i := range transport.InfoChan {
 		build.buildData = append(build.buildData, i)
 	}
-	ocelog.Log().Debug("supposedly done???")
-	build.done <- 0
+	ocelog.Log().Debug("done with build ", transport.Hash)
 	err := appCtx.storage.StoreLines(transport.Hash, build.buildData)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("could not store build data to storage")
 		return
 	}
+	build.done <- 0
 	// get rid of hash from cache, set build done in consul
 	if err := appCtx.SetBuildDone(transport.Hash); err != nil {
 		ocelog.IncludeErrField(err).Error("could not set build done")
