@@ -73,15 +73,8 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
 	<-pumpDone
 }
 
-// kinda hackily done because switching to grpc
-type WebsocketEy interface {
-	SetWriteDeadline(t time.Time) error
-	WriteMessage(messageType int, data []byte) error
-	Close() error
-}
-
 // what to return to socket if something went awry
-func writeWSError(ws WebsocketEy, description []byte) {
+func writeWSError(ws ocenet.WebsocketEy, description []byte) {
 	ws.SetWriteDeadline(time.Now().Add(10*time.Second))
 	ws.WriteMessage(websocket.TextMessage, []byte("ERROR!\n"))
 	ws.WriteMessage(websocket.TextMessage, description)
@@ -89,7 +82,7 @@ func writeWSError(ws WebsocketEy, description []byte) {
 }
 
 // pumpBundle writes build data to web socket
-func pumpBundle(ws WebsocketEy, appCtx *appContext, hash string, done chan int){
+func pumpBundle(ws ocenet.WebsocketEy, appCtx *appContext, hash string, done chan int){
 	// determine whether to get from storage or off infoReader
 	if appCtx.CheckIfBuildDone(hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
@@ -118,7 +111,7 @@ func pumpBundle(ws WebsocketEy, appCtx *appContext, hash string, done chan int){
 	}()
 }
 
-func pumpFromStorage(appCtx *appContext, hash string, ws WebsocketEy) error {
+func pumpFromStorage(appCtx *appContext, hash string, ws ocenet.WebsocketEy) error {
 	reader, err := appCtx.storage.RetrieveReader(hash)
 	if err != nil {
 		ocelog.IncludeErrField(err).Warn("could not retrieve persisted build data")
@@ -138,7 +131,7 @@ func pumpFromStorage(appCtx *appContext, hash string, ws WebsocketEy) error {
 	return s.Err()
 }
 
-func streamFromArray(buildInfo *buildDatum, ws WebsocketEy) (err error){
+func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 	var index int
 	var previousIndex int
 	for {
@@ -151,12 +144,6 @@ func streamFromArray(buildInfo *buildDatum, ws WebsocketEy) (err error){
 			previousIndex = index
 			index += ind + 1
 			ocelog.Log().WithField("lines_sent", ind).WithField("index", index).WithField("previousIndex", previousIndex).Debug()
-			//fmt.Println("------------------------------------------------------------------")
-			//fmt.Println("byte arrays sent   :  ", ind)
-			//fmt.Println("index is at        :  ", index)
-			//fmt.Println("previousIndex is at:  ", previousIndex)
-			//fmt.Println("------------------------------------------------------------------")
-			//time.Sleep(4*time.Second)
 			if err != nil {
 				return err
 			}
@@ -167,7 +154,7 @@ func streamFromArray(buildInfo *buildDatum, ws WebsocketEy) (err error){
 }
 
 
-func iterateOverBuildData(data [][]byte, ws WebsocketEy) (int, error) {
+func iterateOverBuildData(data [][]byte, ws ocenet.WebsocketEy) (int, error) {
 	var index int
 	for ind, dataLine := range data {
 		ws.SetWriteDeadline(time.Now().Add(10*time.Second))

@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"github.com/shankj3/ocelot/util"
 	"github.com/shankj3/ocelot/util/consulet"
+	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/storage"
 	"testing"
 	"time"
@@ -24,50 +24,16 @@ var testData = [][]byte{
 	[]byte("z-3985jfasr jhgfturkeyisgrossf garbage"),
 }
 
-type testWebSocketConn struct {
-	msgData [][]byte
-	done    bool
-}
-
-func (ws *testWebSocketConn) SetWriteDeadline(t time.Time) error {
-	return nil
-}
-
-func (ws *testWebSocketConn) WriteMessage(messageType int, data []byte) error {
-	if !ws.done {
-		ws.msgData = append(ws.msgData, data)
-		return nil
-	} else {
-		return errors.New("can't write to done msg")
-	}
-}
-
-func (ws *testWebSocketConn) Close() error {
-	ws.done = true
-	return nil
-}
-
-func (ws *testWebSocketConn) GetData() [][]byte {
-	return ws.msgData
-}
-
-func newWebSocketConn() *testWebSocketConn {
-	var data [][]byte
-	return &testWebSocketConn{
-		msgData: data,
-		done:    false,
-	}
-}
 
 func Test_iterateOverBuildData(t *testing.T) {
 	var stream [][]byte
-	ws := newWebSocketConn()
+	ws := ocenet.NewWebSocketConn()
 	//buildInfo.buildData = append()
 	for _, dat := range testData {
 		stream = append(stream, dat)
 	}
 	iterateOverBuildData(stream, ws)
-	if !util.CompareByteArrays(ws.msgData, testData) {
+	if !util.CompareByteArrays(ws.MsgData, testData) {
 		t.Errorf("arrays not the same. expected: %v, actual: %v", testData, ws.msgData)
 	}
 }
@@ -78,14 +44,14 @@ func Test_streamFromArray(t *testing.T) {
 	var fstIndex  = 4
 	var secIndex  = 6
 	var buildInfo = &buildDatum{buildData: stream, done: make(chan int),}
-	var ws        = newWebSocketConn()
+	var ws        = ocenet.NewWebSocketConn()
 	//
 	for _, data := range testData[:fstIndex] {
 		buildInfo.buildData = append(buildInfo.buildData, data)
 	}
 	go streamFromArray(buildInfo, ws)
 	time.Sleep(1 * time.Second)
-	if !util.CompareByteArrays(testData[:fstIndex], ws.msgData) {
+	if !util.CompareByteArrays(testData[:fstIndex], ws.MsgData) {
 		t.Errorf("first slices not the same. expected: %v, actual: %v", testData[:fstIndex],  buildInfo.buildData)
 	}
 	for _, data := range testData[fstIndex:secIndex] {

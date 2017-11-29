@@ -1,6 +1,9 @@
 package ocenet
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 // for initializing connections / configurations once, then passing it around for lifetime of application
 // Ctx can be anything, just have to set H to be HandleFunc that also takes in the context as first value.
@@ -26,3 +29,11 @@ func (ah *AppContextHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ah.H(ah.Ctx, w, r)
 }
 
+
+
+// testable interface for using websockets
+type WebsocketEy interface {
+	SetWriteDeadline(t time.Time) error
+	WriteMessage(messageType int, data []byte) error
+	Close() error
+}
