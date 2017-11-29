@@ -1,6 +1,9 @@
 package util
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 func StrFormatErrors(testValue string, expected string, actual string) string {
 	return fmt.Sprintf("expected %v to be %v, got %v", testValue, expected, actual)
@@ -12,4 +15,23 @@ func IntFormatErrors(testValue string, expected int, actual int) string {
 
 func GenericStrFormatErrors(testValue string, expected interface{}, actual interface{}) string {
 	return fmt.Sprintf("expected %v to be %v, got %v", testValue, expected, actual)
+}
+
+// todo: write string function for printing out errors
+func CompareByteArrays(a [][]byte, b [][]byte) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	if len(a) != len(b) {
+		return false
+	}
+	for index, elem := range a {
+		if !bytes.Equal(elem, b[index]) {
+			return false
+		}
+	}
+	return true
 }

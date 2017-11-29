@@ -9,8 +9,6 @@ import (
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/storage"
-	//"io"
-	//"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -75,7 +73,14 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
 	<-pumpDone
 }
 
-func writeWSError(ws *websocket.Conn, description []byte) {
+type WebsocketEy interface {
+	SetWriteDeadline(t time.Time) error
+	WriteMessage(messageType int, data []byte) error
+	Close() error
+}
+
+
+func writeWSError(ws WebsocketEy, description []byte) {
 	ws.SetWriteDeadline(time.Now().Add(10*time.Second))
 	ws.WriteMessage(websocket.TextMessage, []byte("ERROR!\n"))
 	ws.WriteMessage(websocket.TextMessage, description)
@@ -83,7 +88,7 @@ func writeWSError(ws *websocket.Conn, description []byte) {
 }
 
 // pumpBundle writes build data to web socket
-func pumpBundle(ws *websocket.Conn, appCtx *appContext, hash string, done chan int){
+func pumpBundle(ws WebsocketEy, appCtx *appContext, hash string, done chan int){
 	// determine whether to get from storage or off infoReader
 	if appCtx.CheckIfBuildDone(hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
@@ -127,7 +132,7 @@ func pumpBundle(ws *websocket.Conn, appCtx *appContext, hash string, done chan i
 	}()
 }
 
-func streamFromArray(buildInfo *buildDatum, ws *websocket.Conn) (err error){
+func streamFromArray(buildInfo *buildDatum, ws WebsocketEy) (err error){
 	var index int
 	var previousIndex int
 	for {
@@ -156,7 +161,7 @@ func streamFromArray(buildInfo *buildDatum, ws *websocket.Conn) (err error){
 }
 
 
-func iterateOverBuildData(data [][]byte, ws *websocket.Conn) (int, error) {
+func iterateOverBuildData(data [][]byte, ws WebsocketEy) (int, error) {
 	var index int
 	for ind, dataLine := range data {
 		ws.SetWriteDeadline(time.Now().Add(10*time.Second))
