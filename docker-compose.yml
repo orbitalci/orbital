@@ -27,11 +27,11 @@ services:
         max-file: "10"
     environment:
       VAULT_TOKEN: secrets? ooowee
-  worker:
-    image: ocelot-worker
+  werker:
+    image: ocelot-werker
     build:
       context: .
-      dockerfile: worker/Dockerfile
+      dockerfile: werker/Dockerfile
       cache_from:
         - golang:1.9-alpine
     logging:

@@ -1,6 +1,6 @@
 FROM golang:1.9-alpine
 
-ENV SERVICE_NAME worker 
+ENV SERVICE_NAME werker 
 WORKDIR /go/src/${SERVICE_NAME}
 COPY . .
 
