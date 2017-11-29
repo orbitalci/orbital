@@ -139,8 +139,8 @@ func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 	var index int
 	var previousIndex int
 	for {
-		time.Sleep(1000)
-		streamComplete := len(buildInfo.buildData) == index + 1
+		time.Sleep(100)
+		streamComplete := len(buildInfo.buildData) == index
 		if buildInfo.done && streamComplete{
 			ocelog.Log().Debug("done streaming from array")
 			return nil
@@ -149,17 +149,15 @@ func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 		if streamComplete {
 			continue
 		}
+		ocelog.Log().Debug("1")
 		buildData := buildInfo.buildData[index:]
 		ind, err := iterateOverBuildData(buildData, ws)
 		previousIndex = index
-		if ind > 0 {
-			index += ind + 1
-			ocelog.Log().WithField("lines_sent", ind).WithField("index", index).WithField("previousIndex", previousIndex).Debug()
-		}
+		index += ind
+		ocelog.Log().WithField("lines_sent", ind).WithField("index", index).WithField("previousIndex", previousIndex).Debug()
 		if err != nil {
 			return err
 		}
-		time.Sleep(10000)
 	}
 
 }
@@ -174,7 +172,8 @@ func iterateOverBuildData(data [][]byte, ws ocenet.WebsocketEy) (int, error) {
 			ws.Close()
 			return index, err
 		}
-		index = ind
+		// adding the number of lines added to index so streamFromArray knows where to start on the next pass
+		index = ind + 1
 	}
 	return index, nil
 }
