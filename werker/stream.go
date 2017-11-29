@@ -75,6 +75,13 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
 	<-pumpDone
 }
 
+func writeWSError(ws *websocket.Conn, description []byte) {
+	ws.SetWriteDeadline(time.Now().Add(10*time.Second))
+	ws.WriteMessage(websocket.TextMessage, []byte("ERROR!\n"))
+	ws.WriteMessage(websocket.TextMessage, description)
+	ws.Close()
+}
+
 // pumpBundle writes build data to web socket
 func pumpBundle(ws *websocket.Conn, appCtx *appContext, hash string, done chan int){
 	// determine whether to get from storage or off infoReader
@@ -83,6 +90,7 @@ func pumpBundle(ws *websocket.Conn, appCtx *appContext, hash string, done chan i
 		reader, err := appCtx.storage.RetrieveReader(hash)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error("could not retrieve persisted build data")
+			writeWSError(ws, []byte("could not retrieve persisted build data"))
 			return
 		}
 		s := bufio.NewScanner(reader)
@@ -99,14 +107,18 @@ func pumpBundle(ws *websocket.Conn, appCtx *appContext, hash string, done chan i
 			ocelog.IncludeErrField(s.Err()).Error("infoReader scan error")
 		}
 	} else {
-		ocelog.Log().Debug("pumping info reader data to web socket")
-		buildInfo := appCtx.buildInfo[hash]
-		err := streamFromArray(buildInfo, ws)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("could not stream from array!")
+		ocelog.Log().Debug("pumping info array data to web socket")
+		buildInfo, ok := appCtx.buildInfo[hash]
+		if ok {
+			err := streamFromArray(buildInfo, ws)
+			if err != nil {
+				ocelog.IncludeErrField(err).Error("could not stream from array!")
+			}
+			ocelog.Log().Debug("streamed build data from array")
+		} else {
+			writeWSError(ws, []byte("did not find hash in current streaming data and the build was not marked as done"))
 		}
 	}
-	ocelog.Log().Debug("finished pumping info reader data to web socket")
 	defer func(){
 		close(done)
 		ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
@@ -127,12 +139,13 @@ func streamFromArray(buildInfo *buildDatum, ws *websocket.Conn) (err error){
 			ind, err := iterateOverBuildData(buildData, ws)
 			previousIndex = index
 			index += ind + 1
-			fmt.Println("------------------------------------------------------------------")
-			fmt.Println("byte arrays sent   :  ", ind)
-			fmt.Println("index is at        :  ", index)
-			fmt.Println("previousIndex is at:  ", previousIndex)
-			fmt.Println("------------------------------------------------------------------")
-			time.Sleep(4*time.Second)
+			ocelog.Log().WithField("lines_sent", ind).WithField("index", index).WithField("previousIndex", previousIndex).Debug()
+			//fmt.Println("------------------------------------------------------------------")
+			//fmt.Println("byte arrays sent   :  ", ind)
+			//fmt.Println("index is at        :  ", index)
+			//fmt.Println("previousIndex is at:  ", previousIndex)
+			//fmt.Println("------------------------------------------------------------------")
+			//time.Sleep(4*time.Second)
 			if err != nil {
 				return err
 			}
@@ -157,13 +170,13 @@ func iterateOverBuildData(data [][]byte, ws *websocket.Conn) (int, error) {
 	return index, nil
 }
 
-// todo: update docstring
-// writeInfoChanToCache is what processes transport objects that come from the transport channel (objects get created
-// 	and sent when a new build is pulled off the queue). a pipe is created, and the readerCache is populated for that
-// 	git hash and the io.PipeReader
-// 	the info chan is written to the io.PipeWriter, then stored using the storage config in appCtx for persistence.
-// 	consul is updated with build done status, and readerCache entry is removed
-func writeInfoChanToCache(transport  *Transport, appCtx *appContext){
+// writeInfoChanToInMemMap is what processes transport objects that come from the transport channel (objects get created
+// 	and sent when a new build is pulled off the queue).
+// 	the info channel is written to an array which is put in a map in the appCtx along with a done channel so
+//  there is a way to see when the array will not be written to anymore
+//  when the info channel is closed and the loop finishes, all the data is written to the storage defined in the
+//  appCtx, the done flag is written to consul, and the array is removed from the map
+func writeInfoChanToInMemMap(transport  *Transport, appCtx *appContext){
 	var dataSlice [][]byte
 	build := &buildDatum{dataSlice, make(chan int),}
 	appCtx.buildInfo[transport.Hash] = build
@@ -194,7 +207,7 @@ func writeInfoChanToCache(transport  *Transport, appCtx *appContext){
 func cacheProcessor(transpo chan *Transport, appCtx *appContext){
 	for i := range transpo {
 		ocelog.Log().Debugf("adding info channel for hash %s to map for streaming access.", i.Hash)
-		go writeInfoChanToCache(i, appCtx)
+		go writeInfoChanToInMemMap(i, appCtx)
 	}
 }
 

@@ -66,7 +66,7 @@ func (f *FileBuildStorage) StoreLines(gitHash string, lines [][]byte) (err error
 	defer file.Close()
 	w := bufio.NewWriter(file)
 	for _, line := range lines {
-		fmt.Fprintln(w, line)
+		fmt.Fprintln(w, string(line))
 	}
 	return w.Flush()
 }
