@@ -139,8 +139,15 @@ func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 	var index int
 	var previousIndex int
 	for {
-		if buildInfo.done {
+		time.Sleep(1000)
+		streamComplete := len(buildInfo.buildData) == index + 1
+		if buildInfo.done && streamComplete{
+			ocelog.Log().Debug("done streaming from array")
 			return nil
+		}
+		// if no new data has been sent, don't even try
+		if streamComplete {
+			continue
 		}
 		buildData := buildInfo.buildData[index:]
 		ind, err := iterateOverBuildData(buildData, ws)
@@ -152,8 +159,7 @@ func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 		if err != nil {
 			return err
 		}
-
-		time.Sleep(100)
+		time.Sleep(10000)
 	}
 
 }

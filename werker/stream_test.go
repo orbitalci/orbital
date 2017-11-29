@@ -60,13 +60,13 @@ func Test_streamFromArray(t *testing.T) {
 	middleTest := testData[:secIndex]
 	middleActual := buildInfo.buildData[:secIndex]
 	if !util.CompareByteArrays(middleTest, middleActual) {
-		t.Errorf("second slices not the same. expected: %v, actual: %v", testData, stream)
+		t.Errorf("second slices not the same. expected: %v, actual: %v", testData, buildInfo.buildData[:secIndex])
 	}
 	for _, data := range testData[secIndex:] {
 		buildInfo.buildData = append(buildInfo.buildData, data)
 	}
 	if !util.CompareByteArrays(testData, buildInfo.buildData) {
-		t.Errorf("full arrays not the same. expected: %v, actual: %v", testData, stream)
+		t.Errorf("full arrays not the same. expected: %v, actual: %v", testData, buildInfo.buildData)
 	}
 }
 
