@@ -10,4 +10,4 @@ RUN apk --update --no-cache add git && \
     go install -v ./... && \
     rm -rf /go/src/${SERVICE_NAME}/*
 
-CMD ["go-wrapper", "run", "${SERVICE_NAME}"]
+CMD ["go-wrapper", "run"]

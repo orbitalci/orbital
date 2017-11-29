@@ -20,10 +20,10 @@ Use a Queueing system (nsq? go doesn't really need a special queing system, can 
 
 ## How do I get started?
 
-Since the golang code is built inside the container, you only need to have a docker host to run containers, and docker-compose installed (Compose file format 3.4).
+Since the golang code is built inside the container, you only need to have a docker host to run containers, and docker-compose installed (Compose file format 3.3).
 
-* docker-engine >= 17.09.0+
-* docker-compose >= 1.17+
+* docker-engine >= 17.06.0+
+* docker-compose >= 1.14.0+
 
 ### Build
 
