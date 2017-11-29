@@ -17,4 +17,3 @@ Use a Queueing system (nsq? go doesn't really need a special queing system, can 
 *simple website that shows status of builds*
 *endpoint for getting historical data*
 *prometheus exporter for those stats (or something like that)*
-
