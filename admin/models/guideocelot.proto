@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package models;
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.routeguide";
+option java_outer_classname = "RouteGuideProto";
+
+//TODO: why doesn't this compilleeee
+service GuideOcelot {
+    rpc GetFeature() returns (Credentials) {}
+//    rpc GetConfigs()        returns (Credentials) {}
+}
+
+message Credentials {
+    string clientId = 1;
+    string clientSecret = 2;
+    string tokenURL = 3;
+    string acctName = 4;
+    string type = 5;
+}
