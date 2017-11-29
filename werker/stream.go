@@ -86,7 +86,7 @@ func pumpBundle(ws ocenet.WebsocketEy, appCtx *appContext, hash string, done cha
 	// determine whether to get from storage or off infoReader
 	if appCtx.CheckIfBuildDone(hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
-		err := pumpFromStorage(appCtx, hash, ws)
+		err := streamFromStorage(appCtx, hash, ws)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error("error retrieving from storage")
 		}
@@ -111,8 +111,8 @@ func pumpBundle(ws ocenet.WebsocketEy, appCtx *appContext, hash string, done cha
 	}()
 }
 
-// pumpFromStorage gets the buildInfo data from storage and writes the lines to the websocket connection
-func pumpFromStorage(appCtx *appContext, hash string, ws ocenet.WebsocketEy) error {
+// streamFromStorage gets the buildInfo data from storage and writes the lines to the websocket connection
+func streamFromStorage(appCtx *appContext, hash string, ws ocenet.WebsocketEy) error {
 	reader, err := appCtx.storage.RetrieveReader(hash)
 	if err != nil {
 		ocelog.IncludeErrField(err).Warn("could not retrieve persisted build data")
@@ -133,7 +133,7 @@ func pumpFromStorage(appCtx *appContext, hash string, ws ocenet.WebsocketEy) err
 }
 
 // streamFromArray writes the buildData slice to a web socket. it keeps track of where the index is that it has
-// previously read and waits for more data on the buildData slice until the buildInfo done channel has been touched,
+// previously read and waits for more data on the buildData slice until the buildInfo done flag is set to true,
 // at which point it cancels out
 func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 	var index int
@@ -153,7 +153,7 @@ func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 			return err
 		}
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(100)
 	}
 
 }
@@ -221,7 +221,7 @@ func serveHome(w http.ResponseWriter, r *http.Request){
 	http.ServeFile(w, r, "test.html")
 }
 
-func GetWerkConfig(conf *WerkerConf) *appContext{
+func GetAppContext(conf *WerkerConf) *appContext{
 	store := storage.NewFileBuildStorage("")
 	appCtx := &appContext{ conf: conf, storage: store, buildInfo: make(map[string]*buildDatum), consul: consulet.Default()}
 	return appCtx
@@ -229,7 +229,7 @@ func GetWerkConfig(conf *WerkerConf) *appContext{
 
 func ServeMe(transportChan chan *Transport, conf *WerkerConf){
 	ocelog.Log().Debug("started serving routine for streaming data")
-	appctx := GetWerkConfig(conf)
+	appctx := GetAppContext(conf)
 	go cacheProcessor(transportChan, appctx)
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{appctx, stream}).Methods("GET")

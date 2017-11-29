@@ -24,7 +24,6 @@ var testData = [][]byte{
 	[]byte("z-3985jfasr jhgfturkeyisgrossf garbage"),
 }
 
-
 func Test_iterateOverBuildData(t *testing.T) {
 	var stream [][]byte
 	ws := ocenet.NewWebSocketConn()
