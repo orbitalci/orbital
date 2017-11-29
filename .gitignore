@@ -15,7 +15,11 @@
 vendor/
 .idea
 .DS_Store
+
 hookhandler
 ./hookhandler
 werker
 work
+
+# Ignore vim garbage
+*.swp
