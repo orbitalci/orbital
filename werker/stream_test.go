@@ -43,7 +43,7 @@ func Test_streamFromArray(t *testing.T) {
 	var stream [][]byte
 	var fstIndex  = 4
 	var secIndex  = 6
-	var buildInfo = &buildDatum{buildData: stream, done: make(chan int),}
+	var buildInfo = &buildDatum{buildData: stream, done: false,}
 	var ws        = ocenet.NewWebSocketConn()
 	//
 	for _, data := range testData[:fstIndex] {
@@ -95,10 +95,11 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 		t.Errorf("full slice not the same. expected: %v, actual: %v", testData, ctx.buildInfo[trans.Hash].buildData)
 	}
 	close(trans.InfoChan)
-	time.Sleep(100)
 
 	// wait for storage to be done, then check it
-	<- ctx.buildInfo[trans.Hash].done
+	for !ctx.buildInfo[trans.Hash].done {
+		time.Sleep(100)
+	}
 	reader, err := ctx.storage.RetrieveReader(trans.Hash)
 	if err != nil {
 		t.Fatal(err)
