@@ -86,12 +86,12 @@ func (f *FileBuildStorage) RetrieveReader(gitHash string) (read io.Reader, err e
 	return
 }
 
-func (f FileBuildStorage) getTempFile(gitHash string) string {
+func (f *FileBuildStorage) getTempFile(gitHash string) string {
 	fp := filepath.Join(f.saveDirec, gitHash)
 	return fp
 }
 
 
-func (f FileBuildStorage) Clean() {
+func (f *FileBuildStorage) Clean() {
 	os.RemoveAll(f.saveDirec)
 }
