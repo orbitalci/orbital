@@ -13,12 +13,26 @@ import (
 	"net/http"
 	"github.com/shankj3/ocelot/util"
 	"gopkg.in/go-playground/validator.v9"
+	"context"
 )
 
 //TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
 //TODO: rewrite admin code to use grpc
 //TODO: floe integration??? just putting this note here so we remember
+//TODO: change this to use my fork of logrus so we can pretty print logs
 
+
+//this is our grpc server struct
+type guideOcelotServer struct {
+	//TODO: probably want other properties here
+}
+
+//TODO: what is htis context good for?
+func (g *guideOcelotServer) GetCreds(ctx context.Context) (*models.CredWrapper, error) {
+
+}
+
+//application context, contains stuff that'll get used across admin code
 type AdminCtx struct {
 	deserializer	*deserialize.Deserializer
 	adminValidator	*AdminValidator
