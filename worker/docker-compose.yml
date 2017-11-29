@@ -1,0 +1,9 @@
+version: '3.1'
+services:
+  worker:
+    image: ocelot-worker
+    build:
+      context: ..
+      dockerfile: worker/Dockerfile
+      cache_from:
+        - golang:1.9-alpine
