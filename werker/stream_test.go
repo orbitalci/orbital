@@ -95,8 +95,8 @@ func Test_streamFromArray(t *testing.T) {
 		buildInfo.buildData = append(buildInfo.buildData, data)
 	}
 	time.Sleep(1 * time.Second)
-	middleTest := testData[fstIndex:secIndex]
-	middleActual := buildInfo.buildData[fstIndex:secIndex]
+	middleTest := testData[:secIndex]
+	middleActual := buildInfo.buildData[:secIndex]
 	if !util.CompareByteArrays(middleTest, middleActual) {
 		t.Errorf("second slices not the same. expected: %v, actual: %v", testData, stream)
 	}

@@ -73,13 +73,14 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
 	<-pumpDone
 }
 
+// kinda hackily done because switching to grpc
 type WebsocketEy interface {
 	SetWriteDeadline(t time.Time) error
 	WriteMessage(messageType int, data []byte) error
 	Close() error
 }
 
-
+// what to return to socket if something went awry
 func writeWSError(ws WebsocketEy, description []byte) {
 	ws.SetWriteDeadline(time.Now().Add(10*time.Second))
 	ws.WriteMessage(websocket.TextMessage, []byte("ERROR!\n"))
@@ -92,24 +93,9 @@ func pumpBundle(ws WebsocketEy, appCtx *appContext, hash string, done chan int){
 	// determine whether to get from storage or off infoReader
 	if appCtx.CheckIfBuildDone(hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
-		reader, err := appCtx.storage.RetrieveReader(hash)
+		err := pumpFromStorage(appCtx, hash, ws)
 		if err != nil {
-			ocelog.IncludeErrField(err).Error("could not retrieve persisted build data")
-			writeWSError(ws, []byte("could not retrieve persisted build data"))
-			return
-		}
-		s := bufio.NewScanner(reader)
-		// write to web socket
-		for s.Scan() {
-			ws.SetWriteDeadline(time.Now().Add(10*time.Second))
-			if err := ws.WriteMessage(websocket.TextMessage, s.Bytes()); err != nil{
-				ocelog.IncludeErrField(err).Error("could not write to web socket")
-				ws.Close()
-				break
-			}
-		}
-		if s.Err() != nil {
-			ocelog.IncludeErrField(s.Err()).Error("infoReader scan error")
+			ocelog.IncludeErrField(err).Error("error retrieving from storage")
 		}
 	} else {
 		ocelog.Log().Debug("pumping info array data to web socket")
@@ -130,6 +116,26 @@ func pumpBundle(ws WebsocketEy, appCtx *appContext, hash string, done chan int){
 		ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 		ws.Close()
 	}()
+}
+
+func pumpFromStorage(appCtx *appContext, hash string, ws WebsocketEy) error {
+	reader, err := appCtx.storage.RetrieveReader(hash)
+	if err != nil {
+		ocelog.IncludeErrField(err).Warn("could not retrieve persisted build data")
+		writeWSError(ws, []byte("could not retrieve persisted build data"))
+		return err
+	}
+	s := bufio.NewScanner(reader)
+	// write to web socket
+	for s.Scan() {
+		ws.SetWriteDeadline(time.Now().Add(10*time.Second))
+		if err := ws.WriteMessage(websocket.TextMessage, s.Bytes()); err != nil{
+			ocelog.IncludeErrField(err).Error("could not write to web socket")
+			ws.Close()
+			break
+		}
+	}
+	return s.Err()
 }
 
 func streamFromArray(buildInfo *buildDatum, ws WebsocketEy) (err error){
