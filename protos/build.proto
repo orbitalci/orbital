@@ -22,10 +22,12 @@ message PushBuildBundle {
     BuildConfig config = 1;
     RepoPush pushData = 2;
     string vaultToken = 3;
+    string checkoutHash = 4;
 }
 
 message PRBuildBundle {
     BuildConfig config = 1;
     PullRequest prData = 2;
     string vaultToken = 3;
+    string checkoutHash = 4;
 }

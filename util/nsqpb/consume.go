@@ -53,7 +53,7 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
         return err
     }
 	p.StopChan = c.StopChan
-    c.SetLogger(NewNSQLoggerAtLevel(ocelog.GetLogLevel()))
+    c.SetLogger(NSQLogger{}, nsq.LogLevelError)
     c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
 
     if err = c.ConnectToNSQLookupd(p.Config.LookupDAddress()); err != nil {

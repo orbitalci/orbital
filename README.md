@@ -30,7 +30,7 @@ Since the golang code is built inside the container, you only need to have a doc
 From `${OCELOT_ROOT}` or `${OCELOT_ROOT}/${SERVICE_ROOT}` run the following to build every service:
 `docker-compose build`
 
-(There should be a `${OCELOT_ROOT}/${SERVICE_ROOT}/docker-compose.yml` that points back to `${OCELOT_ROOT}/docker-compose.yml` because the build context includes files from `${OCELOT_ROOT}`)
+(There should be a `${OCELOT_ROOT}/${SERVICE_ROOT}/docker-compose.yml` that sets the build context to `${OCELOT_ROOT}`, because the build context includes vendoring dependencies from `dep`)
 
 ### Run
 
@@ -46,3 +46,24 @@ From `${OCELOT_ROOT}` or `${OCELOT_ROOT}/${SERVICE_ROOT}` run the following to r
 
 ## Known issues:
 * Starting an Ocelot development cluster with `docker-compose up` does not result in a fully wired, functional system.
+
+## Proposed features
+ * store length of builds
+ * monitoring process??   
+ * resource management  
+ * support different failure conditions
+   * re-queueing vs error reporting 
+ * define trigger section for build?
+
+## Target projects
+ * Ocelot
+ * orchestr8 - The reference java project
+
+## TODO:
+ * Fix firewall rules (w/ Tanner's assistance) so we can route webhooks internally
+ * Deploy onto VM
+
+marianne: grpc admin & hookhandler remote config
+jessi: grpc streaming & changes from PR & converting ocelot.yml -> abbys pipeline proto message
+abby: pipeline stuff | docker / kubernetes implementation | client related stuff 
+tj: building & running project & registrator alternative? or registrator? 

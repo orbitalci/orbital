@@ -1,4 +1,4 @@
-version: '3.3'
+version: "3.3"
 services:
   # Ocelot services
   admin:
@@ -13,6 +13,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    environment:
+      VAULT_TOKEN: e92136aa-93c6-6062-b724-cba19fd775fe
   hookhandler:
     image: ocelot-hookhandler
     build:
@@ -25,8 +27,11 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    ports:
+      - "8088:8088"
     environment:
-      VAULT_TOKEN: secrets? ooowee
+      VAULT_TOKEN: e92136aa-93c6-6062-b724-cba19fd775fe
+      VAULT_ADDR: http://172.18.0.1:8200
   werker:
     image: ocelot-werker
     build:
@@ -34,85 +39,14 @@ services:
       dockerfile: werker/Dockerfile
       cache_from:
         - golang:1.9-alpine
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
-
-  # Copied directly from ./docs/docker-compose/vault-consul/docker-compose.yml, with volume paths slightly modified, and with logging
-  consul:
-    image: "consul"
-    hostname: "consul"
-    command: "agent -dev -client 0.0.0.0"
-    ports:
-      - "8400:8400"
-      - "8500:8500"
-      - "8600:53/udp"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
-  vault:
-    depends_on:
-      - consul
-    image: "vault"
-    hostname: "vault"
-    links:
-      - "consul:consul"
     environment:
-      VAULT_ADDR: http://127.0.0.1:8200
-    ports:
-      - "8200:8200"
+      VAULT_ADDR: http://172.18.0.1:8200
     logging:
       driver: "json-file"
       options:
         max-size: "200k"
         max-file: "10"
-    volumes:
-      - ./docs/docker-compose/vault-consul/tools/wait-for-it.sh:/wait-for-it.sh
-      - ./docs/docker-compose/vault-consul/config/vault:/config
-      - ./docs/docker-compose/vault-consul/config/vault/policies:/policies
-    entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl
-
-  # Copied directly from ./util/nsqpb/docker-compose.yml, modified with logging
-  nsqlookupd:
-    image: nsqio/nsq
-    command: >
-      /nsqlookupd
-      -broadcast-address localhost:4160
-    ports:
-      - "4160:4160"
-      - "4161:4161"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
-  nsqd:
-    image: nsqio/nsq
-    command: >
-      /nsqd
-      -broadcast-address localhost
-      -lookupd-tcp-address nsqlookupd:4160
-    ports:
-      - "4150:4150"
-      - "4151:4151"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
-  nsqadmin:
-    image: nsqio/nsq
-    command: >
-      /nsqadmin
-      -nsqd-http-address nsqd:4151
-    ports:
-      - "4171:4171"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
+networks:
+  default:
+    external:
+      name: ocelot_default
