@@ -56,8 +56,8 @@ From `${OCELOT_ROOT}` or `${OCELOT_ROOT}/${SERVICE_ROOT}` run the following to r
  * define trigger section for build?
 
 ## Target projects
-Ocelot
-orchestr8 - The reference java project
+ * Ocelot
+ * orchestr8 - The reference java project
 
 ## TODO:
  * Fix firewall rules (w/ Tanner's assistance) so we can route webhooks internally
