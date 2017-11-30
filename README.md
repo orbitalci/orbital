@@ -30,7 +30,7 @@ Since the golang code is built inside the container, you only need to have a doc
 From `${OCELOT_ROOT}` or `${OCELOT_ROOT}/${SERVICE_ROOT}` run the following to build every service:
 `docker-compose build`
 
-(There should be a `${OCELOT_ROOT}/${SERVICE_ROOT}/docker-compose.yml` that points back to `${OCELOT_ROOT}/docker-compose.yml` because the build context includes files from `${OCELOT_ROOT}`)
+(There should be a `${OCELOT_ROOT}/${SERVICE_ROOT}/docker-compose.yml` that sets the build context to `${OCELOT_ROOT}`, because the build context includes vendoring dependencies from `dep`)
 
 ### Run
 
