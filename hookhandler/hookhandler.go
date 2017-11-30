@@ -41,7 +41,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
-			ocenet.JSONApiError(w, http.StatusBadRequest,"unable to get build conf", err)
+			ocelog.IncludeErrField(err).Error("unable to get build conf")
 			return
 		}
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
@@ -51,7 +51,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
+		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 	}
 	// instead, add to topic. each worker gets a topic off a channel,
 	// so one worker to one channel
@@ -69,7 +69,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 func PullRequest(w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
 	if err := deserializer.JSONToProto(r.Body, pr); err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
+		ocelog.IncludeErrField(err).Error("could not parse request body into pb.PullRequest")
 		return
 	}
 	fullName := pr.Pullrequest.Source.Repository.FullName
@@ -77,10 +77,9 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 
 	buildConf, err := GetBuildConfig(fullName, hash)
 	if err != nil {
-		//ocelog.IncludeErrField(err).Error("unable to get build conf")
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
-			ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
+			ocelog.IncludeErrField(err).Error("unable to get build conf")
 			return
 		}
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
@@ -90,7 +89,7 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
+		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
 	// create bundle, send that s*** off!
@@ -167,8 +166,6 @@ func main() {
 	// handleBBevent can take push/pull/ w/e
 	muxi.HandleFunc("/bitbucket", HandleBBEvent).Methods("POST")
 
-	muxi.HandleFunc("/bitbucket/rp", RepoPush).Methods("POST")
-	muxi.HandleFunc("/bitbucket/pr", PullRequest).Methods("POST")
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)

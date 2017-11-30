@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -113,12 +114,13 @@ func pumpBundle(ws ocenet.WebsocketEy, appCtx *appContext, hash string, done cha
 
 // streamFromStorage gets the buildInfo data from storage and writes the lines to the websocket connection
 func streamFromStorage(appCtx *appContext, hash string, ws ocenet.WebsocketEy) error {
-	reader, err := appCtx.storage.RetrieveReader(hash)
+	bytez, err := appCtx.storage.Retrieve(hash)
 	if err != nil {
 		ocelog.IncludeErrField(err).Warn("could not retrieve persisted build data")
 		writeWSError(ws, []byte("could not retrieve persisted build data"))
 		return err
 	}
+	reader := bytes.NewReader(bytez)
 	s := bufio.NewScanner(reader)
 	// write to web socket
 	for s.Scan() {
@@ -139,7 +141,7 @@ func streamFromArray(buildInfo *buildDatum, ws ocenet.WebsocketEy) (err error){
 	var index int
 	var previousIndex int
 	for {
-		time.Sleep(100)
+		time.Sleep(100) // todo: set polling to be configurable
 		fullArrayStreamed := len(buildInfo.buildData) == index
 		if buildInfo.done && fullArrayStreamed {
 			ocelog.Log().Debug("done streaming from array")
@@ -184,6 +186,7 @@ func iterateOverBuildData(data [][]byte, ws ocenet.WebsocketEy) (int, error) {
 //  when the info channel is closed and the loop finishes, all the data is written to the storage defined in the
 //  appCtx, the done flag is written to consul, and the array is removed from the map
 func writeInfoChanToInMemMap(transport  *Transport, appCtx *appContext){
+	// question: does this support unicode?
 	var dataSlice [][]byte
 	build := &buildDatum{dataSlice, false,}
 	appCtx.buildInfo[transport.Hash] = build

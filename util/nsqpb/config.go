@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+// todo: consul integration to make discovery less painful
+
 var (
 	// environment variables
 	envNsqLookupd = "NSQLOOKUPD_IP"

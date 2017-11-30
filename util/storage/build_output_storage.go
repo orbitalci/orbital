@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"io"
 )
 
 // Interface for any storage type that we pick (mongo, mysql, filesystem..)
@@ -17,7 +16,6 @@ type BuildOutputStorage interface {
 	Retrieve(gitHash string) ([]byte, error)
 	Store(gitHash string, data []byte) error
 	StoreLines(gitHash string, lines [][]byte) error
-	RetrieveReader(gitHash string) (io.Reader, error)
 }
 
 // FileBuildStorage is an implementation of BuildOutputStorage that is for filesystem.
@@ -43,7 +41,7 @@ func (f *FileBuildStorage) setup(){
 		}
 		f.saveDirec = direc
 	}
-	if err = os.MkdirAll(f.saveDirec, 0777); err != nil {
+	if err = os.MkdirAll(f.saveDirec, 0755); err != nil {
 		ocelog.IncludeErrField(err).Fatal("could not init build storage")
 	}
 }
@@ -76,13 +74,6 @@ func (f *FileBuildStorage) StoreLines(gitHash string, lines [][]byte) (err error
 func (f *FileBuildStorage) Retrieve(gitHash string) (data []byte, err error) {
 	fp := f.getTempFile(gitHash)
 	data, err = ioutil.ReadFile(fp)
-	return
-}
-
-// retrieve build data from filesystem as io.Reader
-func (f *FileBuildStorage) RetrieveReader(gitHash string) (read io.Reader, err error){
-	fp := f.getTempFile(gitHash)
-	read, err = os.Open(fp)
 	return
 }
 

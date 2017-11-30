@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"github.com/shankj3/ocelot/util"
 	"github.com/shankj3/ocelot/util/consulet"
 	"github.com/shankj3/ocelot/util/ocenet"
@@ -99,10 +100,11 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	for !ctx.buildInfo[trans.Hash].done {
 		time.Sleep(100)
 	}
-	reader, err := ctx.storage.RetrieveReader(trans.Hash)
+	bytez, err := ctx.storage.Retrieve(trans.Hash)
 	if err != nil {
 		t.Fatal(err)
 	}
+	reader := bytes.NewReader(bytez)
 	var actualData [][]byte
 	// todo: this is a dumb and lazy and nonperformant way but its late
 	sc := bufio.NewScanner(reader)
