@@ -46,3 +46,31 @@ From `${OCELOT_ROOT}` or `${OCELOT_ROOT}/${SERVICE_ROOT}` run the following to r
 
 ## Known issues:
 * Starting an Ocelot development cluster with `docker-compose up` does not result in a fully wired, functional system.
+
+store length of builds
+
+
+monitoring process??   
+resource management  
+support different failure conditions?   
+re-queueing vs error reporting 
+
+*define trigger section for build?* 
+
+# TODO: TANNER HOLE PUNCH
+
+build ocelot is for us
+
+## java test project  
+orchestr8
+
+
+
+#DEPLOY ON VM! 
+
+
+marianne: grpc admin & hookhandler remote config
+jessi: grpc streaming & changes from PR & converting ocelot.yml -> abbys pipeline proto message
+abby: pipeline stuff | docker / kubernetes implementation | client related stuff 
+tj: building & running project & registrator alternative? or registrator? 
+>>>>>>> master

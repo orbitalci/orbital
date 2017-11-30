@@ -3,7 +3,6 @@ package nsqpb
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/ocelot/protos/out"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"net/http"
@@ -16,8 +15,17 @@ const (
 
 var SupportedTopics = [2]string{PushTopic, PRTopic}
 
+// extends proto.Message interface
+type BundleProtoMessage interface {
+	GetCheckoutHash() string
+	Reset()
+	String() string
+	ProtoMessage()
+}
 
-func TopicsUnmarshalObj(topic string) proto.Message {
+
+
+func TopicsUnmarshalObj(topic string) BundleProtoMessage {
 	switch topic {
 	case PRTopic:   return &protos.PRBuildBundle{}
 	case PushTopic: return &protos.PushBuildBundle{}

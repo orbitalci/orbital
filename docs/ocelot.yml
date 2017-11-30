@@ -1,4 +1,4 @@
-image: test
+image: java:1.8
 dockerPackages: # apt-get install
   - maven<v>
   - blah
@@ -17,9 +17,3 @@ build:
     - SEARCH_URL=https://google.com
   script:
     - echo "hello1"
-test:
-  script:
-    - echo "goodbye"
-deploy:
-  script:
-    - echo "fly away"
