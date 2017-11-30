@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/meatballhat/negroni-logrus"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
@@ -13,8 +12,6 @@ import (
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/ocevault"
-	log "github.com/sirupsen/logrus"
-	"github.com/urfave/negroni"
 	"net/http"
 	"os"
 	"sync"
@@ -23,20 +20,14 @@ import (
 //var consul = consulet.Default()
 var deserializer = deserialize.New()
 
+// vault singleton
 var vaultCached *ocevault.Ocevault
-var once sync.Once
+var vaultOnce sync.Once
 
-// the sync.Once() way of letting something get initialized only one time.
-func getInitVault() *ocevault.Ocevault {
-	once.Do(func() {
-		ocev, err := ocevault.NewEnvAuthClient()
-		if err != nil {
-			ocelog.IncludeErrField(err).Fatal("vault must be initialized.")
-		}
-		vaultCached = ocev
-	})
-	return vaultCached
-}
+// producer singleton
+var producerCached *nsqpb.PbProduce
+var producerOnce sync.Once
+
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
 func RepoPush(w http.ResponseWriter, r *http.Request) {
@@ -48,51 +39,80 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 	hash := repopush.Push.Changes[0].New.Target.Hash
 	buildConf, err := GetBuildConfig(fullName, hash)
 	if err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest,"unable to get build conf", err)
+		// if the build file just isn't there don't worry about it.
+		if err != ocenet.FileNotFound {
+			ocelog.IncludeErrField(err).Error("unable to get build conf")
+			return
+		}
+		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
-	vault := getInitVault()
+	ocelog.Log().Debug("found ocelot yml")
+	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
+		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 	}
 	// instead, add to topic. each worker gets a topic off a channel,
 	// so one worker to one channel
 	bundle := &pb.PushBuildBundle{
-		Config:     buildConf,
-		PushData:   repopush,
-		VaultToken: token,
+		Config:       buildConf,
+		PushData:     repopush,
+		VaultToken:   token,
+		CheckoutHash: hash,
 	}
-	ocelog.Log().Debug("added!")
-	go nsqpb.WriteToNsq(bundle, nsqpb.PushTopic)
+	ocelog.Log().Debug("created push bundle")
+	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
+	go pbProducer.WriteToNsq(bundle, nsqpb.PushTopic)
 }
 
 func PullRequest(w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
 	if err := deserializer.JSONToProto(r.Body, pr); err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
+		ocelog.IncludeErrField(err).Error("could not parse request body into pb.PullRequest")
 		return
 	}
-	buildConf, err := GetBuildConfig(pr.Pullrequest.Source.Repository.FullName, pr.Pullrequest.Source.Repository.FullName)
+	fullName := pr.Pullrequest.Source.Repository.FullName
+	hash := pr.Pullrequest.Source.Commit.Hash
+
+	buildConf, err := GetBuildConfig(fullName, hash)
 	if err != nil {
-		//ocelog.IncludeErrField(err).Error("unable to get build conf")
-		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to get build conf", err)
+		// if the build file just isn't there don't worry about it.
+		if err != ocenet.FileNotFound {
+			ocelog.IncludeErrField(err).Error("unable to get build conf")
+			return
+		}
+		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
 		return
 	}
 	// get one-time token use for access to vault
-	vault := getInitVault()
+	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
 	token, err := vault.CreateThrowawayToken()
 	if err != nil {
-		ocenet.JSONApiError(w, http.StatusBadRequest, "unable to create one-time vault token", err)
+		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
+		return
 	}
 	// create bundle, send that s*** off!
 	bundle := &pb.PRBuildBundle{
 		Config:     buildConf,
 		PrData:     pr,
 		VaultToken: token,
+		CheckoutHash: hash,
 	}
-	go nsqpb.WriteToNsq(bundle, nsqpb.PRTopic)
+	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
+	go pbProducer.WriteToNsq(bundle, nsqpb.PRTopic)
 
+}
+
+func HandleBBEvent(w http.ResponseWriter, r *http.Request) {
+	switch r.Header.Get("X-Event-Key") {
+	case "repo:push":  RepoPush(w, r)
+	case "pullrequest:created",
+	     "pullrequest:updated": PullRequest(w, r)
+	default:
+		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
+		w.WriteHeader(http.StatusUnprocessableEntity)
+	}
 }
 
 // for testing
@@ -137,15 +157,16 @@ func main() {
 		ocelog.Log().Warning("running on default port :8088")
 	}
 	// initialize vault on startup, we want to know right away if we don't have the creds we need.
-	_ = getInitVault()
+	_ = ocevault.GetInitVault(vaultOnce, vaultCached)
+	// same goes for nsq producer
+	_ = nsqpb.GetInitProducer(producerOnce, producerCached)
+
 	muxi := mux.NewRouter()
-	muxi.HandleFunc("/bitbucket/rp", RepoPush).Methods("POST")
-	muxi.HandleFunc("/bitbucket/pr", PullRequest).Methods("POST")
+
+	// handleBBevent can take push/pull/ w/e
+	muxi.HandleFunc("/bitbucket", HandleBBEvent).Methods("POST")
 
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
-
-	n := negroni.New(negroni.NewRecovery(), negroni.NewStatic(http.Dir("public")))
-	n.Use(negronilogrus.NewCustomMiddleware(ocelog.GetLogLevel(), &log.JSONFormatter{}, "web"))
-	n.UseHandler(muxi)
+	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)
 }
