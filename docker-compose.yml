@@ -1,4 +1,4 @@
-version: '3.3'
+version: "3.3"
 services:
   # Ocelot services
   admin:
@@ -42,13 +42,13 @@ services:
 
   # Copied directly from ./docs/docker-compose/vault-consul/docker-compose.yml, with volume paths slightly modified, and with logging
   consul:
-    image: "consul"
-    hostname: "consul"
-    command: "agent -dev -client 0.0.0.0"
+    image: consul
+    hostname: consul
+    command: agent -dev -client 0.0.0.0
     ports:
-      - "8400:8400"
-      - "8500:8500"
-      - "8600:53/udp"
+      - 8400:8400
+      - 8500:8500
+      - 8600:53/udp
     logging:
       driver: "json-file"
       options:
@@ -57,14 +57,14 @@ services:
   vault:
     depends_on:
       - consul
-    image: "vault"
-    hostname: "vault"
+    image: vault
+    hostname: vault
     links:
-      - "consul:consul"
+      - consul:consul
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
     ports:
-      - "8200:8200"
+      - 8200:8200
     logging:
       driver: "json-file"
       options:
@@ -83,8 +83,8 @@ services:
       /nsqlookupd
       -broadcast-address localhost:4160
     ports:
-      - "4160:4160"
-      - "4161:4161"
+      - 4160:4160
+      - 4161:4161
     logging:
       driver: "json-file"
       options:
@@ -97,8 +97,8 @@ services:
       -broadcast-address localhost
       -lookupd-tcp-address nsqlookupd:4160
     ports:
-      - "4150:4150"
-      - "4151:4151"
+      - 4150:4150
+      - 4151:4151
     logging:
       driver: "json-file"
       options:
@@ -110,7 +110,7 @@ services:
       /nsqadmin
       -nsqd-http-address nsqd:4151
     ports:
-      - "4171:4171"
+      - 4171:4171
     logging:
       driver: "json-file"
       options:
