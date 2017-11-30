@@ -16,19 +16,23 @@ import (
 	"context"
 )
 
-//TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
+//TODO: rewrite hookhandler logic to use remoteconfig
 //TODO: rewrite admin code to use grpc
+
 //TODO: floe integration??? just putting this note here so we remember
+//TODO: rewrite all the objects so that they use CredWrapper + Credentials protobuf classes instead - SHIIIIIIT HALFWAY THROUGH
 //TODO: change this to use my fork of logrus so we can pretty print logs
 
 
 //this is our grpc server struct
 type guideOcelotServer struct {
+	remoteConfig	*util.RemoteConfig
 	//TODO: probably want other properties here
 }
 
-//TODO: what is htis context good for?
+//TODO: what is this context good for?
 func (g *guideOcelotServer) GetCreds(ctx context.Context) (*models.CredWrapper, error) {
+	creds, _ := g.remoteConfig.GetCredAt(util.ConfigPath, true)
 	return nil, nil
 }
 
@@ -68,8 +72,6 @@ func main() {
 		remoteConfig: configInstance,
 	}
 
-	adminContext.remoteConfig.Consul.RegisterService("localhost", 8080, "ocelot-admin")
-
 	//check for config on load
 	ReadConfig(adminContext)
 
@@ -81,6 +83,7 @@ func main() {
 	//add new repo
 	//configure whether or not you want admin to discover new ocelot.yaml files for you
 
+	//TODO: change these two lines below to use grpc gateway instead
 	mux.Handle("/", &ocenet.AppContextHandler{adminContext, ConfigHandler}).Methods("POST")
 	mux.Handle("/", &ocenet.AppContextHandler{adminContext,ListConfigHandler}).Methods("GET")
 	ocelog.Log().Fatal(http.ListenAndServe(":"+port, mux))
