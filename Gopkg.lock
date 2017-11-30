@@ -215,7 +215,7 @@
   branch = "master"
   name = "github.com/keybase/go-crypto"
   packages = ["brainpool","cast5","curve25519","ed25519","ed25519/internal/edwards25519","openpgp","openpgp/armor","openpgp/ecdh","openpgp/elgamal","openpgp/errors","openpgp/packet","openpgp/s2k","rsa"]
-  revision = "f63716704117f5bd34d8f0f068f7e8369d20d4ab"
+  revision = "80dd18f19f35c6b2e3b56254e397c36d07d9d285"
 
 [[projects]]
   branch = "master"
@@ -353,13 +353,13 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "13fcbd661c8ececa8807a29b48407d674b1d8ed8"
+  revision = "8b4580aae2a0dd0c231a45d3ccb8434ff533b840"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
-  revision = "572a2b141f625f4360cf42a41a43622067e0510b"
+  revision = "75cc3cad82b5f47d3fb229ddda8c5167da14f294"
 
 [[projects]]
   name = "google.golang.org/appengine"
