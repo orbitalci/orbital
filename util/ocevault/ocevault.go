@@ -3,6 +3,8 @@ package ocevault
 import (
 	"errors"
 	"fmt"
+	"github.com/shankj3/ocelot/util/ocelog"
+	"sync"
 
 	//"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/vault/api"
@@ -31,6 +33,21 @@ var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
 type Ocevault struct {
 	Client	*api.Client
 	Config	*api.Config
+}
+
+
+// Use this function as a singleton essentially.
+// todo,  flesh out docs, for now look at hookhandler for use.
+func GetInitVault(once sync.Once, vaultCached *Ocevault) *Ocevault {
+	once.Do(func() {
+		ocelog.Log().Info("initializing vault client Ocevault")
+		ocev, err := NewEnvAuthClient()
+		if err != nil {
+			ocelog.IncludeErrField(err).Fatal("vault must be initialized.")
+		}
+		vaultCached = ocev
+	})
+	return vaultCached
 }
 
 
