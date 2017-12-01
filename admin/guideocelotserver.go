@@ -6,28 +6,35 @@ import (
 	"context"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/shankj3/ocelot/util/ocelog"
+	"github.com/shankj3/ocelot/util/deserialize"
 )
 
 //this is our grpc server struct
 type guideOcelotServer struct {
-	remoteConfig	*util.RemoteConfig
+	RemoteConfig	*util.RemoteConfig
+	Deserializer	*deserialize.Deserializer
+	AdminValidator	*AdminValidator
 }
 
 func (g *guideOcelotServer) GetCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	ocelog.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
 
-	//creds, err := g.remoteConfig.GetCredAt(util.ConfigPath, true)
-	//if err != nil {
-	//	return credWrapper, err
-	//}
-	//
-	//for _, v := range creds {
-	//	credWrapper.Credentials = append(credWrapper.Credentials, v)
-	//}
+	creds, err := g.RemoteConfig.GetCredAt(util.ConfigPath, true)
+	if err != nil {
+		return credWrapper, err
+	}
+
+	for _, v := range creds {
+		credWrapper.Credentials = append(credWrapper.Credentials, v)
+	}
 	return credWrapper, nil
 }
 
-func NewGuideOcelotServer() models.GuideOcelotServer {
-	return new(guideOcelotServer)
+func NewGuideOcelotServer(config *util.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator) models.GuideOcelotServer {
+	guideOcelotServer := new (guideOcelotServer)
+	guideOcelotServer.RemoteConfig = config
+	guideOcelotServer.Deserializer = d
+	guideOcelotServer.AdminValidator = adminV
+	return guideOcelotServer
 }
