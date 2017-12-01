@@ -22,6 +22,7 @@ import (
 	"strings"
 	"log"
 	"crypto/x509"
+	"github.com/philips/grpc-gateway-example/insecure"
 )
 
 //TODO: rewrite hookhandler logic to use remoteconfig
@@ -72,9 +73,17 @@ func main() {
 	ReadConfig(adminContext)
 
 	fakeCert := x509.NewCertPool()
-	pair, err := tls.X509KeyPair([]byte(models.Cert), []byte(models.Key))
+	ok := fakeCert.AppendCertsFromPEM([]byte(insecure.Cert))
+	//ok := fakeCert.AppendCertsFromPEM([]byte(models.Cert))
+	if !ok {
+		panic("bad certs")
+	}
+
+	pair, err := tls.X509KeyPair([]byte(insecure.Cert), []byte(insecure.Key))
+	//pair, err := tls.X509KeyPair([]byte(models.Cert), []byte(models.Key))
 	fakeKeyPair := &pair
 
+	//grpc server
 	opts := []grpc.ServerOption{
 		grpc.Creds(credentials.NewClientTLSFromCert(fakeCert, "localhost:10000"))}
 
@@ -90,6 +99,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	//grpc gateway proxy
 	gwmux := runtime.NewServeMux()
 	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, "localhost:10000", dopts)
 	if err != nil {
