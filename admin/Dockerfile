@@ -13,4 +13,8 @@ RUN rm -f ./protos/out/* && cd protos && ./build-protos.sh && cd .. && \
     cd ${SERVICE_NAME} && go-wrapper install
 
 WORKDIR /go/src/github.com/shankj3/ocelot/${SERVICE_NAME}
+
+# clear admin specific protobuf files and regenerate
+RUN rm -f ./models/guideocelot.* && ./build.sh
+
 CMD ["go-wrapper", "run"]

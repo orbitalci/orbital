@@ -51,7 +51,7 @@ func InitializeOcelog(logLevel string) {
 		log.SetLevel(loglevel)
 	}
 	log.SetFormatter(&log.JSONFormatter{
-		PrettyPrint: true,
+		//PrettyPrint: true,
 	})
 	log.SetOutput(os.Stdout)
 }

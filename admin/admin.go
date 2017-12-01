@@ -24,7 +24,7 @@ import (
 )
 
 //TODO: floe integration??? just putting this note here so we remember
-//TODO: change this to use my fork of logrus so we can pretty print logs
+//TODO: change this to use my fork of logrus so we can pretty print logs?
 
 func main() {
 	//load properties
