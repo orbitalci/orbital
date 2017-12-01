@@ -86,6 +86,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	//grpc gateway proxy
+	runtime.HTTPError = CustomErrorHandler
 	gwmux := runtime.NewServeMux()
 	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, "localhost:10000", dopts)
 	if err != nil {
@@ -118,9 +119,6 @@ func main() {
 	//list all repos + 'tracked' repos vs. 'untracked' repos
 	//add new repo
 	//configure whether or not you want admin to discover new ocelot.yaml files for you
-
-	//TODO: change these two lines below to use grpc gateway instead
-	//mux.Handle("/", &ocenet.AppContextHandler{adminContext, ConfigHandler}).Methods("POST")
 }
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
@@ -138,34 +136,19 @@ func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Ha
 	})
 }
 
-//ConfigHandler handles config from REST api
-//func ConfigHandler(ctx interface{}, w http.ResponseWriter, r *http.Request) {
-//	adminCtx := ctx.(*AdminCtx)
-//
-//	var adminConfig models.AdminConfig
-//	_ = json.NewDecoder(r.Body).Decode(&adminConfig)
-//
-//	errorMsg, err := adminCtx.adminValidator.ValidateConfig(&adminConfig)
-//
-//	if err != nil {
-//		ocenet.JSONApiError(w, http.StatusBadRequest, errorMsg, err)
-//		return
-//	}
-//
-//	errorMsg, err = SetupCredentials(adminCtx, &adminConfig)
-//	if err != nil {
-//		ocenet.JSONApiError(w, http.StatusUnprocessableEntity, errorMsg, err)
-//		return
-//	}
-//
-//}
+//TODO: damn how to propagate error codes up????
+func CustomErrorHandler(ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
+	// see example here: https://github.com/mycodesmells/golang-examples/blob/master/grpc/cmd/server/main.go
+	ocenet.JSONApiError(w, runtime.HTTPStatusFromCode(grpc.Code(err)), "", err)
+}
 
 //reads config file in current directory if it exists, exits if file is unparseable or doesn't exist
 func ReadConfig(gosss models.GuideOcelotServer) {
 	gos := gosss.(*guideOcelotServer)
 
 	config := &models.CredWrapper{}
-	configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
+	configFile, err := ioutil.ReadFile(models.ConfigFileName)
+	//configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return
@@ -176,13 +159,13 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 		return
 	}
 	for _, configVal := range config.Credentials {
-		errMsg, err := gos.AdminValidator.ValidateConfig(configVal)
+		err := gos.AdminValidator.ValidateConfig(configVal)
 		if err != nil {
-			ocelog.IncludeErrField(err).Error(errMsg)
+			ocelog.IncludeErrField(err)
 			continue
 		}
 
-		_, err = SetupCredentials(gos, configVal)
+		err = SetupCredentials(gos, configVal)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error()
 		}
@@ -190,7 +173,7 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 }
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
-func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials) (string, error) {
+func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials) (error) {
 	gos := gosss.(*guideOcelotServer)
 
 	//hehe right now we only have bitbucket
@@ -204,15 +187,15 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials
 
 		if err != nil {
 			ocelog.Log().Error("could not setup bitbucket client")
-			return "Could not setup bitbucket client for " + config.Type + "/" + config.AcctName, err
+			return err
 		}
 
 		err = bbHandler.Walk()
 		if err != nil {
-			return "Could not traverse repositories and create necessary webhooks for " + config.Type + "/" + config.AcctName, err
+			return err
 		}
 	}
 	configPath := util.ConfigPath + "/" + config.Type + "/" + config.AcctName
 	err := gos.RemoteConfig.AddCreds(configPath, config)
-	return "", err
+	return err
 }

@@ -1,46 +1,36 @@
 package main
 
 import (
-	"gopkg.in/go-playground/validator.v9"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/util/ocelog"
+	"github.com/pkg/errors"
 )
 
 //validator for all admin related stuff
-type AdminValidator struct {
-	Validate	*validator.Validate
-}
+type AdminValidator struct {}
 
 func GetValidator() *AdminValidator {
-	adminValidator := &AdminValidator {
-		Validate: validator.New(),
-	}
-	adminValidator.Validate.RegisterValidation("validtype", typeValidation)
-	return adminValidator
+	return &AdminValidator {}
 }
 
 //validates config and returns json formatted error
-func(adminValidator AdminValidator) ValidateConfig(adminConfig *models.Credentials) (string, error) {
-	err := adminValidator.Validate.Struct(adminConfig)
-	if err != nil {
-		var errorMsg string
-		for _, nestedErr := range err.(validator.ValidationErrors) {
-			errorMsg = nestedErr.Field() + " is " + nestedErr.Tag()
-			if nestedErr.Tag() == "validtype" {
-				errorMsg = "type must be one of the following: bitbucket"
-			}
-
-			ocelog.Log().Warn(errorMsg)
-		}
-		return errorMsg, err
+func(adminValidator AdminValidator) ValidateConfig(adminCreds *models.Credentials) (error) {
+	if len(adminCreds.AcctName) == 0 {
+		return errors.New("acctName must contain at least one letter")
 	}
-	return "", nil
-}
-
-func typeValidation(fl validator.FieldLevel) bool {
-	switch fl.Field().String() {
+	if len(adminCreds.ClientId) == 0 {
+		return errors.New("clientId must contain at least one letter")
+	}
+	if len(adminCreds.ClientSecret) == 0 {
+		return errors.New("clientSecret must contain at least one letter")
+	}
+	if len(adminCreds.TokenURL) == 0 {
+		return errors.New("tokenURL must contain at least one letter")
+	}
+	switch adminCreds.Type {
 	case "bitbucket":
-		return true
+		return nil
+	default:
+		return errors.New("creds must be one of the following type: bitbucket")
 	}
-	return false
+	return nil
 }

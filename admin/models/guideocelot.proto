@@ -11,6 +11,13 @@ service GuideOcelot {
 			get: "/v1/creds"
 		};
     }
+
+    rpc SetCreds(Credentials) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			post: "/v1/creds"
+			body: "*"
+		};
+    }
 }
 
 message CredWrapper {

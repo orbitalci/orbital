@@ -117,8 +117,8 @@ func HandleBBEvent(w http.ResponseWriter, r *http.Request) {
 
 // for testing
 // irl... use vault
-func getCredConfig() models.AdminConfig {
-	return models.AdminConfig{
+func getCredConfig() models.Credentials {
+	return models.Credentials{
 		ClientId:     "QEBYwP5cKAC3ykhau4",
 		ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
 		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",

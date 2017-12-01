@@ -31,8 +31,17 @@ func (g *guideOcelotServer) GetCreds(ctx context.Context, msg *empty.Empty) (*mo
 	return credWrapper, nil
 }
 
+func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Credentials) (*empty.Empty, error) {
+	err := g.AdminValidator.ValidateConfig(credentials)
+	if err != nil {
+		return nil, err
+	}
+	err = SetupCredentials(g, credentials)
+	return nil, err
+}
+
 func NewGuideOcelotServer(config *util.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator) models.GuideOcelotServer {
-	guideOcelotServer := new (guideOcelotServer)
+	guideOcelotServer := new(guideOcelotServer)
 	guideOcelotServer.RemoteConfig = config
 	guideOcelotServer.Deserializer = d
 	guideOcelotServer.AdminValidator = adminV
