@@ -5,20 +5,19 @@ import (
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
+	"github.com/shankj3/ocelot/util"
 	"github.com/shankj3/ocelot/util/deserialize"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
 	"net/http"
 	"os"
-	"github.com/shankj3/ocelot/util"
 )
 
-
 type HookHandlerContext struct {
-	RemoteConfig	*util.RemoteConfig
-	Producer	*nsqpb.PbProduce
-	Deserializer	*deserialize.Deserializer
+	RemoteConfig *util.RemoteConfig
+	Producer     *nsqpb.PbProduce
+	Deserializer *deserialize.Deserializer
 }
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
@@ -85,9 +84,9 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 	}
 	// create bundle, send that s*** off!
 	bundle := &pb.PRBuildBundle{
-		Config:     buildConf,
-		PrData:     pr,
-		VaultToken: token,
+		Config:       buildConf,
+		PrData:       pr,
+		VaultToken:   token,
 		CheckoutHash: hash,
 	}
 	go ctx.Producer.WriteToNsq(bundle, nsqpb.PRTopic)
@@ -98,9 +97,11 @@ func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	handlerCtx := ctx.(*HookHandlerContext)
 
 	switch r.Header.Get("X-Event-Key") {
-	case "repo:push":  RepoPush(handlerCtx, w, r)
+	case "repo:push":
+		RepoPush(handlerCtx, w, r)
 	case "pullrequest:created",
-	     "pullrequest:updated": PullRequest(handlerCtx, w, r)
+		"pullrequest:updated":
+		PullRequest(handlerCtx, w, r)
 	default:
 		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -119,8 +120,8 @@ func getCredConfig() *models.Credentials {
 
 func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	//cfg := getCredConfig()
-	bbCreds, err := ctx.RemoteConfig.GetCredAt(util.ConfigPath + "/bitbucket/" + acctName, false)
-	cfg := bbCreds["bitbucket/" + acctName]
+	bbCreds, err := ctx.RemoteConfig.GetCredAt(util.ConfigPath+"/bitbucket/"+acctName, false)
+	cfg := bbCreds["bitbucket/"+acctName]
 	bb := handler.Bitbucket{}
 	bbClient := &ocenet.OAuthClient{}
 	bbClient.Setup(cfg)
@@ -140,7 +141,6 @@ func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName str
 	return
 }
 
-
 func main() {
 	ocelog.InitializeOcelog(ocelog.GetFlags())
 	ocelog.Log().Debug()
@@ -158,7 +158,7 @@ func main() {
 	hookHandlerContext := &HookHandlerContext{
 		RemoteConfig: remoteConfig,
 		Deserializer: deserialize.New(),
-		Producer: nsqpb.GetInitProducer(),
+		Producer:     nsqpb.GetInitProducer(),
 	}
 
 	muxi := mux.NewRouter()

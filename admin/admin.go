@@ -1,26 +1,26 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/namsral/flag"
+	"github.com/philips/grpc-gateway-example/insecure"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
+	"github.com/shankj3/ocelot/util"
 	"github.com/shankj3/ocelot/util/deserialize"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"io/ioutil"
-	"net/http"
-	"github.com/shankj3/ocelot/util"
-	"fmt"
-	"google.golang.org/grpc"
 	"golang.org/x/net/context"
-	"net"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"crypto/tls"
-	"strings"
+	"io/ioutil"
 	"log"
-	"crypto/x509"
-	"github.com/philips/grpc-gateway-example/insecure"
+	"net"
+	"net/http"
+	"strings"
 )
 
 //TODO: floe integration??? just putting this note here so we remember
@@ -41,6 +41,8 @@ func main() {
 
 	ocelog.InitializeOcelog(logLevel)
 
+	serverRunsAt := fmt.Sprintf("localhost:%v", port)
+
 	//TODO: this is my local vault root token, too lazy to set env variable
 	configInstance, err := util.GetInstance(consulHost, consulPort, "466e3ddc-f588-d552-6b9a-5f959a9f20a8")
 
@@ -50,7 +52,7 @@ func main() {
 
 	//TODO: figure out if there's a way I can do this without casting back to struct every time
 	//initializes our "context" - guideOcelotServer
-	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(),)
+	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator())
 
 	//check for config on load
 	ReadConfig(guideOcelotServer)
@@ -68,14 +70,14 @@ func main() {
 
 	//grpc server
 	opts := []grpc.ServerOption{
-		grpc.Creds(credentials.NewClientTLSFromCert(fakeCert, "localhost:10000"))}
+		grpc.Creds(credentials.NewClientTLSFromCert(fakeCert, serverRunsAt))}
 
 	grpcServer := grpc.NewServer(opts...)
 	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
 	ctx := context.Background()
 
 	dcreds := credentials.NewTLS(&tls.Config{
-		ServerName: "localhost:10000",
+		ServerName: serverRunsAt,
 		RootCAs:    fakeCert,
 	})
 	dopts := []grpc.DialOption{grpc.WithTransportCredentials(dcreds)}
@@ -85,7 +87,7 @@ func main() {
 	//grpc gateway proxy
 	runtime.HTTPError = CustomErrorHandler
 	gwmux := runtime.NewServeMux()
-	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, "localhost:10000", dopts)
+	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, serverRunsAt, dopts)
 	if err != nil {
 		fmt.Printf("serve: %v\n", err)
 		return
@@ -93,13 +95,13 @@ func main() {
 
 	mux.Handle("/", gwmux)
 
-	conn, err := net.Listen("tcp", fmt.Sprintf(":%d", 10000))
+	conn, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 	if err != nil {
 		panic(err)
 	}
 
 	srv := &http.Server{
-		Addr:    "localhost:10000",
+		Addr:    serverRunsAt,
 		Handler: grpcHandlerFunc(grpcServer, mux),
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{*fakeKeyPair},
@@ -112,11 +114,9 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
-
-	//list all repos + 'tracked' repos vs. 'untracked' repos
-	//add new repo
-	//configure whether or not you want admin to discover new ocelot.yaml files for you
 }
+
+// see full example at: https://github.com/philips/grpc-gateway-example
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
 // connections or otherHandler otherwise. Copied from cockroachdb.
@@ -133,7 +133,7 @@ func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Ha
 	})
 }
 
-//TODO: damn how to propagate error codes up????
+//TODO: how to propagate error codes up????
 func CustomErrorHandler(ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
 	// see example here: https://github.com/mycodesmells/golang-examples/blob/master/grpc/cmd/server/main.go
 	ocenet.JSONApiError(w, runtime.HTTPStatusFromCode(grpc.Code(err)), "", err)
@@ -170,7 +170,7 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 }
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
-func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials) (error) {
+func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials) error {
 	gos := gosss.(*guideOcelotServer)
 
 	//hehe right now we only have bitbucket
