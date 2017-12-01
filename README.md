@@ -18,27 +18,50 @@ Use a Queueing system (nsq? go doesn't really need a special queing system, can 
 *endpoint for getting historical data*
 *prometheus exporter for those stats (or something like that)*
 
-store length of builds
+## How do I get started?
 
+Since the golang code is built inside the container, you only need to have a docker host to run containers, and docker-compose installed (Compose file format 3.3).
 
-monitoring process??   
-resource management  
-support different failure conditions?   
-re-queueing vs error reporting 
+* docker-engine >= 17.06.0+
+* docker-compose >= 1.14.0+
 
-*define trigger section for build?* 
+### Build
 
-# TODO: TANNER HOLE PUNCH
+From `${OCELOT_ROOT}` or `${OCELOT_ROOT}/${SERVICE_ROOT}` run the following to build every service:
+`docker-compose build`
 
-build ocelot is for us
+(There should be a `${OCELOT_ROOT}/${SERVICE_ROOT}/docker-compose.yml` that sets the build context to `${OCELOT_ROOT}`, because the build context includes vendoring dependencies from `dep`)
 
-## java test project  
-orchestr8
+### Run
 
+To start a local development cluster:
 
+From `${OCELOT_ROOT}` or `${OCELOT_ROOT}/${SERVICE_ROOT}` run the following to run every service (including infrastructure):
 
-#DEPLOY ON VM! 
+`docker-compose up` to run everything in the foreground
 
+`docker-compose up -d` to run everything in the background
+
+`docker-compose stop` to stop it all
+
+## Known issues:
+* Starting an Ocelot development cluster with `docker-compose up` does not result in a fully wired, functional system.
+
+## Proposed features
+ * store length of builds
+ * monitoring process??   
+ * resource management  
+ * support different failure conditions
+   * re-queueing vs error reporting 
+ * define trigger section for build?
+
+## Target projects
+ * Ocelot
+ * orchestr8 - The reference java project
+
+## TODO:
+ * Fix firewall rules (w/ Tanner's assistance) so we can route webhooks internally
+ * Deploy onto VM
 
 marianne: grpc admin & hookhandler remote config
 jessi: grpc streaming & changes from PR & converting ocelot.yml -> abbys pipeline proto message

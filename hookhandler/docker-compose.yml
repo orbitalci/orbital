@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+  hookhandler:
+    image: ocelot-hookhandler
+    build:
+      context: ..
+      dockerfile: hookhandler/Dockerfile
+      cache_from:
+        - golang:1.9-alpine
+    environment:
+      VAULT_TOKEN: secrets? ooowee
