@@ -10,8 +10,8 @@
 [[projects]]
   name = "github.com/SAP/go-hdb"
   packages = ["driver","driver/sqltrace","internal/bufio","internal/protocol","internal/unicode","internal/unicode/cesu8"]
-  revision = "5155b87edff9ebf661f8102079fa3463ac83b7af"
-  version = "v0.9.2"
+  revision = "040ffde6d6dbd3887530ba784f7bcbdce4a2db0e"
+  version = "v0.9.3"
 
 [[projects]]
   name = "github.com/SermoDigital/jose"
@@ -131,7 +131,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-cleanhttp"
   packages = ["."]
-  revision = "3573b8b52aa7b37b9358d966a898feb387f62437"
+  revision = "06c9ea3a335b7443026f8124b22619524420291b"
 
 [[projects]]
   branch = "master"
