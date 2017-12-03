@@ -23,6 +23,9 @@ import (
 	"strings"
 )
 
+//TODO: fix this and get this running
+
+
 //TODO: floe integration??? just putting this note here so we remember
 //TODO: change this to use my fork of logrus so we can pretty print logs?
 
@@ -33,7 +36,7 @@ func main() {
 	var consulPort int
 	var logLevel string
 
-	flag.StringVar(&port, "port", "8080", "admin server port")
+	flag.StringVar(&port, "port", "10000", "admin server port")
 	flag.StringVar(&consulHost, "consul-host", "localhost", "consul host")
 	flag.IntVar(&consulPort, "consul-port", 8500, "consul port")
 	flag.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
@@ -41,10 +44,11 @@ func main() {
 
 	ocelog.InitializeOcelog(logLevel)
 
-	serverRunsAt := fmt.Sprintf("localhost:%v", port)
+	serverRunsAt := fmt.Sprintf("https://localhost:%v", port)
+	ocelog.Log().Debug(serverRunsAt)
 
 	//TODO: this is my local vault root token, too lazy to set env variable
-	configInstance, err := util.GetInstance(consulHost, consulPort, "466e3ddc-f588-d552-6b9a-5f959a9f20a8")
+	configInstance, err := util.GetInstance(consulHost, consulPort, "f5378aea-d4f9-ce89-9043-55cb6dde5279")
 
 	if err != nil {
 		ocelog.Log().Fatal("could not talk to consul or vault, bailing")
@@ -76,15 +80,15 @@ func main() {
 	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
 	ctx := context.Background()
 
+	//grpc gateway proxy
 	dcreds := credentials.NewTLS(&tls.Config{
 		ServerName: serverRunsAt,
 		RootCAs:    fakeCert,
 	})
-	dopts := []grpc.DialOption{grpc.WithTransportCredentials(dcreds)}
 
+	dopts := []grpc.DialOption{grpc.WithTransportCredentials(dcreds)}
 	mux := http.NewServeMux()
 
-	//grpc gateway proxy
 	runtime.HTTPError = CustomErrorHandler
 	gwmux := runtime.NewServeMux()
 	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, serverRunsAt, dopts)
@@ -134,6 +138,7 @@ func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Ha
 }
 
 //TODO: how to propagate error codes up????
+//TODO: cast this back to MY error type and set status
 func CustomErrorHandler(ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
 	// see example here: https://github.com/mycodesmells/golang-examples/blob/master/grpc/cmd/server/main.go
 	ocenet.JSONApiError(w, runtime.HTTPStatusFromCode(grpc.Code(err)), "", err)
