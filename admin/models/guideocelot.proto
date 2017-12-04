@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package models;
 
-option java_multiple_files = true;
-option java_package = "io.grpc.examples.routeguide";
-option java_outer_classname = "RouteGuideProto";
+import "google/protobuf/empty.proto";
 
-//TODO: why doesn't this compilleeee
 service GuideOcelot {
-    rpc GetFeature() returns (Credentials) {}
-//    rpc GetConfigs()        returns (Credentials) {}
+    rpc GetCreds(google.protobuf.Empty) returns (CredWrapper) {}
+}
+
+message CredWrapper {
+    repeated Credentials credentials = 1;
 }
 
 message Credentials {

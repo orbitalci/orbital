@@ -27,10 +27,12 @@ Since the golang code is built inside the container, you only need to have a doc
 
 ### Build
 
-From `${OCELOT_ROOT}` or `${OCELOT_ROOT}/${SERVICE_ROOT}` run the following to build every service:
-`docker-compose build`
+To build, you should run `./build-release.sh` from the project root.
 
-(There should be a `${OCELOT_ROOT}/${SERVICE_ROOT}/docker-compose.yml` that sets the build context to `${OCELOT_ROOT}`, because the build context includes vendoring dependencies from `dep`)
+The build occurs in 3 steps.
+1. We build a base build image `ocelot-build` that includes all the tools, and golang library dependencies we need to compiling the project. 
+2. Using `ocelot-build`, we statically compile the golang binaries.
+3. Using docker [multi-stage build](https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds) features, we copy the compiled-binary into an empty [scratch](https://hub.docker.com/_/scratch/) container.
 
 ### Run
 
