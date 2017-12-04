@@ -68,6 +68,7 @@ func main() {
 			ocelog.Log().Info("Consuming messages for topic ", topic)
 		} else {
 			ocelog.Log().Warnf("Topic with name %s not found. Will retry every 10 seconds.", topic)
+			//todo: dedupe
 			go retry(protoConsume, topic, conf, tunnel)
 		}
 		consumers = append(consumers, protoConsume)
