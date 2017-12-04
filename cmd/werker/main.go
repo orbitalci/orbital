@@ -24,53 +24,55 @@ import (
 	"fmt"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
+	"github.com/shankj3/ocelot/werker"
 	"time"
 )
 
-func retry(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf) {
+func retry(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			time.Sleep(10 * time.Second)
 		} else {
-			handler := &WorkerMsgHandler{
-				topic:    topic,
-				werkConf: conf,
+			handler := &werker.WorkerMsgHandler{
+				Topic:    topic,
+				WerkConf: conf,
+				ChanChan: tunnel,
 			}
 			p.Handler = handler
-			p.ConsumeMessages(topic, conf.werkerName)
+			p.ConsumeMessages(topic, conf.WerkerName)
 			ocelog.Log().Info("Consuming messages for topic ", topic)
 		}
 	}
 }
 
 func main() {
-	conf, err := GetConf()
+	conf, err := werker.GetConf()
 	if err != nil {
 		fmt.Errorf("cannot get configuration, exiting.... error: %s", err)
 		return
 	}
-	ocelog.InitializeOcelog(conf.logLevel)
-	tunnel := make(chan *Transport)
-	ocelog.Log().Debug("starting up worker on off channels w/ ", conf.werkerName)
+	ocelog.InitializeOcelog(conf.LogLevel)
+	tunnel := make(chan *werker.Transport)
+	ocelog.Log().Debug("starting up worker on off channels w/ ", conf.WerkerName)
 	var consumers []*nsqpb.ProtoConsume
     for _, topic := range nsqpb.SupportedTopics {
 		protoConsume := nsqpb.NewProtoConsume()
 		if nsqpb.LookupTopic(protoConsume.Config.LookupDAddress(), topic) {
-			handler := &WorkerMsgHandler{
-				topic:    topic,
-				werkConf: conf,
-				chanChan: tunnel,
+			handler := &werker.WorkerMsgHandler{
+				Topic:    topic,
+				WerkConf: conf,
+				ChanChan: tunnel,
 			}
 			protoConsume.Handler = handler
-			protoConsume.ConsumeMessages(topic, conf.werkerName)
+			protoConsume.ConsumeMessages(topic, conf.WerkerName)
 			ocelog.Log().Info("Consuming messages for topic ", topic)
 		} else {
 			ocelog.Log().Warnf("Topic with name %s not found. Will retry every 10 seconds.", topic)
-			retry(protoConsume, topic, conf)
+			go retry(protoConsume, topic, conf, tunnel)
 		}
 		consumers = append(consumers, protoConsume)
 	}
-	go ServeMe(tunnel, conf)
+	go werker.ServeMe(tunnel, conf)
 	for _, consumer := range consumers {
 		<-consumer.StopChan
 	}

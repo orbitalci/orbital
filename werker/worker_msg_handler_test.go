@@ -1,4 +1,4 @@
-package main
+package werker
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
 			go func(){
 				wmh.infochan <- wd.chanData
 			}()
-			trans := <- wmh.chanChan
+			trans := <- wmh.ChanChan
 			info := <- trans.InfoChan
 			if bytes.Compare(info, wd.chanData) != 0 {
 				t.Error(util.StrFormatErrors("info channel response", string(wd.chanData), string(info)))
@@ -50,8 +50,8 @@ func TestWorkerMsgHandler_buildPRBuildBundle(t *testing.T) {
 			t.Error(util.StrFormatErrors("build data", "hit run pr bundle", string(data)))
 		}
 	}()
-	// todo: why does data := <-wmh.infochan need to be inside a goroutine, but not this wmh.chanChan???
-	//w, ok := <-wmh.chanChan; if !ok {
+	// todo: why does data := <-wmh.infochan need to be inside a goroutine, but not this wmh.ChanChan???
+	//w, ok := <-wmh.ChanChan; if !ok {
 	//	fmt.Println("tunnel closed")
 	//} else {
 	//	fmt.Println(w.Hash)
