@@ -1,4 +1,4 @@
-package main
+package werker
 
 import (
 	"bufio"
@@ -7,6 +7,8 @@ import (
 	"github.com/shankj3/ocelot/util/consulet"
 	"github.com/shankj3/ocelot/util/ocenet"
 	"github.com/shankj3/ocelot/util/storage"
+	"github.com/shankj3/ocelot/werker/protobuf"
+	"google.golang.org/grpc"
 	"testing"
 	"time"
 )
@@ -25,6 +27,26 @@ var testData = [][]byte{
 	[]byte("z-3985jfasr jhgfturkeyisgrossf garbage"),
 }
 
+func stringifyTestData(testData [][]byte) []string {
+	var stringy []string
+	for _, line := range testData {
+		stringy = append(stringy, string(line))
+	}
+	return stringy
+}
+
+var stringTestData = stringifyTestData(testData)
+
+type testBuildInfoGrpcServer struct {
+	testData []string
+	grpc.ServerStream
+}
+
+func (t *testBuildInfoGrpcServer) Send(response *protobuf.Response) error {
+	t.testData = append(t.testData, response.OutputLine)
+	return nil
+}
+
 func Test_iterateOverBuildData(t *testing.T) {
 	var stream [][]byte
 	ws := ocenet.NewWebSocketConn()
@@ -35,6 +57,15 @@ func Test_iterateOverBuildData(t *testing.T) {
 	iterateOverBuildData(stream, ws)
 	if !util.CompareByteArrays(ws.MsgData, testData) {
 		t.Errorf("arrays not the same. expected: %v, actual: %v", testData, ws.MsgData)
+	}
+	var streamGrpc [][]byte
+	grp := &testBuildInfoGrpcServer{}
+	for _, datum := range testData {
+		streamGrpc = append(streamGrpc, datum)
+	}
+	iterateOverBuildData(streamGrpc, grp)
+	if !util.CompareStringArrays(grp.testData, stringTestData) {
+		t.Errorf("arrays not same for grpc. expected: %s, actual: %s", stringTestData, grp.testData)
 	}
 }
 
@@ -73,7 +104,7 @@ func Test_streamFromArray(t *testing.T) {
 
 func Test_writeInfoChanToInMemMap(t *testing.T) {
 	trans := &Transport{"FOR_TESTING", make(chan []byte)}
-	ctx := &appContext{
+	ctx := &werkerStreamer{
 		buildInfo: make(map[string]*buildDatum),
 		storage: storage.NewFileBuildStorage(""),
 		consul: consulet.Default(),
