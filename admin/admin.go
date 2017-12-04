@@ -13,18 +13,31 @@ import (
 	"net/http"
 	"github.com/shankj3/ocelot/util"
 	"gopkg.in/go-playground/validator.v9"
+	"context"
 )
 
 //TODO: look into hookhandler logic and separate into new ocelot.yaml + new commit
 //TODO: rewrite admin code to use grpc
 //TODO: floe integration??? just putting this note here so we remember
+//TODO: change this to use my fork of logrus so we can pretty print logs
 
 
-//TODO: use appcontext
+//this is our grpc server struct
+type guideOcelotServer struct {
+	//TODO: probably want other properties here
+}
 
-var deserializer = deserialize.New()
-var adminValidator = GetValidator()
-var remoteConfig *util.RemoteConfig
+//TODO: what is htis context good for?
+func (g *guideOcelotServer) GetCreds(ctx context.Context) (*models.CredWrapper, error) {
+	return nil, nil
+}
+
+//application context, contains stuff that'll get used across admin code
+type AdminCtx struct {
+	deserializer	*deserialize.Deserializer
+	adminValidator	*AdminValidator
+	remoteConfig	*util.RemoteConfig
+}
 
 func main() {
 	//load properties
@@ -48,11 +61,17 @@ func main() {
 		ocelog.Log().Fatal("could not talk to consul or vault, bailing")
 	}
 
-	remoteConfig = configInstance
-	remoteConfig.Consul.RegisterService("localhost", 8080, "ocelot-admin")
+	//populate admin context
+	adminContext := &AdminCtx{
+		deserializer: deserialize.New(),
+		adminValidator: GetValidator(),
+		remoteConfig: configInstance,
+	}
+
+	adminContext.remoteConfig.Consul.RegisterService("localhost", 8080, "ocelot-admin")
 
 	//check for config on load
-	ReadConfig()
+	ReadConfig(adminContext)
 
 	//start http server
 	mux := mux.NewRouter()
@@ -62,30 +81,34 @@ func main() {
 	//add new repo
 	//configure whether or not you want admin to discover new ocelot.yaml files for you
 
-	mux.HandleFunc("/", ConfigHandler).Methods("POST")
-	mux.HandleFunc("/", ListConfigHandler).Methods("GET")
+	mux.Handle("/", &ocenet.AppContextHandler{adminContext, ConfigHandler}).Methods("POST")
+	mux.Handle("/", &ocenet.AppContextHandler{adminContext,ListConfigHandler}).Methods("GET")
 	ocelog.Log().Fatal(http.ListenAndServe(":"+port, mux))
 }
 
-func ListConfigHandler(w http.ResponseWriter, r *http.Request) {
+func ListConfigHandler(ctx interface{}, w http.ResponseWriter, r *http.Request) {
+	adminCtx := ctx.(*AdminCtx)
+
 	w.Header().Set("Content-Type", "application/json")
-	creds, _ := remoteConfig.GetCredAt(util.ConfigPath, true)
+	creds, _ := adminCtx.remoteConfig.GetCredAt(util.ConfigPath, true)
 	json.NewEncoder(w).Encode(creds)
 }
 
 //ConfigHandler handles config from REST api
-func ConfigHandler(w http.ResponseWriter, r *http.Request) {
+func ConfigHandler(ctx interface{}, w http.ResponseWriter, r *http.Request) {
+	adminCtx := ctx.(*AdminCtx)
+
 	var adminConfig models.AdminConfig
 	_ = json.NewDecoder(r.Body).Decode(&adminConfig)
 
-	errorMsg, err := adminValidator.ValidateConfig(&adminConfig)
+	errorMsg, err := adminCtx.adminValidator.ValidateConfig(&adminConfig)
 
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, errorMsg, err)
 		return
 	}
 
-	errorMsg, err = SetupCredentials(&adminConfig)
+	errorMsg, err = SetupCredentials(adminCtx, &adminConfig)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusUnprocessableEntity, errorMsg, err)
 		return
@@ -94,26 +117,26 @@ func ConfigHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //reads config file in current directory if it exists, exits if file is unparseable or doesn't exist
-func ReadConfig() {
+func ReadConfig(ctx *AdminCtx) {
 	config := &models.ConfigYaml{}
 	configFile, err := ioutil.ReadFile(models.ConfigFileName)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return
 	}
-	err = deserializer.YAMLToStruct(configFile, config)
+	err = ctx.deserializer.YAMLToStruct(configFile, config)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return
 	}
 	for _, configVal := range config.Credentials {
-		errMsg, err := adminValidator.ValidateConfig(&configVal)
+		errMsg, err := ctx.adminValidator.ValidateConfig(&configVal)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error(errMsg)
 			continue
 		}
 
-		_, err = SetupCredentials(&configVal)
+		_, err = SetupCredentials(ctx, &configVal)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error()
 		}
@@ -121,7 +144,7 @@ func ReadConfig() {
 }
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
-func SetupCredentials(config *models.AdminConfig) (string, error) {
+func SetupCredentials(ctx *AdminCtx, config *models.AdminConfig) (string, error) {
 	//hehe right now we only have bitbucket
 	switch config.Type {
 	case "bitbucket":
@@ -142,10 +165,9 @@ func SetupCredentials(config *models.AdminConfig) (string, error) {
 		}
 	}
 	configPath := util.ConfigPath + "/" + config.Type + "/" + config.AcctName
-	err := remoteConfig.AddCreds(configPath, config)
+	err := ctx.remoteConfig.AddCreds(configPath, config)
 	return "", err
 }
-
 
 
 ////everything below this is for validating/////
