@@ -1,11 +1,10 @@
-package main
+package admin
 
 import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/namsral/flag"
 	"github.com/philips/grpc-gateway-example/insecure"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
@@ -23,38 +22,11 @@ import (
 	"strings"
 )
 
-//TODO: fix this and get this running
-
-
 //TODO: floe integration??? just putting this note here so we remember
 //TODO: change this to use my fork of logrus so we can pretty print logs?
 
-func main() {
-	//load properties
-	var port string
-	var consulHost string
-	var consulPort int
-	var logLevel string
-
-	flag.StringVar(&port, "port", "10000", "admin server port")
-	flag.StringVar(&consulHost, "consul-host", "localhost", "consul host")
-	flag.IntVar(&consulPort, "consul-port", 8500, "consul port")
-	flag.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
-	flag.Parse()
-
-	ocelog.InitializeOcelog(logLevel)
-
-	serverRunsAt := fmt.Sprintf("localhost:%v", port)
-	ocelog.Log().Debug(serverRunsAt)
-
-	//TODO: this is my local vault root token, too lazy to set env variable
-	configInstance, err := util.GetInstance(consulHost, consulPort, "f5378aea-d4f9-ce89-9043-55cb6dde5279")
-
-	if err != nil {
-		ocelog.Log().Fatal("could not talk to consul or vault, bailing")
-	}
-
-	//TODO: figure out if there's a way I can do this without casting back to struct every time
+//Start will kick off our grpc server so it's ready to receive requests over both grpc and http
+func Start(configInstance *util.RemoteConfig, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator())
 
@@ -63,14 +35,9 @@ func main() {
 
 	fakeCert := x509.NewCertPool()
 	ok := fakeCert.AppendCertsFromPEM([]byte(insecure.Cert))
-	//ok := fakeCert.AppendCertsFromPEM([]byte(models.Cert))
 	if !ok {
 		panic("bad certs")
 	}
-
-	pair, err := tls.X509KeyPair([]byte(insecure.Cert), []byte(insecure.Key))
-	//pair, err := tls.X509KeyPair([]byte(models.Cert), []byte(models.Key))
-	fakeKeyPair := &pair
 
 	//grpc server
 	opts := []grpc.ServerOption{
@@ -78,6 +45,10 @@ func main() {
 
 	grpcServer := grpc.NewServer(opts...)
 	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
+
+	pair, err := tls.X509KeyPair([]byte(insecure.Cert), []byte(insecure.Key))
+	fakeKeyPair := &pair
+
 	ctx := context.Background()
 
 	//grpc gateway proxy

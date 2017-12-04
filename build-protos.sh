@@ -8,4 +8,9 @@ cd werker
 ./build-protos.sh
 cd ..
 # ===============
+# ===============
+cd admin
+./build-protos.sh
+cd ..
+# ===============
 
