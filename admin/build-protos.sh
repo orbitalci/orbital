@@ -15,6 +15,6 @@ protoc -I models/ -I. \
   --grpc-gateway_out=logtostderr=true:models \
   models/guideocelot.proto
 
-# then we have to run go get in the stub directory cause grpc gateway ¯\_(ツ)_/¯
+# then we have to run go get in the stub directory cause grpc gateway ¯\_(ツ)_/¯ does this even work
 cd models
 go get .
