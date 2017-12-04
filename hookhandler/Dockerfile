@@ -4,8 +4,7 @@ ARG SERVICE_NAME=hookhandler
 WORKDIR /go/src/github.com/shankj3/ocelot/
 COPY . .
 
-RUN rm -f ./protos/out/* && cd protos && ./build-protos.sh && cd .. && \
-    cd ${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -v -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .
+RUN cd ${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -v -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .
 
 FROM scratch
 ENV SERVICE_NAME hookhandler

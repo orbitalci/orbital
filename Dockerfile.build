@@ -6,4 +6,5 @@ RUN apk --update --no-cache add git protobuf-dev ca-certificates && \
 
 WORKDIR /go/src/github.com/shankj3/ocelot/
 COPY . .
+RUN rm -f ./protos/out/* && cd protos && ./build-protos.sh && cd ..
 RUN dep ensure -v
