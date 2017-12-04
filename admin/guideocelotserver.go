@@ -21,14 +21,14 @@ func (g *guideOcelotServer) GetCreds(ctx context.Context, msg *empty.Empty) (*mo
 	ocelog.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
 
-	//creds, err := g.RemoteConfig.GetCredAt(util.ConfigPath, true)
-	//if err != nil {
-	//	return credWrapper, err
-	//}
-	//
-	//for _, v := range creds {
-	//	credWrapper.Credentials = append(credWrapper.Credentials, v)
-	//}
+	creds, err := g.RemoteConfig.GetCredAt(util.ConfigPath, true)
+	if err != nil {
+		return credWrapper, err
+	}
+
+	for _, v := range creds {
+		credWrapper.Credentials = append(credWrapper.Credentials, v)
+	}
 	return credWrapper, nil
 }
 

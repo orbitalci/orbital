@@ -44,7 +44,7 @@ func main() {
 
 	ocelog.InitializeOcelog(logLevel)
 
-	serverRunsAt := fmt.Sprintf("https://localhost:%v", port)
+	serverRunsAt := fmt.Sprintf("localhost:%v", port)
 	ocelog.Log().Debug(serverRunsAt)
 
 	//TODO: this is my local vault root token, too lazy to set env variable
