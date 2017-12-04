@@ -1,6 +1,7 @@
 package werker
 
 import (
+	//"fmt"
 	"testing"
 	"github.com/shankj3/ocelot/util"
 	"bytes"
@@ -44,18 +45,21 @@ func TestWorkerMsgHandler_buildPRBuildBundle(t *testing.T) {
 	}
 	wmh := testGetWorkerMsgHandler(t, "testbuild")
 	go wmh.build(msg)
-	go func(){
-		data := <- wmh.infochan
-		if bytes.Compare(data, prBundleInfoMsg) != 0 {
-			t.Error(util.StrFormatErrors("build data", "hit run pr bundle", string(data)))
-		}
-	}()
 	// todo: why does data := <-wmh.infochan need to be inside a goroutine, but not this wmh.ChanChan???
-	//w, ok := <-wmh.ChanChan; if !ok {
-	//	fmt.Println("tunnel closed")
-	//} else {
-	//	fmt.Println(w.Hash)
-	//}
+	w, ok := <-wmh.ChanChan; if !ok {
+		t.Fatal("no data on channel")
+	} else {
+		if w.Hash != msg.CheckoutHash {
+			t.Error(util.StrFormatErrors("checkout hash", msg.CheckoutHash, w.Hash))
+		}
+		if w.InfoChan != wmh.infochan {
+			t.Error("should be same channel")
+		}
+	}
+	data := <- wmh.infochan
+	if bytes.Compare(data, prBundleInfoMsg) != 0 {
+		t.Error(util.StrFormatErrors("build data", "hit run pr bundle", string(data)))
+	}
 }
 
 func TestWorkerMsgHandler_buildPushBuildBundle(t *testing.T) {
