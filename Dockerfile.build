@@ -1,0 +1,9 @@
+FROM golang:1.9-alpine as builder
+
+RUN apk --update --no-cache add git protobuf-dev ca-certificates && \
+    go get -u github.com/golang/dep/cmd/dep && \
+    go get -v -u github.com/golang/protobuf/protoc-gen-go
+
+WORKDIR /go/src/github.com/shankj3/ocelot/
+COPY . .
+RUN dep ensure -v
