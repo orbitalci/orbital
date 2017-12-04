@@ -1,4 +1,4 @@
-package main
+package werker
 
 import (
 	"github.com/shankj3/ocelot/protos/out"
@@ -25,12 +25,12 @@ func (t *testWerkerProcessor) RunPRBundle(bund *protos.PRBuildBundle, infoChan c
 
 func testGetConf() *WerkerConf {
 	return &WerkerConf{
-		servicePort: 	 "9090",
-		werkerName:  	 "test agent",
-		werkerType:  	 Docker,
+		servicePort:     "9090",
+		WerkerName:      "test agent",
+		werkerType:      Docker,
 		werkerProcessor: &testWerkerProcessor{},
-		storage:		 &storage.FileBuildStorage{}, // todo: create test interface
-		logLevel: 		 "info",
+		storage:         &storage.FileBuildStorage{}, // todo: create test interface
+		LogLevel:        "info",
 	}
 }
 
@@ -43,10 +43,10 @@ func testGetWorkerMsgHandler(t *testing.T, topic string) *WorkerMsgHandler {
 	tunnel := make(chan *Transport)
 	infor := make(chan []byte)
 	wmh := &WorkerMsgHandler{
-		topic: topic,
-		werkConf: werkConf,
+		Topic:    topic,
+		WerkConf: werkConf,
 		infochan: infor,
-		chanChan: tunnel,
+		ChanChan: tunnel,
 	}
 	// set werker processor to mock one
 	return wmh
