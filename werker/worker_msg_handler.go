@@ -1,4 +1,4 @@
-package main
+package werker
 
 import (
 	"fmt"
@@ -17,16 +17,16 @@ type Transport struct {
 }
 
 type WorkerMsgHandler struct {
-	topic    string
-	werkConf *WerkerConf
+	Topic    string
+	WerkConf *WerkerConf
 	infochan chan []byte
-	chanChan chan *Transport
+	ChanChan chan *Transport
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	ocelog.Log().Debug("unmarshaling build obj and processing")
-	unmarshalobj := nsqpb.TopicsUnmarshalObj(w.topic)
+	unmarshalobj := nsqpb.TopicsUnmarshalObj(w.Topic)
 	if err := proto.Unmarshal(msg, unmarshalobj); err != nil {
 		ocelog.IncludeErrField(err).Warning("unmarshal error")
 		return err
@@ -44,7 +44,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 func (w *WorkerMsgHandler) WatchForResults(hash string) {
 	ocelog.Log().Debugf("adding hash ( %s ) & infochan to transport channel", hash)
 	transport := &Transport{Hash: hash, InfoChan: w.infochan,}
-	w.chanChan <- transport
+	w.ChanChan <- transport
 }
 
 // build contains the logic for actually building. switches on type of proto message that was sent
@@ -55,11 +55,11 @@ func (w *WorkerMsgHandler) build(psg nsqpb.BundleProtoMessage) {
 	case *protos.PRBuildBundle:
 		ocelog.Log().Debug("hash build ", v.GetCheckoutHash())
 		w.WatchForResults(v.GetCheckoutHash())
-		w.werkConf.werkerProcessor.RunPRBundle(v, w.infochan)
+		w.WerkConf.werkerProcessor.RunPRBundle(v, w.infochan)
 	case *protos.PushBuildBundle:
 		ocelog.Log().Debug("hash build: ", v.GetCheckoutHash())
 		w.WatchForResults(v.GetCheckoutHash())
-		w.werkConf.werkerProcessor.RunPushBundle(v, w.infochan)
+		w.WerkConf.werkerProcessor.RunPushBundle(v, w.infochan)
 	default:
 		// todo: default handling
 		fmt.Println("why is there no timeeeeeeeeeeeeeeeeeee ", v)

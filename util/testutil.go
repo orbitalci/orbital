@@ -35,3 +35,21 @@ func CompareByteArrays(a [][]byte, b [][]byte) bool {
 	}
 	return true
 }
+
+func CompareStringArrays(a []string, b []string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	if len(a) != len(b) {
+		return false
+	}
+	for ind, elem := range a {
+		if elem != b[ind] {
+			return false
+		}
+	}
+	return true
+}

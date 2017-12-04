@@ -1,4 +1,4 @@
-package main
+package werker
 
 import (
 	"errors"
@@ -17,6 +17,7 @@ const (
 
 const (
 	defaultServicePort = "9090"
+	defaultGrpcPort    = "9099"
 	defaultWerkerType  = "docker"
 	defaultStorage     = "filesystem"
 )
@@ -40,12 +41,13 @@ func strToStorageImplement(str string) storage.BuildOutputStorage {
 // WerkerConf is all the configuration for the Werker to do its job properly. this is where the
 // storage type is set (ie filesystem, etc..) and the processor is set (ie Docker, kubernetes, etc..)
 type WerkerConf struct {
-	servicePort   	string
-	werkerName    	string
-	werkerType    	WerkType
+	servicePort     string
+	grpcPort        string
+	WerkerName      string
+	werkerType      WerkType
 	werkerProcessor processors.Processor
-	storage 		storage.BuildOutputStorage
-	logLevel 	  	string
+	storage         storage.BuildOutputStorage
+	LogLevel        string
 }
 
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
@@ -56,16 +58,17 @@ func GetConf() (*WerkerConf, error) {
 	var werkerTypeStr string
 	var storageTypeStr string
 	flag.StringVar(&werkerTypeStr, "werker_type", defaultWerkerType, "type of werker, kubernetes or docker")
-	flag.StringVar(&werker.werkerName,"werker_name", werkerName, "if wish to identify as other than hostname")
-	flag.StringVar(&werker.servicePort, "werker_port", defaultServicePort, "port to run service on. default 9090")
-	flag.StringVar(&werker.logLevel, "log-level", "info", "log level")
+	flag.StringVar(&werker.WerkerName,"werker_name", werkerName, "if wish to identify as other than hostname")
+	flag.StringVar(&werker.servicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
+	flag.StringVar(&werker.grpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
+	flag.StringVar(&werker.LogLevel, "log-level", "info", "log level")
 	flag.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
 	flag.Parse()
 	werker.werkerType = strToWerkType(werkerTypeStr)
 	if werker.werkerType == -1 {
 		return nil, errors.New("werker type can only be: k8s, kubernetes, docker")
 	}
-	if werker.werkerName == "" {
+	if werker.WerkerName == "" {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")
 	}
 	werker.storage = strToStorageImplement(storageTypeStr)
