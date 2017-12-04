@@ -29,7 +29,7 @@ type guideOcelotServer struct {
 
 //TODO: what is htis context good for?
 func (g *guideOcelotServer) GetCreds(ctx context.Context) (*models.CredWrapper, error) {
-
+	return nil, nil
 }
 
 //application context, contains stuff that'll get used across admin code
