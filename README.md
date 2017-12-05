@@ -69,3 +69,15 @@ marianne: grpc admin & hookhandler remote config
 jessi: grpc streaming & changes from PR & converting ocelot.yml -> abbys pipeline proto message
 abby: pipeline stuff | docker / kubernetes implementation | client related stuff 
 tj: building & running project & registrator alternative? or registrator? 
+
+
+# what to post to admin for creds 
+
+```{
+   "configId":"jessishank", 
+   "clientId": "QEBYwP5cKAC3ykhau4",
+   "clientSecret": "secretz",
+   "tokenURL": "https://bitbucket.org/site/oauth2/access_token", 
+   "acctName": "jessishank",
+   "type": "bitbucket"
+}```
