@@ -23,7 +23,7 @@ type RepoPush struct {
 func (m *RepoPush) Reset()                    { *m = RepoPush{} }
 func (m *RepoPush) String() string            { return proto.CompactTextString(m) }
 func (*RepoPush) ProtoMessage()               {}
-func (*RepoPush) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0} }
+func (*RepoPush) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
 
 func (m *RepoPush) GetActor() *Owner {
 	if m != nil {
@@ -53,7 +53,7 @@ type RepoPush_PushDetail struct {
 func (m *RepoPush_PushDetail) Reset()                    { *m = RepoPush_PushDetail{} }
 func (m *RepoPush_PushDetail) String() string            { return proto.CompactTextString(m) }
 func (*RepoPush_PushDetail) ProtoMessage()               {}
-func (*RepoPush_PushDetail) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0, 0} }
+func (*RepoPush_PushDetail) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0, 0} }
 
 func (m *RepoPush_PushDetail) GetChanges() []*Changeset {
 	if m != nil {
@@ -72,7 +72,7 @@ type PullRequest struct {
 func (m *PullRequest) Reset()                    { *m = PullRequest{} }
 func (m *PullRequest) String() string            { return proto.CompactTextString(m) }
 func (*PullRequest) ProtoMessage()               {}
-func (*PullRequest) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{1} }
+func (*PullRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{1} }
 
 func (m *PullRequest) GetActor() *Owner {
 	if m != nil {
@@ -106,7 +106,7 @@ type PullRequestApproved struct {
 func (m *PullRequestApproved) Reset()                    { *m = PullRequestApproved{} }
 func (m *PullRequestApproved) String() string            { return proto.CompactTextString(m) }
 func (*PullRequestApproved) ProtoMessage()               {}
-func (*PullRequestApproved) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{2} }
+func (*PullRequestApproved) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{2} }
 
 func (m *PullRequestApproved) GetActor() *Owner {
 	if m != nil {
@@ -144,7 +144,7 @@ type PullRequestApprovedApprove struct {
 func (m *PullRequestApprovedApprove) Reset()                    { *m = PullRequestApprovedApprove{} }
 func (m *PullRequestApprovedApprove) String() string            { return proto.CompactTextString(m) }
 func (*PullRequestApprovedApprove) ProtoMessage()               {}
-func (*PullRequestApprovedApprove) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{2, 0} }
+func (*PullRequestApprovedApprove) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{2, 0} }
 
 func (m *PullRequestApprovedApprove) GetDate() *google_protobuf.Timestamp {
 	if m != nil {
@@ -170,7 +170,7 @@ type CreateWebhook struct {
 func (m *CreateWebhook) Reset()                    { *m = CreateWebhook{} }
 func (m *CreateWebhook) String() string            { return proto.CompactTextString(m) }
 func (*CreateWebhook) ProtoMessage()               {}
-func (*CreateWebhook) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{3} }
+func (*CreateWebhook) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{3} }
 
 func (m *CreateWebhook) GetDescription() string {
 	if m != nil {
@@ -211,7 +211,7 @@ type GetWebhooks struct {
 func (m *GetWebhooks) Reset()                    { *m = GetWebhooks{} }
 func (m *GetWebhooks) String() string            { return proto.CompactTextString(m) }
 func (*GetWebhooks) ProtoMessage()               {}
-func (*GetWebhooks) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{4} }
+func (*GetWebhooks) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{4} }
 
 func (m *GetWebhooks) GetPagelen() float64 {
 	if m != nil {
@@ -259,7 +259,7 @@ type Webhooks struct {
 func (m *Webhooks) Reset()                    { *m = Webhooks{} }
 func (m *Webhooks) String() string            { return proto.CompactTextString(m) }
 func (*Webhooks) ProtoMessage()               {}
-func (*Webhooks) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{5} }
+func (*Webhooks) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{5} }
 
 func (m *Webhooks) GetDescription() string {
 	if m != nil {
@@ -307,9 +307,9 @@ func init() {
 	proto.RegisterType((*Webhooks)(nil), "protos.Webhooks")
 }
 
-func init() { proto.RegisterFile("webhook.proto", fileDescriptor5) }
+func init() { proto.RegisterFile("webhook.proto", fileDescriptor6) }
 
-var fileDescriptor5 = []byte{
+var fileDescriptor6 = []byte{
 	// 538 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x54, 0xcd, 0x8a, 0x13, 0x41,
 	0x10, 0x66, 0x76, 0x26, 0x9b, 0xa4, 0xc6, 0xc0, 0xda, 0x82, 0xcc, 0xc6, 0x83, 0x71, 0x72, 0x09,

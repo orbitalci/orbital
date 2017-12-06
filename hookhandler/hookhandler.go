@@ -12,6 +12,8 @@ import (
 	"github.com/shankj3/ocelot/util/ocenet"
 	"net/http"
 	"os"
+	"leveler/resources"
+	"strings"
 )
 
 type HookHandlerContext struct {
@@ -20,7 +22,7 @@ type HookHandlerContext struct {
 	Deserializer *deserialize.Deserializer
 }
 
-// On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
+// On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
 	if err := ctx.Deserializer.JSONToProto(r.Body, repopush); err != nil {
@@ -39,23 +41,10 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
-	ocelog.Log().Debug("found ocelot yml")
-	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
-	}
-	// instead, add to topic. each worker gets a topic off a channel,
-	// so one worker to one channel
-	bundle := &pb.PushBuildBundle{
-		Config:       buildConf,
-		PushData:     repopush,
-		VaultToken:   token,
-		CheckoutHash: hash,
-	}
-	ocelog.Log().Debug("created push bundle")
-	go ctx.Producer.WriteToNsq(bundle, nsqpb.PushTopic)
+	tellWerker(ctx, buildConf, hash)
 }
 
+// On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
 	if err := ctx.Deserializer.JSONToProto(r.Body, pr); err != nil {
@@ -76,21 +65,78 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
 		return
 	}
+	tellWerker(ctx, buildConf, hash)
+}
+
+func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string) {
 	// get one-time token use for access to vault
 	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
-	// create bundle, send that s*** off!
-	bundle := &pb.PRBuildBundle{
-		Config:       buildConf,
-		PrData:       pr,
+
+	pipeConfig, err := buildDockerPipeline(buildConf)
+
+	werkerTask :=  &pb.WerkerTask{
 		VaultToken:   token,
 		CheckoutHash: hash,
+		Pipe: pipeConfig,
 	}
-	go ctx.Producer.WriteToNsq(bundle, nsqpb.PRTopic)
 
+	go ctx.Producer.WriteToNsq(werkerTask, nsqpb.Build)
+}
+
+//this just builds the pipeline config, worker will call NewPipeline with the protobuf pipeline config and run
+func buildDockerPipeline(oceConfig *pb.BuildConfig) (*resources.Pipeline, error) {
+	//TODO: what's a global env?
+		// environment rules that we want to persist across jobs
+	//TODO: avoid passing integration (this is sensitive data) around by not setting it, maybe mistake?
+		// integration will be list of strings we can parse on werker side and it will do things with it there
+	//TODO: ask Abby if we can share existing containers between jobs
+		// if you need to share container, should be in one job
+	//TODO: what should be the key in this job map?
+		// key = job name, and needs to be unique within the pipeline
+	//TODO: example input for job? What should be passed ot list of strings?
+		// job input output = file
+	//TODO: potentially think about how to use integration?
+	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
+	// consider creating file that will get converted to pipelineconfig
+	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code) potentially watch for changes in .m2/PKG_NAME with fsnotify?
+	//TODO: add global config to ocelot.yaml (and definition to build protobuf obj)
+	//TODO: we might be able to actually create an image and use input/outputs for the dockerPackages part
+	//TODO: seems like image and dockerPackages should be mutually exclusive?
+		// reasoning: can handle weird specific docker package needs (like downloading maven version CANNOT just be apt-get)
+		// would make my life easier
+
+	jobMap := make(map[string] *resources.Job)
+	jobMap["before"] = convertStageToJob(oceConfig.Before, oceConfig.Image)
+	jobMap["build"] = convertStageToJob(oceConfig.Build, oceConfig.Image)
+	jobMap["after"] = convertStageToJob(oceConfig.After, oceConfig.Image)
+	jobMap["test"] = convertStageToJob(oceConfig.Test, oceConfig.Image)
+	jobMap["deploy"] = convertStageToJob(oceConfig.Deploy, oceConfig.Image)
+
+	pipeConfig := &resources.Pipeline{
+		Steps : jobMap,
+	}
+	return pipeConfig, nil
+}
+
+func convertStageToJob(stage *pb.Stage, image string) *resources.Job {
+	if stage == nil {
+		return nil
+	}
+	beforeEnv := make(map[string] string)
+	for _, v := range stage.Env {
+		env := strings.Split(v, "=")
+		beforeEnv[env[0]] = env[1]
+	}
+	before := &resources.Job{
+		Command: strings.Join(stage.Env, " && "),
+		Env: beforeEnv,
+		Image: image,
+	}
+	return before
 }
 
 func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
@@ -141,6 +187,7 @@ func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName str
 	return
 }
 
+//TODO: move this so that the kickoff starts in cmd, and edit the dockerfiles accordingly
 func main() {
 	ocelog.InitializeOcelog(ocelog.GetFlags())
 	ocelog.Log().Debug()

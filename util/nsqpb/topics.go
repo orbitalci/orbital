@@ -11,6 +11,8 @@ import (
 const (
 	PRTopic   = "pr"
 	PushTopic = "push"
+
+	Build = "build"
 )
 
 var SupportedTopics = [2]string{PushTopic, PRTopic}
