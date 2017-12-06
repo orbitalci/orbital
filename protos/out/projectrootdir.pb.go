@@ -23,7 +23,7 @@ type PaginatedRootDirs struct {
 func (m *PaginatedRootDirs) Reset()                    { *m = PaginatedRootDirs{} }
 func (m *PaginatedRootDirs) String() string            { return proto.CompactTextString(m) }
 func (*PaginatedRootDirs) ProtoMessage()               {}
-func (*PaginatedRootDirs) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
+func (*PaginatedRootDirs) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
 
 func (m *PaginatedRootDirs) GetPagelen() float64 {
 	if m != nil {
@@ -71,7 +71,7 @@ func (m *PaginatedRootDirs_SourceValues) Reset()         { *m = PaginatedRootDir
 func (m *PaginatedRootDirs_SourceValues) String() string { return proto.CompactTextString(m) }
 func (*PaginatedRootDirs_SourceValues) ProtoMessage()    {}
 func (*PaginatedRootDirs_SourceValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor4, []int{0, 0}
+	return fileDescriptor3, []int{0, 0}
 }
 
 func (m *PaginatedRootDirs_SourceValues) GetPath() string {
@@ -115,7 +115,7 @@ func (m *PaginatedRootDirs_SourceValues_SourceLinks) String() string {
 }
 func (*PaginatedRootDirs_SourceValues_SourceLinks) ProtoMessage() {}
 func (*PaginatedRootDirs_SourceValues_SourceLinks) Descriptor() ([]byte, []int) {
-	return fileDescriptor4, []int{0, 0, 0}
+	return fileDescriptor3, []int{0, 0, 0}
 }
 
 func (m *PaginatedRootDirs_SourceValues_SourceLinks) GetSelf() *LinkUrl {
@@ -138,9 +138,9 @@ func init() {
 	proto.RegisterType((*PaginatedRootDirs_SourceValues_SourceLinks)(nil), "protos.PaginatedRootDirs.SourceValues.SourceLinks")
 }
 
-func init() { proto.RegisterFile("projectrootdir.proto", fileDescriptor4) }
+func init() { proto.RegisterFile("projectrootdir.proto", fileDescriptor3) }
 
-var fileDescriptor4 = []byte{
+var fileDescriptor3 = []byte{
 	// 281 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x91, 0x31, 0x4b, 0xc4, 0x30,
 	0x14, 0xc7, 0xa9, 0xed, 0x9d, 0xf4, 0xf5, 0x40, 0x0c, 0x0e, 0xa1, 0x83, 0x14, 0x05, 0xe9, 0xd4,

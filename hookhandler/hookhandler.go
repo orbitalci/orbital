@@ -118,6 +118,7 @@ func werk(oceConfig *pb.BuildConfig) (*resources.Pipeline, error) {
 
 	jobMap := make(map[string]*resources.Job)
 	jobMap["before"] = convertStageToJob(oceConfig.Before, oceConfig.Image)
+	//TODO: don't add to map if nil
 	jobMap["build"] = convertStageToJob(oceConfig.Build, oceConfig.Image)
 	jobMap["after"] = convertStageToJob(oceConfig.After, oceConfig.Image)
 	jobMap["test"] = convertStageToJob(oceConfig.Test, oceConfig.Image)

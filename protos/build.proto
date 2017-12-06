@@ -19,7 +19,7 @@ message Stage {
     repeated string script = 2;
 }
 
-//don't think we'll need PushBuildBundle/PRBuildBundle, but keep right now //
+//don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//
 
 message PushBuildBundle {
     BuildConfig config = 1;
