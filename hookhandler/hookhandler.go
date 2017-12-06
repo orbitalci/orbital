@@ -76,7 +76,7 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 		return
 	}
 
-	pipeConfig, err := werk(buildConf)
+	pipeConfig, err := werk(*buildConf, hash)
 
 	werkerTask := WerkerTask{
 		VaultToken:   token,
@@ -95,56 +95,75 @@ type WerkerTask struct {
 }
 
 //this just builds the pipeline config, worker will call NewPipeline with the protobuf pipeline config and run
-func werk(oceConfig *pb.BuildConfig) (*resources.Pipeline, error) {
-	//TODO: what's a global env?
-	// environment rules that we want to persist across jobs
+func werk(oceConfig pb.BuildConfig, gitCommit string) (*resources.Pipeline, error) {
 	//TODO: avoid passing integration (this is sensitive data) around by not setting it, maybe mistake?
 	// integration will be list of strings we can parse on werker side and it will do things with it there
-	//TODO: ask Abby if we can share existing containers between jobs
-	// if you need to share container, should be in one job
 	//TODO: what should be the key in this job map?
 	// key = job name, and needs to be unique within the pipeline
 	//TODO: example input for job? What should be passed ot list of strings?
-	// job input output = file
-	//TODO: potentially think about how to use integration?
 	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
-	// consider creating file that will get converted to pipelineconfig
-	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code) potentially watch for changes in .m2/PKG_NAME with fsnotify?
-	//TODO: add global config to ocelot.yaml (and definition to build protobuf obj)
+	//TODO: potentially think about how to use integration?
+	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code)
+		// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
 	//TODO: we might be able to actually create an image and use input/outputs for the dockerPackages part
 	//TODO: seems like image and dockerPackages should be mutually exclusive?
-	// reasoning: can handle weird specific docker package needs (like downloading maven version CANNOT just be apt-get)
-	// would make my life easier
+		// reasoning: can handle weird specific docker package needs (like downloading maven version CANNOT just be apt-get)
+		// would make my life easier
 
 	jobMap := make(map[string]*resources.Job)
-	jobMap["before"] = convertStageToJob(oceConfig.Before, oceConfig.Image)
-	//TODO: don't add to map if nil
-	jobMap["build"] = convertStageToJob(oceConfig.Build, oceConfig.Image)
-	jobMap["after"] = convertStageToJob(oceConfig.After, oceConfig.Image)
-	jobMap["test"] = convertStageToJob(oceConfig.Test, oceConfig.Image)
-	jobMap["deploy"] = convertStageToJob(oceConfig.Deploy, oceConfig.Image)
+
+	var kickOffCmd []string
+	var kickOffEnvs = make(map[string]string)
+	var buildImage string
+
+	if oceConfig.Image != "" {
+		buildImage = oceConfig.Image
+	} else if len(oceConfig.DockerPackages) > 0 {
+		buildImage = "TODO PARSE THIS AND PUSH TO NEXUS"
+		//TODO: build image and store it somewhere. OH! NEXUS! oh shit we need nexus int. now
+	}
+
+	if oceConfig.Before != nil {
+		if oceConfig.Before.Script != nil {
+			kickOffCmd = append(kickOffCmd, oceConfig.Before.Script...)
+		}
+
+		//combine optional before env values if passed
+		if oceConfig.Before.Env != nil {
+			for envKey, envVal := range oceConfig.Before.Env {
+				kickOffEnvs[envKey] = envVal
+			}
+		}
+	}
+
+	if oceConfig.Build != nil {
+		if oceConfig.Build.Script != nil {
+			kickOffCmd = append(kickOffCmd, oceConfig.Build.Script...)
+		}
+
+		//combine optional before env values if passed
+		if oceConfig.Build.Env != nil {
+			for envKey, envVal := range oceConfig.Build.Env {
+				kickOffEnvs[envKey] = envVal
+			}
+		}
+	}
+
+	//TODO: figure out what to do about the rest of the stages
+
+	job := &resources.Job{
+		Command: strings.Join(kickOffCmd, " && "),
+		Env:     kickOffEnvs,
+		Image:   buildImage,
+	}
+
+	jobMap[gitCommit] = job
 
 	pipeConfig := &resources.Pipeline{
 		Steps: jobMap,
+		GlobalEnv: oceConfig.Env,
 	}
 	return pipeConfig, nil
-}
-
-func convertStageToJob(stage *pb.Stage, image string) *resources.Job {
-	if stage == nil {
-		return nil
-	}
-	beforeEnv := make(map[string]string)
-	for _, v := range stage.Env {
-		env := strings.Split(v, "=")
-		beforeEnv[env[0]] = env[1]
-	}
-	before := &resources.Job{
-		Command: strings.Join(stage.Env, " && "),
-		Env:     beforeEnv,
-		Image:   image,
-	}
-	return before
 }
 
 func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
@@ -189,7 +208,7 @@ func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName str
 	if err != nil {
 		return
 	}
-	if err = ctx.Deserializer.YAMLToProto(fileBitz, conf); err != nil {
+	if err = ctx.Deserializer.YAMLToStruct(fileBitz, conf); err != nil {
 		return
 	}
 	return

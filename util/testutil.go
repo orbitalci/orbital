@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"testing"
 )
 
 func StrFormatErrors(testValue string, expected string, actual string) string {
@@ -15,6 +16,12 @@ func IntFormatErrors(testValue string, expected int, actual int) string {
 
 func GenericStrFormatErrors(testValue string, expected interface{}, actual interface{}) string {
 	return fmt.Sprintf("expected %v to be %v, got %v", testValue, expected, actual)
+}
+
+func NotNull(t *testing.T, theThing interface{}) {
+	if theThing == nil {
+		t.Error(GenericStrFormatErrors(theThing.(string), nil, theThing))
+	}
 }
 
 // todo: write string function for printing out errors

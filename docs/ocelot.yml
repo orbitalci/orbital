@@ -2,17 +2,19 @@ image: java:1.8
 dockerPackages: # apt-get install
   - maven<v>
   - blah
+env:
+  TEST: 1
 before:
   script:
     - sh echo "hello"
 build: 
   env:
-    - BUILD_DEBUG=1
-    - SEARCH_URL=https://google.com
+    BUILD_DEBUG: 1
+    SEARCH_URL: https://google.com
   script:
     - echo "hello1"
 after:
   env:
-    - BUILD_DEBUG=0
+    BUILD_DEBUG: 0
   script:
     - sh echo "goodbye"

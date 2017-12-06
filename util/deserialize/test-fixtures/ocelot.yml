@@ -1,0 +1,13 @@
+image: test
+dockerPackages:
+  - tsss
+  - xss
+env:
+  BUILD_DEBUG: 1
+  SEARCH_URL: https://google.com
+before:
+  script:
+    - sh echo "hello"
+after:
+  env:
+    BUILD_DEBUG: 0

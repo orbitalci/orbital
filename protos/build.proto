@@ -7,15 +7,16 @@ import "webhook.proto";
 message BuildConfig {
     string image = 1;
     repeated string dockerPackages = 2;
-    Stage before= 3;
-    Stage after = 4;
-    Stage build = 5;
-    Stage test = 6;
-    Stage deploy = 7;
+    map<string, string> env = 3;
+    Stage before= 4;
+    Stage after = 5;
+    Stage build = 6;
+    Stage test = 7;
+    Stage deploy = 8;
 }
 
 message Stage {
-    repeated string env = 1;
+    map<string, string> env = 1;
     repeated string script = 2;
 }
 
