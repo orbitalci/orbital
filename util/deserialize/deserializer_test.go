@@ -20,8 +20,8 @@ func TestDeserializer_YAMLToStruct(t *testing.T) {
 	if ocelot.Image != "test" {
 		t.Error(util.StrFormatErrors("ocelot image", "test", ocelot.Image))
 	}
-	if len(ocelot.DockerPackages) != 2 {
-		t.Error(util.IntFormatErrors("docker package list size", 2, len(ocelot.DockerPackages)))
+	if len(ocelot.Packages) != 2 {
+		t.Error(util.IntFormatErrors("docker package list size", 2, len(ocelot.Packages)))
 	}
 	if ocelot.Env["BUILD_DEBUG"] != "1" {
 		t.Error(util.StrFormatErrors("build debug value in global env", "1", ocelot.Env["BUILD_DEBUG"]))

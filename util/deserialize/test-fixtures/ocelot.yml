@@ -1,5 +1,5 @@
 image: test
-dockerPackages:
+packages:
   - tsss
   - xss
 env:

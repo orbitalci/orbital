@@ -6,7 +6,7 @@ import "webhook.proto";
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
     string image = 1;
-    repeated string dockerPackages = 2;
+    repeated string packages = 2;
     map<string, string> env = 3;
     Stage before= 4;
     Stage after = 5;
