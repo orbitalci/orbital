@@ -2,7 +2,6 @@ syntax = "proto3";
 package protos;
 
 import "webhook.proto";
-import "pipelineproxy.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
@@ -19,13 +18,6 @@ message Stage {
     repeated string env = 1;
     repeated string script = 2;
 }
-
-message WerkerTask {
-    resources.Pipeline pipe = 1;
-    string vaultToken = 2;
-    string checkoutHash = 3;
-}
-
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep right now //
 

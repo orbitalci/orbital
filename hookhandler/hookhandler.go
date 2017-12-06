@@ -10,9 +10,9 @@ import (
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
+	"leveler/resources"
 	"net/http"
 	"os"
-	"leveler/resources"
 	"strings"
 )
 
@@ -76,29 +76,36 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 		return
 	}
 
-	pipeConfig, err := buildDockerPipeline(buildConf)
+	pipeConfig, err := werk(buildConf)
 
-	werkerTask :=  &pb.WerkerTask{
+	werkerTask := WerkerTask{
 		VaultToken:   token,
 		CheckoutHash: hash,
-		Pipe: pipeConfig,
+		Pipe:         pipeConfig,
 	}
 
-	go ctx.Producer.WriteToNsq(werkerTask, nsqpb.Build)
+	go ctx.Producer.WriteAny(werkerTask, nsqpb.Build)
+}
+
+//TODO: this needs to live not in this file
+type WerkerTask struct {
+	VaultToken   string
+	CheckoutHash string
+	Pipe         *resources.Pipeline
 }
 
 //this just builds the pipeline config, worker will call NewPipeline with the protobuf pipeline config and run
-func buildDockerPipeline(oceConfig *pb.BuildConfig) (*resources.Pipeline, error) {
+func werk(oceConfig *pb.BuildConfig) (*resources.Pipeline, error) {
 	//TODO: what's a global env?
-		// environment rules that we want to persist across jobs
+	// environment rules that we want to persist across jobs
 	//TODO: avoid passing integration (this is sensitive data) around by not setting it, maybe mistake?
-		// integration will be list of strings we can parse on werker side and it will do things with it there
+	// integration will be list of strings we can parse on werker side and it will do things with it there
 	//TODO: ask Abby if we can share existing containers between jobs
-		// if you need to share container, should be in one job
+	// if you need to share container, should be in one job
 	//TODO: what should be the key in this job map?
-		// key = job name, and needs to be unique within the pipeline
+	// key = job name, and needs to be unique within the pipeline
 	//TODO: example input for job? What should be passed ot list of strings?
-		// job input output = file
+	// job input output = file
 	//TODO: potentially think about how to use integration?
 	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
 	// consider creating file that will get converted to pipelineconfig
@@ -106,10 +113,10 @@ func buildDockerPipeline(oceConfig *pb.BuildConfig) (*resources.Pipeline, error)
 	//TODO: add global config to ocelot.yaml (and definition to build protobuf obj)
 	//TODO: we might be able to actually create an image and use input/outputs for the dockerPackages part
 	//TODO: seems like image and dockerPackages should be mutually exclusive?
-		// reasoning: can handle weird specific docker package needs (like downloading maven version CANNOT just be apt-get)
-		// would make my life easier
+	// reasoning: can handle weird specific docker package needs (like downloading maven version CANNOT just be apt-get)
+	// would make my life easier
 
-	jobMap := make(map[string] *resources.Job)
+	jobMap := make(map[string]*resources.Job)
 	jobMap["before"] = convertStageToJob(oceConfig.Before, oceConfig.Image)
 	jobMap["build"] = convertStageToJob(oceConfig.Build, oceConfig.Image)
 	jobMap["after"] = convertStageToJob(oceConfig.After, oceConfig.Image)
@@ -117,7 +124,7 @@ func buildDockerPipeline(oceConfig *pb.BuildConfig) (*resources.Pipeline, error)
 	jobMap["deploy"] = convertStageToJob(oceConfig.Deploy, oceConfig.Image)
 
 	pipeConfig := &resources.Pipeline{
-		Steps : jobMap,
+		Steps: jobMap,
 	}
 	return pipeConfig, nil
 }
@@ -126,15 +133,15 @@ func convertStageToJob(stage *pb.Stage, image string) *resources.Job {
 	if stage == nil {
 		return nil
 	}
-	beforeEnv := make(map[string] string)
+	beforeEnv := make(map[string]string)
 	for _, v := range stage.Env {
 		env := strings.Split(v, "=")
 		beforeEnv[env[0]] = env[1]
 	}
 	before := &resources.Job{
 		Command: strings.Join(stage.Env, " && "),
-		Env: beforeEnv,
-		Image: image,
+		Env:     beforeEnv,
+		Image:   image,
 	}
 	return before
 }

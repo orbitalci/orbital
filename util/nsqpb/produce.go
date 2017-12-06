@@ -4,6 +4,8 @@ import (
 	"github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
     "github.com/shankj3/ocelot/util/ocelog"
+	"bytes"
+	"encoding/gob"
 )
 
 
@@ -26,11 +28,34 @@ func DefaultProducer() (producer *PbProduce, err error){
 	return
 }
 
+// Writes any struct to a topic, you better implement UnmarshalAndProcess good in your producer, giiiiirl
+func (p *PbProduce) WriteAny(someStruct interface{}, topicName string) error {
+	//TODO: buffer cleanup??
+	var buf bytes.Buffer
+
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(someStruct)
+	if err != nil {
+		return err
+	}
+
+	if err != nil {
+		ocelog.IncludeErrField(err).Warn("proto marshal error")
+		return err
+	}
+	ocelog.Log().Debug("publishing data to ", topicName)
+	err = p.Producer.Publish(topicName, buf.Bytes())
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("could not publish to nsq!")
+	}
+	return err
+}
+
 // Write Protobuf Message to an NSQ topic with name topicName
 // Gets the ip of the NSQ daemon from either the environment variable
 //  `NSQD_IP` or sets it to 127.0.0.1. the NSQ daemon should run alongside
 // any service that produces messages, so this will work usually.
-func (p *PbProduce) WriteToNsq(message proto.Message, topicName string) error {
+func (p *PbProduce) WriteProto(message proto.Message, topicName string) error {
     var data []byte
     data, err := proto.Marshal(message)
     if err != nil {
