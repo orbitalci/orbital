@@ -3,12 +3,12 @@ package handler
 //TODO: add interface once we have more than just bitbucket
 import (
 	"fmt"
+	"errors"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/util/ocelog"
-	"github.com/shankj3/ocelot/util/ocenet"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
 	pb "github.com/shankj3/ocelot/protos/out"
-	"errors"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 )
 
 const DefaultCallbackURL = "https://radiant-mesa-23210.herokuapp.com/bitbucket"

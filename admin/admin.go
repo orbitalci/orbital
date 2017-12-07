@@ -9,17 +9,16 @@ import (
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	"github.com/shankj3/ocelot/util/cred"
-	"github.com/shankj3/ocelot/util/deserialize"
-	"github.com/shankj3/ocelot/util/ocelog"
-	"github.com/shankj3/ocelot/util/ocenet"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"strings"
+	"bitbucket.org/level11consulting/go-til/deserialize"
+	"bitbucket.org/level11consulting/go-til/log"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
 )
 
 //TODO: floe integration??? just putting this note here so we remember
@@ -87,7 +86,7 @@ func Start(configInstance *cred.RemoteConfig, serverRunsAt string, port string) 
 	err = srv.Serve(tls.NewListener(conn, srv.TLSConfig))
 
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+		log.Log().Fatal("ListenAndServe: ", err)
 	}
 }
 
@@ -99,10 +98,10 @@ func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Ha
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// This is a partial recreation of gRPC's internal checks https://github.com/grpc/grpc-go/pull/514/files#diff-95e9a25b738459a2d3030e1e6fa2a718R61
 		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			ocelog.Log().Debug("serving grpc guuuuurl")
+			log.Log().Debug("serving grpc guuuuurl")
 			grpcServer.ServeHTTP(w, r)
 		} else {
-			ocelog.Log().Debug("serving HTTTTTTTTTTPPPPPP")
+			log.Log().Debug("serving HTTTTTTTTTTPPPPPP")
 			otherHandler.ServeHTTP(w, r)
 		}
 	})
@@ -123,24 +122,24 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 	configFile, err := ioutil.ReadFile("/home/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
 	//configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error()
+		log.IncludeErrField(err).Error()
 		return
 	}
 	err = gos.Deserializer.YAMLToProto(configFile, config)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error()
+		log.IncludeErrField(err).Error()
 		return
 	}
 	for _, configVal := range config.Credentials {
 		err := gos.AdminValidator.ValidateConfig(configVal)
 		if err != nil {
-			ocelog.IncludeErrField(err)
+			log.IncludeErrField(err)
 			continue
 		}
 
 		err = SetupCredentials(gos, configVal)
 		if err != nil {
-			ocelog.IncludeErrField(err).Error()
+			log.IncludeErrField(err).Error()
 		}
 	}
 }
@@ -159,7 +158,7 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials
 		err := bbHandler.SetMeUp(config, bitbucketClient)
 
 		if err != nil {
-			ocelog.Log().Error("could not setup bitbucket client")
+			log.Log().Error("could not setup bitbucket client")
 			return err
 		}
 

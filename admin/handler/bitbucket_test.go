@@ -1,12 +1,12 @@
 package handler
 
 import (
+	"os"
 	"testing"
 	"github.com/shankj3/ocelot/admin/models"
 	"github.com/golang/protobuf/proto"
-	"github.com/shankj3/ocelot/util/test"
 	"github.com/golang/protobuf/jsonpb"
-	"os"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 
