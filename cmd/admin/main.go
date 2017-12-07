@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/shankj3/ocelot/util/ocelog"
 	"fmt"
 	"github.com/namsral/flag"
-	"github.com/shankj3/ocelot/util"
+	"github.com/shankj3/ocelot/util/cred"
 	"github.com/shankj3/ocelot/admin"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 )
 
 func main() {
@@ -21,13 +21,13 @@ func main() {
 	flag.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
 	flag.Parse()
 
-	ocelog.InitializeOcelog(logLevel)
+	ocelog.InitializeLog(logLevel)
 
 	serverRunsAt := fmt.Sprintf("localhost:%v", port)
 	ocelog.Log().Debug(serverRunsAt)
 
 	//TODO: this is my local vault root token, too lazy to set env variable
-	configInstance, err := util.GetInstance(consulHost, consulPort, "0175e9be-9917-a01f-cd65-b412f55ec545")
+	configInstance, err := cred.GetInstance(consulHost, consulPort, "0175e9be-9917-a01f-cd65-b412f55ec545")
 
 	if err != nil {
 		ocelog.Log().Fatal("could not talk to consul or vault, bailing")

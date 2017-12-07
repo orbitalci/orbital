@@ -22,8 +22,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/shankj3/ocelot/util/nsqpb"
-	"github.com/shankj3/ocelot/util/ocelog"
+	"bitbucket.org/level11consulting/go-til/nsqpb"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"github.com/shankj3/ocelot/werker"
 	"time"
 )
@@ -51,7 +51,7 @@ func main() {
 		fmt.Errorf("cannot get configuration, exiting.... error: %s", err)
 		return
 	}
-	ocelog.InitializeOcelog(conf.LogLevel)
+	ocelog.InitializeLog(conf.LogLevel)
 	tunnel := make(chan *werker.Transport)
 	ocelog.Log().Debug("starting up worker on off channels w/ ", conf.WerkerName)
 	var consumers []*nsqpb.ProtoConsume
