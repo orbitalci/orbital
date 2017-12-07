@@ -38,7 +38,7 @@ func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Cr
 		return nil, err
 	}
 	err = SetupCredentials(g, credentials)
-	return nil, err
+	return &empty.Empty{}, err
 }
 
 func NewGuideOcelotServer(config *util.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator) models.GuideOcelotServer {
