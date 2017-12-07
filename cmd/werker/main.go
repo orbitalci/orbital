@@ -54,8 +54,12 @@ func main() {
 	ocelog.InitializeLog(conf.LogLevel)
 	tunnel := make(chan *werker.Transport)
 	ocelog.Log().Debug("starting up worker on off channels w/ ", conf.WerkerName)
+
 	var consumers []*nsqpb.ProtoConsume
-    for _, topic := range nsqpb.SupportedTopics {
+	//you should know what channels to subscribe to
+	supportedTopics := []string{"build"}
+
+    for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewProtoConsume()
 		if nsqpb.LookupTopic(protoConsume.Config.LookupDAddress(), topic) {
 			handler := &werker.WorkerMsgHandler{

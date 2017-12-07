@@ -1,11 +1,13 @@
 package werker
 
 import (
-	"fmt"
-	"github.com/golang/protobuf/proto"
-	"github.com/shankj3/ocelot/protos/out"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	d "bitbucket.org/level11consulting/go-til/deserialize"
+	"leveler/server"
+	"bytes"
+	"encoding/gob"
+	"bufio"
+	"log"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -21,22 +23,34 @@ type WorkerMsgHandler struct {
 	WerkConf *WerkerConf
 	infochan chan []byte
 	ChanChan chan *Transport
+	Deserializer d.Deserializer
+}
+
+type WerkerTask struct {
+	VaultToken   string
+	CheckoutHash string
+	Pipe         *server.PipelineConfig
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	ocelog.Log().Debug("unmarshaling build obj and processing")
-	unmarshalobj := nsqpb.TopicsUnmarshalObj(w.Topic)
-	if err := proto.Unmarshal(msg, unmarshalobj); err != nil {
-		ocelog.IncludeErrField(err).Warning("unmarshal error")
-		return err
-	}
+
 	// channels get closed after the build finishes
 	w.infochan = make(chan []byte)
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
-	// do the thing
-	go w.build(unmarshalobj)
+
+	var buf bytes.Buffer
+	var werkerTask WerkerTask
+	enc := gob.NewDecoder(&buf)
+	err := enc.Decode(werkerTask)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error()
+		return nil
+	}
+
+	go w.build(&werkerTask)
 	return nil
 }
 
@@ -49,20 +63,43 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 
 // build contains the logic for actually building. switches on type of proto message that was sent
 // over the nsq queue
-func (w *WorkerMsgHandler) build(psg nsqpb.BundleProtoMessage) {
-	ocelog.Log().Debug("about to build")
-	switch v := psg.(type) {
-	case *protos.PRBuildBundle:
-		ocelog.Log().Debug("hash build ", v.GetCheckoutHash())
-		w.WatchForResults(v.GetCheckoutHash())
-		w.WerkConf.werkerProcessor.RunPRBundle(v, w.infochan)
-	case *protos.PushBuildBundle:
-		ocelog.Log().Debug("hash build: ", v.GetCheckoutHash())
-		w.WatchForResults(v.GetCheckoutHash())
-		w.WerkConf.werkerProcessor.RunPushBundle(v, w.infochan)
-	default:
-		// todo: default handling
-		fmt.Println("why is there no timeeeeeeeeeeeeeeeeeee ", v)
+func (w *WorkerMsgHandler) build(werk *WerkerTask) {
+	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
+	w.WatchForResults(werk.CheckoutHash)
+	//TODO: figure out how to get output to put onto infochan
+	pipe, err := server.NewPipeline(nil, werk.Pipe)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("error building new pipeline")
 	}
-	ocelog.Log().Debugf("finished building id %s", psg.GetCheckoutHash())
+	quit := make(chan int8)
+	done := make(chan int8)
+	pipe.Run(quit, done)
+
+	switch w.WerkConf.werkerType {
+	case Docker:
+		dockerPipe := pipe.JobsMap[werk.CheckoutHash]
+		buildOutput, err := dockerPipe.Logs(true, true, true)
+		defer buildOutput.Close()
+
+		rd := bufio.NewReader(buildOutput)
+
+		for {
+			str, err := rd.ReadString('\n')
+			if err != nil {
+				log.Fatal("Read Error:", err)
+				return
+			}
+			w.infochan <- []byte(str)
+		}
+
+		if err != nil {
+			ocelog.IncludeErrField(err)
+			return
+		}
+	case Kubernetes:
+		//TODO: wait for kubernetes client
+	}
+
+	<-done
+	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
 }

@@ -5,13 +5,14 @@ import (
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
 	"github.com/shankj3/ocelot/util/cred"
+	w "github.com/shankj3/ocelot/werker"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"leveler/resources"
 	"net/http"
 	"strings"
 	"bitbucket.org/level11consulting/go-til/deserialize"
+	"leveler/server"
 )
 
 type HookHandlerContext struct {
@@ -76,31 +77,24 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 
 	pipeConfig, err := werk(*buildConf, hash)
 
-	werkerTask := WerkerTask{
+	werkerTask := w.WerkerTask{
 		VaultToken:   token,
 		CheckoutHash: hash,
 		Pipe:         pipeConfig,
 	}
 
-	go ctx.Producer.WriteAny(werkerTask, nsqpb.Build)
-}
-
-//TODO: this needs to live not in this file
-type WerkerTask struct {
-	VaultToken   string
-	CheckoutHash string
-	Pipe         *resources.Pipeline
+	go ctx.Producer.WriteAny(werkerTask, "docker")
 }
 
 //this just builds the pipeline config, worker will call NewPipeline with the pipeline config and run
-func werk(oceConfig pb.BuildConfig, gitCommit string) (*resources.Pipeline, error) {
+func werk(oceConfig pb.BuildConfig, gitCommit string) (*server.PipelineConfig, error) {
 	//TODO: example input for job? What should be passed to list of strings?
 	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
 	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code)
 		// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
 	//TODO: we might be able to actually create an image and use input/outputs for the packages part?
 
-	jobMap := make(map[string]*resources.Job)
+	jobMap := make(map[string]*server.JobConfig)
 
 	var kickOffCmd []string
 	var kickOffEnvs = make(map[string]string)
@@ -140,7 +134,7 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*resources.Pipeline, erro
 	}
 
 	//TODO: figure out what to do about the rest of the stages
-	job := &resources.Job{
+	job := &server.JobConfig{
 		Command: strings.Join(kickOffCmd, " && "),
 		Env:     kickOffEnvs,
 		Image:   buildImage,
@@ -148,7 +142,7 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*resources.Pipeline, erro
 
 	jobMap[gitCommit] = job
 
-	pipeConfig := &resources.Pipeline{
+	pipeConfig := &server.PipelineConfig{
 		Steps: jobMap,
 		GlobalEnv: oceConfig.Env,
 	}
