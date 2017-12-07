@@ -1,4 +1,4 @@
-package main
+package hookhandler
 
 import (
 	"testing"

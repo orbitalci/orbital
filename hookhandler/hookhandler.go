@@ -1,7 +1,6 @@
-package main
+package hookhandler
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
@@ -11,7 +10,6 @@ import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"leveler/resources"
 	"net/http"
-	"os"
 	"strings"
 	"bitbucket.org/level11consulting/go-til/deserialize"
 )
@@ -203,35 +201,4 @@ func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName str
 		return
 	}
 	return
-}
-
-//TODO: move this so that the kickoff starts in cmd, and edit the dockerfiles accordingly
-func main() {
-	ocelog.InitializeLog(ocelog.GetFlags())
-	ocelog.Log().Debug()
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8088"
-		ocelog.Log().Warning("running on default port :8088")
-	}
-
-	remoteConfig, err := cred.GetInstance("", 0, "")
-	if err != nil {
-		ocelog.Log().Fatal(err)
-	}
-
-	hookHandlerContext := &HookHandlerContext{
-		RemoteConfig: remoteConfig,
-		Deserializer: deserialize.New(),
-		Producer:     nsqpb.GetInitProducer(),
-	}
-
-	muxi := mux.NewRouter()
-
-	// handleBBevent can take push/pull/ w/e
-	muxi.Handle("/bitbucket", &ocenet.AppContextHandler{hookHandlerContext, HandleBBEvent}).Methods("POST")
-
-	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
-	n := ocenet.InitNegroni("hookhandler", muxi)
-	n.Run(":" + port)
 }
