@@ -94,13 +94,13 @@ type WerkerTask struct {
 	Pipe         *resources.Pipeline
 }
 
-//this just builds the pipeline config, worker will call NewPipeline with the protobuf pipeline config and run
+//this just builds the pipeline config, worker will call NewPipeline with the pipeline config and run
 func werk(oceConfig pb.BuildConfig, gitCommit string) (*resources.Pipeline, error) {
-	//TODO: example input for job? What should be passed ot list of strings?
+	//TODO: example input for job? What should be passed to list of strings?
 	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
 	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code)
 		// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
-	//TODO: we might be able to actually create an image and use input/outputs for the dockerPackages part
+	//TODO: we might be able to actually create an image and use input/outputs for the packages part?
 
 	jobMap := make(map[string]*resources.Job)
 
