@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"net"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/util/test"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 
