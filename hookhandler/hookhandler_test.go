@@ -4,6 +4,7 @@ import (
 	"testing"
 	"github.com/shankj3/ocelot/util/test"
 	pb "github.com/shankj3/ocelot/protos/out"
+	"fmt"
 )
 
 func TestHookhandler_WerkBuildOnly(t *testing.T) {
@@ -20,14 +21,37 @@ func TestHookhandler_WerkBuildOnly(t *testing.T) {
 	}
 
 	buildOnlyPipe, _ := werk(buildOnly, "marianne")
-	test.AssertNotNull(t, buildOnlyPipe)
-	test.AssertNotNull(t, buildOnlyPipe.GlobalEnv)
-	test.GenericAssertEqs(t, "1", buildOnlyPipe.GlobalEnv["DEBUG"])
-	test.AssertNotNull(t, buildOnlyPipe.Steps)
-	test.GenericAssertEqs(t, 1, len(buildOnlyPipe.Steps))
-	test.AssertNotNull(t, buildOnlyPipe.Steps["marianne"])
-	test.GenericAssertEqs(t, "TODO PARSE THIS AND PUSH TO ARTIFACT REPO", buildOnlyPipe.Steps["marianne"].Image)
-	test.GenericAssertEqs(t, "sh -a && cp -r . ..", buildOnlyPipe.Steps["marianne"].Command)
+	if buildOnlyPipe == nil {
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe))
+	}
+
+	if buildOnlyPipe.GlobalEnv == nil {
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.GlobalEnv))
+	}
+
+	if buildOnlyPipe.GlobalEnv["DEBUG"] != "1" {
+		t.Error(test.GenericStrFormatErrors("global env DEBUG", "1", buildOnlyPipe.GlobalEnv["DEBUG"]))
+	}
+
+	if buildOnlyPipe.Steps == nil {
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.Steps))
+	}
+
+	if len(buildOnlyPipe.Steps) != 1 {
+		t.Error(test.GenericStrFormatErrors("pipeline steps", 1, len(buildOnlyPipe.Steps)))
+	}
+
+	if buildOnlyPipe.Steps["marianne"] == nil {
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.Steps["marianne"] ))
+	}
+
+	if buildOnlyPipe.Steps["marianne"].Image != "TODO PARSE THIS AND PUSH TO ARTIFACT REPO" {
+		t.Error(test.GenericStrFormatErrors("job image", "TODO PARSE THIS AND PUSH TO ARTIFACT REPO", buildOnlyPipe.Steps["marianne"].Image))
+	}
+
+	if buildOnlyPipe.Steps["marianne"].Command != "sh -a && cp -r . .." {
+		t.Error(test.GenericStrFormatErrors("pipeline command", "sh -a && cp -r . ..", buildOnlyPipe.Steps["marianne"].Command))
+	}
 
 	if buildOnlyPipe.Steps["marianne"].Env["DEBUG"] != testEnv["DEBUG"] {
 		t.Error(test.GenericStrFormatErrors("build stage env DEBUG", "1", buildOnlyPipe.Steps["marianne"].Env["DEBUG"] ))
@@ -54,15 +78,35 @@ func TestHookhandler_WerkBeforeAndBuild(t *testing.T) {
 		},
 	}
 
+
 	buildOnlyPipe, _ := werk(buildOnly, "marianne")
-	test.AssertNotNull(t, buildOnlyPipe)
-	test.AssertNotNull(t, buildOnlyPipe.GlobalEnv)
-	test.AssertNull(t, buildOnlyPipe.GlobalEnv["DEBUG"])
-	test.AssertNotNull(t, buildOnlyPipe.Steps)
-	test.GenericAssertEqs(t, 1, len(buildOnlyPipe.Steps))
-	test.AssertNotNull(t, buildOnlyPipe.Steps["marianne"])
-	test.GenericAssertEqs(t, "wowanimage", buildOnlyPipe.Steps["marianne"].Image)
-	test.GenericAssertEqs(t, "first && sh -a && cp -r . ..", buildOnlyPipe.Steps["marianne"].Command)
+	if buildOnlyPipe == nil {
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe))
+	}
+
+	if len(buildOnlyPipe.GlobalEnv) > 0 {
+		t.Error(fmt.Sprintf("expected %v to be empty", buildOnlyPipe.GlobalEnv))
+	}
+
+	if buildOnlyPipe.Steps == nil {
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.Steps))
+	}
+
+	if len(buildOnlyPipe.Steps) != 1 {
+		t.Error(test.GenericStrFormatErrors("pipeline steps", 1, len(buildOnlyPipe.Steps)))
+	}
+
+	if buildOnlyPipe.Steps["marianne"] == nil {
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.Steps["marianne"] ))
+	}
+
+	if buildOnlyPipe.Steps["marianne"].Image != "wowanimage" {
+		t.Error(test.GenericStrFormatErrors("job image", "wowanimage", buildOnlyPipe.Steps["marianne"].Image))
+	}
+
+	if buildOnlyPipe.Steps["marianne"].Command != "first && sh -a && cp -r . .." {
+		t.Error(test.GenericStrFormatErrors("pipeline command", "first && sh -a && cp -r . ..", buildOnlyPipe.Steps["marianne"].Command))
+	}
 
 	if buildOnlyPipe.Steps["marianne"].Env["DEBUG"] != "1" {
 		t.Error(test.GenericStrFormatErrors("build stage env DEBUG", "1", buildOnlyPipe.Steps["marianne"].Env["DEBUG"] ))
