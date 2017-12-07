@@ -3,14 +3,14 @@ package werker
 import (
 	"bufio"
 	"bytes"
-	"github.com/shankj3/ocelot/util/test"
-	"github.com/shankj3/ocelot/util/consulet"
-	"github.com/shankj3/ocelot/util/ocenet"
+	consulet "bitbucket.org/level11consulting/go-til/consul"
+	ocenet"bitbucket.org/level11consulting/go-til/net"
 	"github.com/shankj3/ocelot/util/storage"
 	"github.com/shankj3/ocelot/werker/protobuf"
 	"google.golang.org/grpc"
 	"testing"
 	"time"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 var testData = [][]byte{
@@ -104,10 +104,11 @@ func Test_streamFromArray(t *testing.T) {
 
 func Test_writeInfoChanToInMemMap(t *testing.T) {
 	trans := &Transport{"FOR_TESTING", make(chan []byte)}
+	werkerConsulet, _ := consulet.Default()
 	ctx := &werkerStreamer{
 		buildInfo: make(map[string]*buildDatum),
 		storage: storage.NewFileBuildStorage(""),
-		consul: consulet.Default(),
+		consul: werkerConsulet,
 	}
 	middleIndex := 6
 	go writeInfoChanToInMemMap(trans, ctx)

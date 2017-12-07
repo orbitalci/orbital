@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/ocelot/protos/out"
-	"github.com/shankj3/ocelot/util/nsqpb"
-	"github.com/shankj3/ocelot/util/ocelog"
+	"bitbucket.org/level11consulting/go-til/nsqpb"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service

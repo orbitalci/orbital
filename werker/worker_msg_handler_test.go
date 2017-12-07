@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/ocelot/protos/out"
-	"github.com/shankj3/ocelot/util/test"
 	"testing"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 func TestWorkerMsgHandler_WatchForResults(t *testing.T) {

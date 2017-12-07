@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/shankj3/ocelot/util/consulet"
-	"github.com/shankj3/ocelot/util/ocelog"
-	"github.com/shankj3/ocelot/util/ocenet"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	consulet "bitbucket.org/level11consulting/go-til/consul"
+	ocenet"bitbucket.org/level11consulting/go-til/net"
 	"github.com/shankj3/ocelot/util/storage"
 	"github.com/shankj3/ocelot/werker/protobuf"
 	"google.golang.org/grpc"
@@ -272,7 +272,15 @@ func serveHome(w http.ResponseWriter, r *http.Request){
 
 func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
 	store := storage.NewFileBuildStorage("")
-	werkerStreamer := &werkerStreamer{ conf: conf, storage: store, buildInfo: make(map[string]*buildDatum), consul: consulet.Default()}
+	werkerConsul, err := consulet.Default()
+	if err != nil {
+		ocelog.IncludeErrField(err)
+	}
+	werkerStreamer := &werkerStreamer{
+		conf: conf,
+		storage: store,
+		buildInfo: make(map[string]*buildDatum),
+		consul: werkerConsul}
 	return werkerStreamer
 }
 
