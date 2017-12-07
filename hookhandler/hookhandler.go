@@ -5,7 +5,7 @@ import (
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
-	"github.com/shankj3/ocelot/util"
+	"github.com/shankj3/ocelot/util/cred"
 	"github.com/shankj3/ocelot/util/deserialize"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
@@ -17,7 +17,7 @@ import (
 )
 
 type HookHandlerContext struct {
-	RemoteConfig *util.RemoteConfig
+	RemoteConfig *cred.RemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
 }
@@ -184,7 +184,7 @@ func getCredConfig() *models.Credentials {
 
 func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	//cfg := getCredConfig()
-	bbCreds, err := ctx.RemoteConfig.GetCredAt(util.ConfigPath+"/bitbucket/"+acctName, false)
+	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath+"/bitbucket/"+acctName, false)
 	cfg := bbCreds["bitbucket/"+acctName]
 	bb := handler.Bitbucket{}
 	bbClient := &ocenet.OAuthClient{}
@@ -215,7 +215,7 @@ func main() {
 		ocelog.Log().Warning("running on default port :8088")
 	}
 
-	remoteConfig, err := util.GetInstance("", 0, "")
+	remoteConfig, err := cred.GetInstance("", 0, "")
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}

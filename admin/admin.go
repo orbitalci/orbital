@@ -8,7 +8,7 @@ import (
 	"github.com/philips/grpc-gateway-example/insecure"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/util"
+	"github.com/shankj3/ocelot/util/cred"
 	"github.com/shankj3/ocelot/util/deserialize"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
@@ -26,7 +26,7 @@ import (
 //TODO: change this to use my fork of logrus so we can pretty print logs?
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
-func Start(configInstance *util.RemoteConfig, serverRunsAt string, port string) {
+func Start(configInstance *cred.RemoteConfig, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator())
 
@@ -168,7 +168,7 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials
 			return err
 		}
 	}
-	configPath := util.ConfigPath + "/" + config.Type + "/" + config.AcctName
+	configPath := cred.ConfigPath + "/" + config.Type + "/" + config.AcctName
 	err := gos.RemoteConfig.AddCreds(configPath, config)
 	return err
 }

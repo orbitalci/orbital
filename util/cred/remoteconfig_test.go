@@ -1,4 +1,4 @@
-package util
+package cred
 
 import (
 	"github.com/hashicorp/vault/http"
