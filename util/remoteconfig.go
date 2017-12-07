@@ -112,7 +112,6 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[s
 
 //GetPassword will return to you the vault password at specified path
 func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
-	path = "secret/ci/" + path
 	authData, err := remoteConfig.Vault.GetUserAuthData(path)
 	if err != nil {
 		return "", err
