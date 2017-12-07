@@ -6,14 +6,14 @@ import (
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
 	"github.com/shankj3/ocelot/util/cred"
-	"github.com/shankj3/ocelot/util/deserialize"
-	"github.com/shankj3/ocelot/util/nsqpb"
-	"github.com/shankj3/ocelot/util/ocelog"
-	"github.com/shankj3/ocelot/util/ocenet"
+	"bitbucket.org/level11consulting/go-til/nsqpb"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"leveler/resources"
 	"net/http"
 	"os"
 	"strings"
+	"bitbucket.org/level11consulting/go-til/deserialize"
 )
 
 type HookHandlerContext struct {
@@ -207,7 +207,7 @@ func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName str
 
 //TODO: move this so that the kickoff starts in cmd, and edit the dockerfiles accordingly
 func main() {
-	ocelog.InitializeOcelog(ocelog.GetFlags())
+	ocelog.InitializeLog(ocelog.GetFlags())
 	ocelog.Log().Debug()
 	port := os.Getenv("PORT")
 	if port == "" {

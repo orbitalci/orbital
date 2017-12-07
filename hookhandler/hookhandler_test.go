@@ -2,9 +2,9 @@ package main
 
 import (
 	"testing"
-	"github.com/shankj3/ocelot/util/test"
 	pb "github.com/shankj3/ocelot/protos/out"
 	"fmt"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 func TestHookhandler_WerkBuildOnly(t *testing.T) {

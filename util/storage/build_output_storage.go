@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
-	"github.com/shankj3/ocelot/util/ocelog"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"io/ioutil"
 	"os"
 	"path/filepath"
