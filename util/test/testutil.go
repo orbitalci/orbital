@@ -1,4 +1,4 @@
-package util
+package test
 
 import (
 	"bytes"
@@ -18,8 +18,26 @@ func GenericStrFormatErrors(testValue string, expected interface{}, actual inter
 	return fmt.Sprintf("expected %v to be %v, got %v", testValue, expected, actual)
 }
 
-func NotNull(t *testing.T, theThing interface{}) {
+func GenericAssertEqs(t *testing.T, expected interface{}, actual interface{}) {
+	if expected != actual {
+		t.Error(fmt.Sprintf("expected %v to be equal to %v", expected, actual))
+	}
+}
+
+func AssertNotNull(t *testing.T, theThing interface{}) {
 	if theThing == nil {
+		t.Error(fmt.Sprintf("expected %v to be nil", theThing.(string)))
+	}
+}
+
+func AssertTrue(t *testing.T, toCheck bool) {
+	if !toCheck {
+		t.Error()
+	}
+}
+
+func AssertNull(t *testing.T, theThing interface{}) {
+	if theThing != nil {
 		t.Error(GenericStrFormatErrors(theThing.(string), nil, theThing))
 	}
 }

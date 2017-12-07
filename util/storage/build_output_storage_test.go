@@ -3,7 +3,7 @@ package storage
 import (
 	"bytes"
 	"github.com/mitchellh/go-homedir"
-	"github.com/shankj3/ocelot/util"
+	"github.com/shankj3/ocelot/util/test"
 	"os"
 	"path/filepath"
 	"testing"
@@ -50,7 +50,7 @@ func TestFileBuildStorage(t *testing.T) {
 			t.Fatal(err)
 		}
 		if filep := fbs.getTempFile(hash); filep != fb.actualSaveLoc {
-			t.Error(util.StrFormatErrors("file path", fb.actualSaveLoc, filep))
+			t.Error(test.StrFormatErrors("file path", fb.actualSaveLoc, filep))
 		}
 
 		actualData, err := fbs.Retrieve(hash)
@@ -58,7 +58,7 @@ func TestFileBuildStorage(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !bytes.Equal(actualData, testBytes){
-			t.Error(util.GenericStrFormatErrors("file data", string(testBytes), string(actualData)))
+			t.Error(test.GenericStrFormatErrors("file data", string(testBytes), string(actualData)))
 		}
 		fbs.Clean()
 		exists, _ := exists(fb.actualSaveLoc)

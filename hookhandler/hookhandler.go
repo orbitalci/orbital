@@ -96,19 +96,11 @@ type WerkerTask struct {
 
 //this just builds the pipeline config, worker will call NewPipeline with the protobuf pipeline config and run
 func werk(oceConfig pb.BuildConfig, gitCommit string) (*resources.Pipeline, error) {
-	//TODO: avoid passing integration (this is sensitive data) around by not setting it, maybe mistake?
-	// integration will be list of strings we can parse on werker side and it will do things with it there
-	//TODO: what should be the key in this job map?
-	// key = job name, and needs to be unique within the pipeline
 	//TODO: example input for job? What should be passed ot list of strings?
 	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
-	//TODO: potentially think about how to use integration?
 	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code)
 		// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
 	//TODO: we might be able to actually create an image and use input/outputs for the dockerPackages part
-	//TODO: seems like image and dockerPackages should be mutually exclusive?
-		// reasoning: can handle weird specific docker package needs (like downloading maven version CANNOT just be apt-get)
-		// would make my life easier
 
 	jobMap := make(map[string]*resources.Job)
 
@@ -118,8 +110,8 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*resources.Pipeline, erro
 
 	if oceConfig.Image != "" {
 		buildImage = oceConfig.Image
-	} else if len(oceConfig.DockerPackages) > 0 {
-		buildImage = "TODO PARSE THIS AND PUSH TO NEXUS"
+	} else if len(oceConfig.Packages) > 0 {
+		buildImage = "TODO PARSE THIS AND PUSH TO ARTIFACT REPO"
 		//TODO: build image and store it somewhere. OH! NEXUS! oh shit we need nexus int. now
 	}
 
@@ -150,7 +142,6 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*resources.Pipeline, erro
 	}
 
 	//TODO: figure out what to do about the rest of the stages
-
 	job := &resources.Job{
 		Command: strings.Join(kickOffCmd, " && "),
 		Env:     kickOffEnvs,

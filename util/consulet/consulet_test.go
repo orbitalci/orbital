@@ -5,7 +5,7 @@ import (
 	"testing"
 	"strings"
 	"strconv"
-	"github.com/shankj3/ocelot/util"
+	"github.com/shankj3/ocelot/util/test"
 )
 
 func initServerAndConsulet(t *testing.T) (*Consulet, *testutil.TestServer) {
@@ -44,14 +44,14 @@ func TestConsulet_Connections(t *testing.T) {
 	brokenConsul := Default()
 	brokenConsul.RegisterService("abc", 1234, "")
 	if brokenConsul.Connected {
-		t.Error(util.GenericStrFormatErrors("broken connection", false, brokenConsul.Connected))
+		t.Error(test.GenericStrFormatErrors("broken connection", false, brokenConsul.Connected))
 	}
 
 	workingConsul, serv := initServerAndConsulet(t)
 	defer serv.Stop()
 	workingConsul.AddKeyValue("abc", []byte{})
 	if !workingConsul.Connected {
-		t.Error(util.GenericStrFormatErrors("working connection", true, workingConsul.Connected))
+		t.Error(test.GenericStrFormatErrors("working connection", true, workingConsul.Connected))
 	}
 
 }

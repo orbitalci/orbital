@@ -1,5 +1,7 @@
 image: java:1.8
-dockerPackages: # apt-get install
+
+
+packages: # apt-get install
   - maven<v>
   - blah
 env:

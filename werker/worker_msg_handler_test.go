@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/ocelot/protos/out"
-	"github.com/shankj3/ocelot/util"
+	"github.com/shankj3/ocelot/util/test"
 	"testing"
 )
 
@@ -30,10 +30,10 @@ func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
 			info := <- trans.InfoChan
 			//t.Log("recieved")
 			if bytes.Compare(info, wd.chanData) != 0 {
-				t.Error(util.StrFormatErrors("info channel response", string(wd.chanData), string(info)))
+				t.Error(test.StrFormatErrors("info channel response", string(wd.chanData), string(info)))
 			}
 			if wd.hash != trans.Hash {
-				t.Error(util.StrFormatErrors("git hash", wd.hash, trans.Hash))
+				t.Error(test.StrFormatErrors("git hash", wd.hash, trans.Hash))
 			}
 		})
 	}
@@ -49,7 +49,7 @@ func TestWorkerMsgHandler_buildPRBuildBundle(t *testing.T) {
 		t.Fatal("no data on channel")
 	} else {
 		if w.Hash != msg.CheckoutHash {
-			t.Error(util.StrFormatErrors("checkout hash", msg.CheckoutHash, w.Hash))
+			t.Error(test.StrFormatErrors("checkout hash", msg.CheckoutHash, w.Hash))
 		}
 		if w.InfoChan != wmh.infochan {
 			t.Error("should be same channel")
@@ -57,7 +57,7 @@ func TestWorkerMsgHandler_buildPRBuildBundle(t *testing.T) {
 	}
 	data := <- wmh.infochan
 	if bytes.Compare(data, prBundleInfoMsg) != 0 {
-		t.Error(util.StrFormatErrors("build data", "hit run pr bundle", string(data)))
+		t.Error(test.StrFormatErrors("build data", "hit run pr bundle", string(data)))
 	}
 }
 
@@ -71,7 +71,7 @@ func TestWorkerMsgHandler_buildPushBuildBundle(t *testing.T) {
 		t.Fatal("no data on channel")
 	} else {
 		if w.Hash != msg.CheckoutHash {
-			t.Error(util.StrFormatErrors("checkout hash", msg.CheckoutHash, w.Hash))
+			t.Error(test.StrFormatErrors("checkout hash", msg.CheckoutHash, w.Hash))
 		}
 		if w.InfoChan != wmh.infochan {
 			t.Error("should be same channel")
@@ -79,7 +79,7 @@ func TestWorkerMsgHandler_buildPushBuildBundle(t *testing.T) {
 	}
 	data := <- wmh.infochan
 	if bytes.Compare(data, pushBundleInfoMsg) != 0 {
-		t.Error(util.StrFormatErrors("build data", string(pushBundleInfoMsg), string(data)))
+		t.Error(test.StrFormatErrors("build data", string(pushBundleInfoMsg), string(data)))
 	}
 }
 
@@ -99,12 +99,12 @@ func TestWorkerMsgHandler_UnmarshalAndProcess(t *testing.T) {
 		t.Fatal("no data on channel")
 	} else {
 		if w.Hash != message.CheckoutHash {
-			t.Error(util.StrFormatErrors("checkout hash", message.CheckoutHash, w.Hash))
+			t.Error(test.StrFormatErrors("checkout hash", message.CheckoutHash, w.Hash))
 		}
 	}
 	data := <- w.InfoChan
 	if bytes.Compare(data, prBundleInfoMsg) != 0 {
-		t.Error(util.StrFormatErrors("build data", "hit run pr bundle", string(data)))
+		t.Error(test.StrFormatErrors("build data", "hit run pr bundle", string(data)))
 	}
 
 
