@@ -134,7 +134,7 @@ func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.Cred
 		if remoteConfig.Vault != nil {
 			secret := make(map[string]interface{})
 			secret["clientsecret"] = adminConfig.ClientSecret
-			_, err := remoteConfig.Vault.AddUserAuthData("secret/ci/" + path, secret)
+			_, err := remoteConfig.Vault.AddUserAuthData(path, secret)
 			if err != nil {
 				return err
 			}
