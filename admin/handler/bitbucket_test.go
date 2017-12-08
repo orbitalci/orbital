@@ -11,7 +11,7 @@ import (
 
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
-	config := &models.AdminConfig{}
+	config := &models.Credentials{}
 	bb := Bitbucket{}
 	bb.SetCallbackURL("webhook-exists-url")
 	bb.SetMeUp(config, MockHttpClient{
@@ -27,7 +27,7 @@ func TestBitbucket_FindWebhooksExists(t *testing.T) {
 }
 
 func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
-	config := &models.AdminConfig{}
+	config := &models.Credentials{}
 	bb := Bitbucket{}
 	bb.SetCallbackURL("marianne-empty-callback-url")
 	bb.SetMeUp(config, MockHttpClient{
@@ -49,10 +49,10 @@ type MockHttpClient struct {
 func (mhc MockHttpClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	switch url {
 	case "empty-webhooks":
-		webhooks, _ := os.Open("testing/EmptyWebhooksResp.json")
+		webhooks, _ := os.Open("test-fixtures/EmptyWebhooksResp.json")
 		_ = mhc.Unmarshaler.Unmarshal(webhooks , unmarshalObj)
 	case "webhooks-exists":
-		webhooks, _ := os.Open("testing/WebhookExistsResp.json")
+		webhooks, _ := os.Open("test-fixtures/WebhookExistsResp.json")
 		_ = mhc.Unmarshaler.Unmarshal(webhooks, unmarshalObj)
 	}
 	return nil

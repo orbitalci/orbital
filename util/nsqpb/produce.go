@@ -4,7 +4,6 @@ import (
 	"github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
     "github.com/shankj3/ocelot/util/ocelog"
-	"sync"
 )
 
 
@@ -50,13 +49,10 @@ func (p *PbProduce) WriteToNsq(message proto.Message, topicName string) error {
 // use this to get a producer instance in your code, it will call only once. need to have global variable
 // once and cachedProducer set in your service, then pass those to this.
 // look into sync.Once if confused
-func GetInitProducer(once sync.Once, cachedProducer *PbProduce) *PbProduce {
-	once.Do(func(){
-		first, err := DefaultProducer()
-		if err != nil {
-			ocelog.IncludeErrField(err).Fatal("Producer must be initialized.")
-		}
-		cachedProducer = first
-	})
-	return cachedProducer
+func GetInitProducer() *PbProduce {
+	first, err := DefaultProducer()
+	if err != nil {
+		ocelog.IncludeErrField(err).Fatal("Producer must be initialized.")
+	}
+	return first
 }

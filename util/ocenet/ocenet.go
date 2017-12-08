@@ -41,7 +41,7 @@ type OAuthClient struct {
 }
 
 //Setup takes in OAuth2 credentials
-func (oc *OAuthClient) Setup(config *models.AdminConfig) error {
+func (oc *OAuthClient) Setup(config *models.Credentials) error {
 	var conf = clientcredentials.Config {
 		ClientID:     config.ClientId,
 		ClientSecret: config.ClientSecret,

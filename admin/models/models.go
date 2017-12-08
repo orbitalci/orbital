@@ -2,8 +2,58 @@ package models
 
 
 //TODO: get callback url from consul or something like it
-const BuildFileName = "ocelot.yml"
-const ConfigFileName = "config.yml"
+
+const (
+	BuildFileName = "ocelot.yml"
+	Key = `-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEA4OKC08dxm3Ao4dgFthKrWa/kDTOCr72eVDgOzeqEKi3rpfFH
+Q2X2Dm8lywVFqap0k2dk4PdfDf8xtXHOgvmckCGE48QmUDqIzmDb/f6VvwC1/bDZ
+EirjCfgsQNcE8Y8T1BOIq1IE6hIcufwAdmpW4JkyvcLQEGJBTMNd580SnJjX+zEP
+zApBlJMQcGOut44wHJ9RTJqKO9Ky6XL4CXEAKPXhkh0zt91FExdpm5vp52217Lrz
+yhns0vc6M+JGedoiwN8Rht6wZLtOwM7OhM6olpayBBp2sf79DIumTHiv1CCrHe1S
+xUGIFnOaKuta23aFp9o9xgKAiHI7ZmrHuMAd5QIDAQABAoIBAALvEZPfuzyy5uWj
+YtewQKoH4GrHrEHMsH8ayB6pm5XNSZC9qBdaAi7IBm8yn2kKP0EZDTjeIVBWbviW
+BoKw7Pj4Zvptua48RUKkAtq6couuX7FymDJjetjLcxBZfcgE/NY8dwD9LfE70UIf
+5oWk94MwnHfbTcmY7o8o0VXP2BlQ4uUOiQtHQr+Ir2udY9795lprgQum/Ij8y/pe
+X6kbFlQ8VDZ5EJayQ53qLxei+qEbk2ApmvY0cFxU9n167PQ3LUwGzD6MG8uXGmv8
+wT1Og8YAIV/sdj8gbldv+cCnGRAl+94P9zkl8YXR8VEY+jo9sW7cP8DuKW/0UBWu
++EnuLpUCgYEA9w+56LI9Rx/mbACOOFKw+4dd4zZ6CnzFird3zH80uML83i/Cczdl
+rKeIYghFPQr06LCuKn+2bXahBV2G3jj83M8HFjH+N2ejvKZr+rOiPClzYjgibmln
+JHqpMwxBAgPrVAGnsaTj8K4Jt4/J4/871aioh3ervJ2WhAd3susNNasCgYEA6QVi
+wybiOpeTgVDAW6G2xua9P6FYbvyhrWKuNizkuC5iRenoDriAe+wRRehZ46DTrd/V
+9MM7gYZ1GXU42DFBbIIiJ9dQ8z1/Ki3LjgjwN5MxRZm3TsTybbfQulLTdb+5+fp8
+74oCXkpVLz6F+HEP9/1+LbgOy6rbtGC6zKyfSq8CgYBKwVFpXXU5LifUih5+YFb4
+5K6971/iCHrlTDpNgDf9p9JHkH/vyNVU9qRHtWTt4YDVX5Bzf409deWm7/O9DdVF
+IsdsKdhX/14F2P1XMD9ooMou7/lLG02ANjU4Iv8QkwsDsjSBhfkKfD6ocjOOb041
+igDkbItkWPKQJIpNct3eXQKBgE1hN3m8uNViLl579VS4b9y/FMtDhf1dMUdFhLqC
+z/UFmibDVQdGZ4w/SUEgtnDroD+WHBOqnWEWyF4K2jSYrrQcxsDaNIyBuG/GQ1lI
+SJT78Rm+wOuMZUDgEJU/Ge95GoYTk1dsSfsLzhvhNFXbHcVpTXRbMbaaZ1kP4hhD
+nqYLAoGAZ6H8IyFPlB1I7ikgcw0Q26UFbiW5R93XGCwFRm7ASOPI2fV1IQ7uVrFF
+9rxVrpwPTdv9CTx8DDHl+TZRDmXKTHvlxgUo7qqtHJ92m4pbk5Wsm07DPvA4Fqap
+l1dNE1M4HaMfKE3mqYmE+9ruNXpDvd1/VvA9LHVGklO+WVqkVcE=
+-----END RSA PRIVATE KEY-----`
+	Cert = `-----BEGIN CERTIFICATE-----
+MIIDOTCCAiGgAwIBAgIBATANBgkqhkiG9w0BAQsFADBKMRIwEAYDVQQDDAlsb2Nh
+bGhvc3QxCzAJBgNVBAYTAlVTMScwJQYJKoZIhvcNAQkBFhhmZW5nLm1lbmdjaGVu
+Z0BnbWFpbC5jb20wHhcNMTcxMjAxMDczMDAwWhcNMTgxMjAxMDczMDAwWjBKMRIw
+EAYDVQQDDAlsb2NhbGhvc3QxCzAJBgNVBAYTAlVTMScwJQYJKoZIhvcNAQkBFhhm
+ZW5nLm1lbmdjaGVuZ0BnbWFpbC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+ggEKAoIBAQDg4oLTx3GbcCjh2AW2EqtZr+QNM4KvvZ5UOA7N6oQqLeul8UdDZfYO
+byXLBUWpqnSTZ2Tg918N/zG1cc6C+ZyQIYTjxCZQOojOYNv9/pW/ALX9sNkSKuMJ
++CxA1wTxjxPUE4irUgTqEhy5/AB2albgmTK9wtAQYkFMw13nzRKcmNf7MQ/MCkGU
+kxBwY663jjAcn1FMmoo70rLpcvgJcQAo9eGSHTO33UUTF2mbm+nnbbXsuvPKGezS
+9zoz4kZ52iLA3xGG3rBku07Azs6EzqiWlrIEGnax/v0Mi6ZMeK/UIKsd7VLFQYgW
+c5oq61rbdoWn2j3GAoCIcjtmase4wB3lAgMBAAGjKjAoMA4GA1UdDwEB/wQEAwIH
+gDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDATANBgkqhkiG9w0BAQsFAAOCAQEAFJxv
+iANVVKbdo786v4YRHbdDZw6WWLwakThp8v5yAzwh1r2m6kxpjOBcWb/K6DwVrtlA
+NkSWvtsqdtkVxsgNDDwEa4jd3aa15IAaOFnpwhnMp3iGz3oTIj/AvDDSOqx6WD6A
+WQSliA2uz3caJzUScGG9+elO6Qv2myYFoCw0Ej9HzivsFlf/zve8jSXg9xXoLc5O
+vHurTqlkWVTqLAtj8KpqDBTPHGv1FvyzO84CwvK15FjP14DEVM+V8I6lm2lAZMAS
+1Sk0IvFm6tlJaBw7BQYvpy3a68/BPaP3xfIfgKOgYch0CXU5AambqMUiio5e9n6b
+scnn6Djiw+Iv9xiyWA==
+-----END CERTIFICATE-----`
+	ConfigFileName = "config.yml"
+)
 
 type AdminConfig struct {
 	ClientId     string `yaml:"clientId" validate:"required"`
@@ -18,3 +68,4 @@ type ConfigYaml struct {
 }
 
 var BitbucketEvents = []string{"repo:push", "pullrequest:approved", "pullrequest:updated"}
+

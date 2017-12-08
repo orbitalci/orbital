@@ -19,7 +19,7 @@ func TestRemoteConfig_ErrorHandling(t *testing.T) {
 	if brokenRemote == nil {
 		t.Error(GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
 	}
-	err := brokenRemote.AddCreds("test", &models.AdminConfig{})
+	err := brokenRemote.AddCreds("test", &models.Credentials{})
 	if err.Error() != "not connected to consul, unable to add credentials" {
 		t.Error(GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to add credentials", err))
 	}
@@ -34,7 +34,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	testRemoteConfig, vaultListener, consulServer := testSetupVaultAndConsul(t)
 	defer teardownVaultAndConsul(vaultListener, consulServer)
 
-	adminConfig := &models.AdminConfig {
+	adminConfig := &models.Credentials {
 		ClientSecret: "top-secret",
 		ClientId: "beeswax",
 		AcctName: "mariannefeng",
@@ -89,7 +89,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(GenericStrFormatErrors("fake cred should get password", "top-secret", marianne.ClientSecret))
 	}
 
-	secondConfig := &models.AdminConfig {
+	secondConfig := &models.Credentials {
 		ClientSecret: "secret",
 		ClientId: "beeswaxxxxx",
 		AcctName: "ariannefeng",

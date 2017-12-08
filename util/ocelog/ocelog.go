@@ -50,7 +50,9 @@ func InitializeOcelog(logLevel string) {
 	} else {
 		log.SetLevel(loglevel)
 	}
-	log.SetFormatter(&log.JSONFormatter{})
+	log.SetFormatter(&log.JSONFormatter{
+		//PrettyPrint: true,
+	})
 	log.SetOutput(os.Stdout)
 }
 

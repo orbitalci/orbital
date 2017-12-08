@@ -5,39 +5,31 @@ import (
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos/out"
-
-	//"github.com/shankj3/ocelot/util/consulet"
+	"github.com/shankj3/ocelot/util"
 	"github.com/shankj3/ocelot/util/deserialize"
 	"github.com/shankj3/ocelot/util/nsqpb"
 	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/shankj3/ocelot/util/ocenet"
-	"github.com/shankj3/ocelot/util/ocevault"
 	"net/http"
 	"os"
-	"sync"
 )
 
-//var consul = consulet.Default()
-var deserializer = deserialize.New()
-
-// vault singleton
-var vaultCached *ocevault.Ocevault
-var vaultOnce sync.Once
-
-// producer singleton
-var producerCached *nsqpb.PbProduce
-var producerOnce sync.Once
-
+type HookHandlerContext struct {
+	RemoteConfig *util.RemoteConfig
+	Producer     *nsqpb.PbProduce
+	Deserializer *deserialize.Deserializer
+}
 
 // On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
-func RepoPush(w http.ResponseWriter, r *http.Request) {
+func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
-	if err := deserializer.JSONToProto(r.Body, repopush); err != nil {
+	if err := ctx.Deserializer.JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
 	fullName := repopush.Repository.FullName
 	hash := repopush.Push.Changes[0].New.Target.Hash
-	buildConf, err := GetBuildConfig(fullName, hash)
+	acctName := repopush.Repository.Owner.Username
+	buildConf, err := GetBBBuildConfig(ctx, acctName, fullName, hash)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -48,8 +40,7 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ocelog.Log().Debug("found ocelot yml")
-	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
-	token, err := vault.CreateThrowawayToken()
+	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 	}
@@ -62,20 +53,20 @@ func RepoPush(w http.ResponseWriter, r *http.Request) {
 		CheckoutHash: hash,
 	}
 	ocelog.Log().Debug("created push bundle")
-	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
-	go pbProducer.WriteToNsq(bundle, nsqpb.PushTopic)
+	go ctx.Producer.WriteToNsq(bundle, nsqpb.PushTopic)
 }
 
-func PullRequest(w http.ResponseWriter, r *http.Request) {
+func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
-	if err := deserializer.JSONToProto(r.Body, pr); err != nil {
+	if err := ctx.Deserializer.JSONToProto(r.Body, pr); err != nil {
 		ocelog.IncludeErrField(err).Error("could not parse request body into pb.PullRequest")
 		return
 	}
 	fullName := pr.Pullrequest.Source.Repository.FullName
 	hash := pr.Pullrequest.Source.Commit.Hash
+	acctName := pr.Pullrequest.Source.Repository.Owner.Username
 
-	buildConf, err := GetBuildConfig(fullName, hash)
+	buildConf, err := GetBBBuildConfig(ctx, acctName, fullName, hash)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -86,29 +77,31 @@ func PullRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// get one-time token use for access to vault
-	vault := ocevault.GetInitVault(vaultOnce, vaultCached)
-	token, err := vault.CreateThrowawayToken()
+	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
 	// create bundle, send that s*** off!
 	bundle := &pb.PRBuildBundle{
-		Config:     buildConf,
-		PrData:     pr,
-		VaultToken: token,
+		Config:       buildConf,
+		PrData:       pr,
+		VaultToken:   token,
 		CheckoutHash: hash,
 	}
-	pbProducer := nsqpb.GetInitProducer(producerOnce, producerCached)
-	go pbProducer.WriteToNsq(bundle, nsqpb.PRTopic)
+	go ctx.Producer.WriteToNsq(bundle, nsqpb.PRTopic)
 
 }
 
-func HandleBBEvent(w http.ResponseWriter, r *http.Request) {
+func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
+	handlerCtx := ctx.(*HookHandlerContext)
+
 	switch r.Header.Get("X-Event-Key") {
-	case "repo:push":  RepoPush(w, r)
+	case "repo:push":
+		RepoPush(handlerCtx, w, r)
 	case "pullrequest:created",
-	     "pullrequest:updated": PullRequest(w, r)
+		"pullrequest:updated":
+		PullRequest(handlerCtx, w, r)
 	default:
 		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -116,9 +109,8 @@ func HandleBBEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 // for testing
-// irl... use vault
-func getCredConfig() models.AdminConfig {
-	return models.AdminConfig{
+func getCredConfig() *models.Credentials {
+	return &models.Credentials{
 		ClientId:     "QEBYwP5cKAC3ykhau4",
 		ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
 		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",
@@ -126,13 +118,15 @@ func getCredConfig() models.AdminConfig {
 	}
 }
 
-func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
-	cfg := getCredConfig()
+func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
+	//cfg := getCredConfig()
+	bbCreds, err := ctx.RemoteConfig.GetCredAt(util.ConfigPath+"/bitbucket/"+acctName, false)
+	cfg := bbCreds["bitbucket/"+acctName]
 	bb := handler.Bitbucket{}
 	bbClient := &ocenet.OAuthClient{}
-	bbClient.Setup(&cfg)
+	bbClient.Setup(cfg)
 
-	bb.SetMeUp(&cfg, bbClient)
+	bb.SetMeUp(cfg, bbClient)
 	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return
@@ -141,12 +135,11 @@ func GetBuildConfig(repoFullName string, checkoutCommit string) (conf *pb.BuildC
 	if err != nil {
 		return
 	}
-	if err = deserializer.YAMLToProto(fileBitz, conf); err != nil {
+	if err = ctx.Deserializer.YAMLToProto(fileBitz, conf); err != nil {
 		return
 	}
 	return
 }
-
 
 func main() {
 	ocelog.InitializeOcelog(ocelog.GetFlags())
@@ -156,15 +149,22 @@ func main() {
 		port = "8088"
 		ocelog.Log().Warning("running on default port :8088")
 	}
-	// initialize vault on startup, we want to know right away if we don't have the creds we need.
-	_ = ocevault.GetInitVault(vaultOnce, vaultCached)
-	// same goes for nsq producer
-	_ = nsqpb.GetInitProducer(producerOnce, producerCached)
+
+	remoteConfig, err := util.GetInstance("", 0, "")
+	if err != nil {
+		ocelog.Log().Fatal(err)
+	}
+
+	hookHandlerContext := &HookHandlerContext{
+		RemoteConfig: remoteConfig,
+		Deserializer: deserialize.New(),
+		Producer:     nsqpb.GetInitProducer(),
+	}
 
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e
-	muxi.HandleFunc("/bitbucket", HandleBBEvent).Methods("POST")
+	muxi.Handle("/bitbucket", &ocenet.AppContextHandler{hookHandlerContext, HandleBBEvent}).Methods("POST")
 
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 	n := ocenet.InitNegroni("hookhandler", muxi)

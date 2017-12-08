@@ -3,9 +3,21 @@ syntax = "proto3";
 package models;
 
 import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
 
 service GuideOcelot {
-    rpc GetCreds(google.protobuf.Empty) returns (CredWrapper) {}
+    rpc GetCreds(google.protobuf.Empty) returns (CredWrapper) {
+        option (google.api.http) = {
+			get: "/v1/creds"
+		};
+    }
+
+    rpc SetCreds(Credentials) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			post: "/v1/creds"
+			body: "*"
+		};
+    }
 }
 
 message CredWrapper {

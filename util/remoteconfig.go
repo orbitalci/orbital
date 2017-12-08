@@ -54,8 +54,8 @@ type RemoteConfig struct {
 //if hideSecret is set to false, will return password in cleartext
 //key of map is CONFIG_TYPE/ACCTNAME. Ex: bitbucket/mariannefeng
 //if an error occurs while reading from vault, the most recent error will be returned from the response
-func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[string]*models.AdminConfig, error) {
-	creds := map[string]*models.AdminConfig{}
+func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[string]*models.Credentials, error) {
+	creds := map[string]*models.Credentials{}
 	var err error
 
 	if remoteConfig.Consul.Connected {
@@ -75,7 +75,7 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[s
 			mapKey := credType + "/" + acctName
 			foundConfig, ok := creds[mapKey]
 			if !ok {
-				foundConfig = &models.AdminConfig{
+				foundConfig = &models.Credentials{
 					AcctName: acctName,
 					Type:     credType,
 				}
@@ -112,7 +112,6 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[s
 
 //GetPassword will return to you the vault password at specified path
 func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
-	path = "secret/ci/" + path
 	authData, err := remoteConfig.Vault.GetUserAuthData(path)
 	if err != nil {
 		return "", err
@@ -121,7 +120,7 @@ func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
 }
 
 //AddCreds adds your adminconfig creds into both consul + vault
-func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.AdminConfig) error {
+func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.Credentials) error {
 	if remoteConfig.Consul.Connected {
 		err := remoteConfig.Consul.AddKeyValue(path+"/clientid", []byte(adminConfig.ClientId))
 		if err != nil {
@@ -134,7 +133,7 @@ func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.Admi
 		if remoteConfig.Vault != nil {
 			secret := make(map[string]interface{})
 			secret["clientsecret"] = adminConfig.ClientSecret
-			_, err := remoteConfig.Vault.AddUserAuthData("secret/ci/" + path, secret)
+			_, err := remoteConfig.Vault.AddUserAuthData(path, secret)
 			if err != nil {
 				return err
 			}

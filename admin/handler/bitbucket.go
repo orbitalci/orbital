@@ -21,12 +21,12 @@ type Bitbucket struct {
 	Client    ocenet.HttpClient
 	Marshaler jsonpb.Marshaler
 
-	credConfig	*models.AdminConfig
+	credConfig	*models.Credentials
 	isInitialized	bool
 }
 
 // Takes in admin config creds, returns any errors that may happen during setup
-func (bb *Bitbucket) SetMeUp(adminConfig *models.AdminConfig, client ocenet.HttpClient) error {
+func (bb *Bitbucket) SetMeUp(adminConfig *models.Credentials, client ocenet.HttpClient) error {
 	bb.Client = client
 	bb.Marshaler = jsonpb.Marshaler{}
 	bb.credConfig = adminConfig
