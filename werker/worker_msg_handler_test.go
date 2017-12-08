@@ -2,10 +2,9 @@ package werker
 
 import (
 	"bytes"
-	"github.com/golang/protobuf/proto"
-	"github.com/shankj3/ocelot/protos/out"
 	"testing"
 	"bitbucket.org/level11consulting/go-til/test"
+	"encoding/gob"
 )
 
 func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
@@ -40,7 +39,7 @@ func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
 }
 
 func TestWorkerMsgHandler_buildPRBuildBundle(t *testing.T) {
-	msg := &protos.PRBuildBundle{
+	msg := &WerkerTask{
 		CheckoutHash: "1231231231234",
 	}
 	wmh := testGetWorkerMsgHandler(t, "testbuild")
@@ -62,7 +61,7 @@ func TestWorkerMsgHandler_buildPRBuildBundle(t *testing.T) {
 }
 
 func TestWorkerMsgHandler_buildPushBuildBundle(t *testing.T) {
-	msg := &protos.PushBuildBundle{
+	msg := &WerkerTask{
 		CheckoutHash: "321321321321",
 	}
 	wmh := testGetWorkerMsgHandler(t, "testpushbuild")
@@ -83,18 +82,53 @@ func TestWorkerMsgHandler_buildPushBuildBundle(t *testing.T) {
 	}
 }
 
-func TestWorkerMsgHandler_UnmarshalAndProcess(t *testing.T) {
-	wmh := testGetWorkerMsgHandler(t, "pr")
-	message := &protos.PRBuildBundle{
-		VaultToken:    "test vault token",
+func TestMyTheory(t *testing.T) {
+	message := WerkerTask {
+		VaultToken: "test vault token",
 		CheckoutHash:  "test hash",
-		PrData:        &protos.PullRequest{},
 	}
-	bytez, err := proto.Marshal(message)
+
+	var buf bytes.Buffer
+
+	enc := gob.NewEncoder(&buf)
+	gob.Register(message)
+	err := enc.Encode(message)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	werkerBytes := buf.Bytes()
+	var decoderBuf bytes.Buffer
+
+	dec := gob.NewDecoder(&decoderBuf)
+	err = dec.Decode(&werkerBytes)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(decoderBuf.Bytes()) == 0 {
+		t.Error("dear god you suck")
+	}
+}
+
+func TestWorkerMsgHandler_UnmarshalAndProcess(t *testing.T) {
+	wmh := testGetWorkerMsgHandler(t, "build")
+	message := WerkerTask {
+		VaultToken: "test vault token",
+		CheckoutHash:  "test hash",
+	}
+
+	var buf bytes.Buffer
+
+	enc := gob.NewEncoder(&buf)
+	gob.Register(message)
+	err := enc.Encode(message)
+
 	if err != nil {
 		t.Fatal(err)
 	}
-	go wmh.UnmarshalAndProcess(bytez)
+	go wmh.UnmarshalAndProcess(buf.Bytes())
 	w, ok := <-wmh.ChanChan; if !ok {
 		t.Fatal("no data on channel")
 	} else {
@@ -109,7 +143,7 @@ func TestWorkerMsgHandler_UnmarshalAndProcess(t *testing.T) {
 
 
 	// unhappy path
-	bytez = []byte("oh hey there, this is useless garbage data!! how nice!!")
+	bytez := []byte("oh hey there, this is useless garbage data!! how nice!!")
 	err = wmh.UnmarshalAndProcess(bytez)
 	if err == nil {
 		t.Error("should not pass unmarshaling")

@@ -42,15 +42,15 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
 
 	var buf bytes.Buffer
-	var werkerTask WerkerTask
-	enc := gob.NewDecoder(&buf)
-	err := enc.Decode(werkerTask)
+	werkerTask := &WerkerTask{}
+	dec := gob.NewDecoder(&buf)
+	err := dec.Decode(werkerTask)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return nil
 	}
 
-	go w.build(&werkerTask)
+	go w.build(werkerTask)
 	return nil
 }
 
@@ -66,7 +66,6 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 func (w *WorkerMsgHandler) build(werk *WerkerTask) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.WatchForResults(werk.CheckoutHash)
-	//TODO: figure out how to get output to put onto infochan
 	pipe, err := server.NewPipeline(nil, werk.Pipe)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("error building new pipeline")

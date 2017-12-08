@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "bitbucket.org/level11consulting/go-til"
+  packages = ["consul","deserialize","log","net","nsqpb","test","vault"]
+  revision = "75119befb8674a1f208d24ae920274d4685ae492"
+
+[[projects]]
   name = "github.com/Jeffail/gabs"
   packages = ["."]
   revision = "2a3aa15961d5fee6047b8151b67ac2f08ba2c48c"
@@ -231,12 +237,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/meatballhat/negroni-logrus"
-  packages = ["."]
-  revision = "31067281800f66f57548a7a32d9c6c5f963fef83"
-
-[[projects]]
-  branch = "master"
   name = "github.com/mgutz/ansi"
   packages = ["."]
   revision = "9520e82c474b0a04dd04f8a40959027271bab992"
@@ -400,6 +400,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "25b8a562b58a7dfbcb8fe8603de524d63a1418cb319643d258170ac4a03d26ee"
+  inputs-digest = "928671115919fbc7b462fb09ee83b90cee88a4baece00022249faa827bb84835"
   solver-name = "gps-cdcl"
   solver-version = 1
