@@ -7,7 +7,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/shankj3/ocelot/admin/models"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	pb "github.com/shankj3/ocelot/protos/out"
+	pb "github.com/shankj3/ocelot/protos"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 )
 

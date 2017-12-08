@@ -3,7 +3,6 @@ package werker
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	d "bitbucket.org/level11consulting/go-til/deserialize"
-	"leveler/server"
 	"bytes"
 	"encoding/gob"
 	"bufio"
@@ -26,11 +25,11 @@ type WorkerMsgHandler struct {
 	Deserializer d.Deserializer
 }
 
-type WerkerTask struct {
-	VaultToken   string
-	CheckoutHash string
-	Pipe         *server.PipelineConfig
-}
+//type WerkerTask struct {
+//	VaultToken   string
+//	CheckoutHash string
+//	Pipe         *server.PipelineConfig
+//}
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
