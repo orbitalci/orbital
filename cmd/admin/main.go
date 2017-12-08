@@ -27,7 +27,7 @@ func main() {
 	ocelog.Log().Debug(serverRunsAt)
 
 	//TODO: this is my local vault root token, too lazy to set env variable
-	configInstance, err := util.GetInstance(consulHost, consulPort, "0175e9be-9917-a01f-cd65-b412f55ec545")
+	configInstance, err := util.GetInstance(consulHost, consulPort, "")
 
 	if err != nil {
 		ocelog.Log().Fatal("could not talk to consul or vault, bailing")
