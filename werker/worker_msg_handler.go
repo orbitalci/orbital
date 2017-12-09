@@ -26,12 +26,6 @@ type WorkerMsgHandler struct {
 	Deserializer d.Deserializer
 }
 
-//type WerkerTask struct {
-//	VaultToken   string
-//	CheckoutHash string
-//	Pipe         *server.PipelineConfig
-//}
-
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	ocelog.Log().Debug("unmarshaling build obj and processing")
