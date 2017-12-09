@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"testing"
 	"bitbucket.org/level11consulting/go-til/test"
+	pb "github.com/shankj3/ocelot/protos"
 	"encoding/gob"
+
 )
 
 func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
@@ -39,7 +41,7 @@ func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
 }
 
 func TestWorkerMsgHandler_buildPRBuildBundle(t *testing.T) {
-	msg := &WerkerTask{
+	msg := &pb.WerkerTask{
 		CheckoutHash: "1231231231234",
 	}
 	wmh := testGetWorkerMsgHandler(t, "testbuild")
@@ -61,7 +63,7 @@ func TestWorkerMsgHandler_buildPRBuildBundle(t *testing.T) {
 }
 
 func TestWorkerMsgHandler_buildPushBuildBundle(t *testing.T) {
-	msg := &WerkerTask{
+	msg := &pb.WerkerTask{
 		CheckoutHash: "321321321321",
 	}
 	wmh := testGetWorkerMsgHandler(t, "testpushbuild")
@@ -83,7 +85,7 @@ func TestWorkerMsgHandler_buildPushBuildBundle(t *testing.T) {
 }
 
 func TestMyTheory(t *testing.T) {
-	message := WerkerTask {
+	message := pb.WerkerTask {
 		VaultToken: "test vault token",
 		CheckoutHash:  "test hash",
 	}
@@ -114,7 +116,7 @@ func TestMyTheory(t *testing.T) {
 
 func TestWorkerMsgHandler_UnmarshalAndProcess(t *testing.T) {
 	wmh := testGetWorkerMsgHandler(t, "build")
-	message := WerkerTask {
+	message := pb.WerkerTask {
 		VaultToken: "test vault token",
 		CheckoutHash:  "test hash",
 	}

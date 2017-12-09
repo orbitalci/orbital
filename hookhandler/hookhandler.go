@@ -4,7 +4,7 @@ import (
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
 	pb "github.com/shankj3/ocelot/protos"
-	res "github.com/shankj3/ocelot/protos/leveler_resources"
+	res "bitbucket.org/level11consulting/leveler_resources"
 	"github.com/shankj3/ocelot/util/cred"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	ocelog "bitbucket.org/level11consulting/go-til/log"

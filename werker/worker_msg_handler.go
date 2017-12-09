@@ -3,10 +3,11 @@ package werker
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	d "bitbucket.org/level11consulting/go-til/deserialize"
-	"bytes"
-	"encoding/gob"
+	pb "github.com/shankj3/ocelot/protos"
 	"bufio"
 	"log"
+	"leveler/server"
+	"github.com/golang/protobuf/proto"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -34,21 +35,16 @@ type WorkerMsgHandler struct {
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	ocelog.Log().Debug("unmarshaling build obj and processing")
-
+	werkerTask := &pb.WerkerTask{}
+	if err := proto.Unmarshal(msg, werkerTask); err != nil {
+		ocelog.IncludeErrField(err).Warning("unmarshal error")
+		return err
+	}
 	// channels get closed after the build finishes
 	w.infochan = make(chan []byte)
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
-
-	var buf bytes.Buffer
-	werkerTask := &WerkerTask{}
-	dec := gob.NewDecoder(&buf)
-	err := dec.Decode(werkerTask)
-	if err != nil {
-		ocelog.IncludeErrField(err).Error()
-		return nil
-	}
-
+	// do the thing
 	go w.build(werkerTask)
 	return nil
 }
@@ -62,7 +58,7 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 
 // build contains the logic for actually building. switches on type of proto message that was sent
 // over the nsq queue
-func (w *WorkerMsgHandler) build(werk *WerkerTask) {
+func (w *WorkerMsgHandler) build(werk *pb.WerkerTask) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.WatchForResults(werk.CheckoutHash)
 	pipe, err := server.NewPipeline(nil, werk.Pipe)
