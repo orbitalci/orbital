@@ -2,7 +2,7 @@ syntax = "proto3";
 package protos;
 
 import "webhook.proto";
-import "leveler_resources/protos/pipeline.proto";
+import "pipeline.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {

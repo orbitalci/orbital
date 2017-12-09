@@ -43,7 +43,7 @@ package protos
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import protos2 "."
+import protos2 "github.com/shankj3/ocelot/protos/leveler_resources"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
