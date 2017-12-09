@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"strings"
 	"bitbucket.org/level11consulting/go-til/deserialize"
-	"github.com/go-errors/errors"
+	"errors"
 )
 
 type HookHandlerContext struct {

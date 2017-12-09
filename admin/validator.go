@@ -2,7 +2,7 @@ package admin
 
 import (
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/pkg/errors"
+	"errors"
 )
 
 //validator for all admin related stuff
