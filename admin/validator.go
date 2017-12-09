@@ -15,16 +15,16 @@ func GetValidator() *AdminValidator {
 //validates config and returns json formatted error
 func(adminValidator AdminValidator) ValidateConfig(adminCreds *models.Credentials) (error) {
 	if len(adminCreds.AcctName) == 0 {
-		return errors.New("acctName must contain at least one letter")
+		return errors.New("acctName is required")
 	}
 	if len(adminCreds.ClientId) == 0 {
-		return errors.New("clientId must contain at least one letter")
+		return errors.New("clientId is required")
 	}
 	if len(adminCreds.ClientSecret) == 0 {
-		return errors.New("clientSecret must contain at least one letter")
+		return errors.New("clientSecret is required")
 	}
 	if len(adminCreds.TokenURL) == 0 {
-		return errors.New("tokenURL must contain at least one letter")
+		return errors.New("tokenURL is required")
 	}
 	switch adminCreds.Type {
 	case "bitbucket":
