@@ -1,7 +1,7 @@
 package werker
 
 import (
-	"github.com/shankj3/ocelot/protos/out"
+	"github.com/shankj3/ocelot/protos"
 	"github.com/shankj3/ocelot/util/storage"
 	"testing"
 )

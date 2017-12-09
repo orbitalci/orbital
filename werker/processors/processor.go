@@ -1,7 +1,7 @@
 package processors
 
 import (
-	"github.com/shankj3/ocelot/protos/out"
+	"github.com/shankj3/ocelot/protos"
 )
 
 type Processor interface {

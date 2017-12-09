@@ -2,7 +2,7 @@ package hookhandler
 
 import (
 	"testing"
-	pb "github.com/shankj3/ocelot/protos/out"
+	pb "github.com/shankj3/ocelot/protos"
 	"fmt"
 	"bitbucket.org/level11consulting/go-til/test"
 )
