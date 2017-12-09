@@ -8,6 +8,12 @@
   revision = "75119befb8674a1f208d24ae920274d4685ae492"
 
 [[projects]]
+  branch = "master"
+  name = "bitbucket.org/level11consulting/leveler_resources"
+  packages = ["."]
+  revision = "6867c19ad6a6857ed1247b6db4a0532428bff98b"
+
+[[projects]]
   name = "github.com/Jeffail/gabs"
   packages = ["."]
   revision = "2a3aa15961d5fee6047b8151b67ac2f08ba2c48c"
@@ -400,6 +406,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "928671115919fbc7b462fb09ee83b90cee88a4baece00022249faa827bb84835"
+  inputs-digest = "dad5919aa99a57ef0f0208cad6a43270d68d0e1602065e5242f9ee3c56bcd051"
   solver-name = "gps-cdcl"
   solver-version = 1

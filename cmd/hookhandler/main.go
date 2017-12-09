@@ -1,4 +1,4 @@
-package hookhandler
+package main
 
 import (
 	"os"

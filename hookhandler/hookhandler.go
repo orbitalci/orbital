@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strings"
 	"bitbucket.org/level11consulting/go-til/deserialize"
+	"github.com/go-errors/errors"
 )
 
 type HookHandlerContext struct {
@@ -130,6 +131,11 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, erro
 				kickOffEnvs[envKey] = envVal
 			}
 		}
+	}
+
+	//TODO: where to store failed builds
+	if len(kickOffCmd) == 0 {
+		return nil, errors.New("You must have at least one stage populated to trigger a build")
 	}
 
 	//TODO: figure out what to do about the rest of the stages

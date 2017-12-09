@@ -26,7 +26,6 @@ func main() {
 	serverRunsAt := fmt.Sprintf("localhost:%v", port)
 	ocelog.Log().Debug(serverRunsAt)
 
-	//TODO: this is my local vault root token, too lazy to set env variable
 	configInstance, err := cred.GetInstance(consulHost, consulPort, "")
 
 	if err != nil {
