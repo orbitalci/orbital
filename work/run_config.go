@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"github.com/shankj3/ocelot/util/ocelog"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"net/http"
 	"time"
 )

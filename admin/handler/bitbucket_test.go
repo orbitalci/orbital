@@ -1,12 +1,12 @@
 package handler
 
 import (
+	"os"
 	"testing"
 	"github.com/shankj3/ocelot/admin/models"
 	"github.com/golang/protobuf/proto"
-	"github.com/shankj3/ocelot/util"
 	"github.com/golang/protobuf/jsonpb"
-	"os"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 
@@ -22,7 +22,7 @@ func TestBitbucket_FindWebhooksExists(t *testing.T) {
 
 	results := bb.FindWebhooks("webhooks-exists")
 	if !results {
-		t.Error(util.GenericStrFormatErrors("webhook exists", true, results))
+		t.Error(test.GenericStrFormatErrors("webhook exists", true, results))
 	}
 }
 
@@ -38,7 +38,7 @@ func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
 
 	results := bb.FindWebhooks("empty-webhooks")
 	if results {
-		t.Error(util.GenericStrFormatErrors("no webhook yet", false, results))
+		t.Error(test.GenericStrFormatErrors("no webhook yet", false, results))
 	}
 }
 

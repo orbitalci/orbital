@@ -1,8 +1,8 @@
 package processors
 
 import (
-	"github.com/shankj3/ocelot/protos/out"
-	"github.com/shankj3/ocelot/util/ocelog"
+	"github.com/shankj3/ocelot/protos"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"time"
 )
 

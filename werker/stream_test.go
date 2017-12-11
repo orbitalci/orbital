@@ -3,14 +3,14 @@ package werker
 import (
 	"bufio"
 	"bytes"
-	"github.com/shankj3/ocelot/util"
-	"github.com/shankj3/ocelot/util/consulet"
-	"github.com/shankj3/ocelot/util/ocenet"
+	consulet "bitbucket.org/level11consulting/go-til/consul"
+	ocenet"bitbucket.org/level11consulting/go-til/net"
 	"github.com/shankj3/ocelot/util/storage"
 	"github.com/shankj3/ocelot/werker/protobuf"
 	"google.golang.org/grpc"
 	"testing"
 	"time"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 var testData = [][]byte{
@@ -55,7 +55,7 @@ func Test_iterateOverBuildData(t *testing.T) {
 		stream = append(stream, dat)
 	}
 	iterateOverBuildData(stream, ws)
-	if !util.CompareByteArrays(ws.MsgData, testData) {
+	if !test.CompareByteArrays(ws.MsgData, testData) {
 		t.Errorf("arrays not the same. expected: %v, actual: %v", testData, ws.MsgData)
 	}
 	var streamGrpc [][]byte
@@ -64,7 +64,7 @@ func Test_iterateOverBuildData(t *testing.T) {
 		streamGrpc = append(streamGrpc, datum)
 	}
 	iterateOverBuildData(streamGrpc, grp)
-	if !util.CompareStringArrays(grp.testData, stringTestData) {
+	if !test.CompareStringArrays(grp.testData, stringTestData) {
 		t.Errorf("arrays not same for grpc. expected: %s, actual: %s", stringTestData, grp.testData)
 	}
 }
@@ -82,7 +82,7 @@ func Test_streamFromArray(t *testing.T) {
 	}
 	go streamFromArray(buildInfo, ws)
 	time.Sleep(1 * time.Second)
-	if !util.CompareByteArrays(testData[:fstIndex], ws.MsgData) {
+	if !test.CompareByteArrays(testData[:fstIndex], ws.MsgData) {
 		t.Errorf("first slices not the same. expected: %v, actual: %v", testData[:fstIndex],  buildInfo.buildData)
 	}
 	for _, data := range testData[fstIndex:secIndex] {
@@ -91,23 +91,24 @@ func Test_streamFromArray(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	middleTest := testData[:secIndex]
 	middleActual := buildInfo.buildData[:secIndex]
-	if !util.CompareByteArrays(middleTest, middleActual) {
+	if !test.CompareByteArrays(middleTest, middleActual) {
 		t.Errorf("second slices not the same. expected: %v, actual: %v", testData, buildInfo.buildData[:secIndex])
 	}
 	for _, data := range testData[secIndex:] {
 		buildInfo.buildData = append(buildInfo.buildData, data)
 	}
-	if !util.CompareByteArrays(testData, buildInfo.buildData) {
+	if !test.CompareByteArrays(testData, buildInfo.buildData) {
 		t.Errorf("full arrays not the same. expected: %v, actual: %v", testData, buildInfo.buildData)
 	}
 }
 
 func Test_writeInfoChanToInMemMap(t *testing.T) {
 	trans := &Transport{"FOR_TESTING", make(chan []byte)}
+	werkerConsulet, _ := consulet.Default()
 	ctx := &werkerStreamer{
 		buildInfo: make(map[string]*buildDatum),
 		storage: storage.NewFileBuildStorage(""),
-		consul: consulet.Default(),
+		consul: werkerConsulet,
 	}
 	middleIndex := 6
 	go writeInfoChanToInMemMap(trans, ctx)
@@ -115,14 +116,14 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 		trans.InfoChan <- data
 	}
 	time.Sleep(100)
-	if !util.CompareByteArrays(testData[:middleIndex], ctx.buildInfo[trans.Hash].buildData) {
+	if !test.CompareByteArrays(testData[:middleIndex], ctx.buildInfo[trans.Hash].buildData) {
 		t.Errorf("middle slice not the same. expected: %v, actual: %v", testData[:middleIndex], ctx.buildInfo[trans.Hash].buildData)
 	}
 	for _, data := range testData[middleIndex:] {
 		trans.InfoChan <- data
 	}
 	time.Sleep(100)
-	if !util.CompareByteArrays(testData, ctx.buildInfo[trans.Hash].buildData) {
+	if !test.CompareByteArrays(testData, ctx.buildInfo[trans.Hash].buildData) {
 		t.Errorf("full slice not the same. expected: %v, actual: %v", testData, ctx.buildInfo[trans.Hash].buildData)
 	}
 	close(trans.InfoChan)
@@ -142,7 +143,7 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	for sc.Scan() {
 		actualData = append(actualData, sc.Bytes())
 	}
-	if !util.CompareByteArrays(testData, actualData) {
+	if !test.CompareByteArrays(testData, actualData) {
 		t.Errorf("bytes from storage not same as testdata. expected: %v, actual: %v", testData, actualData)
 	}
 	// remove stored test data

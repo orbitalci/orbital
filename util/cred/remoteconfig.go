@@ -1,11 +1,11 @@
-package util
+package cred
 
 import (
 	"fmt"
 	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/util/consulet"
-	"github.com/shankj3/ocelot/util/ocelog"
-	"github.com/shankj3/ocelot/util/ocevault"
+	"bitbucket.org/level11consulting/go-til/consul"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	ocevault "bitbucket.org/level11consulting/go-til/vault"
 	"strings"
 	"github.com/pkg/errors"
 )
@@ -20,10 +20,19 @@ func GetInstance(consulHost string, consulPort int, token string) (*RemoteConfig
 
 	//intialize consul
 	if consulHost == "" && consulPort == 0 {
-		remoteConfig.Consul = consulet.Default()
+		consulet, err := consul.Default()
+		if err != nil  {
+			return nil, err
+		}
+		remoteConfig.Consul = consulet
 	} else {
-		remoteConfig.Consul = consulet.New(consulHost, consulPort)
+		consulet, err := consul.New(consulHost, consulPort)
+		remoteConfig.Consul = consulet
+		if err != nil  {
+			return nil, err
+		}
 	}
+
 
 	//initialize vault
 	if token == "" {
@@ -46,8 +55,8 @@ func GetInstance(consulHost string, consulPort int, token string) (*RemoteConfig
 //RemoteConfig is an abstraction for retrieving/setting creds for ocelot
 //currently uses consul + vault
 type RemoteConfig struct {
-	Consul *consulet.Consulet
-	Vault  *ocevault.Ocevault
+	Consul *consul.Consulet
+	Vault  *ocevault.Vaulty
 }
 
 //GetCredAt will return list of credentials stored at specified path.

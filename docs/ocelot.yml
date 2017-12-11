@@ -1,19 +1,28 @@
+# how do we have them specify build tool they're using
 image: java:1.8
-dockerPackages: # apt-get install
-  - maven<v>
-  - blah
-beforeStages:
+
+build_tool: maven # see if google's yaml library will convert this (also need to give accepted list)
+
+branches: # default behavior needs to be appropriate documented inside of docs
+  - master
+  - something else
+
+env:
+  TEST: 1
+
+before:
   script:
     - sh echo "hello"
-afterStages:
-  env:
-    - BUILD_DEBUG=0
-  script:
-    - sh echo "goodbye"
 
-build: 
+build:
   env:
-    - BUILD_DEBUG=1
-    - SEARCH_URL=https://google.com
+    BUILD_DEBUG: 1
+    SEARCH_URL: https://google.com
   script:
     - echo "hello1"
+
+after:
+  env:
+    BUILD_DEBUG: 0
+  script:
+    - sh echo "goodbye"

@@ -1,26 +1,30 @@
-package main
+package hookhandler
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/shankj3/ocelot/admin/handler"
 	"github.com/shankj3/ocelot/admin/models"
-	pb "github.com/shankj3/ocelot/protos/out"
-	"github.com/shankj3/ocelot/util"
-	"github.com/shankj3/ocelot/util/deserialize"
-	"github.com/shankj3/ocelot/util/nsqpb"
-	"github.com/shankj3/ocelot/util/ocelog"
-	"github.com/shankj3/ocelot/util/ocenet"
+	pb "github.com/shankj3/ocelot/protos"
+	res "bitbucket.org/level11consulting/leveler_resources"
+	"github.com/shankj3/ocelot/util/cred"
+	"bitbucket.org/level11consulting/go-til/nsqpb"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"net/http"
-	"os"
+	"strings"
+	"bitbucket.org/level11consulting/go-til/deserialize"
+	"errors"
 )
 
 type HookHandlerContext struct {
-	RemoteConfig *util.RemoteConfig
+	RemoteConfig *cred.RemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
 }
 
-// On receive of repo push, marshal the json to an object then write the important fields to protobuf Message on NSQ queue.
+//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
+//tODO: branch inside of ocelot.yml
+//TODO: what data do we have to store/do we need to store?
+// On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
 	if err := ctx.Deserializer.JSONToProto(r.Body, repopush); err != nil {
@@ -39,23 +43,12 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
-	ocelog.Log().Debug("found ocelot yml")
-	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
-	}
-	// instead, add to topic. each worker gets a topic off a channel,
-	// so one worker to one channel
-	bundle := &pb.PushBuildBundle{
-		Config:       buildConf,
-		PushData:     repopush,
-		VaultToken:   token,
-		CheckoutHash: hash,
-	}
-	ocelog.Log().Debug("created push bundle")
-	go ctx.Producer.WriteToNsq(bundle, nsqpb.PushTopic)
+	tellWerker(ctx, buildConf, hash)
 }
 
+//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
+//tODO: branch inside of ocelot.yml
+// On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
 	if err := ctx.Deserializer.JSONToProto(r.Body, pr); err != nil {
@@ -76,21 +69,98 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
 		return
 	}
+	tellWerker(ctx, buildConf, hash)
+}
+
+func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string) {
 	// get one-time token use for access to vault
 	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
-	// create bundle, send that s*** off!
-	bundle := &pb.PRBuildBundle{
-		Config:       buildConf,
-		PrData:       pr,
+
+	pipeConfig, err := werk(*buildConf, hash)
+
+	werkerTask := &pb.WerkerTask{
 		VaultToken:   token,
 		CheckoutHash: hash,
+		Pipe:         pipeConfig,
 	}
-	go ctx.Producer.WriteToNsq(bundle, nsqpb.PRTopic)
 
+	go ctx.Producer.WriteProto(werkerTask, "docker")
+}
+
+//TODO: state = not started = to be stored inside of postgres (db interface is gonna be inside of go-til)
+//this just builds the pipeline config, worker will call NewPipeline with the pipeline config and run
+func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, error) {
+	//TODO: example input for job? What should be passed to list of strings?
+	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
+	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code)
+		// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
+	//TODO: we might be able to actually create an image and use input/outputs for the packages part?
+
+	jobMap := make(map[string]*res.JobConfig)
+
+	var kickOffCmd []string
+	var kickOffEnvs = make(map[string]string)
+	var buildImage string
+
+	if oceConfig.Image != "" {
+		buildImage = oceConfig.Image
+	} else if len(oceConfig.Packages) > 0 {
+		buildImage = "TODO PARSE THIS AND PUSH TO ARTIFACT REPO"
+		//TODO: build image and store it somewhere. OH! NEXUS! oh shit we need nexus int. now
+	}
+
+	if oceConfig.Before != nil {
+		if oceConfig.Before.Script != nil {
+			kickOffCmd = append(kickOffCmd, oceConfig.Before.Script...)
+		}
+
+		//combine optional before env values if passed
+		if oceConfig.Before.Env != nil {
+			for envKey, envVal := range oceConfig.Before.Env {
+				kickOffEnvs[envKey] = envVal
+			}
+		}
+	}
+
+	if oceConfig.Build != nil {
+		if oceConfig.Build.Script != nil {
+			kickOffCmd = append(kickOffCmd, oceConfig.Build.Script...)
+		}
+
+		//combine optional before env values if passed
+		if oceConfig.Build.Env != nil {
+			for envKey, envVal := range oceConfig.Build.Env {
+				kickOffEnvs[envKey] = envVal
+			}
+		}
+	}
+
+	//TODO: where to store failed builds
+	if len(kickOffCmd) == 0 {
+		return nil, errors.New("You must have at least one stage populated to trigger a build")
+	}
+
+	//create a settings.xml maven file that takes in nexus and/or something else creds
+
+
+	//TODO: figure out what to do about the rest of the stages
+	job := &res.JobConfig{
+		Command: strings.Join(kickOffCmd, " && "),
+		Env:     kickOffEnvs,
+		Image:   buildImage,
+	}
+
+	jobMap[gitCommit] = job
+
+	pipeConfig := &res.PipelineConfig{
+		Steps: jobMap,
+		GlobalEnv: oceConfig.Env,
+	}
+	return pipeConfig, nil
 }
 
 func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
@@ -120,7 +190,7 @@ func getCredConfig() *models.Credentials {
 
 func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	//cfg := getCredConfig()
-	bbCreds, err := ctx.RemoteConfig.GetCredAt(util.ConfigPath+"/bitbucket/"+acctName, false)
+	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath+"/bitbucket/"+acctName, false)
 	cfg := bbCreds["bitbucket/"+acctName]
 	bb := handler.Bitbucket{}
 	bbClient := &ocenet.OAuthClient{}
@@ -135,38 +205,8 @@ func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName str
 	if err != nil {
 		return
 	}
-	if err = ctx.Deserializer.YAMLToProto(fileBitz, conf); err != nil {
+	if err = ctx.Deserializer.YAMLToStruct(fileBitz, conf); err != nil {
 		return
 	}
 	return
-}
-
-func main() {
-	ocelog.InitializeOcelog(ocelog.GetFlags())
-	ocelog.Log().Debug()
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8088"
-		ocelog.Log().Warning("running on default port :8088")
-	}
-
-	remoteConfig, err := util.GetInstance("", 0, "")
-	if err != nil {
-		ocelog.Log().Fatal(err)
-	}
-
-	hookHandlerContext := &HookHandlerContext{
-		RemoteConfig: remoteConfig,
-		Deserializer: deserialize.New(),
-		Producer:     nsqpb.GetInitProducer(),
-	}
-
-	muxi := mux.NewRouter()
-
-	// handleBBevent can take push/pull/ w/e
-	muxi.Handle("/bitbucket", &ocenet.AppContextHandler{hookHandlerContext, HandleBBEvent}).Methods("POST")
-
-	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
-	n := ocenet.InitNegroni("hookhandler", muxi)
-	n.Run(":" + port)
 }

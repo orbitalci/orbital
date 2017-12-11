@@ -1,0 +1,3 @@
+[submodule "protos/leveler_resources"]
+	path = protos/leveler_resources
+	url = git@bitbucket.org:level11consulting/leveler_resources.git

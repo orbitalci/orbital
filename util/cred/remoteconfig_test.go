@@ -1,4 +1,4 @@
-package util
+package cred
 
 import (
 	"github.com/hashicorp/vault/http"
@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"net"
 	"github.com/shankj3/ocelot/admin/models"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 
@@ -17,15 +18,15 @@ import (
 func TestRemoteConfig_ErrorHandling(t *testing.T) {
 	brokenRemote, _ := GetInstance("", 0, "abc")
 	if brokenRemote == nil {
-		t.Error(GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
+		t.Error(test.GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
 	}
 	err := brokenRemote.AddCreds("test", &models.Credentials{})
 	if err.Error() != "not connected to consul, unable to add credentials" {
-		t.Error(GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to add credentials", err))
+		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to add credentials", err))
 	}
 	_, err = brokenRemote.GetCredAt("test", false)
 	if err.Error() != "not connected to consul, unable to retrieve credentials" {
-		t.Error(GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to retrieve credentials", err))
+		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to retrieve credentials", err))
 	}
 
 }
@@ -44,49 +45,49 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 
 	err := testRemoteConfig.AddCreds(ConfigPath + "/github/mariannefeng", adminConfig)
 	if err != nil {
-		t.Error(GenericStrFormatErrors("first adding creds to consul", nil, err))
+		t.Error(test.GenericStrFormatErrors("first adding creds to consul", nil, err))
 	}
 
 	testPassword, err := testRemoteConfig.GetPassword(ConfigPath + "/github/mariannefeng")
 	if err != nil {
-		t.Error(GenericStrFormatErrors("retrieving password", nil, err))
+		t.Error(test.GenericStrFormatErrors("retrieving password", nil, err))
 	}
 
 	if testPassword != "top-secret" {
-		t.Error(GenericStrFormatErrors("secret from vault", "top-secret", testPassword))
+		t.Error(test.GenericStrFormatErrors("secret from vault", "top-secret", testPassword))
 	}
 
 	creds, _ := testRemoteConfig.GetCredAt(ConfigPath + "/github/mariannefeng", true)
 	marianne, ok := creds["github/mariannefeng"]
 	if !ok {
-		t.Error(GenericStrFormatErrors("fake cred should exist", true, ok))
+		t.Error(test.GenericStrFormatErrors("fake cred should exist", true, ok))
 	}
 
 	if marianne.AcctName != "mariannefeng" {
-		t.Error(GenericStrFormatErrors("fake cred acct name", "mariannefeng", marianne.AcctName))
+		t.Error(test.GenericStrFormatErrors("fake cred acct name", "mariannefeng", marianne.AcctName))
 	}
 
 	if marianne.TokenURL != "a-real-url" {
-		t.Error(GenericStrFormatErrors("fake cred token url", "a-real-url", marianne.TokenURL))
+		t.Error(test.GenericStrFormatErrors("fake cred token url", "a-real-url", marianne.TokenURL))
 	}
 
 	if marianne.ClientId != "beeswax" {
-		t.Error(GenericStrFormatErrors("fake cred client id", "beeswax", marianne.ClientId))
+		t.Error(test.GenericStrFormatErrors("fake cred client id", "beeswax", marianne.ClientId))
 	}
 
 	if marianne.Type != "github" {
-		t.Error(GenericStrFormatErrors("fake cred acct type", "github", marianne.Type))
+		t.Error(test.GenericStrFormatErrors("fake cred acct type", "github", marianne.Type))
 	}
 
 	if marianne.ClientSecret != "*********" {
-		t.Error(GenericStrFormatErrors("fake cred hidden password", "*********", marianne.ClientSecret))
+		t.Error(test.GenericStrFormatErrors("fake cred hidden password", "*********", marianne.ClientSecret))
 	}
 
 	creds, _ = testRemoteConfig.GetCredAt(ConfigPath + "/github/mariannefeng", false)
 	marianne, _ = creds["github/mariannefeng"]
 
 	if marianne.ClientSecret != "top-secret" {
-		t.Error(GenericStrFormatErrors("fake cred should get password", "top-secret", marianne.ClientSecret))
+		t.Error(test.GenericStrFormatErrors("fake cred should get password", "top-secret", marianne.ClientSecret))
 	}
 
 	secondConfig := &models.Credentials {
@@ -99,38 +100,38 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 
 	err = testRemoteConfig.AddCreds(ConfigPath + "/bitbucket/ariannefeng", secondConfig)
 	if err != nil {
-		t.Error(GenericStrFormatErrors("adding second set of creds to consul", nil, err))
+		t.Error(test.GenericStrFormatErrors("adding second set of creds to consul", nil, err))
 	}
 
 	creds, _ = testRemoteConfig.GetCredAt(ConfigPath, false)
 
 	_, ok = creds["github/mariannefeng"]
 	if !ok {
-		t.Error(GenericStrFormatErrors("original creds marianne should exist", true, ok))
+		t.Error(test.GenericStrFormatErrors("original creds marianne should exist", true, ok))
 	}
 	newCreds, ok := creds["bitbucket/ariannefeng"]
 	if !ok {
-		t.Error(GenericStrFormatErrors("new creds arianne should exist", true, ok))
+		t.Error(test.GenericStrFormatErrors("new creds arianne should exist", true, ok))
 	}
 
 	if newCreds.AcctName != "ariannefeng" {
-		t.Error(GenericStrFormatErrors("2nd fake cred acct name", "ariannefeng", newCreds.AcctName))
+		t.Error(test.GenericStrFormatErrors("2nd fake cred acct name", "ariannefeng", newCreds.AcctName))
 	}
 
 	if newCreds.TokenURL != "another-real-url" {
-		t.Error(GenericStrFormatErrors("2nd fake cred token url", "another-real-url", newCreds.TokenURL))
+		t.Error(test.GenericStrFormatErrors("2nd fake cred token url", "another-real-url", newCreds.TokenURL))
 	}
 
 	if newCreds.ClientId != "beeswaxxxxx" {
-		t.Error(GenericStrFormatErrors("2nd fake cred client id", "beeswaxxxxx", newCreds.ClientId))
+		t.Error(test.GenericStrFormatErrors("2nd fake cred client id", "beeswaxxxxx", newCreds.ClientId))
 	}
 
 	if newCreds.Type != "bitbucket" {
-		t.Error(GenericStrFormatErrors("2nd fake cred acct type", "bitbucket", newCreds.Type))
+		t.Error(test.GenericStrFormatErrors("2nd fake cred acct type", "bitbucket", newCreds.Type))
 	}
 
 	if newCreds.ClientSecret != "secret" {
-		t.Error(GenericStrFormatErrors("2nd fake open password", "secret", newCreds.ClientSecret))
+		t.Error(test.GenericStrFormatErrors("2nd fake open password", "secret", newCreds.ClientSecret))
 	}
 
 }
