@@ -138,6 +138,9 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, erro
 		return nil, errors.New("You must have at least one stage populated to trigger a build")
 	}
 
+	//create a settings.xml maven file that takes in nexus and/or something else creds
+
+
 	//TODO: figure out what to do about the rest of the stages
 	job := &res.JobConfig{
 		Command: strings.Join(kickOffCmd, " && "),

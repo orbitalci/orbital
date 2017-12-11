@@ -55,16 +55,24 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 func (w *WorkerMsgHandler) build(werk *pb.WerkerTask) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.WatchForResults(werk.CheckoutHash)
-	pipe, err := server.NewPipeline(nil, werk.Pipe)
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("error building new pipeline")
-	}
+
 	quit := make(chan int8)
 	done := make(chan int8)
-	pipe.Run(quit, done)
 
 	switch w.WerkConf.werkerType {
 	case Docker:
+		config := &server.ServerConfig{
+			Platform: &server.ContainerPlatform{
+				Name: "docker",
+			},
+		}
+		pipe, err := server.NewPipeline(config, werk.Pipe)
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("error building new pipeline")
+		}
+		pipe.Run(quit, done)
+
+
 		dockerPipe := pipe.JobsMap[werk.CheckoutHash]
 		buildOutput, err := dockerPipe.Logs(true, true, true)
 		defer buildOutput.Close()
