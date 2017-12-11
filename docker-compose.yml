@@ -13,6 +13,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    ports:
+      - "10000:10000"
     environment:
       VAULT_TOKEN: e92136aa-93c6-6062-b724-cba19fd775fe
   hookhandler:
