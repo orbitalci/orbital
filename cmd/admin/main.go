@@ -1,11 +1,11 @@
 package main
 
 import (
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/admin"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"fmt"
 	"github.com/namsral/flag"
-	"github.com/shankj3/ocelot/util/cred"
-	"github.com/shankj3/ocelot/admin"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
 )
 
 func main() {

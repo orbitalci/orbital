@@ -1,19 +1,19 @@
 package admin
 
 import (
-	"github.com/shankj3/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"errors"
 )
 
 //validator for all admin related stuff
-type AdminValidator struct {}
+type AdminValidator struct{}
 
 func GetValidator() *AdminValidator {
-	return &AdminValidator {}
+	return &AdminValidator{}
 }
 
 //validates config and returns json formatted error
-func(adminValidator AdminValidator) ValidateConfig(adminCreds *models.Credentials) (error) {
+func (adminValidator AdminValidator) ValidateConfig(adminCreds *models.Credentials) error {
 	if len(adminCreds.AcctName) == 0 {
 		return errors.New("acctName is required")
 	}

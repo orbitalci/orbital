@@ -1,10 +1,10 @@
 package werker
 
 import (
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/werker/processors"
 	"errors"
 	"github.com/namsral/flag"
-	"github.com/shankj3/ocelot/util/storage"
-	"github.com/shankj3/ocelot/werker/processors"
 	"os"
 )
 
@@ -24,17 +24,22 @@ const (
 
 func strToWerkType(str string) WerkType {
 	switch str {
-	case "k8s", "kubernetes": return Kubernetes
-	case "docker": 			  return Docker
-	default: 				  return -1
+	case "k8s", "kubernetes":
+		return Kubernetes
+	case "docker":
+		return Docker
+	default:
+		return -1
 	}
 }
 
 func strToStorageImplement(str string) storage.BuildOutputStorage {
 	switch str {
-	case "filesystem": return storage.NewFileBuildStorage("")
+	case "filesystem":
+		return storage.NewFileBuildStorage("")
 	// as more are written, include here
-	default: 		   return storage.NewFileBuildStorage("")
+	default:
+		return storage.NewFileBuildStorage("")
 	}
 }
 
@@ -58,7 +63,7 @@ func GetConf() (*WerkerConf, error) {
 	var werkerTypeStr string
 	var storageTypeStr string
 	flag.StringVar(&werkerTypeStr, "werker_type", defaultWerkerType, "type of werker, kubernetes or docker")
-	flag.StringVar(&werker.WerkerName,"werker_name", werkerName, "if wish to identify as other than hostname")
+	flag.StringVar(&werker.WerkerName, "werker_name", werkerName, "if wish to identify as other than hostname")
 	flag.StringVar(&werker.servicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
 	flag.StringVar(&werker.grpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
 	flag.StringVar(&werker.LogLevel, "log-level", "info", "log level")

@@ -1,13 +1,12 @@
 package processors
 
 import (
-	"github.com/shankj3/ocelot/protos"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/protos"
 	"time"
 )
 
 type DockProc struct {
-
 }
 
 func (d *DockProc) RunPushBundle(bund *protos.PushBuildBundle, infochan chan []byte) {
@@ -17,10 +16,10 @@ func (d *DockProc) RunPushBundle(bund *protos.PushBuildBundle, infochan chan []b
 	infochan <- []byte(bund.PushData.Repository.FullName)
 	infochan <- []byte(bund.PushData.Repository.Owner.Username)
 	infochan <- []byte("gonna sleep for 5 seconds now.")
-	time.Sleep(5*time.Second)
+	time.Sleep(5 * time.Second)
 	infochan <- []byte("push requeeeeeeeest DOCKER!")
 	infochan <- []byte("sleeping for 5 more seconds!!!!")
-	time.Sleep(4*time.Second)
+	time.Sleep(4 * time.Second)
 	infochan <- []byte("this could be some delightful std out from builds! huzzah! I'M RUNNING W/ DOCKER!")
 	close(infochan)
 }

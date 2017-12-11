@@ -1,16 +1,16 @@
 package werker
 
 import (
+	consulet "bitbucket.org/level11consulting/go-til/consul"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	consulet "bitbucket.org/level11consulting/go-til/consul"
-	ocenet"bitbucket.org/level11consulting/go-til/net"
-	"github.com/shankj3/ocelot/util/storage"
-	"github.com/shankj3/ocelot/werker/protobuf"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
@@ -18,25 +18,24 @@ import (
 )
 
 var (
-	upgrader = websocket.Upgrader{}
+	upgrader       = websocket.Upgrader{}
 	consulDonePath = "ci/builds/%s/done" //  %s is hash
 )
+
 // modified from https://elithrar.github.io/article/custom-handlers-avoiding-globals/
 type werkerStreamer struct {
-	conf 		  *WerkerConf
-	storage 	  storage.BuildOutputStorage
-	buildInfo     map[string]*buildDatum
-	consul        *consulet.Consulet
+	conf      *WerkerConf
+	storage   storage.BuildOutputStorage
+	buildInfo map[string]*buildDatum
+	consul    *consulet.Consulet
 }
-
 
 type buildDatum struct {
 	buildData [][]byte
 	done      bool
 }
 
-
-func (w *werkerStreamer)  SetBuildDone(gitHash string) error {
+func (w *werkerStreamer) SetBuildDone(gitHash string) error {
 	// todo: add byte of 0/1.. have ot use binary library though and idk how to use that yet
 	// and not motivated enough to do it right now
 	err := w.consul.AddKeyValue(fmt.Sprintf(consulDonePath, gitHash), []byte("true"))
@@ -58,7 +57,7 @@ func (w *werkerStreamer) CheckIfBuildDone(gitHash string) bool {
 	return false
 }
 
-func (w *werkerStreamer) BuildInfo(request *protobuf.Request, stream protobuf.Build_BuildInfoServer)  (error) {
+func (w *werkerStreamer) BuildInfo(request *protobuf.Request, stream protobuf.Build_BuildInfoServer) error {
 	resp := &protobuf.Response{
 		OutputLine: request.Hash,
 	}
@@ -72,7 +71,7 @@ func (w *werkerStreamer) BuildInfo(request *protobuf.Request, stream protobuf.Bu
 	return nil
 }
 
-func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
+func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	a := ctx.(*werkerStreamer)
 	vars := mux.Vars(r)
 	hash := vars["hash"]
@@ -90,11 +89,12 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request){
 	<-pumpDone
 }
 
-
 func writeStreamError(stream interface{}, description []byte) {
 	switch strm := stream.(type) {
-	case ocenet.WebsocketEy: writeWSError(strm, description)
-	case protobuf.Build_BuildInfoServer: writeGrpcError(strm, description)
+	case ocenet.WebsocketEy:
+		writeWSError(strm, description)
+	case protobuf.Build_BuildInfoServer:
+		writeGrpcError(strm, description)
 	}
 }
 
@@ -107,12 +107,11 @@ func writeWSError(ws ocenet.WebsocketEy, description []byte) {
 
 // writeWSError writes ERROR to the web socket along with a description and closes the web socket connection
 func writeGrpcError(stream protobuf.Build_BuildInfoServer, description []byte) {
-	stream.Send(&protobuf.Response{OutputLine: fmt.Sprintf("ERROR!\n %s", description),})
+	stream.Send(&protobuf.Response{OutputLine: fmt.Sprintf("ERROR!\n %s", description)})
 }
 
-
 // pumpBundle writes build data to web socket
-func pumpBundle(stream interface{}, appCtx *werkerStreamer, hash string, done chan int){
+func pumpBundle(stream interface{}, appCtx *werkerStreamer, hash string, done chan int) {
 	// determine whether to get from storage or off infoReader
 	if appCtx.CheckIfBuildDone(hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
@@ -168,7 +167,7 @@ func streamFromStorage(appCtx *werkerStreamer, hash string, stream interface{}) 
 // streamFromArray writes the buildData slice to a web socket. it keeps track of where the index is that it has
 // previously read and waits for more data on the buildData slice until the buildInfo done flag is set to true,
 // at which point it cancels out
-func streamFromArray(buildInfo *buildDatum, stream interface{}) (err error){
+func streamFromArray(buildInfo *buildDatum, stream interface{}) (err error) {
 	var index int
 	var previousIndex int
 	for {
@@ -208,7 +207,8 @@ func send(conn interface{}, data []byte) error {
 			ocelog.IncludeErrField(err).Error("could not write to grpc stream")
 			return err
 		}
-	default: fmt.Printf("CONNECTION IS WTF??? %v", ci)
+	default:
+		fmt.Printf("CONNECTION IS WTF??? %v", ci)
 	}
 	return nil
 }
@@ -231,10 +231,10 @@ func iterateOverBuildData(data [][]byte, stream interface{}) (int, error) {
 //  there is a way to see when the array will not be written to anymore
 //  when the info channel is closed and the loop finishes, all the data is written to the storage defined in the
 //  appCtx, the done flag is written to consul, and the array is removed from the map
-func writeInfoChanToInMemMap(transport  *Transport, appCtx *werkerStreamer){
+func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 	// question: does this support unicode?
 	var dataSlice [][]byte
-	build := &buildDatum{dataSlice, false,}
+	build := &buildDatum{dataSlice, false}
 	appCtx.buildInfo[transport.Hash] = build
 	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
 	for i := range transport.InfoChan {
@@ -258,15 +258,14 @@ func writeInfoChanToInMemMap(transport  *Transport, appCtx *werkerStreamer){
 
 }
 
-func cacheProcessor(transpo chan *Transport, appCtx *werkerStreamer){
+func cacheProcessor(transpo chan *Transport, appCtx *werkerStreamer) {
 	for i := range transpo {
 		ocelog.Log().Debugf("adding info channel for hash %s to map for streaming access.", i.Hash)
 		go writeInfoChanToInMemMap(i, appCtx)
 	}
 }
 
-
-func serveHome(w http.ResponseWriter, r *http.Request){
+func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "test.html")
 }
 
@@ -277,14 +276,14 @@ func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
 		ocelog.IncludeErrField(err)
 	}
 	werkerStreamer := &werkerStreamer{
-		conf: conf,
-		storage: store,
+		conf:      conf,
+		storage:   store,
 		buildInfo: make(map[string]*buildDatum),
-		consul: werkerConsul}
+		consul:    werkerConsul}
 	return werkerStreamer
 }
 
-func ServeMe(transportChan chan *Transport, conf *WerkerConf){
+func ServeMe(transportChan chan *Transport, conf *WerkerConf) {
 	werkStream := getWerkerStreamer(conf)
 	ocelog.Log().Debug("saving build info channels to in memory map")
 	go cacheProcessor(transportChan, werkStream)
@@ -294,10 +293,10 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf){
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{werkStream, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
 	n := ocenet.InitNegroni("werker", muxi)
-	go n.Run(":"+conf.servicePort)
+	go n.Run(":" + conf.servicePort)
 
 	ocelog.Log().Info("serving grpc streams of build data on port: ", conf.grpcPort)
-	con, err := net.Listen("tcp", ":" + conf.grpcPort)
+	con, err := net.Listen("tcp", ":"+conf.grpcPort)
 	if err != nil {
 		ocelog.Log().Fatal("womp womp")
 	}

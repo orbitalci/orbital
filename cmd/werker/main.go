@@ -21,10 +21,10 @@ provide results endpoint, way for server to access data
 package main
 
 import (
-	"fmt"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"github.com/shankj3/ocelot/werker"
+	"bitbucket.org/level11consulting/go-til/nsqpb"
+	"bitbucket.org/level11consulting/ocelot/werker"
+	"fmt"
 	"time"
 )
 
@@ -59,7 +59,7 @@ func main() {
 	//you should know what channels to subscribe to
 	supportedTopics := []string{"build"}
 
-    for _, topic := range supportedTopics {
+	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewProtoConsume()
 		if nsqpb.LookupTopic(protoConsume.Config.LookupDAddress(), topic) {
 			handler := &werker.WorkerMsgHandler{

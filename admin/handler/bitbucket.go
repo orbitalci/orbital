@@ -2,13 +2,13 @@ package handler
 
 //TODO: add interface once we have more than just bitbucket
 import (
-	"fmt"
-	"errors"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/shankj3/ocelot/admin/models"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	pb "github.com/shankj3/ocelot/protos"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"errors"
+	"fmt"
+	"github.com/golang/protobuf/jsonpb"
 )
 
 const DefaultCallbackURL = "https://radiant-mesa-23210.herokuapp.com/bitbucket"
@@ -17,12 +17,12 @@ const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
 //Bitbucket is a bitbucket handler responsible for finding build files and
 //registering webhooks for necessary repositories
 type Bitbucket struct {
-	CallbackURL	string
-	Client    ocenet.HttpClient
-	Marshaler jsonpb.Marshaler
+	CallbackURL string
+	Client      ocenet.HttpClient
+	Marshaler   jsonpb.Marshaler
 
-	credConfig	*models.Credentials
-	isInitialized	bool
+	credConfig    *models.Credentials
+	isInitialized bool
 }
 
 // Takes in admin config creds, returns any errors that may happen during setup
@@ -64,8 +64,8 @@ func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
 		newWebhook := &pb.CreateWebhook{
 			Description: "marianne did this",
 			Active:      true,
-			Url: bb.GetCallbackURL(),
-			Events: models.BitbucketEvents,
+			Url:         bb.GetCallbackURL(),
+			Events:      models.BitbucketEvents,
 		}
 		webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
 		if err != nil {
@@ -82,7 +82,7 @@ func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
 }
 
 //GetCallbackURL is a getter for retrieving callbackURL for bitbucket webhooks
-func (bb *Bitbucket) GetCallbackURL () string {
+func (bb *Bitbucket) GetCallbackURL() string {
 	if len(bb.CallbackURL) > 0 {
 		return bb.CallbackURL
 	}
@@ -90,7 +90,7 @@ func (bb *Bitbucket) GetCallbackURL () string {
 }
 
 //SetCallbackURL sets callback urls to be used for webhooks
-func (bb *Bitbucket) SetCallbackURL (callbackURL string) {
+func (bb *Bitbucket) SetCallbackURL(callbackURL string) {
 	bb.CallbackURL = callbackURL
 }
 

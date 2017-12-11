@@ -1,19 +1,19 @@
 package admin
 
 import (
-	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/util/cred"
-	"context"
-	"github.com/golang/protobuf/ptypes/empty"
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	"bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"context"
+	"github.com/golang/protobuf/ptypes/empty"
 )
 
 //this is our grpc server struct
 type guideOcelotServer struct {
-	RemoteConfig	*cred.RemoteConfig
-	Deserializer	*deserialize.Deserializer
-	AdminValidator	*AdminValidator
+	RemoteConfig   *cred.RemoteConfig
+	Deserializer   *deserialize.Deserializer
+	AdminValidator *AdminValidator
 }
 
 //TODO: what about adding error field to response? Do something nice about

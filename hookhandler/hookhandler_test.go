@@ -1,10 +1,10 @@
 package hookhandler
 
 import (
-	"testing"
-	pb "github.com/shankj3/ocelot/protos"
-	"fmt"
 	"bitbucket.org/level11consulting/go-til/test"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"fmt"
+	"testing"
 )
 
 func TestHookhandler_WerkBuildOnly(t *testing.T) {
@@ -12,10 +12,10 @@ func TestHookhandler_WerkBuildOnly(t *testing.T) {
 	testEnv["DEBUG"] = "1"
 
 	buildOnly := pb.BuildConfig{
-		Env: testEnv,
+		Env:      testEnv,
 		Packages: []string{"fakepkg1"},
 		Build: &pb.Stage{
-			Env: testEnv,
+			Env:    testEnv,
 			Script: []string{"sh -a", "cp -r . .."},
 		},
 	}
@@ -42,7 +42,7 @@ func TestHookhandler_WerkBuildOnly(t *testing.T) {
 	}
 
 	if buildOnlyPipe.Steps["marianne"] == nil {
-		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.Steps["marianne"] ))
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.Steps["marianne"]))
 	}
 
 	if buildOnlyPipe.Steps["marianne"].Image != "TODO PARSE THIS AND PUSH TO ARTIFACT REPO" {
@@ -54,7 +54,7 @@ func TestHookhandler_WerkBuildOnly(t *testing.T) {
 	}
 
 	if buildOnlyPipe.Steps["marianne"].Env["DEBUG"] != testEnv["DEBUG"] {
-		t.Error(test.GenericStrFormatErrors("build stage env DEBUG", "1", buildOnlyPipe.Steps["marianne"].Env["DEBUG"] ))
+		t.Error(test.GenericStrFormatErrors("build stage env DEBUG", "1", buildOnlyPipe.Steps["marianne"].Env["DEBUG"]))
 	}
 }
 
@@ -69,15 +69,14 @@ func TestHookhandler_WerkBeforeAndBuild(t *testing.T) {
 	buildOnly := pb.BuildConfig{
 		Image: "wowanimage",
 		Before: &pb.Stage{
-			Env: testEnv,
+			Env:    testEnv,
 			Script: []string{"first"},
 		},
 		Build: &pb.Stage{
-			Env: testEnv2,
+			Env:    testEnv2,
 			Script: []string{"sh -a", "cp -r . .."},
 		},
 	}
-
 
 	buildOnlyPipe, _ := werk(buildOnly, "marianne")
 	if buildOnlyPipe == nil {
@@ -97,7 +96,7 @@ func TestHookhandler_WerkBeforeAndBuild(t *testing.T) {
 	}
 
 	if buildOnlyPipe.Steps["marianne"] == nil {
-		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.Steps["marianne"] ))
+		t.Error(fmt.Sprintf("expected %v to NOT be null", buildOnlyPipe.Steps["marianne"]))
 	}
 
 	if buildOnlyPipe.Steps["marianne"].Image != "wowanimage" {
@@ -109,12 +108,10 @@ func TestHookhandler_WerkBeforeAndBuild(t *testing.T) {
 	}
 
 	if buildOnlyPipe.Steps["marianne"].Env["DEBUG"] != "1" {
-		t.Error(test.GenericStrFormatErrors("build stage env DEBUG", "1", buildOnlyPipe.Steps["marianne"].Env["DEBUG"] ))
+		t.Error(test.GenericStrFormatErrors("build stage env DEBUG", "1", buildOnlyPipe.Steps["marianne"].Env["DEBUG"]))
 	}
 
 	if buildOnlyPipe.Steps["marianne"].Env["SOMETHING"] != "ELSE" {
-		t.Error(test.GenericStrFormatErrors("build stage env SOMETHING", "ELSE", buildOnlyPipe.Steps["marianne"].Env["SOMETHING"] ))
+		t.Error(test.GenericStrFormatErrors("build stage env SOMETHING", "ELSE", buildOnlyPipe.Steps["marianne"].Env["SOMETHING"]))
 	}
 }
-
-

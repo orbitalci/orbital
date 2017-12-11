@@ -1,13 +1,13 @@
 package cred
 
 import (
-	"fmt"
-	"github.com/shankj3/ocelot/admin/models"
 	"bitbucket.org/level11consulting/go-til/consul"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
-	"strings"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"fmt"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 var ConfigPath = "creds"
@@ -21,18 +21,17 @@ func GetInstance(consulHost string, consulPort int, token string) (*RemoteConfig
 	//intialize consul
 	if consulHost == "" && consulPort == 0 {
 		consulet, err := consul.Default()
-		if err != nil  {
+		if err != nil {
 			return nil, err
 		}
 		remoteConfig.Consul = consulet
 	} else {
 		consulet, err := consul.New(consulHost, consulPort)
 		remoteConfig.Consul = consulet
-		if err != nil  {
+		if err != nil {
 			return nil, err
 		}
 	}
-
 
 	//initialize vault
 	if token == "" {
@@ -74,7 +73,7 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[s
 		}
 
 		for _, v := range configs {
-			pathKeys := strings.Split(strings.TrimLeft(v.Key, "/" + ConfigPath), "/")
+			pathKeys := strings.Split(strings.TrimLeft(v.Key, "/"+ConfigPath), "/")
 
 			//cred type | acct name gives us a unique id to track by in the map
 			credType := pathKeys[0]

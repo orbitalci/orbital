@@ -1,16 +1,16 @@
 package werker
 
 import (
+	consulet "bitbucket.org/level11consulting/go-til/consul"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"bufio"
 	"bytes"
-	consulet "bitbucket.org/level11consulting/go-til/consul"
-	ocenet"bitbucket.org/level11consulting/go-til/net"
-	"github.com/shankj3/ocelot/util/storage"
-	"github.com/shankj3/ocelot/werker/protobuf"
 	"google.golang.org/grpc"
 	"testing"
 	"time"
-	"bitbucket.org/level11consulting/go-til/test"
 )
 
 var testData = [][]byte{
@@ -72,10 +72,10 @@ func Test_iterateOverBuildData(t *testing.T) {
 func Test_streamFromArray(t *testing.T) {
 	// test data setup
 	var stream [][]byte
-	var fstIndex  = 4
-	var secIndex  = 6
-	var buildInfo = &buildDatum{buildData: stream, done: false,}
-	var ws        = ocenet.NewWebSocketConn()
+	var fstIndex = 4
+	var secIndex = 6
+	var buildInfo = &buildDatum{buildData: stream, done: false}
+	var ws = ocenet.NewWebSocketConn()
 	//
 	for _, data := range testData[:fstIndex] {
 		buildInfo.buildData = append(buildInfo.buildData, data)
@@ -83,7 +83,7 @@ func Test_streamFromArray(t *testing.T) {
 	go streamFromArray(buildInfo, ws)
 	time.Sleep(1 * time.Second)
 	if !test.CompareByteArrays(testData[:fstIndex], ws.MsgData) {
-		t.Errorf("first slices not the same. expected: %v, actual: %v", testData[:fstIndex],  buildInfo.buildData)
+		t.Errorf("first slices not the same. expected: %v, actual: %v", testData[:fstIndex], buildInfo.buildData)
 	}
 	for _, data := range testData[fstIndex:secIndex] {
 		buildInfo.buildData = append(buildInfo.buildData, data)
@@ -107,8 +107,8 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	werkerConsulet, _ := consulet.Default()
 	ctx := &werkerStreamer{
 		buildInfo: make(map[string]*buildDatum),
-		storage: storage.NewFileBuildStorage(""),
-		consul: werkerConsulet,
+		storage:   storage.NewFileBuildStorage(""),
+		consul:    werkerConsulet,
 	}
 	middleIndex := 6
 	go writeInfoChanToInMemMap(trans, ctx)

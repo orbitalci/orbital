@@ -1,19 +1,17 @@
 package cred
 
 import (
+	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"github.com/hashicorp/consul/testutil"
 	"github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/vault"
-	"os"
-	"testing"
-	"github.com/hashicorp/consul/testutil"
-	"strings"
-	"strconv"
 	"net"
-	"github.com/shankj3/ocelot/admin/models"
-	"bitbucket.org/level11consulting/go-til/test"
+	"os"
+	"strconv"
+	"strings"
+	"testing"
 )
-
-
 
 func TestRemoteConfig_ErrorHandling(t *testing.T) {
 	brokenRemote, _ := GetInstance("", 0, "abc")
@@ -35,15 +33,15 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	testRemoteConfig, vaultListener, consulServer := testSetupVaultAndConsul(t)
 	defer teardownVaultAndConsul(vaultListener, consulServer)
 
-	adminConfig := &models.Credentials {
+	adminConfig := &models.Credentials{
 		ClientSecret: "top-secret",
-		ClientId: "beeswax",
-		AcctName: "mariannefeng",
-		TokenURL: "a-real-url",
-		Type: "github",
+		ClientId:     "beeswax",
+		AcctName:     "mariannefeng",
+		TokenURL:     "a-real-url",
+		Type:         "github",
 	}
 
-	err := testRemoteConfig.AddCreds(ConfigPath + "/github/mariannefeng", adminConfig)
+	err := testRemoteConfig.AddCreds(ConfigPath+"/github/mariannefeng", adminConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("first adding creds to consul", nil, err))
 	}
@@ -57,7 +55,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("secret from vault", "top-secret", testPassword))
 	}
 
-	creds, _ := testRemoteConfig.GetCredAt(ConfigPath + "/github/mariannefeng", true)
+	creds, _ := testRemoteConfig.GetCredAt(ConfigPath+"/github/mariannefeng", true)
 	marianne, ok := creds["github/mariannefeng"]
 	if !ok {
 		t.Error(test.GenericStrFormatErrors("fake cred should exist", true, ok))
@@ -83,22 +81,22 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("fake cred hidden password", "*********", marianne.ClientSecret))
 	}
 
-	creds, _ = testRemoteConfig.GetCredAt(ConfigPath + "/github/mariannefeng", false)
+	creds, _ = testRemoteConfig.GetCredAt(ConfigPath+"/github/mariannefeng", false)
 	marianne, _ = creds["github/mariannefeng"]
 
 	if marianne.ClientSecret != "top-secret" {
 		t.Error(test.GenericStrFormatErrors("fake cred should get password", "top-secret", marianne.ClientSecret))
 	}
 
-	secondConfig := &models.Credentials {
+	secondConfig := &models.Credentials{
 		ClientSecret: "secret",
-		ClientId: "beeswaxxxxx",
-		AcctName: "ariannefeng",
-		TokenURL: "another-real-url",
-		Type: "bitbucket",
+		ClientId:     "beeswaxxxxx",
+		AcctName:     "ariannefeng",
+		TokenURL:     "another-real-url",
+		Type:         "bitbucket",
 	}
 
-	err = testRemoteConfig.AddCreds(ConfigPath + "/bitbucket/ariannefeng", secondConfig)
+	err = testRemoteConfig.AddCreds(ConfigPath+"/bitbucket/ariannefeng", secondConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("adding second set of creds to consul", nil, err))
 	}
@@ -135,7 +133,6 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	}
 
 }
-
 
 //////test setup and tear down///////
 

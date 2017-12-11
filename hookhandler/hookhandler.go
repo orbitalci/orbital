@@ -1,18 +1,18 @@
 package hookhandler
 
 import (
-	"github.com/shankj3/ocelot/admin/handler"
-	"github.com/shankj3/ocelot/admin/models"
-	pb "github.com/shankj3/ocelot/protos"
-	res "bitbucket.org/level11consulting/leveler_resources"
-	"github.com/shankj3/ocelot/util/cred"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
+	"bitbucket.org/level11consulting/go-til/deserialize"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/go-til/nsqpb"
+	res "bitbucket.org/level11consulting/leveler_resources"
+	"bitbucket.org/level11consulting/ocelot/admin/handler"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"errors"
 	"net/http"
 	"strings"
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	"errors"
 )
 
 type HookHandlerContext struct {
@@ -97,7 +97,7 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, erro
 	//TODO: example input for job? What should be passed to list of strings?
 	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
 	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code)
-		// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
+	// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
 	//TODO: we might be able to actually create an image and use input/outputs for the packages part?
 
 	jobMap := make(map[string]*res.JobConfig)
@@ -146,7 +146,6 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, erro
 
 	//create a settings.xml maven file that takes in nexus and/or something else creds
 
-
 	//TODO: figure out what to do about the rest of the stages
 	job := &res.JobConfig{
 		Command: strings.Join(kickOffCmd, " && "),
@@ -157,7 +156,7 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, erro
 	jobMap[gitCommit] = job
 
 	pipeConfig := &res.PipelineConfig{
-		Steps: jobMap,
+		Steps:     jobMap,
 		GlobalEnv: oceConfig.Env,
 	}
 	return pipeConfig, nil

@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
-	"github.com/shankj3/ocelot/util/cred"
 	"bitbucket.org/level11consulting/go-til/deserialize"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"github.com/gorilla/mux"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	hh "github.com/shankj3/ocelot/hookhandler"
+	"bitbucket.org/level11consulting/go-til/nsqpb"
+	hh "bitbucket.org/level11consulting/ocelot/hookhandler"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"github.com/gorilla/mux"
+	"os"
 )
 
 func main() {

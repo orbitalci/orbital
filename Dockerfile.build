@@ -4,7 +4,7 @@ RUN apk --update --no-cache add git protobuf-dev ca-certificates openssh python 
     go get -u github.com/golang/dep/cmd/dep && \
     go get -v -u github.com/golang/protobuf/protoc-gen-go
 
-WORKDIR /go/src/github.com/shankj3/ocelot/
+WORKDIR /go/src/bitbucket.org/level11consulting/ocelot/
 COPY . .
 RUN ./build-protos.sh
 RUN mkdir /root/.ssh

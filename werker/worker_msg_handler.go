@@ -1,28 +1,28 @@
 package werker
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
 	d "bitbucket.org/level11consulting/go-til/deserialize"
-	pb "github.com/shankj3/ocelot/protos"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bufio"
-	"log"
-	"leveler/server"
 	"github.com/golang/protobuf/proto"
+	"leveler/server"
+	"log"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
 // to stream results back to the admin. It sends just enough to be unique, the hash that triggered the build
 // and the InfoChan which the builder will write to.
 type Transport struct {
-	Hash       string
-	InfoChan   chan []byte
+	Hash     string
+	InfoChan chan []byte
 }
 
 type WorkerMsgHandler struct {
-	Topic    string
-	WerkConf *WerkerConf
-	infochan chan []byte
-	ChanChan chan *Transport
+	Topic        string
+	WerkConf     *WerkerConf
+	infochan     chan []byte
+	ChanChan     chan *Transport
 	Deserializer d.Deserializer
 }
 
@@ -46,7 +46,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
 func (w *WorkerMsgHandler) WatchForResults(hash string) {
 	ocelog.Log().Debugf("adding hash ( %s ) & infochan to transport channel", hash)
-	transport := &Transport{Hash: hash, InfoChan: w.infochan,}
+	transport := &Transport{Hash: hash, InfoChan: w.infochan}
 	w.ChanChan <- transport
 }
 
@@ -71,7 +71,6 @@ func (w *WorkerMsgHandler) build(werk *pb.WerkerTask) {
 			ocelog.IncludeErrField(err).Error("error building new pipeline")
 		}
 		pipe.Run(quit, done)
-
 
 		dockerPipe := pipe.JobsMap[werk.CheckoutHash]
 		buildOutput, err := dockerPipe.Logs(true, true, true)

@@ -1,9 +1,9 @@
 package admin
 
 import (
-	"testing"
-	"github.com/shankj3/ocelot/admin/models"
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"testing"
 )
 
 func TestAdminValidator_ValidateConfig(t *testing.T) {
@@ -12,7 +12,7 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		AcctName: "blah",
 		ClientId: "blah2",
 		TokenURL: "slkdjf",
-		Type: "bitbucket",
+		Type:     "bitbucket",
 	}
 
 	err := v.ValidateConfig(noClientSecret)
@@ -21,11 +21,11 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 	}
 
 	invalidCred := &models.Credentials{
-		AcctName: "blah",
-		ClientId: "blah2",
-		TokenURL: "slkdjf",
+		AcctName:     "blah",
+		ClientId:     "blah2",
+		TokenURL:     "slkdjf",
 		ClientSecret: "jsdlkfsdfjskdf",
-		Type: "marianne",
+		Type:         "marianne",
 	}
 
 	wrongType := v.ValidateConfig(invalidCred)

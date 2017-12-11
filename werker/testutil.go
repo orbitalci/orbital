@@ -1,8 +1,8 @@
 package werker
 
 import (
-	"github.com/shankj3/ocelot/protos"
-	"github.com/shankj3/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"testing"
 )
 
@@ -38,7 +38,7 @@ func testGetConf() *WerkerConf {
 // uses the mock processor
 func testGetWorkerMsgHandler(t *testing.T, topic string) *WorkerMsgHandler {
 	werkConf := testGetConf()
-	werkConf.werkerProcessor = &testWerkerProcessor{t: t,}
+	werkConf.werkerProcessor = &testWerkerProcessor{t: t}
 
 	tunnel := make(chan *Transport)
 	infor := make(chan []byte)

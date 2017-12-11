@@ -1,14 +1,17 @@
 package admin
 
 import (
+	"bitbucket.org/level11consulting/go-til/deserialize"
+	"bitbucket.org/level11consulting/go-til/log"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/ocelot/admin/handler"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/philips/grpc-gateway-example/insecure"
-	"github.com/shankj3/ocelot/admin/handler"
-	"github.com/shankj3/ocelot/admin/models"
-	"github.com/shankj3/ocelot/util/cred"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -16,9 +19,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	"bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
 )
 
 //TODO: floe integration??? just putting this note here so we remember
@@ -119,8 +119,8 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 	gos := gosss.(*guideOcelotServer)
 
 	config := &models.CredWrapper{}
-	configFile, err := ioutil.ReadFile("/home/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
-	//configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/github.com/shankj3/ocelot/admin/" + models.ConfigFileName)
+	configFile, err := ioutil.ReadFile("/home/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/admin/" + models.ConfigFileName)
+	//configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/admin/" + models.ConfigFileName)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return

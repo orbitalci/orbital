@@ -1,14 +1,13 @@
 package handler
 
 import (
+	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 	"os"
 	"testing"
-	"github.com/shankj3/ocelot/admin/models"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/jsonpb"
-	"bitbucket.org/level11consulting/go-til/test"
 )
-
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
 	config := &models.Credentials{}
@@ -50,7 +49,7 @@ func (mhc MockHttpClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	switch url {
 	case "empty-webhooks":
 		webhooks, _ := os.Open("test-fixtures/EmptyWebhooksResp.json")
-		_ = mhc.Unmarshaler.Unmarshal(webhooks , unmarshalObj)
+		_ = mhc.Unmarshaler.Unmarshal(webhooks, unmarshalObj)
 	case "webhooks-exists":
 		webhooks, _ := os.Open("test-fixtures/WebhookExistsResp.json")
 		_ = mhc.Unmarshaler.Unmarshal(webhooks, unmarshalObj)
