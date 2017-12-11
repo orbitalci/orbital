@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "bitbucket.org/level11consulting/go-til"
+  packages = ["test"]
+  revision = "0e2720cef2d5703f80367b4a13754ca75c6186eb"
+
+[[projects]]
   name = "github.com/Jeffail/gabs"
   packages = ["."]
   revision = "2a3aa15961d5fee6047b8151b67ac2f08ba2c48c"
@@ -400,6 +406,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "25b8a562b58a7dfbcb8fe8603de524d63a1418cb319643d258170ac4a03d26ee"
+  inputs-digest = "ddb14c5c226835a37ec471afc0e41cbb6d7f7720ee42f4defc1590342ce38c58"
   solver-name = "gps-cdcl"
   solver-version = 1
