@@ -21,6 +21,9 @@ type HookHandlerContext struct {
 	Deserializer *deserialize.Deserializer
 }
 
+//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
+//tODO: branch inside of ocelot.yml
+//TODO: what data do we have to store/do we need to store?
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
@@ -43,6 +46,8 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	tellWerker(ctx, buildConf, hash)
 }
 
+//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
+//tODO: branch inside of ocelot.yml
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
@@ -86,6 +91,7 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 	go ctx.Producer.WriteProto(werkerTask, "docker")
 }
 
+//TODO: state = not started = to be stored inside of postgres (db interface is gonna be inside of go-til)
 //this just builds the pipeline config, worker will call NewPipeline with the pipeline config and run
 func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, error) {
 	//TODO: example input for job? What should be passed to list of strings?
