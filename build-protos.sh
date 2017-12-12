@@ -2,6 +2,10 @@
 # ===============
 cd protos 
 ./build-protos.sh
+
+# inject our custom tags into build protobuf
+protoc-go-inject-tag -input=./build.pb.go
+
 cd ..
 # ===============
 cd werker

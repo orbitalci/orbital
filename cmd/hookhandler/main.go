@@ -9,8 +9,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"github.com/gorilla/mux"
 	"os"
-	"net/http"
-	"io/ioutil"
 	"strconv"
 )
 
@@ -51,15 +49,8 @@ func main() {
 
 	// handleBBevent can take push/pull/ w/e
 	muxi.Handle("/bitbucket", &ocenet.AppContextHandler{hookHandlerContext, hh.HandleBBEvent}).Methods("POST")
-	muxi.HandleFunc("/marianne", PrintBody).Methods("POST")
 
 	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)
-}
-
-//this is just temp cause I gotta test some stuff
-func PrintBody(w http.ResponseWriter, r *http.Request) {
-	respBytes, _ := ioutil.ReadAll(r.Body)
-	ocelog.Log().Debug(string(respBytes))
 }

@@ -85,9 +85,12 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
 func shouldBuild(buildConf *pb.BuildConfig, branch string) bool {
-	//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
-	//tODO: branch inside of ocelot.yml
-	return true
+	for _, buildBranch := range buildConf.Branches {
+		if buildBranch == branch {
+			return true
+		}
+	}
+	return false
 }
 
 //TODO: this code needs to say X repo is now being tracked
@@ -100,7 +103,6 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 		return
 	}
 
-
 	pipeConfig, err := werk(*buildConf, hash)
 
 	werkerTask := &pb.WerkerTask{
@@ -109,7 +111,7 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 		Pipe:         pipeConfig,
 	}
 
-	go ctx.Producer.WriteProto(werkerTask, "docker")
+	go ctx.Producer.WriteProto(werkerTask, "build")
 }
 
 //TODO: state = not started = to be stored inside of postgres (db interface is gonna be inside of go-til)
@@ -117,7 +119,6 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, error) {
 	//TODO: example input for job? What should be passed to list of strings?
 	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
-	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code)
 	// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
 	//TODO: we might be able to actually create an image and use input/outputs for the packages part?
 
@@ -131,8 +132,9 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, erro
 		buildImage = oceConfig.Image
 	} else if len(oceConfig.Packages) > 0 {
 		buildImage = "TODO PARSE THIS AND PUSH TO ARTIFACT REPO"
-		//TODO: build image and store it somewhere. OH! NEXUS! oh shit we need nexus int. now
 	}
+
+	//first, let's get the codebase onto the container
 
 	if oceConfig.Before != nil {
 		if oceConfig.Before.Script != nil {

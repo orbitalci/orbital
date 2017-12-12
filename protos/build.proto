@@ -7,13 +7,16 @@ import "pipeline.proto";
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
     string image = 1;
-    repeated string packages = 2;
-    map<string, string> env = 3;
-    Stage before= 4;
-    Stage after = 5;
-    Stage build = 6;
-    Stage test = 7;
-    Stage deploy = 8;
+    // @inject_tag: yaml:"buildTool"
+    string buildTool = 2;
+    repeated string packages = 3;
+    repeated string branches = 4;
+    map<string, string> env = 5;
+    Stage before= 6;
+    Stage after = 7;
+    Stage build = 8;
+    Stage test = 9;
+    Stage deploy = 10;
 }
 
 message Stage {
