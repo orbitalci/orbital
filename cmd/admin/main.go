@@ -4,6 +4,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/admin"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/secure-grpc"
 	"fmt"
 	"github.com/namsral/flag"
 )
@@ -31,7 +32,7 @@ func main() {
 	if err != nil {
 		ocelog.Log().Fatal("could not talk to consul or vault, bailing")
 	}
-
-	admin.Start(configInstance, serverRunsAt, port)
+	security := secure_grpc.NewFakeSecure()
+	admin.Start(configInstance, security, serverRunsAt, port)
 
 }

@@ -7,14 +7,12 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/handler"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/secure-grpc"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/philips/grpc-gateway-example/insecure"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -25,43 +23,30 @@ import (
 //TODO: change this to use my fork of logrus so we can pretty print logs?
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
-func Start(configInstance *cred.RemoteConfig, serverRunsAt string, port string) {
+func Start(configInstance *cred.RemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator())
 
 	//check for config on load
 	ReadConfig(guideOcelotServer)
 
-	fakeCert := x509.NewCertPool()
-	ok := fakeCert.AppendCertsFromPEM([]byte(insecure.Cert))
-	if !ok {
-		panic("bad certs")
-	}
-
 	//grpc server
 	opts := []grpc.ServerOption{
-		grpc.Creds(credentials.NewClientTLSFromCert(fakeCert, serverRunsAt))}
+		grpc.Creds(secure.GetNewClientTLS(serverRunsAt))}
 
 	grpcServer := grpc.NewServer(opts...)
 	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
 
-	pair, err := tls.X509KeyPair([]byte(insecure.Cert), []byte(insecure.Key))
-	fakeKeyPair := &pair
-
 	ctx := context.Background()
 
-	//grpc gateway proxy
-	dcreds := credentials.NewTLS(&tls.Config{
-		ServerName: serverRunsAt,
-		RootCAs:    fakeCert,
-	})
 
-	dopts := []grpc.DialOption{grpc.WithTransportCredentials(dcreds)}
+
+	dopts := []grpc.DialOption{grpc.WithTransportCredentials(secure.GetNewTLS(serverRunsAt))}
 	mux := http.NewServeMux()
 
 	runtime.HTTPError = CustomErrorHandler
 	gwmux := runtime.NewServeMux()
-	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, serverRunsAt, dopts)
+	err := models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, serverRunsAt, dopts)
 	if err != nil {
 		fmt.Printf("serve: %v\n", err)
 		return
@@ -78,7 +63,7 @@ func Start(configInstance *cred.RemoteConfig, serverRunsAt string, port string) 
 		Addr:    serverRunsAt,
 		Handler: grpcHandlerFunc(grpcServer, mux),
 		TLSConfig: &tls.Config{
-			Certificates: []tls.Certificate{*fakeKeyPair},
+			Certificates: []tls.Certificate{*secure.GetKeyPair()},
 			NextProtos:   []string{"h2"},
 		},
 	}
