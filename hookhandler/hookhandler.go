@@ -23,6 +23,7 @@ type HookHandlerContext struct {
 
 //TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
 //tODO: branch inside of ocelot.yml
+
 //TODO: what data do we have to store/do we need to store?
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
@@ -30,6 +31,7 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	if err := ctx.Deserializer.JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
+	ocelog.Log().Debug(r.Body)
 	fullName := repopush.Repository.FullName
 	hash := repopush.Push.Changes[0].New.Target.Hash
 	acctName := repopush.Repository.Owner.Username
@@ -43,7 +45,10 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
-	tellWerker(ctx, buildConf, hash)
+	//TODO: need to check and make sure that New.Type == branch
+	if shouldBuild(buildConf, repopush.Push.Changes[0].New.Name) {
+		tellWerker(ctx, buildConf, hash)
+	}
 }
 
 //TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
@@ -55,6 +60,7 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 		ocelog.IncludeErrField(err).Error("could not parse request body into pb.PullRequest")
 		return
 	}
+	ocelog.Log().Debug(r.Body)
 	fullName := pr.Pullrequest.Source.Repository.FullName
 	hash := pr.Pullrequest.Source.Commit.Hash
 	acctName := pr.Pullrequest.Source.Repository.Owner.Username
@@ -69,9 +75,21 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
 		return
 	}
-	tellWerker(ctx, buildConf, hash)
+
+	if shouldBuild(buildConf, "") {
+		tellWerker(ctx, buildConf, hash)
+	} else {
+		//TODO: tell db that we couldn't build
+	}
 }
 
+//before we build pipeline config for werker, validate and make sure this is good candidate
+func shouldBuild(buildConf *pb.BuildConfig, branch string) bool {
+
+}
+
+//TODO: this code needs to say X repo is now being tracked
+//TODO: this code will also need to store status into db
 func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string) {
 	// get one-time token use for access to vault
 	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
@@ -79,6 +97,7 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
+
 
 	pipeConfig, err := werk(*buildConf, hash)
 
