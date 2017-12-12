@@ -11,6 +11,7 @@ import (
 	"os"
 	"net/http"
 	"io/ioutil"
+	"strconv"
 )
 
 func main() {
@@ -23,7 +24,19 @@ func main() {
 		ocelog.Log().Warning("running on default port :8088")
 	}
 
-	remoteConfig, err := cred.GetInstance("", 0, "")
+	consulHost := os.Getenv("CONSUL_HOST")
+	if consulHost == "" {
+		consulHost = "localhost"
+		ocelog.Log().Warning("consul is assumed to be running on localhost")
+	}
+	consulPort := os.Getenv("CONSUL_PORT")
+	if consulPort == "" {
+		consulPort = "8500"
+		ocelog.Log().Warning("consul is assumed to be running on port 8500")
+	}
+
+	consulPortInt, _ := strconv.Atoi(consulPort)
+	remoteConfig, err := cred.GetInstance(consulHost, consulPortInt, "")
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}
