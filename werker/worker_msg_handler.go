@@ -4,10 +4,11 @@ import (
 	d "bitbucket.org/level11consulting/go-til/deserialize"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
-	"bufio"
+	//"bufio"
 	"github.com/golang/protobuf/proto"
-	"leveler/server"
-	"log"
+	//"bitbucket.org/level11consulting/leveler/server"
+	//res "bitbucket.org/level11consulting/leveler_resources"
+	//"log"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -56,41 +57,41 @@ func (w *WorkerMsgHandler) build(werk *pb.WerkerTask) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.WatchForResults(werk.CheckoutHash)
 
-	quit := make(chan int8)
+	//quit := make(chan int8)
 	done := make(chan int8)
 
 	switch w.WerkConf.werkerType {
 	case Docker:
-		config := &server.ServerConfig{
-			Platform: &server.ContainerPlatform{
-				Name: "docker",
-			},
-		}
-		pipe, err := server.NewPipeline(config, werk.Pipe)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("error building new pipeline")
-		}
-		pipe.Run(quit, done)
-
-		dockerPipe := pipe.JobsMap[werk.CheckoutHash]
-		buildOutput, err := dockerPipe.Logs(true, true, true)
-		defer buildOutput.Close()
-
-		rd := bufio.NewReader(buildOutput)
-
-		for {
-			str, err := rd.ReadString('\n')
-			if err != nil {
-				log.Fatal("Read Error:", err)
-				return
-			}
-			w.infochan <- []byte(str)
-		}
-
-		if err != nil {
-			ocelog.IncludeErrField(err)
-			return
-		}
+		//config := &server.ServerConfig{
+		//	Platform: &server.ContainerPlatform{
+		//		Name: "docker",
+		//	},
+		//}
+		//pipe, err := server.NewPipeline(config, *res.PipelineConfig(werk.Pipe))
+		//if err != nil {
+		//	ocelog.IncludeErrField(err).Error("error building new pipeline")
+		//}
+		//pipe.Run(quit, done)
+		//
+		//dockerPipe := pipe.JobsMap[werk.CheckoutHash]
+		//buildOutput, err := dockerPipe.Logs(true, true, true)
+		//defer buildOutput.Close()
+		//
+		//rd := bufio.NewReader(buildOutput)
+		//
+		//for {
+		//	str, err := rd.ReadString('\n')
+		//	if err != nil {
+		//		log.Fatal("Read Error:", err)
+		//		return
+		//	}
+		//	w.infochan <- []byte(str)
+		//}
+		//
+		//if err != nil {
+		//	ocelog.IncludeErrField(err)
+		//	return
+		//}
 	case Kubernetes:
 		//TODO: wait for kubernetes client
 	}
