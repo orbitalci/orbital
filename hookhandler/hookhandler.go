@@ -28,10 +28,11 @@ type HookHandlerContext struct {
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
+
 	if err := ctx.Deserializer.JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
-	ocelog.Log().Debug(r.Body)
+
 	fullName := repopush.Repository.FullName
 	hash := repopush.Push.Changes[0].New.Target.Hash
 	acctName := repopush.Repository.Owner.Username
@@ -51,8 +52,7 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
-//tODO: branch inside of ocelot.yml
+
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
@@ -85,7 +85,9 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
 func shouldBuild(buildConf *pb.BuildConfig, branch string) bool {
-
+	//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
+	//tODO: branch inside of ocelot.yml
+	return true
 }
 
 //TODO: this code needs to say X repo is now being tracked

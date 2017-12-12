@@ -11,7 +11,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-const DefaultCallbackURL = "https://radiant-mesa-23210.herokuapp.com/bitbucket"
+const DefaultCallbackURL = "http://52.26.105.112/marianne"
 const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
 
 //Bitbucket is a bitbucket handler responsible for finding build files and
