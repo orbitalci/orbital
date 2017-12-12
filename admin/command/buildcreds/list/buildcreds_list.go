@@ -1,4 +1,4 @@
-package buildcreds
+package buildcredslist
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin"
@@ -63,11 +63,9 @@ func (c *cmd) Help() string {
 	return help
 }
 
-const synopsis = "Fire a new event"
+const synopsis = "List all credentials used for tracking repositories to build"
 const help = `
-Usage: consul event [options] [payload]
+Usage: ocelot creds list
 
-  Dispatches a custom user event across a datacenter. An event must provide
-  a name, but a payload is optional. Events support filtering using
-  regular expressions on node name, service, and tag definitions.
+  Retrieves all credentials that ocelot uses to track repositories
 `

@@ -16,12 +16,12 @@ func mainDo() int {
 	for c := range command.Commands {
 		cmds = append(cmds, c)
 	}
-
 	clie := &cli.CLI{
 		Args: args,
 		Commands: command.Commands,
 		Autocomplete: true,
 		Name: "ocelot",
+		Version: "0.1.0",
 		HelpFunc: cli.FilteredHelpFunc(cmds, cli.BasicHelpFunc("ocelot")),
 	}
 
