@@ -5,7 +5,7 @@
   branch = "master"
   name = "bitbucket.org/level11consulting/go-til"
   packages = ["consul","deserialize","log","net","nsqpb","test","vault"]
-  revision = "0e2720cef2d5703f80367b4a13754ca75c6186eb"
+  revision = "4cd1d1b6f3a3bb3e99545292e87982036c2a8238"
 
 [[projects]]
   branch = "master"
@@ -347,7 +347,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","http2","http2/hpack","idna","internal/timeseries","lex/httplex","trace"]
-  revision = "dc871a5d77e227f5bbf6545176ef3eeebf87e76e"
+  revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
 
 [[projects]]
   branch = "master"
