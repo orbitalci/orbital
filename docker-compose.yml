@@ -17,6 +17,7 @@ services:
       - "10000:10000"
     environment:
       VAULT_TOKEN: e92136aa-93c6-6062-b724-cba19fd775fe
+      CONSUL_HOST: http://172.18.0.1
   hookhandler:
     image: ocelot-hookhandler
     build:
@@ -34,6 +35,8 @@ services:
     environment:
       VAULT_TOKEN: e92136aa-93c6-6062-b724-cba19fd775fe
       VAULT_ADDR: http://172.18.0.1:8200
+      CONSUL_HOST: http://172.18.0.1
+      LOG_LEVEL: debug
   werker:
     image: ocelot-werker
     build:
