@@ -5,8 +5,12 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"github.com/golang/protobuf/proto"
-	"bitbucket.org/level11consulting/leveler/server"
+	b "bitbucket.org/level11consulting/ocelot/werker/builder"
 	"bufio"
+	"context"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/builder"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -37,7 +41,6 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	w.infochan = make(chan []byte)
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
-	// do the thing
 	go w.build(werkerTask)
 	return nil
 }
@@ -55,45 +58,24 @@ func (w *WorkerMsgHandler) build(werk *pb.WerkerTask) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.WatchForResults(werk.CheckoutHash)
 
-	quit := make(chan int8)
-	done := make(chan int8)
+	var builder b.Builder
 
 	switch w.WerkConf.werkerType {
 	case Docker:
-		config := &server.ServerConfig{
-			Platform: &server.ContainerPlatform{
-				Name: "docker",
-			},
-		}
-		pipe, err := server.NewPipeline(config, werk.Pipe)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("error building new pipeline")
-		}
-		pipe.Run(quit, done)
-
-		dockerPipe := pipe.JobsMap[werk.CheckoutHash]
-		buildOutput, err := dockerPipe.Logs(true, true, true)
-		defer buildOutput.Close()
-
-		rd := bufio.NewReader(buildOutput)
-
-		for {
-			str, err := rd.ReadString('\n')
-			if err != nil {
-				ocelog.Log().Fatal("Read Error:", err)
-				return
-			}
-			w.infochan <- []byte(str)
-		}
-
-		if err != nil {
-			ocelog.IncludeErrField(err)
-			return
-		}
-	case Kubernetes:
-		//TODO: wait for kubernetes client
+		builder = b.NewDockerBuilder()
+	//
+	//case Kubernetes:
+	//	builder = b.NewK8Builder()
 	}
 
-	<-done
+	//TODO: do something with outputs here
+	_ := builder.Setup(w.infochan, werk.BuildConf.Image)
+
+	//beforeResult := builder.Before(w.infochan)
+	//buildResult := builder.Build(w.infochan)
+	//afterResult := builder.After(w.infochan)
+	//testResult := builder.Test(w.infochan)
+	//deployResult := builder.Deploy(w.infochan)
+
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
 }

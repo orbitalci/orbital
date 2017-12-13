@@ -5,15 +5,11 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	res "bitbucket.org/level11consulting/leveler_resources"
 	"bitbucket.org/level11consulting/ocelot/admin/handler"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"errors"
 	"net/http"
-	"strings"
-	"fmt"
 )
 
 type HookHandlerContext struct {
@@ -104,12 +100,10 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string,
 		return
 	}
 
-	pipeConfig, err := werk(ctx, *buildConf, hash, fullName, acctName)
-
 	werkerTask := &pb.WerkerTask{
 		VaultToken:   token,
 		CheckoutHash: hash,
-		Pipe:         pipeConfig,
+		BuildConf: buildConf,
 	}
 
 	go ctx.Producer.WriteProto(werkerTask, "build")
@@ -117,81 +111,81 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string,
 
 //TODO: state = not started = to be stored inside of postgres (db interface is gonna be inside of go-til)
 //this just builds the pipeline config, worker will call NewPipeline with the pipeline config and run
-func werk(ctx *HookHandlerContext, oceConfig pb.BuildConfig, gitCommit string, fullName string, acctName string) (*res.PipelineConfig, error) {
-	jobMap := make(map[string]*res.JobConfig)
-
-	var kickOffCmd []string
-	var kickOffEnvs = make(map[string]string)
-	var buildImage string
-
-	if oceConfig.Image != "" {
-		buildImage = oceConfig.Image
-	} else if len(oceConfig.Packages) > 0 {
-		buildImage = "TODO PARSE THIS AND PUSH TO ARTIFACT REPO"
-	}
-
-	//TODO: where to store failed builds
-	if oceConfig.Build == nil {
-		return nil, errors.New("Build stage cannot be empty")
-	}
-
-	//first, let's get the codebase onto the container
-	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath + "/bitbucket/" + acctName, false)
-	if err != nil {
-		ocelog.IncludeErrField(err)
-	}
-
-	cfg := bbCreds["bitbucket/" + acctName]
-	//TODO: clone with creds: git clone https://username:password@github.com/username/repository.git
-	kickOffCmd = append(kickOffCmd, fmt.Sprintf("wget --user=%s --password=%s https://bitbucket.org/%s/get/%s.zip", cfg.ClientId, cfg.ClientSecret, fullName, gitCommit))
-	kickOffCmd = append(kickOffCmd, fmt.Sprintf("cd $(unzip %s.zip | awk 'NR=3 {print $2}')", gitCommit))
-
-
-	if oceConfig.Before != nil {
-		if oceConfig.Before.Script != nil {
-			kickOffCmd = append(kickOffCmd, oceConfig.Before.Script...)
-		}
-
-		//combine optional before env values if passed
-		if oceConfig.Before.Env != nil {
-			for envKey, envVal := range oceConfig.Before.Env {
-				kickOffEnvs[envKey] = envVal
-			}
-		}
-	}
-
-	if oceConfig.Build != nil {
-		if oceConfig.Build.Script != nil {
-			kickOffCmd = append(kickOffCmd, oceConfig.Build.Script...)
-		}
-
-		//combine optional before env values if passed
-		if oceConfig.Build.Env != nil {
-			for envKey, envVal := range oceConfig.Build.Env {
-				kickOffEnvs[envKey] = envVal
-			}
-		}
-	}
-
-
-
-	//create a settings.xml maven file that takes in nexus and/or something else creds
-
-	//TODO: figure out what to do about the rest of the stages
-	job := &res.JobConfig{
-		Command: strings.Join(kickOffCmd, " && "),
-		Env:     kickOffEnvs,
-		Image:   buildImage,
-	}
-
-	jobMap[gitCommit] = job
-
-	pipeConfig := &res.PipelineConfig{
-		Steps:     jobMap,
-		GlobalEnv: oceConfig.Env,
-	}
-	return pipeConfig, nil
-}
+//func werk(ctx *HookHandlerContext, oceConfig pb.BuildConfig, gitCommit string, fullName string, acctName string) (*res.PipelineConfig, error) {
+//	jobMap := make(map[string]*res.JobConfig)
+//
+//	var kickOffCmd []string
+//	var kickOffEnvs = make(map[string]string)
+//	var buildImage string
+//
+//	if oceConfig.Image != "" {
+//		buildImage = oceConfig.Image
+//	} else if len(oceConfig.Packages) > 0 {
+//		buildImage = "TODO PARSE THIS AND PUSH TO ARTIFACT REPO"
+//	}
+//
+//	//TODO: where to store failed builds
+//	if oceConfig.Build == nil {
+//		return nil, errors.New("Build stage cannot be empty")
+//	}
+//
+//	//first, let's get the codebase onto the container
+//	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath + "/bitbucket/" + acctName, false)
+//	if err != nil {
+//		ocelog.IncludeErrField(err)
+//	}
+//
+//	cfg := bbCreds["bitbucket/" + acctName]
+//	//TODO: clone with creds: git clone https://username:password@github.com/username/repository.git
+//	kickOffCmd = append(kickOffCmd, fmt.Sprintf("wget --user=%s --password=%s https://bitbucket.org/%s/get/%s.zip", cfg.ClientId, cfg.ClientSecret, fullName, gitCommit))
+//	kickOffCmd = append(kickOffCmd, fmt.Sprintf("cd $(unzip %s.zip | awk 'NR=3 {print $2}')", gitCommit))
+//
+//
+//	if oceConfig.Before != nil {
+//		if oceConfig.Before.Script != nil {
+//			kickOffCmd = append(kickOffCmd, oceConfig.Before.Script...)
+//		}
+//
+//		//combine optional before env values if passed
+//		if oceConfig.Before.Env != nil {
+//			for envKey, envVal := range oceConfig.Before.Env {
+//				kickOffEnvs[envKey] = envVal
+//			}
+//		}
+//	}
+//
+//	if oceConfig.Build != nil {
+//		if oceConfig.Build.Script != nil {
+//			kickOffCmd = append(kickOffCmd, oceConfig.Build.Script...)
+//		}
+//
+//		//combine optional before env values if passed
+//		if oceConfig.Build.Env != nil {
+//			for envKey, envVal := range oceConfig.Build.Env {
+//				kickOffEnvs[envKey] = envVal
+//			}
+//		}
+//	}
+//
+//
+//
+//	//create a settings.xml maven file that takes in nexus and/or something else creds
+//
+//	//TODO: figure out what to do about the rest of the stages
+//	job := &res.JobConfig{
+//		Command: strings.Join(kickOffCmd, " && "),
+//		Env:     kickOffEnvs,
+//		Image:   buildImage,
+//	}
+//
+//	jobMap[gitCommit] = job
+//
+//	pipeConfig := &res.PipelineConfig{
+//		Steps:     jobMap,
+//		GlobalEnv: oceConfig.Env,
+//	}
+//	return pipeConfig, nil
+//}
 
 func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	handlerCtx := ctx.(*HookHandlerContext)

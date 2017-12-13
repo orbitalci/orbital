@@ -2,7 +2,6 @@ package werker
 
 import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"bitbucket.org/level11consulting/ocelot/werker/processors"
 	"errors"
 	"github.com/namsral/flag"
 	"os"
@@ -50,7 +49,7 @@ type WerkerConf struct {
 	grpcPort        string
 	WerkerName      string
 	werkerType      WerkType
-	werkerProcessor processors.Processor
+	//werkerProcessor builder.Processor
 	storage         storage.BuildOutputStorage
 	LogLevel        string
 }
@@ -78,12 +77,12 @@ func GetConf() (*WerkerConf, error) {
 	}
 	werker.storage = strToStorageImplement(storageTypeStr)
 
-	switch werker.werkerType {
-	case Kubernetes:
-		werker.werkerProcessor = &processors.K8Proc{}
-	case Docker:
-		werker.werkerProcessor = &processors.DockProc{}
-	}
+	//switch werker.werkerType {
+	//case Kubernetes:
+	//	werker.werkerProcessor = &builder.K8Proc{}
+	//case Docker:
+	//	werker.werkerProcessor = &builder.DockProc{}
+	//}
 
 	return werker, nil
 }
