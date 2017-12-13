@@ -189,7 +189,7 @@ func getCredConfig() *models.Credentials {
 
 func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	//cfg := getCredConfig()
-	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath+"/bitbucket/"+acctName, false)
+	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.BuildVCSCredPath("bitbucket", acctName), false)
 	cfg := bbCreds["bitbucket/"+acctName]
 	bb := handler.Bitbucket{}
 	bbClient := &ocenet.OAuthClient{}
