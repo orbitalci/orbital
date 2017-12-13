@@ -143,8 +143,9 @@ func werk(ctx *HookHandlerContext, oceConfig pb.BuildConfig, gitCommit string, f
 
 	cfg := bbCreds["bitbucket/" + acctName]
 	//TODO: clone with creds: git clone https://username:password@github.com/username/repository.git
-	kickOffCmd = append(kickOffCmd, fmt.Sprintf("wget --user=%s --password=%s https://bitbucket.org/%s/get/%s.gz -o code.gz", cfg.ClientId, cfg.ClientSecret, fullName, gitCommit))
-	kickOffCmd = append(kickOffCmd, "gunzip code.gz")
+	kickOffCmd = append(kickOffCmd, fmt.Sprintf("wget --user=%s --password=%s https://bitbucket.org/%s/get/%s.zip", cfg.ClientId, cfg.ClientSecret, fullName, gitCommit))
+	kickOffCmd = append(kickOffCmd, fmt.Sprintf("cd $(unzip %s.zip | awk 'NR=3 {print $2}')", gitCommit))
+
 
 	if oceConfig.Before != nil {
 		if oceConfig.Before.Script != nil {
