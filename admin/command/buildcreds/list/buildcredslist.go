@@ -2,6 +2,7 @@ package buildcredslist
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
 	"flag"
 	"fmt"
@@ -18,32 +19,28 @@ func New(ui cli.Ui) *cmd {
 type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
+	client models.GuideOcelotClient
 }
 
 func (c *cmd) init() {
+	var err error
+	//todo: THIS IS HARDCODED! BAD!
+	c.client, err = admin.GetClient("localhost:10000")
+	if err != nil {
+		panic(err)
+	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 }
 
 func (c *cmd) Run(args []string) int {
-	client, err := admin.GetClient("localhost:10000")
-	if err != nil {
-		panic(err)
-	}
 	ctx := context.Background()
 	var protoReq empty.Empty
-	msg, err := client.GetCreds(ctx, &protoReq)
+	msg, err := c.client.GetCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 	}
-	pretty := `ClientId: %s
-ClientSecret: %s
-TokenURL: %s
-AcctName: %s
-Type: %s
-
-`
 	for _, oneline := range msg.Credentials {
-		c.UI.Info(fmt.Sprintf(pretty, oneline.ClientId, oneline.ClientSecret, oneline.TokenURL, oneline.AcctName, oneline.Type))
+		c.UI.Info(prettify(oneline))
 	}
 	return 0
 }
@@ -55,6 +52,18 @@ func (c *cmd) Synopsis() string {
 func (c *cmd) Help() string {
 	return help
 }
+
+func prettify(cred *models.Credentials) string {
+	pretty := `ClientId: %s
+ClientSecret: %s
+TokenURL: %s
+AcctName: %s
+Type: %s
+
+`
+	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, cred.Type)
+}
+
 
 const synopsis = "List all credentials used for tracking repositories to build"
 const help = `
