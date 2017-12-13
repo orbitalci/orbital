@@ -10,12 +10,8 @@ message BuildConfig {
     string buildTool = 2;
     repeated string packages = 3;
     repeated string branches = 4;
-    map<string, string> env = 5;
-    Stage before= 6;
-    Stage after = 7;
-    Stage build = 8;
-    Stage test = 9;
-    Stage deploy = 10;
+    repeated string env = 5;
+    map<string, Stage> stages = 6;
 }
 
 message Stage {

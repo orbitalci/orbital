@@ -1,22 +1,28 @@
 package builder
 
+import (
+	pb "bitbucket.org/level11consulting/ocelot/protos"
+)
+
+
 //TODO: think about how deployment to nexus fits in
 type Builder interface {
-	Setup(logout chan []byte, image string) *Result
-	Before(logout chan []byte) *Result
+	Setup(logout chan []byte, image string, globalEnvs []string) *Result
 	Build(logout chan []byte) *Result
-	After(logout chan []byte) *Result
-	Test(logout chan []byte) *Result
-	Deploy(logout chan []byte) *Result
+	Execute(stage string, actions *pb.Stage, logout chan []byte) *Result
+	Cleanup()
 }
 
 //TODO: could return even less
 type Result struct {
-	Status string
+	Stage string
+	Status StageResult
 	Error  error
 }
 
-//TODO: move db shit out and write interface
-type SQLiteDB struct{}
+type StageResult int32
 
-func (s *SQLiteDB) Connect() {}
+const (
+	PASS	StageResult = 0
+	FAIL	StageResult = 1
+)

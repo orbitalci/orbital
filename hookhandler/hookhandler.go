@@ -44,8 +44,10 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//TODO: need to check and make sure that New.Type == branch
-	if shouldBuild(buildConf, repopush.Push.Changes[0].New.Name) {
+	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
 		tellWerker(ctx, buildConf, hash, fullName, acctName)
+	} else {
+		//TODO: tell db we couldn't build
 	}
 }
 
@@ -73,15 +75,22 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if shouldBuild(buildConf, "") {
+	if validateBuild(buildConf, "") {
 		tellWerker(ctx, buildConf, hash, fullName, acctName)
 	} else {
-		//TODO: tell db that we couldn't build
+		//TODO: tell db we couldn't build
 	}
 }
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
-func shouldBuild(buildConf *pb.BuildConfig, branch string) bool {
+	// - check if commit branch matches with ocelot.yaml branch
+	// - check if ocelot.yaml has at least one step called build
+func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
+	_, ok := buildConf.Stages["build"]
+	if !ok {
+		return false
+	}
+
 	for _, buildBranch := range buildConf.Branches {
 		if buildBranch == branch {
 			return true

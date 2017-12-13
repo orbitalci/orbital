@@ -36,7 +36,16 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	w.infochan = make(chan []byte)
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
-	go w.build(werkerTask)
+
+	var builder b.Builder
+	switch w.WerkConf.werkerType {
+	case Docker:
+		builder = b.NewDockerBuilder()
+		//
+		//case Kubernetes:
+		//	builder = b.NewK8Builder()
+	}
+	go w.build(werkerTask, builder)
 	return nil
 }
 
@@ -47,30 +56,29 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 	w.ChanChan <- transport
 }
 
-// build contains the logic for actually building. switches on type of proto message that was sent
-// over the nsq queue
-func (w *WorkerMsgHandler) build(werk *pb.WerkerTask) {
+//TODO: make this so that you only call NewEnvClient once
+// build will call appropriate builder functions
+func (w *WorkerMsgHandler) build(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
+	defer close(w.infochan)
 	w.WatchForResults(werk.CheckoutHash)
 
-	var builder b.Builder
-
-	switch w.WerkConf.werkerType {
-	case Docker:
-		builder = b.NewDockerBuilder()
-	//
-	//case Kubernetes:
-	//	builder = b.NewK8Builder()
+	//TODO: do something with outputs here
+	result := builder.Setup(w.infochan, werk.BuildConf.Image, werk.BuildConf.Env)
+	if result.Status == b.FAIL {
+		//WRITE TO DB
+		return
 	}
 
-	//TODO: do something with outputs here
-	result := builder.Setup(w.infochan, werk.BuildConf.Image)
-	ocelog.Log().Debug(result)
-	//beforeResult := builder.Before(w.infochan)
-	//buildResult := builder.Build(w.infochan)
-	//afterResult := builder.After(w.infochan)
-	//testResult := builder.Test(w.infochan)
-	//deployResult := builder.Deploy(w.infochan)
+	for stageKey, stageVal := range werk.BuildConf.Stages {
+		//build is special because we deploy with this
+		if stageKey == "build" {
+			builder.Build(w.infochan)
+		}
+		builder.Execute(stageKey, stageVal, w.infochan)
+	}
+
+	builder.Cleanup()
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
 }
