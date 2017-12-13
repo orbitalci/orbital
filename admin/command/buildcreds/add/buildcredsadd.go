@@ -18,6 +18,7 @@ func New(ui cli.Ui) *cmd {
 	return c
 }
 
+
 type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
@@ -26,8 +27,8 @@ type cmd struct {
 }
 
 func (c *cmd) init() {
-	//todo: THIS IS HARDCODED! BAD!
 	var err error
+	//todo: THIS IS HARDCODED! BAD!
 	c.client, err = admin.GetClient("localhost:10000")
 	if err != nil {
 		panic(err)
@@ -42,28 +43,25 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 	dese := deserialize.New()
 	confFile, err := ioutil.ReadFile(c.fileloc)
 	if err != nil {
-		fmt.Println("Could not read file at ", c.fileloc)
-		fmt.Println("Error: ", err)
+		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
 		return 1
 	}
 	if err = dese.YAMLToProto(confFile, credWrap); err != nil {
-		fmt.Println("Could not process file, please check documentation")
-		fmt.Println("Error", err)
+		c.UI.Error(fmt.Sprintf("Could not process file, please check documentation\nError: %s", err.Error()))
 		return 1
 	}
 	var errOccured bool
 	if len(credWrap.Credentials) == 0 {
-		fmt.Println("Did not read any credentials! Is your yaml formatted correctly?")
+		c.UI.Error("Did not read any credentials! Is your yaml formatted correctly?")
 		return 1
 	}
 	for _, configVal := range credWrap.Credentials {
 		_, err = c.client.SetCreds(ctx, configVal)
 		if err != nil {
-			fmt.Println("Could not add credentials for account: ", configVal.AcctName)
-			fmt.Println("Error: ", err)
+			c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
 			errOccured = true
 		} else {
-			fmt.Println("Added credentials for account: ", configVal.AcctName)
+			c.UI.Info(fmt.Sprintf("Added credentials for account: %s", configVal.AcctName))
 		}
 	}
 	if errOccured {
@@ -98,15 +96,14 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.Credentials, errorConcat 
 func (c *cmd) runStdinUpload(ctx context.Context) int {
 	creds, errConcat := getCredentialsFromUiAsk(c.UI)
 	if errConcat != "" {
-		fmt.Println("Error recieving input: \n ", errConcat)
+		c.UI.Error(fmt.Sprint("Error recieving input: ", errConcat))
 		return 1
 	}
 	if _, err := c.client.SetCreds(ctx, creds); err != nil {
-		fmt.Println("Could not add credentials for account: ", creds.AcctName)
-		fmt.Println("Error: ", err)
+		c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", creds.AcctName, err.Error()))
 		return 1
 	}
-	fmt.Println("Successfully added credentials for account: ", creds.AcctName)
+	c.UI.Info(fmt.Sprint("Successfully added credentials for account: ", creds.AcctName))
 	return 0
 }
 

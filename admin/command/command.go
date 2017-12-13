@@ -10,7 +10,8 @@ import (
 var Commands map[string]cli.CommandFactory
 
 func init(){
-	ui := &cli.BasicUi{Writer: os.Stdout, ErrorWriter: os.Stderr, Reader: os.Stdin}
+	base := &cli.BasicUi{Writer: os.Stdout, ErrorWriter: os.Stderr, Reader: os.Stdin}
+	ui := &cli.ColoredUi{Ui: base, OutputColor: cli.UiColorNone, InfoColor: cli.UiColorBlue, ErrorColor: cli.UiColorRed, WarnColor: cli.UiColorYellow}
 	Commands = map[string]cli.CommandFactory{
 		"creds list": func()(cli.Command, error) { return buildcredslist.New(ui), nil },
 		"creds add" : func()(cli.Command, error) { return buildcredsadd.New(ui), nil},

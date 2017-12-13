@@ -24,16 +24,6 @@ func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 }
 
-/*
-type Credentials struct {
-	ClientId     string `protobuf:"bytes,1,opt,name=clientId" json:"clientId,omitempty"`
-	ClientSecret string `protobuf:"bytes,2,opt,name=clientSecret" json:"clientSecret,omitempty"`
-	TokenURL     string `protobuf:"bytes,3,opt,name=tokenURL" json:"tokenURL,omitempty"`
-	AcctName     string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty"`
-	Type         string `protobuf:"bytes,5,opt,name=type" json:"type,omitempty"`
-}
- */
-
 func (c *cmd) Run(args []string) int {
 	client, err := admin.GetClient("localhost:10000")
 	if err != nil {
@@ -42,6 +32,9 @@ func (c *cmd) Run(args []string) int {
 	ctx := context.Background()
 	var protoReq empty.Empty
 	msg, err := client.GetCreds(ctx, &protoReq)
+	if err != nil {
+		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
+	}
 	pretty := `ClientId: %s
 ClientSecret: %s
 TokenURL: %s
@@ -50,7 +43,7 @@ Type: %s
 
 `
 	for _, oneline := range msg.Credentials {
-		fmt.Printf(pretty, oneline.ClientId, oneline.ClientSecret, oneline.TokenURL, oneline.AcctName, oneline.Type)
+		c.UI.Info(fmt.Sprintf(pretty, oneline.ClientId, oneline.ClientSecret, oneline.TokenURL, oneline.AcctName, oneline.Type))
 	}
 	return 0
 }
