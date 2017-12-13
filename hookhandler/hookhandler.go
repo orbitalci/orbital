@@ -13,6 +13,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"fmt"
 )
 
 type HookHandlerContext struct {
@@ -48,7 +49,7 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	}
 	//TODO: need to check and make sure that New.Type == branch
 	if shouldBuild(buildConf, repopush.Push.Changes[0].New.Name) {
-		tellWerker(ctx, buildConf, hash)
+		tellWerker(ctx, buildConf, hash, fullName, acctName)
 	}
 }
 
@@ -77,7 +78,7 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 	}
 
 	if shouldBuild(buildConf, "") {
-		tellWerker(ctx, buildConf, hash)
+		tellWerker(ctx, buildConf, hash, fullName, acctName)
 	} else {
 		//TODO: tell db that we couldn't build
 	}
@@ -95,7 +96,7 @@ func shouldBuild(buildConf *pb.BuildConfig, branch string) bool {
 
 //TODO: this code needs to say X repo is now being tracked
 //TODO: this code will also need to store status into db
-func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string) {
+func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string, fullName string, acctName string) {
 	// get one-time token use for access to vault
 	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
 	if err != nil {
@@ -103,7 +104,7 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 		return
 	}
 
-	pipeConfig, err := werk(*buildConf, hash)
+	pipeConfig, err := werk(ctx, *buildConf, hash, fullName, acctName)
 
 	werkerTask := &pb.WerkerTask{
 		VaultToken:   token,
@@ -116,12 +117,7 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string)
 
 //TODO: state = not started = to be stored inside of postgres (db interface is gonna be inside of go-til)
 //this just builds the pipeline config, worker will call NewPipeline with the pipeline config and run
-func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, error) {
-	//TODO: example input for job? What should be passed to list of strings?
-	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
-	// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
-	//TODO: we might be able to actually create an image and use input/outputs for the packages part?
-
+func werk(ctx *HookHandlerContext, oceConfig pb.BuildConfig, gitCommit string, fullName string, acctName string) (*res.PipelineConfig, error) {
 	jobMap := make(map[string]*res.JobConfig)
 
 	var kickOffCmd []string
@@ -134,7 +130,21 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, erro
 		buildImage = "TODO PARSE THIS AND PUSH TO ARTIFACT REPO"
 	}
 
+	//TODO: where to store failed builds
+	if oceConfig.Build == nil {
+		return nil, errors.New("Build stage cannot be empty")
+	}
+
 	//first, let's get the codebase onto the container
+	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath + "/bitbucket/" + acctName, false)
+	if err != nil {
+		ocelog.IncludeErrField(err)
+	}
+
+	cfg := bbCreds["bitbucket/" + acctName]
+	//TODO: clone with creds: git clone https://username:password@github.com/username/repository.git
+	kickOffCmd = append(kickOffCmd, fmt.Sprintf("wget --user=%s --password=%s https://bitbucket.org/%s/get/%s.gz -o code.gz", cfg.ClientId, cfg.ClientSecret, fullName, gitCommit))
+	kickOffCmd = append(kickOffCmd, "gunzip code.gz")
 
 	if oceConfig.Before != nil {
 		if oceConfig.Before.Script != nil {
@@ -162,10 +172,7 @@ func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, erro
 		}
 	}
 
-	//TODO: where to store failed builds
-	if len(kickOffCmd) == 0 {
-		return nil, errors.New("You must have at least one stage populated to trigger a build")
-	}
+
 
 	//create a settings.xml maven file that takes in nexus and/or something else creds
 
