@@ -6,11 +6,6 @@ import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"github.com/golang/protobuf/proto"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
-	"bufio"
-	"context"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/builder"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -69,8 +64,8 @@ func (w *WorkerMsgHandler) build(werk *pb.WerkerTask) {
 	}
 
 	//TODO: do something with outputs here
-	_ := builder.Setup(w.infochan, werk.BuildConf.Image)
-
+	result := builder.Setup(w.infochan, werk.BuildConf.Image)
+	ocelog.Log().Debug(result)
 	//beforeResult := builder.Before(w.infochan)
 	//buildResult := builder.Build(w.infochan)
 	//afterResult := builder.After(w.infochan)

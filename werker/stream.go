@@ -288,7 +288,7 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf) {
 	ocelog.Log().Debug("saving build info channels to in memory map")
 	go cacheProcessor(transportChan, werkStream)
 
-	ocelog.Log().Debug("serving websocket on port: ", conf.servicePort)
+	ocelog.Log().Info("serving websocket on port: ", conf.servicePort)
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{werkStream, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
