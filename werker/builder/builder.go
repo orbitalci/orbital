@@ -10,12 +10,13 @@ type Builder interface {
 	Deploy(logout chan []byte) *Result
 }
 
+//TODO: could return even less
 type Result struct {
 	Status string
 	Error  error
 }
 
-//TODO: move db shit out
+//TODO: move db shit out and write interface
 type SQLiteDB struct{}
 
 func (s *SQLiteDB) Connect() {}
