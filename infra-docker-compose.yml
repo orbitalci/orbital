@@ -76,3 +76,21 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+  registrator:
+    container_name: registrator
+    image: gliderlabs/registrator:latest
+    network_mode: host
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    environment:
+      DOCKER_HOST: unix:///tmp/docker.sock
+    command: >
+      -cleanup
+      -internal
+      consul://localhost:8500
