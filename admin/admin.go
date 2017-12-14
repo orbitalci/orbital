@@ -119,8 +119,8 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 	gos := gosss.(*guideOcelotServer)
 
 	config := &models.CredWrapper{}
-	configFile, err := ioutil.ReadFile("/home/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/admin/" + models.ConfigFileName)
-	//configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/admin/" + models.ConfigFileName)
+	//configFile, err := ioutil.ReadFile("/home/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/admin/" + models.ConfigFileName)
+	configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/admin/" + models.ConfigFileName)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return

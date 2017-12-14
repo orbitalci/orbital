@@ -61,13 +61,17 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 	containerConfig := &container.Config{
 		Image: imageName,
 		Env: globalEnvs,
-		Cmd: setupCmds,
+		Entrypoint: setupCmds,
+		AttachStderr: true,
+		AttachStdout: true,
+		OpenStdin: true,
 	}
 
 	//TODO: where the fuck does this go on the host machine? Do I have to make the dir first?
 	//host configs like mount points
 	hostConfig := &container.HostConfig{
-		Binds: []string{"/home/mariannefeng/.ocelot:/.ocelot"},
+		Binds: []string{"/Users/mariannefeng/.ocelot:/.ocelot"},
+		//Binds: []string{"/home/mariannefeng/.ocelot:/.ocelot"},
 	}
 
 	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")
@@ -80,6 +84,9 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 		}
 	}
 
+	for _, warning := range resp.Warnings {
+		logout <- []byte(warning)
+	}
 	logout <- []byte(currentStage + "Container created with ID " + resp.ID)
 	d.ContainerId = resp.ID
 
@@ -94,7 +101,12 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 	logout <- []byte(currentStage + "Container " + resp.ID + " started")
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
-	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
+	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow: true,
+		Timestamps: true,
+		})
 
 	if err != nil {
 		return &Result{
@@ -108,6 +120,15 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 	bufReader = bufio.NewReader(containerLog)
 	d.writeToInfo(currentStage, bufReader, logout)
 
+	//attachResp, err := cli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
+	//	Stream: true,
+	//	Stdout: true,
+	//	Stderr: true,
+	//	Logs: true,
+	//})
+	//
+	//ocelog.Log().Info(attachResp)
+
 	return &Result{
 		Stage:  "setup",
 		Status: PASS,
@@ -116,9 +137,9 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 }
 
 func (d *Docker) Cleanup() {
-	d.Log.Close()
+	//d.Log.Close()
 	//TODO: destroy container
-	d.DockerClient.Close()
+	//d.DockerClient.Close()
 }
 
 func (d *Docker) Build(logout chan []byte) *Result {
