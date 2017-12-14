@@ -102,6 +102,7 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string) *R
 func (d *Docker) Cleanup() {
 	d.Log.Close()
 	//TODO: destroy container
+	d.DockerClient.Close()
 }
 
 func (d *Docker) Build(logout chan []byte) *Result {

@@ -56,7 +56,7 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 	w.ChanChan <- transport
 }
 
-//TODO: make this so that you only call NewEnvClient once
+//TODO: make this so that you only call NewEnvClient once?
 // build will call appropriate builder functions
 func (w *WorkerMsgHandler) build(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
