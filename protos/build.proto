@@ -23,6 +23,7 @@ message WerkerTask {
     string vaultToken = 1;
     string checkoutHash = 2;
     BuildConfig buildConf = 3;
+    string vcsToken = 4;
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//

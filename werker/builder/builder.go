@@ -7,7 +7,7 @@ import (
 
 //TODO: think about how deployment to nexus fits in
 type Builder interface {
-	Setup(logout chan []byte, image string, globalEnvs []string) *Result
+	Setup(logout chan []byte, image string, globalEnvs []string, gitCommit string) *Result
 	Build(logout chan []byte) *Result
 	Execute(stage string, actions *pb.Stage, logout chan []byte) *Result
 	Cleanup()

@@ -22,17 +22,21 @@ func NewDockerBuilder() Builder {
 	return &Docker{}
 }
 
-func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string) *Result {
+func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, gitCommit string) *Result {
 	currentStage := "SETUP | "
 
-	ocelog.Log().Debug("doing setup")
+	ocelog.Log().Debug("doing the setup")
 	ctx := context.Background()
 
 	cli, err := client.NewEnvClient()
 	d.DockerClient = cli
 
 	if err != nil {
-		panic(err)
+		return &Result{
+			Stage:  "setup",
+			Status: FAIL,
+			Error:  err,
+		}
 	}
 
 	imageName := image
@@ -42,7 +46,7 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string) *R
 
 	if err != nil {
 		return &Result{
-			Stage:  "Setup",
+			Stage:  "setup",
 			Status: FAIL,
 			Error:  err,
 		}
@@ -51,16 +55,26 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string) *R
 	bufReader := bufio.NewReader(out)
 	d.writeToInfo(currentStage, bufReader, logout)
 
-	//TODO: run bash script for kicking off cmd
 	logout <- []byte(currentStage + "Creating container...")
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
+
+	//container configurations
+	containerConfig := &container.Config{
 		Image: imageName,
 		Env: globalEnvs,
-	}, nil, nil, "")
+		Cmd: []string{"/.ocelot/bb_download.sh " + "" },
+	}
+
+	//TODO: where the fuck does this go on the host machine? Do I have to make the dir first?
+	//host configs like mount points
+	hostConfig := &container.HostConfig{
+		Binds: []string{".ocelot:/.ocelot"},
+	}
+
+	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")
 
 	if err != nil {
 		return &Result{
-			Stage:  "Setup",
+			Stage:  "setup",
 			Status: FAIL,
 			Error:  err,
 		}
@@ -71,7 +85,7 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string) *R
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return &Result{
-			Stage:  "Setup",
+			Stage:  "setup",
 			Status: FAIL,
 			Error:  err,
 		}
@@ -81,19 +95,20 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string) *R
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
 	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
-	d.Log = &containerLog
+	d.Log = containerLog
+
 	bufReader = bufio.NewReader(containerLog)
 	d.writeToInfo(currentStage, bufReader, logout)
 	if err != nil {
 		return &Result{
-			Stage:  "Setup",
+			Stage:  "setup",
 			Status: FAIL,
 			Error:  err,
 		}
 	}
 
 	return &Result{
-		Stage:  "Setup",
+		Stage:  "setup",
 		Status: PASS,
 		Error:  nil,
 	}

@@ -45,7 +45,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 		//case Kubernetes:
 		//	builder = b.NewK8Builder()
 	}
-	go w.build(werkerTask, builder)
+	go w.MakeItSo(werkerTask, builder)
 	return nil
 }
 
@@ -57,21 +57,21 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 }
 
 //TODO: make this so that you only call NewEnvClient once?
-// build will call appropriate builder functions
-func (w *WorkerMsgHandler) build(werk *pb.WerkerTask, builder b.Builder) {
+// MakeItSo will call appropriate builder functions
+func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	defer close(w.infochan)
 	w.WatchForResults(werk.CheckoutHash)
-
-	//TODO: do something with outputs here
-	result := builder.Setup(w.infochan, werk.BuildConf.Image, werk.BuildConf.Env)
+	ocelog.Log().Debug("secret vault token ", werk.VaultToken)
+	ocelog.Log().Debug("BB creds", werk.VcsToken)
+	result := builder.Setup(w.infochan, werk.BuildConf.Image, werk.BuildConf.Env, werk.CheckoutHash)
 	if result.Status == b.FAIL {
 		//WRITE TO DB
 		return
 	}
 
 	for stageKey, stageVal := range werk.BuildConf.Stages {
-		//build is special because we deploy with this
+		//build is special because we deploy after this
 		if stageKey == "build" {
 			builder.Build(w.infochan)
 		}
@@ -79,6 +79,5 @@ func (w *WorkerMsgHandler) build(werk *pb.WerkerTask, builder b.Builder) {
 	}
 
 	builder.Cleanup()
-
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
 }

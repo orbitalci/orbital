@@ -33,7 +33,7 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	fullName := repopush.Repository.FullName
 	hash := repopush.Push.Changes[0].New.Target.Hash
 	acctName := repopush.Repository.Owner.Username
-	buildConf, err := GetBBBuildConfig(ctx, acctName, fullName, hash)
+	buildConf, bbToken, err := GetBBConfig(ctx, acctName, fullName, hash)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -45,7 +45,7 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	}
 	//TODO: need to check and make sure that New.Type == branch
 	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
-		tellWerker(ctx, buildConf, hash, fullName, acctName)
+		tellWerker(ctx, buildConf, hash, fullName, acctName, bbToken)
 	} else {
 		//TODO: tell db we couldn't build
 	}
@@ -64,7 +64,7 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 	hash := pr.Pullrequest.Source.Commit.Hash
 	acctName := pr.Pullrequest.Source.Repository.Owner.Username
 
-	buildConf, err := GetBBBuildConfig(ctx, acctName, fullName, hash)
+	buildConf, bbToken, err := GetBBConfig(ctx, acctName, fullName, hash)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -76,7 +76,7 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 	}
 
 	if validateBuild(buildConf, "") {
-		tellWerker(ctx, buildConf, hash, fullName, acctName)
+		tellWerker(ctx, buildConf, hash, fullName, acctName, bbToken)
 	} else {
 		//TODO: tell db we couldn't build
 	}
@@ -101,7 +101,7 @@ func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 
 //TODO: this code needs to say X repo is now being tracked
 //TODO: this code will also need to store status into db
-func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string, fullName string, acctName string) {
+func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string, fullName string, acctName string, bbToken string) {
 	// get one-time token use for access to vault
 	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
 	if err != nil {
@@ -113,88 +113,11 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string,
 		VaultToken:   token,
 		CheckoutHash: hash,
 		BuildConf: buildConf,
+		VcsToken: bbToken,
 	}
 
 	go ctx.Producer.WriteProto(werkerTask, "build")
 }
-
-//TODO: state = not started = to be stored inside of postgres (db interface is gonna be inside of go-til)
-//this just builds the pipeline config, worker will call NewPipeline with the pipeline config and run
-//func werk(ctx *HookHandlerContext, oceConfig pb.BuildConfig, gitCommit string, fullName string, acctName string) (*res.PipelineConfig, error) {
-//	jobMap := make(map[string]*res.JobConfig)
-//
-//	var kickOffCmd []string
-//	var kickOffEnvs = make(map[string]string)
-//	var buildImage string
-//
-//	if oceConfig.Image != "" {
-//		buildImage = oceConfig.Image
-//	} else if len(oceConfig.Packages) > 0 {
-//		buildImage = "TODO PARSE THIS AND PUSH TO ARTIFACT REPO"
-//	}
-//
-//	//TODO: where to store failed builds
-//	if oceConfig.Build == nil {
-//		return nil, errors.New("Build stage cannot be empty")
-//	}
-//
-//	//first, let's get the codebase onto the container
-//	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath + "/bitbucket/" + acctName, false)
-//	if err != nil {
-//		ocelog.IncludeErrField(err)
-//	}
-//
-//	cfg := bbCreds["bitbucket/" + acctName]
-//	//TODO: clone with creds: git clone https://username:password@github.com/username/repository.git
-//	kickOffCmd = append(kickOffCmd, fmt.Sprintf("wget --user=%s --password=%s https://bitbucket.org/%s/get/%s.zip", cfg.ClientId, cfg.ClientSecret, fullName, gitCommit))
-//	kickOffCmd = append(kickOffCmd, fmt.Sprintf("cd $(unzip %s.zip | awk 'NR=3 {print $2}')", gitCommit))
-//
-//
-//	if oceConfig.Before != nil {
-//		if oceConfig.Before.Script != nil {
-//			kickOffCmd = append(kickOffCmd, oceConfig.Before.Script...)
-//		}
-//
-//		//combine optional before env values if passed
-//		if oceConfig.Before.Env != nil {
-//			for envKey, envVal := range oceConfig.Before.Env {
-//				kickOffEnvs[envKey] = envVal
-//			}
-//		}
-//	}
-//
-//	if oceConfig.Build != nil {
-//		if oceConfig.Build.Script != nil {
-//			kickOffCmd = append(kickOffCmd, oceConfig.Build.Script...)
-//		}
-//
-//		//combine optional before env values if passed
-//		if oceConfig.Build.Env != nil {
-//			for envKey, envVal := range oceConfig.Build.Env {
-//				kickOffEnvs[envKey] = envVal
-//			}
-//		}
-//	}
-//
-//
-//
-//	//create a settings.xml maven file that takes in nexus and/or something else creds
-//
-//	//TODO: figure out what to do about the rest of the stages
-//	job := &res.JobConfig{
-//		Command: strings.Join(kickOffCmd, " && "),
-//		Env:     kickOffEnvs,
-//		Image:   buildImage,
-//	}
-//
-//	jobMap[gitCommit] = job
-//
-//	pipeConfig := &res.PipelineConfig{
-//		Steps:     jobMap,
-//		GlobalEnv: oceConfig.Env,
-//	}
-//	return pipeConfig, nil
-//}
 
 func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	handlerCtx := ctx.(*HookHandlerContext)
@@ -221,13 +144,15 @@ func getCredConfig() *models.Credentials {
 	}
 }
 
-func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
+//returns config if it exists, bitbucket token, and err
+func GetBBConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
 	//cfg := getCredConfig()
 	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath+"/bitbucket/"+acctName, false)
 	cfg := bbCreds["bitbucket/"+acctName]
 	bb := handler.Bitbucket{}
+
 	bbClient := &ocenet.OAuthClient{}
-	bbClient.Setup(cfg)
+	token, err = bbClient.Setup(cfg)
 
 	bb.SetMeUp(cfg, bbClient)
 	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
