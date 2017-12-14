@@ -12,6 +12,11 @@ import (
 
 var ConfigPath = "creds"
 
+// creds/acctname/vcs/bitbucket
+func BuildVCSCredPath(CredType string, AcctName string) string {
+	return fmt.Sprintf("%s/%s/vcs/%s", ConfigPath, AcctName, CredType)
+}
+
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
 //if token is an empty string, vault will be initialized with $VAULT_TOKEN
@@ -58,9 +63,9 @@ type RemoteConfig struct {
 	Vault  *ocevault.Vaulty
 }
 
-//GetCredAt will return list of credentials stored at specified path.
+//GetCredAt will return map of credentials stored at specified path.
 //if hideSecret is set to false, will return password in cleartext
-//key of map is CONFIG_TYPE/ACCTNAME. Ex: bitbucket/mariannefeng
+//key of map is <ACCTNAME>/vcs/<CONFIG_TYPE>. Ex: mariannefeng/vcs/bitbucket
 //if an error occurs while reading from vault, the most recent error will be returned from the response
 func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[string]*models.Credentials, error) {
 	creds := map[string]*models.Credentials{}
@@ -74,11 +79,11 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[s
 
 		for _, v := range configs {
 			pathKeys := strings.Split(strings.TrimLeft(v.Key, "/"+ConfigPath), "/")
-
 			//cred type | acct name gives us a unique id to track by in the map
-			credType := pathKeys[0]
-			acctName := pathKeys[1]
-			infoType := pathKeys[2]
+			acctName := pathKeys[0]
+			// "vcs" is now the second value in path
+			credType := pathKeys[2]
+			infoType := pathKeys[3]
 
 			mapKey := credType + "/" + acctName
 			foundConfig, ok := creds[mapKey]
@@ -91,7 +96,8 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[s
 				if hideSecret {
 					foundConfig.ClientSecret = "*********"
 				} else {
-					passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
+					passcode, passErr := remoteConfig.GetPassword(BuildVCSCredPath(credType, acctName))
+					//passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
 					if passErr != nil {
 						ocelog.IncludeErrField(err).Error()
 						foundConfig.ClientSecret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"

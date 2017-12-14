@@ -14,7 +14,7 @@ import (
 )
 
 func TestRemoteConfig_ErrorHandling(t *testing.T) {
-	brokenRemote, _ := GetInstance("", 0, "abc")
+	brokenRemote, _ := GetInstance("", 19000, "abc")
 	if brokenRemote == nil {
 		t.Error(test.GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
 	}
@@ -41,12 +41,12 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		Type:         "github",
 	}
 
-	err := testRemoteConfig.AddCreds(ConfigPath+"/github/mariannefeng", adminConfig)
+	err := testRemoteConfig.AddCreds(ConfigPath+"/mariannefeng/vcs/github", adminConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("first adding creds to consul", nil, err))
 	}
 
-	testPassword, err := testRemoteConfig.GetPassword(ConfigPath + "/github/mariannefeng")
+	testPassword, err := testRemoteConfig.GetPassword(BuildVCSCredPath("github", "mariannefeng"))
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("retrieving password", nil, err))
 	}
@@ -55,7 +55,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("secret from vault", "top-secret", testPassword))
 	}
 
-	creds, _ := testRemoteConfig.GetCredAt(ConfigPath+"/github/mariannefeng", true)
+	creds, _ := testRemoteConfig.GetCredAt(BuildVCSCredPath("github", "mariannefeng"), true)
 	marianne, ok := creds["github/mariannefeng"]
 	if !ok {
 		t.Error(test.GenericStrFormatErrors("fake cred should exist", true, ok))
@@ -81,7 +81,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("fake cred hidden password", "*********", marianne.ClientSecret))
 	}
 
-	creds, _ = testRemoteConfig.GetCredAt(ConfigPath+"/github/mariannefeng", false)
+	creds, _ = testRemoteConfig.GetCredAt(BuildVCSCredPath("github", "mariannefeng"), false)
 	marianne, _ = creds["github/mariannefeng"]
 
 	if marianne.ClientSecret != "top-secret" {
@@ -96,7 +96,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		Type:         "bitbucket",
 	}
 
-	err = testRemoteConfig.AddCreds(ConfigPath+"/bitbucket/ariannefeng", secondConfig)
+	err = testRemoteConfig.AddCreds(BuildVCSCredPath("bitbucket", "ariannefeng"), secondConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("adding second set of creds to consul", nil, err))
 	}
