@@ -70,7 +70,6 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	switch werk.VcsType {
 	case "bitbucket":
 		setupCmds = append(setupCmds, ".ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf("https://bitbucket.org/%s/get", werk.FullName), werk.CheckoutHash, "&&","tail","-f", "/dev/null")
-		setupCmds = []string{strings.Join(setupCmds, " ")}
 	case "github":
 			ocelog.Log().Error("not implemented")
 	}

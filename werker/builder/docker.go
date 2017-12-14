@@ -65,6 +65,7 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 		AttachStderr: true,
 		AttachStdout: true,
 		OpenStdin: true,
+		Tty: true,
 	}
 
 	//TODO: where the fuck does this go on the host machine? Do I have to make the dir first?
