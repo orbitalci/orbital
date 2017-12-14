@@ -61,14 +61,13 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 	containerConfig := &container.Config{
 		Image: imageName,
 		Env: globalEnvs,
-		Entrypoint: setupCmds,
+		Cmd: setupCmds,
 		AttachStderr: true,
 		AttachStdout: true,
-		OpenStdin: true,
-		Tty: true,
+		AttachStdin:true,
+		Tty:true,
 	}
 
-	//TODO: where the fuck does this go on the host machine? Do I have to make the dir first?
 	//host configs like mount points
 	hostConfig := &container.HostConfig{
 		Binds: []string{"/Users/mariannefeng/.ocelot:/.ocelot"},
@@ -106,7 +105,6 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow: true,
-		Timestamps: true,
 		})
 
 	if err != nil {
@@ -121,15 +119,6 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 	bufReader = bufio.NewReader(containerLog)
 	d.writeToInfo(currentStage, bufReader, logout)
 
-	//attachResp, err := cli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
-	//	Stream: true,
-	//	Stdout: true,
-	//	Stderr: true,
-	//	Logs: true,
-	//})
-	//
-	//ocelog.Log().Info(attachResp)
-
 	return &Result{
 		Stage:  "setup",
 		Status: PASS,
@@ -143,9 +132,52 @@ func (d *Docker) Cleanup() {
 	//d.DockerClient.Close()
 }
 
-func (d *Docker) Build(logout chan []byte) *Result {
+func (d *Docker) Build(logout chan []byte, envs []string, cmds []string, commitHash string) *Result {
 	ocelog.Log().Debug("inside of build function now")
-	return &Result{}
+
+	if len(d.ContainerId) == 0 {
+		return &Result {
+			Stage: "build",
+			Status: FAIL,
+			Error: errors.New("No container exists, setup before executing"),
+		}
+	}
+	ctx := context.Background()
+
+	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
+		Tty: true,
+		AttachStdin: true,
+		AttachStderr: true,
+		AttachStdout: true,
+		Env: envs,
+		Cmd: append([]string{"cd", commitHash, "&&"}, cmds...),
+	})
+
+	if err != nil {
+		return &Result{
+			Stage:  "build",
+			Status: FAIL,
+			Error:  err,
+		}
+	}
+
+	ocelog.Log().Debug(resp.ID)
+
+	err = d.DockerClient.ContainerExecStart(ctx, resp.ID, types.ExecStartCheck{})
+
+	if err != nil {
+		return &Result{
+			Stage:  "build",
+			Status: FAIL,
+			Error:  err,
+		}
+	}
+
+	return &Result{
+		Stage:  "build",
+		Status: PASS,
+		Error:  nil,
+	}
 }
 
 func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *Result {

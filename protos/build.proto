@@ -15,7 +15,7 @@ message BuildConfig {
 }
 
 message Stage {
-    map<string, string> env = 1;
+    repeated string env = 1;
     repeated string script = 2;
 }
 

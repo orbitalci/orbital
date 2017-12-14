@@ -81,7 +81,7 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 		ocelog.IncludeErrField(err).Error("wtf?")
 		return
 	}
-	defer ws.Close()
+	//defer ws.Close()
 	pumpDone := make(chan int)
 
 	go pumpBundle(ws, a, hash, pumpDone)
@@ -113,13 +113,13 @@ func writeGrpcError(stream protobuf.Build_BuildInfoServer, description []byte) {
 // pumpBundle writes build data to web socket
 func pumpBundle(stream interface{}, appCtx *werkerStreamer, hash string, done chan int) {
 	// determine whether to get from storage or off infoReader
-	if appCtx.CheckIfBuildDone(hash) {
-		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
-		err := streamFromStorage(appCtx, hash, stream)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("error retrieving from storage")
-		}
-	} else {
+	//if appCtx.CheckIfBuildDone(hash) {
+	//	ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
+	//	err := streamFromStorage(appCtx, hash, stream)
+	//	if err != nil {
+	//		ocelog.IncludeErrField(err).Error("error retrieving from storage")
+	//	}
+	//} else {
 		ocelog.Log().Debug("pumping info array data to web socket")
 		buildInfo, ok := appCtx.buildInfo[hash]
 		if ok {
@@ -131,8 +131,8 @@ func pumpBundle(stream interface{}, appCtx *werkerStreamer, hash string, done ch
 		} else {
 			writeStreamError(stream, []byte("did not find hash in current streaming data and the build was not marked as done"))
 		}
-	}
-	defer cleanUpStream(stream, done)
+	//}
+	//defer cleanUpStream(stream, done)
 }
 
 func cleanUpStream(stream interface{}, done chan int) {

@@ -7,7 +7,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
 	"fmt"
-	"strings"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -69,7 +68,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 
 	switch werk.VcsType {
 	case "bitbucket":
-		setupCmds = append(setupCmds, ".ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf("https://bitbucket.org/%s/get", werk.FullName), werk.CheckoutHash, "&&","tail","-f", "/dev/null")
+		setupCmds = append(setupCmds, ".ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf("https://bitbucket.org/%s/get", werk.FullName), werk.CheckoutHash)
 	case "github":
 			ocelog.Log().Error("not implemented")
 	}
@@ -82,10 +81,16 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 		return
 	}
 
+	//don't reassign result unless we're storing into db first
 	for stageKey, stageVal := range werk.BuildConf.Stages {
 		//build is special because we deploy after this
 		if stageKey == "build" {
-			builder.Build(w.infochan)
+			result := builder.Build(w.infochan, stageVal.Env, stageVal.Script, werk.CheckoutHash)
+			if result.Status == b.FAIL {
+				ocelog.Log().Error(result.Error)
+				//TODO: WRITE TO DB
+				return
+			}
 		}
 		builder.Execute(stageKey, stageVal, w.infochan)
 	}
