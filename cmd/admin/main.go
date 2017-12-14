@@ -4,7 +4,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/admin"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/secure-grpc"
+	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"fmt"
 	"github.com/namsral/flag"
 )

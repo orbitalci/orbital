@@ -7,7 +7,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/handler"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/secure-grpc"
+	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"crypto/tls"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

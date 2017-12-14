@@ -2,7 +2,7 @@ package admin
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/secure-grpc"
+	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"flag"
 	"google.golang.org/grpc"
 )
