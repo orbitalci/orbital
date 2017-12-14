@@ -22,7 +22,7 @@ func NewDockerBuilder() Builder {
 	return &Docker{}
 }
 
-func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, gitCommit string) *Result {
+func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, setupCmds []string) *Result {
 	currentStage := "SETUP | "
 
 	ocelog.Log().Debug("doing the setup")
@@ -61,13 +61,13 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, gi
 	containerConfig := &container.Config{
 		Image: imageName,
 		Env: globalEnvs,
-		Cmd: []string{"/.ocelot/bb_download.sh " + "" },
+		Cmd: setupCmds,
 	}
 
 	//TODO: where the fuck does this go on the host machine? Do I have to make the dir first?
 	//host configs like mount points
 	hostConfig := &container.HostConfig{
-		Binds: []string{".ocelot:/.ocelot"},
+		Binds: []string{"/home/mariannefeng/.ocelot:/.ocelot"},
 	}
 
 	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")
@@ -95,10 +95,7 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, gi
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
 	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
-	d.Log = containerLog
 
-	bufReader = bufio.NewReader(containerLog)
-	d.writeToInfo(currentStage, bufReader, logout)
 	if err != nil {
 		return &Result{
 			Stage:  "setup",
@@ -106,6 +103,10 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, gi
 			Error:  err,
 		}
 	}
+
+	d.Log = containerLog
+	bufReader = bufio.NewReader(containerLog)
+	d.writeToInfo(currentStage, bufReader, logout)
 
 	return &Result{
 		Stage:  "setup",
@@ -121,6 +122,7 @@ func (d *Docker) Cleanup() {
 }
 
 func (d *Docker) Build(logout chan []byte) *Result {
+	ocelog.Log().Debug("inside of build function now")
 	return &Result{}
 }
 
@@ -132,8 +134,6 @@ func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *R
 			Error: errors.New("No container exists, setup before executing"),
 		}
 	}
-
-
 
 	return &Result{
 

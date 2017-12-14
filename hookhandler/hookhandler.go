@@ -101,6 +101,7 @@ func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 
 //TODO: this code needs to say X repo is now being tracked
 //TODO: this code will also need to store status into db
+//TODO: remove unused fields
 func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string, fullName string, acctName string, bbToken string) {
 	// get one-time token use for access to vault
 	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
@@ -114,6 +115,8 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string,
 		CheckoutHash: hash,
 		BuildConf: buildConf,
 		VcsToken: bbToken,
+		VcsType: "bitbucket",
+		FullName: fullName,
 	}
 
 	go ctx.Producer.WriteProto(werkerTask, "build")

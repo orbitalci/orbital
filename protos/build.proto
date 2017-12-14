@@ -24,6 +24,8 @@ message WerkerTask {
     string checkoutHash = 2;
     BuildConfig buildConf = 3;
     string vcsToken = 4;
+    string vcsType = 5;
+    string fullName = 6;
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//
