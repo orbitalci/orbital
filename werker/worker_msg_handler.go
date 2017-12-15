@@ -61,7 +61,7 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 // MakeItSo will call appropriate builder functions
 func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
-	defer close(w.infochan)
+	//defer close(w.infochan)
 	w.WatchForResults(werk.CheckoutHash)
 
 	var setupCmds []string

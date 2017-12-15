@@ -10,6 +10,7 @@ import (
 	"io"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"errors"
+	"strings"
 )
 
 type Docker struct{
@@ -117,7 +118,7 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 
 	d.Log = containerLog
 	bufReader = bufio.NewReader(containerLog)
-	d.writeToInfo(currentStage, bufReader, logout)
+	go d.writeToInfo(currentStage, bufReader, logout)
 
 	return &Result{
 		Stage:  "setup",
@@ -144,13 +145,16 @@ func (d *Docker) Build(logout chan []byte, envs []string, cmds []string, commitH
 	}
 	ctx := context.Background()
 
+	concatCmd := append([]string{"cd", commitHash, "&&"}, cmds...)
+	completeCmd := append([]string{"/bin/sh", "-c"}, "'" + strings.Join(concatCmd, " ") + "'")
+
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
 		Tty: true,
 		AttachStdin: true,
 		AttachStderr: true,
 		AttachStdout: true,
 		Env: envs,
-		Cmd: append([]string{"cd", commitHash, "&&"}, cmds...),
+		Cmd: completeCmd,
 	})
 
 	if err != nil {
@@ -161,9 +165,20 @@ func (d *Docker) Build(logout chan []byte, envs []string, cmds []string, commitH
 		}
 	}
 
-	ocelog.Log().Debug(resp.ID)
+	attachedExec, err := d.DockerClient.ContainerExecAttach(ctx, resp.ID, types.ExecConfig{
+		Tty: true,
+		AttachStdin: true,
+		AttachStderr: true,
+		AttachStdout: true,
+		Env: envs,
+		Cmd: completeCmd,
+	})
 
-	err = d.DockerClient.ContainerExecStart(ctx, resp.ID, types.ExecStartCheck{})
+	inspect, err := d.DockerClient.ContainerExecInspect(ctx, resp.ID)
+	ocelog.Log().Debug(inspect)
+
+	//TODO: close conn
+	go d.writeToInfo("BUILD | ", attachedExec.Reader, logout)
 
 	if err != nil {
 		return &Result{

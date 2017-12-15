@@ -16,6 +16,8 @@ if [ $# -gt 0 ]; then
   # cleanup
   rm -rf ${codedir}
   rm ${args[2]}.zip
+
+  sleep infinity
 else
     echo "no arguments were passed in"
 fi

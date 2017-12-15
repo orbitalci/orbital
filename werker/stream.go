@@ -120,7 +120,7 @@ func pumpBundle(stream interface{}, appCtx *werkerStreamer, hash string, done ch
 	//		ocelog.IncludeErrField(err).Error("error retrieving from storage")
 	//	}
 	//} else {
-		ocelog.Log().Debug("pumping info array data to web socket")
+	//	ocelog.Log().Debug("pumping info array data to web socket")
 		buildInfo, ok := appCtx.buildInfo[hash]
 		if ok {
 			err := streamFromArray(buildInfo, stream)
