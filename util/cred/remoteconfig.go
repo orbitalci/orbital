@@ -12,6 +12,30 @@ import (
 
 var ConfigPath = "creds"
 
+// OcyCredType is the the of credential that we will be storing, ie binary repo or vcs
+type OcyCredType int
+
+const (
+	Vcs OcyCredType = iota
+	Repo
+)
+
+func BuildCredPath(credType string, AcctName string, ocyCredType OcyCredType) string {
+	var pattern string
+	switch ocyCredType {
+	case Vcs: pattern = "%s/%s/vcs/%s"
+	case Repo: pattern = "%s/%s/repo/%s"
+	default: panic("only repo or vcs")
+	}
+	return fmt.Sprintf(pattern, ConfigPath, AcctName, credType)
+}
+
+// creds/acctname/vcs/bitbucket
+func BuildVCSCredPath(CredType string, AcctName string) string {
+	return fmt.Sprintf("%s/%s/vcs/%s", ConfigPath, AcctName, CredType)
+}
+
+
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
 //if token is an empty string, vault will be initialized with $VAULT_TOKEN
@@ -65,7 +89,6 @@ type RemoteConfig struct {
 func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[string]*models.Credentials, error) {
 	creds := map[string]*models.Credentials{}
 	var err error
-
 	if remoteConfig.Consul.Connected {
 		configs, err := remoteConfig.Consul.GetKeyValues(path)
 		if err != nil {

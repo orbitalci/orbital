@@ -18,6 +18,9 @@ service GuideOcelot {
 			body: "*"
 		};
     }
+
+    rpc GetRepoCreds(google.protobuf.Empty) returns (RepoCredWrapper) {}
+    rpc SetRepoCreds(RepoCreds) returns (google.protobuf.Empty) {}
 }
 
 message CredWrapper {
@@ -30,4 +33,15 @@ message Credentials {
     string tokenURL = 3;
     string acctName = 4;
     string type = 5;
+}
+
+message RepoCredWrapper {
+    repeated RepoCreds credentials = 1;
+}
+
+message RepoCreds {
+    string username = 1;
+    string password = 2;
+    string repoUrl = 3;
+    string acctName = 4;
 }

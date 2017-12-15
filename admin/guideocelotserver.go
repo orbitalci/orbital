@@ -41,6 +41,15 @@ func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Cr
 	return &empty.Empty{}, err
 }
 
+
+func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
+
+}
+
+func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
+
+}
+
 func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator) models.GuideOcelotServer {
 	guideOcelotServer := new(guideOcelotServer)
 	guideOcelotServer.RemoteConfig = config
