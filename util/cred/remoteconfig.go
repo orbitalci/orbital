@@ -82,6 +82,10 @@ type RemoteConfig struct {
 	Vault  *ocevault.Vaulty
 }
 
+//func getVcsCred(acctName string, credType string, infoType string)
+func
+
+
 //GetCredAt will return map of credentials stored at specified path.
 //if hideSecret is set to false, will return password in cleartext
 //key of map is <ACCTNAME>/vcs/<CONFIG_TYPE>. Ex: mariannefeng/vcs/bitbucket
@@ -99,10 +103,12 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[s
 			pathKeys := strings.Split(strings.TrimLeft(v.Key, "/"+ConfigPath), "/")
 			//cred type | acct name gives us a unique id to track by in the map
 			acctName := pathKeys[0]
-			// "vcs" is now the second value in path
+			ocyCredType := pathKeys[1]
 			credType := pathKeys[2]
 			infoType := pathKeys[3]
-
+			if ocyCredType != "vcs" {
+				continue
+			}
 			mapKey := credType + "/" + acctName
 			foundConfig, ok := creds[mapKey]
 			if !ok {
@@ -114,7 +120,7 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[s
 				if hideSecret {
 					foundConfig.ClientSecret = "*********"
 				} else {
-					passcode, passErr := remoteConfig.GetPassword(BuildVCSCredPath(credType, acctName))
+					passcode, passErr := remoteConfig.GetPassword(BuildCredPath(credType, acctName, Vcs))
 					//passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
 					if passErr != nil {
 						ocelog.IncludeErrField(err).Error()
@@ -175,4 +181,26 @@ func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.Cred
 	}
 
 	return nil
+}
+
+// AddRepoCreds adds repo integration creds to consul + vault
+func (remoteConfig *RemoteConfig) AddRepoCreds(path string, repoCred *models.RepoCreds) (err error) {
+	if remoteConfig.Consul.Connected {
+		if err = remoteConfig.Consul.AddKeyValue(path + "/username", []byte(repoCred.Username)); err != nil {
+			return
+		}
+		if err = remoteConfig.Consul.AddKeyValue(path + "/repourl", []byte(repoCred.RepoUrl)); err != nil {
+			return
+		}
+		if remoteConfig.Vault != nil {
+			secret := make(map[string]interface{})
+			secret["clientsecret"] = repoCred.Password
+			if _, err = remoteConfig.Vault.AddUserAuthData(path, secret); err != nil {
+				return
+			}
+		}
+	} else {
+		err = errors.New("not connected to consul, unable to add credentials for artifact repository")
+	}
+	return
 }
