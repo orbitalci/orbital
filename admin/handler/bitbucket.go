@@ -106,7 +106,7 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 	}
 
 	for _, v := range repositories.GetValues() {
-		fmt.Printf("found repo %v\n", v.GetFullName())
+		ocelog.Log().Debug("found repo %v\n", v.GetFullName())
 		err = bb.CreateWebhook(v.GetLinks().GetHooks().GetHref())
 		if err != nil {
 			return err

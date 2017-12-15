@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -ne 1 ]; then
-    echo "usage: $0 [path to file to wrap/secure]"
+    echo "usage: $0 [path to file to wrap/secure-grpc]"
     exit 1
 fi
 

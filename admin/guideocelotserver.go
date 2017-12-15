@@ -37,6 +37,7 @@ func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Cr
 	if err != nil {
 		return nil, err
 	}
+	log.Log().Error("CONFIG: ", credentials)
 	err = SetupCredentials(g, credentials)
 	return &empty.Empty{}, err
 }
