@@ -1,9 +1,9 @@
 package command
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin/command/buildcreds"
-	"bitbucket.org/level11consulting/ocelot/admin/command/buildcreds/add"
-	"bitbucket.org/level11consulting/ocelot/admin/command/buildcreds/list"
+	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds"
+	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds/add"
+	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds/list"
 	"github.com/mitchellh/cli"
 	"os"
 )
