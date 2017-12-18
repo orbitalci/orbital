@@ -14,6 +14,7 @@ type guideOcelotServer struct {
 	RemoteConfig   *cred.RemoteConfig
 	Deserializer   *deserialize.Deserializer
 	AdminValidator *AdminValidator
+	RepoValidator  *RepoValidator
 }
 
 //TODO: what about adding error field to response? Do something nice about
@@ -37,24 +38,53 @@ func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Cr
 	if err != nil {
 		return nil, err
 	}
-	log.Log().Error("CONFIG: ", credentials)
 	err = SetupCredentials(g, credentials)
 	return &empty.Empty{}, err
 }
 
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
-	return &models.RepoCredWrapper{}, nil
+	credWrapper := &models.RepoCredWrapper{}
+	creds, err := g.RemoteConfig.GetRepoCredAt(cred.RepoPath, true)
+	if err != nil {
+		return credWrapper, err
+	}
+	for _, v := range creds {
+		credWrapper.Credentials = append(credWrapper.Credentials, v)
+	}
+	return credWrapper, nil
 }
 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
+	err := g.RepoValidator.ValidateConfig(creds)
+	if err != nil {
+		return nil, err
+	}
+	err = SetupRepoCredentials(g, creds)
+	return &empty.Empty{}, err
 }
 
-func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator) models.GuideOcelotServer {
+func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (*models.AllCredsWrapper, error) {
+	allCreds := &models.AllCredsWrapper{}
+	repoCreds, err := g.GetRepoCreds(ctx, msg)
+	if err != nil {
+		return allCreds, err
+	}
+	allCreds.RepoCreds = repoCreds
+	adminCreds, err := g.GetCreds(ctx, msg)
+	if err != nil {
+		return allCreds, err
+	}
+	allCreds.AdminCreds = adminCreds
+	return allCreds, nil
+}
+
+
+func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator) models.GuideOcelotServer {
 	guideOcelotServer := new(guideOcelotServer)
 	guideOcelotServer.RemoteConfig = config
 	guideOcelotServer.Deserializer = d
 	guideOcelotServer.AdminValidator = adminV
+	guideOcelotServer.RepoValidator = repoV
 	return guideOcelotServer
 }

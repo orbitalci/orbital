@@ -25,7 +25,7 @@ import (
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(configInstance *cred.RemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
-	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator())
+	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator())
 
 	//check for config on load
 	ReadConfig(guideOcelotServer)
@@ -154,5 +154,13 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials
 	}
 	configPath := cred.BuildCredPath(config.Type, config.AcctName, cred.Vcs)
 	err := gos.RemoteConfig.AddCreds(configPath, config)
+	return err
+}
+
+func SetupRepoCredentials(gosss models.GuideOcelotServer, config *models.RepoCreds) error {
+	// todo: probably should do some kind of test f they are valid or not? is there a way to test these creds
+	gos := gosss.(*guideOcelotServer)
+	configPath := cred.BuildCredPath(config.Type, config.AcctName, cred.Repo)
+	err := gos.RemoteConfig.AddRepoCreds(configPath, config)
 	return err
 }

@@ -34,3 +34,32 @@ func (adminValidator AdminValidator) ValidateConfig(adminCreds *models.Credentia
 	}
 	return nil
 }
+
+
+type RepoValidator struct{}
+
+func GetRepoValidator() *RepoValidator {
+	return &RepoValidator{}
+}
+
+// RepoValidator.ValidateConfig validates config and returns an error if it does not meet spec
+func (RepoValidator) ValidateConfig(repoCreds *models.RepoCreds) error {
+	if len(repoCreds.Password) == 0 {
+		return errors.New("password is required")
+	}
+	if len(repoCreds.RepoUrl) == 0 {
+		return errors.New("field repoUrl is required")
+	}
+	if len(repoCreds.AcctName) == 0 {
+		return errors.New("field acctName is required")
+	}
+	if len(repoCreds.Username) == 0 {
+		return errors.New("field username is required")
+	}
+	switch repoCreds.Type {
+	case "nexus", "maven":
+		return nil
+	default:
+		return errors.New("repo creds must be one of the following type: nexus | maven")
+	}
+}
