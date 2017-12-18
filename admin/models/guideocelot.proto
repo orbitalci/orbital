@@ -21,6 +21,13 @@ service GuideOcelot {
 
     rpc GetRepoCreds(google.protobuf.Empty) returns (RepoCredWrapper) {}
     rpc SetRepoCreds(RepoCreds) returns (google.protobuf.Empty) {}
+
+    rpc GetAllCreds(google.protobuf.Empty) returns (AllCredsWrapper) {}
+}
+
+message AllCredsWrapper {
+    RepoCredWrapper repoCreds = 1;
+    CredWrapper adminCreds = 2;
 }
 
 message CredWrapper {
