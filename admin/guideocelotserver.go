@@ -21,7 +21,7 @@ func (g *guideOcelotServer) GetCreds(ctx context.Context, msg *empty.Empty) (*mo
 	log.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
 
-	creds, err := g.RemoteConfig.GetCredAt(cred.ConfigPath, true)
+	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true)
 	if err != nil {
 		return credWrapper, err
 	}
@@ -44,11 +44,11 @@ func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Cr
 
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
-
+	return &models.RepoCredWrapper{}, nil
 }
 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
-
+	return &empty.Empty{}, nil
 }
 
 func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator) models.GuideOcelotServer {

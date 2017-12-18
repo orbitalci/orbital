@@ -44,4 +44,5 @@ message RepoCreds {
     string password = 2;
     string repoUrl = 3;
     string acctName = 4;
+    string type = 5;
 }

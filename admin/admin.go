@@ -152,7 +152,7 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials
 			return err
 		}
 	}
-	configPath := cred.BuildVCSCredPath(config.Type, config.AcctName)
+	configPath := cred.BuildCredPath(config.Type, config.AcctName, cred.Vcs)
 	err := gos.RemoteConfig.AddCreds(configPath, config)
 	return err
 }
