@@ -41,12 +41,12 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		Type:         "github",
 	}
 
-	err := testRemoteConfig.AddCreds(ConfigPath+"/mariannefeng/vcs/github", adminConfig)
+	err := testRemoteConfig.AddCreds(ConfigPath+"/vcs/mariannefeng/github", adminConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("first adding creds to consul", nil, err))
 	}
 
-	testPassword, err := testRemoteConfig.GetPassword(BuildVCSCredPath("github", "mariannefeng"))
+	testPassword, err := testRemoteConfig.GetPassword(BuildCredPath("github", "mariannefeng", Vcs))
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("retrieving password", nil, err))
 	}
@@ -55,7 +55,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("secret from vault", "top-secret", testPassword))
 	}
 
-	creds, _ := testRemoteConfig.GetCredAt(BuildVCSCredPath("github", "mariannefeng"), true)
+	creds, _ := testRemoteConfig.GetCredAt(BuildCredPath("github", "mariannefeng", Vcs), true)
 	marianne, ok := creds["github/mariannefeng"]
 	if !ok {
 		t.Error(test.GenericStrFormatErrors("fake cred should exist", true, ok))
@@ -81,7 +81,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("fake cred hidden password", "*********", marianne.ClientSecret))
 	}
 
-	creds, _ = testRemoteConfig.GetCredAt(BuildVCSCredPath("github", "mariannefeng"), false)
+	creds, _ = testRemoteConfig.GetCredAt(BuildCredPath("github", "mariannefeng", Vcs), false)
 	marianne, _ = creds["github/mariannefeng"]
 
 	if marianne.ClientSecret != "top-secret" {
@@ -96,7 +96,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		Type:         "bitbucket",
 	}
 
-	err = testRemoteConfig.AddCreds(BuildVCSCredPath("bitbucket", "ariannefeng"), secondConfig)
+	err = testRemoteConfig.AddCreds(BuildCredPath("bitbucket", "ariannefeng", Vcs), secondConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("adding second set of creds to consul", nil, err))
 	}
@@ -132,6 +132,15 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("2nd fake open password", "secret", newCreds.ClientSecret))
 	}
 
+}
+
+
+func Test_BuildCredPath(t *testing.T) {
+	expected := "creds/vcs/banana/bitbucket"
+	live := BuildCredPath("bitbucket", "banana", Vcs)
+	if live != expected {
+		t.Error(test.StrFormatErrors("vcs cred path", expected, live))
+	}
 }
 
 //////test setup and tear down///////
