@@ -40,8 +40,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		TokenURL:     "a-real-url",
 		Type:         "github",
 	}
-
-	err := testRemoteConfig.AddCreds(ConfigPath+"/vcs/mariannefeng/github", adminConfig)
+	err := testRemoteConfig.AddCreds(BuildCredPath("github", "mariannefeng", Vcs), adminConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("first adding creds to consul", nil, err))
 	}
@@ -109,7 +108,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	}
 	newCreds, ok := creds["bitbucket/ariannefeng"]
 	if !ok {
-		t.Error(test.GenericStrFormatErrors("new creds arianne should exist", true, ok))
+		t.Fatal(test.GenericStrFormatErrors("new creds arianne should exist", true, ok))
 	}
 
 	if newCreds.AcctName != "ariannefeng" {
@@ -132,6 +131,43 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("2nd fake open password", "secret", newCreds.ClientSecret))
 	}
 
+	repoCreds := &models.RepoCreds{
+		Username: "tasty-gummy-vitamin",
+		Password: "FLINTSTONE",
+		RepoUrl: "http://take-ur-vitamins.org/uploadGummy",
+		AcctName: "jessdanshnak",
+		Type: "nexus",
+	}
+	repoPath := BuildCredPath("nexus", "jessdanshnak", Repo)
+	err = testRemoteConfig.AddRepoCreds(repoPath, repoCreds)
+	if err != nil {
+		t.Error(test.GenericStrFormatErrors("adding repo creds", nil, err))
+	}
+	repoData, err := testRemoteConfig.GetRepoCredAt(repoPath, false)
+	if err != nil {
+		t.Error(test.GenericStrFormatErrors("getting repo creds", nil , err))
+	}
+	shnak, ok := repoData["nexus/jessdanshnak"]
+	if !ok {
+		t.Fatal("inserted repo creds w/ path nexus/jessdanshnak should exist")
+	}
+	if shnak.Password != repoCreds.Password {
+		t.Error(test.StrFormatErrors("repo password", repoCreds.Password, shnak.Password))
+	}
+	if shnak.GetType() != repoCreds.GetType() {
+		t.Error(test.StrFormatErrors("repo acct type", repoCreds.GetType(), shnak.GetType()))
+	}
+	if shnak.GetRepoUrl() != repoCreds.GetRepoUrl() {
+		t.Error(test.StrFormatErrors("repo url", repoCreds.GetRepoUrl(), shnak.GetRepoUrl()))
+	}
+	// testing that all creds should still be there
+	creds, _ = testRemoteConfig.GetCredAt(ConfigPath, false)
+	if _, ok = creds["bitbucket/ariannefeng"]; !ok {
+		t.Error("there should still be the admin credentials at bitbucket/ariannefeng")
+	}
+	if _, ok = creds["github/mariannefeng"]; !ok {
+		t.Error("there should still be admin credentials at github/mariannefeng")
+	}
 }
 
 
@@ -140,6 +176,11 @@ func Test_BuildCredPath(t *testing.T) {
 	live := BuildCredPath("bitbucket", "banana", Vcs)
 	if live != expected {
 		t.Error(test.StrFormatErrors("vcs cred path", expected, live))
+	}
+	expectedRepo := "creds/repo/jessjess/nexus"
+	liveRepo := BuildCredPath("nexus", "jessjess", Repo)
+	if liveRepo != expectedRepo {
+		t.Error(test.StrFormatErrors("repo cred path", expectedRepo, liveRepo))
 	}
 }
 

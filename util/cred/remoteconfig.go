@@ -40,6 +40,15 @@ func BuildCredPath(credType string, AcctName string, ocyCredType OcyCredType) st
 	return fmt.Sprintf(pattern, ConfigPath, AcctName, credType)
 }
 
+// returns <vcs or repo>/acctname/credType/infoType
+func splitConsulCredPath(path string) (typ OcyCredType, acctName, credType, infoType string) {
+	pathKeys := strings.Split(path, "/")
+	typ = OcyCredMap[pathKeys[1]]
+	acctName = pathKeys[2]
+	credType = pathKeys[3]
+	infoType = pathKeys[4]
+	return
+}
 
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
@@ -87,32 +96,33 @@ type RemoteConfig struct {
 	Vault  *ocevault.Vaulty
 }
 
-func splitConsulCredPath(path string) (string,string,string,string) {
-	pathKeys := strings.Split(strings.TrimLeft(path, "/"+ConfigPath), "/")
-	return pathKeys[0], pathKeys[1], pathKeys[2], pathKeys[3]
-}
 
 // GetRepoCredAt will return repo credentials for repo integrations. its waaay to similar to getCredAt, so this is
 // unacceptable. i can't figure out how to successfully use map[string]interface{}
-func (remoteConfig *RemoteConfig) GetRepoCredAt(path string, hideSecret bool) (creds map[string]*models.RepoCreds, err error) {
+func (remoteConfig *RemoteConfig) GetRepoCredAt(path string, hideSecret bool) (map[string]*models.RepoCreds, error) {
+	creds := map[string]*models.RepoCreds{}
+	var err error
 	if remoteConfig.Consul.Connected {
 		configs, err := remoteConfig.Consul.GetKeyValues(path)
 		if err != nil {
-			return
+			return creds, err
 		}
 		for _, v := range configs {
-			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
+			typ, acctName, credType, infoType := splitConsulCredPath(v.Key)
+			if typ != Repo {
+				continue
+			}
 			mapKey := credType + "/" + acctName
 			foundConfig, ok := creds[mapKey]
 			if !ok {
-				foundConfig := &models.RepoCreds{
+				foundConfig = &models.RepoCreds{
 					AcctName: acctName,
-					Type: infoType,
+					Type: credType,
 				}
 				if hideSecret {
 					foundConfig.Password = "*********"
 				} else {
-					passcode, passErr := remoteConfig.GetPassword(BuildCredPath(credType, acctName, Vcs))
+					passcode, passErr := remoteConfig.GetPassword(BuildCredPath(credType, acctName, Repo))
 					//passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
 					if passErr != nil {
 						ocelog.IncludeErrField(err).Error()
@@ -122,6 +132,7 @@ func (remoteConfig *RemoteConfig) GetRepoCredAt(path string, hideSecret bool) (c
 						foundConfig.Password = passcode
 					}
 				}
+				creds[mapKey] = foundConfig
 			}
 			switch infoType {
 			case "repourl":
@@ -141,14 +152,19 @@ func (remoteConfig *RemoteConfig) GetRepoCredAt(path string, hideSecret bool) (c
 //if hideSecret is set to false, will return password in cleartext
 //key of map is cred_type/acct_name. Ex: bitbucket/mariannefeng
 //if an error occurs while reading from vault, the most recent error will be returned from the response
-func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (creds map[string]*models.Credentials, err error) {
+func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[string]*models.Credentials, error) {
+	creds := map[string]*models.Credentials{}
+	var err error
 	if remoteConfig.Consul.Connected {
 		configs, err := remoteConfig.Consul.GetKeyValues(path)
 		if err != nil {
 			return creds, err
 		}
 		for _, v := range configs {
-			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
+			typ, acctName, credType, infoType := splitConsulCredPath(v.Key)
+			if typ != Vcs {
+				continue
+			}
 			mapKey := credType + "/" + acctName
 			foundConfig, ok := creds[mapKey]
 			if !ok {
@@ -162,7 +178,7 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (creds
 					passcode, passErr := remoteConfig.GetPassword(BuildCredPath(credType, acctName, Vcs))
 					//passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
 					if passErr != nil {
-						ocelog.IncludeErrField(err).Error()
+						ocelog.IncludeErrField(passErr).Error()
 						foundConfig.ClientSecret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
 						err = passErr
 					} else {
