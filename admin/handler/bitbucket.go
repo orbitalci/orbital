@@ -100,6 +100,7 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 		return nil
 	}
 	repositories := &pb.PaginatedRepository{}
+	//todo: error pages from bitbucket??? these need to bubble up to client
 	err := bb.Client.GetUrl(repoUrl, repositories)
 	if err != nil {
 		return err
