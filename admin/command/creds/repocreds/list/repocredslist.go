@@ -20,6 +20,7 @@ type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
 	client models.GuideOcelotClient
+	accountFilter string
 }
 
 func (c *cmd) init() {
@@ -30,18 +31,30 @@ func (c *cmd) init() {
 		panic(err)
 	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	c.flags.StringVar(&c.accountFilter, "account", "",
+		"account name to filter on")
 }
 
 func (c *cmd) Run(args []string) int {
+	if err := c.flags.Parse(args); err != nil {
+		return 1
+	}
 	ctx := context.Background()
 	var protoReq empty.Empty
 	msg, err := c.client.GetRepoCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 	}
+	printed := false
 	Header(c.UI)
 	for _, oneline := range msg.Credentials {
-		c.UI.Info(Prettify(oneline))
+		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
+			c.UI.Info(Prettify(oneline))
+			printed = true
+		}
+	}
+	if printed == false {
+		NoDataHeader(c.UI)
 	}
 	return 0
 }

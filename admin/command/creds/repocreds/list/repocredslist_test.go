@@ -4,6 +4,7 @@ package repocredslist
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
+	"flag"
 	"github.com/mitchellh/cli"
 	"strings"
 	"testing"
@@ -16,6 +17,9 @@ func TestCmd_Run(t *testing.T) {
 		UI: ui,
 		client: models.NewFakeGuideOcelotClient(),
 	}
+	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	cmdd.flags.StringVar(&cmdd.accountFilter, "account", "",
+		"")
 	expectedCreds := &models.RepoCredWrapper{
 		Credentials: []*models.RepoCreds{
 			{
@@ -44,7 +48,8 @@ func TestCmd_Run(t *testing.T) {
 	for _, cred := range expectedCreds.Credentials {
 		cmdd.client.SetRepoCreds(ctx, cred)
 	}
-	if exit := cmdd.Run([]string{""}); exit != 0 {
+	var args []string
+	if exit := cmdd.Run(args); exit != 0 {
 		t.Error("should exit with code 0, exited with code ", exit)
 	}
 

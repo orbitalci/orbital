@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
 	"github.com/mitchellh/cli"
+	"flag"
 	"strings"
 	"testing"
 )
@@ -24,6 +25,9 @@ func TestCmd_Run(t *testing.T) {
 		UI: ui,
 		client: models.NewFakeGuideOcelotClient(),
 	}
+	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	cmdd.flags.StringVar(&cmdd.accountFilter, "account", "",
+		"")
 	expectedCreds := &models.CredWrapper{
 		Credentials: []*models.Credentials{
 			{
@@ -46,7 +50,8 @@ func TestCmd_Run(t *testing.T) {
 	for _, cred := range expectedCreds.Credentials {
 		cmdd.client.SetCreds(ctx, cred)
 	}
-	if exit := cmdd.Run([]string{""}); exit != 0 {
+	var args []string
+	if exit := cmdd.Run(args); exit != 0 {
 		t.Error("should exit with code 0, exited with code ", exit)
 	}
 
