@@ -21,14 +21,13 @@ type guideOcelotServer struct {
 func (g *guideOcelotServer) GetCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	log.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
-
-	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true)
+	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
 	if err != nil {
 		return credWrapper, err
 	}
 
 	for _, v := range creds {
-		credWrapper.Credentials = append(credWrapper.Credentials, v)
+		credWrapper.Credentials = append(credWrapper.Credentials, v.(*models.Credentials))
 	}
 	return credWrapper, nil
 }
@@ -45,12 +44,12 @@ func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Cr
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
-	creds, err := g.RemoteConfig.GetRepoCredAt(cred.RepoPath, true)
+	creds, err := g.RemoteConfig.GetCredAt(cred.RepoPath, true, cred.Repo)
 	if err != nil {
 		return credWrapper, err
 	}
 	for _, v := range creds {
-		credWrapper.Credentials = append(credWrapper.Credentials, v)
+		credWrapper.Credentials = append(credWrapper.Credentials, v.(*models.RepoCreds))
 	}
 	return credWrapper, nil
 }

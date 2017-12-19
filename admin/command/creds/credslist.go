@@ -1,7 +1,9 @@
-package buildcredslist
+package creds
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin"
+	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds/list"
+	"bitbucket.org/level11consulting/ocelot/admin/command/creds/repocreds/list"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
 	"flag"
@@ -35,14 +37,28 @@ func (c *cmd) init() {
 func (c *cmd) Run(args []string) int {
 	ctx := context.Background()
 	var protoReq empty.Empty
-	msg, err := c.client.GetCreds(ctx, &protoReq)
+	msg, err := c.client.GetAllCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 	}
-	Header(c.UI)
-	for _, oneline := range msg.Credentials {
-		c.UI.Info(Prettify(oneline))
+	if len(msg.RepoCreds.Credentials) > 0 {
+		repocredslist.Header(c.UI)
+		for _, oneline := range msg.RepoCreds.Credentials {
+			c.UI.Info(repocredslist.Prettify(oneline))
+		}
+	} else {
+		repocredslist.NoDataHeader(c.UI)
 	}
+
+	if len(msg.AdminCreds.Credentials) > 0 {
+		buildcredslist.Header(c.UI)
+		for _, oneline :=  range msg.AdminCreds.Credentials {
+			c.UI.Info(buildcredslist.Prettify(oneline))
+		}
+	} else {
+		buildcredslist.NoDataHeader(c.UI)
+	}
+
 	return 0
 }
 
@@ -54,30 +70,10 @@ func (c *cmd) Help() string {
 	return help
 }
 
-func Header(ui cli.Ui) {
-	ui.Info("--- Admin Credentials ---\n")
-}
 
-func NoDataHeader(ui cli.Ui) {
-	ui.Info("--- No Admin Credentials Found ---\n")
-}
-
-
-func Prettify(cred *models.Credentials) string {
-	pretty := `ClientId: %s
-ClientSecret: %s
-TokenURL: %s
-AcctName: %s
-Type: %s
-
-`
-	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, cred.Type)
-}
-
-
-const synopsis = "List all credentials used for tracking repositories to build"
+const synopsis = "List all credentials added to ocelot"
 const help = `
 Usage: ocelot creds list
 
-  Retrieves all credentials that ocelot uses to track repositories
+  Will list all credentials that have been added to ocelot. //todo filter on acct name
 `

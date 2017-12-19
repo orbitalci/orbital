@@ -96,11 +96,23 @@ type RemoteConfig struct {
 	Vault  *ocevault.Vaulty
 }
 
+// instantiateCredObject is what we will have to add too when we add new credential integrations
+// (ie slack, w/e)
+func instantiateCredObject(ocyType OcyCredType) models.Credential {
+	switch ocyType {
+	case Vcs:
+		return &models.Credentials{}
+	case Repo:
+		return &models.RepoCreds{}
+	default:
+		panic("ahh!")
+	}
+}
 
 // GetRepoCredAt will return repo credentials for repo integrations. its waaay to similar to getCredAt, so this is
 // unacceptable. i can't figure out how to successfully use map[string]interface{}
-func (remoteConfig *RemoteConfig) GetRepoCredAt(path string, hideSecret bool) (map[string]*models.RepoCreds, error) {
-	creds := map[string]*models.RepoCreds{}
+func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]models.Credential, error) {
+	creds := map[string]models.Credential{}
 	var err error
 	if remoteConfig.Consul.Connected {
 		configs, err := remoteConfig.Consul.GetKeyValues(path)
@@ -108,98 +120,32 @@ func (remoteConfig *RemoteConfig) GetRepoCredAt(path string, hideSecret bool) (m
 			return creds, err
 		}
 		for _, v := range configs {
-			typ, acctName, credType, infoType := splitConsulCredPath(v.Key)
-			if typ != Repo {
-				continue
-			}
+			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
 			mapKey := credType + "/" + acctName
 			foundConfig, ok := creds[mapKey]
 			if !ok {
-				foundConfig = &models.RepoCreds{
-					AcctName: acctName,
-					Type: credType,
-				}
+				foundConfig = instantiateCredObject(ocyType)
+				foundConfig.SetAcctNameAndType(acctName, credType)
 				if hideSecret {
-					foundConfig.Password = "*********"
+					foundConfig.SetSecret("*********")
 				} else {
-					passcode, passErr := remoteConfig.GetPassword(BuildCredPath(credType, acctName, Repo))
+					passcode, passErr := remoteConfig.GetPassword(foundConfig.BuildCredPath(credType, acctName))
 					//passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
 					if passErr != nil {
-						ocelog.IncludeErrField(err).Error()
-						foundConfig.Password = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
+						ocelog.IncludeErrField(passErr).Error()
+						foundConfig.SetSecret("ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT")
 						err = passErr
 					} else {
-						foundConfig.Password = passcode
+						foundConfig.SetSecret(passcode)
 					}
 				}
 				creds[mapKey] = foundConfig
 			}
-			switch infoType {
-			case "repourl":
-				foundConfig.RepoUrl = string(v.Value[:])
-			case "username":
-				foundConfig.Username = string(v.Value[:])
-			}
+			foundConfig.SetAdditionalFields(infoType, string(v.Value[:]))
 		}
 	} else {
 		return creds, errors.New("not connected to consul, unable to retrieve credentials")
 	}
-	return creds, err
-}
-
-
-//GetCredAt will return map of credentials stored at specified path.
-//if hideSecret is set to false, will return password in cleartext
-//key of map is cred_type/acct_name. Ex: bitbucket/mariannefeng
-//if an error occurs while reading from vault, the most recent error will be returned from the response
-func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[string]*models.Credentials, error) {
-	creds := map[string]*models.Credentials{}
-	var err error
-	if remoteConfig.Consul.Connected {
-		configs, err := remoteConfig.Consul.GetKeyValues(path)
-		if err != nil {
-			return creds, err
-		}
-		for _, v := range configs {
-			typ, acctName, credType, infoType := splitConsulCredPath(v.Key)
-			if typ != Vcs {
-				continue
-			}
-			mapKey := credType + "/" + acctName
-			foundConfig, ok := creds[mapKey]
-			if !ok {
-				foundConfig = &models.Credentials{
-					AcctName: acctName,
-					Type:     credType,
-				}
-				if hideSecret {
-					foundConfig.ClientSecret = "*********"
-				} else {
-					passcode, passErr := remoteConfig.GetPassword(BuildCredPath(credType, acctName, Vcs))
-					//passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
-					if passErr != nil {
-						ocelog.IncludeErrField(passErr).Error()
-						foundConfig.ClientSecret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
-						err = passErr
-					} else {
-						foundConfig.ClientSecret = passcode
-					}
-			}
-
-			creds[mapKey] = foundConfig
-			}
-
-			switch infoType {
-			case "clientid":
-				foundConfig.ClientId = string(v.Value[:])
-			case "tokenurl":
-				foundConfig.TokenURL = string(v.Value[:])
-				}
-			}
-	} else {
-		return creds, errors.New("not connected to consul, unable to retrieve credentials")
-	}
-
 	return creds, err
 }
 
@@ -212,44 +158,13 @@ func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
 	return fmt.Sprintf("%v", authData["clientsecret"]), nil
 }
 
-//AddCreds adds your adminconfig creds into both consul + vault
-func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.Credentials) error {
-	if remoteConfig.Consul.Connected {
-		err := remoteConfig.Consul.AddKeyValue(path+"/clientid", []byte(adminConfig.ClientId))
-		if err != nil {
-			return err
-		}
-		err = remoteConfig.Consul.AddKeyValue(path+"/tokenurl", []byte(adminConfig.TokenURL))
-		if err != nil {
-			return err
-		}
-		if remoteConfig.Vault != nil {
-			secret := make(map[string]interface{})
-			secret["clientsecret"] = adminConfig.ClientSecret
-			_, err := remoteConfig.Vault.AddUserAuthData(path, secret)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		return errors.New("not connected to consul, unable to add credentials")
-	}
-
-	return nil
-}
-
 // AddRepoCreds adds repo integration creds to consul + vault
-func (remoteConfig *RemoteConfig) AddRepoCreds(path string, repoCred *models.RepoCreds) (err error) {
+func (remoteConfig *RemoteConfig) AddCreds(path string, anyCred models.Credential) (err error) {
 	if remoteConfig.Consul.Connected {
-		if err = remoteConfig.Consul.AddKeyValue(path + "/username", []byte(repoCred.Username)); err != nil {
-			return
-		}
-		if err = remoteConfig.Consul.AddKeyValue(path + "/repourl", []byte(repoCred.RepoUrl)); err != nil {
-			return
-		}
+		anyCred.AddAdditionalFields(remoteConfig.Consul, path)
 		if remoteConfig.Vault != nil {
 			secret := make(map[string]interface{})
-			secret["clientsecret"] = repoCred.Password
+			secret["clientsecret"] = anyCred.GetClientSecret()
 			if _, err = remoteConfig.Vault.AddUserAuthData(path, secret); err != nil {
 				return
 			}
