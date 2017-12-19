@@ -151,7 +151,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		Type: "nexus",
 	}
 	repoPath := BuildCredPath("nexus", "jessdanshnak", Repo)
-	err = testRemoteConfig.AddRepoCreds(repoPath, repoCreds)
+	err = testRemoteConfig.AddCreds(repoPath, repoCreds)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("adding repo creds", nil, err))
 	}

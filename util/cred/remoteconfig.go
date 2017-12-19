@@ -170,7 +170,7 @@ func (remoteConfig *RemoteConfig) AddCreds(path string, anyCred models.Credentia
 			}
 		}
 	} else {
-		err = errors.New("not connected to consul, unable to add credentials for artifact repository")
+		err = errors.New("not connected to consul, unable to add credentials")
 	}
 	return
 }
