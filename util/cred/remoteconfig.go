@@ -63,6 +63,7 @@ type RemoteConfig struct {
 
 // instantiateCredObject is what we will have to add too when we add new credential integrations
 // (ie slack, w/e)
+// todo: find out a way to use either this method or GetCredAt to remove the cred package's dependency on models
 func instantiateCredObject(ocyType OcyCredType) RemoteConfigCred {
 	switch ocyType {
 	case Vcs:

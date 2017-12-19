@@ -13,7 +13,7 @@ import (
 )
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui}
+	c := &cmd{UI: ui, config: admin.NewClientConfig()}
 	c.init()
 	return c
 }
