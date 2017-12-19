@@ -1,4 +1,4 @@
-package buildcreds
+package repocreds
 
 import (
 	"github.com/hashicorp/consul/command/flags"
@@ -23,21 +23,20 @@ func (c *cmd) Help() string {
 	return flags.Usage(help, nil)
 }
 
-const synopsis = "vcs configuration"
+const synopsis = "repo credential configuration"
 const help = `
-Usage: ocelot creds vcs <subcommand> [options] [args]
+Usage: ocelot creds repo <subcommand> [options] [args]
 
-  This command has subcommands for interacting with Ocelot's VCS cred store.
-  The VCS cred store is what drives what code repositories are watched by Ocelot.
+  This command has subcommands for interacting with Ocelot's Repo cred store.
+  The Repo cred store is what saves artifact repository intetgrations, ie Nexus or Artifactory.
 
   Create credential set to trigger your account to be watched by ocelot
 
-      $ ocelot creds vcs add
+      $ ocelot creds repo add
 
-  List VCS accounts that are tracked by Ocelot
+  List Repo accounts that are tracked by Ocelot
 
-      $ ocelot creds vcs list
+      $ ocelot creds repo list
 
   For more examples, ask for subcommand help or view the documentation.
 `
-

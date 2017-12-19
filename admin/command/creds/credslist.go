@@ -71,7 +71,7 @@ func (c *cmd) Help() string {
 }
 
 
-const synopsis = "List all credentials added to ocelot"
+const synopsis = "list all credentials added to ocelot"
 const help = `
 Usage: ocelot creds list
 
