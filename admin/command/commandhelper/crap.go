@@ -25,3 +25,8 @@ func CheckConnection(cmd GuideOcelotCmd, ctx context.Context) error {
 	}
 	return err
 }
+
+type GuideOcelotCmdStdin interface {
+	GuideOcelotCmd
+	GetDataFromUiAsk(ui cli.Ui) (interface{}, error)
+}

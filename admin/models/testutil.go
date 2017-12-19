@@ -37,6 +37,10 @@ func (f *fakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds,
 	return &empty.Empty{}, nil
 }
 
+func (f *fakeGuideOcelotClient) CheckConn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
 func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error) {
 	return &AllCredsWrapper{
 		RepoCreds: f.repoCreds,

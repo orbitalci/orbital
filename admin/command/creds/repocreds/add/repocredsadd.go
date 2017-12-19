@@ -41,9 +41,7 @@ func (c *cmd) GetConfig() *admin.ClientConfig {
 
 func (c *cmd) init() {
 	var err error
-	//todo: THIS IS HARDCODED! BAD!
-	config := admin.NewClientConfig()
-	c.client, err = admin.GetClient(config.AdminLocation)
+	c.client, err = admin.GetClient(c.config.AdminLocation)
 	if err != nil {
 		panic(err)
 	}
