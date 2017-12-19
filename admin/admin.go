@@ -152,7 +152,7 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials
 			return err
 		}
 	}
-	configPath := cred.BuildCredPath(config.Type, config.AcctName, cred.Vcs)
+	configPath := config.BuildCredPath(config.Type, config.AcctName)
 	err := gos.RemoteConfig.AddCreds(configPath, config)
 	return err
 }
@@ -160,7 +160,7 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials
 func SetupRepoCredentials(gosss models.GuideOcelotServer, config *models.RepoCreds) error {
 	// todo: probably should do some kind of test f they are valid or not? is there a way to test these creds
 	gos := gosss.(*guideOcelotServer)
-	configPath := cred.BuildCredPath(config.Type, config.AcctName, cred.Repo)
+	configPath := config.BuildCredPath(config.Type, config.AcctName)
 	err := gos.RemoteConfig.AddCreds(configPath, config)
 	return err
 }

@@ -61,7 +61,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	}
 	marianne, ok := mari.(*models.Credentials)
 	if !ok {
-		t.Fatal("could not cast GetCredAt models.Credential interface to adminConfig models.Credentials")
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.Credentials")
 	}
 
 	if marianne.AcctName != "mariannefeng" {
@@ -88,7 +88,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	mari, _ = creds["github/mariannefeng"]
 	marianne, ok = mari.(*models.Credentials)
 	if !ok {
-		t.Fatal("could not cast GetCredAt models.Credential interface to adminConfig models.Credentials")
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.Credentials")
 	}
 
 	if marianne.ClientSecret != "top-secret" {
@@ -120,7 +120,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	}
 	newCreds, ok := newCred.(*models.Credentials)
 	if !ok {
-		t.Fatal("could not cast GetCredAt models.Credential interface to adminConfig models.Credentials")
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.Credentials")
 	}
 
 	if newCreds.AcctName != "ariannefeng" {
@@ -165,7 +165,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	}
 	shnak, ok := shank.(*models.RepoCreds)
 	if !ok {
-		t.Fatal("could not cast GetCredAt models.Credential interface to repo config *models.RepoCreds")
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to repo config *models.RepoCreds")
 	}
 	if shnak.GetPassword() != repoCreds.GetPassword() {
 		t.Error(test.StrFormatErrors("repo password", repoCreds.Password, shnak.Password))

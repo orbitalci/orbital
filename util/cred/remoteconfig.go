@@ -7,7 +7,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 var (
@@ -15,40 +14,6 @@ var (
  	VCSPath = ConfigPath + "/vcs"
  	RepoPath = ConfigPath + "/repo"
 )
-
-// OcyCredType is the the of credential that we will be storing, ie binary repo or vcs
-type OcyCredType int
-
-const (
-	Vcs OcyCredType = iota
-	Repo
-)
-
-var OcyCredMap = map[string]OcyCredType{
-"vcs": Vcs,
-"repo": Repo,
-}
-
-
-func BuildCredPath(credType string, AcctName string, ocyCredType OcyCredType) string {
-	var pattern string
-	switch ocyCredType {
-	case Vcs: pattern = "%s/vcs/%s/%s"
-	case Repo: pattern = "%s/repo/%s/%s"
-	default: panic("only repo or vcs")
-	}
-	return fmt.Sprintf(pattern, ConfigPath, AcctName, credType)
-}
-
-// returns <vcs or repo>/acctname/credType/infoType
-func splitConsulCredPath(path string) (typ OcyCredType, acctName, credType, infoType string) {
-	pathKeys := strings.Split(path, "/")
-	typ = OcyCredMap[pathKeys[1]]
-	acctName = pathKeys[2]
-	credType = pathKeys[3]
-	infoType = pathKeys[4]
-	return
-}
 
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
@@ -98,7 +63,7 @@ type RemoteConfig struct {
 
 // instantiateCredObject is what we will have to add too when we add new credential integrations
 // (ie slack, w/e)
-func instantiateCredObject(ocyType OcyCredType) models.Credential {
+func instantiateCredObject(ocyType OcyCredType) RemoteConfigCred {
 	switch ocyType {
 	case Vcs:
 		return &models.Credentials{}
@@ -109,10 +74,16 @@ func instantiateCredObject(ocyType OcyCredType) models.Credential {
 	}
 }
 
-// GetRepoCredAt will return repo credentials for repo integrations. its waaay to similar to getCredAt, so this is
-// unacceptable. i can't figure out how to successfully use map[string]interface{}
-func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]models.Credential, error) {
-	creds := map[string]models.Credential{}
+// GetCred at will return a map w/ key <cred_type>/<acct_name> to credentials. depending on the OcyCredType,
+//   the appropriate credential struct will be instantiated and filled with data from consul and vault.
+//   currently supports map[string]*models.Credentials and map[string]*models.RepoCreds
+//   You must cast the resulting values to their appropriate objects after the map is generated if you need to access more than
+//   the methods on the cred.RemoteConfigCred interface
+//   Example:
+//      creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
+//      vcsCreds := creds.(*models.Credentials)
+func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error) {
+	creds := map[string]RemoteConfigCred{}
 	var err error
 	if remoteConfig.Consul.Connected {
 		configs, err := remoteConfig.Consul.GetKeyValues(path)
@@ -159,7 +130,7 @@ func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
 }
 
 // AddRepoCreds adds repo integration creds to consul + vault
-func (remoteConfig *RemoteConfig) AddCreds(path string, anyCred models.Credential) (err error) {
+func (remoteConfig *RemoteConfig) AddCreds(path string, anyCred RemoteConfigCred) (err error) {
 	if remoteConfig.Consul.Connected {
 		anyCred.AddAdditionalFields(remoteConfig.Consul, path)
 		if remoteConfig.Vault != nil {
