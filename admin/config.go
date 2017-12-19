@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"flag"
 	"os"
 )
 
@@ -24,7 +23,6 @@ func NewClientConfig() *ClientConfig {
 	} else {
 		adminHost = v
 	}
-	flag.Parse()
 	return &ClientConfig{
 		AdminLocation: adminHost + ":" + adminPort,
 	}
