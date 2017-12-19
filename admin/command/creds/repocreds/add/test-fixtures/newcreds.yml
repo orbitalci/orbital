@@ -1,6 +1,6 @@
 credentials:
-- clientId: fancy-frickin-identification
-  clientSecret: SHH-BE-QUIET-ITS-A-SECRET
-  tokenURL: https://ocelot.perf/site/oauth2/access_token
-  acctName: lamb-shank
-  type: bitbucket
+- username: thisBeMyUserName
+  password: SHH-BE-QUIET-ITS-A-SECRET
+  repoUrl: https://ocelot.perf/nexus-yo
+  acctName: jessishank
+  type: nexus

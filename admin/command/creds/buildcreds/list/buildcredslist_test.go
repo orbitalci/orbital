@@ -54,7 +54,9 @@ func TestCmd_Run(t *testing.T) {
 	//if err != nil {
 	//	t.Fatal("could not read stdout from buffer")
 	//}
-	expectedText := `ClientId: fancy-frickin-identification
+	expectedText := `--- Admin Credentials ---
+
+ClientId: fancy-frickin-identification
 ClientSecret: SHH-BE-QUIET-ITS-A-SECRET
 TokenURL: https://ocelot.perf/site/oauth2/access_token
 AcctName: lamb-shank

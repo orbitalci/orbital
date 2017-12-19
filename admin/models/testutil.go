@@ -11,11 +11,12 @@ import (
 //}
 
 func NewFakeGuideOcelotClient() *fakeGuideOcelotClient {
-	return &fakeGuideOcelotClient{creds: &CredWrapper{}}
+	return &fakeGuideOcelotClient{creds: &CredWrapper{}, repoCreds: &RepoCredWrapper{}}
 }
 
 type fakeGuideOcelotClient struct {
 	creds *CredWrapper
+	repoCreds *RepoCredWrapper
 }
 
 func (f *fakeGuideOcelotClient) GetCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
@@ -26,6 +27,23 @@ func (f *fakeGuideOcelotClient) SetCreds(ctx context.Context, in *Credentials, o
 	f.creds.Credentials = append(f.creds.Credentials, in)
 	return &empty.Empty{}, nil
 }
+
+func (f *fakeGuideOcelotClient) GetRepoCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*RepoCredWrapper, error) {
+	return f.repoCreds, nil
+}
+
+func (f *fakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	f.repoCreds.Credentials = append(f.repoCreds.Credentials, in)
+	return &empty.Empty{}, nil
+}
+
+func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error) {
+	return &AllCredsWrapper{
+		RepoCreds: f.repoCreds,
+		AdminCreds: f.creds,
+	}, nil
+}
+
 
 func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 	for ind, cred := range credWrapA.Credentials {
@@ -43,6 +61,28 @@ func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 			return false
 		}
 		if cred.ClientId != credB.ClientId {
+			return false
+		}
+	}
+	return true
+}
+
+func CompareRepoCredWrappers(repoWrapA *RepoCredWrapper, repoWrapB *RepoCredWrapper) bool {
+	for ind, cred := range repoWrapA.Credentials {
+		credB := repoWrapB.Credentials[ind]
+		if cred.Type != credB.Type {
+			return false
+		}
+		if cred.Username != credB.Username {
+			return false
+		}
+		if cred.AcctName != credB.AcctName {
+			return false
+		}
+		if cred.Password != credB.Password {
+			return false
+		}
+		if cred.RepoUrl != credB.RepoUrl {
 			return false
 		}
 	}
