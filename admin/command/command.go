@@ -27,4 +27,3 @@ func init(){
 		"creds repo list": func()(cli.Command, error) { return repocredslist.New(ui), nil},
 	}
 }
-

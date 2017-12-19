@@ -23,6 +23,8 @@ service GuideOcelot {
     rpc SetRepoCreds(RepoCreds) returns (google.protobuf.Empty) {}
 
     rpc GetAllCreds(google.protobuf.Empty) returns (AllCredsWrapper) {}
+
+    rpc CheckConn(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message AllCredsWrapper {

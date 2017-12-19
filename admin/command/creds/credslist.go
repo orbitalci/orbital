@@ -2,6 +2,7 @@ package creds
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin"
+	"bitbucket.org/level11consulting/ocelot/admin/command/commandhelper"
 	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds/list"
 	"bitbucket.org/level11consulting/ocelot/admin/command/creds/repocreds/list"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
@@ -13,7 +14,7 @@ import (
 )
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui}
+	c := &cmd{UI: ui, config: admin.NewClientConfig()}
 	c.init()
 	return c
 }
@@ -22,12 +23,26 @@ type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
 	client models.GuideOcelotClient
+	config *admin.ClientConfig
 }
+
+
+func (c *cmd) GetClient() models.GuideOcelotClient {
+	return c.client
+}
+
+func (c *cmd) GetUI() cli.Ui {
+	return c.UI
+}
+
+func (c *cmd) GetConfig() *admin.ClientConfig {
+	return c.config
+}
+
 
 func (c *cmd) init() {
 	var err error
-	//todo: THIS IS HARDCODED! BAD!
-	c.client, err = admin.GetClient("localhost:10000")
+	c.client, err = admin.GetClient(c.config.AdminLocation)
 	if err != nil {
 		panic(err)
 	}
@@ -37,9 +52,13 @@ func (c *cmd) init() {
 func (c *cmd) Run(args []string) int {
 	ctx := context.Background()
 	var protoReq empty.Empty
+	if err := commandhelper.CheckConnection(c, ctx); err != nil {
+		return 1
+	}
 	msg, err := c.client.GetAllCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
+		return 1
 	}
 	if len(msg.RepoCreds.Credentials) > 0 {
 		repocredslist.Header(c.UI)

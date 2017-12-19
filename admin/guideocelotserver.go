@@ -32,6 +32,12 @@ func (g *guideOcelotServer) GetCreds(ctx context.Context, msg *empty.Empty) (*mo
 	return credWrapper, nil
 }
 
+// for checking if the server is reachable
+func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+
 func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Credentials) (*empty.Empty, error) {
 	err := g.AdminValidator.ValidateConfig(credentials)
 	if err != nil {
