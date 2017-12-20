@@ -10,7 +10,6 @@ import (
 	"io"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"errors"
-	"strings"
 )
 
 type Docker struct{
@@ -23,46 +22,48 @@ func NewDockerBuilder() Builder {
 	return &Docker{}
 }
 
-func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, setupCmds []string) *Result {
-	currentStage := "SETUP | "
+func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
+	//TODO: could probably do some sort of util for the stage name + formatting
+	stage := "setup"
+	stagePrintln := "SETUP | "
 
-	ocelog.Log().Debug("doing the setup")
+	logout <- []byte(stagePrintln + "Setting up...")
+
 	ctx := context.Background()
-
 	cli, err := client.NewEnvClient()
 	d.DockerClient = cli
 
 	if err != nil {
 		return &Result{
-			Stage:  "setup",
+			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
 		}
 	}
 
-	imageName := image
+	imageName := werk.BuildConf.Image
 
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	defer out.Close()
 
 	if err != nil {
 		return &Result{
-			Stage:  "setup",
+			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
 		}
 	}
 
 	bufReader := bufio.NewReader(out)
-	d.writeToInfo(currentStage, bufReader, logout)
+	d.writeToInfo(stagePrintln, bufReader, logout)
 
-	logout <- []byte(currentStage + "Creating container...")
+	logout <- []byte(stagePrintln + "Creating container...")
 
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,
-		Env: globalEnvs,
-		Cmd: setupCmds,
+		Env: werk.BuildConf.Env,
+		Cmd: DownloadCodebase(werk),
 		AttachStderr: true,
 		AttachStdout: true,
 		AttachStdin:true,
@@ -79,7 +80,7 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 
 	if err != nil {
 		return &Result{
-			Stage:  "setup",
+			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
 		}
@@ -88,29 +89,31 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 	for _, warning := range resp.Warnings {
 		logout <- []byte(warning)
 	}
-	logout <- []byte(currentStage + "Container created with ID " + resp.ID)
+
+	logout <- []byte(stagePrintln + "Container created with ID " + resp.ID)
+
 	d.ContainerId = resp.ID
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return &Result{
-			Stage:  "setup",
+			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
 		}
 	}
 
-	logout <- []byte(currentStage + "Container " + resp.ID + " started")
+	logout <- []byte(stagePrintln + "Container " + resp.ID + " started")
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
 	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow: true,
-		})
+	})
 
 	if err != nil {
 		return &Result{
-			Stage:  "setup",
+			Stage: stage,
 			Status: FAIL,
 			Error:  err,
 		}
@@ -118,48 +121,54 @@ func (d *Docker) Setup(logout chan []byte, image string, globalEnvs []string, se
 
 	d.Log = containerLog
 	bufReader = bufio.NewReader(containerLog)
-	go d.writeToInfo(currentStage, bufReader, logout)
+	d.writeToInfo(stagePrintln, bufReader, logout)
 
 	return &Result{
-		Stage:  "setup",
+		Stage:  stage,
 		Status: PASS,
 		Error:  nil,
 	}
 }
 
 func (d *Docker) Cleanup() {
-	//d.Log.Close()
-	//TODO: destroy container
-	//d.DockerClient.Close()
+	//TODO: review, should we be creating new contexts for every stage?
+	cleanupCtx := context.Background()
+
+	d.Log.Close()
+	d.DockerClient.ContainerKill(cleanupCtx, d.ContainerId, "SIGTERM")
+	//TODO: review remove options with jessi + tj, dunno what they do
+	d.DockerClient.ContainerRemove(cleanupCtx, d.ContainerId, types.ContainerRemoveOptions{})
+	d.DockerClient.Close()
 }
 
-func (d *Docker) Build(logout chan []byte, envs []string, cmds []string, commitHash string) *Result {
-	ocelog.Log().Debug("inside of build function now")
+func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *Result {
+	currStage := "build"
+	currStageStr := "BUILD | "
+
+	logout <- []byte(currStageStr + "Building...")
 
 	if len(d.ContainerId) == 0 {
 		return &Result {
-			Stage: "build",
+			Stage: currStage,
 			Status: FAIL,
-			Error: errors.New("No container exists, setup before executing"),
+			Error: errors.New("no container exists, setup before executing"),
 		}
 	}
-	ctx := context.Background()
 
-	concatCmd := append([]string{"cd", commitHash, "&&"}, cmds...)
-	completeCmd := append([]string{"/bin/sh", "-c"}, "'" + strings.Join(concatCmd, " ") + "'")
+	ctx := context.Background()
 
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
 		Tty: true,
 		AttachStdin: true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env: envs,
-		Cmd: completeCmd,
+		Env: stage.Env,
+		Cmd: BuildAndDeploy(stage.Script, commitHash),
 	})
 
 	if err != nil {
 		return &Result{
-			Stage:  "build",
+			Stage:  currStage,
 			Status: FAIL,
 			Error:  err,
 		}
@@ -170,26 +179,26 @@ func (d *Docker) Build(logout chan []byte, envs []string, cmds []string, commitH
 		AttachStdin: true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env: envs,
-		Cmd: completeCmd,
+		Env: stage.Env,
+		Cmd: BuildAndDeploy(stage.Script, commitHash),
 	})
 
 	inspect, err := d.DockerClient.ContainerExecInspect(ctx, resp.ID)
 	ocelog.Log().Debug(inspect)
 
-	//TODO: close conn
-	go d.writeToInfo("BUILD | ", attachedExec.Reader, logout)
+	d.writeToInfo(currStageStr, attachedExec.Reader, logout)
+	//attachedExec.Conn.Close()
 
 	if err != nil {
 		return &Result{
-			Stage:  "build",
+			Stage:  currStage,
 			Status: FAIL,
 			Error:  err,
 		}
 	}
 
 	return &Result{
-		Stage:  "build",
+		Stage:  currStage,
 		Status: PASS,
 		Error:  nil,
 	}
@@ -209,13 +218,22 @@ func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *R
 	}
 }
 
+
 func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byte) {
 	for {
+		//TODO: if we swap to scanner will it read maven output nicer?
 		str, err := rd.ReadString('\n')
+
 		if err != nil {
 			ocelog.Log().Info("Read Error:", err)
 			return
 		}
+
 		infochan <- []byte(stage + str)
+
+		//our setup script will echo this to stdout, telling us script is finished downloading
+		if str == "Finished with downloading source code\r\n" {
+			return
+		}
 	}
 }

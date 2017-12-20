@@ -8,7 +8,6 @@ if [ $# -gt 0 ]; then
   args=("$@")
 
   wget --header="Authorization: Bearer ${args[0]}" "${args[1]}/${args[2]}.zip"
-  echo "Finished downloading codebase"
   mkdir ${args[2]}
 
   codedir=$(unzip ${args[2]}.zip | awk 'NR==3 {print $2}')
@@ -17,6 +16,7 @@ if [ $# -gt 0 ]; then
   rm -rf ${codedir}
   rm ${args[2]}.zip
 
+  echo "Finished with downloading source code"
   sleep infinity
 else
     echo "no arguments were passed in"

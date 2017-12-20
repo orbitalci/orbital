@@ -6,7 +6,6 @@ import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"github.com/golang/protobuf/proto"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
-	"fmt"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -42,10 +41,8 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	switch w.WerkConf.werkerType {
 	case Docker:
 		builder = b.NewDockerBuilder()
-		//
-		//case Kubernetes:
-		//	builder = b.NewK8Builder()
 	}
+
 	go w.MakeItSo(werkerTask, builder)
 	return nil
 }
@@ -57,44 +54,46 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 	w.ChanChan <- transport
 }
 
-//TODO: make this so that you only call NewEnvClient once?
 // MakeItSo will call appropriate builder functions
 func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
-	//defer close(w.infochan)
+	//defers are stacked, and we always want to call cleanup since that's where connections get closed/container destroyed
+	defer close(w.infochan)
+	defer builder.Cleanup()
+	//TODO: write stages to db
+	//TODO: write build data to db
+
 	w.WatchForResults(werk.CheckoutHash)
+	var stageResults []*b.Result
 
-	var setupCmds []string
+	setupResult := builder.Setup(w.infochan, werk)
+	stageResults = append(stageResults, setupResult)
 
-	switch werk.VcsType {
-	case "bitbucket":
-		setupCmds = append(setupCmds, ".ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf("https://bitbucket.org/%s/get", werk.FullName), werk.CheckoutHash)
-	case "github":
-			ocelog.Log().Error("not implemented")
-	}
-
-	result := builder.Setup(w.infochan, werk.BuildConf.Image, werk.BuildConf.Env, setupCmds)
-
-	if result.Status == b.FAIL {
-		ocelog.Log().Error(result.Error)
-		//TODO: WRITE TO DB
+	if setupResult.Status == b.FAIL {
+		ocelog.Log().Error(setupResult.Error)
 		return
 	}
 
-	//don't reassign result unless we're storing into db first
 	for stageKey, stageVal := range werk.BuildConf.Stages {
 		//build is special because we deploy after this
 		if stageKey == "build" {
-			result := builder.Build(w.infochan, stageVal.Env, stageVal.Script, werk.CheckoutHash)
-			if result.Status == b.FAIL {
-				ocelog.Log().Error(result.Error)
-				//TODO: WRITE TO DB
+			buildResult := builder.Build(w.infochan, stageVal, werk.CheckoutHash)
+			stageResults = append(stageResults, buildResult)
+
+			if buildResult.Status == b.FAIL {
+				ocelog.Log().Error(buildResult.Error)
 				return
 			}
+			//if stage is build, we don't need call execute, can move onto next stage
+			continue
 		}
-		builder.Execute(stageKey, stageVal, w.infochan)
+
+		stageResult := builder.Execute(stageKey, stageVal, w.infochan)
+		if stageResult.Status == b.FAIL {
+			ocelog.Log().Error(stageResult.Error)
+			return
+		}
 	}
 
-	builder.Cleanup()
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
 }
