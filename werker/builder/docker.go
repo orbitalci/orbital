@@ -23,7 +23,7 @@ func NewDockerBuilder() Builder {
 }
 
 func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
-	//TODO: could probably do some sort of util for the stage name + formatting
+	//TODO: do some sort of util for the stage name + formatting
 	stage := "setup"
 	stagePrintln := "SETUP | "
 
@@ -72,6 +72,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	//host configs like mount points
 	hostConfig := &container.HostConfig{
+		//TODO: taking suggestions for this - should we always assume $HOME/.ocelot?
 		Binds: []string{"/Users/mariannefeng/.ocelot:/.ocelot"},
 		//Binds: []string{"/home/mariannefeng/.ocelot:/.ocelot"},
 	}
@@ -135,12 +136,14 @@ func (d *Docker) Cleanup() {
 	cleanupCtx := context.Background()
 
 	d.Log.Close()
+	//TODO: review kill and remove options with jessi + tj, dunno what these things do, but must be doing something wrong if this doesn't kill the container...
 	d.DockerClient.ContainerKill(cleanupCtx, d.ContainerId, "SIGTERM")
-	//TODO: review remove options with jessi + tj, dunno what they do
 	d.DockerClient.ContainerRemove(cleanupCtx, d.ContainerId, types.ContainerRemoveOptions{})
 	d.DockerClient.Close()
 }
 
+//TODO: depending on how Execute function turns out, this may end up being merged into that and we case switch in Execute
+//TODO: if type is build, since build = deploy afterwards
 func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *Result {
 	currStage := "build"
 	currStageStr := "BUILD | "
@@ -183,11 +186,9 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 		Cmd: BuildAndDeploy(stage.Script, commitHash),
 	})
 
-	inspect, err := d.DockerClient.ContainerExecInspect(ctx, resp.ID)
-	ocelog.Log().Debug(inspect)
+	defer attachedExec.Conn.Close()
 
 	d.writeToInfo(currStageStr, attachedExec.Reader, logout)
-	//attachedExec.Conn.Close()
 
 	if err != nil {
 		return &Result{
@@ -204,6 +205,7 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 	}
 }
 
+//TODO: actually write the code that executes scripts from other stages
 func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *Result {
 	if len(d.ContainerId) == 0 {
 		return &Result {
@@ -221,7 +223,7 @@ func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *R
 
 func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byte) {
 	for {
-		//TODO: if we swap to scanner will it read maven output nicer?
+		//TODO: if we swap to scanner will it outputs nicer?
 		str, err := rd.ReadString('\n')
 
 		if err != nil {
@@ -231,7 +233,7 @@ func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byt
 
 		infochan <- []byte(stage + str)
 
-		//our setup script will echo this to stdout, telling us script is finished downloading
+		//our setup script will echo this to stdout, telling us script is finished downloading. This is HACK for keeping container alive
 		if str == "Finished with downloading source code\r\n" {
 			return
 		}

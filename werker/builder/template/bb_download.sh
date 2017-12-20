@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # order of arguments: BBTOKEN, BBDOWNLOAD PATH, GIT COMMIT
-# todo: make sure unzip is installed?
+# todo: make sure unzip is installed
 
 if [ $# -gt 0 ]; then
   count=0

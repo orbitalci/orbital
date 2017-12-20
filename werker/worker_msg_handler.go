@@ -57,7 +57,7 @@ func (w *WorkerMsgHandler) WatchForResults(hash string) {
 // MakeItSo will call appropriate builder functions
 func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
-	//defers are stacked, and we always want to call cleanup since that's where connections get closed/container destroyed
+	//defers are stacked, will be executed FILO
 	defer close(w.infochan)
 	defer builder.Cleanup()
 	//TODO: write stages to db
@@ -84,7 +84,6 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 				ocelog.Log().Error(buildResult.Error)
 				return
 			}
-			//if stage is build, we don't need call execute, can move onto next stage
 			continue
 		}
 

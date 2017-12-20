@@ -49,8 +49,6 @@ func main() {
 
 	// handleBBevent can take push/pull/ w/e
 	muxi.Handle("/bitbucket", &ocenet.AppContextHandler{hookHandlerContext, hh.HandleBBEvent}).Methods("POST")
-
-	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)
 }

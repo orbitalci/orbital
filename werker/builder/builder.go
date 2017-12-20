@@ -5,7 +5,7 @@ import (
 )
 
 
-//TODO: think about how deployment to nexus fits in
+//TODO: think about where deployment to nexus fits in - do we want this in its own method? Or will it be up to builder implementations to embed into their 'build' stage?
 type Builder interface {
 	Setup(logout chan []byte, werk *pb.WerkerTask) *Result
 	Build(logout chan []byte, stage *pb.Stage, commitHash string) *Result

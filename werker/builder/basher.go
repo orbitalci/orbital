@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// TODO: don't think we need a struct for this? Maybe not
+// TODO: Does embedding a basher struct into docker/k8 make sense?
 
 func DownloadCodebase(werk *protos.WerkerTask) []string {
 	var downloadCode []string

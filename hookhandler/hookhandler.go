@@ -18,10 +18,6 @@ type HookHandlerContext struct {
 	Deserializer *deserialize.Deserializer
 }
 
-//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
-//tODO: branch inside of ocelot.yml
-
-//TODO: what data do we have to store/do we need to store?
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
@@ -45,13 +41,14 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	}
 	//TODO: need to check and make sure that New.Type == branch
 	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
-		tellWerker(ctx, buildConf, hash, fullName, acctName, bbToken)
+		tellWerker(ctx, buildConf, hash, fullName, bbToken)
 	} else {
 		//TODO: tell db we couldn't build
 	}
 }
 
 
+//TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
@@ -76,7 +73,7 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 	}
 
 	if validateBuild(buildConf, "") {
-		tellWerker(ctx, buildConf, hash, fullName, acctName, bbToken)
+		tellWerker(ctx, buildConf, hash, fullName, bbToken)
 	} else {
 		//TODO: tell db we couldn't build
 	}
@@ -101,8 +98,7 @@ func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 
 //TODO: this code needs to say X repo is now being tracked
 //TODO: this code will also need to store status into db
-//TODO: remove unused fields
-func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string, fullName string, acctName string, bbToken string) {
+func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string) {
 	// get one-time token use for access to vault
 	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
 	if err != nil {

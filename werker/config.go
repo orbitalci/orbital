@@ -76,13 +76,5 @@ func GetConf() (*WerkerConf, error) {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")
 	}
 	werker.storage = strToStorageImplement(storageTypeStr)
-
-	//switch werker.werkerType {
-	//case Kubernetes:
-	//	werker.werkerProcessor = &builder.K8Proc{}
-	//case Docker:
-	//	werker.werkerProcessor = &builder.DockProc{}
-	//}
-
 	return werker, nil
 }
