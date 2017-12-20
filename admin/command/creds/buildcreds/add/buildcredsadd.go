@@ -66,12 +66,12 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		return 1
 	}
 	var errOccured bool
-	if len(credWrap.Credentials) == 0 {
+	if len(credWrap.VcsCreds) == 0 {
 		c.UI.Error("Did not read any credentials! Is your yaml formatted correctly?")
 		return 1
 	}
-	for _, configVal := range credWrap.Credentials {
-		_, err = c.client.SetCreds(ctx, configVal)
+	for _, configVal := range credWrap.VcsCreds {
+		_, err = c.client.SetVCSCreds(ctx, configVal)
 		if err != nil {
 			c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
 			errOccured = true
@@ -87,8 +87,8 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 
 // seems really unlikely that hashicorps tool will fail, but this way if it does its all in one
 // function.
-func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.Credentials, errorConcat string) {
-	creds = &models.Credentials{}
+func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.VCSCreds, errorConcat string) {
+	creds = &models.VCSCreds{}
 	var err error
 	if creds.ClientId, err = UI.Ask("Client ID: "); err != nil {
 		errorConcat += "\n" + "Client ID Err: " +  err.Error()
@@ -114,7 +114,7 @@ func (c *cmd) runStdinUpload(ctx context.Context) int {
 		c.UI.Error(fmt.Sprint("Error recieving input: ", errConcat))
 		return 1
 	}
-	if _, err := c.client.SetCreds(ctx, creds); err != nil {
+	if _, err := c.client.SetVCSCreds(ctx, creds); err != nil {
 		c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", creds.AcctName, err.Error()))
 		return 1
 	}

@@ -21,7 +21,7 @@ func TestCmd_Run(t *testing.T) {
 	cmdd.flags.StringVar(&cmdd.accountFilter, "account", "",
 		"")
 	expectedCreds := &models.RepoCredWrapper{
-		Credentials: []*models.RepoCreds{
+		RepoCreds: []*models.RepoCreds{
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
@@ -45,7 +45,7 @@ func TestCmd_Run(t *testing.T) {
 		},
 	}
 
-	for _, cred := range expectedCreds.Credentials {
+	for _, cred := range expectedCreds.RepoCreds {
 		cmdd.client.SetRepoCreds(ctx, cred)
 	}
 	var args []string

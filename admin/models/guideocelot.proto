@@ -6,25 +6,25 @@ import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
 service GuideOcelot {
-    rpc GetCreds(google.protobuf.Empty) returns (CredWrapper) {
+    rpc GetVCSCreds (google.protobuf.Empty) returns (CredWrapper) {
         option (google.api.http) = {
 			get: "/v1/creds"
 		};
     }
 
-    rpc SetCreds(Credentials) returns (google.protobuf.Empty) {
+    rpc SetVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			post: "/v1/creds"
 			body: "*"
 		};
     }
 
-    rpc GetRepoCreds(google.protobuf.Empty) returns (RepoCredWrapper) {}
-    rpc SetRepoCreds(RepoCreds) returns (google.protobuf.Empty) {}
+    rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {}
+    rpc SetRepoCreds (RepoCreds) returns (google.protobuf.Empty) {}
 
-    rpc GetAllCreds(google.protobuf.Empty) returns (AllCredsWrapper) {}
+    rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
 
-    rpc CheckConn(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message AllCredsWrapper {
@@ -33,10 +33,10 @@ message AllCredsWrapper {
 }
 
 message CredWrapper {
-    repeated Credentials credentials = 1;
+    repeated VCSCreds vcsCreds = 1;
 }
 
-message Credentials {
+message VCSCreds {
     string clientId = 1;
     string clientSecret = 2;
     string tokenURL = 3;
@@ -45,7 +45,7 @@ message Credentials {
 }
 
 message RepoCredWrapper {
-    repeated RepoCreds credentials = 1;
+    repeated RepoCreds repoCreds = 2;
 }
 
 message RepoCreds {

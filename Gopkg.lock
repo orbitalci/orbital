@@ -2,10 +2,10 @@
 
 
 [[projects]]
-  branch = "master"
   name = "bitbucket.org/level11consulting/go-til"
   packages = ["consul","deserialize","log","net","nsqpb","test","vault"]
-  revision = "0e2720cef2d5703f80367b4a13754ca75c6186eb"
+  revision = "fa26387de7e75d4041cfc42844fbe63573c6d4c2"
+  version = "0.1.0"
 
 [[projects]]
   branch = "master"
@@ -42,6 +42,12 @@
   name = "github.com/armon/go-radix"
   packages = ["."]
   revision = "1fca145dffbcaa8fe914309b1ec0cfc67500fe61"
+
+[[projects]]
+  name = "github.com/bgentry/speakeasy"
+  packages = ["."]
+  revision = "4aabc24848ce5fd31929f7d1e4ea74d3709c14cd"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -123,7 +129,7 @@
 
 [[projects]]
   name = "github.com/hashicorp/consul"
-  packages = ["api","lib/freeport","testutil","testutil/retry"]
+  packages = ["api","command/flags","lib/freeport","testutil","testutil/retry"]
   revision = "9564c2978b59c060aed0657e662a4eb1c6f35356"
   version = "v1.0.1"
 
@@ -255,6 +261,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/mitchellh/cli"
+  packages = ["."]
+  revision = "33edc47170b5df54d2588696d590c5e20ee583fe"
+
+[[projects]]
+  branch = "master"
   name = "github.com/mitchellh/copystructure"
   packages = ["."]
   revision = "d23ffcb85de31694d6ccaa23ccb4a03e55c1303f"
@@ -314,6 +326,12 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/posener/complete"
+  packages = [".","cmd","cmd/install","match"]
+  revision = "dc2bc5a81accba8782bebea28628224643a8286a"
+  version = "v1.1"
+
+[[projects]]
   name = "github.com/ryanuber/go-glob"
   packages = ["."]
   revision = "572520ed46dbddaed19ea3d9541bdd0494163693"
@@ -330,6 +348,12 @@
   packages = ["."]
   revision = "d682213848ed68c0a260ca37d6dd5ace8423f5ba"
   version = "v1.0.4"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/tonnerre/golang-text"
+  packages = ["."]
+  revision = "048ed3d792f7104850acbc8cfc01e5a6070f4c04"
 
 [[projects]]
   name = "github.com/urfave/negroni"
@@ -406,6 +430,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dad5919aa99a57ef0f0208cad6a43270d68d0e1602065e5242f9ee3c56bcd051"
+  inputs-digest = "406967c47467fcc0ba9d38201d4e49df5b8a50fab98a41987fd5cdfb56ccb8cd"
   solver-name = "gps-cdcl"
   solver-version = 1

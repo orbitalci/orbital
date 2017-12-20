@@ -13,7 +13,7 @@ func GetValidator() *AdminValidator {
 }
 
 //validates config and returns json formatted error
-func (adminValidator AdminValidator) ValidateConfig(adminCreds *models.Credentials) error {
+func (adminValidator AdminValidator) ValidateConfig(adminCreds *models.VCSCreds) error {
 	if len(adminCreds.AcctName) == 0 {
 		return errors.New("acctName is required")
 	}

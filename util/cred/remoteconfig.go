@@ -67,7 +67,7 @@ type RemoteConfig struct {
 func instantiateCredObject(ocyType OcyCredType) RemoteConfigCred {
 	switch ocyType {
 	case Vcs:
-		return &models.Credentials{}
+		return &models.VCSCreds{}
 	case Repo:
 		return &models.RepoCreds{}
 	default:
@@ -77,12 +77,12 @@ func instantiateCredObject(ocyType OcyCredType) RemoteConfigCred {
 
 // GetCred at will return a map w/ key <cred_type>/<acct_name> to credentials. depending on the OcyCredType,
 //   the appropriate credential struct will be instantiated and filled with data from consul and vault.
-//   currently supports map[string]*models.Credentials and map[string]*models.RepoCreds
+//   currently supports map[string]*models.VCSCreds and map[string]*models.RepoCreds
 //   You must cast the resulting values to their appropriate objects after the map is generated if you need to access more than
 //   the methods on the cred.RemoteConfigCred interface
 //   Example:
 //      creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
-//      vcsCreds := creds.(*models.Credentials)
+//      vcsCreds := creds.(*models.VCSCreds)
 func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error) {
 	creds := map[string]RemoteConfigCred{}
 	var err error

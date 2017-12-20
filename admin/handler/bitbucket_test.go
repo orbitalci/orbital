@@ -10,7 +10,7 @@ import (
 )
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
-	config := &models.Credentials{}
+	config := &models.VCSCreds{}
 	bb := Bitbucket{}
 	bb.SetCallbackURL("webhook-exists-url")
 	bb.SetMeUp(config, MockHttpClient{
@@ -26,7 +26,7 @@ func TestBitbucket_FindWebhooksExists(t *testing.T) {
 }
 
 func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
-	config := &models.Credentials{}
+	config := &models.VCSCreds{}
 	bb := Bitbucket{}
 	bb.SetCallbackURL("marianne-empty-callback-url")
 	bb.SetMeUp(config, MockHttpClient{

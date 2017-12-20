@@ -115,7 +115,7 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 		log.IncludeErrField(err).Error()
 		return
 	}
-	for _, configVal := range config.Credentials {
+	for _, configVal := range config.VcsCreds {
 		err := gos.AdminValidator.ValidateConfig(configVal)
 		if err != nil {
 			log.IncludeErrField(err)
@@ -130,7 +130,7 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 }
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
-func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials) error {
+func SetupCredentials(gosss models.GuideOcelotServer, config *models.VCSCreds) error {
 	gos := gosss.(*guideOcelotServer)
 
 	//hehe right now we only have bitbucket

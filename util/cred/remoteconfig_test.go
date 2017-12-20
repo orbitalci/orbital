@@ -18,7 +18,7 @@ func TestRemoteConfig_ErrorHandling(t *testing.T) {
 	if brokenRemote == nil {
 		t.Error(test.GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
 	}
-	err := brokenRemote.AddCreds("test", &models.Credentials{})
+	err := brokenRemote.AddCreds("test", &models.VCSCreds{})
 	if err.Error() != "not connected to consul, unable to add credentials" {
 		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to add credentials", err))
 	}
@@ -33,7 +33,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	testRemoteConfig, vaultListener, consulServer := testSetupVaultAndConsul(t)
 	defer teardownVaultAndConsul(vaultListener, consulServer)
 
-	adminConfig := &models.Credentials{
+	adminConfig := &models.VCSCreds{
 		ClientSecret: "top-secret",
 		ClientId:     "beeswax",
 		AcctName:     "mariannefeng",
@@ -59,9 +59,9 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	if !ok {
 		t.Error(test.GenericStrFormatErrors("fake cred should exist", true, ok))
 	}
-	marianne, ok := mari.(*models.Credentials)
+	marianne, ok := mari.(*models.VCSCreds)
 	if !ok {
-		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.Credentials")
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.VCSCreds")
 	}
 
 	if marianne.AcctName != "mariannefeng" {
@@ -86,16 +86,16 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 
 	creds, _ = testRemoteConfig.GetCredAt(BuildCredPath("github", "mariannefeng", Vcs), false, Vcs)
 	mari, _ = creds["github/mariannefeng"]
-	marianne, ok = mari.(*models.Credentials)
+	marianne, ok = mari.(*models.VCSCreds)
 	if !ok {
-		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.Credentials")
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.VCSCreds")
 	}
 
 	if marianne.ClientSecret != "top-secret" {
 		t.Error(test.GenericStrFormatErrors("fake cred should get password", "top-secret", marianne.ClientSecret))
 	}
 
-	secondConfig := &models.Credentials{
+	secondConfig := &models.VCSCreds{
 		ClientSecret: "secret",
 		ClientId:     "beeswaxxxxx",
 		AcctName:     "ariannefeng",
@@ -118,9 +118,9 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	if !ok {
 		t.Fatal(test.GenericStrFormatErrors("new creds arianne should exist", true, ok))
 	}
-	newCreds, ok := newCred.(*models.Credentials)
+	newCreds, ok := newCred.(*models.VCSCreds)
 	if !ok {
-		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.Credentials")
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.VCSCreds")
 	}
 
 	if newCreds.AcctName != "ariannefeng" {

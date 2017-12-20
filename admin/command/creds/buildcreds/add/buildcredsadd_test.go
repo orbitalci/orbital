@@ -33,7 +33,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	ctx := context.Background()
 	cmd.fileloc = "./test-fixtures/newcreds.yml"
 	expectedCreds := &models.CredWrapper{
-		Credentials: []*models.Credentials{
+		VcsCreds: []*models.VCSCreds{
 			{
 				ClientId:     "fancy-frickin-identification",
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
@@ -47,7 +47,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	if exit := cmd.Run(args); exit != 0 {
 		t.Fatal("should return exit 0")
 	}
-	actualCreds, err := cmd.client.GetCreds(ctx, &empty.Empty{})
+	actualCreds, err := cmd.client.GetVCSCreds(ctx, &empty.Empty{})
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
@@ -67,7 +67,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	cmd := testNew(input)
 	ctx := context.Background()
 	expectedCreds := &models.CredWrapper{
-		Credentials: []*models.Credentials{
+		VcsCreds: []*models.VCSCreds{
 			{
 				ClientId:     "fancy-frickin-identification",
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
@@ -83,7 +83,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	if exit != 0 {
 		t.Error("should return exit code 0, got ", exit)
 	}
-	sentCreds, err := cmd.client.GetCreds(ctx, &empty.Empty{})
+	sentCreds, err := cmd.client.GetVCSCreds(ctx, &empty.Empty{})
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}

@@ -33,7 +33,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	ctx := context.Background()
 	cmd.fileloc = "./test-fixtures/newcreds.yml"
 	expectedCreds := &models.RepoCredWrapper{
-		Credentials: []*models.RepoCreds{
+		RepoCreds: []*models.RepoCreds{
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
@@ -67,7 +67,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	cmd := testNew(input)
 	ctx := context.Background()
 	expectedCreds := &models.RepoCredWrapper{
-		Credentials: []*models.RepoCreds{
+		RepoCreds: []*models.RepoCreds{
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",

@@ -29,7 +29,7 @@ func TestCmd_Run(t *testing.T) {
 	cmdd.flags.StringVar(&cmdd.accountFilter, "account", "",
 		"")
 	expectedCreds := &models.CredWrapper{
-		Credentials: []*models.Credentials{
+		VcsCreds: []*models.VCSCreds{
 			{
 				ClientId:     "fancy-frickin-identification",
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
@@ -47,8 +47,8 @@ func TestCmd_Run(t *testing.T) {
 		},
 	}
 
-	for _, cred := range expectedCreds.Credentials {
-		cmdd.client.SetCreds(ctx, cred)
+	for _, cred := range expectedCreds.VcsCreds {
+		cmdd.client.SetVCSCreds(ctx, cred)
 	}
 	var args []string
 	if exit := cmdd.Run(args); exit != 0 {

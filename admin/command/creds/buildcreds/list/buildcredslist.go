@@ -58,13 +58,13 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	var protoReq empty.Empty
-	msg, err := c.client.GetCreds(ctx, &protoReq)
+	msg, err := c.client.GetVCSCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 	}
 	printed := false
 	Header(c.UI)
-	for _, oneline := range msg.Credentials {
+	for _, oneline := range msg.VcsCreds {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
 			c.UI.Info(Prettify(oneline))
 			printed = true
@@ -93,7 +93,7 @@ func NoDataHeader(ui cli.Ui) {
 }
 
 
-func Prettify(cred *models.Credentials) string {
+func Prettify(cred *models.VCSCreds) string {
 	pretty := `ClientId: %s
 ClientSecret: %s
 TokenURL: %s

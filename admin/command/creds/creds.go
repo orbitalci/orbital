@@ -26,10 +26,7 @@ func (c *helpcmd) Help() string {
 const helpcmdSynopsis = "credential configuration"
 const helpcmdHelp = `
 Usage: ocelot creds <subcommand> [options] [args]
-
+  Interacting with ocelot credentials!
   This command has subcommands for interacting with ocelot's cred stores
-  Current Options:
-    - ocelot creds repo
-    - ocelot creds vcs
   For more examples, ask for subcommand help or view the documentation.
 `

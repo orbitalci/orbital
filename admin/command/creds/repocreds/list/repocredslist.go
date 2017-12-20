@@ -64,7 +64,7 @@ func (c *cmd) Run(args []string) int {
 	}
 	printed := false
 	Header(c.UI)
-	for _, oneline := range msg.Credentials {
+	for _, oneline := range msg.RepoCreds {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
 			c.UI.Info(Prettify(oneline))
 			printed = true

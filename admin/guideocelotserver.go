@@ -18,7 +18,7 @@ type guideOcelotServer struct {
 }
 
 //TODO: what about adding error field to response? Do something nice about
-func (g *guideOcelotServer) GetCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
+func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	log.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
 	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
@@ -27,7 +27,7 @@ func (g *guideOcelotServer) GetCreds(ctx context.Context, msg *empty.Empty) (*mo
 	}
 
 	for _, v := range creds {
-		credWrapper.Credentials = append(credWrapper.Credentials, v.(*models.Credentials))
+		credWrapper.VcsCreds = append(credWrapper.VcsCreds, v.(*models.VCSCreds))
 	}
 	return credWrapper, nil
 }
@@ -38,7 +38,7 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 }
 
 
-func (g *guideOcelotServer) SetCreds(ctx context.Context, credentials *models.Credentials) (*empty.Empty, error) {
+func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
 	err := g.AdminValidator.ValidateConfig(credentials)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 		return credWrapper, err
 	}
 	for _, v := range creds {
-		credWrapper.Credentials = append(credWrapper.Credentials, v.(*models.RepoCreds))
+		credWrapper.RepoCreds = append(credWrapper.RepoCreds, v.(*models.RepoCreds))
 	}
 	return credWrapper, nil
 }
@@ -76,7 +76,7 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 		return allCreds, err
 	}
 	allCreds.RepoCreds = repoCreds
-	adminCreds, err := g.GetCreds(ctx, msg)
+	adminCreds, err := g.GetVCSCreds(ctx, msg)
 	if err != nil {
 		return allCreds, err
 	}

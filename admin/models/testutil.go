@@ -6,8 +6,8 @@ import (
 	"google.golang.org/grpc"
 )
 //type GuideOcelotClient interface {
-//	GetCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error)
-//	SetCreds(ctx context.Context, in *Credentials, opts ...grpc.CallOption) (*empty.Empty, error)
+//	GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error)
+//	SetVCSCreds(ctx context.Context, in *Credentials, opts ...grpc.CallOption) (*empty.Empty, error)
 //}
 
 func NewFakeGuideOcelotClient() *fakeGuideOcelotClient {
@@ -19,12 +19,12 @@ type fakeGuideOcelotClient struct {
 	repoCreds *RepoCredWrapper
 }
 
-func (f *fakeGuideOcelotClient) GetCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
+func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
 	return f.creds, nil
 }
 
-func (f *fakeGuideOcelotClient) SetCreds(ctx context.Context, in *Credentials, opts ...grpc.CallOption) (*empty.Empty, error) {
-	f.creds.Credentials = append(f.creds.Credentials, in)
+func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	f.creds.VcsCreds = append(f.creds.VcsCreds, in)
 	return &empty.Empty{}, nil
 }
 
@@ -33,7 +33,7 @@ func (f *fakeGuideOcelotClient) GetRepoCreds(ctx context.Context, in *empty.Empt
 }
 
 func (f *fakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
-	f.repoCreds.Credentials = append(f.repoCreds.Credentials, in)
+	f.repoCreds.RepoCreds = append(f.repoCreds.RepoCreds, in)
 	return &empty.Empty{}, nil
 }
 
@@ -50,8 +50,8 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 
 
 func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
-	for ind, cred := range credWrapA.Credentials {
-		credB := credWrapB.Credentials[ind]
+	for ind, cred := range credWrapA.VcsCreds {
+		credB := credWrapB.VcsCreds[ind]
 		if cred.Type != credB.Type {
 			return false
 		}
@@ -72,8 +72,8 @@ func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 }
 
 func CompareRepoCredWrappers(repoWrapA *RepoCredWrapper, repoWrapB *RepoCredWrapper) bool {
-	for ind, cred := range repoWrapA.Credentials {
-		credB := repoWrapB.Credentials[ind]
+	for ind, cred := range repoWrapA.RepoCreds {
+		credB := repoWrapB.RepoCreds[ind]
 		if cred.Type != credB.Type {
 			return false
 		}

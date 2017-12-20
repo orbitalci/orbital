@@ -44,21 +44,21 @@ func (m *RepoCreds) AddAdditionalFields(consule *consul.Consulet, path string) (
 }
 
 
-// these methods are to enable remoteconfig cred save with the proto Credentials object
-func (m *Credentials) SetAcctNameAndType(name string, typ string) {
+// these methods are to enable remoteconfig cred save with the proto VCSCreds object
+func (m *VCSCreds) SetAcctNameAndType(name string, typ string) {
 	m.AcctName = name
 	m.Type = typ
 }
 
-func (m *Credentials) BuildCredPath(credType string, acctName string) string {
+func (m *VCSCreds) BuildCredPath(credType string, acctName string) string {
 	return fmt.Sprintf("%s/vcs/%s/%s", "creds", acctName, credType)
 }
 
-func (m *Credentials) SetSecret(secret string) {
+func (m *VCSCreds) SetSecret(secret string) {
 	m.ClientSecret = secret
 }
 
-func (m *Credentials) SetAdditionalFields(infoType string, val string) {
+func (m *VCSCreds) SetAdditionalFields(infoType string, val string) {
 	switch infoType {
 	case "clientid":
 		m.ClientId = val
@@ -67,7 +67,7 @@ func (m *Credentials) SetAdditionalFields(infoType string, val string) {
 	}
 }
 
-func (m *Credentials) AddAdditionalFields(consule *consul.Consulet, path string) error {
+func (m *VCSCreds) AddAdditionalFields(consule *consul.Consulet, path string) error {
 	err := consule.AddKeyValue(path+"/clientid", []byte(m.ClientId))
 	if err != nil {
 		return err

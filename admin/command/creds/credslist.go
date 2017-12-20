@@ -23,6 +23,7 @@ type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
 	client models.GuideOcelotClient
+	accountFilter string
 	config *admin.ClientConfig
 }
 
@@ -60,18 +61,18 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 		return 1
 	}
-	if len(msg.RepoCreds.Credentials) > 0 {
+	if len(msg.RepoCreds.RepoCreds) > 0 {
 		repocredslist.Header(c.UI)
-		for _, oneline := range msg.RepoCreds.Credentials {
+		for _, oneline := range msg.RepoCreds.RepoCreds {
 			c.UI.Info(repocredslist.Prettify(oneline))
 		}
 	} else {
 		repocredslist.NoDataHeader(c.UI)
 	}
 
-	if len(msg.AdminCreds.Credentials) > 0 {
+	if len(msg.AdminCreds.VcsCreds) > 0 {
 		buildcredslist.Header(c.UI)
-		for _, oneline :=  range msg.AdminCreds.Credentials {
+		for _, oneline :=  range msg.AdminCreds.VcsCreds {
 			c.UI.Info(buildcredslist.Prettify(oneline))
 		}
 	} else {
