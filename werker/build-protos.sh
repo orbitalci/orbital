@@ -1,3 +1,3 @@
-#!/bin/sh
+#!/usr/bin/env sh
 echo "building werker stream protobuf files"
-protoc -I protobuf/ --go_out=plugins=grpc:protobuf/ buildoutputstream.proto
+protoc -I protobuf/ --go_out=plugins=grpc:protobuf/ protobuf/buildoutputstream.proto

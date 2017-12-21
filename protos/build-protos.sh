@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+echo "building top-level protobuf files"
 # run protobuf compiler on dir up
 cd ..
 
