@@ -10,4 +10,5 @@ FROM scratch
 ENV SERVICE_NAME hookhandler
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/${SERVICE_NAME} /
-CMD ["/hookhandler"]
+COPY --from=builder /sbin/tini /sbin/
+CMD ["/sbin/tini", "--", "/hookhandler"]
