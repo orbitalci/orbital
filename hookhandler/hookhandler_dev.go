@@ -1,4 +1,5 @@
 package hookhandler
+//has necessary functions for running hookhandler in dev mode
 
 import (
 	"io/ioutil"
@@ -6,8 +7,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/handler"
 	"os"
 )
-
-//has necessary functions for running hookhandler in dev mode
 
 type MockHookHandlerContext struct {
 	HookHandlerContext //embedding hookhandler context cause didn't want to stub out getters/setters
