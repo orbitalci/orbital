@@ -96,8 +96,8 @@ func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 	return false
 }
 
-//TODO: this code needs to say X repo is now being tracked
-//TODO: this code will also need to store status into db
+
+//TODO: this code needs to store status into db
 func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string) {
 	// get one-time token use for access to vault
 	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
@@ -143,17 +143,28 @@ func getCredConfig() *models.Credentials {
 	}
 }
 
+//Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
+func getBitbucketClient(cfg *models.Credentials) (handler.VCSHandler, string, error) {
+	bbClient := &ocenet.OAuthClient{}
+	token, err := bbClient.Setup(cfg)
+	if err != nil {
+		return nil, "", err
+	}
+	bb := handler.GetBitbucketHandler(cfg, bbClient)
+	return bb, token, nil
+}
+
 //returns config if it exists, bitbucket token, and err
 func GetBBConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
 	//cfg := getCredConfig()
 	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath+"/bitbucket/"+acctName, false)
 	cfg := bbCreds["bitbucket/"+acctName]
-	bb := handler.Bitbucket{}
 
-	bbClient := &ocenet.OAuthClient{}
-	token, err = bbClient.Setup(cfg)
+	bb, token, err := getBitbucketClient(cfg)
+	if err != nil {
+		return
+	}
 
-	bb.SetMeUp(cfg, bbClient)
 	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return

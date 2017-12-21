@@ -22,7 +22,6 @@ import (
 )
 
 //TODO: floe integration??? just putting this note here so we remember
-//TODO: change this to use my fork of logrus so we can pretty print logs?
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(configInstance *cred.RemoteConfig, serverRunsAt string, port string) {
@@ -151,18 +150,11 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.Credentials
 	//hehe right now we only have bitbucket
 	switch config.Type {
 	case "bitbucket":
-		bbHandler := handler.Bitbucket{}
 		bitbucketClient := &ocenet.OAuthClient{}
 		bitbucketClient.Setup(config)
 
-		err := bbHandler.SetMeUp(config, bitbucketClient)
-
-		if err != nil {
-			log.Log().Error("could not setup bitbucket client")
-			return err
-		}
-
-		err = bbHandler.Walk()
+		bbHandler := handler.GetBitbucketHandler(config, bitbucketClient)
+		err := bbHandler.Walk()
 		if err != nil {
 			return err
 		}

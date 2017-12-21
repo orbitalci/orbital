@@ -11,14 +11,12 @@ import (
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
 	config := &models.Credentials{}
-	bb := Bitbucket{}
-	bb.SetCallbackURL("webhook-exists-url")
-	bb.SetMeUp(config, MockHttpClient{
+	bb := GetBitbucketHandler(config, MockHttpClient{
 		Unmarshaler: &jsonpb.Unmarshaler{
 			AllowUnknownFields: true,
 		},
 	})
-
+	bb.SetCallbackURL("webhook-exists-url")
 	results := bb.FindWebhooks("webhooks-exists")
 	if !results {
 		t.Error(test.GenericStrFormatErrors("webhook exists", true, results))
@@ -27,14 +25,12 @@ func TestBitbucket_FindWebhooksExists(t *testing.T) {
 
 func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
 	config := &models.Credentials{}
-	bb := Bitbucket{}
-	bb.SetCallbackURL("marianne-empty-callback-url")
-	bb.SetMeUp(config, MockHttpClient{
+	bb := GetBitbucketHandler(config, MockHttpClient{
 		Unmarshaler: &jsonpb.Unmarshaler{
 			AllowUnknownFields: true,
 		},
 	})
-
+	bb.SetCallbackURL("marianne-empty-callback-url")
 	results := bb.FindWebhooks("empty-webhooks")
 	if results {
 		t.Error(test.GenericStrFormatErrors("no webhook yet", false, results))

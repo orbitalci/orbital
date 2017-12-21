@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -31,6 +32,10 @@ func main() {
 	if consulPort == "" {
 		consulPort = "8500"
 		ocelog.Log().Warning("consul is assumed to be running on port 8500")
+	}
+	mode := os.Getenv("ENV")
+	if strings.EqualFold(mode, "dev") {
+
 	}
 
 	consulPortInt, _ := strconv.Atoi(consulPort)

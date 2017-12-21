@@ -18,6 +18,8 @@ func DownloadCodebase(werk *protos.WerkerTask) []string {
 		downloadCode = append(downloadCode, ".ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf("https://bitbucket.org/%s/get", werk.FullName), werk.CheckoutHash)
 	case "github":
 		ocelog.Log().Error("not implemented")
+	default:
+		ocelog.Log().Error("werker VCS type not recognized")
 	}
 
 	return downloadCode

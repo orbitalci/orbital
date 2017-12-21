@@ -74,7 +74,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	//host configs like mount points
 	hostConfig := &container.HostConfig{
-		//TODO: taking suggestions for this - should we always assume $HOME/.ocelot?
+		//TODO: assume $HOME/.ocelot, and have it be overridable via env variable
 		Binds: []string{"/Users/mariannefeng/.ocelot:/.ocelot"},
 		//Binds: []string{"/home/mariannefeng/.ocelot:/.ocelot"},
 	}
