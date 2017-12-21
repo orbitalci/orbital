@@ -4,8 +4,8 @@ package credsadd
 import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	"bitbucket.org/level11consulting/ocelot/admin"
-	"bitbucket.org/level11consulting/ocelot/admin/command/commandhelper"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"

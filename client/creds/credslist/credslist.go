@@ -2,10 +2,10 @@ package credslist
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin"
-	"bitbucket.org/level11consulting/ocelot/admin/command/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds/list"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/repocreds/list"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/list"
+	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
 	"context"
 	"flag"
 	"fmt"

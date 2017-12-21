@@ -1,9 +1,9 @@
-package buildcredslist
+package repocredslist
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin"
-	"bitbucket.org/level11consulting/ocelot/admin/command/commandhelper"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
@@ -21,10 +21,9 @@ type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
 	client models.GuideOcelotClient
-	config *admin.ClientConfig
 	accountFilter string
+	config *admin.ClientConfig
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.client
@@ -37,6 +36,7 @@ func (c *cmd) GetUI() cli.Ui {
 func (c *cmd) GetConfig() *admin.ClientConfig {
 	return c.config
 }
+
 
 func (c *cmd) init() {
 	var err error
@@ -58,13 +58,13 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	var protoReq empty.Empty
-	msg, err := c.client.GetVCSCreds(ctx, &protoReq)
+	msg, err := c.client.GetRepoCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 	}
 	printed := false
 	Header(c.UI)
-	for _, oneline := range msg.Vcs {
+	for _, oneline := range msg.Repo {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
 			c.UI.Info(Prettify(oneline))
 			printed = true
@@ -84,30 +84,30 @@ func (c *cmd) Help() string {
 	return help
 }
 
+
 func Header(ui cli.Ui) {
-	ui.Info("--- Admin Credentials ---\n")
+	ui.Info("--- Repo Credentials ---\n")
 }
 
 func NoDataHeader(ui cli.Ui) {
-	ui.Warn("--- No Admin Credentials Found ---\n")
+	ui.Warn("--- No Repo Credentials Found! ---")
 }
 
-
-func Prettify(cred *models.VCSCreds) string {
-	pretty := `ClientId: %s
-ClientSecret: %s
-TokenURL: %s
+func Prettify(cred *models.RepoCreds) string {
+	pretty := `Username: %s
+Password: %s
+RepoUrl: %s
 AcctName: %s
 Type: %s
 
 `
-	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, cred.Type)
+	return fmt.Sprintf(pretty, cred.Username, cred.Password, cred.RepoUrl, cred.AcctName, cred.Type)
 }
 
 
-const synopsis = "List all credentials used for tracking repositories to build"
+const synopsis = "List all credentials used for artifact repositories"
 const help = `
-Usage: ocelot creds vcs list
+Usage: ocelot creds repo list
 
-  Retrieves all credentials that ocelot uses to track repositories
+  Retrieves all credentials that ocelot uses to auth into artifact repositories
 `

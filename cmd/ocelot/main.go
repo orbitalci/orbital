@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin/command"
+	"bitbucket.org/level11consulting/ocelot/client"
 	"fmt"
 	"github.com/mitchellh/cli"
 	"os"
@@ -13,12 +13,12 @@ func mainDo() int {
 
 	// todo how to get just keys out of map?
 	var cmds []string
-	for c := range command.Commands {
+	for c := range client.Commands {
 		cmds = append(cmds, c)
 	}
 	clie := &cli.CLI{
 		Args: args,
-		Commands: command.Commands,
+		Commands: client.Commands,
 		Autocomplete: true,
 		Name: "ocelot",
 		Version: "0.1.0",
