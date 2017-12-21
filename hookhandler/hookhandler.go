@@ -178,8 +178,8 @@ func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 }
 
 // for testing
-func getCredConfig() *models.Credentials {
-	return &models.Credentials{
+func getCredConfig() *models.VCSCreds {
+	return &models.VCSCreds{
 		ClientId:     "QEBYwP5cKAC3ykhau4",
 		ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
 		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",
@@ -189,8 +189,12 @@ func getCredConfig() *models.Credentials {
 
 func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
 	//cfg := getCredConfig()
-	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.BuildVCSCredPath("bitbucket", acctName), false)
-	cfg := bbCreds["bitbucket/"+acctName]
+	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, cred.Vcs)
+	cf := bbCreds["bitbucket/"+acctName]
+	cfg, ok := cf.(*models.VCSCreds)
+	if !ok {
+		return
+	}
 	bb := handler.Bitbucket{}
 	bbClient := &ocenet.OAuthClient{}
 	bbClient.Setup(cfg)

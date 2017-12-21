@@ -1,4 +1,4 @@
-package buildcredsadd
+package repocredsadd
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
@@ -32,14 +32,14 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	cmd := testNew(input)
 	ctx := context.Background()
 	cmd.fileloc = "./test-fixtures/newcreds.yml"
-	expectedCreds := &models.CredWrapper{
-		Credentials: []*models.Credentials{
+	expectedCreds := &models.RepoCredWrapper{
+		Repo: []*models.RepoCreds{
 			{
-				ClientId:     "fancy-frickin-identification",
-				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
-				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
-				AcctName:     "lamb-shank",
-				Type:         "bitbucket",
+				Username:     "thisBeMyUserName",
+				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
+				RepoUrl:      "https://ocelot.perf/nexus-yo",
+				AcctName:     "jessishank",
+				Type:         "nexus",
 			},
 		},
 	}
@@ -47,11 +47,11 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	if exit := cmd.Run(args); exit != 0 {
 		t.Fatal("should return exit 0")
 	}
-	actualCreds, err := cmd.client.GetCreds(ctx, &empty.Empty{})
+	actualCreds, err := cmd.client.GetRepoCreds(ctx, &empty.Empty{})
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
-	if !models.CompareCredWrappers(expectedCreds, actualCreds) {
+	if !models.CompareRepoCredWrappers(expectedCreds, actualCreds) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", actualCreds)
 	}
 
@@ -59,21 +59,21 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 }
 
 func Test_cmd_Run_noYaml(t *testing.T) {
-	input := []byte(`fancy-frickin-identification
-bitbucket
-lamb-shank
-https://ocelot.perf/site/oauth2/access_token
+	input := []byte(`thisBeMyUserName
+nexus
+jessishank
+https://ocelot.perf/nexus-yo
 SHH-BE-QUIET-ITS-A-SECRET`)
 	cmd := testNew(input)
 	ctx := context.Background()
-	expectedCreds := &models.CredWrapper{
-		Credentials: []*models.Credentials{
+	expectedCreds := &models.RepoCredWrapper{
+		Repo: []*models.RepoCreds{
 			{
-				ClientId:     "fancy-frickin-identification",
-				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
-				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
-				AcctName:     "lamb-shank",
-				Type:         "bitbucket",
+				Username:     "thisBeMyUserName",
+				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
+				RepoUrl:      "https://ocelot.perf/nexus-yo",
+				AcctName:     "jessishank",
+				Type:         "nexus",
 			},
 		},
 	}
@@ -83,11 +83,11 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	if exit != 0 {
 		t.Error("should return exit code 0, got ", exit)
 	}
-	sentCreds, err := cmd.client.GetCreds(ctx, &empty.Empty{})
+	sentCreds, err := cmd.client.GetRepoCreds(ctx, &empty.Empty{})
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
-	if !models.CompareCredWrappers(expectedCreds, sentCreds) {
+	if !models.CompareRepoCredWrappers(expectedCreds, sentCreds) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", sentCreds)
 	}
 }

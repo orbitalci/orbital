@@ -21,12 +21,12 @@ type Bitbucket struct {
 	Client      ocenet.HttpClient
 	Marshaler   jsonpb.Marshaler
 
-	credConfig    *models.Credentials
+	credConfig    *models.VCSCreds
 	isInitialized bool
 }
 
 // Takes in admin config creds, returns any errors that may happen during setup
-func (bb *Bitbucket) SetMeUp(adminConfig *models.Credentials, client ocenet.HttpClient) error {
+func (bb *Bitbucket) SetMeUp(adminConfig *models.VCSCreds, client ocenet.HttpClient) error {
 	bb.Client = client
 	bb.Marshaler = jsonpb.Marshaler{}
 	bb.credConfig = adminConfig
@@ -100,6 +100,7 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 		return nil
 	}
 	repositories := &pb.PaginatedRepository{}
+	//todo: error pages from bitbucket??? these need to bubble up to client
 	err := bb.Client.GetUrl(repoUrl, repositories)
 	if err != nil {
 		return err

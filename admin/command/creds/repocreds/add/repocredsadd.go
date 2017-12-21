@@ -1,9 +1,9 @@
-package buildcredsadd
-
+package repocredsadd
 
 import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	"bitbucket.org/level11consulting/ocelot/admin"
+	"bitbucket.org/level11consulting/ocelot/admin/command/commandhelper"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
 	"flag"
@@ -13,7 +13,7 @@ import (
 )
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui}
+	c := &cmd{UI: ui, config: admin.NewClientConfig()}
 	c.init()
 	return c
 }
@@ -24,22 +24,34 @@ type cmd struct {
 	flags   *flag.FlagSet
 	fileloc string
 	client  models.GuideOcelotClient
+	config *admin.ClientConfig
+}
+
+func (c *cmd) GetClient() models.GuideOcelotClient {
+	return c.client
+}
+
+func (c *cmd) GetUI() cli.Ui {
+	return c.UI
+}
+
+func (c *cmd) GetConfig() *admin.ClientConfig {
+	return c.config
 }
 
 func (c *cmd) init() {
 	var err error
-	//todo: THIS IS HARDCODED! BAD!
-	c.client, err = admin.GetClient("localhost:10000")
+	c.client, err = admin.GetClient(c.config.AdminLocation)
 	if err != nil {
 		panic(err)
 	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.fileloc, "credfile-loc", "",
-		"Location of yaml file containing creds to upload")
+		"Location of yaml file containing repo creds to upload")
 }
 
 func (c *cmd) runCredFileUpload(ctx context.Context) int {
-	credWrap := &models.CredWrapper{}
+	credWrap := &models.RepoCredWrapper{}
 	dese := deserialize.New()
 	confFile, err := ioutil.ReadFile(c.fileloc)
 	if err != nil {
@@ -51,17 +63,17 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		return 1
 	}
 	var errOccured bool
-	if len(credWrap.Credentials) == 0 {
-		c.UI.Error("Did not read any credentials! Is your yaml formatted correctly?")
+	if len(credWrap.Repo) == 0 {
+		c.UI.Error("Did not read any repo credentials! Is your yaml formatted correctly?")
 		return 1
 	}
-	for _, configVal := range credWrap.Credentials {
-		_, err = c.client.SetCreds(ctx, configVal)
+	for _, configVal := range credWrap.Repo {
+		_, err = c.client.SetRepoCreds(ctx, configVal)
 		if err != nil {
-			c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
+			c.UI.Error(fmt.Sprintf("Could not add credentials for repository: %s \nError: %s", configVal.AcctName, err.Error()))
 			errOccured = true
 		} else {
-			c.UI.Info(fmt.Sprintf("Added credentials for account: %s", configVal.AcctName))
+			c.UI.Info(fmt.Sprintf("Added credentials for account with username %s: %s", configVal.Username, configVal.AcctName))
 		}
 	}
 	if errOccured {
@@ -72,23 +84,23 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 
 // seems really unlikely that hashicorps tool will fail, but this way if it does its all in one
 // function.
-func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.Credentials, errorConcat string) {
-	creds = &models.Credentials{}
+func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat string) {
+	creds = &models.RepoCreds{}
 	var err error
-	if creds.ClientId, err = UI.Ask("Client ID: "); err != nil {
-		errorConcat += "\n" + "Client ID Err: " +  err.Error()
+	if creds.Username, err = UI.Ask("Username: "); err != nil {
+		errorConcat += "\n" + "Username Err: " +  err.Error()
 	}
-	if creds.Type, err = UI.Ask("Type: "); err != nil {
+	if creds.Type, err = UI.Ask("Type (nexus or artifactory): "); err != nil {
 		errorConcat += "\n" + "Type Err: " +  err.Error()
 	}
 	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
 		errorConcat += "\n" + "Account Name Err: " +  err.Error()
 	}
-	if creds.TokenURL, err = UI.Ask("OAuth token URL for repository: "); err != nil {
-		errorConcat += "\n" + "OAuth token URL for repository: " + err.Error()
+	if creds.RepoUrl, err = UI.Ask("Repo URL for uploading repo artifacts: "); err != nil {
+		errorConcat += "\n" + "Repo URL Err: " + err.Error()
 	}
-	if creds.ClientSecret, err = UI.AskSecret("Secret for OAuth: "); err != nil {
-		errorConcat += "\n" + "OAuth Secret Err: " + err.Error()
+	if creds.Password, err = UI.AskSecret("Password for Repo Integration: "); err != nil {
+		errorConcat += "\n" + "Password Err: " + err.Error()
 	}
 	return creds, errorConcat
 }
@@ -99,7 +111,7 @@ func (c *cmd) runStdinUpload(ctx context.Context) int {
 		c.UI.Error(fmt.Sprint("Error recieving input: ", errConcat))
 		return 1
 	}
-	if _, err := c.client.SetCreds(ctx, creds); err != nil {
+	if _, err := c.client.SetRepoCreds(ctx, creds); err != nil {
 		c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", creds.AcctName, err.Error()))
 		return 1
 	}
@@ -112,7 +124,9 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	ctx := context.Background()
-
+	if err := commandhelper.CheckConnection(c, ctx); err != nil {
+		return 1
+	}
 	if c.fileloc != "" {
 		return c.runCredFileUpload(ctx)
 	} else {
@@ -129,20 +143,20 @@ func (c *cmd) Help() string {
 	return help
 }
 
-const synopsis = "Add credentials or a set of them"
+const synopsis = "Add credentials or a set of them for artifact repositories"
 const help = `
-Usage: ocelot creds add
+Usage: ocelot creds repo add
   Add one set of credentials or a list of them.
   If you specify a filename using:
     ocelot creds add -credfile-loc=<yaml file>
-  The client will expect that the yaml is a credentials object with an array of creds you would like to integrate with ocelot.
+  The client will expect that the yaml is a repo credentials object with an array of artifact repository creds.
   For example:
     credentials:
-    - clientId: <OAUTH_CLIENT_ID>   ---> client id correlated with clientSecret
-      clientSecret: <OAUTH_SECRET>  ---> generated when you add an oauth access
-      tokenURL: <OAUTH_TOKEN_URL>   ---> e.g. https://bitbucket.org/site/oauth2/access_token
+    - username: <ARTIFACT_USER>     ---> username for logging into artifact repo (i.e. artifactory / nexus)
+      password: <PASSWORD>          ---> password for logging into artifact repo
+      repoUrl: <REPO_URL>           ---> e.g. !!!! get url example from marianne !!!!
       acctName: <ACCOUNT_NAME>      ---> e.g. level11consulting
-      type: <SCM_TYPE>              ---> e.g. bitbucket
+      type: <REPO_TYPE>             ---> e.g. nexus
 
-  Retrieves all credentials that ocelot uses to track repositories
+  Retrieves all credentials that ocelot uses to integrate with artifact repositories
 `

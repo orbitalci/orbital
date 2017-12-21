@@ -18,11 +18,11 @@ func TestRemoteConfig_ErrorHandling(t *testing.T) {
 	if brokenRemote == nil {
 		t.Error(test.GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
 	}
-	err := brokenRemote.AddCreds("test", &models.Credentials{})
+	err := brokenRemote.AddCreds("test", &models.VCSCreds{})
 	if err.Error() != "not connected to consul, unable to add credentials" {
 		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to add credentials", err))
 	}
-	_, err = brokenRemote.GetCredAt("test", false)
+	_, err = brokenRemote.GetCredAt("test", false, Vcs)
 	if err.Error() != "not connected to consul, unable to retrieve credentials" {
 		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to retrieve credentials", err))
 	}
@@ -33,20 +33,19 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	testRemoteConfig, vaultListener, consulServer := testSetupVaultAndConsul(t)
 	defer teardownVaultAndConsul(vaultListener, consulServer)
 
-	adminConfig := &models.Credentials{
+	adminConfig := &models.VCSCreds{
 		ClientSecret: "top-secret",
 		ClientId:     "beeswax",
 		AcctName:     "mariannefeng",
 		TokenURL:     "a-real-url",
 		Type:         "github",
 	}
-
-	err := testRemoteConfig.AddCreds(ConfigPath+"/mariannefeng/vcs/github", adminConfig)
+	err := testRemoteConfig.AddCreds(BuildCredPath("github", "mariannefeng", Vcs), adminConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("first adding creds to consul", nil, err))
 	}
 
-	testPassword, err := testRemoteConfig.GetPassword(BuildVCSCredPath("github", "mariannefeng"))
+	testPassword, err := testRemoteConfig.GetPassword(BuildCredPath("github", "mariannefeng", Vcs))
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("retrieving password", nil, err))
 	}
@@ -55,10 +54,14 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("secret from vault", "top-secret", testPassword))
 	}
 
-	creds, _ := testRemoteConfig.GetCredAt(BuildVCSCredPath("github", "mariannefeng"), true)
-	marianne, ok := creds["github/mariannefeng"]
+	creds, _ := testRemoteConfig.GetCredAt(BuildCredPath("github", "mariannefeng", Vcs), true, Vcs)
+	mari, ok := creds["github/mariannefeng"]
 	if !ok {
 		t.Error(test.GenericStrFormatErrors("fake cred should exist", true, ok))
+	}
+	marianne, ok := mari.(*models.VCSCreds)
+	if !ok {
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.VCSCreds")
 	}
 
 	if marianne.AcctName != "mariannefeng" {
@@ -81,14 +84,18 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("fake cred hidden password", "*********", marianne.ClientSecret))
 	}
 
-	creds, _ = testRemoteConfig.GetCredAt(BuildVCSCredPath("github", "mariannefeng"), false)
-	marianne, _ = creds["github/mariannefeng"]
+	creds, _ = testRemoteConfig.GetCredAt(BuildCredPath("github", "mariannefeng", Vcs), false, Vcs)
+	mari, _ = creds["github/mariannefeng"]
+	marianne, ok = mari.(*models.VCSCreds)
+	if !ok {
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.VCSCreds")
+	}
 
 	if marianne.ClientSecret != "top-secret" {
 		t.Error(test.GenericStrFormatErrors("fake cred should get password", "top-secret", marianne.ClientSecret))
 	}
 
-	secondConfig := &models.Credentials{
+	secondConfig := &models.VCSCreds{
 		ClientSecret: "secret",
 		ClientId:     "beeswaxxxxx",
 		AcctName:     "ariannefeng",
@@ -96,20 +103,24 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		Type:         "bitbucket",
 	}
 
-	err = testRemoteConfig.AddCreds(BuildVCSCredPath("bitbucket", "ariannefeng"), secondConfig)
+	err = testRemoteConfig.AddCreds(BuildCredPath("bitbucket", "ariannefeng", Vcs), secondConfig)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("adding second set of creds to consul", nil, err))
 	}
 
-	creds, _ = testRemoteConfig.GetCredAt(ConfigPath, false)
+	creds, _ = testRemoteConfig.GetCredAt(ConfigPath, false, Vcs)
 
 	_, ok = creds["github/mariannefeng"]
 	if !ok {
 		t.Error(test.GenericStrFormatErrors("original creds marianne should exist", true, ok))
 	}
-	newCreds, ok := creds["bitbucket/ariannefeng"]
+	newCred, ok := creds["bitbucket/ariannefeng"]
 	if !ok {
-		t.Error(test.GenericStrFormatErrors("new creds arianne should exist", true, ok))
+		t.Fatal(test.GenericStrFormatErrors("new creds arianne should exist", true, ok))
+	}
+	newCreds, ok := newCred.(*models.VCSCreds)
+	if !ok {
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to adminConfig models.VCSCreds")
 	}
 
 	if newCreds.AcctName != "ariannefeng" {
@@ -132,6 +143,61 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("2nd fake open password", "secret", newCreds.ClientSecret))
 	}
 
+	repoCreds := &models.RepoCreds{
+		Username: "tasty-gummy-vitamin",
+		Password: "FLINTSTONE",
+		RepoUrl: "http://take-ur-vitamins.org/uploadGummy",
+		AcctName: "jessdanshnak",
+		Type: "nexus",
+	}
+	repoPath := BuildCredPath("nexus", "jessdanshnak", Repo)
+	err = testRemoteConfig.AddCreds(repoPath, repoCreds)
+	if err != nil {
+		t.Error(test.GenericStrFormatErrors("adding repo creds", nil, err))
+	}
+	repoData, err := testRemoteConfig.GetCredAt(repoPath, false, Repo)
+	if err != nil {
+		t.Error(test.GenericStrFormatErrors("getting repo creds", nil , err))
+	}
+	shank, ok := repoData["nexus/jessdanshnak"]
+	if !ok {
+		t.Fatal("inserted repo creds w/ path nexus/jessdanshnak should exist")
+	}
+	shnak, ok := shank.(*models.RepoCreds)
+	if !ok {
+		t.Fatal("could not cast GetCredAt cred.RemoteConfigCred interface to repo config *models.RepoCreds")
+	}
+	if shnak.GetPassword() != repoCreds.GetPassword() {
+		t.Error(test.StrFormatErrors("repo password", repoCreds.Password, shnak.Password))
+	}
+	if shnak.GetType() != repoCreds.GetType() {
+		t.Error(test.StrFormatErrors("repo acct type", repoCreds.GetType(), shnak.GetType()))
+	}
+	if shnak.GetRepoUrl() != repoCreds.GetRepoUrl() {
+		t.Error(test.StrFormatErrors("repo url", repoCreds.GetRepoUrl(), shnak.GetRepoUrl()))
+	}
+	// testing that all creds should still be there
+	creds, _ = testRemoteConfig.GetCredAt(ConfigPath, false, Vcs)
+	if _, ok = creds["bitbucket/ariannefeng"]; !ok {
+		t.Error("there should still be the admin credentials at bitbucket/ariannefeng")
+	}
+	if _, ok = creds["github/mariannefeng"]; !ok {
+		t.Error("there should still be admin credentials at github/mariannefeng")
+	}
+}
+
+
+func Test_BuildCredPath(t *testing.T) {
+	expected := "creds/vcs/banana/bitbucket"
+	live := BuildCredPath("bitbucket", "banana", Vcs)
+	if live != expected {
+		t.Error(test.StrFormatErrors("vcs cred path", expected, live))
+	}
+	expectedRepo := "creds/repo/jessjess/nexus"
+	liveRepo := BuildCredPath("nexus", "jessjess", Repo)
+	if liveRepo != expectedRepo {
+		t.Error(test.StrFormatErrors("repo cred path", expectedRepo, liveRepo))
+	}
 }
 
 //////test setup and tear down///////
