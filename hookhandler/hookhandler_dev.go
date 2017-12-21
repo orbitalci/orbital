@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/admin/handler"
+	"os"
 )
 
 //has necessary functions for running hookhandler in dev mode
@@ -23,9 +24,10 @@ func (mvh *MockVCSHandler) Walk() error {
 	return nil
 }
 
+//TODO: ****WARNING**** this assumes you're running this inside of the hookhandler folder
 func (mvh *MockVCSHandler) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
-	//TODO: fix this relative path
-	return ioutil.ReadFile("test-fixtures/dev-ocelot.yml")
+	pwd, _ := os.Getwd()
+	return ioutil.ReadFile(pwd + "/test-fixtures/dev-ocelot.yml")
 }
 
 func (mvh *MockVCSHandler) CreateWebhook(webhookURL string) error {
