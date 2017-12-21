@@ -5,7 +5,7 @@ import (
 "github.com/mitchellh/cli"
 )
 
-func NewCred() *helpcmd {
+func New() *helpcmd {
 	return &helpcmd{}
 }
 

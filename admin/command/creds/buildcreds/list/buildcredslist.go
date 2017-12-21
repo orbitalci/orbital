@@ -64,7 +64,7 @@ func (c *cmd) Run(args []string) int {
 	}
 	printed := false
 	Header(c.UI)
-	for _, oneline := range msg.VcsCreds {
+	for _, oneline := range msg.Vcs {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
 			c.UI.Info(Prettify(oneline))
 			printed = true
@@ -107,7 +107,7 @@ Type: %s
 
 const synopsis = "List all credentials used for tracking repositories to build"
 const help = `
-Usage: ocelot creds list
+Usage: ocelot creds vcs list
 
   Retrieves all credentials that ocelot uses to track repositories
 `

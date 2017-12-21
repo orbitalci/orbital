@@ -115,7 +115,7 @@ func ReadConfig(gosss models.GuideOcelotServer) {
 		log.IncludeErrField(err).Error()
 		return
 	}
-	for _, configVal := range config.VcsCreds {
+	for _, configVal := range config.Vcs {
 		err := gos.AdminValidator.ValidateConfig(configVal)
 		if err != nil {
 			log.IncludeErrField(err)

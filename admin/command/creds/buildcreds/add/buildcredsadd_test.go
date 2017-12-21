@@ -33,7 +33,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	ctx := context.Background()
 	cmd.fileloc = "./test-fixtures/newcreds.yml"
 	expectedCreds := &models.CredWrapper{
-		VcsCreds: []*models.VCSCreds{
+		Vcs: []*models.VCSCreds{
 			{
 				ClientId:     "fancy-frickin-identification",
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
@@ -67,7 +67,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	cmd := testNew(input)
 	ctx := context.Background()
 	expectedCreds := &models.CredWrapper{
-		VcsCreds: []*models.VCSCreds{
+		Vcs: []*models.VCSCreds{
 			{
 				ClientId:     "fancy-frickin-identification",
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",

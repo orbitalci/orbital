@@ -29,11 +29,11 @@ service GuideOcelot {
 
 message AllCredsWrapper {
     RepoCredWrapper repoCreds = 1;
-    CredWrapper adminCreds = 2;
+    CredWrapper vcsCreds = 3;
 }
 
 message CredWrapper {
-    repeated VCSCreds vcsCreds = 1;
+    repeated VCSCreds vcs = 2;
 }
 
 message VCSCreds {
@@ -45,7 +45,7 @@ message VCSCreds {
 }
 
 message RepoCredWrapper {
-    repeated RepoCreds repoCreds = 2;
+    repeated RepoCreds repo = 3;
 }
 
 message RepoCreds {

@@ -63,11 +63,11 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		return 1
 	}
 	var errOccured bool
-	if len(credWrap.RepoCreds) == 0 {
+	if len(credWrap.Repo) == 0 {
 		c.UI.Error("Did not read any repo credentials! Is your yaml formatted correctly?")
 		return 1
 	}
-	for _, configVal := range credWrap.RepoCreds {
+	for _, configVal := range credWrap.Repo {
 		_, err = c.client.SetRepoCreds(ctx, configVal)
 		if err != nil {
 			c.UI.Error(fmt.Sprintf("Could not add credentials for repository: %s \nError: %s", configVal.AcctName, err.Error()))

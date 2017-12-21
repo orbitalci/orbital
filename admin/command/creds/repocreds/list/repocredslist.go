@@ -64,7 +64,7 @@ func (c *cmd) Run(args []string) int {
 	}
 	printed := false
 	Header(c.UI)
-	for _, oneline := range msg.RepoCreds {
+	for _, oneline := range msg.Repo {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
 			c.UI.Info(Prettify(oneline))
 			printed = true
@@ -107,7 +107,7 @@ Type: %s
 
 const synopsis = "List all credentials used for artifact repositories"
 const help = `
-Usage: ocelot creds list
+Usage: ocelot creds repo list
 
   Retrieves all credentials that ocelot uses to auth into artifact repositories
 `

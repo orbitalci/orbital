@@ -66,11 +66,11 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		return 1
 	}
 	var errOccured bool
-	if len(credWrap.VcsCreds) == 0 {
+	if len(credWrap.Vcs) == 0 {
 		c.UI.Error("Did not read any credentials! Is your yaml formatted correctly?")
 		return 1
 	}
-	for _, configVal := range credWrap.VcsCreds {
+	for _, configVal := range credWrap.Vcs {
 		_, err = c.client.SetVCSCreds(ctx, configVal)
 		if err != nil {
 			c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
@@ -149,10 +149,10 @@ func (c *cmd) Help() string {
 
 const synopsis = "Add credentials or a set of them"
 const help = `
-Usage: ocelot creds add
+Usage: ocelot creds vcs add
   Add one set of credentials or a list of them.
   If you specify a filename using:
-    ocelot creds add -credfile-loc=<yaml file>
+    ocelot creds add vcs -credfile-loc=<yaml file>
   The client will expect that the yaml is a credentials object with an array of creds you would like to integrate with ocelot.
   For example:
     credentials:

@@ -24,7 +24,7 @@ func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty
 }
 
 func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
-	f.creds.VcsCreds = append(f.creds.VcsCreds, in)
+	f.creds.Vcs = append(f.creds.Vcs, in)
 	return &empty.Empty{}, nil
 }
 
@@ -33,7 +33,7 @@ func (f *fakeGuideOcelotClient) GetRepoCreds(ctx context.Context, in *empty.Empt
 }
 
 func (f *fakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
-	f.repoCreds.RepoCreds = append(f.repoCreds.RepoCreds, in)
+	f.repoCreds.Repo = append(f.repoCreds.Repo, in)
 	return &empty.Empty{}, nil
 }
 
@@ -44,14 +44,14 @@ func (f *fakeGuideOcelotClient) CheckConn(ctx context.Context, in *empty.Empty, 
 func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error) {
 	return &AllCredsWrapper{
 		RepoCreds: f.repoCreds,
-		AdminCreds: f.creds,
+		VcsCreds: f.creds,
 	}, nil
 }
 
 
 func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
-	for ind, cred := range credWrapA.VcsCreds {
-		credB := credWrapB.VcsCreds[ind]
+	for ind, cred := range credWrapA.Vcs {
+		credB := credWrapB.Vcs[ind]
 		if cred.Type != credB.Type {
 			return false
 		}
@@ -72,8 +72,8 @@ func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 }
 
 func CompareRepoCredWrappers(repoWrapA *RepoCredWrapper, repoWrapB *RepoCredWrapper) bool {
-	for ind, cred := range repoWrapA.RepoCreds {
-		credB := repoWrapB.RepoCreds[ind]
+	for ind, cred := range repoWrapA.Repo {
+		credB := repoWrapB.Repo[ind]
 		if cred.Type != credB.Type {
 			return false
 		}
@@ -89,6 +89,16 @@ func CompareRepoCredWrappers(repoWrapA *RepoCredWrapper, repoWrapB *RepoCredWrap
 		if cred.RepoUrl != credB.RepoUrl {
 			return false
 		}
+	}
+	return true
+}
+
+func CompareAllCredWrappers(allWrapA *AllCredsWrapper, allWrapB *AllCredsWrapper) bool {
+	if repoMatches := CompareRepoCredWrappers(allWrapA.RepoCreds, allWrapB.RepoCreds); !repoMatches {
+		return false
+	}
+	if vcsMatches := CompareCredWrappers(allWrapA.VcsCreds, allWrapB.VcsCreds); !vcsMatches {
+		return false
 	}
 	return true
 }

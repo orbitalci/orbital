@@ -27,7 +27,7 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 	}
 
 	for _, v := range creds {
-		credWrapper.VcsCreds = append(credWrapper.VcsCreds, v.(*models.VCSCreds))
+		credWrapper.Vcs = append(credWrapper.Vcs, v.(*models.VCSCreds))
 	}
 	return credWrapper, nil
 }
@@ -55,7 +55,7 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 		return credWrapper, err
 	}
 	for _, v := range creds {
-		credWrapper.RepoCreds = append(credWrapper.RepoCreds, v.(*models.RepoCreds))
+		credWrapper.Repo = append(credWrapper.Repo, v.(*models.RepoCreds))
 	}
 	return credWrapper, nil
 }
@@ -80,7 +80,7 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 	if err != nil {
 		return allCreds, err
 	}
-	allCreds.AdminCreds = adminCreds
+	allCreds.VcsCreds = adminCreds
 	return allCreds, nil
 }
 

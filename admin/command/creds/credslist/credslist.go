@@ -1,4 +1,4 @@
-package creds
+package credslist
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin"
@@ -61,18 +61,18 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 		return 1
 	}
-	if len(msg.RepoCreds.RepoCreds) > 0 {
+	if len(msg.RepoCreds.Repo) > 0 {
 		repocredslist.Header(c.UI)
-		for _, oneline := range msg.RepoCreds.RepoCreds {
+		for _, oneline := range msg.RepoCreds.Repo {
 			c.UI.Info(repocredslist.Prettify(oneline))
 		}
 	} else {
 		repocredslist.NoDataHeader(c.UI)
 	}
 
-	if len(msg.AdminCreds.VcsCreds) > 0 {
+	if len(msg.VcsCreds.Vcs) > 0 {
 		buildcredslist.Header(c.UI)
-		for _, oneline :=  range msg.AdminCreds.VcsCreds {
+		for _, oneline :=  range msg.VcsCreds.Vcs {
 			c.UI.Info(buildcredslist.Prettify(oneline))
 		}
 	} else {
