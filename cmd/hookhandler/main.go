@@ -33,10 +33,6 @@ func main() {
 		consulPort = "8500"
 		ocelog.Log().Warning("consul is assumed to be running on port 8500")
 	}
-	mode := os.Getenv("ENV")
-	if strings.EqualFold(mode, "dev") {
-
-	}
 
 	consulPortInt, _ := strconv.Atoi(consulPort)
 	remoteConfig, err := cred.GetInstance(consulHost, consulPortInt, "")
@@ -44,11 +40,18 @@ func main() {
 		ocelog.Log().Fatal(err)
 	}
 
-	hookHandlerContext := &hh.HookHandlerContext{
-		RemoteConfig: remoteConfig,
-		Deserializer: deserialize.New(),
-		Producer:     nsqpb.GetInitProducer(),
+	var hookHandlerContext hh.HookHandler
+
+	mode := os.Getenv("ENV")
+	if strings.EqualFold(mode, "dev") {
+		hookHandlerContext = &hh.MockHookHandlerContext{}
+	} else {
+		hookHandlerContext = &hh.HookHandlerContext{}
 	}
+
+	hookHandlerContext.SetRemoteConfig(remoteConfig)
+	hookHandlerContext.SetDeserializer(deserialize.New())
+	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
 
 	muxi := mux.NewRouter()
 

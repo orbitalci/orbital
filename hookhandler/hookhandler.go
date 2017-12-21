@@ -12,17 +12,60 @@ import (
 	"net/http"
 )
 
+
+type HookHandler interface {
+	GetBitbucketClient(cfg *models.Credentials) (handler.VCSHandler, string, error)
+	GetRemoteConfig() *cred.RemoteConfig
+	SetRemoteConfig(remoteConfig *cred.RemoteConfig)
+	GetProducer() *nsqpb.PbProduce
+	SetProducer(producer *nsqpb.PbProduce)
+	GetDeserializer() *deserialize.Deserializer
+	SetDeserializer(deserializer *deserialize.Deserializer)
+}
+
+
 type HookHandlerContext struct {
 	RemoteConfig *cred.RemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
 }
 
+//Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
+func (hhc *HookHandlerContext) GetBitbucketClient(cfg *models.Credentials) (handler.VCSHandler, string, error) {
+	bbClient := &ocenet.OAuthClient{}
+	token, err := bbClient.Setup(cfg)
+	if err != nil {
+		return nil, "", err
+	}
+	bb := handler.GetBitbucketHandler(cfg, bbClient)
+	return bb, token, nil
+}
+
+func (hhc *HookHandlerContext) GetRemoteConfig() *cred.RemoteConfig {
+	return hhc.RemoteConfig
+}
+func (hhc *HookHandlerContext) SetRemoteConfig(remoteConfig *cred.RemoteConfig) {
+	hhc.RemoteConfig = remoteConfig
+}
+func (hhc *HookHandlerContext) GetProducer() *nsqpb.PbProduce {
+	return hhc.Producer
+}
+func (hhc *HookHandlerContext) SetProducer(producer *nsqpb.PbProduce) {
+	hhc.Producer = producer
+}
+func (hhc *HookHandlerContext) GetDeserializer() *deserialize.Deserializer {
+	return hhc.Deserializer
+}
+func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deserializer) {
+	hhc.Deserializer = deserializer
+}
+
+
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
-func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
+func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
 
-	if err := ctx.Deserializer.JSONToProto(r.Body, repopush); err != nil {
+	if err := ctx.GetDeserializer().JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
 
@@ -50,9 +93,9 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 
 //TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
-func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
+func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
-	if err := ctx.Deserializer.JSONToProto(r.Body, pr); err != nil {
+	if err := ctx.GetDeserializer().JSONToProto(r.Body, pr); err != nil {
 		ocelog.IncludeErrField(err).Error("could not parse request body into pb.PullRequest")
 		return
 	}
@@ -98,9 +141,9 @@ func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 
 
 //TODO: this code needs to store status into db
-func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string) {
+func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string) {
 	// get one-time token use for access to vault
-	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
+	token, err := ctx.GetRemoteConfig().Vault.CreateThrowawayToken()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
@@ -115,11 +158,11 @@ func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string,
 		FullName: fullName,
 	}
 
-	go ctx.Producer.WriteProto(werkerTask, "build")
+	go ctx.GetProducer().WriteProto(werkerTask, "build")
 }
 
 func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
-	handlerCtx := ctx.(*HookHandlerContext)
+	handlerCtx := ctx.(HookHandler)
 
 	switch r.Header.Get("X-Event-Key") {
 	case "repo:push":
@@ -143,24 +186,13 @@ func getCredConfig() *models.Credentials {
 	}
 }
 
-//Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
-func getBitbucketClient(cfg *models.Credentials) (handler.VCSHandler, string, error) {
-	bbClient := &ocenet.OAuthClient{}
-	token, err := bbClient.Setup(cfg)
-	if err != nil {
-		return nil, "", err
-	}
-	bb := handler.GetBitbucketHandler(cfg, bbClient)
-	return bb, token, nil
-}
-
 //returns config if it exists, bitbucket token, and err
-func GetBBConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
+func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
 	//cfg := getCredConfig()
-	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.ConfigPath+"/bitbucket/"+acctName, false)
+	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.ConfigPath+"/bitbucket/"+acctName, false)
 	cfg := bbCreds["bitbucket/"+acctName]
 
-	bb, token, err := getBitbucketClient(cfg)
+	bb, token, err := ctx.GetBitbucketClient(cfg)
 	if err != nil {
 		return
 	}
@@ -173,7 +205,7 @@ func GetBBConfig(ctx *HookHandlerContext, acctName string, repoFullName string, 
 	if err != nil {
 		return
 	}
-	if err = ctx.Deserializer.YAMLToStruct(fileBitz, conf); err != nil {
+	if err = ctx.GetDeserializer().YAMLToStruct(fileBitz, conf); err != nil {
 		return
 	}
 	return
