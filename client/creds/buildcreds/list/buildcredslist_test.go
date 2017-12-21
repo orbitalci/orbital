@@ -3,8 +3,8 @@ package buildcredslist
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
-	"github.com/mitchellh/cli"
 	"flag"
+	"github.com/mitchellh/cli"
 	"strings"
 	"testing"
 )

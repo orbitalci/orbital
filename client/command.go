@@ -1,15 +1,15 @@
-package command
+package client
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds/add"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/buildcreds/list"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/credsadd"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/credslist"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/repocreds"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/repocreds/add"
-	"bitbucket.org/level11consulting/ocelot/admin/command/creds/repocreds/list"
+	"bitbucket.org/level11consulting/ocelot/client/creds"
+	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds"
+	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/add"
+	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/list"
+	"bitbucket.org/level11consulting/ocelot/client/creds/credsadd"
+	"bitbucket.org/level11consulting/ocelot/client/creds/credslist"
+	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds"
+	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/add"
+	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
 	"github.com/mitchellh/cli"
 	"os"
 )
