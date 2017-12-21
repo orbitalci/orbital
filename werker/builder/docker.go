@@ -59,6 +59,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	logout <- []byte(stagePrintln + "Creating container...")
 
+
+	// TODO: if running in test mode, download from wiremock
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,

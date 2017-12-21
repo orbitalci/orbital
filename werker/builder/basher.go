@@ -8,6 +8,7 @@ import (
 )
 
 // TODO: Does embedding a basher struct into docker/k8 make sense?
+// TODO: if running in test mode, download from wiremock
 
 func DownloadCodebase(werk *protos.WerkerTask) []string {
 	var downloadCode []string
