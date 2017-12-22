@@ -125,9 +125,11 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 //before we build pipeline config for werker, validate and make sure this is good candidate
 	// - check if commit branch matches with ocelot.yaml branch
 	// - check if ocelot.yaml has at least one step called build
+//TODO: move validator out to its own class and whatnot, that way admin or command line client can use to validate
 func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 	_, ok := buildConf.Stages["build"]
 	if !ok {
+		ocelog.Log().Error("your ocelot.yml does not have the required `build` stage")
 		return false
 	}
 
@@ -136,6 +138,7 @@ func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 			return true
 		}
 	}
+	ocelog.Log().Errorf("build does not match any branches listed: %v", buildConf.Branches)
 	return false
 }
 

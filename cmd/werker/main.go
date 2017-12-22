@@ -29,6 +29,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/werker/builder"
 	"os"
 	"github.com/mitchellh/go-homedir"
+	"io"
 )
 
 func retry(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport) {
@@ -63,6 +64,7 @@ func main() {
 	//you should know what channels to subscribe to
 	supportedTopics := []string{"build"}
 
+	//do whatever setup stuff werker needs in this function
 	setupWerker()
 
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
@@ -97,16 +99,30 @@ func main() {
 func setupWerker() {
 	pwd, _ := os.Getwd()
 
-	//TODO: this may eventually iterate over template directory and copy all files to .ocelot
-	//AND DON'T HARDCODE FILE NAME!!!
-	downloadFile, err := os.Open(pwd + "/templates/bb_download.sh")
+	//TODO: this may eventually iterate over template directory and copy all files to .ocelot AND DON'T HARDCODE FILE NAME!!!
+	downloadFile, err := os.Open(pwd + "/template/bb_download.sh")
 	if err != nil {
-		ocelog.IncludeErrField(err)
+		ocelog.IncludeErrField(err).Error("failed to open code download file")
 		return
 	}
 	defer downloadFile.Close()
 
 	destFile, _ := homedir.Expand("~/.ocelot/bb_download.sh")
+	destDownloadFile, err := os.Create(destFile)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("failed to create file at ~/.ocelot/bb_download.sh")
+		return
+	}
+	defer destDownloadFile.Close()
 
-	destDownloadFile, err := os.Create()
+	if _, err = io.Copy(destDownloadFile, downloadFile); err != nil {
+		ocelog.IncludeErrField(err).Error("failed to copy file to ~/.ocelot/bb_download.sh")
+		return
+	}
+
+	err = os.Chmod(destFile, 0555)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("could not change file to be executable")
+		return
+	}
 }
