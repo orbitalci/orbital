@@ -196,7 +196,8 @@ func streamFromArray(buildInfo *buildDatum, stream interface{}) (err error) {
 func send(conn interface{}, data []byte) error {
 	switch ci := conn.(type) {
 	case ocenet.WebsocketEy:
-		ci.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		// todo: figure out why this breaks shit if the time is too long (but not longer than the timeout???)
+		//ci.SetWriteDeadline(time.Now().Add(10 * time.Second))
 		if err := ci.WriteMessage(websocket.TextMessage, data); err != nil {
 			ocelog.IncludeErrField(err).Error("could not write to web socket")
 			ci.Close()
