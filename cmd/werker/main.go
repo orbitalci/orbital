@@ -59,6 +59,8 @@ func main() {
 	//you should know what channels to subscribe to
 	supportedTopics := []string{"build"}
 
+	//TODO: write bb_download.sh to home's .ocelot directory
+
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewProtoConsume()
