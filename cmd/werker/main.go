@@ -26,6 +26,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/werker"
 	"fmt"
 	"time"
+	"bitbucket.org/level11consulting/ocelot/werker/builder"
 )
 
 func retry(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport) {
@@ -37,6 +38,7 @@ func retry(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel 
 				Topic:    topic,
 				WerkConf: conf,
 				ChanChan: tunnel,
+				Basher: &builder.Basher{},
 			}
 			p.Handler = handler
 			p.ConsumeMessages(topic, conf.WerkerName)
@@ -69,6 +71,7 @@ func main() {
 				Topic:    topic,
 				WerkConf: conf,
 				ChanChan: tunnel,
+				Basher: &builder.Basher{},
 			}
 			protoConsume.Handler = handler
 			protoConsume.ConsumeMessages(topic, conf.WerkerName)
