@@ -266,6 +266,7 @@ func cacheProcessor(transpo chan *Transport, appCtx *werkerStreamer) {
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
+	//TODO: need to change this to not use marianne's shit dummy
 	http.ServeFile(w, r, "/Users/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/cmd/werker/test.html")
 }
 

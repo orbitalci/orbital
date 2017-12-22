@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"time"
 	"bitbucket.org/level11consulting/ocelot/werker/builder"
+	"os"
+	"github.com/mitchellh/go-homedir"
 )
 
 func retry(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport) {
@@ -61,7 +63,7 @@ func main() {
 	//you should know what channels to subscribe to
 	supportedTopics := []string{"build"}
 
-	//TODO: write bb_download.sh to home's .ocelot directory
+	setupWerker()
 
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
@@ -88,4 +90,23 @@ func main() {
 	for _, consumer := range consumers {
 		<-consumer.StopChan
 	}
+}
+
+//performs whatever setup is needed by werker, right now copies over bb_download.sh to $HOME/.ocelot
+//TODO: ***WARINING**** this assumes you're inside of cmd/werker folder
+func setupWerker() {
+	pwd, _ := os.Getwd()
+
+	//TODO: this may eventually iterate over template directory and copy all files to .ocelot
+	//AND DON'T HARDCODE FILE NAME!!!
+	downloadFile, err := os.Open(pwd + "/templates/bb_download.sh")
+	if err != nil {
+		ocelog.IncludeErrField(err)
+		return
+	}
+	defer downloadFile.Close()
+
+	destFile, _ := homedir.Expand("~/.ocelot/bb_download.sh")
+
+	destDownloadFile, err := os.Create()
 }
