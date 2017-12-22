@@ -23,7 +23,7 @@ func (mvh *MockVCSHandler) Walk() error {
 	return nil
 }
 
-//TODO: ****WARNING**** this assumes you're running this inside of the hookhandler folder
+//****WARNING**** this assumes you're running this inside of the hookhandler folder
 func (mvh *MockVCSHandler) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	pwd, _ := os.Getwd()
 	return ioutil.ReadFile(pwd + "/test-fixtures/dev-ocelot.yml")

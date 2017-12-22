@@ -13,7 +13,6 @@ type Builder interface {
 	Cleanup()
 }
 
-//TODO: could return even less
 type Result struct {
 	Stage string
 	Status StageResult

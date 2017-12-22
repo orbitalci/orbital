@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"time"
 	"os"
+	"strings"
 )
 
 var (
@@ -267,7 +268,7 @@ func cacheProcessor(transpo chan *Transport, appCtx *werkerStreamer) {
 	}
 }
 
-//TODO: ****WARNING**** this assumes you're inside of /cmd/werker directory
+//****WARNING**** this assumes you're inside of /cmd/werker directory
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	pwd, _ := os.Getwd()
 	http.ServeFile(w, r, pwd + "/test.html")
@@ -297,7 +298,13 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf) {
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{werkStream, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
-	//TODO: add new line here to serve everything out of test-fixtures
+
+	//if we're in dev mode, serve everything out of test-fixtures at /dev
+	mode := os.Getenv("ENV")
+	if strings.EqualFold(mode, "dev") {
+		muxi.PathPrefix("/dev/").Handler(http.StripPrefix("/dev/", http.FileServer(http.Dir("./dev"))))
+	}
+
 	n := ocenet.InitNegroni("werker", muxi)
 	go n.Run(":" + conf.servicePort)
 

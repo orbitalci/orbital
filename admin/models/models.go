@@ -1,8 +1,6 @@
 package models
 
 
-//TODO: get callback url from consul or something like it
-
 const (
 	BuildFileName = "ocelot.yml"
 	Key = `-----BEGIN RSA PRIVATE KEY-----
