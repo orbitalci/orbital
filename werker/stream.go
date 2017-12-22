@@ -15,6 +15,7 @@ import (
 	"net"
 	"net/http"
 	"time"
+	"os"
 )
 
 var (
@@ -266,9 +267,10 @@ func cacheProcessor(transpo chan *Transport, appCtx *werkerStreamer) {
 	}
 }
 
+//TODO: ****WARNING**** this assumes you're inside of /cmd/werker directory
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	//TODO: need to change this to not use marianne's shit dummy
-	http.ServeFile(w, r, "/Users/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/cmd/werker/test.html")
+	pwd, _ := os.Getwd()
+	http.ServeFile(w, r, pwd + "/test.html")
 }
 
 func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
