@@ -22,6 +22,7 @@ type WorkerMsgHandler struct {
 	infochan     chan []byte
 	ChanChan     chan *Transport
 	Deserializer d.Deserializer
+	Basher	*b.Basher
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
@@ -40,7 +41,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	var builder b.Builder
 	switch w.WerkConf.werkerType {
 	case Docker:
-		builder = b.NewDockerBuilder()
+		builder = b.NewDockerBuilder(*w.Basher)
 	}
 
 	go w.MakeItSo(werkerTask, builder)

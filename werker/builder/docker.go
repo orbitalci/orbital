@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"io"
+	"github.com/mitchellh/go-homedir"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"errors"
 )
@@ -16,10 +17,11 @@ type Docker struct{
 	Log	io.ReadCloser
 	ContainerId	string
 	DockerClient *client.Client
+	Basher
 }
 
-func NewDockerBuilder() Builder {
-	return &Docker{}
+func NewDockerBuilder(b Basher) Builder {
+	return &Docker{nil, "", nil, b}
 }
 
 func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
@@ -65,18 +67,18 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	containerConfig := &container.Config{
 		Image: imageName,
 		Env: werk.BuildConf.Env,
-		Cmd: DownloadCodebase(werk),
+		Cmd: d.DownloadCodebase(werk),
 		AttachStderr: true,
 		AttachStdout: true,
 		AttachStdin:true,
 		Tty:true,
 	}
 
+	homeDirectory, _ := homedir.Expand("~/.ocelot")
 	//host configs like mount points
 	hostConfig := &container.HostConfig{
-		//TODO: assume $HOME/.ocelot, and have it be overridable via env variable
-		Binds: []string{"/Users/mariannefeng/.ocelot:/.ocelot"},
-		//Binds: []string{"/home/mariannefeng/.ocelot:/.ocelot"},
+		//TODO: have it be overridable via env variable
+		Binds: []string{ homeDirectory + ":/.ocelot"},
 	}
 
 	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")
@@ -168,7 +170,7 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 		AttachStderr: true,
 		AttachStdout: true,
 		Env: stage.Env,
-		Cmd: BuildAndDeploy(stage.Script, commitHash),
+		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
 	})
 
 	if err != nil {
@@ -185,7 +187,7 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 		AttachStderr: true,
 		AttachStdout: true,
 		Env: stage.Env,
-		Cmd: BuildAndDeploy(stage.Script, commitHash),
+		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
 	})
 
 	defer attachedExec.Conn.Close()

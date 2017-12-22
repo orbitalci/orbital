@@ -59,6 +59,7 @@ func main() {
 	//you should know what channels to subscribe to
 	supportedTopics := []string{"build"}
 
+	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewProtoConsume()
 		if nsqpb.LookupTopic(protoConsume.Config.LookupDAddress(), topic) {
@@ -77,6 +78,7 @@ func main() {
 		}
 		consumers = append(consumers, protoConsume)
 	}
+
 	go werker.ServeMe(tunnel, conf)
 	for _, consumer := range consumers {
 		<-consumer.StopChan

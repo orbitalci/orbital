@@ -283,6 +283,7 @@ func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
 	return werkerStreamer
 }
 
+//ServeMe will start HTTP Server as needed for streaming build output by hash
 func ServeMe(transportChan chan *Transport, conf *WerkerConf) {
 	werkStream := getWerkerStreamer(conf)
 	ocelog.Log().Debug("saving build info channels to in memory map")
@@ -292,6 +293,7 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf) {
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{werkStream, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
+	//TODO: add new line here to serve everything out of test-fixtures
 	n := ocenet.InitNegroni("werker", muxi)
 	go n.Run(":" + conf.servicePort)
 
