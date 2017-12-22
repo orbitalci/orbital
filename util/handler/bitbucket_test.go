@@ -10,7 +10,7 @@ import (
 )
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
-	config := &models.Credentials{}
+	config := &models.VCSCreds{}
 	bb := GetBitbucketHandler(config, MockHttpClient{
 		Unmarshaler: &jsonpb.Unmarshaler{
 			AllowUnknownFields: true,
@@ -24,7 +24,7 @@ func TestBitbucket_FindWebhooksExists(t *testing.T) {
 }
 
 func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
-	config := &models.Credentials{}
+	config := &models.VCSCreds{}
 	bb := GetBitbucketHandler(config, MockHttpClient{
 		Unmarshaler: &jsonpb.Unmarshaler{
 			AllowUnknownFields: true,

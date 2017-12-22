@@ -5,7 +5,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/admin/handler"
+	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
@@ -14,7 +14,7 @@ import (
 
 
 type HookHandler interface {
-	GetBitbucketClient(cfg *models.Credentials) (handler.VCSHandler, string, error)
+	GetBitbucketClient(cfg *models.VCSCreds) (handler.VCSHandler, string, error)
 	GetRemoteConfig() *cred.RemoteConfig
 	SetRemoteConfig(remoteConfig *cred.RemoteConfig)
 	GetProducer() *nsqpb.PbProduce
@@ -31,7 +31,7 @@ type HookHandlerContext struct {
 }
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
-func (hhc *HookHandlerContext) GetBitbucketClient(cfg *models.Credentials) (handler.VCSHandler, string, error) {
+func (hhc *HookHandlerContext) GetBitbucketClient(cfg *models.VCSCreds) (handler.VCSHandler, string, error) {
 	bbClient := &ocenet.OAuthClient{}
 	token, err := bbClient.Setup(cfg)
 	if err != nil {
@@ -180,8 +180,8 @@ func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 }
 
 // for testing
-func getCredConfig() *models.Credentials {
-	return &models.Credentials{
+func getCredConfig() *models.VCSCreds {
+	return &models.VCSCreds{
 		ClientId:     "QEBYwP5cKAC3ykhau4",
 		ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
 		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",
@@ -191,9 +191,16 @@ func getCredConfig() *models.Credentials {
 
 //returns config if it exists, bitbucket token, and err
 func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
-	//cfg := getCredConfig()
-	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.ConfigPath+"/bitbucket/"+acctName, false)
-	cfg := bbCreds["bitbucket/"+acctName]
+	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, cred.Vcs)
+	cf := bbCreds["bitbucket/"+acctName]
+	cfg, ok := cf.(*models.VCSCreds)
+
+	if !ok {
+		return
+	}
+
+	bbClient := &ocenet.OAuthClient{}
+	bbClient.Setup(cfg)
 
 	bb, token, err := ctx.GetBitbucketClient(cfg)
 	if err != nil {

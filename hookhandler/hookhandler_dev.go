@@ -4,7 +4,7 @@ package hookhandler
 import (
 	"io/ioutil"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
-	"bitbucket.org/level11consulting/ocelot/admin/handler"
+	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"os"
 )
 
@@ -12,7 +12,7 @@ type MockHookHandlerContext struct {
 	HookHandlerContext //embedding hookhandler context cause didn't want to stub out getters/setters
 }
 
-func (hhc *MockHookHandlerContext) GetBitbucketClient(cfg *models.Credentials) (handler.VCSHandler, string, error) {
+func (hhc *MockHookHandlerContext) GetBitbucketClient(cfg *models.VCSCreds) (handler.VCSHandler, string, error) {
 	mockVcsHandler := &MockVCSHandler{}
 	return mockVcsHandler , "", nil
 }

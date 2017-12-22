@@ -16,7 +16,7 @@ const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 //TODO: callback url is set as env. variable on admin, or passed in via command line
 
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
-func GetBitbucketHandler(adminConfig *models.Credentials, client ocenet.HttpClient) VCSHandler {
+func GetBitbucketHandler(adminConfig *models.VCSCreds, client ocenet.HttpClient) VCSHandler {
 	bb := &Bitbucket{
 		Client: client,
 		Marshaler: jsonpb.Marshaler{},
@@ -34,7 +34,7 @@ type Bitbucket struct {
 	Client      ocenet.HttpClient
 	Marshaler   jsonpb.Marshaler
 
-	credConfig    *models.Credentials
+	credConfig    *models.VCSCreds
 	isInitialized bool
 }
 
@@ -115,13 +115,14 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 		return nil
 	}
 	repositories := &pb.PaginatedRepository{}
+	//todo: error pages from bitbucket??? these need to bubble up to client
 	err := bb.Client.GetUrl(repoUrl, repositories)
 	if err != nil {
 		return err
 	}
 
 	for _, v := range repositories.GetValues() {
-		fmt.Printf("found repo %v\n", v.GetFullName())
+		ocelog.Log().Debug("found repo %v\n", v.GetFullName())
 		err = bb.CreateWebhook(v.GetLinks().GetHooks().GetHref())
 		if err != nil {
 			return err
