@@ -19,6 +19,9 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+[[constraint]]
+  name = "github.com/moby/moby"
+  branch = "moby"
 
 [[constraint]]
   name = "github.com/ghodss/yaml"
@@ -85,5 +88,5 @@
   name = "gopkg.in/yaml.v2"
 
 [[constraint]]
-  branch = "api"
-  name = "bitbucket.org/level11consulting/leveler"
+  branch = "master"
+  name = "bitbucket.org/level11consulting/go-til"
