@@ -30,18 +30,28 @@ import (
 	"os"
 	"github.com/mitchellh/go-homedir"
 	"io"
+	"strings"
 )
 
-func retry(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport) {
+//listen will listen for messages for a specified topic. If a message is received, a
+//message worker handler is created to process the message
+func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			time.Sleep(10 * time.Second)
 		} else {
+
+			mode := os.Getenv("ENV")
+			basher := &builder.Basher{}
+			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
+				basher.SetBbDownloadURL("localhost:9090/dev/1552818963350a29750a7ade7bccc0e2b1977bd2.zip")
+			}
+
 			handler := &werker.WorkerMsgHandler{
 				Topic:    topic,
 				WerkConf: conf,
 				ChanChan: tunnel,
-				Basher: &builder.Basher{},
+				Basher: basher,
 			}
 			p.Handler = handler
 			p.ConsumeMessages(topic, conf.WerkerName)
@@ -70,21 +80,7 @@ func main() {
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewProtoConsume()
-		if nsqpb.LookupTopic(protoConsume.Config.LookupDAddress(), topic) {
-			handler := &werker.WorkerMsgHandler{
-				Topic:    topic,
-				WerkConf: conf,
-				ChanChan: tunnel,
-				Basher: &builder.Basher{},
-			}
-			protoConsume.Handler = handler
-			protoConsume.ConsumeMessages(topic, conf.WerkerName)
-			ocelog.Log().Info("Consuming messages for topic ", topic)
-		} else {
-			ocelog.Log().Warnf("Topic with name %s not found. Will retry every 10 seconds.", topic)
-			//todo: dedupe
-			go retry(protoConsume, topic, conf, tunnel)
-		}
+		go listen(protoConsume, topic, conf, tunnel)
 		consumers = append(consumers, protoConsume)
 	}
 

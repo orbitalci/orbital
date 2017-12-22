@@ -1,6 +1,5 @@
 package handler
 
-//TODO: add interface once we have more than just bitbucket
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
@@ -16,6 +15,7 @@ const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
 //TODO: callback url is set as env. variable on admin, or passed in via command line
 
+//GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
 func GetBitbucketHandler(adminConfig *models.Credentials, client ocenet.HttpClient) VCSHandler {
 	bb := &Bitbucket{
 		Client: client,

@@ -8,7 +8,8 @@ if [ $# -gt 0 ]; then
   count=0
   args=("$@")
 
-  wget --header="Authorization: Bearer ${args[0]}" "${args[1]}/${args[2]}.zip"
+  download_url=${args[1]}/${args[2]}.zip
+  wget --header="Authorization: Bearer ${args[0]}" "${download_url}"
   mkdir ${args[2]}
 
   codedir=$(unzip ${args[2]}.zip | awk 'NR==3 {print $2}')
