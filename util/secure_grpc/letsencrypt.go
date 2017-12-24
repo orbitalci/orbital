@@ -3,6 +3,7 @@ package secure_grpc
 import (
 	"crypto/tls"
 	"crypto/x509"
+	//"github.com/philips/grpc-gateway-example/insecure"
 	"google.golang.org/grpc/credentials"
 	"io/ioutil"
 )
@@ -25,10 +26,10 @@ func NewLeSecure() *leSecure {
 // GetNewClientTLS will create a fake cert using x509 and the insecure package. it will be enough
 // to have tls but generate a warning. I'm pulling this out because the Client will need it too.
 func (fs *leSecure) GetNewClientTLS(serverRunsAt string) credentials.TransportCredentials {
-	//ok := fs.cert.AppendCertsFromPEM([]byte(insecure.Cert))
-	//if !ok {
-	//	panic("bad certs")
-	//}
+	ok := fs.cert.AppendCertsFromPEM([]byte(fullChain))
+	if !ok {
+		panic("bad certs")
+	}
 	return credentials.NewClientTLSFromCert(fs.cert, serverRunsAt)
 }
 
@@ -43,7 +44,7 @@ func (fs *leSecure) GetNewTLS(serverRunsAt string) credentials.TransportCredenti
 func (fs *leSecure) GetKeyPair() *tls.Certificate {
 	key, err := ioutil.ReadFile("/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem")
 	if err != nil {
-		panic("couldn't get private certs")
+		panic("couldn't get private certs" + err.Error())
 	}
 	pair, err := tls.X509KeyPair([]byte(fullChain), key)
 	if err != nil {
