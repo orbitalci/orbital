@@ -9,6 +9,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"fmt"
+	"github.com/go-errors/errors"
 	"net/http"
 )
 
@@ -82,6 +84,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
+	fmt.Println(buildConf)
 	//TODO: need to check and make sure that New.Type == branch
 	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
 		tellWerker(ctx, buildConf, hash, fullName, bbToken)
@@ -196,6 +199,7 @@ func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkout
 	cfg, ok := cf.(*models.VCSCreds)
 
 	if !ok {
+		err = errors.New(fmt.Sprintf("could not cast config as models.VCSCreds, config: %v", cf))
 		return
 	}
 
