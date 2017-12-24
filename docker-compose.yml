@@ -13,11 +13,16 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    volumes:
+      - "/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem:/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem"
     ports:
       - "10000:10000"
     environment:
       VAULT_TOKEN: ${VAULT_TOKEN}
       CONSUL_HOST: http://172.18.0.1
+      VAULT_ADDR: http://172.18.0.1:8200
+      NSQLOOKUPD_IP: 172.18.0.1
+      NSQD_IP: 172.18.0.1
   hookhandler:
     image: ocelot-hookhandler
     build:
