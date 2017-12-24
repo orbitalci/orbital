@@ -13,7 +13,7 @@
     "test",
     "vault"
   ]
-  revision = "d1e1c1cb8bbebe92dd541886e3e08088e2b7edec"
+  revision = "962e582a0d379e45f83a37bf29e00b9432ea2818"
 
 [[projects]]
   name = "github.com/Jeffail/gabs"
