@@ -13,10 +13,15 @@ var (
 )
 
 
-func GetClient(serverAddr string) (client models.GuideOcelotClient, err error){
-	secure := secure_grpc.NewFakeSecure()
+func GetClient(serverAddr string, insecure bool, tlsDns string) (client models.GuideOcelotClient, err error){
+	var secure secure_grpc.SecureGrpc
+	if insecure {
+		secure = secure_grpc.NewFakeSecure()
+	} else {
+		secure = secure_grpc.NewLeSecure()
+	}
 	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithTransportCredentials(secure.GetNewClientTLS(serverAddr)))
+	opts = append(opts, grpc.WithTransportCredentials(secure.GetNewClientTLS(tlsDns)))
 	conn, err := grpc.Dial(serverAddr, opts...)
 	client = models.NewGuideOcelotClient(conn)
 	return

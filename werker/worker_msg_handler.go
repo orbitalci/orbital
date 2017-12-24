@@ -41,7 +41,9 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	var builder b.Builder
 	switch w.WerkConf.werkerType {
 	case Docker:
-		builder = b.NewDockerBuilder(*w.Basher)
+		builder = b.NewDockerBuilder(w.Basher)
+	default:
+		builder = b.NewDockerBuilder(w.Basher)
 	}
 
 	go w.MakeItSo(werkerTask, builder)

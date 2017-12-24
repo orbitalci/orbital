@@ -17,10 +17,10 @@ type Docker struct{
 	Log	io.ReadCloser
 	ContainerId	string
 	DockerClient *client.Client
-	Basher
+	*Basher
 }
 
-func NewDockerBuilder(b Basher) Builder {
+func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 

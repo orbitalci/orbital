@@ -14,7 +14,7 @@ import (
 )
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: admin.NewClientConfig()}
+	c := &cmd{UI: ui, config: commandhelper.NewClientConfig()}
 	c.init()
 	return c
 }
@@ -25,7 +25,7 @@ type cmd struct {
 	flags   *flag.FlagSet
 	fileloc string
 	client  models.GuideOcelotClient
-	config  *admin.ClientConfig
+	config  *commandhelper.ClientConfig
 }
 
 
@@ -37,13 +37,13 @@ func (c *cmd) GetUI() cli.Ui {
 	return c.UI
 }
 
-func (c *cmd) GetConfig() *admin.ClientConfig {
+func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 	return c.config
 }
 
 func (c *cmd) init() {
 	var err error
-	c.client, err = admin.GetClient(c.config.AdminLocation)
+	c.client, err = admin.GetClient(c.config.AdminLocation, c.config.Insecure, c.config.OcyDns)
 	if err != nil {
 		panic(err)
 	}
