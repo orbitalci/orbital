@@ -4,6 +4,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bufio"
 	"context"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -54,6 +55,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 			Error:  err,
 		}
 	}
+	var byt []byte
+	buf := bufio.NewReader(out)
+	buf.Read(byt)
+	fmt.Println(string(byt))
 	defer out.Close()
 
 	bufReader := bufio.NewReader(out)
@@ -230,7 +235,11 @@ func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byt
 		str, err := rd.ReadString('\n')
 
 		if err != nil {
-			ocelog.Log().Info("Read Error:", err)
+			if err != io.EOF {
+				ocelog.Log().Error("Read Error:", err)
+			} else {
+				ocelog.Log().Debug("EOF, finished writing to Info")
+			}
 			return
 		}
 

@@ -78,7 +78,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	}
 
 	for stageKey, stageVal := range werk.BuildConf.Stages {
-		//build is special because we deployafter this
+		//build is special because we deploy after this
 		if stageKey == "build" {
 			buildResult := builder.Build(w.infochan, stageVal, werk.CheckoutHash)
 			stageResults = append(stageResults, buildResult)
