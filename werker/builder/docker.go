@@ -46,15 +46,15 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	imageName := werk.BuildConf.Image
 
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
-	defer out.Close()
-
 	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't pull image!")
 		return &Result{
 			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
 		}
 	}
+	defer out.Close()
 
 	bufReader := bufio.NewReader(out)
 	d.writeToInfo(stagePrintln, bufReader, logout)
