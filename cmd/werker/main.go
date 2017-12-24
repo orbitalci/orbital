@@ -56,6 +56,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 			p.Handler = handler
 			p.ConsumeMessages(topic, conf.WerkerName)
 			ocelog.Log().Info("Consuming messages for topic ", topic)
+			break
 		}
 	}
 }
