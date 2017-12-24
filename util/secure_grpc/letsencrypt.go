@@ -37,6 +37,7 @@ func (fs *leSecure) GetNewTLS(serverRunsAt string) credentials.TransportCredenti
 	return credentials.NewTLS(&tls.Config{
 		ServerName: serverRunsAt,
 		RootCAs:    fs.cert,
+		InsecureSkipVerify: true,
 	})
 }
 
