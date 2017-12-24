@@ -16,7 +16,7 @@ services:
     ports:
       - "10000:10000"
     environment:
-      VAULT_TOKEN: e92136aa-93c6-6062-b724-cba19fd775fe
+      VAULT_TOKEN: ${VAULT_TOKEN}
       CONSUL_HOST: http://172.18.0.1
   hookhandler:
     image: ocelot-hookhandler
@@ -33,10 +33,12 @@ services:
     ports:
       - "8088:8088"
     environment:
-      VAULT_TOKEN: e92136aa-93c6-6062-b724-cba19fd775fe
+      VAULT_TOKEN: ${VAULT_TOKEN}
       VAULT_ADDR: http://172.18.0.1:8200
       CONSUL_HOST: http://172.18.0.1
       LOG_LEVEL: debug
+      NSQD_IP: 172.17.0.1
+      NSQLOOKUPD_IP: 172.17.0.1
   werker:
     image: ocelot-werker
     build:
@@ -46,6 +48,8 @@ services:
         - golang:1.9-alpine
     environment:
       VAULT_ADDR: http://172.18.0.1:8200
+      NSQD_IP: 172.17.0.1
+      NSQLOOKUPD_IP: 172.17.0.1
     logging:
       driver: "json-file"
       options:
