@@ -40,7 +40,6 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			time.Sleep(10 * time.Second)
 		} else {
-
 			mode := os.Getenv("ENV")
 			basher := &builder.Basher{}
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker

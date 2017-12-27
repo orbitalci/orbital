@@ -2,12 +2,12 @@ version: "3.3"
 services:
   # Copied directly from ./docs/docker-compose/vault-consul/docker-compose.yml, with volume paths slightly modified, and with logging
   vault:
-    depends_on:
-      - consul
+#    depends_on:
+#      - consul
     image: vault
     hostname: vault
-    links:
-      - consul:consul
+#    links:
+#      - consul:consul
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
     ports:
