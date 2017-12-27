@@ -14,9 +14,11 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
-	"time"
 	"os"
+	"path"
+	"runtime"
 	"strings"
+	"time"
 )
 
 var (
@@ -270,8 +272,13 @@ func cacheProcessor(transpo chan *Transport, appCtx *werkerStreamer) {
 
 //****WARNING**** this assumes you're inside of /cmd/werker directory
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	pwd, _ := os.Getwd()
-	http.ServeFile(w, r, pwd + "/test.html")
+	//pwd, _ := os.Getwd()
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("no caller???? ")
+	}
+	fmt.Println("FILENAME ",  path.Dir(filename) + "/test.html")
+	http.ServeFile(w, r, path.Dir(filename) + "/test.html")
 }
 
 func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {

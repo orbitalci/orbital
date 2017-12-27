@@ -1,7 +1,6 @@
 package credslist
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/list"
@@ -14,7 +13,7 @@ import (
 )
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: commandhelper.NewClientConfig()}
+	c := &cmd{UI: ui, config: commandhelper.Config}
 	c.init()
 	return c
 }
@@ -22,14 +21,13 @@ func New(ui cli.Ui) *cmd {
 type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
-	client models.GuideOcelotClient
 	accountFilter string
 	config *commandhelper.ClientConfig
 }
 
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
-	return c.client
+	return c.config.Client
 }
 
 func (c *cmd) GetUI() cli.Ui {
@@ -42,11 +40,7 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 
 
 func (c *cmd) init() {
-	var err error
-	c.client, err = admin.GetClient(c.config.AdminLocation, c.config.Insecure, c.config.OcyDns)
-	if err != nil {
-		panic(err)
-	}
+
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 }
 
@@ -56,7 +50,7 @@ func (c *cmd) Run(args []string) int {
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	msg, err := c.client.GetAllCreds(ctx, &protoReq)
+	msg, err := c.config.Client.GetAllCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 		return 1

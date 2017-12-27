@@ -2,7 +2,6 @@ package repocredsadd
 
 import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
-	"bitbucket.org/level11consulting/ocelot/admin"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
@@ -23,12 +22,11 @@ type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
 	fileloc string
-	client  models.GuideOcelotClient
 	config *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
-	return c.client
+	return c.config.Client
 }
 
 func (c *cmd) GetUI() cli.Ui {
@@ -40,11 +38,7 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 }
 
 func (c *cmd) init() {
-	var err error
-	c.client, err = admin.GetClient(c.config.AdminLocation, c.config.Insecure, c.config.OcyDns)
-	if err != nil {
-		panic(err)
-	}
+
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.fileloc, "credfile-loc", "",
 		"Location of yaml file containing repo creds to upload")
@@ -68,7 +62,7 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		return 1
 	}
 	for _, configVal := range credWrap.Repo {
-		_, err = c.client.SetRepoCreds(ctx, configVal)
+		_, err = c.config.Client.SetRepoCreds(ctx, configVal)
 		if err != nil {
 			c.UI.Error(fmt.Sprintf("Could not add credentials for repository: %s \nError: %s", configVal.AcctName, err.Error()))
 			errOccured = true
@@ -111,7 +105,7 @@ func (c *cmd) runStdinUpload(ctx context.Context) int {
 		c.UI.Error(fmt.Sprint("Error recieving input: ", errConcat))
 		return 1
 	}
-	if _, err := c.client.SetRepoCreds(ctx, creds); err != nil {
+	if _, err := c.config.Client.SetRepoCreds(ctx, creds); err != nil {
 		c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", creds.AcctName, err.Error()))
 		return 1
 	}

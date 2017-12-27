@@ -1,6 +1,8 @@
 package commandhelper
 
 import (
+	"bitbucket.org/level11consulting/ocelot/admin"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
 	"os"
 )
@@ -9,7 +11,7 @@ var Config = NewClientConfig()
 
 type ClientConfig struct {
 	AdminLocation string
-	Insecure      bool
+	Client        models.GuideOcelotClient
 	OcyDns        string
 }
 
@@ -32,13 +34,20 @@ func NewClientConfig() *ClientConfig {
 	} else {
 		ocyDns = v
 	}
-	_, ok := os.LookupEnv("CLIENT_INSECURE")
-	if ok {
+	_, insecure := os.LookupEnv("CLIENT_INSECURE")
+	if insecure {
 		fmt.Println("The environment variable CLIENT_INSECURE is set. Using fake certs.")
 	}
+	client, err := admin.GetClient(adminHost + ":" + adminPort, insecure, ocyDns)
+	if err != nil {
+		fmt.Println("Could not get client! Error: ", err)
+		os.Exit(1)
+	}
+
 	return &ClientConfig{
 		AdminLocation: adminHost + ":" + adminPort,
-		Insecure:      ok,
+		Client: client,
 		OcyDns: ocyDns,
 	}
 }
+

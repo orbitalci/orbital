@@ -2,6 +2,7 @@ package buildcredsadd
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bytes"
 	"context"
 	"flag"
@@ -19,7 +20,7 @@ func testNew(inputReaderData []byte) *cmd {
 	}
 	c := &cmd{
 		UI: ui,
-		client: models.NewFakeGuideOcelotClient(),
+		config: commandhelper.NewTestClientConfig(),
 	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.fileloc, "credfile-loc", "",
@@ -47,7 +48,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	if exit := cmd.Run(args); exit != 0 {
 		t.Fatal("should return exit 0")
 	}
-	actualCreds, err := cmd.client.GetVCSCreds(ctx, &empty.Empty{})
+	actualCreds, err := cmd.config.Client.GetVCSCreds(ctx, &empty.Empty{})
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
@@ -83,7 +84,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	if exit != 0 {
 		t.Error("should return exit code 0, got ", exit)
 	}
-	sentCreds, err := cmd.client.GetVCSCreds(ctx, &empty.Empty{})
+	sentCreds, err := cmd.config.Client.GetVCSCreds(ctx, &empty.Empty{})
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
