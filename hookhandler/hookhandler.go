@@ -5,15 +5,26 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	res "bitbucket.org/level11consulting/leveler_resources"
-	"bitbucket.org/level11consulting/ocelot/admin/handler"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"errors"
+	"fmt"
 	"net/http"
-	"strings"
 )
+
+
+type HookHandler interface {
+	GetBitbucketClient(cfg *models.VCSCreds) (handler.VCSHandler, string, error)
+	GetRemoteConfig() *cred.RemoteConfig
+	SetRemoteConfig(remoteConfig *cred.RemoteConfig)
+	GetProducer() *nsqpb.PbProduce
+	SetProducer(producer *nsqpb.PbProduce)
+	GetDeserializer() *deserialize.Deserializer
+	SetDeserializer(deserializer *deserialize.Deserializer)
+}
+
 
 type HookHandlerContext struct {
 	RemoteConfig *cred.RemoteConfig
@@ -21,19 +32,49 @@ type HookHandlerContext struct {
 	Deserializer *deserialize.Deserializer
 }
 
-//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
-//tODO: branch inside of ocelot.yml
-//TODO: what data do we have to store/do we need to store?
+//Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
+func (hhc *HookHandlerContext) GetBitbucketClient(cfg *models.VCSCreds) (handler.VCSHandler, string, error) {
+	bbClient := &ocenet.OAuthClient{}
+	token, err := bbClient.Setup(cfg)
+	if err != nil {
+		return nil, "", err
+	}
+	bb := handler.GetBitbucketHandler(cfg, bbClient)
+	return bb, token, nil
+}
+
+func (hhc *HookHandlerContext) GetRemoteConfig() *cred.RemoteConfig {
+	return hhc.RemoteConfig
+}
+func (hhc *HookHandlerContext) SetRemoteConfig(remoteConfig *cred.RemoteConfig) {
+	hhc.RemoteConfig = remoteConfig
+}
+func (hhc *HookHandlerContext) GetProducer() *nsqpb.PbProduce {
+	return hhc.Producer
+}
+func (hhc *HookHandlerContext) SetProducer(producer *nsqpb.PbProduce) {
+	hhc.Producer = producer
+}
+func (hhc *HookHandlerContext) GetDeserializer() *deserialize.Deserializer {
+	return hhc.Deserializer
+}
+func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deserializer) {
+	hhc.Deserializer = deserializer
+}
+
+
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
-func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
+func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
-	if err := ctx.Deserializer.JSONToProto(r.Body, repopush); err != nil {
+
+	if err := ctx.GetDeserializer().JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
 	}
+
 	fullName := repopush.Repository.FullName
 	hash := repopush.Push.Changes[0].New.Target.Hash
 	acctName := repopush.Repository.Owner.Username
-	buildConf, err := GetBBBuildConfig(ctx, acctName, fullName, hash)
+	buildConf, bbToken, err := GetBBConfig(ctx, acctName, fullName, hash)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -43,23 +84,30 @@ func RepoPush(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
-	tellWerker(ctx, buildConf, hash)
+	fmt.Println(buildConf)
+	//TODO: need to check and make sure that New.Type == branch
+	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
+		tellWerker(ctx, buildConf, hash, fullName, bbToken)
+	} else {
+		//TODO: tell db we couldn't build
+	}
 }
 
-//TODO: look into all the branches that's listed inside of ocelot.yml and only build if event corresonds
-//tODO: branch inside of ocelot.yml
+
+//TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
-func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request) {
+func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	pr := &pb.PullRequest{}
-	if err := ctx.Deserializer.JSONToProto(r.Body, pr); err != nil {
+	if err := ctx.GetDeserializer().JSONToProto(r.Body, pr); err != nil {
 		ocelog.IncludeErrField(err).Error("could not parse request body into pb.PullRequest")
 		return
 	}
+	ocelog.Log().Debug(r.Body)
 	fullName := pr.Pullrequest.Source.Repository.FullName
 	hash := pr.Pullrequest.Source.Commit.Hash
 	acctName := pr.Pullrequest.Source.Repository.Owner.Username
 
-	buildConf, err := GetBBBuildConfig(ctx, acctName, fullName, hash)
+	buildConf, bbToken, err := GetBBConfig(ctx, acctName, fullName, hash)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -69,101 +117,58 @@ func PullRequest(ctx *HookHandlerContext, w http.ResponseWriter, r *http.Request
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
 		return
 	}
-	tellWerker(ctx, buildConf, hash)
+
+	if validateBuild(buildConf, "") {
+		tellWerker(ctx, buildConf, hash, fullName, bbToken)
+	} else {
+		//TODO: tell db we couldn't build
+	}
 }
 
-func tellWerker(ctx *HookHandlerContext, buildConf *pb.BuildConfig, hash string) {
+//before we build pipeline config for werker, validate and make sure this is good candidate
+	// - check if commit branch matches with ocelot.yaml branch
+	// - check if ocelot.yaml has at least one step called build
+//TODO: move validator out to its own class and whatnot, that way admin or command line client can use to validate
+func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
+	_, ok := buildConf.Stages["build"]
+	if !ok {
+		ocelog.Log().Error("your ocelot.yml does not have the required `build` stage")
+		return false
+	}
+
+	for _, buildBranch := range buildConf.Branches {
+		if buildBranch == branch {
+			return true
+		}
+	}
+	ocelog.Log().Errorf("build does not match any branches listed: %v", buildConf.Branches)
+	return false
+}
+
+
+//TODO: this code needs to store status into db
+func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string) {
 	// get one-time token use for access to vault
-	token, err := ctx.RemoteConfig.Vault.CreateThrowawayToken()
+	token, err := ctx.GetRemoteConfig().Vault.CreateThrowawayToken()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
 
-	pipeConfig, err := werk(*buildConf, hash)
-
 	werkerTask := &pb.WerkerTask{
 		VaultToken:   token,
 		CheckoutHash: hash,
-		Pipe:         pipeConfig,
+		BuildConf: buildConf,
+		VcsToken: bbToken,
+		VcsType: "bitbucket",
+		FullName: fullName,
 	}
 
-	go ctx.Producer.WriteProto(werkerTask, "docker")
-}
-
-//TODO: state = not started = to be stored inside of postgres (db interface is gonna be inside of go-til)
-//this just builds the pipeline config, worker will call NewPipeline with the pipeline config and run
-func werk(oceConfig pb.BuildConfig, gitCommit string) (*res.PipelineConfig, error) {
-	//TODO: example input for job? What should be passed to list of strings?
-	// inputs/outputs in a JOB are the keys to pipeline input/outputs in PipelineConfig
-	//TODO: how/when do we push artifacts to nexus? (think about this while I'm writing other code)
-	// TODO: potentially watch for changes in .m2/PKG_NAME with fsnotify?
-	//TODO: we might be able to actually create an image and use input/outputs for the packages part?
-
-	jobMap := make(map[string]*res.JobConfig)
-
-	var kickOffCmd []string
-	var kickOffEnvs = make(map[string]string)
-	var buildImage string
-
-	if oceConfig.Image != "" {
-		buildImage = oceConfig.Image
-	} else if len(oceConfig.Packages) > 0 {
-		buildImage = "TODO PARSE THIS AND PUSH TO ARTIFACT REPO"
-		//TODO: build image and store it somewhere. OH! NEXUS! oh shit we need nexus int. now
-	}
-
-	if oceConfig.Before != nil {
-		if oceConfig.Before.Script != nil {
-			kickOffCmd = append(kickOffCmd, oceConfig.Before.Script...)
-		}
-
-		//combine optional before env values if passed
-		if oceConfig.Before.Env != nil {
-			for envKey, envVal := range oceConfig.Before.Env {
-				kickOffEnvs[envKey] = envVal
-			}
-		}
-	}
-
-	if oceConfig.Build != nil {
-		if oceConfig.Build.Script != nil {
-			kickOffCmd = append(kickOffCmd, oceConfig.Build.Script...)
-		}
-
-		//combine optional before env values if passed
-		if oceConfig.Build.Env != nil {
-			for envKey, envVal := range oceConfig.Build.Env {
-				kickOffEnvs[envKey] = envVal
-			}
-		}
-	}
-
-	//TODO: where to store failed builds
-	if len(kickOffCmd) == 0 {
-		return nil, errors.New("You must have at least one stage populated to trigger a build")
-	}
-
-	//create a settings.xml maven file that takes in nexus and/or something else creds
-
-	//TODO: figure out what to do about the rest of the stages
-	job := &res.JobConfig{
-		Command: strings.Join(kickOffCmd, " && "),
-		Env:     kickOffEnvs,
-		Image:   buildImage,
-	}
-
-	jobMap[gitCommit] = job
-
-	pipeConfig := &res.PipelineConfig{
-		Steps:     jobMap,
-		GlobalEnv: oceConfig.Env,
-	}
-	return pipeConfig, nil
+	go ctx.GetProducer().WriteProto(werkerTask, "build")
 }
 
 func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
-	handlerCtx := ctx.(*HookHandlerContext)
+	handlerCtx := ctx.(HookHandler)
 
 	switch r.Header.Get("X-Event-Key") {
 	case "repo:push":
@@ -187,19 +192,25 @@ func getCredConfig() *models.VCSCreds {
 	}
 }
 
-func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, err error) {
-	//cfg := getCredConfig()
-	bbCreds, err := ctx.RemoteConfig.GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, cred.Vcs)
+//returns config if it exists, bitbucket token, and err
+func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
+	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, cred.Vcs)
 	cf := bbCreds["bitbucket/"+acctName]
 	cfg, ok := cf.(*models.VCSCreds)
+
 	if !ok {
+		err = errors.New(fmt.Sprintf("could not cast config as models.VCSCreds, config: %v", cf))
 		return
 	}
-	bb := handler.Bitbucket{}
+
 	bbClient := &ocenet.OAuthClient{}
 	bbClient.Setup(cfg)
 
-	bb.SetMeUp(cfg, bbClient)
+	bb, token, err := ctx.GetBitbucketClient(cfg)
+	if err != nil {
+		return
+	}
+
 	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		return
@@ -208,7 +219,7 @@ func GetBBBuildConfig(ctx *HookHandlerContext, acctName string, repoFullName str
 	if err != nil {
 		return
 	}
-	if err = ctx.Deserializer.YAMLToStruct(fileBitz, conf); err != nil {
+	if err = ctx.GetDeserializer().YAMLToStruct(fileBitz, conf); err != nil {
 		return
 	}
 	return

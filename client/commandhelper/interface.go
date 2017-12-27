@@ -1,7 +1,6 @@
 package commandhelper
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
 	"fmt"
@@ -12,7 +11,7 @@ import (
 type GuideOcelotCmd interface {
 	GetClient() models.GuideOcelotClient
 	GetUI() cli.Ui
-	GetConfig() *admin.ClientConfig
+	GetConfig() *ClientConfig
 }
 
 // CheckConnection calls the CheckConn() method of GuideOcelotClient which is validates a connection exists.

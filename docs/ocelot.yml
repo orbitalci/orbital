@@ -6,23 +6,17 @@ build_tool: maven # see if google's yaml library will convert this (also need to
 branches: # default behavior needs to be appropriate documented inside of docs
   - master
   - something else
-
 env:
-  TEST: 1
+  - "TEST=1"
 
-before:
-  script:
-    - sh echo "hello"
+stages:
+  build: #commands are assumed to be run from root directory of code
+    env:
+      - "BUILD_DEBUG=1"
+      - "SEARCH_URL=https://google.com"
+    script:
+      - echo "hello1"
 
-build:
-  env:
-    BUILD_DEBUG: 1
-    SEARCH_URL: https://google.com
-  script:
-    - echo "hello1"
-
-after:
-  env:
-    BUILD_DEBUG: 0
-  script:
-    - sh echo "goodbye"
+  after:
+    script:
+      - echo "woohoo! fin!"

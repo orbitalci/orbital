@@ -1,12 +1,13 @@
 package credsadd
 
 import (
-"bitbucket.org/level11consulting/ocelot/admin/models"
-"context"
-"flag"
-"github.com/golang/protobuf/ptypes/empty"
-"github.com/mitchellh/cli"
-"testing"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"context"
+	"flag"
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/mitchellh/cli"
+	"testing"
 )
 
 // testNew will return the bare minimum. flags and fileloc of yaml will have to be set after instantiation
@@ -15,7 +16,7 @@ func testNew() *cmd {
 	ui := cli.NewMockUi()
 	c := &cmd{
 		UI: ui,
-		client: models.NewFakeGuideOcelotClient(),
+		config: commandhelper.NewTestClientConfig(),
 	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.fileloc, "credfile-loc", "",
@@ -57,7 +58,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	if exit := cmd.Run(args); exit != 0 {
 		t.Fatal("should return exit 0")
 	}
-	actualCreds, err := cmd.client.GetAllCreds(ctx, &empty.Empty{})
+	actualCreds, err := cmd.config.Client.GetAllCreds(ctx, &empty.Empty{})
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}

@@ -14,6 +14,10 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
+	"os"
+	"path"
+	"runtime"
+	"strings"
 	"time"
 )
 
@@ -81,7 +85,7 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 		ocelog.IncludeErrField(err).Error("wtf?")
 		return
 	}
-	defer ws.Close()
+	//defer ws.Close()
 	pumpDone := make(chan int)
 
 	go pumpBundle(ws, a, hash, pumpDone)
@@ -113,14 +117,14 @@ func writeGrpcError(stream protobuf.Build_BuildInfoServer, description []byte) {
 // pumpBundle writes build data to web socket
 func pumpBundle(stream interface{}, appCtx *werkerStreamer, hash string, done chan int) {
 	// determine whether to get from storage or off infoReader
-	if appCtx.CheckIfBuildDone(hash) {
-		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
-		err := streamFromStorage(appCtx, hash, stream)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("error retrieving from storage")
-		}
-	} else {
-		ocelog.Log().Debug("pumping info array data to web socket")
+	//if appCtx.CheckIfBuildDone(hash) {
+	//	ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
+	//	err := streamFromStorage(appCtx, hash, stream)
+	//	if err != nil {
+	//		ocelog.IncludeErrField(err).Error("error retrieving from storage")
+	//	}
+	//} else {
+	//	ocelog.Log().Debug("pumping info array data to web socket")
 		buildInfo, ok := appCtx.buildInfo[hash]
 		if ok {
 			err := streamFromArray(buildInfo, stream)
@@ -131,8 +135,8 @@ func pumpBundle(stream interface{}, appCtx *werkerStreamer, hash string, done ch
 		} else {
 			writeStreamError(stream, []byte("did not find hash in current streaming data and the build was not marked as done"))
 		}
-	}
-	defer cleanUpStream(stream, done)
+	//}
+	//defer cleanUpStream(stream, done)
 }
 
 func cleanUpStream(stream interface{}, done chan int) {
@@ -196,7 +200,8 @@ func streamFromArray(buildInfo *buildDatum, stream interface{}) (err error) {
 func send(conn interface{}, data []byte) error {
 	switch ci := conn.(type) {
 	case ocenet.WebsocketEy:
-		ci.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		// todo: figure out why this breaks shit if the time is too long (but not longer than the timeout???)
+		//ci.SetWriteDeadline(time.Now().Add(10 * time.Second))
 		if err := ci.WriteMessage(websocket.TextMessage, data); err != nil {
 			ocelog.IncludeErrField(err).Error("could not write to web socket")
 			ci.Close()
@@ -265,8 +270,15 @@ func cacheProcessor(transpo chan *Transport, appCtx *werkerStreamer) {
 	}
 }
 
+//****WARNING**** this assumes you're inside of /cmd/werker directory
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "test.html")
+	//pwd, _ := os.Getwd()
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("no caller???? ")
+	}
+	fmt.Println("FILENAME ",  path.Dir(filename) + "/test.html")
+	http.ServeFile(w, r, path.Dir(filename) + "/test.html")
 }
 
 func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
@@ -283,15 +295,23 @@ func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
 	return werkerStreamer
 }
 
+//ServeMe will start HTTP Server as needed for streaming build output by hash
 func ServeMe(transportChan chan *Transport, conf *WerkerConf) {
 	werkStream := getWerkerStreamer(conf)
 	ocelog.Log().Debug("saving build info channels to in memory map")
 	go cacheProcessor(transportChan, werkStream)
 
-	ocelog.Log().Debug("serving websocket on port: ", conf.servicePort)
+	ocelog.Log().Info("serving websocket on port: ", conf.servicePort)
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{werkStream, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
+
+	//if we're in dev mode, serve everything out of test-fixtures at /dev
+	mode := os.Getenv("ENV")
+	if strings.EqualFold(mode, "dev") {
+		muxi.PathPrefix("/dev/").Handler(http.StripPrefix("/dev/", http.FileServer(http.Dir("./dev"))))
+	}
+
 	n := ocenet.InitNegroni("werker", muxi)
 	go n.Run(":" + conf.servicePort)
 

@@ -1,7 +1,6 @@
 package buildcredslist
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
@@ -12,7 +11,7 @@ import (
 )
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: admin.NewClientConfig()}
+	c := &cmd{UI: ui, config: commandhelper.Config}
 	c.init()
 	return c
 }
@@ -20,30 +19,25 @@ func New(ui cli.Ui) *cmd {
 type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
-	client models.GuideOcelotClient
-	config *admin.ClientConfig
+	config *commandhelper.ClientConfig
 	accountFilter string
 }
 
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
-	return c.client
+	return c.config.Client
 }
 
 func (c *cmd) GetUI() cli.Ui {
 	return c.UI
 }
 
-func (c *cmd) GetConfig() *admin.ClientConfig {
+func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 	return c.config
 }
 
 func (c *cmd) init() {
-	var err error
-	c.client, err = admin.GetClient(c.config.AdminLocation)
-	if err != nil {
-		panic(err)
-	}
+
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.accountFilter, "account", "",
 		"account name to filter on")
@@ -58,7 +52,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	var protoReq empty.Empty
-	msg, err := c.client.GetVCSCreds(ctx, &protoReq)
+	msg, err := c.config.Client.GetVCSCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 	}

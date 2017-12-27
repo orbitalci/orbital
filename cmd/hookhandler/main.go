@@ -9,9 +9,12 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"github.com/gorilla/mux"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func main() {
+	//ocelog.InitializeLog("debug")
 	ocelog.InitializeLog(ocelog.GetFlags())
 	ocelog.Log().Debug()
 	port := os.Getenv("PORT")
@@ -20,23 +23,40 @@ func main() {
 		ocelog.Log().Warning("running on default port :8088")
 	}
 
-	remoteConfig, err := cred.GetInstance("", 0, "")
+	consulHost := os.Getenv("CONSUL_HOST")
+	if consulHost == "" {
+		consulHost = "localhost"
+		ocelog.Log().Warning("consul is assumed to be running on localhost")
+	}
+	consulPort := os.Getenv("CONSUL_PORT")
+	if consulPort == "" {
+		consulPort = "8500"
+		ocelog.Log().Warning("consul is assumed to be running on port 8500")
+	}
+
+	consulPortInt, _ := strconv.Atoi(consulPort)
+	remoteConfig, err := cred.GetInstance(consulHost, consulPortInt, "")
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}
 
-	hookHandlerContext := &hh.HookHandlerContext{
-		RemoteConfig: remoteConfig,
-		Deserializer: deserialize.New(),
-		Producer:     nsqpb.GetInitProducer(),
+	var hookHandlerContext hh.HookHandler
+
+	mode := os.Getenv("ENV")
+	if strings.EqualFold(mode, "dev") {
+		hookHandlerContext = &hh.MockHookHandlerContext{}
+	} else {
+		hookHandlerContext = &hh.HookHandlerContext{}
 	}
+
+	hookHandlerContext.SetRemoteConfig(remoteConfig)
+	hookHandlerContext.SetDeserializer(deserialize.New())
+	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
 
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e
 	muxi.Handle("/bitbucket", &ocenet.AppContextHandler{hookHandlerContext, hh.HandleBBEvent}).Methods("POST")
-
-	// mux.HandleFunc("/", ViewWebhooks).Methods("GET")
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)
 }

@@ -102,7 +102,6 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyTyp
 					foundConfig.SetSecret("*********")
 				} else {
 					passcode, passErr := remoteConfig.GetPassword(foundConfig.BuildCredPath(credType, acctName))
-					//passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
 					if passErr != nil {
 						ocelog.IncludeErrField(passErr).Error()
 						foundConfig.SetSecret("ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT")

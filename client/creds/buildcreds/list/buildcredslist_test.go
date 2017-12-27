@@ -2,6 +2,7 @@ package buildcredslist
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"github.com/mitchellh/cli"
@@ -13,7 +14,7 @@ func testNew() (*cmd, *cli.MockUi) {
 	ui := cli.NewMockUi()
 	c := &cmd{
 		UI: ui,
-		client: models.NewFakeGuideOcelotClient(),
+		config: commandhelper.NewTestClientConfig(),
 	}
 	return c, ui
 }
@@ -23,7 +24,7 @@ func TestCmd_Run(t *testing.T) {
 	ui := cli.NewMockUi()
 	cmdd := &cmd{
 		UI: ui,
-		client: models.NewFakeGuideOcelotClient(),
+		config: commandhelper.NewTestClientConfig(),
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	cmdd.flags.StringVar(&cmdd.accountFilter, "account", "",
@@ -48,7 +49,7 @@ func TestCmd_Run(t *testing.T) {
 	}
 
 	for _, cred := range expectedCreds.Vcs {
-		cmdd.client.SetVCSCreds(ctx, cred)
+		cmdd.config.Client.SetVCSCreds(ctx, cred)
 	}
 	var args []string
 	if exit := cmdd.Run(args); exit != 0 {

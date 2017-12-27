@@ -1,0 +1,24 @@
+version: "3.3"
+services:
+  # Copied directly from ./docs/docker-compose/vault-consul/docker-compose.yml, with volume paths slightly modified, and with logging
+  vault:
+#    depends_on:
+#      - consul
+    image: vault
+    hostname: vault
+#    links:
+#      - consul:consul
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    ports:
+      - 8200:8200
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    volumes:
+      - ./docs/docker-compose/vault-consul/tools/wait-for-it.sh:/wait-for-it.sh
+      - ./docs/docker-compose/vault-consul/config/vault:/config
+      - ./docs/docker-compose/vault-consul/config/vault/policies:/policies
+    entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl

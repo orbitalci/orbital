@@ -4,7 +4,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	"bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/ocelot/admin/handler"
+	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
@@ -13,22 +13,17 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
 )
 
 //TODO: floe integration??? just putting this note here so we remember
-//TODO: change this to use my fork of logrus so we can pretty print logs?
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(configInstance *cred.RemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator())
-
-	//check for config on load
-	ReadConfig(guideOcelotServer)
 
 	//grpc server
 	opts := []grpc.ServerOption{
@@ -38,8 +33,6 @@ func Start(configInstance *cred.RemoteConfig, secure secure_grpc.SecureGrpc, ser
 	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
 
 	ctx := context.Background()
-
-
 
 	dopts := []grpc.DialOption{grpc.WithTransportCredentials(secure.GetNewTLS(serverRunsAt))}
 	mux := http.NewServeMux()
@@ -99,36 +92,6 @@ func CustomErrorHandler(ctx context.Context, _ *runtime.ServeMux, marshaler runt
 	ocenet.JSONApiError(w, runtime.HTTPStatusFromCode(grpc.Code(err)), "", err)
 }
 
-//reads config file in current directory if it exists, exits if file is unparseable or doesn't exist
-func ReadConfig(gosss models.GuideOcelotServer) {
-	gos := gosss.(*guideOcelotServer)
-
-	config := &models.CredWrapper{}
-	configFile, err := ioutil.ReadFile("/home/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/admin/" + models.ConfigFileName)
-	//configFile, err := ioutil.ReadFile("/Users/mariannefeng/go/src/bitbucket.org/level11consulting/ocelot/admin/" + models.ConfigFileName)
-	if err != nil {
-		log.IncludeErrField(err).Error()
-		return
-	}
-	err = gos.Deserializer.YAMLToProto(configFile, config)
-	if err != nil {
-		log.IncludeErrField(err).Error()
-		return
-	}
-	for _, configVal := range config.Vcs {
-		err := gos.AdminValidator.ValidateConfig(configVal)
-		if err != nil {
-			log.IncludeErrField(err)
-			continue
-		}
-
-		err = SetupCredentials(gos, configVal)
-		if err != nil {
-			log.IncludeErrField(err).Error()
-		}
-	}
-}
-
 //when new configurations are added to the config channel, create bitbucket client and webhooks
 func SetupCredentials(gosss models.GuideOcelotServer, config *models.VCSCreds) error {
 	gos := gosss.(*guideOcelotServer)
@@ -136,18 +99,11 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.VCSCreds) e
 	//hehe right now we only have bitbucket
 	switch config.Type {
 	case "bitbucket":
-		bbHandler := handler.Bitbucket{}
 		bitbucketClient := &ocenet.OAuthClient{}
 		bitbucketClient.Setup(config)
 
-		err := bbHandler.SetMeUp(config, bitbucketClient)
-
-		if err != nil {
-			log.Log().Error("could not setup bitbucket client")
-			return err
-		}
-
-		err = bbHandler.Walk()
+		bbHandler := handler.GetBitbucketHandler(config, bitbucketClient)
+		err := bbHandler.Walk()
 		if err != nil {
 			return err
 		}

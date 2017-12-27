@@ -1,6 +1,5 @@
 package handler
 
-//TODO: add interface once we have more than just bitbucket
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
@@ -11,27 +10,32 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-const DefaultCallbackURL = "https://radiant-mesa-23210.herokuapp.com/bitbucket"
-const BitbucketRepoBase = "https://api.bitbucket.org/2.0/repositories/%v"
+const DefaultCallbackURL = "http://52.26.105.112/bitbucket"
+const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
+
+//TODO: callback url is set as env. variable on admin, or passed in via command line
+
+//GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
+func GetBitbucketHandler(adminConfig *models.VCSCreds, client ocenet.HttpClient) VCSHandler {
+	bb := &Bitbucket{
+		Client: client,
+		Marshaler: jsonpb.Marshaler{},
+		credConfig: adminConfig,
+		isInitialized: true,
+	}
+	return bb
+}
 
 //Bitbucket is a bitbucket handler responsible for finding build files and
 //registering webhooks for necessary repositories
 type Bitbucket struct {
 	CallbackURL string
+	RepoBaseURL	string
 	Client      ocenet.HttpClient
 	Marshaler   jsonpb.Marshaler
 
 	credConfig    *models.VCSCreds
 	isInitialized bool
-}
-
-// Takes in admin config creds, returns any errors that may happen during setup
-func (bb *Bitbucket) SetMeUp(adminConfig *models.VCSCreds, client ocenet.HttpClient) error {
-	bb.Client = client
-	bb.Marshaler = jsonpb.Marshaler{}
-	bb.credConfig = adminConfig
-	bb.isInitialized = true
-	return nil
 }
 
 //Walk iterates over all repositories and creates webhook if one doesn't
@@ -40,7 +44,7 @@ func (bb *Bitbucket) Walk() error {
 	if !bb.isInitialized {
 		return errors.New("client has not yet been initialized, please call SetMeUp() before walking")
 	}
-	return bb.recurseOverRepos(fmt.Sprintf(BitbucketRepoBase, bb.credConfig.AcctName))
+	return bb.recurseOverRepos(fmt.Sprintf(bb.GetBaseURL(), bb.credConfig.AcctName))
 }
 
 // Get File in repo at a certain commit.
@@ -50,7 +54,7 @@ func (bb *Bitbucket) Walk() error {
 func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	ocelog.Log().Debug("inside GetFile")
 	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
-	bytez, err = bb.Client.GetUrlRawData(fmt.Sprintf(BitbucketRepoBase, path))
+	bytez, err = bb.Client.GetUrlRawData(fmt.Sprintf(bb.GetBaseURL(), path))
 	if err != nil {
 		return
 	}
@@ -92,6 +96,17 @@ func (bb *Bitbucket) GetCallbackURL() string {
 //SetCallbackURL sets callback urls to be used for webhooks
 func (bb *Bitbucket) SetCallbackURL(callbackURL string) {
 	bb.CallbackURL = callbackURL
+}
+
+func (bb *Bitbucket) SetBaseURL(baseURL string) {
+	bb.RepoBaseURL = baseURL
+}
+
+func (bb *Bitbucket) GetBaseURL() string {
+	if len (bb.RepoBaseURL) > 0 {
+		return bb.RepoBaseURL
+	}
+	return DefaultRepoBaseURL
 }
 
 //recursively iterates over all repositories and creates webhook
