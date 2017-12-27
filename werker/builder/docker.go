@@ -4,6 +4,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bufio"
 	"context"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -17,10 +18,10 @@ type Docker struct{
 	Log	io.ReadCloser
 	ContainerId	string
 	DockerClient *client.Client
-	Basher
+	*Basher
 }
 
-func NewDockerBuilder(b Basher) Builder {
+func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 
@@ -46,15 +47,19 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	imageName := werk.BuildConf.Image
 
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
-	defer out.Close()
-
 	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't pull image!")
 		return &Result{
 			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
 		}
 	}
+	var byt []byte
+	buf := bufio.NewReader(out)
+	buf.Read(byt)
+	fmt.Println(string(byt))
+	defer out.Close()
 
 	bufReader := bufio.NewReader(out)
 	d.writeToInfo(stagePrintln, bufReader, logout)
@@ -230,7 +235,11 @@ func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byt
 		str, err := rd.ReadString('\n')
 
 		if err != nil {
-			ocelog.Log().Info("Read Error:", err)
+			if err != io.EOF {
+				ocelog.Log().Error("Read Error:", err)
+			} else {
+				ocelog.Log().Debug("EOF, finished writing to Info")
+			}
 			return
 		}
 

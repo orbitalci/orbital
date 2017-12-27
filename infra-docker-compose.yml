@@ -2,7 +2,7 @@ version: "3.3"
 services:
   # Copied directly from ./docs/docker-compose/vault-consul/docker-compose.yml, with volume paths slightly modified, and with logging
   consul:
-    image: consul
+    image: consul:1.0.0
     hostname: consul
     command: agent -dev -client 0.0.0.0
     ports:
@@ -35,13 +35,12 @@ services:
       - ./docs/docker-compose/vault-consul/config/vault:/config
       - ./docs/docker-compose/vault-consul/config/vault/policies:/policies
     entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl
-
   # Copied directly from ./util/nsqpb/docker-compose.yml, modified with logging
   nsqlookupd:
     image: nsqio/nsq
     command: >
       /nsqlookupd
-      -broadcast-address localhost:4160
+      -broadcast-address 52.11.169.204:4160
     ports:
       - 4160:4160
       - 4161:4161
@@ -54,7 +53,7 @@ services:
     image: nsqio/nsq
     command: >
       /nsqd
-      -broadcast-address localhost
+      -broadcast-address 52.11.169.204
       -lookupd-tcp-address nsqlookupd:4160
     ports:
       - 4150:4150
