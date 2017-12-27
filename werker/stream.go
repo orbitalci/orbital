@@ -18,6 +18,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -37,6 +38,7 @@ type werkerStreamer struct {
 type buildDatum struct {
 	buildData [][]byte
 	done      bool
+	mu 		  sync.Mutex
 }
 
 func (w *werkerStreamer) SetBuildDone(gitHash string) error {
@@ -185,6 +187,7 @@ func streamFromArray(buildInfo *buildDatum, stream interface{}) (err error) {
 		if fullArrayStreamed {
 			continue
 		}
+		buildInfo.mu.Lock()
 		buildData := buildInfo.buildData[index:]
 		ind, err := iterateOverBuildData(buildData, stream)
 		previousIndex = index
@@ -193,6 +196,7 @@ func streamFromArray(buildInfo *buildDatum, stream interface{}) (err error) {
 		if err != nil {
 			return err
 		}
+		buildInfo.mu.Unlock()
 	}
 
 }
@@ -239,7 +243,8 @@ func iterateOverBuildData(data [][]byte, stream interface{}) (int, error) {
 func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 	// question: does this support unicode?
 	var dataSlice [][]byte
-	build := &buildDatum{dataSlice, false}
+	mu := sync.Mutex{}
+	build := &buildDatum{dataSlice, false, mu,}
 	appCtx.buildInfo[transport.Hash] = build
 	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
 	for i := range transport.InfoChan {
