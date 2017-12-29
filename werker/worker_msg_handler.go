@@ -9,7 +9,7 @@ import (
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
-// to stream results back to the admin. It sends just enough to be unique, the hash that triggered the build
+// to streamer results back to the admin. It sends just enough to be unique, the hash that triggered the build
 // and the InfoChan which the builder will write to.
 type Transport struct {
 	Hash     string
@@ -50,7 +50,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	return nil
 }
 
-// watchForResults sends the *Transport object over the transport channel for stream functions to process
+// watchForResults sends the *Transport object over the transport channel for streamer functions to process
 func (w *WorkerMsgHandler) WatchForResults(hash string) {
 	ocelog.Log().Debugf("adding hash ( %s ) & infochan to transport channel", hash)
 	transport := &Transport{Hash: hash, InfoChan: w.infochan}
