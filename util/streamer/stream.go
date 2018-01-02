@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+// StreamFromArray will do exactly that, it will write to the Streamable stream from an array.
+// it will wait 0.1s before checking array again for new content
 func StreamFromArray(array StreamArray, stream Streamable, debug func(...interface{})) (err error) {
 	var index int
 	var previousIndex int
