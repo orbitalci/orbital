@@ -20,8 +20,7 @@ import (
 )
 
 var (
-	upgrader       = websocket.Upgrader{}
-	consulDonePath = "ci/builds/%s/done" //  %s is hash
+	upgrader = websocket.Upgrader{}
 )
 
 // modified from https://elithrar.github.io/article/custom-handlers-avoiding-globals/
@@ -46,27 +45,6 @@ func (b *buildDatum) CheckDone() bool {
 }
 
 
-func (w *werkerStreamer) SetBuildDone(gitHash string) error {
-	// todo: add byte of 0/1.. have ot use binary library though and idk how to use that yet
-	// and not motivated enough to do it right now
-	err := w.consul.AddKeyValue(fmt.Sprintf(consulDonePath, gitHash), []byte("true"))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (w *werkerStreamer) CheckIfBuildDone(gitHash string) bool {
-	kv, err := w.consul.GetKeyValue(fmt.Sprintf(consulDonePath, gitHash))
-	if err != nil {
-		// idk what we should be doing if the error is not nil, maybe panic? hope that never happens?
-		return false
-	}
-	if kv != nil {
-		return true
-	}
-	return false
-}
 
 func (w *werkerStreamer) BuildInfo(request *protobuf.Request, stream protobuf.Build_BuildInfoServer) error {
 	resp := &protobuf.Response{
@@ -89,7 +67,6 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	hash := vars["hash"]
 	ocelog.Log().Debug(hash)
-	//ws, err := upgrader.Upgrade(w, r, nil)
 	ws, err := ocenet.Upgrade(upgrader, w, r)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("wtf?")
@@ -103,19 +80,17 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	<-pumpDone
 }
 
-
 // pumpBundle writes build data to web socket
 func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string, done chan int) {
 	// determine whether to get from storage or off infoReader
-	//if appCtx.CheckIfBuildDone(hash) {
-	//	ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
-	// // err := streamFromStorage(appCtx, hash, streamer)
-	//  err := streamer.StreamFromStorage(appCtx.storage, stream, hash)
-	//	if err != nil {
-	//		ocelog.IncludeErrField(err).Error("error retrieving from storage")
-	//	}
-	//} else {
-	//	ocelog.Log().Debug("pumping info array data to web socket")
+	if CheckIfBuildDone(appCtx.consul, hash) {
+		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
+		err := streamer.StreamFromStorage(appCtx.storage, stream, hash)
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("error retrieving from storage")
+		}
+	} else {
+		ocelog.Log().Debug("pumping info array data to web socket")
 		buildInfo, ok := appCtx.buildInfo[hash]
 		if ok {
 			err := streamer.StreamFromArray(buildInfo, stream, ocelog.Log().Debug)
@@ -126,8 +101,30 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 		} else {
 			stream.SendError([]byte("did not find hash in current streaming data and the build was not marked as done"))
 		}
-	//}
-	//defer streamer.Finish()
+	}
+	defer stream.Finish()
+}
+
+
+// processTransport deals with adding info to consul, and calling writeInfoChanToInMemMap
+func processTransport(transport *Transport, appCtx *werkerStreamer) {
+	// question: does this support unicode?
+	if err := Register(appCtx.consul, transport.Hash, appCtx.conf.RegisterIP); err != nil {
+		ocelog.IncludeErrField(err).Error("could not register with consul")
+	} else {
+		ocelog.Log().Infof("registered ip %s running build %s with consul", appCtx.conf.RegisterIP, transport.Hash)
+	}
+	writeInfoChanToInMemMap(transport, appCtx)
+	// get rid of hash from cache, set build done in consul
+	if err := SetBuildDone(appCtx.consul, transport.Hash); err != nil {
+		ocelog.IncludeErrField(err).Error("could not set build done")
+	}
+	ocelog.Log().Debugf("removing hash %s from readerCache, channelDict, and consul", transport.Hash)
+	delete(appCtx.buildInfo, transport.Hash)
+	if err := Delete(appCtx.consul, transport.Hash); err != nil {
+		ocelog.IncludeErrField(err).Error("could not recursively delete values from consul")
+	}
+
 }
 
 // writeInfoChanToInMemMap is what processes transport objects that come from the transport channel (objects get created
@@ -137,7 +134,6 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 //  when the info channel is closed and the loop finishes, all the data is written to the storage defined in the
 //  appCtx, the done flag is written to consul, and the array is removed from the map
 func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
-	// question: does this support unicode?
 	var dataSlice [][]byte
 	build := &buildDatum{dataSlice, false}
 	appCtx.buildInfo[transport.Hash] = build
@@ -152,25 +148,16 @@ func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 	build.done = true
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("could not store build data to storage")
-		return
 	}
-	// get rid of hash from cache, set build done in consul
-	if err := appCtx.SetBuildDone(transport.Hash); err != nil {
-		ocelog.IncludeErrField(err).Error("could not set build done")
-	}
-	ocelog.Log().Debugf("removing hash %s from readerCache and channelDict", transport.Hash)
-	delete(appCtx.buildInfo, transport.Hash)
-
 }
 
 func cacheProcessor(transpo chan *Transport, appCtx *werkerStreamer) {
 	for i := range transpo {
 		ocelog.Log().Debugf("adding info channel for hash %s to map for streaming access.", i.Hash)
-		go writeInfoChanToInMemMap(i, appCtx)
+		go processTransport(i, appCtx)
 	}
 }
 
-//****WARNING**** this assumes you're inside of /cmd/werker directory
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	//pwd, _ := os.Getwd()
 	_, filename, _, ok := runtime.Caller(0)
