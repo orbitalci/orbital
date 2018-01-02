@@ -48,6 +48,15 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 	}, nil
 }
 
+// todo: make this useful
+func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*BuildRuntimeInfo, error) {
+	return nil, nil
+}
+
+// todo: make this useful
+func (f *fakeGuideOcelotClient) Logs(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (GuideOcelot_LogsClient, error) {
+	return nil, nil
+}
 
 func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 	for ind, cred := range credWrapA.Vcs {

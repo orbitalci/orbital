@@ -4,9 +4,13 @@ import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	"bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	rt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"context"
+	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 //this is our grpc server struct
@@ -41,7 +45,7 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
 	err := g.AdminValidator.ValidateConfig(credentials)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "failed vcs creds validation! error: %s", err.Error())
 	}
 	err = SetupCredentials(g, credentials)
 	return &empty.Empty{}, err
@@ -63,7 +67,7 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
 	err := g.RepoValidator.ValidateConfig(creds)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "failed repo creds validation! error: %s", err.Error())
 	}
 	err = SetupRepoCredentials(g, creds)
 	return &empty.Empty{}, err
@@ -73,18 +77,38 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 	allCreds := &models.AllCredsWrapper{}
 	repoCreds, err := g.GetRepoCreds(ctx, msg)
 	if err != nil {
-		return allCreds, err
+		return allCreds, status.Errorf(codes.Internal, "unable to get repo creds! error: %s", err.Error())
 	}
 	allCreds.RepoCreds = repoCreds
 	adminCreds, err := g.GetVCSCreds(ctx, msg)
 	if err != nil {
-		return allCreds, err
+		return allCreds, status.Errorf(codes.Internal, "unable to get vcs creds! error: %s", err.Error())
 	}
 	allCreds.VcsCreds = adminCreds
 	return allCreds, nil
 }
 
-func (g *guideOcelotServer) Logs(*models.StreamQuery, models.GuideOcelot_LogsServer) error {
+func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.BuildRuntimeInfo, error) {
+	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.Consul, bq.Hash)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, err.Error())
+	}
+	return &models.BuildRuntimeInfo{Done: buildRtInfo.Done, Ip: buildRtInfo.Ip, GrpcPort: buildRtInfo.GrpcPort}, nil
+}
+
+// todo: calling Logs should stream from build storage, this is doing nothing
+func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
+	if rt.CheckIfBuildDone(g.RemoteConfig.Consul, bq.Hash) {
+		stream.Send(&models.LogResponse{OutputLine: "build is finished and stream from storage is not yet implemented",})
+	} else {
+		brt, err := rt.GetBuildRuntime(g.RemoteConfig.Consul, bq.Hash)
+		if err != nil {
+			stream.Send(&models.LogResponse{OutputLine: "error getting build runtime, " + err.Error(),})
+			return status.Error(codes.Internal, err.Error())
+		}
+		fmt.Println(brt)
+
+	}
 	return nil
 }
 
