@@ -22,8 +22,8 @@ func StreamFromArray(array StreamArray, stream Streamable, debug func(...interfa
 		if fullArrayStreamed {
 			continue
 		}
-		buildData := array.GetData()[index:]
-		ind, err := iterateOverBuildData(buildData, stream)
+		dataArray := array.GetData()[index:]
+		ind, err := iterateOverByteArray(dataArray, stream)
 		previousIndex = index
 		index += ind
 		debug(fmt.Sprintf("lines sent: %s | index: %s | previousIndex: %s", ind, index, previousIndex))
@@ -35,7 +35,7 @@ func StreamFromArray(array StreamArray, stream Streamable, debug func(...interfa
 }
 
 
-func iterateOverBuildData(data [][]byte, stream Streamable) (int, error) {
+func iterateOverByteArray(data [][]byte, stream Streamable) (int, error) {
 	var index int
 	for ind, dataLine := range data {
 		if err := stream.SendIt(dataLine); err != nil {

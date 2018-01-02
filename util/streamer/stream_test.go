@@ -61,7 +61,7 @@ func Test_iterateOverBuildData(t *testing.T) {
 	for _, dat := range testData {
 		stream = append(stream, dat)
 	}
-	iterateOverBuildData(stream, ws)
+	iterateOverByteArray(stream, ws)
 	if !test.CompareByteArrays(ws.MsgData, testData) {
 		t.Errorf("arrays not the same. expected: %v, actual: %v", testData, ws.MsgData)
 	}
@@ -70,7 +70,7 @@ func Test_iterateOverBuildData(t *testing.T) {
 	for _, datum := range testData {
 		streamGrpc = append(streamGrpc, datum)
 	}
-	iterateOverBuildData(streamGrpc, grp)
+	iterateOverByteArray(streamGrpc, grp)
 	if !test.CompareStringArrays(grp.testData, stringTestData) {
 		t.Errorf("arrays not same for grpc. expected: %s, actual: %s", stringTestData, grp.testData)
 	}
