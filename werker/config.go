@@ -52,6 +52,7 @@ type WerkerConf struct {
 	//werkerProcessor builder.Processor
 	storage         storage.BuildOutputStorage
 	LogLevel        string
+	RegisterIP     string
 }
 
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
@@ -61,13 +62,15 @@ func GetConf() (*WerkerConf, error) {
 	werkerName, _ := os.Hostname()
 	var werkerTypeStr string
 	var storageTypeStr string
-	flag.StringVar(&werkerTypeStr, "werker_type", defaultWerkerType, "type of werker, kubernetes or docker")
-	flag.StringVar(&werker.WerkerName, "werker_name", werkerName, "if wish to identify as other than hostname")
-	flag.StringVar(&werker.servicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
-	flag.StringVar(&werker.grpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
-	flag.StringVar(&werker.LogLevel, "log-level", "info", "log level")
-	flag.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
-	flag.Parse()
+	flrg := flag.NewFlagSetWithEnvPrefix("werker", "WERKER", flag.ExitOnError)
+	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes or docker")
+	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
+	flrg.StringVar(&werker.servicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
+	flrg.StringVar(&werker.grpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
+	flrg.StringVar(&werker.LogLevel, "log-level", "info", "log level")
+	flrg.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
+	flrg.StringVar(&werker.RegisterIP, "register-ip", "localhost", "ip to register with consul when picking up builds")
+	flrg.Parse(os.Args[1:])
 	werker.werkerType = strToWerkType(werkerTypeStr)
 	if werker.werkerType == -1 {
 		return nil, errors.New("werker type can only be: k8s, kubernetes, docker")
