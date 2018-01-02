@@ -120,7 +120,7 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 		if ok {
 			err := streamer.StreamFromArray(buildInfo, stream, ocelog.Log().Debug)
 			if err != nil {
-				ocelog.IncludeErrField(err).Error("could not streamer from array!")
+				ocelog.IncludeErrField(err).Error("could not stream from array!")
 			}
 			ocelog.Log().Debug("streamed build data from array")
 		} else {
