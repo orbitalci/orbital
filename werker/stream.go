@@ -102,7 +102,7 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 			stream.SendError([]byte("did not find hash in current streaming data and the build was not marked as done"))
 		}
 	}
-	defer stream.Finish()
+	defer stream.Finish(done)
 }
 
 

@@ -15,4 +15,6 @@ func (x *BuildStreamableServer) SendError(errorDesc []byte) {
 	x.Server.Send(&Response{OutputLine: string(errorDesc)})
 }
 
-func (x *BuildStreamableServer) Finish() {}
+func (x *BuildStreamableServer) Finish(done chan int) {
+	close(done)
+}

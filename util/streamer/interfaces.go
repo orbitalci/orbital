@@ -9,5 +9,5 @@ type StreamArray interface {
 type Streamable interface {
 	SendIt(data []byte) error
 	SendError(errorDesc []byte)
-	Finish()
+	Finish(chan int)
 }
