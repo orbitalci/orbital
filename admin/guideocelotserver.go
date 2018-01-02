@@ -6,6 +6,9 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	rt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,6 +22,7 @@ type guideOcelotServer struct {
 	Deserializer   *deserialize.Deserializer
 	AdminValidator *AdminValidator
 	RepoValidator  *RepoValidator
+	Storage 	   storage.BuildOutputStorage
 }
 
 //TODO: what about adding error field to response? Do something nice about
@@ -98,26 +102,32 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 
 // todo: calling Logs should stream from build storage, this is doing nothing
 func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
-	if rt.CheckIfBuildDone(g.RemoteConfig.Consul, bq.Hash) {
-		stream.Send(&models.LogResponse{OutputLine: "build is finished and stream from storage is not yet implemented",})
+	if !rt.CheckIfBuildDone(g.RemoteConfig.Consul, bq.Hash) {
+		stream.Send(&models.LogResponse{OutputLine: "build is not finished, use BuildRuntime method and stream from the werker registered",})
 	} else {
-		brt, err := rt.GetBuildRuntime(g.RemoteConfig.Consul, bq.Hash)
+		data, err := g.Storage.Retrieve(bq.Hash)
 		if err != nil {
-			stream.Send(&models.LogResponse{OutputLine: "error getting build runtime, " + err.Error(),})
-			return status.Error(codes.Internal, err.Error())
+			return status.Error(codes.DataLoss, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		fmt.Println(brt)
-
+		scanner := bufio.NewScanner(bytes.NewReader(data))
+		for scanner.Scan() {
+			resp := &models.LogResponse{OutputLine: scanner.Text()}
+			stream.Send(resp)
+		}
 	}
 	return nil
 }
 
 
-func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator) models.GuideOcelotServer {
-	guideOcelotServer := new(guideOcelotServer)
-	guideOcelotServer.RemoteConfig = config
-	guideOcelotServer.Deserializer = d
-	guideOcelotServer.AdminValidator = adminV
-	guideOcelotServer.RepoValidator = repoV
+func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.BuildOutputStorage) models.GuideOcelotServer {
+	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
+	// purdier to me anyway
+	guideOcelotServer := &guideOcelotServer{
+		RemoteConfig: config,
+		Deserializer: d,
+		AdminValidator: adminV,
+		RepoValidator: repoV,
+		Storage: storage,
+	}
 	return guideOcelotServer
 }
