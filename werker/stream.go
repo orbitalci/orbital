@@ -4,6 +4,7 @@ import (
 	consulet "bitbucket.org/level11consulting/go-til/consul"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
+	rt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/util/streamer"
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
@@ -91,7 +92,7 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 // pumpBundle writes build data to web socket
 func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string, done chan int) {
 	// determine whether to get from storage or off infoReader
-	if CheckIfBuildDone(appCtx.consul, hash) {
+	if rt.CheckIfBuildDone(appCtx.consul, hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
 		err := streamer.StreamFromStorage(appCtx.storage, stream, hash)
 		if err != nil {
@@ -117,19 +118,19 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 // processTransport deals with adding info to consul, and calling writeInfoChanToInMemMap
 func processTransport(transport *Transport, appCtx *werkerStreamer) {
 	// question: does this support unicode?
-	if err := Register(appCtx.consul, transport.Hash, appCtx.conf.RegisterIP); err != nil {
+	if err := rt.Register(appCtx.consul, transport.Hash, appCtx.conf.RegisterIP, appCtx.conf.grpcPort, appCtx.conf.servicePort); err != nil {
 		ocelog.IncludeErrField(err).Error("could not register with consul")
 	} else {
 		ocelog.Log().Infof("registered ip %s running build %s with consul", appCtx.conf.RegisterIP, transport.Hash)
 	}
 	writeInfoChanToInMemMap(transport, appCtx)
 	// get rid of hash from cache, set build done in consul
-	if err := SetBuildDone(appCtx.consul, transport.Hash); err != nil {
+	if err := rt.SetBuildDone(appCtx.consul, transport.Hash); err != nil {
 		ocelog.IncludeErrField(err).Error("could not set build done")
 	}
 	ocelog.Log().Debugf("removing hash %s from readerCache, channelDict, and consul", transport.Hash)
 	delete(appCtx.buildInfo, transport.Hash)
-	if err := Delete(appCtx.consul, transport.Hash); err != nil {
+	if err := rt.Delete(appCtx.consul, transport.Hash); err != nil {
 		ocelog.IncludeErrField(err).Error("could not recursively delete values from consul")
 	}
 

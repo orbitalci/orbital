@@ -84,6 +84,10 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 	return allCreds, nil
 }
 
+func (g *guideOcelotServer) Logs(*models.StreamQuery, models.GuideOcelot_LogsServer) error {
+	return nil
+}
+
 
 func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator) models.GuideOcelotServer {
 	guideOcelotServer := new(guideOcelotServer)

@@ -1,11 +1,11 @@
 package streamer
 
+import "sync"
 
 type StreamArray interface {
 	GetData() [][]byte
 	CheckDone() bool
-	Lock()
-	Unlock()
+	sync.Locker
 }
 
 type Streamable interface {
