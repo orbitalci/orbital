@@ -44,58 +44,57 @@ func (c *cmd) init() {
 
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.hash, "hash", "ERROR",
-		"hash to get build data of")
+		"*REQUIRED* hash to get build data of")
 }
+
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
+		return 1
+	}
+	if c.hash == "ERROR" {
+		c.UI.Error("flag --hash is required, otherwise there is no build to tail")
 		return 1
 	}
 	ctx := context.Background()
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
-	conn, err := grpc.Dial("localhost:9099", opts...)
+	build, err := c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.hash})
 	if err != nil {
-		panic("err!" + err.Error())
+		c.UI.Error("unable to get build runtime! error: " + err.Error())
+		return 1
 	}
-	client := pb.NewBuildClient(conn)
-	stream, _ := client.BuildInfo(ctx, &pb.Request{Hash: c.hash})
-	for {
-		line, err := stream.Recv()
-		if err == io.EOF {
-			stream.CloseSend()
-			return 0
-		} else if err != nil {
-			c.UI.Error(fmt.Sprintf("Error streaming: %s", err.Error()))
+	if build.Done {
+		c.UI.Error("stream from storage not yet implemented")
+		// todo: implement c.config.Client.Logs() then call it here
+		return 1
+	} else {
+		var opts []grpc.DialOption
+		// right now werker is insecure
+		opts = append(opts, grpc.WithInsecure())
+		conn, err := grpc.Dial(build.Ip + ":" + build.GrpcPort, opts...)
+		if err != nil {
+			c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.Ip, build.GrpcPort, err.Error()))
 			return 1
 		}
-		c.UI.Info(line.GetOutputLine())
+		client := pb.NewBuildClient(conn)
+		stream, err := client.BuildInfo(ctx, &pb.Request{Hash: c.hash})
+		if err != nil {
+			c.UI.Error(fmt.Sprintf("Unable to get build info stream from client at %s:%s! Error: %s", build.Ip, build.GrpcPort, err.Error()))
+		}
+		for {
+			line, err := stream.Recv()
+			if err == io.EOF {
+				stream.CloseSend()
+				return 0
+			} else if err != nil {
+				c.UI.Error(fmt.Sprintf("Error streaming: %s", err.Error()))
+				return 1
+			}
+			c.UI.Info(line.GetOutputLine())
+		}
 	}
-	//msg, err := c.config.Client.GetAllCreds(ctx, &protoReq)
-	//if err != nil {
-	//	c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
-	//	return 1
-	//}
-	//if len(msg.RepoCreds.Repo) > 0 {
-	//	repocredslist.Header(c.UI)
-	//	for _, oneline := range msg.RepoCreds.Repo {
-	//		c.UI.Info(repocredslist.Prettify(oneline))
-	//	}
-	//} else {
-	//	repocredslist.NoDataHeader(c.UI)
-	//}
-	//
-	//if len(msg.VcsCreds.Vcs) > 0 {
-	//	buildcredslist.Header(c.UI)
-	//	for _, oneline :=  range msg.VcsCreds.Vcs {
-	//		c.UI.Info(buildcredslist.Prettify(oneline))
-	//	}
-	//} else {
-	//	buildcredslist.NoDataHeader(c.UI)
-	//}
 
 	return 0
 }

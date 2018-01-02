@@ -2,7 +2,9 @@ package buildruntime
 
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
+	"errors"
 	"fmt"
+	"strings"
 )
 
 var (
@@ -12,6 +14,39 @@ var (
 	buildGrpcPort  = buildPath + "/werker_grpc_port"
 	buildWsPort    = buildPath + "/werker_ws_port"
 )
+
+type BuildRuntime struct {
+	Done 	 bool
+	Ip   	 string
+	GrpcPort string
+	WsPort   string
+}
+
+func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (*BuildRuntime, error) {
+	path := fmt.Sprintf(buildPath, gitHash)
+	pairs, err := consulete.GetKeyValues(path)
+	if err != nil {
+		return nil, err
+	}
+	rt := &BuildRuntime{}
+	if len(pairs) == 0 {
+		return nil, errors.New("no build at hash " + gitHash)
+	}
+	for _, pair := range pairs {
+		key := strings.Replace(pair.Key, path + "/", "", 1)
+		switch key {
+		case "done":
+			rt.Done = true
+		case "werker_ip":
+			rt.Ip = string(pair.Value)
+		case "werker_grpc_port":
+			rt.GrpcPort = string(pair.Value)
+		case "werker_ws_port":
+			rt.WsPort = string(pair.Value)
+		}
+	}
+	return rt, nil
+}
 
 // SetBuildDone adds the flag `ci/builds/<gitHash>/done` to consul
 func SetBuildDone(consulete *consul.Consulet, gitHash string) error {
@@ -44,13 +79,17 @@ func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
 // 		'' 			    + werker_grpc_port = grpcPort
 // 		''				+ werker_ws_port   = wsPort
 func Register(consulete *consul.Consulet, gitHash string, ip string, grpcPort string, wsPort string) (err error) {
-	if err := consulete.AddKeyValue(fmt.Sprintf(buildRegister, gitHash), []byte(ip)); err != nil {
+	// TODO: add in postgres so we can get rid of consul done path at the end (see line 63)
+	if err = consulete.RemoveValue(fmt.Sprintf(buildDonePath, gitHash)); err != nil {
 		return
 	}
-	if err := consulete.AddKeyValue(fmt.Sprintf(buildGrpcPort, gitHash), []byte(grpcPort)); err != nil {
+	if err = consulete.AddKeyValue(fmt.Sprintf(buildRegister, gitHash), []byte(ip)); err != nil {
 		return
 	}
-	if err := consulete.AddKeyValue(fmt.Sprintf(buildWsPort, gitHash), []byte(wsPort)); err != nil {
+	if err = consulete.AddKeyValue(fmt.Sprintf(buildGrpcPort, gitHash), []byte(grpcPort)); err != nil {
+		return
+	}
+	if err = consulete.AddKeyValue(fmt.Sprintf(buildWsPort, gitHash), []byte(wsPort)); err != nil {
 		return
 	}
 	return
