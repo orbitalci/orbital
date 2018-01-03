@@ -45,15 +45,19 @@ func StreamFromArray(array StreamArray, stream Streamable, debug func(...interfa
 
 func iterateOverByteArray(array StreamArray, stream Streamable, index int) (int, error) {
 	array.Lock()
-	defer array.Unlock()
 	data := array.GetData()[index:]
 	for _, dataLine := range data {
+		if dataLine == nil {
+			fmt.Println("WHY!!!!!!!")
+			continue
+		}
 		if err := stream.SendIt(dataLine); err != nil {
 			return 0, err
 		}
 		// adding the number of lines added to index so streamFromArray knows where to start on the next pass
 		index += 1
 	}
+	array.Unlock()
 	return index, nil
 }
 

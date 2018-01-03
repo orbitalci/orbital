@@ -15,10 +15,10 @@ import (
 const synopsis = "stream logs on running or completed build"
 const help = `
 Usage: ocelot logs --hash <git_hash>
-	Will stream logs of a running or completed build identified by the hash. If the build is still running, it will stream from the werker.
-	If it is finished, will stream from storage using the admin as an intermediary.
-	An error will be returned and the tool will exit if that hash is not found.
-	If there are multiple builds of the same hash, it will stream the latest.
+  Will stream logs of a running or completed build identified by the hash. If the build is still running, it will stream from the werker.
+  If it is finished, will stream from storage using the admin as an intermediary.
+  An error will be returned and the tool will exit if that hash is not found.
+  If there are multiple builds of the same hash, it will stream the latest.
 `
 
 
