@@ -2,16 +2,17 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"io"
 	"github.com/mitchellh/go-homedir"
-	pb "bitbucket.org/level11consulting/ocelot/protos"
-	"errors"
+	"io"
+	//"os/exec"
 )
 
 type Docker struct{
@@ -144,8 +145,14 @@ func (d *Docker) Cleanup() {
 	cleanupCtx := context.Background()
 
 	d.Log.Close()
-	//TODO: review kill and remove options with jessi + tj, dunno what these things do, but must be doing something wrong if this doesn't kill the container...
-	d.DockerClient.ContainerKill(cleanupCtx, d.ContainerId, "SIGTERM")
+	if err := d.DockerClient.ContainerKill(cleanupCtx, d.ContainerId, "SIGKILL"); err != nil {
+		ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't kill")
+	} else {
+		if err := d.DockerClient.ContainerRemove(cleanupCtx, d.ContainerId, types.ContainerRemoveOptions{}); err != nil {
+			ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't rm")
+		}
+	}
+
 	d.DockerClient.ContainerRemove(cleanupCtx, d.ContainerId, types.ContainerRemoveOptions{})
 	d.DockerClient.Close()
 }
