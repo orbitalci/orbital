@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -35,7 +36,8 @@ func StreamFromArray(array StreamArray, stream Streamable, debug func(...interfa
 		index, err = iterateOverByteArray(array, stream, index)
 		if err != nil {
 			debug("ERROR! " + err.Error())
-			return err
+			continue
+			//return err
 		}
 		debug(fmt.Sprintf("lines sent: %d | index: %d | previousIndex: %d | length: %d", index - previousIndex, index, previousIndex, len(array.GetData())))
 	}
@@ -49,10 +51,10 @@ func iterateOverByteArray(array StreamArray, stream Streamable, index int) (int,
 	for _, dataLine := range data {
 		if dataLine == nil {
 			fmt.Println("WHY!!!!!!!")
-			continue
+			return index, errors.New("data line was nil! how tf")
 		}
 		if err := stream.SendIt(dataLine); err != nil {
-			return 0, err
+			return index, err
 		}
 		// adding the number of lines added to index so streamFromArray knows where to start on the next pass
 		index += 1
