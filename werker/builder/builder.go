@@ -9,7 +9,7 @@ import (
 type Builder interface {
 	Setup(logout chan []byte, werk *pb.WerkerTask) *Result
 	Build(logout chan []byte, stage *pb.Stage, commitHash string) *Result
-	Execute(stage string, actions *pb.Stage, logout chan []byte) *Result
+	Execute(actions *pb.Stage, logout chan []byte) *Result
 	Cleanup()
 }
 

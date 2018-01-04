@@ -144,7 +144,6 @@ func (d *Docker) Cleanup() {
 	cleanupCtx := context.Background()
 
 	d.Log.Close()
-	//TODO: review kill and remove options with jessi + tj, dunno what these things do, but must be doing something wrong if this doesn't kill the container...
 	d.DockerClient.ContainerKill(cleanupCtx, d.ContainerId, "SIGTERM")
 	d.DockerClient.ContainerRemove(cleanupCtx, d.ContainerId, types.ContainerRemoveOptions{})
 	d.DockerClient.Close()
@@ -214,10 +213,10 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 }
 
 //TODO: actually write the code that executes scripts from other stages
-func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *Result {
+func (d *Docker) Execute(stage *pb.Stage, logout chan []byte) *Result {
 	if len(d.ContainerId) == 0 {
 		return &Result {
-			Stage: stage,
+			Stage: stage.Name,
 			Status: FAIL,
 			Error: errors.New("No container exists, setup before executing"),
 		}

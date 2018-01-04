@@ -77,10 +77,10 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 		return
 	}
 
-	for stageKey, stageVal := range werk.BuildConf.Stages {
+	for _, stage := range werk.BuildConf.Stages {
 		//build is special because we deploy after this
-		if stageKey == "build" {
-			buildResult := builder.Build(w.infochan, stageVal, werk.CheckoutHash)
+		if stage.Name == "build" {
+			buildResult := builder.Build(w.infochan, stage, werk.CheckoutHash)
 			stageResults = append(stageResults, buildResult)
 
 			if buildResult.Status == b.FAIL {
@@ -90,7 +90,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 			continue
 		}
 
-		stageResult := builder.Execute(stageKey, stageVal, w.infochan)
+		stageResult := builder.Execute(stage, w.infochan)
 		if stageResult.Status == b.FAIL {
 			ocelog.Log().Error(stageResult.Error)
 			return

@@ -1,6 +1,6 @@
 vcs:
-    - clientId: wSfJHcfpHP4dzHv8ak
-      clientSecret: jQqXJmn52wupDzqSheckKu62NqpvnFuR
+    - clientId: QEBYwP5cKAC3ykhau4
+      clientSecret: gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb
       tokenURL: https://bitbucket.org/site/oauth2/access_token
-      acctName: mariannefeng
+      acctName: jessishank
       type: bitbucket

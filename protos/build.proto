@@ -11,12 +11,13 @@ message BuildConfig {
     repeated string packages = 3;
     repeated string branches = 4;
     repeated string env = 5;
-    map<string, Stage> stages = 6;
+    repeated Stage stages = 7;
 }
 
 message Stage {
     repeated string env = 1;
     repeated string script = 2;
+    string name = 3;
 }
 
 message WerkerTask {
