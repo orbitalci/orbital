@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -15,37 +16,50 @@ func StreamFromArray(array StreamArray, stream Streamable, debug func(...interfa
 	var previousIndex int
 	for {
 		time.Sleep(100) // todo: set polling to be configurable
-		fullArrayStreamed := len(array.GetData()) == index
+		numLines := len(array.GetData())
+		fullArrayStreamed := numLines == index
 		if array.CheckDone() && fullArrayStreamed {
 			debug("done streaming from array")
-			return nil
+			return
 		}
 		// if no new data has been sent, don't even try
 		if fullArrayStreamed {
+			//debug("full array streamed")
 			continue
 		}
-		dataArray := array.GetData()[index:]
-		ind, err := iterateOverByteArray(dataArray, stream)
-		previousIndex = index
-		index += ind
-		debug(fmt.Sprintf("lines sent: %s | index: %s | previousIndex: %s", ind, index, previousIndex))
-		if err != nil {
-			return err
+		if index > numLines {
+			debug(fmt.Sprintf("WOAH THERE. SOMETHING IS STUPID WRONG. Index: %d, numLines: %d", index, numLines))
+			continue
 		}
+		//dataArray := array.GetData()[index:]
+		previousIndex = index
+		index, err = iterateOverByteArray(array, stream, index)
+		if err != nil {
+			debug("ERROR! " + err.Error())
+			continue
+			//return err
+		}
+		debug(fmt.Sprintf("lines sent: %d | index: %d | previousIndex: %d | length: %d", index - previousIndex, index, previousIndex, len(array.GetData())))
 	}
-
+	return
 }
 
 
-func iterateOverByteArray(data [][]byte, stream Streamable) (int, error) {
-	var index int
-	for ind, dataLine := range data {
+func iterateOverByteArray(array StreamArray, stream Streamable, index int) (int, error) {
+	array.Lock()
+	data := array.GetData()[index:]
+	for _, dataLine := range data {
+		if dataLine == nil {
+			fmt.Println("WHY!!!!!!!")
+			return index, errors.New("data line was nil! how tf")
+		}
 		if err := stream.SendIt(dataLine); err != nil {
-			return ind, err
+			return index, err
 		}
 		// adding the number of lines added to index so streamFromArray knows where to start on the next pass
-		index = ind + 1
+		index += 1
 	}
+	array.Unlock()
 	return index, nil
 }
 
