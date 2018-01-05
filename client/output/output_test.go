@@ -38,6 +38,7 @@ func TestCmd_fromWerker(t *testing.T) {
 	}{
 		{"hashyhash", "al;ksdfjlksjfaslkdfj\n203948jfas;dkf8ewe\nalskdfjane8nxzlcfkue8@#$@#$@#$\n83nuadfn32"},
 		{"3jd8r32lks", "83242$#%@#%!#!@#!@\n)@!*$NASDFUEN\nfa;lskdjfal;ksdjf\nasdfasdfasdf"},
+		{"3jd8r232lks", "˚∂˜¨¨˙¬∂˚˜˜ππœ…“µß˙©¬˚˜˜…¬˚∆\n∂¬˚∆ƒ∂¬˚˜˜˜˜µ≤≈"},
 	}
 	for _, datum := range data {
 		lines := strings.Split(datum.stream, "\n")
