@@ -109,19 +109,19 @@ func (c *cmd) fromStorage(ctx context.Context) int {
 	}
 }
 
-func (c *cmd) fromWerker(ctx context.Context, build *models.BuildRuntimeInfo) int {
+func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 	var opts []grpc.DialOption
 	// right now werker is insecure
 	opts = append(opts, grpc.WithInsecure())
-	conn, err := grpc.Dial(build.Ip + ":" + build.GrpcPort, opts...)
+	client, err := build.CreateBuildClient(opts)
 	if err != nil {
-		c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.Ip, build.GrpcPort, err.Error()))
+		c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.GetIp(), build.GetGrpcPort(), err.Error()))
 		return 1
 	}
-	client := pb.NewBuildClient(conn)
+
 	stream, err := client.BuildInfo(ctx, &pb.Request{Hash: c.hash})
 	if err != nil {
-		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.Ip, build.GrpcPort))
+		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1
 	}
 	for {

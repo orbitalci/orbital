@@ -1,22 +1,26 @@
 package models
 
 import (
+	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"context"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"io"
 )
 //type GuideOcelotClient interface {
 //	GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error)
 //	SetVCSCreds(ctx context.Context, in *Credentials, opts ...grpc.CallOption) (*empty.Empty, error)
 //}
 
-func NewFakeGuideOcelotClient() *fakeGuideOcelotClient {
-	return &fakeGuideOcelotClient{creds: &CredWrapper{}, repoCreds: &RepoCredWrapper{}}
+func NewFakeGuideOcelotClient(logLines []string) *fakeGuideOcelotClient {
+	return &fakeGuideOcelotClient{creds: &CredWrapper{}, repoCreds: &RepoCredWrapper{}, logLines:logLines}
 }
 
 type fakeGuideOcelotClient struct {
 	creds *CredWrapper
 	repoCreds *RepoCredWrapper
+	brInfo *BuildRuntimeInfo
+	logLines []string
 }
 
 func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
@@ -50,12 +54,75 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 
 // todo: make this useful
 func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*BuildRuntimeInfo, error) {
-	return nil, nil
+	return f.brInfo, nil
 }
 
 // todo: make this useful
 func (f *fakeGuideOcelotClient) Logs(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (GuideOcelot_LogsClient, error) {
-	return nil, nil
+	return NewFakeGuideOcelotLogsCli(f.logLines), nil
+}
+
+func NewFakeGuideOcelotLogsCli(lines []string) *fakeGuideOcelotLogsClient {
+	return &fakeGuideOcelotLogsClient{outputLines: lines}
+}
+
+type fakeGuideOcelotLogsClient struct {
+	index int
+	outputLines []string
+	grpc.ClientStream
+}
+
+func (c *fakeGuideOcelotLogsClient) CloseSend() error {
+	return nil
+}
+
+func (c *fakeGuideOcelotLogsClient) Recv() (*LogResponse, error) {
+	if c.index + 1 > len(c.outputLines) {
+		return nil, io.EOF
+	}
+	resp := &LogResponse{OutputLine: c.outputLines[c.index]}
+	c.index++
+	return resp, nil
+}
+
+type testBuildClient struct {
+	logLines []string
+}
+
+func (t *testBuildClient) BuildInfo(ctx context.Context, in *protobuf.Request, opts ...grpc.CallOption) (protobuf.Build_BuildInfoClient, error) {
+	return protobuf.NewFakeBuildClient(t.logLines), nil
+}
+
+func NewTestBuildRuntime(done bool, ip string, grpcPort string, logLines []string) *testBuildRuntime{
+	return &testBuildRuntime{
+		Done: done,
+		Ip: ip,
+		GrpcPort: grpcPort,
+		logLines: logLines,
+	}
+}
+
+type testBuildRuntime struct {
+	Done     bool
+	Ip       string
+	GrpcPort string
+	logLines []string
+}
+
+func (t *testBuildRuntime) GetDone() bool {
+	return t.Done
+}
+
+func (t *testBuildRuntime) GetIp() string {
+	return t.Ip
+}
+
+func (t *testBuildRuntime) GetGrpcPort() string {
+	return t.GrpcPort
+}
+
+func (t *testBuildRuntime) CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error) {
+	return &testBuildClient{logLines: t.logLines}, nil
 }
 
 func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
