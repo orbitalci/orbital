@@ -91,6 +91,11 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 
 // pumpBundle writes build data to web socket
 func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string, done chan int) {
+	defer func() {
+		if r := recover(); r != nil {
+			ocelog.Log().WithField("recover", r).Error("recovered from a panic in pumpBundle!!")
+		}
+	}()
 	// determine whether to get from storage or off infoReader
 	if rt.CheckIfBuildDone(appCtx.consul, hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
