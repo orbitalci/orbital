@@ -11,7 +11,7 @@ import (
 
 //this is our grpc server struct
 type guideOcelotServer struct {
-	RemoteConfig   *cred.RemoteConfig
+	RemoteConfig   cred.CVRemoteConfig
 	Deserializer   *deserialize.Deserializer
 	AdminValidator *AdminValidator
 	RepoValidator  *RepoValidator
@@ -85,7 +85,7 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 
-func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator) models.GuideOcelotServer {
+func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator) models.GuideOcelotServer {
 	guideOcelotServer := new(guideOcelotServer)
 	guideOcelotServer.RemoteConfig = config
 	guideOcelotServer.Deserializer = d

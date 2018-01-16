@@ -21,7 +21,7 @@ import (
 //TODO: floe integration??? just putting this note here so we remember
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
-func Start(configInstance *cred.RemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
+func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator())
 

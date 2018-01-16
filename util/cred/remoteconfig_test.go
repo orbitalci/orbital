@@ -202,7 +202,7 @@ func Test_BuildCredPath(t *testing.T) {
 
 //////test setup and tear down///////
 
-func testSetupVaultAndConsul(t *testing.T) (*RemoteConfig, net.Listener, *testutil.TestServer) {
+func testSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testutil.TestServer) {
 	//set up unsealed vault for testing
 	core, _, token := vault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
