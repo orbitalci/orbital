@@ -48,11 +48,11 @@ func TestBasher_DownloadCodebaseNotDefault(t *testing.T) {
 	if defaultResult[0] != ".ocelot/bb_download.sh" {
 		t.Error(test.GenericStrFormatErrors("download first param", ".ocelot/bb_download.sh", defaultResult[0]))
 	}
-	if defaultResult[1] != "something" {
-		t.Error(test.GenericStrFormatErrors("download second param(token)", "something", defaultResult[1]))
+	if defaultResult[1] != "" {
+		t.Error(test.GenericStrFormatErrors("download second param(token)", "", defaultResult[1]))
 	}
-	if defaultResult[2] != "https://bitbucket.org/marianne/get" {
-		t.Error(test.GenericStrFormatErrors("download third param(url)", "https://bitbucket.org/marianne/get", defaultResult[2]))
+	if defaultResult[2] != "https://localhost:9090/marianne/is/number/one" {
+		t.Error(test.GenericStrFormatErrors("download third param(url)", "https://localhost:9090/marianne/is/number/one", defaultResult[2]))
 	}
 	if defaultResult[3] != "123" {
 		t.Error(test.GenericStrFormatErrors("download fourth param(git hash)", "123", defaultResult[3]))

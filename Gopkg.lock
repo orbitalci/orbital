@@ -13,7 +13,7 @@
     "test",
     "vault"
   ]
-  revision = "371da5298da83eb7db7f3d2a644ab77fb76440b8"
+  revision = "17dbf7566128eda1ef19e06db3ab765705b7da94"
 
 [[projects]]
   name = "github.com/Jeffail/gabs"
@@ -73,7 +73,7 @@
   branch = "master"
   name = "github.com/denisenkom/go-mssqldb"
   packages = ["."]
-  revision = "25953bd869105021ccb023711daeff786470a7f1"
+  revision = "df1dd7185ab5a4b98222e0852c7f057fa00f6e1c"
 
 [[projects]]
   name = "github.com/docker/distribution"
@@ -189,8 +189,8 @@
 [[projects]]
   name = "github.com/gorilla/mux"
   packages = ["."]
-  revision = "7f08801859139f86dfafd1c296e2cba9a80d292e"
-  version = "v1.6.0"
+  revision = "53c1911da2b537f792e7cafcb446b05ffe33b996"
+  version = "v1.6.1"
 
 [[projects]]
   name = "github.com/gorilla/websocket"
@@ -248,7 +248,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-immutable-radix"
   packages = ["."]
-  revision = "8aac2701530899b64bdea735a1de8da899815220"
+  revision = "59b67882ec612f43b9d4c4fd97cebd507be4b3ee"
 
 [[projects]]
   branch = "master"
@@ -684,6 +684,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9df5448a7eb3d9ff400f90a4b087652900fca654cf2fda39af76669ecaf30995"
+  inputs-digest = "e84411b4b9646af59c33644e64c8b1e3c26589ee4332a5fa590facef29a8c0e3"
   solver-name = "gps-cdcl"
   solver-version = 1

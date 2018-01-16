@@ -44,7 +44,7 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	case "bitbucket":
 		//if download url is not the default, then we assume whoever set it knows exactly what they're doing and no replacements
 		if b.GetBbDownloadURL() != DefaultBitbucketURL {
-			downloadCode = append(downloadCode, ".ocelot/bb_download.sh", werk.VcsToken, b.GetBbDownloadURL())
+			downloadCode = append(downloadCode, ".ocelot/bb_download.sh", werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
 		} else {
 			downloadCode = append(downloadCode, ".ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.FullName), werk.CheckoutHash)
 		}
