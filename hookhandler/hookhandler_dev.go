@@ -2,9 +2,9 @@ package hookhandler
 //has necessary functions for running hookhandler in dev mode
 
 import (
-	"io/ioutil"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
+	"io/ioutil"
 	"os"
 )
 

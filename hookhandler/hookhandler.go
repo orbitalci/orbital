@@ -9,9 +9,12 @@ import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 )
 
 
@@ -23,6 +26,8 @@ type HookHandler interface {
 	SetProducer(producer *nsqpb.PbProduce)
 	GetDeserializer() *deserialize.Deserializer
 	SetDeserializer(deserializer *deserialize.Deserializer)
+	GetStorage() storage.BuildSum
+	SetStorage(sum storage.BuildSum)
 }
 
 
@@ -30,6 +35,7 @@ type HookHandlerContext struct {
 	RemoteConfig *cred.RemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
+	Storage 	 storage.BuildSum
 }
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
@@ -62,6 +68,13 @@ func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deseria
 	hhc.Deserializer = deserializer
 }
 
+func (hhc *HookHandlerContext) GetStorage() storage.BuildSum {
+	return hhc.Storage
+}
+
+func (hhc *HookHandlerContext) SetStorage(store storage.BuildSum) {
+	hhc.Storage = store
+}
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
@@ -73,6 +86,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 
 	fullName := repopush.Repository.FullName
 	hash := repopush.Push.Changes[0].New.Target.Hash
+	branch := repopush.Push.Changes[0].New.Name
 	acctName := repopush.Repository.Owner.Username
 	buildConf, bbToken, err := GetBBConfig(ctx, acctName, fullName, hash)
 	if err != nil {
@@ -87,7 +101,14 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	fmt.Println(buildConf)
 	//TODO: need to check and make sure that New.Type == branch
 	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
-		tellWerker(ctx, buildConf, hash, fullName, bbToken)
+		list := strings.Split(repopush.Repository.FullName, "/")
+		account := list[0]
+		repo := list[1]
+		ocelog.Log().Debug("LETS STORE THIS SHIT")
+		id := notifyStorage(ctx.GetStorage(), hash, time.Now(), repo, branch, account)
+		ocelog.Log().Debug("notified storage ")
+		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
+		ocelog.Log().Debug("told werker!")
 	} else {
 		//TODO: tell db we couldn't build
 	}
@@ -119,7 +140,11 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validateBuild(buildConf, "") {
-		tellWerker(ctx, buildConf, hash, fullName, bbToken)
+		list := strings.Split(pr.Repository.FullName, "/")
+		account := list[0]
+		repo := list[1]
+		id := notifyStorage(ctx.GetStorage(), hash, time.Now(), repo, pr.Pullrequest.Source.Branch.Name, account)
+		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
 	} else {
 		//TODO: tell db we couldn't build
 	}
@@ -148,9 +173,18 @@ func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 	return false
 }
 
+func notifyStorage(store storage.BuildSum, hash string, starttime time.Time, repo string, branch string, account string) int64 {
+	//AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error)
+	id, err := store.AddSumStart(hash, starttime, account, repo, branch)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("could not kick off summary")
+	}
+	return id
+}
+
 
 //TODO: this code needs to store status into db
-func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string) {
+func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string, dbid int64) {
 	// get one-time token use for access to vault
 	token, err := ctx.GetRemoteConfig().Vault.CreateThrowawayToken()
 	if err != nil {
@@ -165,6 +199,7 @@ func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullNam
 		VcsToken: bbToken,
 		VcsType: "bitbucket",
 		FullName: fullName,
+		Id: dbid,
 	}
 
 	go ctx.GetProducer().WriteProto(werkerTask, "build")

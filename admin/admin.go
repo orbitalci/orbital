@@ -25,7 +25,7 @@ import (
 func Start(configInstance *cred.RemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(),
-		storage.NewFileBuildStorage("/Users/jesseshank/.ocelot/build-output"))
+		storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432))
 
 	//grpc server
 	opts := []grpc.ServerOption{

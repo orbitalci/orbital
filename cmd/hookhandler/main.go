@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	hh "bitbucket.org/level11consulting/ocelot/hookhandler"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/gorilla/mux"
 	"os"
 	"strconv"
@@ -52,7 +53,8 @@ func main() {
 	hookHandlerContext.SetRemoteConfig(remoteConfig)
 	hookHandlerContext.SetDeserializer(deserialize.New())
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
-
+	hookHandlerContext.SetStorage(storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432))
+	// todo: add check for hookHandlerContext being valid
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e

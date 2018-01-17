@@ -73,8 +73,10 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	if build.Done {
+		c.UI.Info("streaming from storage")
 		return c.fromStorage(ctx)
 	} else {
+		c.UI.Info("streaming from werker")
 		return c.fromWerker(ctx, build)
 	}
 

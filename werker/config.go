@@ -32,7 +32,7 @@ func strToWerkType(str string) WerkType {
 	}
 }
 
-func strToStorageImplement(str string) storage.BuildOutputStorage {
+func strToStorageImplement(str string) storage.BuildOut {
 	switch str {
 	case "filesystem":
 		return storage.NewFileBuildStorage("")
@@ -50,7 +50,7 @@ type WerkerConf struct {
 	WerkerName      string
 	werkerType      WerkType
 	//werkerProcessor builder.Processor
-	storage         storage.BuildOutputStorage
+	storage         storage.BuildOut
 	LogLevel        string
 	RegisterIP     string
 }

@@ -8,12 +8,12 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strings"
 )
 
 //this is our grpc server struct
@@ -22,7 +22,7 @@ type guideOcelotServer struct {
 	Deserializer   *deserialize.Deserializer
 	AdminValidator *AdminValidator
 	RepoValidator  *RepoValidator
-	Storage 	   storage.BuildOutputStorage
+	Storage 	   storage.OcelotStorage
 }
 
 //TODO: what about adding error field to response? Do something nice about
@@ -95,21 +95,24 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.BuildRuntimeInfo, error) {
 	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.Consul, bq.Hash)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, err.Error())
+		if _, ok := err.(*rt.ErrBuildDone); ok {
+			return  &models.BuildRuntimeInfo{Done:true}, nil
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &models.BuildRuntimeInfo{Done: buildRtInfo.Done, Ip: buildRtInfo.Ip, GrpcPort: buildRtInfo.GrpcPort}, nil
 }
 
 // todo: calling Logs should stream from build storage, this is doing nothing
 func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
-	if !rt.CheckIfBuildDone(g.RemoteConfig.Consul, bq.Hash) {
+	if !rt.CheckIfBuildDone(g.RemoteConfig.Consul, g.Storage, bq.Hash) {
 		stream.Send(&models.LogResponse{OutputLine: "build is not finished, use BuildRuntime method and stream from the werker registered",})
 	} else {
-		data, err := g.Storage.Retrieve(bq.Hash)
+		data, err := g.Storage.RetrieveLastOutByHash(bq.Hash)
 		if err != nil {
 			return status.Error(codes.DataLoss, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		scanner := bufio.NewScanner(bytes.NewReader(data))
+		scanner := bufio.NewScanner(strings.NewReader(data.Output))
 		for scanner.Scan() {
 			resp := &models.LogResponse{OutputLine: scanner.Text()}
 			stream.Send(resp)
@@ -119,7 +122,7 @@ func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelo
 }
 
 
-func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.BuildOutputStorage) models.GuideOcelotServer {
+func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.OcelotStorage) models.GuideOcelotServer {
 	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
 	// purdier to me anyway
 	guideOcelotServer := &guideOcelotServer{

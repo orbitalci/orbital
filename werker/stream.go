@@ -6,8 +6,10 @@ import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	rt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"bitbucket.org/level11consulting/ocelot/util/streamer"
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
+	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -28,7 +30,8 @@ var (
 // modified from https://elithrar.github.io/article/custom-handlers-avoiding-globals/
 type werkerStreamer struct {
 	conf      *WerkerConf
-	storage   storage.BuildOutputStorage
+	out       storage.BuildOut
+	sum       storage.BuildSum
 	buildInfo map[string]*buildDatum
 	consul    *consulet.Consulet
 }
@@ -96,12 +99,17 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 			ocelog.Log().WithField("recover", r).Error("recovered from a panic in pumpBundle!!")
 		}
 	}()
-	// determine whether to get from storage or off infoReader
-	if rt.CheckIfBuildDone(appCtx.consul, hash) {
+	// determine whether to get from out or off infoReader
+	if rt.CheckIfBuildDone(appCtx.consul, appCtx.sum, hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
-		err := streamer.StreamFromStorage(appCtx.storage, stream, hash)
+		latestSummary, err := appCtx.sum.RetrieveLatestSum(hash)
 		if err != nil {
-			ocelog.IncludeErrField(err).Error("error retrieving from storage")
+			ocelog.IncludeErrField(err).Error("could not get latest build from storage")
+		} else {
+			err = streamer.StreamFromStorage(appCtx.out, stream, latestSummary.BuildId)
+			if err != nil {
+				ocelog.IncludeErrField(err).Error("error retrieving from storage")
+			}
 		}
 	} else {
 		ocelog.Log().Debug("pumping info array data to web socket")
@@ -145,7 +153,7 @@ func processTransport(transport *Transport, appCtx *werkerStreamer) {
 // 	and sent when a new build is pulled off the queue).
 // 	the info channel is written to an array which is put in a map in the appCtx along with a done channel so
 //  there is a way to see when the array will not be written to anymore
-//  when the info channel is closed and the loop finishes, all the data is written to the storage defined in the
+//  when the info channel is closed and the loop finishes, all the data is written to the out defined in the
 //  appCtx, the done flag is written to consul, and the array is removed from the map
 func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 	var dataSlice [][]byte
@@ -157,7 +165,11 @@ func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 		build.buildData = append(build.buildData, i)
 	}
 	ocelog.Log().Debug("done with build ", transport.Hash)
-	err := appCtx.storage.StoreLines(transport.Hash, build.buildData)
+	out := &models.BuildOutput{
+		BuildId: transport.DbId,
+		Output: string(bytes.Join(build.buildData, []byte("\n"))),
+	}
+	err := appCtx.out.AddOut(out)
 	// even if it didn't store properly, we need to set the build in the map as "done" so
 	// that the streams that connect when the build is still happening know to close the connection
 	build.done = true
@@ -184,14 +196,15 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
-	store := storage.NewFileBuildStorage("")
+	store := storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432)
 	werkerConsul, err := consulet.Default()
 	if err != nil {
 		ocelog.IncludeErrField(err)
 	}
 	werkerStreamer := &werkerStreamer{
 		conf:      conf,
-		storage:   store,
+		out:       store,
+		sum:       store,
 		buildInfo: make(map[string]*buildDatum),
 		consul:    werkerConsul}
 	return werkerStreamer

@@ -90,3 +90,7 @@
 [[constraint]]
   version = "0.1.5"
   name = "bitbucket.org/level11consulting/go-til"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/lib/pq"

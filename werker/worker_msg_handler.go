@@ -4,8 +4,11 @@ import (
 	d "bitbucket.org/level11consulting/go-til/deserialize"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
-	"github.com/golang/protobuf/proto"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
+	"github.com/golang/protobuf/proto"
+	"time"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -14,6 +17,7 @@ import (
 type Transport struct {
 	Hash     string
 	InfoChan chan []byte
+	DbId     int64
 }
 
 type WorkerMsgHandler struct {
@@ -22,7 +26,8 @@ type WorkerMsgHandler struct {
 	infochan     chan []byte
 	ChanChan     chan *Transport
 	Deserializer d.Deserializer
-	Basher	*b.Basher
+	Basher	     *b.Basher
+	Store        storage.OcelotStorage
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
@@ -51,9 +56,9 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 }
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
-func (w *WorkerMsgHandler) WatchForResults(hash string) {
+func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 	ocelog.Log().Debugf("adding hash ( %s ) & infochan to transport channel", hash)
-	transport := &Transport{Hash: hash, InfoChan: w.infochan}
+	transport := &Transport{Hash: hash, InfoChan: w.infochan, DbId: dbId}
 	w.ChanChan <- transport
 }
 
@@ -66,7 +71,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	//TODO: write stages to db
 	//TODO: write build data to db
 
-	w.WatchForResults(werk.CheckoutHash)
+	w.WatchForResults(werk.CheckoutHash, werk.Id)
 	var stageResults []*b.Result
 
 	setupResult := builder.Setup(w.infochan, werk)
@@ -77,24 +82,53 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 		ocelog.Log().Error(setupResult.Error)
 		return
 	}
-
+	fail := false
+	start := time.Now()
 	for _, stage := range werk.BuildConf.Stages {
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
+		ocelog.Log().Info("finished stage", stage.Name)
 		stageResults = append(stageResults, stageResult)
 		// todo: should this check go before or after special build stuffs? i guess if it fails, there won't be
 		// any deployment
 		if stageResult.Status == b.FAIL {
+			fail = true
 			ocelog.Log().Error(stageResult.Error)
-			return
+			// todo: update failure reasons
+			if err := w.Store.AddFail(convertResultToFailureReasons(stageResult, werk.Id)); err != nil {
+				ocelog.IncludeErrField(err).Error("couldn't add failure reasons")
+			}
+			break
 		}
-		//build is special because we deploy after this
+		// build is special because we deploy after this
 		if stage.Name == "build" {
 			// todo: deploy to nexus
 			continue
 		}
-
-
+	}
+	dura := time.Now().Sub(start)
+	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
 	}
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
+}
+
+
+func convertResultToFailureReasons(res *b.Result, id int64) *models.BuildFailureReason {
+	var err string
+	if res.Error == nil {
+		err = ""
+	} else {
+		err = res.Error.Error()
+	}
+	fr :=  &models.FailureReasons{
+				Stage: res.Stage,
+				Status: int32(res.Status),
+				Error: err,
+				Messages: res.Messages,
+			}
+	return &models.BuildFailureReason{
+		BuildId: id,
+		FailureReasons: fr,
+	}
 }

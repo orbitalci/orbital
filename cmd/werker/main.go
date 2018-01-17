@@ -23,6 +23,7 @@ package main
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/werker"
 	"fmt"
 	"time"
@@ -45,12 +46,13 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
 				basher.SetBbDownloadURL("localhost:9090/dev/1552818963350a29750a7ade7bccc0e2b1977bd2.zip")
 			}
-
+			store := storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost",5432)
 			handler := &werker.WorkerMsgHandler{
 				Topic:    topic,
 				WerkConf: conf,
 				ChanChan: tunnel,
 				Basher: basher,
+				Store:  store,
 			}
 			p.Handler = handler
 			p.ConsumeMessages(topic, conf.WerkerName)

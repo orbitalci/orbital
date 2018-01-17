@@ -29,7 +29,7 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	werkerConsulet, _ := consulet.Default()
 	ctx := &werkerStreamer{
 		buildInfo: make(map[string]*buildDatum),
-		storage:   storage.NewFileBuildStorage(""),
+		out:       storage.NewFileBuildStorage(""),
 		consul:    werkerConsulet,
 	}
 	middleIndex := 6
@@ -50,11 +50,11 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	}
 	close(trans.InfoChan)
 
-	// wait for storage to be done, then check it
+	// wait for out to be done, then check it
 	for !ctx.buildInfo[trans.Hash].done {
 		time.Sleep(100)
 	}
-	bytez, err := ctx.storage.Retrieve(trans.Hash)
+	bytez, err := ctx.out.Retrieve(trans.Hash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 		t.Errorf("bytes from storage not same as testdata. expected: %v, actual: %v", testData, actualData)
 	}
 	// remove stored test data
-	fbs := ctx.storage.(*storage.FileBuildStorage)
+	fbs := ctx.out.(*storage.FileBuildStorage)
 	defer fbs.Clean()
 	// todo: check the consul stuff
 }
