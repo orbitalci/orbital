@@ -9,9 +9,13 @@ import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"strings"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"github.com/golang/protobuf/ptypes/empty"
 )
+
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui}
+	c := &cmd{UI: ui, config: commandhelper.Config}
 	c.init()
 	return c
 }
@@ -20,10 +24,19 @@ type cmd struct {
 	UI      cli.Ui
 	flags   *flag.FlagSet
 	ocelotFileLoc string
+	config *commandhelper.ClientConfig 	//TODO: review that this talks to server, not directly to consul
+}
+
+func (c *cmd) GetClient() models.GuideOcelotClient {
+	return c.config.Client
 }
 
 func (c *cmd) GetUI() cli.Ui {
 	return c.UI
+}
+
+func (c *cmd) GetConfig() *commandhelper.ClientConfig {
+	return c.config
 }
 
 func (c *cmd) init() {
@@ -56,9 +69,25 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Invalid ocelot.yml file: %s", err.Error()))
 		return 1
-	} else {
-		c.UI.Info(fmt.Sprintf("%s is valid", c.ocelotFileLoc))
 	}
+
+	//if err := commandhelper.CheckConnection(c, ctx); err != nil {
+	//	return 1
+	//}
+	//
+	//var protoReq empty.Empty
+	//msg, err := c.config.Client.GetRepoCreds(ctx, &protoReq)
+	//
+	//
+	//for _, repo := range msg.Repo {
+	//	if strings.Compare(repo.AcctName,
+	//}
+
+	if err != nil {
+		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
+	}
+
+	c.UI.Info(fmt.Sprintf("%s is valid", c.ocelotFileLoc))
 	return 0
 }
 
