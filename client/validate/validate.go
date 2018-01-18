@@ -45,7 +45,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 		return 1
 	}
 
-	fileName := c.ocelotFileLoc[strings.LastIndex(c.ocelotFileLoc, "/"):]
+	fileName := c.ocelotFileLoc[strings.LastIndex(c.ocelotFileLoc, "/") + 1:]
 	if fileName != "ocelot.yml" {
 		c.UI.Error("Your file must be named ocelot.yml")
 		return 1

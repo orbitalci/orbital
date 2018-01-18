@@ -32,7 +32,7 @@ Error: open /abc/def/test: no such file or directory
 	}
 }
 
-func TestCmd_RunPathErrors(t *testing.T) {
+func TestCmd_RunPathFileNoProcess(t *testing.T) {
 	ui := cli.NewMockUi()
 	pwd, _ := os.Getwd()
 	cmdd := &cmd{
@@ -56,6 +56,53 @@ Error: yaml: unmarshal errors:
 			"expected:\n%s\ngot:\n%s", expectedError, errMsg)
 	}
 }
+
+func TestCmd_RunPathFileName(t *testing.T) {
+	ui := cli.NewMockUi()
+	pwd, _ := os.Getwd()
+	cmdd := &cmd{
+		UI: ui,
+	}
+	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
+
+	badName := []string{pwd + "/test-fixtures/bad-name.yml"}
+
+	expectedError := `Your file must be named ocelot.yml
+`
+	if exit := cmdd.Run(badName); exit != 1 {
+		t.Error("should exit with error code 1", exit)
+	}
+
+	errMsg := ui.ErrorWriter.String()
+	if strings.Compare(expectedError, errMsg) != 0 {
+		t.Errorf("output and expected not the same,  \n" +
+			"expected:\n%s\ngot:\n%s", expectedError, errMsg)
+	}
+}
+
+func TestCmd_RunPathFileWrongFormat(t *testing.T) {
+	ui := cli.NewMockUi()
+	pwd, _ := os.Getwd()
+	cmdd := &cmd{
+		UI: ui,
+	}
+	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
+
+	badName := []string{pwd + "/test-fixtures/ocelot.yml"}
+
+	expectedError := `Invalid ocelot.yml file: BuildTool must be specified
+`
+	if exit := cmdd.Run(badName); exit != 1 {
+		t.Error("should exit with error code 1", exit)
+	}
+
+	errMsg := ui.ErrorWriter.String()
+	if strings.Compare(expectedError, errMsg) != 0 {
+		t.Errorf("output and expected not the same,  \n" +
+			"expected:\n%s\ngot:\n%s", expectedError, errMsg)
+	}
+}
+
 
 //TODO: why can't I read the output from help message? Is it cause I'm not explicitly calling it?
 func TestCmd_RunEmptyPath(t *testing.T) {
