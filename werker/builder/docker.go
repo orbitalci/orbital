@@ -159,8 +159,6 @@ func (d *Docker) Cleanup() {
 	d.DockerClient.Close()
 }
 
-//TODO: depending on how Execute function turns out, this may end up being merged into that and we case switch in Execute
-//TODO: if type is build, since build = deploy afterwards
 func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *Result {
 	currStage := "build"
 	currStageStr := "BUILD | "
@@ -221,6 +219,69 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 		Error:  nil,
 	}
 }
+
+//uses the repo creds from admin to store artifact - keyed by acctname
+func (d *Docker) SaveArtifact(logout chan []byte, stage *pb.Stage, commitHash string) *Result {
+	currStage := "SaveArtifact"
+	currStageStr := "SAVE_ARTIFACT | "
+
+	logout <- []byte(currStageStr + "Saving artifact to ...")
+
+	if len(d.ContainerId) == 0 {
+		return &Result {
+			Stage: currStage,
+			Status: FAIL,
+			Error: errors.New("no container exists, setup before executing"),
+		}
+	}
+
+	ctx := context.Background()
+
+	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
+		Tty: true,
+		AttachStdin: true,
+		AttachStderr: true,
+		AttachStdout: true,
+		Env: stage.Env,
+		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
+	})
+
+	if err != nil {
+		return &Result{
+			Stage:  currStage,
+			Status: FAIL,
+			Error:  err,
+		}
+	}
+
+	attachedExec, err := d.DockerClient.ContainerExecAttach(ctx, resp.ID, types.ExecConfig{
+		Tty: true,
+		AttachStdin: true,
+		AttachStderr: true,
+		AttachStdout: true,
+		Env: stage.Env,
+		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
+	})
+
+	defer attachedExec.Conn.Close()
+
+	d.writeToInfo(currStageStr, attachedExec.Reader, logout)
+
+	if err != nil {
+		return &Result{
+			Stage:  currStage,
+			Status: FAIL,
+			Error:  err,
+		}
+	}
+
+	return &Result{
+		Stage:  currStage,
+		Status: PASS,
+		Error:  nil,
+	}
+}
+
 
 //TODO: actually write the code that executes scripts from other stages
 func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *Result {
