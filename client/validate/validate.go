@@ -1,14 +1,17 @@
 package validate
 
 import (
-	"github.com/hashicorp/consul/command/flags"
 	"github.com/mitchellh/cli"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"flag"
 	"context"
+	"io/ioutil"
+	"fmt"
+	"bitbucket.org/level11consulting/go-til/deserialize"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"strings"
 )
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: commandhelper.Config}
+	c := &cmd{UI: ui}
 	c.init()
 	return c
 }
@@ -17,71 +20,61 @@ type cmd struct {
 	UI      cli.Ui
 	flags   *flag.FlagSet
 	ocelotFileLoc string
-	config  *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetUI() cli.Ui {
 	return c.UI
 }
 
-func (c *cmd) GetConfig() *commandhelper.ClientConfig {
-	return c.config
-}
-
 func (c *cmd) init() {
-	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.ocelotFileLoc, "ocelotyml-loc", "",
-		"Location of ocelot.yml file to validate")
+	c.flags = flag.NewFlagSet("", flag.ExitOnError)
 }
 
 
 func (c *cmd) validateOcelotYaml(ctx context.Context) int {
-	//credWrap := &models.CredWrapper{}
-	//dese := deserialize.New()
-	//confFile, err := ioutil.ReadFile(c.fileloc)
-	//if err != nil {
-	//	c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
-	//	return 1
-	//}
-	//if err = dese.YAMLToProto(confFile, credWrap); err != nil {
-	//	c.UI.Error(fmt.Sprintf("Could not process file, please check documentation\nError: %s", err.Error()))
-	//	return 1
-	//}
-	var errOccured bool
-	//if len(credWrap.Vcs) == 0 {
-	//	c.UI.Error("Did not read any credentials! Is your yaml formatted correctly?")
-	//	return 1
-	//}
-	//for _, configVal := range credWrap.Vcs {
-	//	_, err = c.config.Client.SetVCSCreds(ctx, configVal)
-	//	if err != nil {
-	//		c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
-	//		errOccured = true
-	//	} else {
-	//		c.UI.Info(fmt.Sprintf("Added credentials for account: %s", configVal.AcctName))
-	//	}
-	//}
-	if errOccured {
+	conf := &pb.BuildConfig{}
+	dese := deserialize.New()
+	confFile, err := ioutil.ReadFile(c.ocelotFileLoc)
+	if err != nil {
+		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.ocelotFileLoc, err.Error()))
 		return 1
+	}
+
+	if err = dese.YAMLToStruct(confFile, conf); err != nil {
+		c.UI.Error(fmt.Sprintf("Could not process file, please check make sure the file at %s exists\nError: %s", c.ocelotFileLoc, err.Error()))
+		return 1
+	}
+
+	fileName := c.ocelotFileLoc[strings.LastIndex(c.ocelotFileLoc, "/"):]
+	if fileName != "ocelot.yml" {
+		c.UI.Error("Your file must be named ocelot.yml")
+		return 1
+	}
+
+	fileValidator := GetOcelotValidator()
+	err = fileValidator.ValidateConfig(conf)
+	if err != nil {
+		c.UI.Error(fmt.Sprintf("Invalid ocelot.yml file: %s", err.Error()))
+		return 1
+	} else {
+		c.UI.Info(fmt.Sprintf("%s is valid", c.ocelotFileLoc))
 	}
 	return 0
 }
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
-		return 1
-	}
-	ctx := context.Background()
-	if err := commandhelper.CheckConnection(c, ctx); err != nil {
+		fmt.Println("an error occurred while parsing flags")
 		return 1
 	}
 
-	if c.ocelotFileLoc != "" {
-		return c.validateOcelotYaml(ctx)
-	} else {
+	if len(args) == 0 {
 		return cli.RunResultHelp
 	}
-	return 0
+
+	c.ocelotFileLoc = args[0]
+	ctx := context.Background()
+	return c.validateOcelotYaml(ctx)
 }
 
 func (c *cmd) Synopsis() string {
@@ -89,7 +82,7 @@ func (c *cmd) Synopsis() string {
 }
 
 func (c *cmd) Help() string {
-	return flags.Usage(helpcmdHelp, nil)
+	return helpcmdHelp
 }
 
 const helpcmdSynopsis = "built-in validator"
