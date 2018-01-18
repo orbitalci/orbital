@@ -2,7 +2,9 @@ package models
 
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
+	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"fmt"
+	"google.golang.org/grpc"
 )
 
 
@@ -77,4 +79,22 @@ func (m *VCSCreds) AddAdditionalFields(consule *consul.Consulet, path string) er
 		return err
 	}
 	return err
+}
+
+// wrapper interface around models.BuildRuntimeInfo
+type BuildRuntime interface {
+	GetDone() bool
+	GetIp() string
+	GetGrpcPort() string
+	CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error)
+}
+
+
+// CreateBuildClient dials the grpc server at the werker endpoints
+func (m *BuildRuntimeInfo) CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error) {
+	conn, err :=  grpc.Dial(m.Ip + ":" + m.GrpcPort, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return protobuf.NewBuildClient(conn), nil
 }

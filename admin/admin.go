@@ -8,6 +8,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"crypto/tls"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -23,7 +24,8 @@ import (
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(configInstance *cred.RemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
-	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator())
+	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(),
+		storage.NewFileBuildStorage("/Users/jesseshank/.ocelot/build-output"))
 
 	//grpc server
 	opts := []grpc.ServerOption{
