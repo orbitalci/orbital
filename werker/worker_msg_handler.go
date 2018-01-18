@@ -71,30 +71,29 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 
 	setupResult := builder.Setup(w.infochan, werk)
 	stageResults = append(stageResults, setupResult)
-
+	// todo: this is causing panic: runtime error: invalid memory address or nil pointer dereference
+	// on the builder.Cleanup
 	if setupResult.Status == b.FAIL {
 		ocelog.Log().Error(setupResult.Error)
 		return
 	}
 
-	for stageKey, stageVal := range werk.BuildConf.Stages {
-		//build is special because we deploy after this
-		if stageKey == "build" {
-			buildResult := builder.Build(w.infochan, stageVal, werk.CheckoutHash)
-			stageResults = append(stageResults, buildResult)
-
-			if buildResult.Status == b.FAIL {
-				ocelog.Log().Error(buildResult.Error)
-				return
-			}
-			continue
-		}
-
-		stageResult := builder.Execute(stageKey, stageVal, w.infochan)
+	for _, stage := range werk.BuildConf.Stages {
+		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
+		stageResults = append(stageResults, stageResult)
+		// todo: should this check go before or after special build stuffs? i guess if it fails, there won't be
+		// any deployment
 		if stageResult.Status == b.FAIL {
 			ocelog.Log().Error(stageResult.Error)
 			return
 		}
+		//build is special because we deploy after this
+		if stage.Name == "build" {
+			// todo: deploy to nexus
+			continue
+		}
+
+
 	}
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
