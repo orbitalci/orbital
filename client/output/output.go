@@ -15,10 +15,14 @@ import (
 const synopsis = "stream logs on running or completed build"
 const help = `
 Usage: ocelot logs --hash <git_hash>
-  Will stream logs of a running or completed build identified by the hash. If the build is still running, it will stream from the werker.
-  If it is finished, will stream from storage using the admin as an intermediary.
-  An error will be returned and the tool will exit if that hash is not found.
-  If there are multiple builds of the same hash, it will stream the latest.
+  Will stream logs of a running or completed build identified by the hash. 
+  If the build is: 
+    - completed:   logs will stream from storage via the admin
+    - in progress: logs will stream from the werker node running the build 
+    - not found:   he cli will return an error and exit. 
+  If there are multiple builds of the same hash, it will stream the latest found in storage.
+  If you have the build id from running 'ocelot summary', you can also stream old logs by running: 
+    ocelot logs -build-id <id>
 `
 
 
@@ -33,6 +37,7 @@ type cmd struct {
 	flags   *flag.FlagSet
 	config *commandhelper.ClientConfig
 	hash string
+	buildId int
 }
 
 
@@ -53,24 +58,31 @@ func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.hash, "hash", "ERROR",
 		"*REQUIRED* hash to get build data of")
+	c.flags.IntVar(&c.buildId, "build-id", 0, "build id from build_summary table, if you do not want to get the last")
 }
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
-	if c.hash == "ERROR" {
-		c.UI.Error("flag --hash is required, otherwise there is no build to tail")
-		return 1
-	}
 	ctx := context.Background()
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	build, err := c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.hash})
-	if err != nil {
-		c.UI.Error("unable to get build runtime! error: " + err.Error())
-		return 1
+	var build *models.BuildRuntimeInfo
+	var err error
+	if c.buildId != 0 {
+		build = &models.BuildRuntimeInfo{Done: true}
+	} else {
+		if c.hash == "ERROR" {
+			c.UI.Error("flag --hash is required, otherwise there is no build to tail")
+			return 1
+		}
+		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.hash})
+		if err != nil {
+			c.UI.Error("unable to get build runtime! error: " + err.Error())
+			return 1
+		}
 	}
 	if build.Done {
 		c.UI.Info("streaming from storage")
@@ -93,7 +105,7 @@ func (c *cmd) Help() string {
 
 
 func (c *cmd) fromStorage(ctx context.Context) int {
-	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: c.hash})
+	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: c.hash, BuildId:int64(c.buildId)})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, "Unable to get stream from admin.")
 		return 1

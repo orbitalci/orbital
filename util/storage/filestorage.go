@@ -156,6 +156,12 @@ func (f *FileBuildStorage) RetrieveLatestSum(gitHash string) (models.BuildSummar
 	return summary, err
 }
 
+//stub
+func (f *FileBuildStorage) RetrieveLastFiveSums(repo string, account string) ([]models.BuildSummary, error) {
+	var sums []models.BuildSummary
+	return sums, nil
+}
+
 func (f *FileBuildStorage) AddOut(output *models.BuildOutput) error {
 	if err := output.Validate(); err != nil {
 		return err

@@ -63,7 +63,7 @@ func (p *PostgresStorage) AddSumStart(hash string, starttime time.Time, account 
 	defer p.Disconnect()
 	var id int64
 	//"2006-01-02 15:04:05"
-	if err := p.db.QueryRow(`INSERT INTO build_summary(hash, starttime, account, repo, branch) values ($1,$2,$3,$4,$5) RETURNING id`,
+	if err := p.db.QueryRow(`INSERT INTO build_summary(hash, starttime, account, repo, branch, failed, buildtime) values ($1,$2,$3,$4,$5,true,-99.999) RETURNING id`,
 		hash, starttime.Format("2006-01-02 15:04:05"), account, repo, branch).Scan(&id); err != nil {
 			return id, err
 	}
@@ -89,7 +89,6 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 	}
 	defer p.Disconnect()
 	rows, err := p.db.Query(`SELECT * FROM build_summary WHERE hash = $1`, gitHash)
-	rows.Next()
 	if err != nil {
 		return sums, err
 	}
@@ -124,6 +123,31 @@ func (p *PostgresStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary
 	return sum, err
 }
 
+func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
+	var sums []models.BuildSummary
+	if err := p.Connect(); err != nil {
+		return sums, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	queryRow := fmt.Sprintf(`SELECT * FROM build_summary WHERE repo=$1 and account=$2 ORDER BY starttime DESC LIMIT %d`, limit)
+	rows, err := p.db.Query(queryRow, repo, account)
+	if err != nil {
+		return sums, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		sum := models.BuildSummary{}
+		if err = rows.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch); err != nil {
+			if err == sql.ErrNoRows {
+				return sums, BuildSumNotFound("account: " + account + "and repo: " + repo)
+			}
+			return sums, err
+		}
+		sums = append(sums, sum)
+	}
+	return sums, nil
+}
+
 /*
   Column  |       Type        | Collation | Nullable
 ----------+-------------------+-----------+-----------
@@ -154,6 +178,7 @@ func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error)
 	}
 	defer p.Disconnect()
 	queryStr := `SELECT * FROM build_output WHERE build_id=$1`
+	fmt.Println(queryStr, string(buildId))
 	if err := p.db.QueryRow(queryStr, buildId).Scan(&out.BuildId, &out.Output, &out.OutputId); err != nil {
 		return out, err
 	}
@@ -174,13 +199,7 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 	return out, err
 }
 
-/*
-  Column  |  Type   | Collation | Nullable |
-----------+---------+-----------+----------+
- build_id | integer |           | not null |
- reasons  | jsonb   |           |          |
- id       | integer |           | not null |
- */
+
 func (p *PostgresStorage) AddFail(reason *models.BuildFailureReason) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())

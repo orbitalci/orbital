@@ -31,6 +31,7 @@ type BuildSum interface {
 	UpdateSum(failed bool, duration float64, id int64) error
 	RetrieveSum(gitHash string) ([]models.BuildSummary, error)
 	RetrieveLatestSum(gitHash string) (models.BuildSummary, error)
+	RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error)
 }
 
 type FailReason interface {
