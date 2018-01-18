@@ -54,6 +54,11 @@ func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfi
 	return remoteConfig, nil
 }
 
+func New() (CVRemoteConfig, error) {
+	return GetInstance("localhost", 8500, "")
+}
+
+
 //RemoteConfig is an abstraction for retrieving/setting creds for ocelot
 //currently uses consul + vault
 type CVRemoteConfig interface {
@@ -61,6 +66,7 @@ type CVRemoteConfig interface {
 	SetConsul(consul *consul.Consulet)
 	GetVault() ocevault.Vaulty
 	SetVault(vault ocevault.Vaulty)
+	CheckExists(path string) error
 	GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error)
 	GetPassword(path string) (string, error)
 	AddCreds(path string, anyCred RemoteConfigCred) (err error)
@@ -86,6 +92,7 @@ func (rc *RemoteConfig)  GetVault() ocevault.Vaulty {
 func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 	rc.Vault = vault
 }
+
 
 // instantiateCredObject is what we will have to add too when we add new credential integrations
 // (ie slack, w/e)
@@ -144,6 +151,41 @@ func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredT
 		return creds, errors.New("not connected to consul, unable to retrieve credentials")
 	}
 	return creds, err
+}
+
+//CheckExists will tell you if a value exists at specified path
+func (rc *RemoteConfig) CheckExists(path string) error {
+	if rc.Consul.Connected {
+		configs, err := rc.Consul.GetKeyValues(path)
+		if err != nil {
+			return err
+		}
+		for _, v := range configs {
+			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
+			mapKey := credType + "/" + acctName
+			foundConfig, ok := creds[mapKey]
+			if !ok {
+				foundConfig = instantiateCredObject(ocyType)
+				foundConfig.SetAcctNameAndType(acctName, credType)
+				if hideSecret {
+					foundConfig.SetSecret("*********")
+				} else {
+					passcode, passErr := rc.GetPassword(foundConfig.BuildCredPath(credType, acctName))
+					if passErr != nil {
+						ocelog.IncludeErrField(passErr).Error()
+						foundConfig.SetSecret("ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT")
+						err = passErr
+					} else {
+						foundConfig.SetSecret(passcode)
+					}
+				}
+				creds[mapKey] = foundConfig
+			}
+			foundConfig.SetAdditionalFields(infoType, string(v.Value[:]))
+		}
+	} else {
+		return creds, errors.New("not connected to consul, unable to retrieve credentials")
+	}
 }
 
 //GetPassword will return to you the vault password at specified path

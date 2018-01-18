@@ -87,7 +87,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	fmt.Println(buildConf)
 	//TODO: need to check and make sure that New.Type == branch
 	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
-		tellWerker(ctx, buildConf, hash, fullName, bbToken)
+		tellWerker(ctx, buildConf, hash, acctName, fullName, bbToken)
 	} else {
 		//TODO: tell db we couldn't build
 	}
@@ -119,7 +119,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validateBuild(buildConf, "") {
-		tellWerker(ctx, buildConf, hash, fullName, bbToken)
+		tellWerker(ctx, buildConf, hash, acctName, fullName, bbToken)
 	} else {
 		//TODO: tell db we couldn't build
 	}
@@ -147,7 +147,7 @@ func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
 
 
 //TODO: this code needs to store status into db
-func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string) {
+func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, acctName string, fullName string, bbToken string) {
 	// get one-time token use for access to vault
 	token, err := ctx.GetRemoteConfig().GetVault().CreateThrowawayToken()
 	if err != nil {
@@ -162,6 +162,7 @@ func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullNam
 		VcsToken: bbToken,
 		VcsType: "bitbucket",
 		FullName: fullName,
+		AcctName: acctName,
 	}
 
 	go ctx.GetProducer().WriteProto(werkerTask, "build")

@@ -47,6 +47,9 @@ func (mrc *MockRemoteConfig) GetCredAt(path string, hideSecret bool, ocyType cre
 func (mrc *MockRemoteConfig) GetPassword(path string) (string, error) {
 	return "", nil
 }
+func (rc *MockRemoteConfig) CheckExists(path string) error {
+	return nil
+}
 func (mrc *MockRemoteConfig) AddCreds(path string, anyCred cred.RemoteConfigCred) (err error) {
 	return nil
 }

@@ -13,17 +13,21 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"io"
 	//"os/exec"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"strings"
 )
 
 type Docker struct{
 	Log	io.ReadCloser
 	ContainerId	string
 	DockerClient *client.Client
+	RemoteConfig cred.CVRemoteConfig
 	*Basher
 }
 
 func NewDockerBuilder(b *Basher) Builder {
-	return &Docker{nil, "", nil, b}
+	remoteCred, _ := cred.New()
+	return &Docker{nil, "", nil, remoteCred, b}
 }
 
 func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
@@ -173,55 +177,11 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 		}
 	}
 
-	ctx := context.Background()
-
-	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
-		Tty: true,
-		AttachStdin: true,
-		AttachStderr: true,
-		AttachStdout: true,
-		Env: stage.Env,
-		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
-	})
-
-	if err != nil {
-		return &Result{
-			Stage:  currStage,
-			Status: FAIL,
-			Error:  err,
-		}
-	}
-
-	attachedExec, err := d.DockerClient.ContainerExecAttach(ctx, resp.ID, types.ExecConfig{
-		Tty: true,
-		AttachStdin: true,
-		AttachStderr: true,
-		AttachStdout: true,
-		Env: stage.Env,
-		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
-	})
-
-	defer attachedExec.Conn.Close()
-
-	d.writeToInfo(currStageStr, attachedExec.Reader, logout)
-
-	if err != nil {
-		return &Result{
-			Stage:  currStage,
-			Status: FAIL,
-			Error:  err,
-		}
-	}
-
-	return &Result{
-		Stage:  currStage,
-		Status: PASS,
-		Error:  nil,
-	}
+	return d.Exec(currStage, currStageStr, stage.Env, d.BuildScript(stage.Script, commitHash), logout)
 }
 
 //uses the repo creds from admin to store artifact - keyed by acctname
-func (d *Docker) SaveArtifact(logout chan []byte, stage *pb.Stage, commitHash string) *Result {
+func (d *Docker) SaveArtifact(logout chan []byte, task *pb.WerkerTask, commitHash string) *Result {
 	currStage := "SaveArtifact"
 	currStageStr := "SAVE_ARTIFACT | "
 
@@ -235,6 +195,47 @@ func (d *Docker) SaveArtifact(logout chan []byte, stage *pb.Stage, commitHash st
 		}
 	}
 
+	//check if build tool if set to maven (cause that's the only thing that we use to push to nexus right now)
+	if strings.Compare(task.BuildConf.BuildTool, "maven") != 0 {
+		logout <- []byte(fmt.Sprintf(currStageStr + "build tool %s not part of accepted values: %s...", task.BuildConf.BuildTool, "maven"))
+		return &Result {
+			Stage: currStage,
+			Status: FAIL,
+			Error: errors.New(fmt.Sprintf("build tool %s not part of accepted values: %s...", task.BuildConf.BuildTool, "maven")),
+		}
+	}
+
+	//check if nexus creds exist
+	err := d.RemoteConfig.CheckExists(cred.BuildCredPath("nexus", task.AcctName, cred.Repo))
+
+	if err != nil {
+		logout <- []byte(currStageStr + err.Error())
+		return &Result {
+			Stage: currStage,
+			Status: FAIL,
+			Error: errors.New("nexus credentials don't exist for " + task.AcctName),
+		}
+	}
+
+	return d.Exec(currStage, currStageStr, nil, d.PushToNexus(commitHash), logout)
+}
+
+func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *Result {
+	if len(d.ContainerId) == 0 {
+		return &Result {
+			Stage: stage,
+			Status: FAIL,
+			Error: errors.New("No container exists, setup before executing"),
+		}
+	}
+
+	//TODO: call d.Exec function
+	return &Result{
+
+	}
+}
+
+func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
 	ctx := context.Background()
 
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
@@ -242,8 +243,8 @@ func (d *Docker) SaveArtifact(logout chan []byte, stage *pb.Stage, commitHash st
 		AttachStdin: true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env: stage.Env,
-		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
+		Env: env,
+		Cmd: cmds,
 	})
 
 	if err != nil {
@@ -259,8 +260,8 @@ func (d *Docker) SaveArtifact(logout chan []byte, stage *pb.Stage, commitHash st
 		AttachStdin: true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env: stage.Env,
-		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
+		Env: env,
+		Cmd: cmds,
 	})
 
 	defer attachedExec.Conn.Close()
@@ -279,22 +280,6 @@ func (d *Docker) SaveArtifact(logout chan []byte, stage *pb.Stage, commitHash st
 		Stage:  currStage,
 		Status: PASS,
 		Error:  nil,
-	}
-}
-
-
-//TODO: actually write the code that executes scripts from other stages
-func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *Result {
-	if len(d.ContainerId) == 0 {
-		return &Result {
-			Stage: stage,
-			Status: FAIL,
-			Error: errors.New("No container exists, setup before executing"),
-		}
-	}
-
-	return &Result{
-
 	}
 }
 
