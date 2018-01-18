@@ -88,5 +88,5 @@
   name = "gopkg.in/yaml.v2"
 
 [[constraint]]
-  version = "0.1.5"
+  branch = "master"
   name = "bitbucket.org/level11consulting/go-til"

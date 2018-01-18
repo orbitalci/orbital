@@ -51,7 +51,7 @@ func (t *testBuildInfoGrpcServer) SendIt(data []byte) error {
 
 func (t *testBuildInfoGrpcServer) SendError(errorDes []byte) {}
 
-func (t *testBuildInfoGrpcServer) Finish() {}
+func (t *testBuildInfoGrpcServer) Finish(chan int) {}
 
 
 func Test_iterateOverBuildData(t *testing.T) {
