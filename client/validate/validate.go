@@ -36,7 +36,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 	dese := deserialize.New()
 	confFile, err := ioutil.ReadFile(c.ocelotFileLoc)
 	if err != nil {
-		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.ocelotFileLoc, err.Error()))
+		c.UI.Error(fmt.Sprintf("Could not read file at %s\nError: %s", c.ocelotFileLoc, err.Error()))
 		return 1
 	}
 
