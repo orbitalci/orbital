@@ -13,6 +13,7 @@ func GetOcelotValidator() *OcelotValidator {
 }
 
 func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig) error {
+	//TODO: errrm check if image exists?
 	if len(config.BuildTool) == 0 {
 		return errors.New("BuildTool must be specified")
 	}
