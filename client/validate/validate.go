@@ -11,7 +11,6 @@ import (
 	"strings"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
-	"github.com/golang/protobuf/ptypes/empty"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -69,23 +68,6 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Invalid ocelot.yml file: %s", err.Error()))
 		return 1
-	}
-
-	//TODO: add the part that checks to see if your creds exists
-	//if err := commandhelper.CheckConnection(c, ctx); err != nil {
-	//	return 1
-	//}
-	//
-	//var protoReq empty.Empty
-	//msg, err := c.config.Client.GetRepoCreds(ctx, &protoReq)
-	//
-	//
-	//for _, repo := range msg.Repo {
-	//	if strings.Compare(repo.AcctName,
-	//}
-
-	if err != nil {
-		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 	}
 
 	c.UI.Info(fmt.Sprintf("%s is valid", c.ocelotFileLoc))

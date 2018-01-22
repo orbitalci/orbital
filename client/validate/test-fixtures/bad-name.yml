@@ -5,6 +5,6 @@ branches:
 env:
   - "MARIANNE=1"
 stages:
-   build:
-     script:
-        - mvn clean install
+  - name : build
+    script:
+      - mvn clean install
