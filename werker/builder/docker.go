@@ -72,6 +72,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	//container configurations
 	containerConfig := &container.Config{
+
 		Image: imageName,
 		Env: werk.BuildConf.Env,
 		Cmd: d.DownloadCodebase(werk),
@@ -86,6 +87,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
 		Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
+		NetworkMode: "host",
 	}
 
 	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")

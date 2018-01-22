@@ -11,6 +11,7 @@ if [ $# -gt 0 ]; then
   wget --header="Authorization: Bearer ${args[0]}" "${args[1]}/${args[2]}.zip"
   mkdir ${args[2]}
 
+  echo "unzipping file ${args[2]}.zip"
   codedir=$(unzip ${args[2]}.zip | awk 'NR==3 {print $2}')
   cp -r ${codedir}. /${args[2]}
   # cleanup
