@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/api/types"
+	"github.com/mitchellh/cli"
 )
 
 //contains all validators for commands as recognized by ocelot <command> [args]
@@ -15,9 +16,13 @@ func GetOcelotValidator() *OcelotValidator {
 	return &OcelotValidator{}
 }
 
-func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig) error {
+//validates config, takes in an optional cli out
+func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) error {
 	if len(config.BuildTool) == 0 {
 		return errors.New("BuildTool must be specified")
+	}
+	if UI != nil {
+		UI.Info("BuildTool is specified \u2713" )
 	}
 	if len(config.Stages) == 0 {
 		return errors.New("there must be at least one stage listed")
@@ -35,7 +40,14 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig) er
 		return errors.New("build is a required stage")
 	}
 
+	if UI != nil {
+		UI.Info("Required stage `build` exists \u2713" )
+	}
 
+
+	if UI != nil {
+		UI.Info("Connecting to docker to check for image validity..." )
+	}
 	// validate can pull image
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
@@ -43,12 +55,13 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig) er
 		return errors.New("could not connect to docker to check for image validity, **WARNING THIS MEANS YOUR BUILD MIGHT FAIL IN THE SETUP STAGE**")
 	}
 
-	_ , err = cli.ImagePull(ctx, config.Image, types.ImagePullOptions{})
+	_, err = cli.ImagePull(ctx, config.Image, types.ImagePullOptions{})
 	if err != nil {
-		return errors.New("an error has occurred while trying to pull for image: " + config.Image + " full error: " + err.Error())
+		return errors.New("an error has occurred while trying to pull for image: " + config.Image + ". Full error: " + err.Error())
 	}
 
-	//since image pull was successful, we want to remove from the client's local docker hub to avoid polluting their local docker repo
-	_, _ = cli.ImageRemove(ctx, config.Image, types.ImageRemoveOptions{})
+	if UI != nil {
+		UI.Info(config.Image + " exists \u2713")
+	}
 	return nil
 }

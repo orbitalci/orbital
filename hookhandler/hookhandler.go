@@ -138,7 +138,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 //before we build pipeline config for werker, validate and make sure this is good candidate
 	// - check if commit branch matches with ocelot.yaml branch and validate
 func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) bool {
-	err := ctx.GetValidator().ValidateConfig(buildConf)
+	err := ctx.GetValidator().ValidateConfig(buildConf, nil)
 
 	if err != nil {
 		return false

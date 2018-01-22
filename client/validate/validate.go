@@ -64,7 +64,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 	}
 
 	fileValidator := GetOcelotValidator()
-	err = fileValidator.ValidateConfig(conf)
+	err = fileValidator.ValidateConfig(conf, c.UI)
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Invalid ocelot.yml file: %s", err.Error()))
 		return 1
