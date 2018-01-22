@@ -13,14 +13,19 @@ func GetOcelotValidator() *OcelotValidator {
 }
 
 func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig) error {
-	//TODO: errrm check if image exists?
+	//TODO: check if image exists?
 	if len(config.BuildTool) == 0 {
 		return errors.New("BuildTool must be specified")
 	}
 	if len(config.Stages) == 0 {
 		return errors.New("there must be at least one stage listed")
 	}
-	_, ok := config.Stages["build"]
+
+	var ok bool
+	for _, stg := range config.Stages {
+		if stg.Name == "build" { ok = true }
+	}
+
 	if !ok {
 		return errors.New("build is a required stage")
 	}

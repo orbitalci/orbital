@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"bitbucket.org/level11consulting/ocelot/client/validate"
 )
 
 func main() {
@@ -54,6 +55,7 @@ func main() {
 
 	hookHandlerContext.SetDeserializer(deserialize.New())
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
+	hookHandlerContext.SetValidator(validate.GetOcelotValidator())
 
 	muxi := mux.NewRouter()
 

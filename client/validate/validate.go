@@ -71,6 +71,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 		return 1
 	}
 
+	//TODO: add the part that checks to see if your creds exists
 	//if err := commandhelper.CheckConnection(c, ctx); err != nil {
 	//	return 1
 	//}

@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"bitbucket.org/level11consulting/ocelot/client/validate"
 )
 
 
@@ -23,6 +24,8 @@ type HookHandler interface {
 	SetProducer(producer *nsqpb.PbProduce)
 	GetDeserializer() *deserialize.Deserializer
 	SetDeserializer(deserializer *deserialize.Deserializer)
+	GetValidator() *validate.OcelotValidator
+	SetValidator(validator *validate.OcelotValidator)
 }
 
 
@@ -30,6 +33,7 @@ type HookHandlerContext struct {
 	RemoteConfig cred.CVRemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
+	OcelotValidator *validate.OcelotValidator
 }
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
@@ -61,6 +65,12 @@ func (hhc *HookHandlerContext) GetDeserializer() *deserialize.Deserializer {
 func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deserializer) {
 	hhc.Deserializer = deserializer
 }
+func (hhc *HookHandlerContext) SetValidator(validator *validate.OcelotValidator) {
+	hhc.OcelotValidator = validator
+}
+func (hhc *HookHandlerContext) GetValidator() *validate.OcelotValidator {
+	return hhc.OcelotValidator
+}
 
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -86,7 +96,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(buildConf)
 	//TODO: need to check and make sure that New.Type == branch
-	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
+	if validateBuild(ctx, buildConf, repopush.Push.Changes[0].New.Name) {
 		tellWerker(ctx, buildConf, hash, fullName, bbToken)
 	} else {
 		//TODO: tell db we couldn't build
@@ -118,7 +128,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if validateBuild(buildConf, "") {
+	if validateBuild(ctx, buildConf, "") {
 		tellWerker(ctx, buildConf, hash, fullName, bbToken)
 	} else {
 		//TODO: tell db we couldn't build
@@ -126,13 +136,11 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 }
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
-	// - check if commit branch matches with ocelot.yaml branch
-	// - check if ocelot.yaml has at least one step called build
-//TODO: move validator out to its own class and whatnot, that way admin or command line client can use to validate
-func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
-	_, ok := buildConf.Stages["build"]
-	if !ok {
-		ocelog.Log().Error("your ocelot.yml does not have the required `build` stage")
+	// - check if commit branch matches with ocelot.yaml branch and validate
+func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) bool {
+	err := ctx.GetValidator().ValidateConfig(buildConf)
+
+	if err != nil {
 		return false
 	}
 

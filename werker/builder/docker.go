@@ -12,6 +12,8 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/mitchellh/go-homedir"
 	"io"
+	"strings"
+
 	//"os/exec"
 )
 
@@ -81,10 +83,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	}
 
 	homeDirectory, _ := homedir.Expand("~/.ocelot")
-	//host configs like mount points
+	//host config binds are mount points
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
-		Binds: []string{ homeDirectory + ":/.ocelot"},
+		Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
 	}
 
@@ -145,8 +147,9 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 func (d *Docker) Cleanup() {
 	//TODO: review, should we be creating new contexts for every stage?
 	cleanupCtx := context.Background()
-
-	d.Log.Close()
+	if d.Log != nil {
+		d.Log.Close()
+	}
 	if err := d.DockerClient.ContainerKill(cleanupCtx, d.ContainerId, "SIGKILL"); err != nil {
 		ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't kill")
 	} else {
@@ -154,27 +157,17 @@ func (d *Docker) Cleanup() {
 			ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't rm")
 		}
 	}
-
-	d.DockerClient.ContainerRemove(cleanupCtx, d.ContainerId, types.ContainerRemoveOptions{})
 	d.DockerClient.Close()
 }
 
-//TODO: depending on how Execute function turns out, this may end up being merged into that and we case switch in Execute
-//TODO: if type is build, since build = deploy afterwards
-func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *Result {
-	currStage := "build"
-	currStageStr := "BUILD | "
-
-	logout <- []byte(currStageStr + "Building...")
-
+func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string) *Result {
 	if len(d.ContainerId) == 0 {
 		return &Result {
-			Stage: currStage,
+			Stage: stage.Name,
 			Status: FAIL,
 			Error: errors.New("no container exists, setup before executing"),
 		}
 	}
-
 	ctx := context.Background()
 
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
@@ -188,7 +181,7 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 
 	if err != nil {
 		return &Result{
-			Stage:  currStage,
+			Stage:  stage.Name,
 			Status: FAIL,
 			Error:  err,
 		}
@@ -205,35 +198,19 @@ func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *
 
 	defer attachedExec.Conn.Close()
 
-	d.writeToInfo(currStageStr, attachedExec.Reader, logout)
+	d.writeToInfo(strings.ToUpper(stage.Name) + " | ", attachedExec.Reader, logout)
 
 	if err != nil {
 		return &Result{
-			Stage:  currStage,
+			Stage:  stage.Name,
 			Status: FAIL,
 			Error:  err,
 		}
 	}
-
 	return &Result{
-		Stage:  currStage,
+		Stage:  stage.Name,
 		Status: PASS,
 		Error:  nil,
-	}
-}
-
-//TODO: actually write the code that executes scripts from other stages
-func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *Result {
-	if len(d.ContainerId) == 0 {
-		return &Result {
-			Stage: stage,
-			Status: FAIL,
-			Error: errors.New("No container exists, setup before executing"),
-		}
-	}
-
-	return &Result{
-
 	}
 }
 

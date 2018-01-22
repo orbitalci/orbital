@@ -16,7 +16,7 @@ func TestCmd_Run(t *testing.T) {
 	ui := cli.NewMockUi()
 	cmdd := &cmd{
 		UI: ui,
-		config: commandhelper.NewTestClientConfig(),
+		config: commandhelper.NewTestClientConfig([]string{}),
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	cmdd.flags.StringVar(&cmdd.accountFilter, "account", "",

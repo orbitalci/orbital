@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
+	"bitbucket.org/level11consulting/ocelot/client/output"
 	"github.com/mitchellh/cli"
 	"os"
 	"bitbucket.org/level11consulting/ocelot/client/validate"
@@ -31,5 +32,6 @@ func init(){
 		"creds repo add" : func()(cli.Command, error) { return repocredsadd.New(ui), nil},
 		"creds repo list": func()(cli.Command, error) { return repocredslist.New(ui), nil},
 		"validate": func()(cli.Command, error) { return validate.New(ui), nil},
+		"logs"			  : func()(cli.Command, error) { return output.New(ui), nil},
 	}
 }
