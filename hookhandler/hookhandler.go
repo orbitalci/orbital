@@ -130,7 +130,10 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	// - check if ocelot.yaml has at least one step called build
 //TODO: move validator out to its own class and whatnot, that way admin or command line client can use to validate
 func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
-	_, ok := buildConf.Stages["build"]
+	var ok bool
+	for _, stg := range buildConf.Stages {
+		if stg.Name == "build" { ok = true }
+	}
 	if !ok {
 		ocelog.Log().Error("your ocelot.yml does not have the required `build` stage")
 		return false
