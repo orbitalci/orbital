@@ -16,6 +16,7 @@ type BuildOutputStorage interface {
 	Retrieve(gitHash string) ([]byte, error)
 	Store(gitHash string, data []byte) error
 	StoreLines(gitHash string, lines [][]byte) error
+	StorageType() string
 }
 
 // FileBuildStorage is an implementation of BuildOutputStorage that is for filesystem.
@@ -46,6 +47,10 @@ func (f *FileBuildStorage) setup(){
 	}
 }
 
+func (f *FileBuildStorage) StorageType() string {
+	return "FileSystem Build Storage"
+}
+
 // Store build data to a file at <saveDirec>/hash
 func (f *FileBuildStorage) Store(gitHash string, data []byte) (err error) {
 	fp := f.getTempFile(gitHash)
@@ -54,6 +59,7 @@ func (f *FileBuildStorage) Store(gitHash string, data []byte) (err error) {
 	}
 	return
 }
+
 
 func (f *FileBuildStorage) StoreLines(gitHash string, lines [][]byte) (err error) {
 	fp := f.getTempFile(gitHash)
@@ -69,7 +75,6 @@ func (f *FileBuildStorage) StoreLines(gitHash string, lines [][]byte) (err error
 	return w.Flush()
 }
 
-
 // retrieve build data from filesystem
 func (f *FileBuildStorage) Retrieve(gitHash string) (data []byte, err error) {
 	fp := f.getTempFile(gitHash)
@@ -81,8 +86,6 @@ func (f *FileBuildStorage) getTempFile(gitHash string) string {
 	fp := filepath.Join(f.saveDirec, gitHash)
 	return fp
 }
-
-
 func (f *FileBuildStorage) Clean() {
 	os.RemoveAll(f.saveDirec)
 }

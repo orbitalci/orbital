@@ -12,6 +12,8 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/mitchellh/go-homedir"
 	"io"
+	"strings"
+
 	//"os/exec"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"strings"
@@ -31,11 +33,9 @@ func NewDockerBuilder(b *Basher) Builder {
 }
 
 func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
-	//TODO: do some sort of util for the stage name + formatting
-	stage := "setup"
-	stagePrintln := "SETUP | "
+	su := InitStageUtil("setup")
 
-	logout <- []byte(stagePrintln + "Setting up...")
+	logout <- []byte(su.GetStageLabel() + "Setting up...")
 
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
@@ -43,7 +43,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	if err != nil {
 		return &Result{
-			Stage:  stage,
+			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 		}
@@ -55,7 +55,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't pull image!")
 		return &Result{
-			Stage:  stage,
+			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 		}
@@ -67,9 +67,9 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	defer out.Close()
 
 	bufReader := bufio.NewReader(out)
-	d.writeToInfo(stagePrintln, bufReader, logout)
+	d.writeToInfo(su.GetStageLabel(), bufReader, logout)
 
-	logout <- []byte(stagePrintln + "Creating container...")
+	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
 
 	//container configurations
@@ -85,10 +85,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	}
 
 	homeDirectory, _ := homedir.Expand("~/.ocelot")
-	//host configs like mount points
+	//host config binds are mount points
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
-		Binds: []string{ homeDirectory + ":/.ocelot"},
+		Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
 	}
 
@@ -96,7 +96,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	if err != nil {
 		return &Result{
-			Stage:  stage,
+			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 		}
@@ -106,19 +106,19 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 		logout <- []byte(warning)
 	}
 
-	logout <- []byte(stagePrintln + "Container created with ID " + resp.ID)
+	logout <- []byte(su.GetStageLabel() + "Container created with ID " + resp.ID)
 
 	d.ContainerId = resp.ID
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return &Result{
-			Stage:  stage,
+			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 		}
 	}
 
-	logout <- []byte(stagePrintln + "Container " + resp.ID + " started")
+	logout <- []byte(su.GetStageLabel()  + "Container " + resp.ID + " started")
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
 	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
@@ -129,7 +129,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	if err != nil {
 		return &Result{
-			Stage: stage,
+			Stage: su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 		}
@@ -137,20 +137,24 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	d.Log = containerLog
 	bufReader = bufio.NewReader(containerLog)
-	d.writeToInfo(stagePrintln, bufReader, logout)
+	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 
 	return &Result{
-		Stage:  stage,
+		Stage:  su.GetStage(),
 		Status: PASS,
 		Error:  nil,
 	}
 }
 
-func (d *Docker) Cleanup() {
+func (d *Docker) Cleanup(logout chan []byte) {
+	su := InitStageUtil("cleanup")
+	logout <- []byte(su.GetStageLabel() + "Performing build cleanup...")
+
 	//TODO: review, should we be creating new contexts for every stage?
 	cleanupCtx := context.Background()
-
-	d.Log.Close()
+	if d.Log != nil {
+		d.Log.Close()
+	}
 	if err := d.DockerClient.ContainerKill(cleanupCtx, d.ContainerId, "SIGKILL"); err != nil {
 		ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't kill")
 	} else {
@@ -158,38 +162,35 @@ func (d *Docker) Cleanup() {
 			ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't rm")
 		}
 	}
-
-	d.DockerClient.ContainerRemove(cleanupCtx, d.ContainerId, types.ContainerRemoveOptions{})
 	d.DockerClient.Close()
 }
 
-func (d *Docker) Build(logout chan []byte, stage *pb.Stage, commitHash string) *Result {
-	currStage := "build"
-	currStageStr := "BUILD | "
 
-	logout <- []byte(currStageStr + "Building...")
-
+func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string) *Result {
 	if len(d.ContainerId) == 0 {
 		return &Result {
-			Stage: currStage,
+			Stage: stage.Name,
 			Status: FAIL,
 			Error: errors.New("no container exists, setup before executing"),
 		}
 	}
 
-	return d.Exec(currStage, currStageStr, stage.Env, d.BuildScript(stage.Script, commitHash), logout)
+	su := InitStageUtil(stage.Name)
+	return d.Exec(su.GetStage(), su.GetStageLabel(), stage.Env, d.BuildScript(stage.Script, commitHash), logout)
 }
 
 //uses the repo creds from admin to store artifact - keyed by acctname
 func (d *Docker) SaveArtifact(logout chan []byte, task *pb.WerkerTask, commitHash string) *Result {
-	currStage := "SaveArtifact"
-	currStageStr := "SAVE_ARTIFACT | "
+	su := &StageUtil{
+		Stage: "SaveArtifact",
+		StageLabel: "SAVE_ARTIFACT | ",
+	}
 
-	logout <- []byte(currStageStr + "Saving artifact to ...")
+	logout <- []byte(su.GetStageLabel() + "Saving artifact to ...")
 
 	if len(d.ContainerId) == 0 {
 		return &Result {
-			Stage: currStage,
+			Stage: su.GetStage(),
 			Status: FAIL,
 			Error: errors.New("no container exists, setup before executing"),
 		}
@@ -197,9 +198,9 @@ func (d *Docker) SaveArtifact(logout chan []byte, task *pb.WerkerTask, commitHas
 
 	//check if build tool if set to maven (cause that's the only thing that we use to push to nexus right now)
 	if strings.Compare(task.BuildConf.BuildTool, "maven") != 0 {
-		logout <- []byte(fmt.Sprintf(currStageStr + "build tool %s not part of accepted values: %s...", task.BuildConf.BuildTool, "maven"))
+		logout <- []byte(fmt.Sprintf(su.GetStageLabel() + "build tool %s not part of accepted values: %s...", task.BuildConf.BuildTool, "maven"))
 		return &Result {
-			Stage: currStage,
+			Stage: su.GetStage(),
 			Status: FAIL,
 			Error: errors.New(fmt.Sprintf("build tool %s not part of accepted values: %s...", task.BuildConf.BuildTool, "maven")),
 		}
@@ -209,31 +210,17 @@ func (d *Docker) SaveArtifact(logout chan []byte, task *pb.WerkerTask, commitHas
 	err := d.RemoteConfig.CheckExists(cred.BuildCredPath("nexus", task.AcctName, cred.Repo))
 
 	if err != nil {
-		logout <- []byte(currStageStr + err.Error())
+		logout <- []byte(su.GetStageLabel() + err.Error())
 		return &Result {
-			Stage: currStage,
+			Stage: su.GetStage(),
 			Status: FAIL,
 			Error: errors.New("nexus credentials don't exist for " + task.AcctName),
 		}
 	}
 
-	return d.Exec(currStage, currStageStr, nil, d.PushToNexus(commitHash), logout)
+	return d.Exec(su.GetStage(), su.GetStageLabel(), nil, d.PushToNexus(commitHash), logout)
 }
 
-func (d *Docker) Execute(stage string, actions *pb.Stage, logout chan []byte) *Result {
-	if len(d.ContainerId) == 0 {
-		return &Result {
-			Stage: stage,
-			Status: FAIL,
-			Error: errors.New("No container exists, setup before executing"),
-		}
-	}
-
-	//TODO: call d.Exec function
-	return &Result{
-
-	}
-}
 
 func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
 	ctx := context.Background()
@@ -275,7 +262,6 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 			Error:  err,
 		}
 	}
-
 	return &Result{
 		Stage:  currStage,
 		Status: PASS,

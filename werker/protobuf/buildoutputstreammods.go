@@ -7,7 +7,8 @@ type BuildStreamableServer struct {
 }
 
 func (x *BuildStreamableServer) SendIt(data []byte) error {
-	return x.Server.Send(&Response{OutputLine: string(data)})
+	resp := &Response{OutputLine: string(data)}
+	return x.Server.Send(resp)
 }
 
 func (x *BuildStreamableServer) SendError(errorDesc []byte) {

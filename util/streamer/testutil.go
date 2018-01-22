@@ -1,9 +1,11 @@
 package streamer
 
+import "sync"
+
 type testStreamArray struct {
-	//&buildDatum{buildData: streamer, done: false}
 	data [][]byte
 	done bool
+	mu sync.Mutex
 }
 
 func (t *testStreamArray) GetData() [][]byte {
@@ -20,11 +22,20 @@ func (t *testStreamArray) AddToData(data [][]byte) {
 	}
 }
 
+func (t *testStreamArray) Lock() {
+	t.mu.Lock()
+}
+
+func (t *testStreamArray) Unlock() {
+	t.mu.Unlock()
+}
+
 func NewTestStreamArray() *testStreamArray {
 	var data [][]byte
 	var done bool
 	return &testStreamArray{
 		data: data,
 		done: done,
+		mu: sync.Mutex{},
 	}
 }
