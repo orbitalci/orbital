@@ -11,8 +11,8 @@ else
 fi
 
 # Build this image first to cache dependencies
+# add --squash when this is released into stable v of docker
 docker build \
-   --squash \
    --build-arg SSH_PRIVATE_KEY="$(cat ${SSH_PRIVATE_KEY})" \
    -f Dockerfile.build \
    -t ocelot-build \

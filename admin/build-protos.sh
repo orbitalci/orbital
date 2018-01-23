@@ -4,7 +4,6 @@ echo "building admin protobuf files"
 
 echo "[DEBUG] first"
 protoc -I models/ -I. \
-    -I/usr/local/include \
     -I$GOPATH/src \
     -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
     --go_out=plugins=grpc:models \
@@ -13,7 +12,6 @@ protoc -I models/ -I. \
 echo "[DEBUG] second"
 # generate reverse proxy cause grpc gateway
 protoc -I models/ -I. \
-  -I/usr/local/include \
   -I$GOPATH/src \
   -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
   --grpc-gateway_out=logtostderr=true:models \
