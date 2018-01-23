@@ -126,9 +126,6 @@ func Test_GetBuildRuntime(t *testing.T) {
 		if val.Ip != ip {
 			t.Error(test.StrFormatErrors("registered ip", ip, val.Ip))
 		}
-		//if val.WsPort != wsPort {
-		//	t.Error(test.StrFormatErrors("websocket port", wsPort, brt.WsPort))
-		//}
 	}
 
 }

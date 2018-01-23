@@ -8,6 +8,7 @@ import (
 	"github.com/mitchellh/cli"
 	"strings"
 	"testing"
+	"flag"
 )
 
 func TestCmd_fromStorage(t *testing.T) {
@@ -30,6 +31,36 @@ func TestCmd_fromStorage(t *testing.T) {
 		test.StrFormatErrors("output", streamText + "\n", text)
 	}
 }
+
+func TestCmd_RunMultipleBuilds(t *testing.T) {
+	hash := "testinghash"
+	ui := cli.NewMockUi()
+	cliConf := commandhelper.NewTestClientConfig([]string{})
+	cmdd := &cmd{
+		UI: ui,
+		config: cliConf,
+	}
+	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	cmdd.flags.StringVar(&cmdd.hash, "hash", hash, "goal hash")
+	var args []string
+	exit := cmdd.Run(args)
+
+	if exit != 0 {
+		t.Error("non zero exit code")
+	}
+
+	text := strings.TrimSpace(ui.ErrorWriter.String())
+	if text != "it's your lucky day, there's TWO hashes matching that str:" {
+		t.Error(test.StrFormatErrors("output", "it's your lucky day, there's TWO hashes matching that str:", text))
+	}
+
+	text = strings.TrimSpace(ui.ErrorWriter.String())
+	if text != "abc" {
+		t.Error(test.StrFormatErrors("output", "abc", text))
+	}
+}
+
+
 
 func TestCmd_fromWerker(t *testing.T) {
 	var data = []struct{

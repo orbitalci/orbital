@@ -52,9 +52,22 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 	}, nil
 }
 
-// todo: make this useful
 func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*Builds, error) {
-	return f.brInfo, nil
+	builds := &Builds{
+		Builds: map[string]*BuildRuntimeInfo{},
+	}
+	//put your hash val and expected results here:
+	switch in.Hash {
+	case "testinghash":
+		builds.Builds["abc"] = &BuildRuntimeInfo{
+			Hash: "abc",
+		}
+		builds.Builds["def"] = &BuildRuntimeInfo{
+			Hash: "def",
+		}
+	}
+
+	return builds, nil
 }
 
 // todo: make this useful
