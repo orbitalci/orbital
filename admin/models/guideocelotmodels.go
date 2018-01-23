@@ -86,6 +86,7 @@ type BuildRuntime interface {
 	GetDone() bool
 	GetIp() string
 	GetGrpcPort() string
+	GetHash() string
 	CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error)
 }
 

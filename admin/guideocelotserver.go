@@ -97,7 +97,11 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
-	return &models.BuildRuntimeInfo{Done: buildRtInfo.Done, Ip: buildRtInfo.Ip, GrpcPort: buildRtInfo.GrpcPort}, nil
+	return &models.BuildRuntimeInfo{
+		Done: buildRtInfo.Done,
+		Ip: buildRtInfo.Ip,
+		GrpcPort: buildRtInfo.GrpcPort,
+		Hash: buildRtInfo.Hash}, nil
 }
 
 // todo: calling Logs should stream from build storage, this is doing nothing

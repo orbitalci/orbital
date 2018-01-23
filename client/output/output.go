@@ -73,7 +73,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	if build.Done {
-		return c.fromStorage(ctx)
+		return c.fromStorage(ctx, build.Hash)
 	} else {
 		return c.fromWerker(ctx, build)
 	}
@@ -90,8 +90,8 @@ func (c *cmd) Help() string {
 }
 
 
-func (c *cmd) fromStorage(ctx context.Context) int {
-	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: c.hash})
+func (c *cmd) fromStorage(ctx context.Context, hash string) int {
+	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: hash})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, "Unable to get stream from admin.")
 		return 1
@@ -119,7 +119,7 @@ func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 		return 1
 	}
 
-	stream, err := client.BuildInfo(ctx, &pb.Request{Hash: c.hash})
+	stream, err := client.BuildInfo(ctx, &pb.Request{Hash: build.GetHash()})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1

@@ -20,8 +20,10 @@ type BuildRuntime struct {
 	Ip   	 string
 	GrpcPort string
 	WsPort   string
+	Hash	string
 }
 
+//this matches by start of partial git hash
 func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (*BuildRuntime, error) {
 	path := fmt.Sprintf(buildPath, gitHash)
 	pairs, err := consulete.GetKeyValues(path)
@@ -32,8 +34,13 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (*BuildRuntime,
 	if len(pairs) == 0 {
 		return nil, errors.New("no build at hash " + gitHash)
 	}
+	//TODO: this only matches to one git hash, NEED TO ACCOUNT FOR MULTIPLE RESULTS FROM THIS QUERY
 	for _, pair := range pairs {
-		key := strings.Replace(pair.Key, path + "/", "", 1)
+		key := pair.Key[strings.LastIndex(pair.Key, "/") + 1:]
+		if len(rt.Hash) == 0 {
+			removeEnd := pair.Key[:strings.LastIndex(pair.Key, "/")]
+			rt.Hash = removeEnd[strings.LastIndex(removeEnd, "/") + 1:]
+		}
 		switch key {
 		case "done":
 			rt.Done = true

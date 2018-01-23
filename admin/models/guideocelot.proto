@@ -67,6 +67,7 @@ message BuildRuntimeInfo {
     bool   done     = 1;
     string ip       = 2;
     string grpcPort = 3;
+    string hash = 4;
 }
 
 message LogResponse {
