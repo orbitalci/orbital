@@ -154,17 +154,19 @@ func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredT
 }
 
 //CheckExists will tell you if a value exists at specified path
-func (rc *RemoteConfig) CheckExists(path string) (bool, error) {
+func (rc *RemoteConfig) CheckExists(path string) error {
 	if rc.Consul.Connected {
 		configs, err := rc.Consul.GetKeyValues(path)
 		if err != nil {
-			return false, err
+			return err
 		}
 		if len(configs) > 0 {
-			return true, nil
+			return nil
+		} else {
+			return errors.New(fmt.Sprintf("there are no values stored at path %s", path))
 		}
 	}
-	return false, errors.New("not connected to consul")
+	return errors.New("not connected to consul")
 }
 
 //GetPassword will return to you the vault password at specified path

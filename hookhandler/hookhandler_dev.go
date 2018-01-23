@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
 	"github.com/hashicorp/vault/api"
+	"errors"
 )
 
 type MockHookHandlerContext struct {
@@ -48,7 +49,7 @@ func (mrc *MockRemoteConfig) GetPassword(path string) (string, error) {
 	return "", nil
 }
 func (rc *MockRemoteConfig) CheckExists(path string) error {
-	return nil
+	return errors.New("FAIL")
 }
 func (mrc *MockRemoteConfig) AddCreds(path string, anyCred cred.RemoteConfigCred) (err error) {
 	return nil
