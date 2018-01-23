@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "building admin protobuf files"
 protoc -I models/ -I. \
     -I/usr/local/include \
     -I$GOPATH/src \
