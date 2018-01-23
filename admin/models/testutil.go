@@ -107,6 +107,7 @@ type testBuildRuntime struct {
 	Ip       string
 	GrpcPort string
 	logLines []string
+	Hash	string
 }
 
 func (t *testBuildRuntime) GetDone() bool {
@@ -119,6 +120,10 @@ func (t *testBuildRuntime) GetIp() string {
 
 func (t *testBuildRuntime) GetGrpcPort() string {
 	return t.GrpcPort
+}
+
+func (t *testBuildRuntime) GetHash() string {
+	return t.Hash
 }
 
 func (t *testBuildRuntime) CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error) {

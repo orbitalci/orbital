@@ -21,7 +21,7 @@ func TestCmd_fromStorage(t *testing.T) {
 		hash: hash,
 	}
 	ctx := context.Background()
-	exit := cmdd.fromStorage(ctx)
+	exit := cmdd.fromStorage(ctx, hash)
 	if exit != 0 {
 		t.Error("non zero exit code")
 	}
