@@ -6,17 +6,14 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/mitchellh/go-homedir"
 	"io"
 	"strings"
-
-	//"os/exec"
+	"fmt"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"strings"
 )
 
 type Docker struct{
@@ -60,10 +57,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 			Error:  err,
 		}
 	}
-	var byt []byte
-	buf := bufio.NewReader(out)
-	buf.Read(byt)
-	fmt.Println(string(byt))
+	//var byt []byte
+	//buf := bufio.NewReader(out)
+	//buf.Read(byt)
+	//fmt.Println(string(byt))
 	defer out.Close()
 
 	bufReader := bufio.NewReader(out)
@@ -71,10 +68,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
-
 	//container configurations
 	containerConfig := &container.Config{
-
 		Image: imageName,
 		Env: werk.BuildConf.Env,
 		Cmd: d.DownloadCodebase(werk),
@@ -186,7 +181,7 @@ func (d *Docker) SaveArtifact(logout chan []byte, task *pb.WerkerTask, commitHas
 		StageLabel: "SAVE_ARTIFACT | ",
 	}
 
-	logout <- []byte(su.GetStageLabel() + "Saving artifact to ...")
+	logout <- []byte(su.GetStageLabel() + "Saving artifact...")
 
 	if len(d.ContainerId) == 0 {
 		return &Result {

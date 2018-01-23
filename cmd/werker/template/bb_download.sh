@@ -14,10 +14,11 @@ if [ $# -gt 0 ]; then
 
   echo "unzipping file ${args[2]}.zip"
   codedir=$(unzip ${args[2]}.zip | awk 'NR==3 {print $2}')
+  echo "${codedir}"
   cp -r ${codedir}. /${args[2]}
   # cleanup
-  rm -rf ${codedir}
-  rm ${args[2]}.zip
+#  rm -rf ${codedir}
+#  rm ${args[2]}.zip
 
   echo "Finished with downloading source code"
   sleep infinity

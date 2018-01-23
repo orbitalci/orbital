@@ -154,38 +154,17 @@ func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredT
 }
 
 //CheckExists will tell you if a value exists at specified path
-func (rc *RemoteConfig) CheckExists(path string) error {
+func (rc *RemoteConfig) CheckExists(path string) (bool, error) {
 	if rc.Consul.Connected {
 		configs, err := rc.Consul.GetKeyValues(path)
 		if err != nil {
-			return err
+			return false, err
 		}
-		for _, v := range configs {
-			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
-			mapKey := credType + "/" + acctName
-			foundConfig, ok := creds[mapKey]
-			if !ok {
-				foundConfig = instantiateCredObject(ocyType)
-				foundConfig.SetAcctNameAndType(acctName, credType)
-				if hideSecret {
-					foundConfig.SetSecret("*********")
-				} else {
-					passcode, passErr := rc.GetPassword(foundConfig.BuildCredPath(credType, acctName))
-					if passErr != nil {
-						ocelog.IncludeErrField(passErr).Error()
-						foundConfig.SetSecret("ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT")
-						err = passErr
-					} else {
-						foundConfig.SetSecret(passcode)
-					}
-				}
-				creds[mapKey] = foundConfig
-			}
-			foundConfig.SetAdditionalFields(infoType, string(v.Value[:]))
+		if len(configs) > 0 {
+			return true, nil
 		}
-	} else {
-		return creds, errors.New("not connected to consul, unable to retrieve credentials")
 	}
+	return false, errors.New("not connected to consul")
 }
 
 //GetPassword will return to you the vault password at specified path

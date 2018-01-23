@@ -74,6 +74,7 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 	if errOccured {
 		return 1
 	}
+	//TODO: try this, it returns invalid memory address or nil pointer dereference error
 	return 0
 }
 

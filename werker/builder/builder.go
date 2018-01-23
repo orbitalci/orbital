@@ -48,10 +48,10 @@ func (s *StageUtil) GetStageLabel() string {
 	return s.StageLabel
 }
 
-func (s *StageUtil) SetStage(stage string) string {
+func (s *StageUtil) SetStage(stage string) {
 	s.Stage = stage
 }
 
-func (s *StageUtil) SetStageLabel(stageLabel string) string {
+func (s *StageUtil) SetStageLabel(stageLabel string) {
 	s.StageLabel = stageLabel
 }

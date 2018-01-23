@@ -63,7 +63,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	//defers are stacked, will be executed FILO
 
 	defer close(w.infochan)
-	defer builder.Cleanup()
+	defer builder.Cleanup(w.infochan)
 	//TODO: write stages to db
 	//TODO: write build data to db
 
@@ -82,8 +82,6 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	for _, stage := range werk.BuildConf.Stages {
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
 		stageResults = append(stageResults, stageResult)
-		// todo: should this check go before or after special build stuffs? i guess if it fails, there won't be
-		// any deployment
 		if stageResult.Status == b.FAIL {
 			ocelog.Log().Error(stageResult.Error)
 			return
@@ -93,8 +91,6 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 			builder.SaveArtifact(w.infochan, werk, werk.CheckoutHash)
 			continue
 		}
-
-
 	}
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
