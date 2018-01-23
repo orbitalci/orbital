@@ -19,7 +19,7 @@ func NewFakeGuideOcelotClient(logLines []string) *fakeGuideOcelotClient {
 type fakeGuideOcelotClient struct {
 	creds *CredWrapper
 	repoCreds *RepoCredWrapper
-	brInfo *BuildRuntimeInfo
+	brInfo *Builds
 	logLines []string
 }
 
@@ -53,7 +53,7 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 }
 
 // todo: make this useful
-func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*BuildRuntimeInfo, error) {
+func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*Builds, error) {
 	return f.brInfo, nil
 }
 

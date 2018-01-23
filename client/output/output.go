@@ -72,12 +72,25 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error("unable to get build runtime! error: " + err.Error())
 		return 1
 	}
-	if build.Done {
-		return c.fromStorage(ctx, build.Hash)
-	} else {
-		return c.fromWerker(ctx, build)
-	}
 
+	if len(build.Builds) > 1 {
+		c.UI.Warn(fmt.Sprintf("it's your lucky day, there's TWO hashes matching that str: "))
+		for _, build := range build.Builds {
+			c.UI.Warn(fmt.Sprintf("\u0009%s ", build.Hash))
+		}
+		c.UI.Info(fmt.Sprintf("please enter a complete git hash"))
+	} else if len(build.Builds) == 1 {
+		for _, build := range build.Builds {
+			if build.Done {
+				return c.fromStorage(ctx, build.Hash)
+			} else {
+				return c.fromWerker(ctx, build)
+			}
+		}
+	} else {
+		c.UI.Info(fmt.Sprintf("no builds found for entry: %s", c.hash))
+		return 0
+	}
 	return 0
 }
 
