@@ -4,18 +4,20 @@ package buildruntime
 import (
 	consulet "bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"fmt"
 	"github.com/hashicorp/consul/testutil"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 // todo: put these in util
 func modifyServerConfig(c *testutil.TestServerConfig) {
 	c.LogLevel = "err"
 }
 // todo: put these in util
-func initServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestServer) {
+func initServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestServer, storage.BuildSum) {
 	testServer, err := testutil.NewTestServerConfig(modifyServerConfig)
 	if err != nil {
 		t.Fatal("Couldn't create consul test server, error: ", err)
@@ -23,7 +25,8 @@ func initServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestSer
 	ayy := strings.Split(testServer.HTTPAddr, ":")
 	port, _ := strconv.ParseInt(ayy[1], 10, 32)
 	consul, _ := consulet.New(ayy[0], int(port))
-	return consul, testServer
+	store := storage.NewFileBuildStorage("./test-fixtures/storage")
+	return consul, testServer, store
 }
 //
 //type ConsulShtuff struct {
@@ -34,7 +37,7 @@ func initServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestSer
 //SetBuildDone(consulete *consul.Consulet, gitHash string) error
 func Test_SetBuildDone(t *testing.T) {
 	hash := "OHAi"
-	consu, serv := initServerAndConsulet(t)
+	consu, serv, _ := initServerAndConsulet(t)
 	defer serv.Stop()
 	if err := SetBuildDone(consu, hash); err != nil {
 		t.Fatal("could not set build done, err ", err.Error())
@@ -48,17 +51,27 @@ func Test_SetBuildDone(t *testing.T) {
 //// func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
 func Test_CheckIfBuildDone(t *testing.T) {
 	hash := "sup"
-	path := fmt.Sprintf(buildDonePath, hash)
-	consu, serv := initServerAndConsulet(t)
+	consu, serv, store := initServerAndConsulet(t)
 	defer serv.Stop()
-	serv.SetKV(t, path, []byte("true"))
-	done := CheckIfBuildDone(consu, hash)
+	testAddFullBuildSummary(hash, store, t)
+	done := CheckIfBuildDone(consu, store, hash)
 	if !done {
 		t.Error(test.GenericStrFormatErrors("build done", true, done))
 	}
-	done = CheckIfBuildDone(consu, "nerd")
+	done = CheckIfBuildDone(consu, store, "nerd")
 	if done {
 		t.Error(test.GenericStrFormatErrors("build done", false, done))
+	}
+}
+
+func testAddFullBuildSummary(hash string, store storage.BuildSum, t *testing.T) {
+	id, err := store.AddSumStart(hash, time.Now(), "1", "2", "3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = store.UpdateSum(false, 10.7, id)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -68,7 +81,7 @@ func Test_Register(t *testing.T) {
 	ip := "10.1.1.0"
 	grpcPort := "1020"
 	wsPort := "4030"
-	consu, serv := initServerAndConsulet(t)
+	consu, serv, _ := initServerAndConsulet(t)
 	defer serv.Stop()
 	err := Register(consu, hash, ip, grpcPort, wsPort)
 	if err != nil {
@@ -103,7 +116,7 @@ func Test_GetBuildRuntime(t *testing.T) {
 	ip := "10.1.1.0"
 	grpcPort := "1020"
 	wsPort := "4030"
-	consu, serv := initServerAndConsulet(t)
+	consu, serv, _ := initServerAndConsulet(t)
 	defer serv.Stop()
 	serv.SetKV(t, fmt.Sprintf(buildGrpcPort, hash), []byte(grpcPort))
 	serv.SetKV(t, fmt.Sprintf(buildWsPort, hash), []byte(wsPort))

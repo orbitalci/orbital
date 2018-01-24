@@ -44,7 +44,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 			mode := os.Getenv("ENV")
 			basher := &builder.Basher{}
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
-				basher.SetBbDownloadURL("localhost:9090/dev/1552818963350a29750a7ade7bccc0e2b1977bd2.zip")
+				basher.SetBbDownloadURL("docker.for.mac.localhost:9090/dev")
 			}
 			store := storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost",5432)
 			handler := &werker.WorkerMsgHandler{

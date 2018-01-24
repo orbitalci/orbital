@@ -66,6 +66,7 @@ func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	//defers are stacked, will be executed FILO
+
 	defer close(w.infochan)
 	defer builder.Cleanup()
 	//TODO: write stages to db

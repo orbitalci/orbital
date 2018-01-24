@@ -20,8 +20,8 @@ import (
 
 type HookHandler interface {
 	GetBitbucketClient(cfg *models.VCSCreds) (handler.VCSHandler, string, error)
-	GetRemoteConfig() *cred.RemoteConfig
-	SetRemoteConfig(remoteConfig *cred.RemoteConfig)
+	GetRemoteConfig() cred.CVRemoteConfig
+	SetRemoteConfig(remoteConfig cred.CVRemoteConfig)
 	GetProducer() *nsqpb.PbProduce
 	SetProducer(producer *nsqpb.PbProduce)
 	GetDeserializer() *deserialize.Deserializer
@@ -32,7 +32,7 @@ type HookHandler interface {
 
 
 type HookHandlerContext struct {
-	RemoteConfig *cred.RemoteConfig
+	RemoteConfig cred.CVRemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
 	Storage 	 storage.BuildSum
@@ -49,10 +49,10 @@ func (hhc *HookHandlerContext) GetBitbucketClient(cfg *models.VCSCreds) (handler
 	return bb, token, nil
 }
 
-func (hhc *HookHandlerContext) GetRemoteConfig() *cred.RemoteConfig {
+func (hhc *HookHandlerContext) GetRemoteConfig() cred.CVRemoteConfig {
 	return hhc.RemoteConfig
 }
-func (hhc *HookHandlerContext) SetRemoteConfig(remoteConfig *cred.RemoteConfig) {
+func (hhc *HookHandlerContext) SetRemoteConfig(remoteConfig cred.CVRemoteConfig) {
 	hhc.RemoteConfig = remoteConfig
 }
 func (hhc *HookHandlerContext) GetProducer() *nsqpb.PbProduce {
@@ -186,7 +186,7 @@ func notifyStorage(store storage.BuildSum, hash string, starttime time.Time, rep
 //TODO: this code needs to store status into db
 func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string, dbid int64) {
 	// get one-time token use for access to vault
-	token, err := ctx.GetRemoteConfig().Vault.CreateThrowawayToken()
+	token, err := ctx.GetRemoteConfig().GetVault().CreateThrowawayToken()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
