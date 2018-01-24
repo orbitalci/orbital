@@ -5,7 +5,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
-	"bytes"
+	"strings"
 	"testing"
 	"time"
 )
@@ -25,11 +25,11 @@ var testData = [][]byte{
 }
 
 func Test_writeInfoChanToInMemMap(t *testing.T) {
-	trans := &Transport{"FOR_TESTING", make(chan []byte)}
+	trans := &Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: 182}
 	werkerConsulet, _ := consulet.Default()
 	ctx := &werkerStreamer{
 		buildInfo: make(map[string]*buildDatum),
-		out:       storage.NewFileBuildStorage(""),
+		out:       storage.NewFileBuildStorage("./test-fixtures/store"),
 		consul:    werkerConsulet,
 	}
 	middleIndex := 6
@@ -54,11 +54,11 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	for !ctx.buildInfo[trans.Hash].done {
 		time.Sleep(100)
 	}
-	bytez, err := ctx.out.Retrieve(trans.Hash)
+	out, err := ctx.out.RetrieveLastOutByHash(trans.Hash)
 	if err != nil {
 		t.Fatal(err)
 	}
-	reader := bytes.NewReader(bytez)
+	reader := strings.NewReader(out.Output)
 	var actualData [][]byte
 	// todo: this is a dumb and lazy and nonperformant way but its late
 	sc := bufio.NewScanner(reader)

@@ -63,7 +63,8 @@ func (f *FileBuildStorage) Clean() {
 
 
 func (f *FileBuildStorage) AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error) {
-	id := getRandomStorage(f.saveDirec)
+	var id int64
+	id = getRandomStorage(f.saveDirec)
 	file, err := fileMaker(f.saveDirec, id, hash, "sum.json")
 	if err != nil {
 		return id, err
@@ -131,6 +132,12 @@ func (f *FileBuildStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, e
 		if err := json.Unmarshal(file, &sum); err != nil {
 			return sums, err
 		}
+		id, err := getBuildIdFromPath(drawer.path)
+		if err != nil {
+			//do something?
+		} else {
+			sum.BuildId = id
+		}
 		sums = append(sums, sum)
 
 	}
@@ -160,7 +167,8 @@ func (f *FileBuildStorage) AddOut(output *models.BuildOutput) error {
 	if err := output.Validate(); err != nil {
 		return err
 	}
-	cab := NewCabinet(string(output.BuildId))
+	str := strconv.Itoa(int(output.BuildId))
+	cab := NewCabinet(str)
 	fp, err := cab.findFolderPathByName(f.saveDirec)
 	if err != nil {
 		return err
@@ -177,7 +185,8 @@ func (f *FileBuildStorage) AddOut(output *models.BuildOutput) error {
 
 func (f *FileBuildStorage) RetrieveOut(buildId int64) (models.BuildOutput, error) {
 	var out models.BuildOutput
-	cab := NewCabinet(string(buildId))
+	str := strconv.Itoa(int(buildId))
+	cab := NewCabinet(str)
 	fp, err := cab.findFolderPathByName(f.saveDirec)
 	if err != nil {
 		return out, err

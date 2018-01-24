@@ -19,7 +19,7 @@ func insertDependentData(t *testing.T) (*PostgresStorage, int64){
 		Repo: "testRepo",
 		Branch: "aBranch",
 	}
-	id, err := pg.AddSumStart(model)
+	id, err := pg.AddSumStart(model.Hash, model.BuildTime, model.Account, model.Repo, model.Branch)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 		Repo: "testRepo",
 		Branch: "aBranch",
 	}
-	id, err := pg.AddSumStart(model)
+	id, err := pg.AddSumStart(model.Hash, model.BuildTime, model.Account, model.Repo, model.Branch)
 	if err != nil {
 		t.Fatal(err)
 	}
