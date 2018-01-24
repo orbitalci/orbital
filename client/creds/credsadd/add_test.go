@@ -16,7 +16,7 @@ func testNew() *cmd {
 	ui := cli.NewMockUi()
 	c := &cmd{
 		UI: ui,
-		config: commandhelper.NewTestClientConfig([]string{""}),
+		config: commandhelper.NewTestClientConfig([]string{}),
 	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.fileloc, "credfile-loc", "",

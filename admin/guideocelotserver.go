@@ -18,7 +18,7 @@ import (
 
 //this is our grpc server struct
 type guideOcelotServer struct {
-	RemoteConfig   *cred.RemoteConfig
+	RemoteConfig   cred.CVRemoteConfig
 	Deserializer   *deserialize.Deserializer
 	AdminValidator *AdminValidator
 	RepoValidator  *RepoValidator
@@ -93,7 +93,7 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.BuildRuntimeInfo, error) {
-	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.Consul, bq.Hash)
+	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 	if err != nil {
 		if _, ok := err.(*rt.ErrBuildDone); ok {
 			return  &models.BuildRuntimeInfo{Done:true}, nil
@@ -105,7 +105,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 
 // todo: calling Logs should stream from build storage, this is doing nothing
 func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
-	if !rt.CheckIfBuildDone(g.RemoteConfig.Consul, g.Storage, bq.Hash) {
+	if !rt.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
 		stream.Send(&models.LogResponse{OutputLine: "build is not finished, use BuildRuntime method and stream from the werker registered",})
 	} else {
 		data, err := g.Storage.RetrieveLastOutByHash(bq.Hash)
@@ -122,7 +122,7 @@ func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelo
 }
 
 
-func NewGuideOcelotServer(config *cred.RemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.OcelotStorage) models.GuideOcelotServer {
+func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.OcelotStorage) models.GuideOcelotServer {
 	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
 	// purdier to me anyway
 	guideOcelotServer := &guideOcelotServer{

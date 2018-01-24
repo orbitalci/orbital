@@ -46,11 +46,13 @@ func main() {
 	mode := os.Getenv("ENV")
 	if strings.EqualFold(mode, "dev") {
 		hookHandlerContext = &hh.MockHookHandlerContext{}
+		hookHandlerContext.SetRemoteConfig(&hh.MockRemoteConfig{})
+
 	} else {
 		hookHandlerContext = &hh.HookHandlerContext{}
+		hookHandlerContext.SetRemoteConfig(remoteConfig)
 	}
 
-	hookHandlerContext.SetRemoteConfig(remoteConfig)
 	hookHandlerContext.SetDeserializer(deserialize.New())
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
 	hookHandlerContext.SetStorage(storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432))

@@ -18,7 +18,7 @@ var (
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
 //if token is an empty string, vault will be initialized with $VAULT_TOKEN
-func GetInstance(consulHost string, consulPort int, token string) (*RemoteConfig, error) {
+func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfig, error) {
 	remoteConfig := &RemoteConfig{}
 
 	//intialize consul
@@ -56,9 +56,35 @@ func GetInstance(consulHost string, consulPort int, token string) (*RemoteConfig
 
 //RemoteConfig is an abstraction for retrieving/setting creds for ocelot
 //currently uses consul + vault
+type CVRemoteConfig interface {
+	GetConsul()	*consul.Consulet
+	SetConsul(consul *consul.Consulet)
+	GetVault() ocevault.Vaulty
+	SetVault(vault ocevault.Vaulty)
+	GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error)
+	GetPassword(path string) (string, error)
+	AddCreds(path string, anyCred RemoteConfigCred) (err error)
+}
+
 type RemoteConfig struct {
 	Consul *consul.Consulet
-	Vault  *ocevault.Vaulty
+	Vault  ocevault.Vaulty
+}
+
+func (rc *RemoteConfig) GetConsul() *consul.Consulet {
+	return rc.Consul
+}
+
+func (rc *RemoteConfig) SetConsul(consul *consul.Consulet) {
+	rc.Consul = consul
+}
+
+func (rc *RemoteConfig)  GetVault() ocevault.Vaulty {
+	return rc.Vault
+}
+
+func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
+	rc.Vault = vault
 }
 
 // instantiateCredObject is what we will have to add too when we add new credential integrations
@@ -83,11 +109,11 @@ func instantiateCredObject(ocyType OcyCredType) RemoteConfigCred {
 //   Example:
 //      creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
 //      vcsCreds := creds.(*models.VCSCreds)
-func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error) {
+func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error) {
 	creds := map[string]RemoteConfigCred{}
 	var err error
-	if remoteConfig.Consul.Connected {
-		configs, err := remoteConfig.Consul.GetKeyValues(path)
+	if rc.Consul.Connected {
+		configs, err := rc.Consul.GetKeyValues(path)
 		if err != nil {
 			return creds, err
 		}
@@ -101,7 +127,7 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyTyp
 				if hideSecret {
 					foundConfig.SetSecret("*********")
 				} else {
-					passcode, passErr := remoteConfig.GetPassword(foundConfig.BuildCredPath(credType, acctName))
+					passcode, passErr := rc.GetPassword(foundConfig.BuildCredPath(credType, acctName))
 					if passErr != nil {
 						ocelog.IncludeErrField(passErr).Error()
 						foundConfig.SetSecret("ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT")
@@ -121,8 +147,8 @@ func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyTyp
 }
 
 //GetPassword will return to you the vault password at specified path
-func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
-	authData, err := remoteConfig.Vault.GetUserAuthData(path)
+func (rc *RemoteConfig) GetPassword(path string) (string, error) {
+	authData, err := rc.Vault.GetUserAuthData(path)
 	if err != nil {
 		return "", err
 	}
@@ -130,13 +156,13 @@ func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
 }
 
 // AddRepoCreds adds repo integration creds to consul + vault
-func (remoteConfig *RemoteConfig) AddCreds(path string, anyCred RemoteConfigCred) (err error) {
-	if remoteConfig.Consul.Connected {
-		anyCred.AddAdditionalFields(remoteConfig.Consul, path)
-		if remoteConfig.Vault != nil {
+func (rc *RemoteConfig) AddCreds(path string, anyCred RemoteConfigCred) (err error) {
+	if rc.Consul.Connected {
+		anyCred.AddAdditionalFields(rc.Consul, path)
+		if rc.Vault != nil {
 			secret := make(map[string]interface{})
 			secret["clientsecret"] = anyCred.GetClientSecret()
-			if _, err = remoteConfig.Vault.AddUserAuthData(path, secret); err != nil {
+			if _, err = rc.Vault.AddUserAuthData(path, secret); err != nil {
 				return
 			}
 		}
