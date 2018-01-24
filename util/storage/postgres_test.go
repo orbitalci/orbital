@@ -7,25 +7,6 @@ import (
 	"time"
 )
 
-func insertDependentData(t *testing.T) (*PostgresStorage, int64){
-	pg := NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432)
-	hash := "123"
-	model := &models.BuildSummary{
-		Hash: hash,
-		Failed: false,
-		BuildTime: time.Now(),
-		Account: "testAccount",
-		BuildDuration: 23.232,
-		Repo: "testRepo",
-		Branch: "aBranch",
-	}
-	id, err := pg.AddSumStart(model.Hash, model.BuildTime, model.Account, model.Repo, model.Branch)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return pg, id
-}
-
 func TestPostgresStorage_AddSumStart(t *testing.T) {
 	pg := NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432)
 	const shortForm = "2006-01-02 15:04:05"
@@ -78,7 +59,8 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 }
 
 func TestPostgresStorage_AddOut(t *testing.T) {
-	pg, id := insertDependentData(t)
+	pg, id, cleanup := insertDependentData(t)
+	defer cleanup(t)
 	txt := "a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf"
 	out := &models.BuildOutput{
 		BuildId: id,
@@ -104,8 +86,8 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 }
 
 func TestPostgresStorage_AddFail(t *testing.T) {
-	pg, id := insertDependentData(t)
-	defer pg.db.QueryRow(`delete from build_summary where id = $1`, id)
+	pg, id, cleanup := insertDependentData(t)
+	defer cleanup(t)
 	adtl := make(models.FailureData)
 	adtl["sup"] = "123"
 	fails := &models.FailureReasons{

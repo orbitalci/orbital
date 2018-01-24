@@ -164,7 +164,7 @@ func (f *FileBuildStorage) RetrieveLatestSum(gitHash string) (models.BuildSummar
 }
 
 //stub
-func (f *FileBuildStorage) RetrieveLastFiveSums(repo string, account string) ([]models.BuildSummary, error) {
+func (f *FileBuildStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
 	var sums []models.BuildSummary
 	return sums, nil
 }
