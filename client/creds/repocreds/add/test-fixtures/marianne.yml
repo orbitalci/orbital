@@ -1,0 +1,6 @@
+repo:
+- username: thisBeMyUserName
+  password: SHH-BE-QUIET-ITS-A-SECRET
+  repoUrl: https://ocelot.perf/nexus-yo
+  acctName: jessishank
+  type: nexus

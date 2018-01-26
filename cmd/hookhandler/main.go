@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"bitbucket.org/level11consulting/ocelot/client/validate"
 )
 
 func main() {
@@ -57,6 +58,7 @@ func main() {
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
 	hookHandlerContext.SetStorage(storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432))
 	// todo: add check for hookHandlerContext being valid
+	hookHandlerContext.SetValidator(validate.GetOcelotValidator())
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e

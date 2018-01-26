@@ -1,15 +1,28 @@
 FROM golang:1.9-alpine as builder
 
-RUN apk --update --no-cache add git protobuf-dev ca-certificates openssh python && \
-    go get -u github.com/golang/dep/cmd/dep && \
-    go get -v -u github.com/golang/protobuf/protoc-gen-go
+ARG SSH_PRIVATE_KEY
+
+RUN apk --update --no-cache add git protobuf-dev ca-certificates openssh python mercurial tini && \
+    go get -v -u github.com/golang/dep/cmd/dep && \
+    go get -v -u github.com/golang/protobuf/protoc-gen-go && \
+    go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway && \
+    go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
+    go get -v -u github.com/favadi/protoc-go-inject-tag
 
 WORKDIR /go/src/bitbucket.org/level11consulting/ocelot/
 COPY . .
 RUN ./build-protos.sh
+
 RUN mkdir /root/.ssh
-COPY ./id_rsa  /root/.ssh/id_rsa
+
+# Add your ssh key
+RUN echo "${SSH_PRIVATE_KEY}" > /root/.ssh/private_key && \
+    echo "IdentityFile /root/.ssh/private_key" >> /root/.ssh/config && \
+    echo "StrictHostKeyChecking no" >> /root/.ssh/config && \
+    chmod 600 /root/.ssh/private_key && \
+    chmod 400 /root/.ssh/config
+
 RUN git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.org/"
-RUN echo  "StrictHostKeyChecking no" >> /root/.ssh/config && chmod 400 /root/.ssh/config 
+
 #CMD ["python","-m","SimpleHTTPServer"]
-RUN dep ensure -v
+RUN dep ensure -v && rm /root/.ssh/private_key

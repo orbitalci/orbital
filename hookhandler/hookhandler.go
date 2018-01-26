@@ -6,6 +6,7 @@ import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/client/validate"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
@@ -28,6 +29,8 @@ type HookHandler interface {
 	SetDeserializer(deserializer *deserialize.Deserializer)
 	GetStorage() storage.BuildSum
 	SetStorage(sum storage.BuildSum)
+	GetValidator() *validate.OcelotValidator
+	SetValidator(validator *validate.OcelotValidator)
 }
 
 
@@ -36,6 +39,7 @@ type HookHandlerContext struct {
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
 	Storage 	 storage.BuildSum
+	OcelotValidator *validate.OcelotValidator
 }
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
@@ -66,6 +70,12 @@ func (hhc *HookHandlerContext) GetDeserializer() *deserialize.Deserializer {
 }
 func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deserializer) {
 	hhc.Deserializer = deserializer
+}
+func (hhc *HookHandlerContext) SetValidator(validator *validate.OcelotValidator) {
+	hhc.OcelotValidator = validator
+}
+func (hhc *HookHandlerContext) GetValidator() *validate.OcelotValidator {
+	return hhc.OcelotValidator
 }
 
 func (hhc *HookHandlerContext) GetStorage() storage.BuildSum {
@@ -100,7 +110,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(buildConf)
 	//TODO: need to check and make sure that New.Type == branch
-	if validateBuild(buildConf, repopush.Push.Changes[0].New.Name) {
+	if validateBuild(ctx, buildConf, repopush.Push.Changes[0].New.Name) {
 		list := strings.Split(repopush.Repository.FullName, "/")
 		account := list[0]
 		repo := list[1]
@@ -139,7 +149,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if validateBuild(buildConf, "") {
+	if validateBuild(ctx, buildConf, "") {
 		list := strings.Split(pr.Repository.FullName, "/")
 		account := list[0]
 		repo := list[1]
@@ -151,16 +161,11 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 }
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
-	// - check if commit branch matches with ocelot.yaml branch
-	// - check if ocelot.yaml has at least one step called build
-//TODO: move validator out to its own class and whatnot, that way admin or command line client can use to validate
-func validateBuild(buildConf *pb.BuildConfig, branch string) bool {
-	var ok bool
-	for _, stg := range buildConf.Stages {
-		if stg.Name == "build" { ok = true }
-	}
-	if !ok {
-		ocelog.Log().Error("your ocelot.yml does not have the required `build` stage")
+	// - check if commit branch matches with ocelot.yaml branch and validate
+func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) bool {
+	err := ctx.GetValidator().ValidateConfig(buildConf, nil)
+
+	if err != nil {
 		return false
 	}
 

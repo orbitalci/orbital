@@ -6,15 +6,12 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/mitchellh/go-homedir"
 	"io"
 	"strings"
-
-	//"os/exec"
 )
 
 type Docker struct{
@@ -58,10 +55,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 			Error:  err,
 		}
 	}
-	var byt []byte
-	buf := bufio.NewReader(out)
-	buf.Read(byt)
-	fmt.Println(string(byt))
+	//var byt []byte
+	//buf := bufio.NewReader(out)
+	//buf.Read(byt)
+	//fmt.Println(string(byt))
 	defer out.Close()
 
 	bufReader := bufio.NewReader(out)
@@ -69,10 +66,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	logout <- []byte(stagePrintln + "Creating container...")
 
-
 	//container configurations
 	containerConfig := &container.Config{
-
 		Image: imageName,
 		Env: werk.BuildConf.Env,
 		Cmd: d.DownloadCodebase(werk),

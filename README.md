@@ -34,6 +34,14 @@ The build occurs in 3 steps.
 2. Using `ocelot-build`, we statically compile the golang binaries.
 3. Using docker [multi-stage build](https://docs.docker.com/engine/userguide/eng-image/multistage-build/#use-multi-stage-builds) features, we copy the compiled-binary into an empty [scratch](https://hub.docker.com/_/scratch/) container.
 
+#### Troubleshooting build
+If the build is acting funny, you can use this `docker run` command to start a shell in the builder environment.
+
+    docker run --rm -it \
+    -v $(pwd):/go/src/bitbucket.org/level11consulting/ocelot/ \
+    -e SSH_PRIVATE_KEY="$(cat ~/.ssh/id_rsa)" \
+    ocelot-build sh
+
 ### Run
 
 To start a local development cluster:
@@ -81,3 +89,4 @@ tj: building & running project & registrator alternative? or registrator?
    "acctName": "jessishank",
    "type": "bitbucket"
 }```
+

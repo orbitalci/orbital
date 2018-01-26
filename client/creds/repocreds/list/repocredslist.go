@@ -37,7 +37,6 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 
 
 func (c *cmd) init() {
-
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.accountFilter, "account", "",
 		"account name to filter on")

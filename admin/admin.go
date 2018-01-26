@@ -26,7 +26,6 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	//initializes our "context" - guideOcelotServer
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(),
 		storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432))
-
 	//grpc server
 	opts := []grpc.ServerOption{
 		grpc.Creds(secure.GetNewClientTLS(serverRunsAt))}
