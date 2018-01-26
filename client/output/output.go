@@ -78,7 +78,7 @@ func (c *cmd) Run(args []string) int {
 		for _, build := range build.Builds {
 			c.UI.Warn(fmt.Sprintf("\u0009%s ", build.Hash))
 		}
-		c.UI.Info(fmt.Sprintf("please enter a complete git hash"))
+		c.UI.Info(fmt.Sprintf("please enter a more complete git hash"))
 	} else if len(build.Builds) == 1 {
 		for _, build := range build.Builds {
 			if build.Done {

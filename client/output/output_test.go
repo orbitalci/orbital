@@ -49,14 +49,15 @@ func TestCmd_RunMultipleBuilds(t *testing.T) {
 		t.Error("non zero exit code")
 	}
 
-	text := strings.TrimSpace(ui.ErrorWriter.String())
-	if text != "it's your lucky day, there's TWO hashes matching that str:" {
-		t.Error(test.StrFormatErrors("output", "it's your lucky day, there's TWO hashes matching that str:", text))
+	expectedOutput := "it's your lucky day, there's TWO hashes matching that str:"
+	text := ui.ErrorWriter.String()
+	if !strings.HasPrefix(text, expectedOutput) {
+		t.Error(test.StrFormatErrors("multiple hashes output starts with", expectedOutput, text))
 	}
 
-	text = strings.TrimSpace(ui.ErrorWriter.String())
-	if text != "abc" {
-		t.Error(test.StrFormatErrors("output", "abc", text))
+	text = strings.TrimSpace(ui.OutputWriter.String())
+	if text != "please enter a more complete git hash" {
+		t.Error(test.StrFormatErrors("multiple hashes prompt", "please enter a more complete git hash", text))
 	}
 }
 
