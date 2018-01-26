@@ -216,7 +216,9 @@ func (f *FileBuildStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOu
 	if err := filepath.Walk(f.saveDirec, cab.folderWalker); err != nil {
 		return out, err
 	}
-
+	// todo: this is a hack to make sure this works, figure out if need
+	// to write another walker function or if this is _actually_ the best way
+	// feels icky to have to iterate again, we just friggin did that
 	var arry []*Drawer
 	for _, draw := range cab.files {
 		paths := strings.Split(draw.path,string( os.PathSeparator))
