@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"fmt"
 	"github.com/hashicorp/consul/testutil"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -54,6 +55,7 @@ func Test_CheckIfBuildDone(t *testing.T) {
 	consu, serv, store := initServerAndConsulet(t)
 	defer serv.Stop()
 	testAddFullBuildSummary(hash, store, t)
+	defer os.RemoveAll("./test-fixtures/storage")
 	done := CheckIfBuildDone(consu, store, hash)
 	if !done {
 		t.Error(test.GenericStrFormatErrors("build done", true, done))

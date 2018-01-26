@@ -1,3 +1,23 @@
+/*
+This implementation of the OcelotStorage system creates a directory structure and stores the data via json files.
+The build id is a generated random number that is unique to the storage system.
+The directory tree ends up being as follows:
+save-direc/
+├── 1238ejs7 <---------------- hash
+│   └── 5577006791947779410 <- build id
+│       ├── out.json <-------- build output
+│       └── sum.json <-------- build summary
+│       └── fail.json  <------ build failure reasons (if any) *NOT IMPLEMENTED YET*
+├── 123cc34
+│   └── 6129484611666145821
+│       ├── out.json
+│       └── sum.json
+└── alsdkurnv
+    └── 8674665223082153551
+        ├── out.json
+        └── sum.json
+
+ */
 package storage
 
 import (
@@ -13,7 +33,6 @@ import (
 	"time"
 )
 
-// todo: have a description here about how filestorage works
 
 // FileBuildStorage is an implementation of BuildOutput that is for filesystem.
 type FileBuildStorage struct {
@@ -221,7 +240,7 @@ func (f *FileBuildStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOu
 	// feels icky to have to iterate again, we just friggin did that
 	var arry []*Drawer
 	for _, draw := range cab.files {
-		paths := strings.Split(draw.path,string( os.PathSeparator))
+		paths := strings.Split(draw.path, string(os.PathSeparator))
 		if !(paths[len(paths) - 1] == gitHash) {
 			arry = append(arry, draw)
 		}
