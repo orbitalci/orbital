@@ -102,34 +102,3 @@ func TestCmd_RunPathFileWrongFormat(t *testing.T) {
 			"expected:\n%s\ngot:\n%s", expectedError, errMsg)
 	}
 }
-
-
-//TODO: why can't I read the output from help message? Is it cause I'm not explicitly calling it?
-func TestCmd_RunEmptyPath(t *testing.T) {
-//	ui := cli.NewMockUi()
-//	cmdd := &cmd{
-//		UI: ui,
-//	}
-//	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
-//
-//	var args []string
-//	if exit := cmdd.Run(args); exit != -18511 {
-//		t.Error("should exit with code -18511 for help, exited with code ", exit)
-//	}
-//
-//	expectedError := `
-//
-//Usage: ocelot validate [filepath]
-//  Interacting with ocelot validator
-//  This client takes in an argument as a path to a local ocelot.yaml file
-//  Example: ocelot validate /home/mariannef/git/MyProject/ocelot.yml
-//
-//`
-//
-//	errMsg := ui.OutputWriter.String()
-//	if strings.Compare(expectedError, errMsg) != 0 {
-//		t.Errorf("output and expected not the same,  \n" +
-//			"expected:\n%s\ngot:\n%s", "an error", errMsg)
-//	}
-}
-

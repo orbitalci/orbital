@@ -23,7 +23,7 @@ type cmd struct {
 	UI      cli.Ui
 	flags   *flag.FlagSet
 	ocelotFileLoc string
-	config *commandhelper.ClientConfig 	//TODO: review that this talks to server, not directly to consul
+	config *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
@@ -76,7 +76,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
-		fmt.Println("an error occurred while parsing flags")
+		c.UI.Error("an error occurred while parsing flags")
 		return 1
 	}
 
