@@ -68,7 +68,8 @@ func SetBuildDone(consulete *consul.Consulet, gitHash string) error {
 	return nil
 }
 
-// CheckIfBuildDone will do a check in consul for the `done` flag
+// CheckIfBuildDone will chck in consul to make sure there is nothing in runtime configuration anymore,
+// then it will makes sure it can find it in storage
 func CheckIfBuildDone(consulete *consul.Consulet, summary storage.BuildSum, gitHash string) bool {
 	kv, err := consulete.GetKeyValue(fmt.Sprintf(buildRegister, gitHash))
 	fmt.Println("KV!", kv)
