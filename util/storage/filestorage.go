@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -215,6 +216,15 @@ func (f *FileBuildStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOu
 	if err := filepath.Walk(f.saveDirec, cab.folderWalker); err != nil {
 		return out, err
 	}
+
+	var arry []*Drawer
+	for _, draw := range cab.files {
+		paths := strings.Split(draw.path,string( os.PathSeparator))
+		if !(paths[len(paths) - 1] == gitHash) {
+			arry = append(arry, draw)
+		}
+	}
+	cab.files = arry
 	latestDirec := cab.findLatestFileObj()
 	bytez, err := ioutil.ReadFile(filepath.Join(latestDirec, "out.json"))
 	if err != nil {

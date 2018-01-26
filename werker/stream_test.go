@@ -25,11 +25,16 @@ var testData = [][]byte{
 }
 
 func Test_writeInfoChanToInMemMap(t *testing.T) {
-	trans := &Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: 182}
+	store := storage.NewFileBuildStorage("./test-fixtures/store")
+	id, err := store.AddSumStart("FOR_TESTING", time.Now(), "myacct", "myrepo", "BRANCH!")
+	if err != nil {
+		t.Fatal("could not create setup data, err: ", err.Error())
+	}
+	trans := &Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: id}
 	werkerConsulet, _ := consulet.Default()
 	ctx := &werkerStreamer{
 		buildInfo: make(map[string]*buildDatum),
-		out:       storage.NewFileBuildStorage("./test-fixtures/store"),
+		out: 	    store,
 		consul:    werkerConsulet,
 	}
 	middleIndex := 6
