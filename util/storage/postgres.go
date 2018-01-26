@@ -11,12 +11,13 @@ import (
 	"time"
 )
 
-func NewPostgresStorage(user string, pw string, loc string, port int) *PostgresStorage {
+func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc string) *PostgresStorage {
 	pg := &PostgresStorage{
 		user: user,
 		password: pw,
 		location: loc,
 		port: port,
+		dbLoc: dbLoc,
 	}
 	//if err := pg.Connect(); err != nil {
 	//	return pg, err
@@ -29,11 +30,12 @@ type PostgresStorage struct {
 	password string
 	location string
 	port int
+	dbLoc string
 	db *sql.DB
 }
 
 func (p *PostgresStorage) Connect() error {
-	db, err := sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.user, "postgres", p.password, p.location, p.port))
+	db, err := sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.user, p.dbLoc, p.password, p.location, p.port))
 	if err != nil {
 		return err
 	}

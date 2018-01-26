@@ -195,8 +195,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, path.Dir(filename) + "/test.html")
 }
 
-func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
-	store := storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432)
+func getWerkerStreamer(conf *WerkerConf, store storage.OcelotStorage) *werkerStreamer {
 	werkerConsul, err := consulet.Default()
 	if err != nil {
 		ocelog.IncludeErrField(err)
@@ -211,8 +210,8 @@ func getWerkerStreamer(conf *WerkerConf) *werkerStreamer {
 }
 
 //ServeMe will start HTTP Server as needed for streaming build output by hash
-func ServeMe(transportChan chan *Transport, conf *WerkerConf) {
-	werkStream := getWerkerStreamer(conf)
+func ServeMe(transportChan chan *Transport, conf *WerkerConf, store storage.OcelotStorage) {
+	werkStream := getWerkerStreamer(conf, store)
 	ocelog.Log().Debug("saving build info channels to in memory map")
 	go cacheProcessor(transportChan, werkStream)
 

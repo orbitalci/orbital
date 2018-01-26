@@ -166,6 +166,7 @@ func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) bo
 	err := ctx.GetValidator().ValidateConfig(buildConf, nil)
 
 	if err != nil {
+		ocelog.IncludeErrField(err).Error("failed validation")
 		return false
 	}
 
@@ -262,6 +263,7 @@ func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkout
 	if err != nil {
 		return
 	}
+	fmt.Println(string(fileBitz))
 	if err = ctx.GetDeserializer().YAMLToStruct(fileBitz, conf); err != nil {
 		return
 	}

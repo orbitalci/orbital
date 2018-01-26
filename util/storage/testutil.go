@@ -14,7 +14,7 @@ import (
 // seed data
 func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing.T)){
 	cleanup, pw, port := CreateTestPgDatabase(t)
-	pg := NewPostgresStorage("postgres", pw, "localhost", port)
+	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	hash := "123"
 	model := &models.BuildSummary{
 		Hash: hash,

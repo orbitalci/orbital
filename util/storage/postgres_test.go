@@ -10,7 +10,7 @@ import (
 func TestPostgresStorage_AddSumStart(t *testing.T) {
 	cleanup, pw, port := CreateTestPgDatabase(t)
 	defer cleanup(t)
-	pg := NewPostgresStorage("postgres", pw, "localhost", port)
+	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	const shortForm = "2006-01-02 15:04:05"
 	buildTime, err := time.Parse(shortForm,"2018-01-14 18:38:59")
 	if err != nil {

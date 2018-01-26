@@ -5,7 +5,7 @@
   branch = "master"
   name = "bitbucket.org/level11consulting/go-til"
   packages = ["consul","deserialize","log","net","nsqpb","test","vault"]
-  revision = "17dbf7566128eda1ef19e06db3ab765705b7da94"
+  revision = "7687e6c5bb6b9fcae625ff73cc805b17bf6375aa"
 
 [[projects]]
   name = "github.com/Jeffail/gabs"
@@ -53,7 +53,7 @@
   branch = "master"
   name = "github.com/denisenkom/go-mssqldb"
   packages = ["."]
-  revision = "df1dd7185ab5a4b98222e0852c7f057fa00f6e1c"
+  revision = "7deea793d3c7703dd74a1a38f09223b8c2cd0501"
 
 [[projects]]
   name = "github.com/docker/distribution"
@@ -113,7 +113,7 @@
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["jsonpb","proto","protoc-gen-go/descriptor","ptypes","ptypes/any","ptypes/duration","ptypes/empty","ptypes/struct","ptypes/timestamp"]
-  revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
 
 [[projects]]
   branch = "master"
@@ -154,8 +154,8 @@
 [[projects]]
   name = "github.com/hashicorp/consul"
   packages = ["api","command/flags","lib/freeport","testutil","testutil/retry"]
-  revision = "b55059fc3d0327c92c41431e57dfd2df3f956b03"
-  version = "v1.0.2"
+  revision = "48f3dd5642374d079f5a64359023fb8318eb81cc"
+  version = "v1.0.3"
 
 [[projects]]
   branch = "master"
@@ -173,7 +173,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-hclog"
   packages = ["."]
-  revision = "ca137eb4b4389c9bc6f1a6d887f056bf16c00510"
+  revision = "5bcb0f17e36442247290887cc914a6e507afa5c4"
 
 [[projects]]
   branch = "master"
@@ -197,7 +197,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-plugin"
   packages = ["."]
-  revision = "e37881a3f1a07fce82b3d99ce0342a72e53386bc"
+  revision = "e53f54cbf51efde642d4711313e829a1ff0c236d"
 
 [[projects]]
   branch = "master"
@@ -257,7 +257,7 @@
   branch = "master"
   name = "github.com/lib/pq"
   packages = [".","oid"]
-  revision = "83612a56d3dd153a94a629cd64925371c9adad78"
+  revision = "19c8e9ad00952ce0c64489b60e8df88bb16dd514"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
@@ -338,6 +338,12 @@
   version = "v1.0.7"
 
 [[projects]]
+  name = "github.com/oklog/run"
+  packages = ["."]
+  revision = "4dadeb3030eda0273a12382bb2348ffc7c9d1a39"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
@@ -400,26 +406,26 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","md4","ssh","ssh/terminal"]
-  revision = "13931e22f9e72ea58bb73048bc752b48c6d4d4ac"
+  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","internal/chacha20","md4","poly1305","ssh","ssh/terminal"]
+  revision = "0efb9460aaf800c6376acf625be2853bceac2e06"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","http2","http2/hpack","idna","internal/timeseries","lex/httplex","proxy","trace"]
-  revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
+  revision = "0ed95abb35c445290478a5348a7b38bb154135fd"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","clientcredentials","internal"]
-  revision = "30785a2c434e431ef7c507b54617d6a951d5f2b4"
+  revision = "a032972e28060ca4f5644acffae3dfc268cc09db"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "fff93fa7cd278d84afc205751523809c464168ab"
+  revision = "ff2a66f350cefa5c93a634eadb5d25bb60c85a9c"
 
 [[projects]]
   branch = "master"
@@ -437,13 +443,13 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/api/annotations","googleapis/rpc/status"]
-  revision = "a8101f21cf983e773d0c1133ebc5424792003214"
+  revision = "4eb30f4778eed4c258ba66527a0d4f9ec8a36c45"
 
 [[projects]]
   name = "google.golang.org/grpc"
   packages = [".","balancer","balancer/base","balancer/roundrobin","codes","connectivity","credentials","encoding","grpclb/grpc_lb_v1/messages","grpclog","health","health/grpc_health_v1","internal","keepalive","metadata","naming","peer","resolver","resolver/dns","resolver/passthrough","stats","status","tap","transport"]
-  revision = "7cea4cc846bcf00cbb27595b07da5de875ef7de9"
-  version = "v1.9.1"
+  revision = "6b51017f791ae1cfbec89c52efdf444b13b550ef"
+  version = "v1.9.2"
 
 [[projects]]
   name = "gopkg.in/inf.v0"

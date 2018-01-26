@@ -6,6 +6,16 @@ import (
 	"time"
 )
 
+type Dest int
+
+const (
+	FileSystem Dest = iota
+	Postgres
+)
+
+
+
+
 type Stringy interface {
 	StorageType() string
 }

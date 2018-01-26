@@ -25,18 +25,18 @@ import (
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/werker"
-	"fmt"
-	"time"
 	"bitbucket.org/level11consulting/ocelot/werker/builder"
-	"os"
+	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"io"
+	"os"
 	"strings"
+	"time"
 )
 
 //listen will listen for messages for a specified topic. If a message is received, a
 //message worker handler is created to process the message
-func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport) {
+func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			time.Sleep(10 * time.Second)
@@ -46,7 +46,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
 				basher.SetBbDownloadURL("docker.for.mac.localhost:9090/dev")
 			}
-			store := storage.NewPostgresStorage("postgres", "mysecretpassword", "localhost",5432)
+
 			handler := &werker.WorkerMsgHandler{
 				Topic:    topic,
 				WerkConf: conf,
@@ -78,15 +78,19 @@ func main() {
 
 	//do whatever setup stuff werker needs in this function
 	setupWerker()
+	store, err := conf.RemoteConfig.GetOcelotStorage()
+	if err != nil {
+		ocelog.IncludeErrField(err).Fatal("COULD NOT GET OCELOT STORAGE! BAILING!")
+	}
 
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewProtoConsume()
-		go listen(protoConsume, topic, conf, tunnel)
+		go listen(protoConsume, topic, conf, tunnel, store)
 		consumers = append(consumers, protoConsume)
 	}
 
-	go werker.ServeMe(tunnel, conf)
+	go werker.ServeMe(tunnel, conf, store)
 	for _, consumer := range consumers {
 		<-consumer.StopChan
 	}
