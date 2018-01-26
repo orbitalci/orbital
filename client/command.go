@@ -13,6 +13,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/output"
 	"github.com/mitchellh/cli"
 	"os"
+	"bitbucket.org/level11consulting/ocelot/client/validate"
 )
 
 var Commands map[string]cli.CommandFactory
@@ -30,6 +31,7 @@ func init(){
 		"creds repo"     : func()(cli.Command, error) { return repocreds.New(), nil },
 		"creds repo add" : func()(cli.Command, error) { return repocredsadd.New(ui), nil},
 		"creds repo list": func()(cli.Command, error) { return repocredslist.New(ui), nil},
+		"validate": func()(cli.Command, error) { return validate.New(ui), nil},
 		"logs"			  : func()(cli.Command, error) { return output.New(ui), nil},
 	}
 }

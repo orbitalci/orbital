@@ -25,7 +25,7 @@ import (
 func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(),
-		storage.NewFileBuildStorage("/Users/jesseshank/.ocelot/build-output"))
+		storage.NewFileBuildStorage(""))
 
 	//grpc server
 	opts := []grpc.ServerOption{

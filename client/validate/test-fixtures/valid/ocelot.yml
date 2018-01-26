@@ -1,0 +1,10 @@
+image: maven:3.5.2
+buildTool: maven
+branches:
+  - master
+env:
+  - "MARIANNE=1"
+stages:
+  - name : build
+    script:
+      - mvn clean install
