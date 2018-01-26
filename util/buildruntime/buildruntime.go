@@ -68,7 +68,7 @@ func SetBuildDone(consulete *consul.Consulet, gitHash string) error {
 	return nil
 }
 
-// CheckIfBuildDone will chck in consul to make sure there is nothing in runtime configuration anymore,
+// CheckIfBuildDone will check in consul to make sure there is nothing in runtime configuration anymore,
 // then it will makes sure it can find it in storage
 func CheckIfBuildDone(consulete *consul.Consulet, summary storage.BuildSum, gitHash string) bool {
 	kv, err := consulete.GetKeyValue(fmt.Sprintf(buildRegister, gitHash))
@@ -117,8 +117,6 @@ func Register(consulete *consul.Consulet, gitHash string, ip string, grpcPort st
 }
 
 // Delete will remove everything related to that werker's build of the gitHash out of consul
-// **HOWEVER... RIGHT NOW...** it will leave in the `done` flag (until we include a postgres db)
-// This should be called after a build has completed and everything has been stored.
 func Delete(consulete *consul.Consulet, gitHash string) error {
 	err := consulete.RemoveValues(fmt.Sprintf(buildPath, gitHash))
 	// for now, leaving in build done

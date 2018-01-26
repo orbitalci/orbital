@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-
+// todo: have a description here about how filestorage works
 
 // FileBuildStorage is an implementation of BuildOutput that is for filesystem.
 type FileBuildStorage struct {
@@ -61,7 +61,8 @@ func (f *FileBuildStorage) Clean() {
 	os.RemoveAll(f.saveDirec)
 }
 
-
+// AddSumStart will create an entry in the filesystem storage by generating a random number that
+// has not been used yet. that will be the buildId. Then it will dump the models.BuildSummary struct to JSON.
 func (f *FileBuildStorage) AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error) {
 	var id int64
 	id = getRandomStorage(f.saveDirec)

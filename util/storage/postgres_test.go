@@ -8,7 +8,9 @@ import (
 )
 
 func TestPostgresStorage_AddSumStart(t *testing.T) {
-	pg := NewPostgresStorage("postgres", "mysecretpassword", "localhost", 5432)
+	cleanup, pw, port := CreateTestPgDatabase(t)
+	defer cleanup(t)
+	pg := NewPostgresStorage("postgres", pw, "localhost", port)
 	const shortForm = "2006-01-02 15:04:05"
 	buildTime, err := time.Parse(shortForm,"2018-01-14 18:38:59")
 	if err != nil {
@@ -36,8 +38,9 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	if sum.Hash != "123" {
 		t.Error(test.StrFormatErrors("hash", "123", sum.Hash))
 	}
-	if sum.Failed != false {
-		t.Error(test.GenericStrFormatErrors("failed", false, sum.Failed))
+	// when first inserted, should be true
+	if sum.Failed != true {
+		t.Error(test.GenericStrFormatErrors("failed", true, sum.Failed))
 	}
 	//if sum.BuildTime != buildTime {
 	//	t.Error(test.GenericStrFormatErrors("build start time", buildTime, sum.BuildTime))
@@ -45,17 +48,29 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	if sum.Account != "testAccount" {
 		t.Error(test.StrFormatErrors("account", "testAccount", sum.Account))
 	}
-	if sum.BuildDuration != 23.232 {
-		t.Error(test.GenericStrFormatErrors("build duration", 23.232, sum.BuildDuration))
-	}
 	if sum.Repo != "testRepo" {
 		t.Error(test.StrFormatErrors("repo", "testRepo", sum.Repo))
 	}
 	if sum.Branch != "aBranch" {
 		t.Error(test.StrFormatErrors("branch", "aBranch", sum.Branch))
 	}
+	err = pg.UpdateSum(model.Failed, model.BuildDuration, id)
+	if err != nil {
+		t.Fatal("could not update build summary: ", err)
+	}
 	//cleanup
-	_ = pg.db.QueryRow(`delete from build_summary where hash = 123`)
+	//_ = pg.db.QueryRow(`delete from build_summary where hash = 123`)
+	sumaz, err := pg.RetrieveSum("123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	suum := sumaz[0]
+	if suum.BuildDuration != model.BuildDuration {
+		t.Error(test.GenericStrFormatErrors("build duration", model.BuildDuration, suum.BuildDuration))
+	}
+	if suum.Failed != false {
+		t.Error(test.GenericStrFormatErrors("failed", false, sum.Failed))
+	}
 }
 
 func TestPostgresStorage_AddOut(t *testing.T) {
@@ -67,14 +82,12 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 		Output: txt,
 	}
 	err := pg.AddOut(out)
-	defer pg.db.QueryRow(`delete from build_summary where hash = 123`)
-	defer pg.db.QueryRow(`delete from build_output where build_id = $1`, id)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("could not add out: ", err)
 	}
 	retrieved, err := pg.RetrieveOut(id)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("could not retrieve out: ", err)
 	}
 	if retrieved.BuildId != id {
 		t.Error(test.GenericStrFormatErrors("build id", id, retrieved.BuildId))

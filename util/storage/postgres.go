@@ -56,6 +56,9 @@ repo      | character varying(100)
 id        | integer
 branch    | character varying
 */
+
+// AddSumStart updates the build_summary table with the initial information that you get from a webhook
+// returning the build id that postgres generates
 func (p *PostgresStorage) AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error) {
 	if err := p.Connect(); err != nil {
 		return 0, errors.New("could not connect to postgres: " + err.Error())
@@ -70,6 +73,7 @@ func (p *PostgresStorage) AddSumStart(hash string, starttime time.Time, account 
 	return id, nil
 }
 
+// UpdateSum updates the remaining fields in the build_summary table
 func (p *PostgresStorage) UpdateSum(failed bool, duration float64, id int64) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
@@ -108,6 +112,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 	return sums, nil
 }
 
+// RetrieveLatestSum will return the latest entry of build_summary where hash=gitHash
 func (p *PostgresStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
 	var sum models.BuildSummary
 	if err := p.Connect(); err != nil {
@@ -123,6 +128,7 @@ func (p *PostgresStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary
 	return sum, err
 }
 
+// RetrieveLastFewSums will return <limit> number of summaries that correlate with a repo and account.
 func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
 	var sums []models.BuildSummary
 	if err := p.Connect(); err != nil {
@@ -155,6 +161,8 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
  output   | character varying |           |
  id       | integer           |           | not null
  */
+
+ //AddOut adds build output text to build_output table
 func (p *PostgresStorage) AddOut(output *models.BuildOutput) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
@@ -178,14 +186,14 @@ func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error)
 	}
 	defer p.Disconnect()
 	queryStr := `SELECT * FROM build_output WHERE build_id=$1`
-	fmt.Println(queryStr, string(buildId))
+	//fmt.Println(queryStr, string(buildId))
 	if err := p.db.QueryRow(queryStr, buildId).Scan(&out.BuildId, &out.Output, &out.OutputId); err != nil {
 		return out, err
 	}
 	return out, nil
 }
 
-// will return the latest
+// RetrieveLastOutByHash will return the last output text that correlates with the gitHash
 func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOutput, error) {
 	queryStr := "select build_id, output, build_output.id from build_output " +
 		"join build_summary on build_output.build_id = build_summary.id and build_summary.hash = $1 " +
@@ -199,7 +207,7 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 	return out, err
 }
 
-
+//
 func (p *PostgresStorage) AddFail(reason *models.BuildFailureReason) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())

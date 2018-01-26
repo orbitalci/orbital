@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	"bytes"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -37,8 +38,17 @@ func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing
 func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password string, port int) {
 	port = 5555
 	password = "mysecretpassword"
-	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("docker run -p %d:5432 -e POSTGRES_PASSWORD=%s --name pgtest -d postgres", port, password))
+	path, err := filepath.Abs("./test-fixtures/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("docker run -p %d:5432  -v %s:/docker-entrypoint-initdb.d -e POSTGRES_PASSWORD=%s --name pgtest -d postgres", port, path, password))
+	var outbe, errbe bytes.Buffer
+	cmd.Stdout = &outbe
+	cmd.Stderr = &errbe
 	if err := cmd.Run(); err != nil {
+		t.Log(outbe.String())
+		t.Log(errbe.String())
 		t.Fatal("could not start db, err: ", err.Error())
 	}
 	t.Log("successfully started up test pg database on port 5555")
@@ -52,15 +62,9 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 			t.Fatal("could not rm db image, err: ", err.Error())
 		}
 	}
-	path, err := filepath.Abs("./test-fixtures/schema.sql")
-	if err != nil {
-		t.Fatal("could not get absolute path to schema sql file")
-	}
-	psqlCmd := fmt.Sprintf(`PGPASSWORD=mysecretpassword psql -h localhost -p 5555 --user postgres < %s`, path)
-	cmd = exec.Command("/bin/sh", "-c", psqlCmd)
-	if err := cmd.Run(); err != nil {
-		t.Fatal("could not insert schemas")
-	}
+	// this has to happen for postgres to be able to actually start up
+	t.Log("waiting 4 seconds for postgres container to start up proper")
+	time.Sleep(4 * time.Second)
 	return
 
 }
