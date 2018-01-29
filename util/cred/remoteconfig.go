@@ -193,7 +193,8 @@ func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 		return 0, errors.New("unable to get storage type from consul, err: " + err.Error())
 	}
 	if kv == nil {
-		return 0, errors.New(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; this is required to know which storage to use.", StorageType))
+		ocelog.Log().Warning(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; using file system as the default.", StorageType))
+		return storage.FileSystem, nil
 	}
 	storageType := string(kv.Value)
 	switch storageType {
