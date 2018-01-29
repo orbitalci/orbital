@@ -37,9 +37,9 @@ type werkerStreamer struct {
 }
 
 type buildDatum struct {
+	sync.Mutex
 	buildData [][]byte
 	done      bool
-	mu 		  sync.Mutex
 }
 
 func (b *buildDatum) GetData() [][]byte{
@@ -48,14 +48,6 @@ func (b *buildDatum) GetData() [][]byte{
 
 func (b *buildDatum) CheckDone() bool {
 	return b.done
-}
-
-func (b *buildDatum) Lock() {
-	b.mu.Lock()
-}
-
-func (b *buildDatum) Unlock() {
-	b.mu.Unlock()
 }
 
 func (w *werkerStreamer) BuildInfo(request *protobuf.Request, stream protobuf.Build_BuildInfoServer) error {
@@ -157,8 +149,7 @@ func processTransport(transport *Transport, appCtx *werkerStreamer) {
 //  appCtx, the done flag is written to consul, and the array is removed from the map
 func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 	var dataSlice [][]byte
-	mu := sync.Mutex{}
-	build := &buildDatum{dataSlice, false, mu,}
+	build := &buildDatum{buildData: dataSlice, done: false}
 	appCtx.buildInfo[transport.Hash] = build
 	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
 	for i := range transport.InfoChan {
