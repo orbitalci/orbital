@@ -127,16 +127,20 @@ func Test_GetBuildRuntime(t *testing.T) {
 	if err != nil {
 		t.Fatal("unable to get build runtime, err: ", err.Error())
 	}
-	if brt.Done != false {
-		t.Error(test.GenericStrFormatErrors("done", false, brt.Done))
+	if len(brt) != 1 {
+		t.Error(test.GenericStrFormatErrors("result length", 1, len(brt)))
 	}
-	if brt.GrpcPort != grpcPort {
-		t.Error(test.StrFormatErrors("grpc port", grpcPort, brt.GrpcPort))
+
+	for _, val := range brt{
+		if val.Done != false {
+			t.Error(test.GenericStrFormatErrors("done", false, val.Done))
+		}
+		if val.GrpcPort != grpcPort {
+			t.Error(test.StrFormatErrors("grpc port", grpcPort, val.GrpcPort))
+		}
+		if val.Ip != ip {
+			t.Error(test.StrFormatErrors("registered ip", ip, val.Ip))
+		}
 	}
-	if brt.Ip != ip {
-		t.Error(test.StrFormatErrors("registered ip", ip, brt.Ip))
-	}
-	if brt.WsPort != wsPort {
-		t.Error(test.StrFormatErrors("websocket port", wsPort, brt.WsPort))
-	}
+
 }

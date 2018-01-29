@@ -94,7 +94,7 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 	return allCreds, nil
 }
 
-func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.BuildRuntimeInfo, error) {
+func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.Builds, error) {
 	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 	if err != nil {
 		if _, ok := err.(*rt.ErrBuildDone); ok {
@@ -102,7 +102,12 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &models.BuildRuntimeInfo{Done: buildRtInfo.Done, Ip: buildRtInfo.Ip, GrpcPort: buildRtInfo.GrpcPort}, nil
+
+	builds := &models.Builds{
+		Builds : buildRtInfo,
+	}
+
+	return builds, err
 }
 
 // todo: calling Logs should stream from build storage, this is doing nothing

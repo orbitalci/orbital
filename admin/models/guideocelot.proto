@@ -26,7 +26,7 @@ service GuideOcelot {
     rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
 
     rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
-    rpc BuildRuntime (BuildQuery) returns (BuildRuntimeInfo) {}
+    rpc BuildRuntime (BuildQuery) returns (Builds) {}
     rpc Logs (BuildQuery) returns (stream LogResponse) {}
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {}
 }
@@ -65,10 +65,16 @@ message BuildQuery {
     int64 buildId = 2;
 }
 
+
+message Builds {
+    map<string, BuildRuntimeInfo> builds = 1;
+}
+
 message BuildRuntimeInfo {
     bool   done     = 1;
     string ip       = 2;
     string grpcPort = 3;
+    string hash = 4;
 }
 
 message LogResponse {

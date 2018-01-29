@@ -69,10 +69,12 @@ func (c *cmd) Run(args []string) int {
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	var build *models.BuildRuntimeInfo
+	var build *models.Builds
 	var err error
 	if c.buildId != 0 {
-		build = &models.BuildRuntimeInfo{Done: true}
+		builds := make(map[string]*models.BuildRuntimeInfo)
+		builds["br"] = &models.BuildRuntimeInfo{Done: true}
+		build = &models.Builds{Builds:builds}
 	} else {
 		if c.hash == "ERROR" {
 			c.UI.Error("flag --hash is required, otherwise there is no build to tail")
@@ -84,14 +86,24 @@ func (c *cmd) Run(args []string) int {
 			return 1
 		}
 	}
-	if build.Done {
-		c.UI.Info("streaming from storage")
-		return c.fromStorage(ctx)
+	if len(build.Builds) > 1 {
+		c.UI.Warn(fmt.Sprintf("it's your lucky day, there's TWO hashes matching that str: "))
+		for _, build := range build.Builds {
+			c.UI.Warn(fmt.Sprintf("\u0009%s ", build.Hash))
+		}
+		c.UI.Info(fmt.Sprintf("please enter a more complete git hash"))
+	} else if len(build.Builds) == 1 {
+		for _, build := range build.Builds {
+			if build.Done {
+				return c.fromStorage(ctx, build.Hash)
+			} else {
+				return c.fromWerker(ctx, build)
+			}
+		}
 	} else {
-		c.UI.Info("streaming from werker")
-		return c.fromWerker(ctx, build)
+		c.UI.Info(fmt.Sprintf("no builds found for entry: %s", c.hash))
+		return 0
 	}
-
 	return 0
 }
 
@@ -104,8 +116,8 @@ func (c *cmd) Help() string {
 }
 
 
-func (c *cmd) fromStorage(ctx context.Context) int {
-	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: c.hash, BuildId:int64(c.buildId)})
+func (c *cmd) fromStorage(ctx context.Context, hash string) int {
+	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: hash})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, "Unable to get stream from admin.")
 		return 1
@@ -133,7 +145,7 @@ func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 		return 1
 	}
 
-	stream, err := client.BuildInfo(ctx, &pb.Request{Hash: c.hash})
+	stream, err := client.BuildInfo(ctx, &pb.Request{Hash: build.GetHash()})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1

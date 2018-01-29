@@ -8,6 +8,7 @@ import (
 	"github.com/mitchellh/cli"
 	"strings"
 	"testing"
+	"flag"
 )
 
 func TestCmd_fromStorage(t *testing.T) {
@@ -21,7 +22,7 @@ func TestCmd_fromStorage(t *testing.T) {
 		hash: hash,
 	}
 	ctx := context.Background()
-	exit := cmdd.fromStorage(ctx)
+	exit := cmdd.fromStorage(ctx, hash)
 	if exit != 0 {
 		t.Error("non zero exit code")
 	}
@@ -30,6 +31,37 @@ func TestCmd_fromStorage(t *testing.T) {
 		test.StrFormatErrors("output", streamText + "\n", text)
 	}
 }
+
+func TestCmd_RunMultipleBuilds(t *testing.T) {
+	hash := "testinghash"
+	ui := cli.NewMockUi()
+	cliConf := commandhelper.NewTestClientConfig([]string{})
+	cmdd := &cmd{
+		UI: ui,
+		config: cliConf,
+	}
+	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	cmdd.flags.StringVar(&cmdd.hash, "hash", hash, "goal hash")
+	var args []string
+	exit := cmdd.Run(args)
+
+	if exit != 0 {
+		t.Error("non zero exit code")
+	}
+
+	expectedOutput := "it's your lucky day, there's TWO hashes matching that str:"
+	text := ui.ErrorWriter.String()
+	if !strings.HasPrefix(text, expectedOutput) {
+		t.Error(test.StrFormatErrors("multiple hashes output starts with", expectedOutput, text))
+	}
+
+	text = strings.TrimSpace(ui.OutputWriter.String())
+	if text != "please enter a more complete git hash" {
+		t.Error(test.StrFormatErrors("multiple hashes prompt", "please enter a more complete git hash", text))
+	}
+}
+
+
 
 func TestCmd_fromWerker(t *testing.T) {
 	var data = []struct{
