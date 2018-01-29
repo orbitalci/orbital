@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# starts infrastructure needed for ocelot, can optionally disable consul/vault with --no-consul, --no-vault, or --no-nsq flags
+# starts infrastructure needed for ocelot, can optionally disable consul/vault with --no-consul, --no-vault, --no-postgres or --no-nsq flags
 args=()
 follow=(" -d")
 CONSUL=1
 VAULT=1
 NSQ=1
+POSTGRES=1
 while [[ $# -gt 0 ]]
 do
 key="$1"
@@ -23,6 +24,11 @@ case $key in
     --no-vault)
     VAULT=0
     echo "starting without vault"
+    shift
+    ;;
+    --no-postgres)
+    POSTGRES=0
+    echo "starting without postgres"
     shift
     ;;
     --no-nsq)
@@ -43,6 +49,10 @@ fi
 
 if (( VAULT == 1 )); then
     args+=(" -f infra/vault-docker-compose.yml")
+fi
+
+if (( POSTGRES == 1 )); then
+    args+=(" -f infra/postgres-docker-compose.yml")
 fi
 
 if (( NSQ == 1 )); then

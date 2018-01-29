@@ -1,0 +1,7 @@
+version: "3.3"
+services:
+  db:
+    image: postgres
+    hostname: db
+    ports:
+      - 5432:5432
