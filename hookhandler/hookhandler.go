@@ -27,8 +27,6 @@ type HookHandler interface {
 	SetProducer(producer *nsqpb.PbProduce)
 	GetDeserializer() *deserialize.Deserializer
 	SetDeserializer(deserializer *deserialize.Deserializer)
-	GetStorage() storage.BuildSum
-	SetStorage(sum storage.BuildSum)
 	GetValidator() *validate.OcelotValidator
 	SetValidator(validator *validate.OcelotValidator)
 }
@@ -38,7 +36,6 @@ type HookHandlerContext struct {
 	RemoteConfig cred.CVRemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
-	Storage 	 storage.BuildSum
 	OcelotValidator *validate.OcelotValidator
 }
 
@@ -78,14 +75,6 @@ func (hhc *HookHandlerContext) GetValidator() *validate.OcelotValidator {
 	return hhc.OcelotValidator
 }
 
-func (hhc *HookHandlerContext) GetStorage() storage.BuildSum {
-	return hhc.Storage
-}
-
-func (hhc *HookHandlerContext) SetStorage(store storage.BuildSum) {
-	hhc.Storage = store
-}
-
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
@@ -115,7 +104,11 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		account := list[0]
 		repo := list[1]
 		ocelog.Log().Debug("LETS STORE THIS SHIT")
-		id := notifyStorage(ctx.GetStorage(), hash, time.Now(), repo, branch, account)
+		store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("unable to get storage")
+		}
+		id := notifyStorage(store, hash, time.Now(), repo, branch, account)
 		ocelog.Log().Debug("notified storage ")
 		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
 		ocelog.Log().Debug("told werker!")
@@ -153,7 +146,11 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		list := strings.Split(pr.Repository.FullName, "/")
 		account := list[0]
 		repo := list[1]
-		id := notifyStorage(ctx.GetStorage(), hash, time.Now(), repo, pr.Pullrequest.Source.Branch.Name, account)
+		store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("unable to get storage")
+		}
+		id := notifyStorage(store, hash, time.Now(), repo, pr.Pullrequest.Source.Branch.Name, account)
 		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
 	} else {
 		//TODO: tell db we couldn't build

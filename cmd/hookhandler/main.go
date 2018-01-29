@@ -51,11 +51,6 @@ func main() {
 
 	hookHandlerContext.SetDeserializer(deserialize.New())
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
-	store, err := remoteConfig.GetOcelotStorage()
-	if err != nil {
-		ocelog.IncludeErrField(err).Fatal("couldn't get storage")
-	}
-	hookHandlerContext.SetStorage(store)
 	// todo: add check for hookHandlerContext being valid
 	hookHandlerContext.SetValidator(validate.GetOcelotValidator())
 	muxi := mux.NewRouter()
