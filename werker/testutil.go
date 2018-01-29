@@ -2,7 +2,6 @@ package werker
 
 import (
 	"bitbucket.org/level11consulting/ocelot/protos"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"testing"
 )
 
@@ -28,8 +27,7 @@ func testGetConf() *WerkerConf {
 		servicePort:     "9090",
 		WerkerName:      "test agent",
 		werkerType:      Docker,
-		werkerProcessor: &testWerkerProcessor{},
-		storage:         &storage.FileBuildStorage{}, // todo: create test interface
+		//werkerProcessor: &testWerkerProcessor{},
 		LogLevel:        "info",
 	}
 }
@@ -38,7 +36,7 @@ func testGetConf() *WerkerConf {
 // uses the mock processor
 func testGetWorkerMsgHandler(t *testing.T, topic string) *WorkerMsgHandler {
 	werkConf := testGetConf()
-	werkConf.werkerProcessor = &testWerkerProcessor{t: t}
+	//werkConf.werkerProcessor = &testWerkerProcessor{t: t}
 
 	tunnel := make(chan *Transport)
 	infor := make(chan []byte)

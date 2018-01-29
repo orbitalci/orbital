@@ -4,6 +4,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/admin"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"fmt"
 	"github.com/namsral/flag"
 )
@@ -14,11 +15,13 @@ func main() {
 	var consulHost string
 	var consulPort int
 	var logLevel string
+	var insecure bool
 
 	flag.StringVar(&port, "port", "10000", "admin server port")
 	flag.StringVar(&consulHost, "consul-host", "localhost", "consul host")
 	flag.IntVar(&consulPort, "consul-port", 8500, "consul port")
 	flag.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
+	flag.BoolVar(&insecure, "insecure", false, "use insecure certs")
 	flag.Parse()
 
 	ocelog.InitializeLog(logLevel)
@@ -31,7 +34,12 @@ func main() {
 	if err != nil {
 		ocelog.Log().Fatal("could not talk to consul or vault, bailing")
 	}
-
-	admin.Start(configInstance, serverRunsAt, port)
+	var security secure_grpc.SecureGrpc
+	if insecure {
+		security = secure_grpc.NewFakeSecure()
+	} else {
+		security = secure_grpc.NewLeSecure()
+	}
+	admin.Start(configInstance, security, serverRunsAt, port)
 
 }

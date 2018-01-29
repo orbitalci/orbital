@@ -5,17 +5,17 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"fmt"
 	"github.com/pkg/errors"
-	"strings"
+	"strconv"
 )
 
-var ConfigPath = "creds"
 
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
 //if token is an empty string, vault will be initialized with $VAULT_TOKEN
-func GetInstance(consulHost string, consulPort int, token string) (*RemoteConfig, error) {
+func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfig, error) {
 	remoteConfig := &RemoteConfig{}
 
 	//intialize consul
@@ -51,104 +51,227 @@ func GetInstance(consulHost string, consulPort int, token string) (*RemoteConfig
 	return remoteConfig, nil
 }
 
-//RemoteConfig is an abstraction for retrieving/setting creds for ocelot
-//currently uses consul + vault
-type RemoteConfig struct {
-	Consul *consul.Consulet
-	Vault  *ocevault.Vaulty
+type StorageCreds struct {
+	User     string
+	Location string
+	Port     int
+	DbName   string
+	Password string
 }
 
-//GetCredAt will return list of credentials stored at specified path.
-//if hideSecret is set to false, will return password in cleartext
-//key of map is CONFIG_TYPE/ACCTNAME. Ex: bitbucket/mariannefeng
-//if an error occurs while reading from vault, the most recent error will be returned from the response
-func (remoteConfig *RemoteConfig) GetCredAt(path string, hideSecret bool) (map[string]*models.Credentials, error) {
-	creds := map[string]*models.Credentials{}
-	var err error
+type StorageCred interface {
+	GetStorageCreds(typ storage.Dest) (*StorageCreds, error)
+	GetStorageType() (storage.Dest, error)
+	GetOcelotStorage() (storage.OcelotStorage, error)
+}
 
-	if remoteConfig.Consul.Connected {
-		configs, err := remoteConfig.Consul.GetKeyValues(path)
+
+//RemoteConfig is an abstraction for retrieving/setting creds for ocelot
+//currently uses consul + vault
+type CVRemoteConfig interface {
+	GetConsul()	*consul.Consulet
+	SetConsul(consul *consul.Consulet)
+	GetVault() ocevault.Vaulty
+	SetVault(vault ocevault.Vaulty)
+	GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error)
+	GetPassword(path string) (string, error)
+	AddCreds(path string, anyCred RemoteConfigCred) (err error)
+	StorageCred
+}
+
+
+type RemoteConfig struct {
+	Consul *consul.Consulet
+	Vault  ocevault.Vaulty
+}
+
+func (rc *RemoteConfig) GetConsul() *consul.Consulet {
+	return rc.Consul
+}
+
+func (rc *RemoteConfig) SetConsul(consul *consul.Consulet) {
+	rc.Consul = consul
+}
+
+func (rc *RemoteConfig)  GetVault() ocevault.Vaulty {
+	return rc.Vault
+}
+
+func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
+	rc.Vault = vault
+}
+
+// instantiateCredObject is what we will have to add too when we add new credential integrations
+// (ie slack, w/e)
+// todo: find out a way to use either this method or GetCredAt to remove the cred package's dependency on models
+func instantiateCredObject(ocyType OcyCredType) RemoteConfigCred {
+	switch ocyType {
+	case Vcs:
+		return &models.VCSCreds{}
+	case Repo:
+		return &models.RepoCreds{}
+	default:
+		panic("ahh!")
+	}
+}
+
+// GetCred at will return a map w/ key <cred_type>/<acct_name> to credentials. depending on the OcyCredType,
+//   the appropriate credential struct will be instantiated and filled with data from consul and vault.
+//   currently supports map[string]*models.VCSCreds and map[string]*models.RepoCreds
+//   You must cast the resulting values to their appropriate objects after the map is generated if you need to access more than
+//   the methods on the cred.RemoteConfigCred interface
+//   Example:
+//      creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
+//      vcsCreds := creds.(*models.VCSCreds)
+func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error) {
+	creds := map[string]RemoteConfigCred{}
+	var err error
+	if rc.Consul.Connected {
+		configs, err := rc.Consul.GetKeyValues(path)
 		if err != nil {
 			return creds, err
 		}
-
 		for _, v := range configs {
-			pathKeys := strings.Split(strings.TrimLeft(v.Key, "/"+ConfigPath), "/")
-
-			//cred type | acct name gives us a unique id to track by in the map
-			credType := pathKeys[0]
-			acctName := pathKeys[1]
-			infoType := pathKeys[2]
-
+			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
 			mapKey := credType + "/" + acctName
 			foundConfig, ok := creds[mapKey]
 			if !ok {
-				foundConfig = &models.Credentials{
-					AcctName: acctName,
-					Type:     credType,
-				}
-
+				foundConfig = instantiateCredObject(ocyType)
+				foundConfig.SetAcctNameAndType(acctName, credType)
 				if hideSecret {
-					foundConfig.ClientSecret = "*********"
+					foundConfig.SetSecret("*********")
 				} else {
-					passcode, passErr := remoteConfig.GetPassword(ConfigPath + "/" + credType + "/" + acctName)
+					passcode, passErr := rc.GetPassword(foundConfig.BuildCredPath(credType, acctName))
 					if passErr != nil {
-						ocelog.IncludeErrField(err).Error()
-						foundConfig.ClientSecret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
+						ocelog.IncludeErrField(passErr).Error()
+						foundConfig.SetSecret("ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT")
 						err = passErr
 					} else {
-						foundConfig.ClientSecret = passcode
+						foundConfig.SetSecret(passcode)
 					}
 				}
-
 				creds[mapKey] = foundConfig
 			}
-
-			switch infoType {
-			case "clientid":
-				foundConfig.ClientId = string(v.Value[:])
-			case "tokenurl":
-				foundConfig.TokenURL = string(v.Value[:])
-			}
+			foundConfig.SetAdditionalFields(infoType, string(v.Value[:]))
 		}
 	} else {
 		return creds, errors.New("not connected to consul, unable to retrieve credentials")
 	}
-
 	return creds, err
 }
 
 //GetPassword will return to you the vault password at specified path
-func (remoteConfig *RemoteConfig) GetPassword(path string) (string, error) {
-	authData, err := remoteConfig.Vault.GetUserAuthData(path)
+func (rc *RemoteConfig) GetPassword(path string) (string, error) {
+	authData, err := rc.Vault.GetUserAuthData(path)
 	if err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%v", authData["clientsecret"]), nil
 }
 
-//AddCreds adds your adminconfig creds into both consul + vault
-func (remoteConfig *RemoteConfig) AddCreds(path string, adminConfig *models.Credentials) error {
-	if remoteConfig.Consul.Connected {
-		err := remoteConfig.Consul.AddKeyValue(path+"/clientid", []byte(adminConfig.ClientId))
-		if err != nil {
-			return err
-		}
-		err = remoteConfig.Consul.AddKeyValue(path+"/tokenurl", []byte(adminConfig.TokenURL))
-		if err != nil {
-			return err
-		}
-		if remoteConfig.Vault != nil {
+// AddRepoCreds adds repo integration creds to consul + vault
+func (rc *RemoteConfig) AddCreds(path string, anyCred RemoteConfigCred) (err error) {
+	if rc.Consul.Connected {
+		anyCred.AddAdditionalFields(rc.Consul, path)
+		if rc.Vault != nil {
 			secret := make(map[string]interface{})
-			secret["clientsecret"] = adminConfig.ClientSecret
-			_, err := remoteConfig.Vault.AddUserAuthData(path, secret)
-			if err != nil {
-				return err
+			secret["clientsecret"] = anyCred.GetClientSecret()
+			if _, err = rc.Vault.AddUserAuthData(path, secret); err != nil {
+				return
 			}
 		}
 	} else {
-		return errors.New("not connected to consul, unable to add credentials")
+		err = errors.New("not connected to consul, unable to add credentials")
 	}
+	return
+}
 
-	return nil
+
+func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
+	kv, err := rc.Consul.GetKeyValue(StorageType)
+	if err != nil {
+		return 0, errors.New("unable to get storage type from consul, err: " + err.Error())
+	}
+	if kv == nil {
+		return 0, errors.New(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; this is required to know which storage to use.", StorageType))
+	}
+	storageType := string(kv.Value)
+	switch storageType {
+	case "postgres":
+		return storage.Postgres, nil
+	case "filesystem":
+		return storage.FileSystem, nil
+	default:
+		return 0, errors.New("unknown storage type: " + storageType)
+	}
+}
+
+func (rc *RemoteConfig) GetStorageCreds(typ storage.Dest) (*StorageCreds, error) {
+	switch typ {
+	case storage.Postgres:
+		return rc.getForPostgres()
+	case storage.FileSystem:
+		return rc.getForFilesystem()
+	default:
+		fmt.Println("shouldnoteverhappen")
+		return nil, nil
+	}
+}
+
+func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
+	pairs, err := rc.Consul.GetKeyValues(PostgresCredLoc)
+	if err != nil {
+		return nil, errors.New("unable to get postgres creds from consul, err: " + err.Error())
+	}
+	storeConfig := &StorageCreds{}
+	for _, pair := range pairs {
+		switch pair.Key {
+		case PostgresDatabaseName:
+			storeConfig.DbName = string(pair.Value)
+		case PostgresLocation:
+			storeConfig.Location = string(pair.Value)
+		case PostgresUsername:
+			storeConfig.User = string(pair.Value)
+		case PostgresPort:
+			// todo: check for err
+			storeConfig.Port, _ = strconv.Atoi(string(pair.Value))
+		}
+	}
+	secrets, err := rc.Vault.GetVaultData(PostgresPasswordLoc)
+	if err != nil {
+		return storeConfig, errors.New("unable to get postgres password from vault, err: " + err.Error())
+	}
+	// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
+	storeConfig.Password = fmt.Sprintf("%v", secrets[PostgresPasswordKey])
+	return storeConfig, nil
+}
+
+func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
+	pair, err := rc.Consul.GetKeyValue(FilesystemDir)
+	if err != nil {
+		return nil, errors.New("unable to get save directory from consul, err: " + err.Error())
+	}
+	return &StorageCreds{Location: string(pair.Value)}, nil
+}
+
+func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
+	typ, err := rc.GetStorageType()
+	if err != nil {
+		return nil, err
+	}
+	if typ == storage.Postgres {
+		fmt.Println("postgres storage")
+	}
+	creds, err := rc.GetStorageCreds(typ)
+	if err != nil {
+		return nil, err
+	}
+	switch typ {
+	case storage.FileSystem:
+		return storage.NewFileBuildStorage(creds.Location), nil
+	case storage.Postgres:
+		return storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName), nil
+	default:
+		return nil, errors.New("unknown type")
+	}
 }

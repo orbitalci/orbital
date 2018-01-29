@@ -8,8 +8,18 @@ It is generated from these files:
 	guideocelot.proto
 
 It has these top-level messages:
+	AllCredsWrapper
 	CredWrapper
-	Credentials
+	VCSCreds
+	RepoCredWrapper
+	RepoCreds
+	BuildQuery
+	Builds
+	BuildRuntimeInfo
+	LogResponse
+	RepoAccount
+	BuildSummary
+	Summaries
 */
 package models
 
@@ -18,6 +28,7 @@ import fmt "fmt"
 import math "math"
 import google_protobuf "github.com/golang/protobuf/ptypes/empty"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
+import google_protobuf2 "github.com/golang/protobuf/ptypes/timestamp"
 
 import (
 	context "golang.org/x/net/context"
@@ -35,23 +46,47 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type AllCredsWrapper struct {
+	RepoCreds *RepoCredWrapper `protobuf:"bytes,1,opt,name=repoCreds" json:"repoCreds,omitempty"`
+	VcsCreds  *CredWrapper     `protobuf:"bytes,3,opt,name=vcsCreds" json:"vcsCreds,omitempty"`
+}
+
+func (m *AllCredsWrapper) Reset()                    { *m = AllCredsWrapper{} }
+func (m *AllCredsWrapper) String() string            { return proto.CompactTextString(m) }
+func (*AllCredsWrapper) ProtoMessage()               {}
+func (*AllCredsWrapper) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+func (m *AllCredsWrapper) GetRepoCreds() *RepoCredWrapper {
+	if m != nil {
+		return m.RepoCreds
+	}
+	return nil
+}
+
+func (m *AllCredsWrapper) GetVcsCreds() *CredWrapper {
+	if m != nil {
+		return m.VcsCreds
+	}
+	return nil
+}
+
 type CredWrapper struct {
-	Credentials []*Credentials `protobuf:"bytes,1,rep,name=credentials" json:"credentials,omitempty"`
+	Vcs []*VCSCreds `protobuf:"bytes,2,rep,name=vcs" json:"vcs,omitempty"`
 }
 
 func (m *CredWrapper) Reset()                    { *m = CredWrapper{} }
 func (m *CredWrapper) String() string            { return proto.CompactTextString(m) }
 func (*CredWrapper) ProtoMessage()               {}
-func (*CredWrapper) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (*CredWrapper) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *CredWrapper) GetCredentials() []*Credentials {
+func (m *CredWrapper) GetVcs() []*VCSCreds {
 	if m != nil {
-		return m.Credentials
+		return m.Vcs
 	}
 	return nil
 }
 
-type Credentials struct {
+type VCSCreds struct {
 	ClientId     string `protobuf:"bytes,1,opt,name=clientId" json:"clientId,omitempty"`
 	ClientSecret string `protobuf:"bytes,2,opt,name=clientSecret" json:"clientSecret,omitempty"`
 	TokenURL     string `protobuf:"bytes,3,opt,name=tokenURL" json:"tokenURL,omitempty"`
@@ -59,49 +94,339 @@ type Credentials struct {
 	Type         string `protobuf:"bytes,5,opt,name=type" json:"type,omitempty"`
 }
 
-func (m *Credentials) Reset()                    { *m = Credentials{} }
-func (m *Credentials) String() string            { return proto.CompactTextString(m) }
-func (*Credentials) ProtoMessage()               {}
-func (*Credentials) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (m *VCSCreds) Reset()                    { *m = VCSCreds{} }
+func (m *VCSCreds) String() string            { return proto.CompactTextString(m) }
+func (*VCSCreds) ProtoMessage()               {}
+func (*VCSCreds) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
-func (m *Credentials) GetClientId() string {
+func (m *VCSCreds) GetClientId() string {
 	if m != nil {
 		return m.ClientId
 	}
 	return ""
 }
 
-func (m *Credentials) GetClientSecret() string {
+func (m *VCSCreds) GetClientSecret() string {
 	if m != nil {
 		return m.ClientSecret
 	}
 	return ""
 }
 
-func (m *Credentials) GetTokenURL() string {
+func (m *VCSCreds) GetTokenURL() string {
 	if m != nil {
 		return m.TokenURL
 	}
 	return ""
 }
 
-func (m *Credentials) GetAcctName() string {
+func (m *VCSCreds) GetAcctName() string {
 	if m != nil {
 		return m.AcctName
 	}
 	return ""
 }
 
-func (m *Credentials) GetType() string {
+func (m *VCSCreds) GetType() string {
 	if m != nil {
 		return m.Type
 	}
 	return ""
 }
 
+type RepoCredWrapper struct {
+	Repo []*RepoCreds `protobuf:"bytes,3,rep,name=repo" json:"repo,omitempty"`
+}
+
+func (m *RepoCredWrapper) Reset()                    { *m = RepoCredWrapper{} }
+func (m *RepoCredWrapper) String() string            { return proto.CompactTextString(m) }
+func (*RepoCredWrapper) ProtoMessage()               {}
+func (*RepoCredWrapper) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *RepoCredWrapper) GetRepo() []*RepoCreds {
+	if m != nil {
+		return m.Repo
+	}
+	return nil
+}
+
+type RepoCreds struct {
+	Username string `protobuf:"bytes,1,opt,name=username" json:"username,omitempty"`
+	Password string `protobuf:"bytes,2,opt,name=password" json:"password,omitempty"`
+	RepoUrl  string `protobuf:"bytes,3,opt,name=repoUrl" json:"repoUrl,omitempty"`
+	AcctName string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty"`
+	Type     string `protobuf:"bytes,5,opt,name=type" json:"type,omitempty"`
+}
+
+func (m *RepoCreds) Reset()                    { *m = RepoCreds{} }
+func (m *RepoCreds) String() string            { return proto.CompactTextString(m) }
+func (*RepoCreds) ProtoMessage()               {}
+func (*RepoCreds) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *RepoCreds) GetUsername() string {
+	if m != nil {
+		return m.Username
+	}
+	return ""
+}
+
+func (m *RepoCreds) GetPassword() string {
+	if m != nil {
+		return m.Password
+	}
+	return ""
+}
+
+func (m *RepoCreds) GetRepoUrl() string {
+	if m != nil {
+		return m.RepoUrl
+	}
+	return ""
+}
+
+func (m *RepoCreds) GetAcctName() string {
+	if m != nil {
+		return m.AcctName
+	}
+	return ""
+}
+
+func (m *RepoCreds) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+type BuildQuery struct {
+	Hash    string `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	BuildId int64  `protobuf:"varint,2,opt,name=buildId" json:"buildId,omitempty"`
+}
+
+func (m *BuildQuery) Reset()                    { *m = BuildQuery{} }
+func (m *BuildQuery) String() string            { return proto.CompactTextString(m) }
+func (*BuildQuery) ProtoMessage()               {}
+func (*BuildQuery) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *BuildQuery) GetHash() string {
+	if m != nil {
+		return m.Hash
+	}
+	return ""
+}
+
+func (m *BuildQuery) GetBuildId() int64 {
+	if m != nil {
+		return m.BuildId
+	}
+	return 0
+}
+
+type Builds struct {
+	Builds map[string]*BuildRuntimeInfo `protobuf:"bytes,1,rep,name=builds" json:"builds,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+}
+
+func (m *Builds) Reset()                    { *m = Builds{} }
+func (m *Builds) String() string            { return proto.CompactTextString(m) }
+func (*Builds) ProtoMessage()               {}
+func (*Builds) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
+func (m *Builds) GetBuilds() map[string]*BuildRuntimeInfo {
+	if m != nil {
+		return m.Builds
+	}
+	return nil
+}
+
+type BuildRuntimeInfo struct {
+	Done     bool   `protobuf:"varint,1,opt,name=done" json:"done,omitempty"`
+	Ip       string `protobuf:"bytes,2,opt,name=ip" json:"ip,omitempty"`
+	GrpcPort string `protobuf:"bytes,3,opt,name=grpcPort" json:"grpcPort,omitempty"`
+	Hash     string `protobuf:"bytes,4,opt,name=hash" json:"hash,omitempty"`
+}
+
+func (m *BuildRuntimeInfo) Reset()                    { *m = BuildRuntimeInfo{} }
+func (m *BuildRuntimeInfo) String() string            { return proto.CompactTextString(m) }
+func (*BuildRuntimeInfo) ProtoMessage()               {}
+func (*BuildRuntimeInfo) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *BuildRuntimeInfo) GetDone() bool {
+	if m != nil {
+		return m.Done
+	}
+	return false
+}
+
+func (m *BuildRuntimeInfo) GetIp() string {
+	if m != nil {
+		return m.Ip
+	}
+	return ""
+}
+
+func (m *BuildRuntimeInfo) GetGrpcPort() string {
+	if m != nil {
+		return m.GrpcPort
+	}
+	return ""
+}
+
+func (m *BuildRuntimeInfo) GetHash() string {
+	if m != nil {
+		return m.Hash
+	}
+	return ""
+}
+
+type LogResponse struct {
+	OutputLine string `protobuf:"bytes,1,opt,name=outputLine" json:"outputLine,omitempty"`
+}
+
+func (m *LogResponse) Reset()                    { *m = LogResponse{} }
+func (m *LogResponse) String() string            { return proto.CompactTextString(m) }
+func (*LogResponse) ProtoMessage()               {}
+func (*LogResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+
+func (m *LogResponse) GetOutputLine() string {
+	if m != nil {
+		return m.OutputLine
+	}
+	return ""
+}
+
+type RepoAccount struct {
+	Repo    string `protobuf:"bytes,1,opt,name=repo" json:"repo,omitempty"`
+	Account string `protobuf:"bytes,2,opt,name=account" json:"account,omitempty"`
+	Limit   int32  `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
+}
+
+func (m *RepoAccount) Reset()                    { *m = RepoAccount{} }
+func (m *RepoAccount) String() string            { return proto.CompactTextString(m) }
+func (*RepoAccount) ProtoMessage()               {}
+func (*RepoAccount) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+func (m *RepoAccount) GetRepo() string {
+	if m != nil {
+		return m.Repo
+	}
+	return ""
+}
+
+func (m *RepoAccount) GetAccount() string {
+	if m != nil {
+		return m.Account
+	}
+	return ""
+}
+
+func (m *RepoAccount) GetLimit() int32 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
+type BuildSummary struct {
+	Hash          string                      `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	Failed        bool                        `protobuf:"varint,2,opt,name=failed" json:"failed,omitempty"`
+	BuildTime     *google_protobuf2.Timestamp `protobuf:"bytes,3,opt,name=buildTime" json:"buildTime,omitempty"`
+	Account       string                      `protobuf:"bytes,4,opt,name=account" json:"account,omitempty"`
+	BuildDuration float64                     `protobuf:"fixed64,5,opt,name=buildDuration" json:"buildDuration,omitempty"`
+	Repo          string                      `protobuf:"bytes,6,opt,name=repo" json:"repo,omitempty"`
+	Branch        string                      `protobuf:"bytes,7,opt,name=branch" json:"branch,omitempty"`
+	BuildId       int64                       `protobuf:"varint,8,opt,name=buildId" json:"buildId,omitempty"`
+}
+
+func (m *BuildSummary) Reset()                    { *m = BuildSummary{} }
+func (m *BuildSummary) String() string            { return proto.CompactTextString(m) }
+func (*BuildSummary) ProtoMessage()               {}
+func (*BuildSummary) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *BuildSummary) GetHash() string {
+	if m != nil {
+		return m.Hash
+	}
+	return ""
+}
+
+func (m *BuildSummary) GetFailed() bool {
+	if m != nil {
+		return m.Failed
+	}
+	return false
+}
+
+func (m *BuildSummary) GetBuildTime() *google_protobuf2.Timestamp {
+	if m != nil {
+		return m.BuildTime
+	}
+	return nil
+}
+
+func (m *BuildSummary) GetAccount() string {
+	if m != nil {
+		return m.Account
+	}
+	return ""
+}
+
+func (m *BuildSummary) GetBuildDuration() float64 {
+	if m != nil {
+		return m.BuildDuration
+	}
+	return 0
+}
+
+func (m *BuildSummary) GetRepo() string {
+	if m != nil {
+		return m.Repo
+	}
+	return ""
+}
+
+func (m *BuildSummary) GetBranch() string {
+	if m != nil {
+		return m.Branch
+	}
+	return ""
+}
+
+func (m *BuildSummary) GetBuildId() int64 {
+	if m != nil {
+		return m.BuildId
+	}
+	return 0
+}
+
+type Summaries struct {
+	Sums []*BuildSummary `protobuf:"bytes,1,rep,name=sums" json:"sums,omitempty"`
+}
+
+func (m *Summaries) Reset()                    { *m = Summaries{} }
+func (m *Summaries) String() string            { return proto.CompactTextString(m) }
+func (*Summaries) ProtoMessage()               {}
+func (*Summaries) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *Summaries) GetSums() []*BuildSummary {
+	if m != nil {
+		return m.Sums
+	}
+	return nil
+}
+
 func init() {
+	proto.RegisterType((*AllCredsWrapper)(nil), "models.AllCredsWrapper")
 	proto.RegisterType((*CredWrapper)(nil), "models.CredWrapper")
-	proto.RegisterType((*Credentials)(nil), "models.Credentials")
+	proto.RegisterType((*VCSCreds)(nil), "models.VCSCreds")
+	proto.RegisterType((*RepoCredWrapper)(nil), "models.RepoCredWrapper")
+	proto.RegisterType((*RepoCreds)(nil), "models.RepoCreds")
+	proto.RegisterType((*BuildQuery)(nil), "models.BuildQuery")
+	proto.RegisterType((*Builds)(nil), "models.Builds")
+	proto.RegisterType((*BuildRuntimeInfo)(nil), "models.BuildRuntimeInfo")
+	proto.RegisterType((*LogResponse)(nil), "models.LogResponse")
+	proto.RegisterType((*RepoAccount)(nil), "models.RepoAccount")
+	proto.RegisterType((*BuildSummary)(nil), "models.BuildSummary")
+	proto.RegisterType((*Summaries)(nil), "models.Summaries")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -115,8 +440,15 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for GuideOcelot service
 
 type GuideOcelotClient interface {
-	GetCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*CredWrapper, error)
-	SetCreds(ctx context.Context, in *Credentials, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	GetVCSCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*CredWrapper, error)
+	SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	GetRepoCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*RepoCredWrapper, error)
+	SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	GetAllCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error)
+	CheckConn(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*Builds, error)
+	Logs(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (GuideOcelot_LogsClient, error)
+	LastFewSummaries(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*Summaries, error)
 }
 
 type guideOcelotClient struct {
@@ -127,18 +459,104 @@ func NewGuideOcelotClient(cc *grpc.ClientConn) GuideOcelotClient {
 	return &guideOcelotClient{cc}
 }
 
-func (c *guideOcelotClient) GetCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
+func (c *guideOcelotClient) GetVCSCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
 	out := new(CredWrapper)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetCreds", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetVCSCreds", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) SetCreds(ctx context.Context, in *Credentials, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
+func (c *guideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetCreds", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetVCSCreds", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *guideOcelotClient) GetRepoCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*RepoCredWrapper, error) {
+	out := new(RepoCredWrapper)
+	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetRepoCreds", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *guideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
+	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetRepoCreds", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *guideOcelotClient) GetAllCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error) {
+	out := new(AllCredsWrapper)
+	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetAllCreds", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *guideOcelotClient) CheckConn(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
+	err := grpc.Invoke(ctx, "/models.GuideOcelot/CheckConn", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *guideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*Builds, error) {
+	out := new(Builds)
+	err := grpc.Invoke(ctx, "/models.GuideOcelot/BuildRuntime", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *guideOcelotClient) Logs(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (GuideOcelot_LogsClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_GuideOcelot_serviceDesc.Streams[0], c.cc, "/models.GuideOcelot/Logs", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &guideOcelotLogsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GuideOcelot_LogsClient interface {
+	Recv() (*LogResponse, error)
+	grpc.ClientStream
+}
+
+type guideOcelotLogsClient struct {
+	grpc.ClientStream
+}
+
+func (x *guideOcelotLogsClient) Recv() (*LogResponse, error) {
+	m := new(LogResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *guideOcelotClient) LastFewSummaries(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*Summaries, error) {
+	out := new(Summaries)
+	err := grpc.Invoke(ctx, "/models.GuideOcelot/LastFewSummaries", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,46 +566,182 @@ func (c *guideOcelotClient) SetCreds(ctx context.Context, in *Credentials, opts 
 // Server API for GuideOcelot service
 
 type GuideOcelotServer interface {
-	GetCreds(context.Context, *google_protobuf.Empty) (*CredWrapper, error)
-	SetCreds(context.Context, *Credentials) (*google_protobuf.Empty, error)
+	GetVCSCreds(context.Context, *google_protobuf.Empty) (*CredWrapper, error)
+	SetVCSCreds(context.Context, *VCSCreds) (*google_protobuf.Empty, error)
+	GetRepoCreds(context.Context, *google_protobuf.Empty) (*RepoCredWrapper, error)
+	SetRepoCreds(context.Context, *RepoCreds) (*google_protobuf.Empty, error)
+	GetAllCreds(context.Context, *google_protobuf.Empty) (*AllCredsWrapper, error)
+	CheckConn(context.Context, *google_protobuf.Empty) (*google_protobuf.Empty, error)
+	BuildRuntime(context.Context, *BuildQuery) (*Builds, error)
+	Logs(*BuildQuery, GuideOcelot_LogsServer) error
+	LastFewSummaries(context.Context, *RepoAccount) (*Summaries, error)
 }
 
 func RegisterGuideOcelotServer(s *grpc.Server, srv GuideOcelotServer) {
 	s.RegisterService(&_GuideOcelot_serviceDesc, srv)
 }
 
-func _GuideOcelot_GetCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GuideOcelot_GetVCSCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(google_protobuf.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GuideOcelotServer).GetCreds(ctx, in)
+		return srv.(GuideOcelotServer).GetVCSCreds(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/models.GuideOcelot/GetCreds",
+		FullMethod: "/models.GuideOcelot/GetVCSCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetCreds(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetVCSCreds(ctx, req.(*google_protobuf.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GuideOcelot_SetCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Credentials)
+func _GuideOcelot_SetVCSCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VCSCreds)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GuideOcelotServer).SetCreds(ctx, in)
+		return srv.(GuideOcelotServer).SetVCSCreds(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/models.GuideOcelot/SetCreds",
+		FullMethod: "/models.GuideOcelot/SetVCSCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).SetCreds(ctx, req.(*Credentials))
+		return srv.(GuideOcelotServer).SetVCSCreds(ctx, req.(*VCSCreds))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GuideOcelot_GetRepoCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(google_protobuf.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GuideOcelotServer).GetRepoCreds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/models.GuideOcelot/GetRepoCreds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GuideOcelotServer).GetRepoCreds(ctx, req.(*google_protobuf.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GuideOcelot_SetRepoCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepoCreds)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GuideOcelotServer).SetRepoCreds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/models.GuideOcelot/SetRepoCreds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GuideOcelotServer).SetRepoCreds(ctx, req.(*RepoCreds))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GuideOcelot_GetAllCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(google_protobuf.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GuideOcelotServer).GetAllCreds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/models.GuideOcelot/GetAllCreds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GuideOcelotServer).GetAllCreds(ctx, req.(*google_protobuf.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GuideOcelot_CheckConn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(google_protobuf.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GuideOcelotServer).CheckConn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/models.GuideOcelot/CheckConn",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GuideOcelotServer).CheckConn(ctx, req.(*google_protobuf.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GuideOcelot_BuildRuntime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BuildQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GuideOcelotServer).BuildRuntime(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/models.GuideOcelot/BuildRuntime",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GuideOcelotServer).BuildRuntime(ctx, req.(*BuildQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GuideOcelot_Logs_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(BuildQuery)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GuideOcelotServer).Logs(m, &guideOcelotLogsServer{stream})
+}
+
+type GuideOcelot_LogsServer interface {
+	Send(*LogResponse) error
+	grpc.ServerStream
+}
+
+type guideOcelotLogsServer struct {
+	grpc.ServerStream
+}
+
+func (x *guideOcelotLogsServer) Send(m *LogResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _GuideOcelot_LastFewSummaries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepoAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GuideOcelotServer).LastFewSummaries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/models.GuideOcelot/LastFewSummaries",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GuideOcelotServer).LastFewSummaries(ctx, req.(*RepoAccount))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -197,40 +751,104 @@ var _GuideOcelot_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*GuideOcelotServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetCreds",
-			Handler:    _GuideOcelot_GetCreds_Handler,
+			MethodName: "GetVCSCreds",
+			Handler:    _GuideOcelot_GetVCSCreds_Handler,
 		},
 		{
-			MethodName: "SetCreds",
-			Handler:    _GuideOcelot_SetCreds_Handler,
+			MethodName: "SetVCSCreds",
+			Handler:    _GuideOcelot_SetVCSCreds_Handler,
+		},
+		{
+			MethodName: "GetRepoCreds",
+			Handler:    _GuideOcelot_GetRepoCreds_Handler,
+		},
+		{
+			MethodName: "SetRepoCreds",
+			Handler:    _GuideOcelot_SetRepoCreds_Handler,
+		},
+		{
+			MethodName: "GetAllCreds",
+			Handler:    _GuideOcelot_GetAllCreds_Handler,
+		},
+		{
+			MethodName: "CheckConn",
+			Handler:    _GuideOcelot_CheckConn_Handler,
+		},
+		{
+			MethodName: "BuildRuntime",
+			Handler:    _GuideOcelot_BuildRuntime_Handler,
+		},
+		{
+			MethodName: "LastFewSummaries",
+			Handler:    _GuideOcelot_LastFewSummaries_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Logs",
+			Handler:       _GuideOcelot_Logs_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "guideocelot.proto",
 }
 
 func init() { proto.RegisterFile("guideocelot.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 314 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0xcf, 0x4a, 0x33, 0x31,
-	0x14, 0xc5, 0x99, 0xb6, 0x5f, 0x69, 0x33, 0x1f, 0x42, 0xa3, 0x48, 0x18, 0x5d, 0x94, 0xac, 0x8a,
-	0x8b, 0x0c, 0x56, 0xdc, 0xb8, 0xad, 0x52, 0x14, 0xff, 0x40, 0x8b, 0xb8, 0x4e, 0x33, 0xd7, 0x32,
-	0x38, 0x4d, 0x42, 0xe6, 0x56, 0xe8, 0xd6, 0x57, 0x70, 0xe5, 0x1b, 0xf8, 0x3e, 0xbe, 0x82, 0x0f,
-	0x22, 0x93, 0x74, 0xac, 0x05, 0xdd, 0xdd, 0x73, 0xcf, 0xbd, 0xe7, 0x26, 0x3f, 0xd2, 0x9b, 0x2f,
-	0xf3, 0x0c, 0x8c, 0x82, 0xc2, 0xa0, 0xb0, 0xce, 0xa0, 0xa1, 0xed, 0x85, 0xc9, 0xa0, 0x28, 0x93,
-	0x83, 0xb9, 0x31, 0xf3, 0x02, 0x52, 0xdf, 0x9d, 0x2d, 0x1f, 0x53, 0x58, 0x58, 0x5c, 0x85, 0xa1,
-	0xe4, 0x70, 0x6d, 0x4a, 0x9b, 0xa7, 0x52, 0x6b, 0x83, 0x12, 0x73, 0xa3, 0xcb, 0xe0, 0xf2, 0x73,
-	0x12, 0x8f, 0x1c, 0x64, 0x0f, 0x4e, 0x5a, 0x0b, 0x8e, 0x9e, 0x92, 0x58, 0x39, 0xc8, 0x40, 0x63,
-	0x2e, 0x8b, 0x92, 0x45, 0xfd, 0xe6, 0x20, 0x1e, 0xee, 0x8a, 0x70, 0x47, 0x8c, 0x36, 0xd6, 0xe4,
-	0xe7, 0x1c, 0x7f, 0x8b, 0x42, 0xcc, 0x5a, 0xd3, 0x84, 0x74, 0x54, 0x91, 0x83, 0xc6, 0xcb, 0x8c,
-	0x45, 0xfd, 0x68, 0xd0, 0x9d, 0x7c, 0x6b, 0xca, 0xc9, 0xff, 0x50, 0x4f, 0x41, 0x39, 0x40, 0xd6,
-	0xf0, 0xfe, 0x56, 0xaf, 0xda, 0x47, 0xf3, 0x04, 0xfa, 0x7e, 0x72, 0xcd, 0x9a, 0x61, 0xbf, 0xd6,
-	0x95, 0x27, 0x95, 0xc2, 0x5b, 0xb9, 0x00, 0xd6, 0x0a, 0x5e, 0xad, 0x29, 0x25, 0x2d, 0x5c, 0x59,
-	0x60, 0xff, 0x7c, 0xdf, 0xd7, 0xc3, 0xf7, 0x88, 0xc4, 0xe3, 0x0a, 0xdd, 0x9d, 0x47, 0x47, 0xaf,
-	0x48, 0x67, 0x0c, 0x58, 0xbd, 0xb6, 0xa4, 0xfb, 0x22, 0xc0, 0x11, 0x35, 0x39, 0x71, 0x51, 0x91,
-	0x4b, 0xb6, 0x7e, 0xbc, 0x66, 0xc3, 0x7b, 0x2f, 0x1f, 0x9f, 0xaf, 0x8d, 0x98, 0x76, 0xd3, 0xe7,
-	0xe3, 0x54, 0xf9, 0xfd, 0x1b, 0xd2, 0x99, 0xd6, 0x59, 0xbf, 0x51, 0x4a, 0xfe, 0x38, 0xc0, 0xf7,
-	0x7c, 0xd6, 0x0e, 0xdf, 0x64, 0x9d, 0x45, 0x47, 0xb3, 0xb6, 0x9f, 0x3a, 0xf9, 0x0a, 0x00, 0x00,
-	0xff, 0xff, 0x37, 0x5f, 0x17, 0x5e, 0xeb, 0x01, 0x00, 0x00,
+	// 861 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0x5f, 0x6f, 0xe3, 0x44,
+	0x10, 0x8f, 0x13, 0x37, 0x17, 0x8f, 0x4b, 0xaf, 0xdd, 0xab, 0x8a, 0x65, 0x10, 0x9c, 0x56, 0x20,
+	0x55, 0x48, 0x24, 0x5c, 0x8e, 0x93, 0xaa, 0x02, 0x12, 0xa5, 0x1c, 0x55, 0xa5, 0x1c, 0x70, 0x9b,
+	0x3b, 0x78, 0x76, 0x9d, 0x6d, 0x6a, 0xd5, 0xde, 0xb5, 0xbc, 0xeb, 0x9e, 0xf2, 0xca, 0x3b, 0x0f,
+	0x08, 0x89, 0x2f, 0x86, 0xf8, 0x06, 0x7c, 0x0a, 0x9e, 0xd0, 0xfe, 0x73, 0xec, 0xf4, 0x22, 0xc4,
+	0x53, 0x76, 0x66, 0x7e, 0xb3, 0x3b, 0xf3, 0x9b, 0xf1, 0x2f, 0x70, 0xb0, 0xac, 0xb3, 0x05, 0xe5,
+	0x29, 0xcd, 0xb9, 0x1c, 0x97, 0x15, 0x97, 0x1c, 0x0d, 0x0b, 0xbe, 0xa0, 0xb9, 0x88, 0xdf, 0x5b,
+	0x72, 0xbe, 0xcc, 0xe9, 0x44, 0x7b, 0xaf, 0xea, 0xeb, 0x09, 0x2d, 0x4a, 0xb9, 0x32, 0xa0, 0xf8,
+	0x7d, 0x1b, 0x4c, 0xca, 0x6c, 0x92, 0x30, 0xc6, 0x65, 0x22, 0x33, 0xce, 0x84, 0x8d, 0x7e, 0xb8,
+	0x99, 0x2a, 0xb3, 0x82, 0x0a, 0x99, 0x14, 0xa5, 0x01, 0xe0, 0x15, 0x3c, 0x3c, 0xcb, 0xf3, 0xf3,
+	0x8a, 0x2e, 0xc4, 0xcf, 0x55, 0x52, 0x96, 0xb4, 0x42, 0xcf, 0x20, 0xa8, 0x68, 0xc9, 0xb5, 0x2f,
+	0xf2, 0x1e, 0x7b, 0xc7, 0xe1, 0xf4, 0xdd, 0xb1, 0x29, 0x65, 0x4c, 0x6c, 0xc0, 0x62, 0xc9, 0x1a,
+	0x89, 0x26, 0x30, 0xba, 0x4b, 0x85, 0xc9, 0x1a, 0xe8, 0xac, 0x47, 0x2e, 0xab, 0x9d, 0xd1, 0x80,
+	0xf0, 0x13, 0x08, 0x5b, 0x01, 0x84, 0x61, 0x70, 0x97, 0x8a, 0xa8, 0xff, 0x78, 0x70, 0x1c, 0x4e,
+	0xf7, 0x5d, 0xea, 0x4f, 0xe7, 0x73, 0x8d, 0x26, 0x2a, 0x88, 0xff, 0xf0, 0x60, 0xe4, 0x3c, 0x28,
+	0x86, 0x51, 0x9a, 0x67, 0x94, 0xc9, 0xcb, 0x85, 0x2e, 0x33, 0x20, 0x8d, 0x8d, 0x30, 0xec, 0x9a,
+	0xf3, 0x9c, 0xa6, 0x15, 0x95, 0x51, 0x5f, 0xc7, 0x3b, 0x3e, 0x95, 0x2f, 0xf9, 0x2d, 0x65, 0xaf,
+	0xc9, 0x4c, 0x17, 0x1c, 0x90, 0xc6, 0x56, 0xb1, 0x24, 0x4d, 0xe5, 0xf7, 0x49, 0x41, 0x23, 0xdf,
+	0xc4, 0x9c, 0x8d, 0x10, 0xf8, 0x72, 0x55, 0xd2, 0x68, 0x47, 0xfb, 0xf5, 0x19, 0x9f, 0xc0, 0xc3,
+	0x0d, 0x6a, 0xd0, 0xc7, 0xe0, 0x2b, 0x72, 0xa2, 0x81, 0x6e, 0xe8, 0x60, 0x93, 0x41, 0x41, 0x74,
+	0x18, 0xff, 0xea, 0x41, 0xd0, 0xf8, 0xd4, 0xbb, 0xb5, 0xa0, 0x15, 0x53, 0xef, 0xda, 0x9e, 0x9c,
+	0xad, 0x62, 0x65, 0x22, 0xc4, 0x1b, 0x5e, 0x2d, 0x6c, 0x3f, 0x8d, 0x8d, 0x22, 0x78, 0xa0, 0x6e,
+	0x7b, 0x5d, 0xe5, 0xb6, 0x15, 0x67, 0xfe, 0xef, 0x4e, 0x4e, 0x01, 0xbe, 0xa9, 0xb3, 0x7c, 0xf1,
+	0xb2, 0xa6, 0xd5, 0x4a, 0x21, 0x6e, 0x12, 0x71, 0x63, 0x6b, 0xd1, 0x67, 0xf5, 0xd6, 0x95, 0x42,
+	0x5c, 0x9a, 0x32, 0x06, 0xc4, 0x99, 0xf8, 0x37, 0x0f, 0x86, 0x3a, 0x59, 0xa0, 0x29, 0x0c, 0xb5,
+	0x57, 0x6d, 0x90, 0xea, 0x3f, 0x76, 0xfd, 0x9b, 0xb8, 0xfd, 0x79, 0xce, 0x64, 0xb5, 0x22, 0x16,
+	0x19, 0xcf, 0x21, 0x6c, 0xb9, 0xd1, 0x3e, 0x0c, 0x6e, 0xe9, 0xca, 0x3e, 0xad, 0x8e, 0x68, 0x0c,
+	0x3b, 0x77, 0x49, 0x5e, 0x53, 0xfd, 0x6e, 0x38, 0x8d, 0x3a, 0x77, 0x92, 0x9a, 0xa9, 0xe5, 0xbe,
+	0x64, 0xd7, 0x9c, 0x18, 0xd8, 0x69, 0xff, 0xc4, 0xc3, 0xd7, 0xb0, 0xbf, 0x19, 0x56, 0x5d, 0x2d,
+	0x38, 0x33, 0x0c, 0x8f, 0x88, 0x3e, 0xa3, 0x3d, 0xe8, 0x67, 0xa5, 0xe5, 0xb5, 0x9f, 0x95, 0x8a,
+	0xb7, 0x65, 0x55, 0xa6, 0x3f, 0xf2, 0x4a, 0xba, 0xed, 0x70, 0x76, 0xc3, 0x8a, 0xbf, 0x66, 0x05,
+	0x7f, 0x0a, 0xe1, 0x8c, 0x2f, 0x09, 0x15, 0x25, 0x67, 0x82, 0xa2, 0x0f, 0x00, 0x78, 0x2d, 0xcb,
+	0x5a, 0xce, 0x32, 0xe6, 0x46, 0xd9, 0xf2, 0xe0, 0x97, 0x10, 0xaa, 0xa9, 0x9f, 0xa5, 0x29, 0xaf,
+	0x99, 0xbe, 0x51, 0x2f, 0x8b, 0xe5, 0x59, 0x9d, 0x15, 0xcf, 0x89, 0x09, 0xdb, 0xb2, 0x9c, 0x89,
+	0x0e, 0x61, 0x27, 0xcf, 0x8a, 0xcc, 0x14, 0xb6, 0x43, 0x8c, 0x81, 0xff, 0xf1, 0x60, 0x57, 0xb7,
+	0x3a, 0xaf, 0x8b, 0x22, 0xd9, 0x32, 0xbc, 0x23, 0x18, 0x5e, 0x27, 0x59, 0x4e, 0xcd, 0xec, 0x46,
+	0xc4, 0x5a, 0xe8, 0x04, 0x02, 0x3d, 0x85, 0x57, 0x59, 0x41, 0xed, 0xe7, 0x1b, 0x8f, 0x8d, 0x78,
+	0x8c, 0x9d, 0x78, 0x8c, 0x5f, 0x39, 0xf1, 0x20, 0x6b, 0x70, 0xbb, 0x4c, 0xbf, 0x5b, 0xe6, 0x47,
+	0xf0, 0x8e, 0x86, 0x7d, 0x5b, 0x57, 0x5a, 0x94, 0xf4, 0x9e, 0x79, 0xa4, 0xeb, 0x6c, 0x5a, 0x1f,
+	0xb6, 0x5a, 0x3f, 0x82, 0xe1, 0x55, 0x95, 0xb0, 0xf4, 0x26, 0x7a, 0xa0, 0xbd, 0xd6, 0x6a, 0xaf,
+	0xde, 0xa8, 0xbb, 0x7a, 0xcf, 0x20, 0x30, 0x6d, 0x67, 0x54, 0xa0, 0x63, 0xf0, 0x45, 0x5d, 0xb8,
+	0xd5, 0x3b, 0xec, 0xac, 0x89, 0x25, 0x87, 0x68, 0xc4, 0xf4, 0x2f, 0x1f, 0xc2, 0x0b, 0x25, 0xbc,
+	0x3f, 0x68, 0xe1, 0x45, 0x2f, 0x20, 0xbc, 0xa0, 0xb2, 0x91, 0x98, 0xa3, 0x7b, 0x14, 0x3c, 0x57,
+	0xd2, 0x1b, 0xbf, 0x4d, 0xd9, 0xf0, 0xc1, 0x2f, 0x7f, 0xfe, 0xfd, 0x7b, 0x3f, 0x44, 0xc1, 0xe4,
+	0xee, 0xc9, 0x24, 0xd5, 0xf9, 0x2f, 0x20, 0x9c, 0xb7, 0xae, 0xbb, 0xa7, 0x6a, 0xf1, 0x96, 0x07,
+	0xf0, 0xa1, 0xbe, 0x6b, 0x0f, 0xaf, 0xef, 0x3a, 0xf5, 0x3e, 0x41, 0x67, 0xb0, 0x7b, 0x41, 0xe5,
+	0x5a, 0x2d, 0xb6, 0x95, 0xb7, 0x4d, 0xae, 0x71, 0x0f, 0x7d, 0x01, 0xbb, 0xf3, 0xf6, 0x15, 0xf7,
+	0x75, 0x69, 0x6b, 0x4d, 0x3d, 0xf4, 0xb5, 0x66, 0xc7, 0xfd, 0x5f, 0xfc, 0xf7, 0xf3, 0x1b, 0xff,
+	0x2c, 0xb8, 0x87, 0xbe, 0x82, 0xe0, 0xfc, 0x86, 0xa6, 0xb7, 0xe7, 0x9c, 0xb1, 0xad, 0xf9, 0xdb,
+	0x0b, 0xf8, 0xdc, 0x6e, 0xb8, 0xfd, 0x98, 0x11, 0xea, 0x8c, 0x56, 0x4b, 0x56, 0xbc, 0xd7, 0x55,
+	0x1a, 0xdc, 0x43, 0x4f, 0xc1, 0x9f, 0xf1, 0xa5, 0x78, 0x2b, 0xba, 0x99, 0x64, 0xeb, 0xe3, 0xc5,
+	0xbd, 0xcf, 0x3c, 0xf4, 0x25, 0xec, 0xcf, 0x12, 0x21, 0xbf, 0xa3, 0x6f, 0xd6, 0x7b, 0xf5, 0xa8,
+	0x4d, 0x96, 0xfd, 0x74, 0xe3, 0x86, 0xc1, 0x06, 0x87, 0x7b, 0x57, 0x43, 0x5d, 0xfa, 0xd3, 0x7f,
+	0x03, 0x00, 0x00, 0xff, 0xff, 0x1a, 0x79, 0xa9, 0xb5, 0xd6, 0x07, 0x00, 0x00,
 }

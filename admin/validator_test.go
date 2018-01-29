@@ -8,7 +8,7 @@ import (
 
 func TestAdminValidator_ValidateConfig(t *testing.T) {
 	v := GetValidator()
-	noClientSecret := &models.Credentials{
+	noClientSecret := &models.VCSCreds{
 		AcctName: "blah",
 		ClientId: "blah2",
 		TokenURL: "slkdjf",
@@ -20,7 +20,7 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("client secret", "clientSecret is required", err.Error()))
 	}
 
-	invalidCred := &models.Credentials{
+	invalidCred := &models.VCSCreds{
 		AcctName:     "blah",
 		ClientId:     "blah2",
 		TokenURL:     "slkdjf",

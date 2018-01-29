@@ -3,11 +3,7 @@ syntax = "proto3";
 option go_package = "protobuf";
 package protobuf;
 
-// Prime factors service definition.
 service Build {
-    // We have a method called `PrimeFactors` which takes
-    // parameter called `Request` and returns the message `Response`
-
     // The stream keyword is specified before both the request type and response
     // type to make it as bidirectional streaming RPC method.
 

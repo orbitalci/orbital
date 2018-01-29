@@ -2,29 +2,32 @@ syntax = "proto3";
 package protos;
 
 import "webhook.proto";
-import "pipeline.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
     string image = 1;
-    repeated string packages = 2;
-    map<string, string> env = 3;
-    Stage before= 4;
-    Stage after = 5;
-    Stage build = 6;
-    Stage test = 7;
-    Stage deploy = 8;
+    // @inject_tag: yaml:"buildTool"
+    string buildTool = 2;
+    repeated string packages = 3;
+    repeated string branches = 4;
+    repeated string env = 5;
+    repeated Stage stages = 7;
 }
 
 message Stage {
-    map<string, string> env = 1;
+    repeated string env = 1;
     repeated string script = 2;
+    string name = 3;
 }
 
 message WerkerTask {
     string vaultToken = 1;
     string checkoutHash = 2;
-    PipelineConfig pipe = 3;
+    BuildConfig buildConf = 3;
+    string vcsToken = 4;
+    string vcsType = 5;
+    string fullName = 6;
+    int64 id = 7; // database id
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//

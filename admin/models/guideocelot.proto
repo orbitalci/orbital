@@ -4,30 +4,100 @@ package models;
 
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
 
 service GuideOcelot {
-    rpc GetCreds(google.protobuf.Empty) returns (CredWrapper) {
+    rpc GetVCSCreds (google.protobuf.Empty) returns (CredWrapper) {
         option (google.api.http) = {
 			get: "/v1/creds"
 		};
     }
 
-    rpc SetCreds(Credentials) returns (google.protobuf.Empty) {
+    rpc SetVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			post: "/v1/creds"
 			body: "*"
 		};
     }
+
+    rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {}
+    rpc SetRepoCreds (RepoCreds) returns (google.protobuf.Empty) {}
+
+    rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
+
+    rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc BuildRuntime (BuildQuery) returns (Builds) {}
+    rpc Logs (BuildQuery) returns (stream LogResponse) {}
+    rpc LastFewSummaries (RepoAccount) returns (Summaries) {}
+}
+
+message AllCredsWrapper {
+    RepoCredWrapper repoCreds = 1;
+    CredWrapper vcsCreds = 3;
 }
 
 message CredWrapper {
-    repeated Credentials credentials = 1;
+    repeated VCSCreds vcs = 2;
 }
 
-message Credentials {
+message VCSCreds {
     string clientId = 1;
     string clientSecret = 2;
     string tokenURL = 3;
     string acctName = 4;
     string type = 5;
+}
+
+message RepoCredWrapper {
+    repeated RepoCreds repo = 3;
+}
+
+message RepoCreds {
+    string username = 1;
+    string password = 2;
+    string repoUrl = 3;
+    string acctName = 4;
+    string type = 5;
+}
+
+message BuildQuery {
+    string hash = 1;
+    int64 buildId = 2;
+}
+
+
+message Builds {
+    map<string, BuildRuntimeInfo> builds = 1;
+}
+
+message BuildRuntimeInfo {
+    bool   done     = 1;
+    string ip       = 2;
+    string grpcPort = 3;
+    string hash = 4;
+}
+
+message LogResponse {
+    string outputLine = 1;
+}
+
+message RepoAccount {
+    string repo = 1;
+    string account = 2;
+    int32  limit = 3;
+}
+
+message BuildSummary {
+    string hash = 1;
+    bool failed = 2;
+    google.protobuf.Timestamp buildTime = 3;
+    string account = 4;
+    double buildDuration = 5;
+    string repo = 6;
+    string branch = 7;
+    int64 buildId = 8;
+}
+
+message Summaries {
+    repeated BuildSummary sums = 1;
 }

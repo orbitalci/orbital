@@ -1,4 +1,53 @@
 #!/bin/bash
 
-docker-compose -f infra-docker-compose.yml up -d
+# starts infrastructure needed for ocelot, can optionally disable consul/vault with --no-consul, --no-vault, or --no-nsq flags
+args=()
+follow=(" -d")
+CONSUL=1
+VAULT=1
+NSQ=1
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -f|--follow)
+    follow=()
+    shift
+    ;;
+    --no-consul)
+    echo "starting without consul"
+    CONSUL=0
+    shift
+    ;;
+    --no-vault)
+    VAULT=0
+    echo "starting without vault"
+    shift
+    ;;
+    --no-nsq)
+    NSQ=0
+    echo "starting without NSQ"
+    shift
+    ;;
+    *)
+    echo "unrecognized flag ${key}"
+    shift
+    ;;
+esac
+done
+
+if (( CONSUL == 1 )); then
+    args+=(" -f infra/consul-docker-compose.yml")
+fi
+
+if (( VAULT == 1 )); then
+    args+=(" -f infra/vault-docker-compose.yml")
+fi
+
+if (( NSQ == 1 )); then
+    args+=(" -f infra/nsq-docker-compose.yml")
+fi
+
+docker-compose${args[@]} up${follow[@]}
 # TODO: TJ has some stuff that will unseal vault for us! Perhaps it goes here?

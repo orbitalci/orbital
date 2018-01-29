@@ -20,7 +20,7 @@ func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
 	for _, wd := range watchdata {
 		wd := wd
 		t.Run(wd.name, func(t *testing.T){
-			go wmh.WatchForResults(wd.hash)
+			go wmh.WatchForResults(wd.hash, 1)
 			go func(){
 				wmh.infochan <- wd.chanData
 			}()

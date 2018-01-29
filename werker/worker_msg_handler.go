@@ -4,10 +4,11 @@ import (
 	d "bitbucket.org/level11consulting/go-til/deserialize"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
-	"bufio"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	b "bitbucket.org/level11consulting/ocelot/werker/builder"
 	"github.com/golang/protobuf/proto"
-	"leveler/server"
-	"log"
+	"time"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -16,6 +17,7 @@ import (
 type Transport struct {
 	Hash     string
 	InfoChan chan []byte
+	DbId     int64
 }
 
 type WorkerMsgHandler struct {
@@ -24,6 +26,8 @@ type WorkerMsgHandler struct {
 	infochan     chan []byte
 	ChanChan     chan *Transport
 	Deserializer d.Deserializer
+	Basher	     *b.Basher
+	Store        storage.OcelotStorage
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
@@ -38,63 +42,94 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	w.infochan = make(chan []byte)
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
-	// do the thing
-	go w.build(werkerTask)
+
+	var builder b.Builder
+	switch w.WerkConf.werkerType {
+	case Docker:
+		builder = b.NewDockerBuilder(w.Basher)
+	default:
+		builder = b.NewDockerBuilder(w.Basher)
+	}
+
+	go w.MakeItSo(werkerTask, builder)
 	return nil
 }
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
-func (w *WorkerMsgHandler) WatchForResults(hash string) {
+func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 	ocelog.Log().Debugf("adding hash ( %s ) & infochan to transport channel", hash)
-	transport := &Transport{Hash: hash, InfoChan: w.infochan}
+	transport := &Transport{Hash: hash, InfoChan: w.infochan, DbId: dbId}
 	w.ChanChan <- transport
 }
 
-// build contains the logic for actually building. switches on type of proto message that was sent
-// over the nsq queue
-func (w *WorkerMsgHandler) build(werk *pb.WerkerTask) {
+// MakeItSo will call appropriate builder functions
+func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
-	w.WatchForResults(werk.CheckoutHash)
+	//defers are stacked, will be executed FILO
 
-	quit := make(chan int8)
-	done := make(chan int8)
+	defer close(w.infochan)
+	defer builder.Cleanup()
+	//TODO: write stages to db
+	//TODO: write build data to db
 
-	switch w.WerkConf.werkerType {
-	case Docker:
-		config := &server.ServerConfig{
-			Platform: &server.ContainerPlatform{
-				Name: "docker",
-			},
-		}
-		pipe, err := server.NewPipeline(config, werk.Pipe)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("error building new pipeline")
-		}
-		pipe.Run(quit, done)
+	w.WatchForResults(werk.CheckoutHash, werk.Id)
+	var stageResults []*b.Result
 
-		dockerPipe := pipe.JobsMap[werk.CheckoutHash]
-		buildOutput, err := dockerPipe.Logs(true, true, true)
-		defer buildOutput.Close()
-
-		rd := bufio.NewReader(buildOutput)
-
-		for {
-			str, err := rd.ReadString('\n')
-			if err != nil {
-				log.Fatal("Read Error:", err)
-				return
+	setupResult := builder.Setup(w.infochan, werk)
+	stageResults = append(stageResults, setupResult)
+	// todo: this is causing panic: runtime error: invalid memory address or nil pointer dereference
+	// on the builder.Cleanup
+	if setupResult.Status == b.FAIL {
+		ocelog.Log().Error(setupResult.Error)
+		return
+	}
+	fail := false
+	start := time.Now()
+	for _, stage := range werk.BuildConf.Stages {
+		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
+		ocelog.Log().Info("finished stage", stage.Name)
+		stageResults = append(stageResults, stageResult)
+		// todo: should this check go before or after special build stuffs? i guess if it fails, there won't be
+		// any deployment
+		if stageResult.Status == b.FAIL {
+			fail = true
+			ocelog.Log().Error(stageResult.Error)
+			// todo: update failure reasons
+			if err := w.Store.AddFail(convertResultToFailureReasons(stageResult, werk.Id)); err != nil {
+				ocelog.IncludeErrField(err).Error("couldn't add failure reasons")
 			}
-			w.infochan <- []byte(str)
+			break
 		}
-
-		if err != nil {
-			ocelog.IncludeErrField(err)
-			return
+		// build is special because we deploy after this
+		if stage.Name == "build" {
+			// todo: deploy to nexus
+			continue
 		}
-	case Kubernetes:
-		//TODO: wait for kubernetes client
+	}
+	dura := time.Now().Sub(start)
+	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
 	}
 
-	<-done
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
+}
+
+
+func convertResultToFailureReasons(res *b.Result, id int64) *models.BuildFailureReason {
+	var err string
+	if res.Error == nil {
+		err = ""
+	} else {
+		err = res.Error.Error()
+	}
+	fr :=  &models.FailureReasons{
+				Stage: res.Stage,
+				Status: int32(res.Status),
+				Error: err,
+				Messages: res.Messages,
+			}
+	return &models.BuildFailureReason{
+		BuildId: id,
+		FailureReasons: fr,
+	}
 }

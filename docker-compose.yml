@@ -3,6 +3,7 @@ services:
   # Ocelot services
   admin:
     image: ocelot-admin
+    command: /admin -log-level=debug -consul-host=172.17.0.1
     build:
       context: .
       dockerfile: admin/Dockerfile
@@ -13,13 +14,18 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    volumes:
+      - "/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem:/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem"
     ports:
       - "10000:10000"
     environment:
-      VAULT_TOKEN: 4b7b5f11-7bd1-80fa-cdaa-b950e9bd502d
-      CONSUL_HOST: 172.18.0.1
+      VAULT_TOKEN: 4e156fee-03f4-11b8-5ae8-2445e6fd438f
+      VAULT_ADDR: http://172.18.0.1:8200
+      NSQLOOKUPD_IP: 172.18.0.1
+      NSQD_IP: 172.18.0.1
   hookhandler:
     image: ocelot-hookhandler
+    command: /hookhandler 
     build:
       context: .
       dockerfile: hookhandler/Dockerfile
@@ -33,19 +39,28 @@ services:
     ports:
       - "8088:8088"
     environment:
-      VAULT_TOKEN: 4b7b5f11-7bd1-80fa-cdaa-b950e9bd502d
+      VAULT_TOKEN: 4e156fee-03f4-11b8-5ae8-2445e6fd438f
       VAULT_ADDR: http://172.18.0.1:8200
-      CONSUL_HOST: 172.18.0.1
+      CONSUL_HTTP_ADDR: http://172.18.0.1:8500
+      CONSUL_HOST: http://172.17.0.1
+      LOG_LEVEL: debug
+      NSQD_IP: 172.17.0.1
+      NSQLOOKUPD_IP: 172.17.0.1
   werker:
     image: ocelot-werker
+    command: /werker -log-level debug 
     build:
       context: .
       dockerfile: werker/Dockerfile
       cache_from:
         - golang:1.9-alpine
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
       VAULT_ADDR: http://172.18.0.1:8200
-      CONSUL_HOST: 172.18.0.1
+      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
+      NSQD_IP: 172.17.0.1
+      NSQLOOKUPD_IP: 172.17.0.1
     logging:
       driver: "json-file"
       options:
