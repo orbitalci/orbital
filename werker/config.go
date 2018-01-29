@@ -86,8 +86,9 @@ func GetConf() (*WerkerConf, error) {
 	}
 	rc, err := cred.GetInstance(consuladdr, consulport, "")
 	if err != nil {
-		return nil, errors.New("could not get instance of remote config")
+		return nil, errors.New("could not get instance of remote config; err: " + err.Error())
 	}
+
 	werker.RemoteConfig = rc
 	return werker, nil
 }
