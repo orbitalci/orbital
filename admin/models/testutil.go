@@ -19,7 +19,7 @@ func NewFakeGuideOcelotClient(logLines []string) *fakeGuideOcelotClient {
 type fakeGuideOcelotClient struct {
 	creds *CredWrapper
 	repoCreds *RepoCredWrapper
-	brInfo *BuildRuntimeInfo
+	brInfo *Builds
 	logLines []string
 }
 
@@ -52,9 +52,22 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 	}, nil
 }
 
-// todo: make this useful
-func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*BuildRuntimeInfo, error) {
-	return f.brInfo, nil
+func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*Builds, error) {
+	builds := &Builds{
+		Builds: map[string]*BuildRuntimeInfo{},
+	}
+	//put your hash val and expected results here:
+	switch in.Hash {
+	case "testinghash":
+		builds.Builds["abc"] = &BuildRuntimeInfo{
+			Hash: "abc",
+		}
+		builds.Builds["def"] = &BuildRuntimeInfo{
+			Hash: "def",
+		}
+	}
+
+	return builds, nil
 }
 
 // todo: make this useful
@@ -107,6 +120,7 @@ type testBuildRuntime struct {
 	Ip       string
 	GrpcPort string
 	logLines []string
+	Hash	string
 }
 
 func (t *testBuildRuntime) GetDone() bool {
@@ -119,6 +133,10 @@ func (t *testBuildRuntime) GetIp() string {
 
 func (t *testBuildRuntime) GetGrpcPort() string {
 	return t.GrpcPort
+}
+
+func (t *testBuildRuntime) GetHash() string {
+	return t.Hash
 }
 
 func (t *testBuildRuntime) CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error) {

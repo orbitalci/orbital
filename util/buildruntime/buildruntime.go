@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
 )
 
 var (
@@ -20,29 +21,41 @@ type BuildRuntime struct {
 	Ip   	 string
 	GrpcPort string
 	WsPort   string
+	Hash	string
 }
 
-func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (*BuildRuntime, error) {
+//this matches by start of partial git hash
+func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*models.BuildRuntimeInfo, error) {
 	path := fmt.Sprintf(buildPath, gitHash)
 	pairs, err := consulete.GetKeyValues(path)
 	if err != nil {
 		return nil, err
 	}
-	rt := &BuildRuntime{}
+	rt := make(map[string]*models.BuildRuntimeInfo)
 	if len(pairs) == 0 {
 		return nil, errors.New("no build at hash " + gitHash)
 	}
+
 	for _, pair := range pairs {
-		key := strings.Replace(pair.Key, path + "/", "", 1)
+		key := pair.Key[strings.LastIndex(pair.Key, "/") + 1:]
+		keySub := pair.Key[:strings.LastIndex(pair.Key, "/")]
+		gitHash := keySub[strings.LastIndex(keySub, "/") + 1:]
+		_, ok := rt[gitHash]
+		if !ok {
+			rt[gitHash] = &models.BuildRuntimeInfo{
+				Hash: gitHash,
+			}
+		}
+
 		switch key {
 		case "done":
-			rt.Done = true
+			rt[gitHash].Done = true
 		case "werker_ip":
-			rt.Ip = string(pair.Value)
+			rt[gitHash].Ip = string(pair.Value)
 		case "werker_grpc_port":
-			rt.GrpcPort = string(pair.Value)
+			rt[gitHash].GrpcPort = string(pair.Value)
 		case "werker_ws_port":
-			rt.WsPort = string(pair.Value)
+			// don't use this right now
 		}
 	}
 	return rt, nil

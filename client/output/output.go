@@ -72,12 +72,25 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error("unable to get build runtime! error: " + err.Error())
 		return 1
 	}
-	if build.Done {
-		return c.fromStorage(ctx)
-	} else {
-		return c.fromWerker(ctx, build)
-	}
 
+	if len(build.Builds) > 1 {
+		c.UI.Warn(fmt.Sprintf("it's your lucky day, there's TWO hashes matching that str: "))
+		for _, build := range build.Builds {
+			c.UI.Warn(fmt.Sprintf("\u0009%s ", build.Hash))
+		}
+		c.UI.Info(fmt.Sprintf("please enter a more complete git hash"))
+	} else if len(build.Builds) == 1 {
+		for _, build := range build.Builds {
+			if build.Done {
+				return c.fromStorage(ctx, build.Hash)
+			} else {
+				return c.fromWerker(ctx, build)
+			}
+		}
+	} else {
+		c.UI.Info(fmt.Sprintf("no builds found for entry: %s", c.hash))
+		return 0
+	}
 	return 0
 }
 
@@ -90,8 +103,8 @@ func (c *cmd) Help() string {
 }
 
 
-func (c *cmd) fromStorage(ctx context.Context) int {
-	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: c.hash})
+func (c *cmd) fromStorage(ctx context.Context, hash string) int {
+	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: hash})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, "Unable to get stream from admin.")
 		return 1
@@ -119,7 +132,7 @@ func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 		return 1
 	}
 
-	stream, err := client.BuildInfo(ctx, &pb.Request{Hash: c.hash})
+	stream, err := client.BuildInfo(ctx, &pb.Request{Hash: build.GetHash()})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1
