@@ -128,6 +128,8 @@ func (c *cmd) fromStorage(ctx context.Context, hash string) int {
 			stream.CloseSend()
 			return 0
 		} else if err != nil {
+			//todo: implement this
+			c.UI.Warn("Warning: partial matching is not yet supported for streaming from storage")
 			commandhelper.UIErrFromGrpc(err, c.UI, "Error streaming from storage via admin.")
 			return 1
 		}

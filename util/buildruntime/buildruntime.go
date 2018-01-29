@@ -40,7 +40,7 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*mo
 	}
 	rt := make(map[string]*models.BuildRuntimeInfo)
 	if len(pairs) == 0 {
-		rt.Done = true
+		//rt.Done = true
 		return rt, &ErrBuildDone{"no build found in consul"}
 	}
 

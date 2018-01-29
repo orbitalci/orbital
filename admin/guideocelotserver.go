@@ -98,7 +98,10 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 	if err != nil {
 		if _, ok := err.(*rt.ErrBuildDone); ok {
-			return  &models.BuildRuntimeInfo{Done:true}, nil
+			var builds = map[string]*models.BuildRuntimeInfo{
+				bq.Hash: {Done: true},
+			}
+			return &models.Builds{Builds: builds}, nil
 		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
