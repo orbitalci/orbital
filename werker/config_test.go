@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+// ** this test will pass only if vault token is set as env. variable **
 // i'm really testing namsrals flag code, i dont trust it.
 func TestGetConf_fromEnv(t *testing.T) {
 	testConf := &WerkerConf{
