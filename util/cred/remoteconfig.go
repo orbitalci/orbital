@@ -5,15 +5,12 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"fmt"
 	"github.com/pkg/errors"
+	"strconv"
 )
 
-var (
-	ConfigPath = "creds"
- 	VCSPath = ConfigPath + "/vcs"
- 	RepoPath = ConfigPath + "/repo"
-)
 
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
@@ -54,6 +51,21 @@ func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfi
 	return remoteConfig, nil
 }
 
+type StorageCreds struct {
+	User     string
+	Location string
+	Port     int
+	DbName   string
+	Password string
+}
+
+type StorageCred interface {
+	GetStorageCreds(typ storage.Dest) (*StorageCreds, error)
+	GetStorageType() (storage.Dest, error)
+	GetOcelotStorage() (storage.OcelotStorage, error)
+}
+
+
 //RemoteConfig is an abstraction for retrieving/setting creds for ocelot
 //currently uses consul + vault
 type CVRemoteConfig interface {
@@ -64,7 +76,9 @@ type CVRemoteConfig interface {
 	GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error)
 	GetPassword(path string) (string, error)
 	AddCreds(path string, anyCred RemoteConfigCred) (err error)
+	StorageCred
 }
+
 
 type RemoteConfig struct {
 	Consul *consul.Consulet
@@ -170,4 +184,94 @@ func (rc *RemoteConfig) AddCreds(path string, anyCred RemoteConfigCred) (err err
 		err = errors.New("not connected to consul, unable to add credentials")
 	}
 	return
+}
+
+
+func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
+	kv, err := rc.Consul.GetKeyValue(StorageType)
+	if err != nil {
+		return 0, errors.New("unable to get storage type from consul, err: " + err.Error())
+	}
+	if kv == nil {
+		return 0, errors.New(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; this is required to know which storage to use.", StorageType))
+	}
+	storageType := string(kv.Value)
+	switch storageType {
+	case "postgres":
+		return storage.Postgres, nil
+	case "filesystem":
+		return storage.FileSystem, nil
+	default:
+		return 0, errors.New("unknown storage type: " + storageType)
+	}
+}
+
+func (rc *RemoteConfig) GetStorageCreds(typ storage.Dest) (*StorageCreds, error) {
+	switch typ {
+	case storage.Postgres:
+		return rc.getForPostgres()
+	case storage.FileSystem:
+		return rc.getForFilesystem()
+	default:
+		fmt.Println("shouldnoteverhappen")
+		return nil, nil
+	}
+}
+
+func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
+	pairs, err := rc.Consul.GetKeyValues(PostgresCredLoc)
+	if err != nil {
+		return nil, errors.New("unable to get postgres creds from consul, err: " + err.Error())
+	}
+	storeConfig := &StorageCreds{}
+	for _, pair := range pairs {
+		switch pair.Key {
+		case PostgresDatabaseName:
+			storeConfig.DbName = string(pair.Value)
+		case PostgresLocation:
+			storeConfig.Location = string(pair.Value)
+		case PostgresUsername:
+			storeConfig.User = string(pair.Value)
+		case PostgresPort:
+			// todo: check for err
+			storeConfig.Port, _ = strconv.Atoi(string(pair.Value))
+		}
+	}
+	secrets, err := rc.Vault.GetVaultData(PostgresPasswordLoc)
+	if err != nil {
+		return storeConfig, errors.New("unable to get postgres password from vault, err: " + err.Error())
+	}
+	// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
+	storeConfig.Password = fmt.Sprintf("%v", secrets[PostgresPasswordKey])
+	return storeConfig, nil
+}
+
+func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
+	pair, err := rc.Consul.GetKeyValue(FilesystemDir)
+	if err != nil {
+		return nil, errors.New("unable to get save directory from consul, err: " + err.Error())
+	}
+	return &StorageCreds{Location: string(pair.Value)}, nil
+}
+
+func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
+	typ, err := rc.GetStorageType()
+	if err != nil {
+		return nil, err
+	}
+	if typ == storage.Postgres {
+		fmt.Println("postgres storage")
+	}
+	creds, err := rc.GetStorageCreds(typ)
+	if err != nil {
+		return nil, err
+	}
+	switch typ {
+	case storage.FileSystem:
+		return storage.NewFileBuildStorage(creds.Location), nil
+	case storage.Postgres:
+		return storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName), nil
+	default:
+		return nil, errors.New("unknown type")
+	}
 }

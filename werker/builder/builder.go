@@ -13,9 +13,10 @@ type Builder interface {
 }
 
 type Result struct {
-	Stage string
-	Status StageResult
-	Error  error
+	Stage    string
+	Status   StageResult
+	Error    error
+	Messages []string
 }
 
 type StageResult int32

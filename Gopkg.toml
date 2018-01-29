@@ -90,3 +90,11 @@
 [[constraint]]
   branch = "master"
   name = "bitbucket.org/level11consulting/go-til"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/lib/pq"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/olekukonko/tablewriter"

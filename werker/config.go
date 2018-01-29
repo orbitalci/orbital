@@ -1,6 +1,7 @@
 package werker
 
 import (
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"errors"
 	"github.com/namsral/flag"
@@ -32,7 +33,7 @@ func strToWerkType(str string) WerkType {
 	}
 }
 
-func strToStorageImplement(str string) storage.BuildOutputStorage {
+func strToStorageImplement(str string) storage.BuildOut {
 	switch str {
 	case "filesystem":
 		return storage.NewFileBuildStorage("")
@@ -50,9 +51,9 @@ type WerkerConf struct {
 	WerkerName      string
 	werkerType      WerkType
 	//werkerProcessor builder.Processor
-	storage         storage.BuildOutputStorage
 	LogLevel        string
 	RegisterIP     string
+	RemoteConfig   cred.CVRemoteConfig
 }
 
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
@@ -62,6 +63,9 @@ func GetConf() (*WerkerConf, error) {
 	werkerName, _ := os.Hostname()
 	var werkerTypeStr string
 	var storageTypeStr string
+	var consuladdr string
+	var consulport int
+	//todo: idk about this env prefix thing, might not be necessary
 	flrg := flag.NewFlagSetWithEnvPrefix("werker", "WERKER", flag.ExitOnError)
 	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes or docker")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
@@ -70,6 +74,8 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&werker.LogLevel, "log-level", "info", "log level")
 	flrg.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
 	flrg.StringVar(&werker.RegisterIP, "register-ip", "localhost", "ip to register with consul when picking up builds")
+	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
+	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
 	flrg.Parse(os.Args[1:])
 	werker.werkerType = strToWerkType(werkerTypeStr)
 	if werker.werkerType == -1 {
@@ -78,6 +84,10 @@ func GetConf() (*WerkerConf, error) {
 	if werker.WerkerName == "" {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")
 	}
-	werker.storage = strToStorageImplement(storageTypeStr)
+	rc, err := cred.GetInstance(consuladdr, consulport, "")
+	if err != nil {
+		return nil, errors.New("could not get instance of remote config")
+	}
+	werker.RemoteConfig = rc
 	return werker, nil
 }

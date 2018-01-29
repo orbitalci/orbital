@@ -194,7 +194,15 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 	defer attachedExec.Conn.Close()
 
 	d.writeToInfo(strings.ToUpper(stage.Name) + " | ", attachedExec.Reader, logout)
-
+	inspector, err := d.DockerClient.ContainerExecInspect(ctx, resp.ID)
+	if inspector.ExitCode != 0 {
+		return &Result{
+			Stage: stage.Name,
+			Status: FAIL,
+			Error: nil,
+			Messages: []string{"exit code was not zero"},
+		}
+	}
 	if err != nil {
 		return &Result{
 			Stage:  stage.Name,

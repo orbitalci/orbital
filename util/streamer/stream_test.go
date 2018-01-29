@@ -55,13 +55,16 @@ func (t *testBuildInfoGrpcServer) Finish(chan int) {}
 
 
 func Test_iterateOverBuildData(t *testing.T) {
+	var stream = NewTestStreamArray()
 	ws := ocenet.NewWebSocketConn()
 	//buildInfo.buildData = append()
-	var stream = NewTestStreamArray()
 	for _, dat := range testData {
 		stream.data = append(stream.data, dat)
 	}
-	iterateOverByteArray(stream, ws, 0)
+	_, err := iterateOverByteArray(stream, ws, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !test.CompareByteArrays(ws.MsgData, testData) {
 		t.Errorf("arrays not the same. expected: %v, actual: %v", testData, ws.MsgData)
 	}
@@ -70,8 +73,10 @@ func Test_iterateOverBuildData(t *testing.T) {
 	for _, datum := range testData {
 		streamGrpc.data = append(streamGrpc.data, datum)
 	}
-
-	iterateOverByteArray(streamGrpc, grp, 0)
+	_, err = iterateOverByteArray(streamGrpc, grp, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !test.CompareStringArrays(grp.testData, stringTestData) {
 		t.Errorf("arrays not same for grpc. expected: %s, actual: %s", stringTestData, grp.testData)
 	}

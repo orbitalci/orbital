@@ -2,14 +2,15 @@ package hookhandler
 //has necessary functions for running hookhandler in dev mode
 
 import (
-	"io/ioutil"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/handler"
-	"os"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/go-til/consul"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/handler"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/hashicorp/vault/api"
+	"io/ioutil"
+	"os"
 )
 
 type MockHookHandlerContext struct {
@@ -51,6 +52,19 @@ func (mrc *MockRemoteConfig) AddCreds(path string, anyCred cred.RemoteConfigCred
 	return nil
 }
 
+func (mrc *MockRemoteConfig) GetStorageCreds(typ storage.Dest) (*cred.StorageCreds, error) {
+	return nil, nil
+}
+
+func (mrc *MockRemoteConfig) GetStorageType() (storage.Dest, error) {
+	return storage.FileSystem, nil
+}
+
+// in dev mode, just get have it be file build storage
+func (mrc *MockRemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
+	return storage.NewFileBuildStorage("~/.ocelot/storage"), nil
+}
+
 ////mock vault////
 
 type MockVaulty struct {}
@@ -58,10 +72,21 @@ type MockVaulty struct {}
 func (mv *MockVaulty) AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error) {
 	return nil, nil
 }
+
 func (mv *MockVaulty) GetUserAuthData(user string) (map[string]interface{}, error) {
 	mockMap := make(map[string]interface{})
 	return mockMap, nil
 }
+
+func (mv *MockVaulty) AddVaultData(path string, data map[string]interface{}) (*api.Secret, error) {
+	return nil, nil
+}
+
+func (mv *MockVaulty) GetVaultData(user string) (map[string]interface{}, error) {
+	mockMap := make(map[string]interface{})
+	return mockMap, nil
+}
+
 func (mv *MockVaulty) CreateToken(request *api.TokenCreateRequest) (token string, err error) {
 	return "", nil
 }

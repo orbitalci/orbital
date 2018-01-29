@@ -2,7 +2,7 @@ package buildruntime
 
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
-	"errors"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"fmt"
 	"strings"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
@@ -24,7 +24,14 @@ type BuildRuntime struct {
 	Hash	string
 }
 
-//this matches by start of partial git hash
+type ErrBuildDone struct {
+	msg string
+}
+
+func (e *ErrBuildDone) Error() string {
+	return e.msg
+}
+
 func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*models.BuildRuntimeInfo, error) {
 	path := fmt.Sprintf(buildPath, gitHash)
 	pairs, err := consulete.GetKeyValues(path)
@@ -33,7 +40,8 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*mo
 	}
 	rt := make(map[string]*models.BuildRuntimeInfo)
 	if len(pairs) == 0 {
-		return nil, errors.New("no build at hash " + gitHash)
+		//rt.Done = true
+		return rt, &ErrBuildDone{"no build found in consul"}
 	}
 
 	for _, pair := range pairs {
@@ -72,18 +80,30 @@ func SetBuildDone(consulete *consul.Consulet, gitHash string) error {
 	return nil
 }
 
-// CheckIfBuildDone will do a check in consul for the `done` flag
-// todo: should also look in db if not in consul
-func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
-	kv, err := consulete.GetKeyValue(fmt.Sprintf(buildDonePath, gitHash))
+// CheckIfBuildDone will check in consul to make sure there is nothing in runtime configuration anymore,
+// then it will makes sure it can find it in storage
+func CheckIfBuildDone(consulete *consul.Consulet, summary storage.BuildSum, gitHash string) bool {
+	kv, err := consulete.GetKeyValue(fmt.Sprintf(buildRegister, gitHash))
+	fmt.Println("KV!", kv)
 	if err != nil {
-		// idk what we should be doing if the error is not nil, maybe panic? hope that never happens?
+		// log here what the err is, etc
+		fmt.Println(err)
 		return false
 	}
 	if kv != nil {
+		return false
+	} else {
+		// look in storage if not found in consul
+		_, err := summary.RetrieveLatestSum(gitHash)
+		if err != nil {
+			if _, ok := err.(*storage.ErrNotFound); !ok {
+				// log here what the err is, etc
+				fmt.Println(err)
+				 return false
+			} else { return true }
+		}
 		return true
 	}
-	return false
 }
 
 // Register will add all the appropriate build details that the admin needs to contact the werker for stream info
@@ -109,11 +129,9 @@ func Register(consulete *consul.Consulet, gitHash string, ip string, grpcPort st
 }
 
 // Delete will remove everything related to that werker's build of the gitHash out of consul
-// **HOWEVER... RIGHT NOW...** it will leave in the `done` flag (until we include a postgres db)
-// This should be called after a build has completed and everything has been stored.
 func Delete(consulete *consul.Consulet, gitHash string) error {
 	err := consulete.RemoveValues(fmt.Sprintf(buildPath, gitHash))
 	// for now, leaving in build done
-	err = SetBuildDone(consulete, gitHash)
+	//err = SetBuildDone(consulete, gitHash)
 	return err
 }

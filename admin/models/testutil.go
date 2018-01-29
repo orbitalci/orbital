@@ -52,6 +52,12 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 	}, nil
 }
 
+//todo: implement for testing
+func (f *fakeGuideOcelotClient) LastFewSummaries(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*Summaries, error) {
+	return &Summaries{}, nil
+}
+
+
 func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*Builds, error) {
 	builds := &Builds{
 		Builds: map[string]*BuildRuntimeInfo{},

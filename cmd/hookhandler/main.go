@@ -5,18 +5,26 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
+	"bitbucket.org/level11consulting/ocelot/client/validate"
 	hh "bitbucket.org/level11consulting/ocelot/hookhandler"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"github.com/gorilla/mux"
+	"github.com/namsral/flag"
 	"os"
-	"strconv"
 	"strings"
-	"bitbucket.org/level11consulting/ocelot/client/validate"
 )
 
 func main() {
 	//ocelog.InitializeLog("debug")
-	ocelog.InitializeLog(ocelog.GetFlags())
+	var consulHost, loglevel string
+	var consulPort int
+	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
+	flrg.StringVar(&consulHost, "consul-host", "localhost", "host / ip that consul is running on")
+	flrg.StringVar(&loglevel, "log-level", "info", "log level")
+	flrg.IntVar(&consulPort, "consul-port", 8500, "port that consul is running on")
+	flrg.Parse(os.Args[1:])
+
+	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -24,19 +32,7 @@ func main() {
 		ocelog.Log().Warning("running on default port :8088")
 	}
 
-	consulHost := os.Getenv("CONSUL_HOST")
-	if consulHost == "" {
-		consulHost = "localhost"
-		ocelog.Log().Warning("consul is assumed to be running on localhost")
-	}
-	consulPort := os.Getenv("CONSUL_PORT")
-	if consulPort == "" {
-		consulPort = "8500"
-		ocelog.Log().Warning("consul is assumed to be running on port 8500")
-	}
-
-	consulPortInt, _ := strconv.Atoi(consulPort)
-	remoteConfig, err := cred.GetInstance(consulHost, consulPortInt, "")
+	remoteConfig, err := cred.GetInstance(consulHost, consulPort, "")
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}
@@ -55,8 +51,8 @@ func main() {
 
 	hookHandlerContext.SetDeserializer(deserialize.New())
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
+	// todo: add check for hookHandlerContext being valid
 	hookHandlerContext.SetValidator(validate.GetOcelotValidator())
-
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e

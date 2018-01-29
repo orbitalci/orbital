@@ -4,8 +4,16 @@ import "sync"
 
 type testStreamArray struct {
 	data [][]byte
-	done bool
 	mu sync.Mutex
+	done bool
+}
+
+func (t *testStreamArray) Lock() {
+	t.mu.Lock()
+}
+
+func (t *testStreamArray) Unlock() {
+	t.mu.Unlock()
 }
 
 func (t *testStreamArray) GetData() [][]byte {
@@ -20,14 +28,6 @@ func (t *testStreamArray) AddToData(data [][]byte) {
 	for _, datum := range data {
 		t.data = append(t.data, datum)
 	}
-}
-
-func (t *testStreamArray) Lock() {
-	t.mu.Lock()
-}
-
-func (t *testStreamArray) Unlock() {
-	t.mu.Unlock()
 }
 
 func NewTestStreamArray() *testStreamArray {

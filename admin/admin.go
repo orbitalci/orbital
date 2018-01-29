@@ -4,11 +4,10 @@ import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	"bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"crypto/tls"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -24,9 +23,13 @@ import (
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
 	//initializes our "context" - guideOcelotServer
-	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(),
-		storage.NewFileBuildStorage(""))
-
+	//store := cred.GetOcelotStorage()
+	store, err := configInstance.GetOcelotStorage()
+	if err != nil {
+		fmt.Println("couldn't get storage instance. error: ", err.Error())
+		return
+	}
+	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(), store)
 	//grpc server
 	opts := []grpc.ServerOption{
 		grpc.Creds(secure.GetNewClientTLS(serverRunsAt))}
@@ -41,7 +44,7 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 
 	runtime.HTTPError = CustomErrorHandler
 	gwmux := runtime.NewServeMux()
-	err := models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, serverRunsAt, dopts)
+	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, serverRunsAt, dopts)
 	if err != nil {
 		fmt.Printf("serve: %v\n", err)
 		return

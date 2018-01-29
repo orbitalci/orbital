@@ -2,7 +2,6 @@ package werker
 
 import (
 	"bitbucket.org/level11consulting/ocelot/protos"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"testing"
 )
 
@@ -29,7 +28,6 @@ func testGetConf() *WerkerConf {
 		WerkerName:      "test agent",
 		werkerType:      Docker,
 		//werkerProcessor: &testWerkerProcessor{},
-		storage:         &storage.FileBuildStorage{}, // todo: create test interface
 		LogLevel:        "info",
 	}
 }

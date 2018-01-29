@@ -40,8 +40,6 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 }
 
 func (c *cmd) init() {
-
-
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.fileloc, "credfile-loc", "",
 		"Location of yaml file containing creds to upload")

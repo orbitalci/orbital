@@ -27,6 +27,7 @@ message WerkerTask {
     string vcsToken = 4;
     string vcsType = 5;
     string fullName = 6;
+    int64 id = 7; // database id
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//

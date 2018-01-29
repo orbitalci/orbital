@@ -3,9 +3,9 @@ package streamer
 import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -63,12 +63,12 @@ func iterateOverByteArray(array StreamArray, stream Streamable, index int) (int,
 	return index, nil
 }
 
-func StreamFromStorage(store storage.BuildOutputStorage, stream Streamable, storageKey string) error {
-	bytez, err := store.Retrieve(storageKey)
+func StreamFromStorage(store storage.BuildOut, stream Streamable, storageKey int64) error {
+	output, err := store.RetrieveOut(storageKey)
 	if err != nil {
 		stream.SendError([]byte("could not retrieve persisted build data"))
 	}
-	reader := bytes.NewReader(bytez)
+	reader := strings.NewReader(output.Output)
 	s := bufio.NewScanner(reader)
 	for s.Scan() {
 		if err := stream.SendIt(s.Bytes()); err != nil {

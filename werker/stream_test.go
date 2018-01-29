@@ -5,7 +5,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
-	"bytes"
+	"strings"
 	"testing"
 	"time"
 )
@@ -25,11 +25,16 @@ var testData = [][]byte{
 }
 
 func Test_writeInfoChanToInMemMap(t *testing.T) {
-	trans := &Transport{"FOR_TESTING", make(chan []byte)}
+	store := storage.NewFileBuildStorage("./test-fixtures/store")
+	id, err := store.AddSumStart("FOR_TESTING", time.Now(), "myacct", "myrepo", "BRANCH!")
+	if err != nil {
+		t.Fatal("could not create setup data, err: ", err.Error())
+	}
+	trans := &Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: id}
 	werkerConsulet, _ := consulet.Default()
 	ctx := &werkerStreamer{
 		buildInfo: make(map[string]*buildDatum),
-		storage:   storage.NewFileBuildStorage(""),
+		out: 	    store,
 		consul:    werkerConsulet,
 	}
 	middleIndex := 6
@@ -50,15 +55,15 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	}
 	close(trans.InfoChan)
 
-	// wait for storage to be done, then check it
+	// wait for out to be done, then check it
 	for !ctx.buildInfo[trans.Hash].done {
 		time.Sleep(100)
 	}
-	bytez, err := ctx.storage.Retrieve(trans.Hash)
+	out, err := ctx.out.RetrieveLastOutByHash(trans.Hash)
 	if err != nil {
 		t.Fatal(err)
 	}
-	reader := bytes.NewReader(bytez)
+	reader := strings.NewReader(out.Output)
 	var actualData [][]byte
 	// todo: this is a dumb and lazy and nonperformant way but its late
 	sc := bufio.NewScanner(reader)
@@ -69,7 +74,7 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 		t.Errorf("bytes from storage not same as testdata. expected: %v, actual: %v", testData, actualData)
 	}
 	// remove stored test data
-	fbs := ctx.storage.(*storage.FileBuildStorage)
+	fbs := ctx.out.(*storage.FileBuildStorage)
 	defer fbs.Clean()
 	// todo: check the consul stuff
 }

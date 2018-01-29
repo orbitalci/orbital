@@ -6,13 +6,16 @@ import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/client/validate"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"errors"
 	"fmt"
 	"net/http"
-	"bitbucket.org/level11consulting/ocelot/client/validate"
+	"strings"
+	"time"
 )
 
 
@@ -72,7 +75,6 @@ func (hhc *HookHandlerContext) GetValidator() *validate.OcelotValidator {
 	return hhc.OcelotValidator
 }
 
-
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	repopush := &pb.RepoPush{}
@@ -83,6 +85,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 
 	fullName := repopush.Repository.FullName
 	hash := repopush.Push.Changes[0].New.Target.Hash
+	branch := repopush.Push.Changes[0].New.Name
 	acctName := repopush.Repository.Owner.Username
 	buildConf, bbToken, err := GetBBConfig(ctx, acctName, fullName, hash)
 	if err != nil {
@@ -97,7 +100,18 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	fmt.Println(buildConf)
 	//TODO: need to check and make sure that New.Type == branch
 	if validateBuild(ctx, buildConf, repopush.Push.Changes[0].New.Name) {
-		tellWerker(ctx, buildConf, hash, fullName, bbToken)
+		list := strings.Split(repopush.Repository.FullName, "/")
+		account := list[0]
+		repo := list[1]
+		ocelog.Log().Debug("LETS STORE THIS SHIT")
+		store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("unable to get storage")
+		}
+		id := notifyStorage(store, hash, time.Now(), repo, branch, account)
+		ocelog.Log().Debug("notified storage ")
+		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
+		ocelog.Log().Debug("told werker!")
 	} else {
 		//TODO: tell db we couldn't build
 	}
@@ -129,18 +143,27 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validateBuild(ctx, buildConf, "") {
-		tellWerker(ctx, buildConf, hash, fullName, bbToken)
+		list := strings.Split(pr.Repository.FullName, "/")
+		account := list[0]
+		repo := list[1]
+		store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("unable to get storage")
+		}
+		id := notifyStorage(store, hash, time.Now(), repo, pr.Pullrequest.Source.Branch.Name, account)
+		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
 	} else {
 		//TODO: tell db we couldn't build
 	}
 }
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
-	// - check if commit branch matches with ocelot.yaml branch and validate
+// - check if commit branch matches with ocelot.yaml branch and validate
 func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) bool {
 	err := ctx.GetValidator().ValidateConfig(buildConf, nil)
 
 	if err != nil {
+		ocelog.IncludeErrField(err).Error("failed validation")
 		return false
 	}
 
@@ -153,9 +176,18 @@ func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) bo
 	return false
 }
 
+func notifyStorage(store storage.BuildSum, hash string, starttime time.Time, repo string, branch string, account string) int64 {
+	//AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error)
+	id, err := store.AddSumStart(hash, starttime, account, repo, branch)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("could not kick off summary")
+	}
+	return id
+}
+
 
 //TODO: this code needs to store status into db
-func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string) {
+func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string, dbid int64) {
 	// get one-time token use for access to vault
 	token, err := ctx.GetRemoteConfig().GetVault().CreateThrowawayToken()
 	if err != nil {
@@ -170,6 +202,7 @@ func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullNam
 		VcsToken: bbToken,
 		VcsType: "bitbucket",
 		FullName: fullName,
+		Id: dbid,
 	}
 
 	go ctx.GetProducer().WriteProto(werkerTask, "build")
@@ -227,6 +260,7 @@ func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkout
 	if err != nil {
 		return
 	}
+	fmt.Println(string(fileBitz))
 	if err = ctx.GetDeserializer().YAMLToStruct(fileBitz, conf); err != nil {
 		return
 	}
