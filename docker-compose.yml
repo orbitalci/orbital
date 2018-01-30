@@ -3,7 +3,7 @@ services:
   # Ocelot services
   admin:
     image: ocelot-admin
-    command: /admin -log-level=debug -consul-host=172.17.0.1
+    command: /admin -log-level=debug
     build:
       context: .
       dockerfile: admin/Dockerfile
