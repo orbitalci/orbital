@@ -68,7 +68,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	//defers are stacked, will be executed FILO
 
 	defer close(w.infochan)
-	//defer builder.Cleanup()
+	defer builder.Cleanup()
 	//TODO: write stages to db
 	//TODO: write build data to db
 
