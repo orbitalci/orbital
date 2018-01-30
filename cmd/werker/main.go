@@ -119,7 +119,12 @@ func setupWerker() {
 			return
 		}
 	}
-
+	// just get rid of old file
+	err = os.Remove(destFile)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("failed to remove old file at ~/.ocelot/bb_download.sh")
+	}
+	ocelog.Log().Info("removed old bb_download")
 
 	destDownloadFile, err := os.Create(destFile)
 	if err != nil {
@@ -138,4 +143,5 @@ func setupWerker() {
 		ocelog.IncludeErrField(err).Error("could not change file to be executable")
 		return
 	}
+	ocelog.Log().Info("successfully installed bb_download.sh for use in containers.")
 }

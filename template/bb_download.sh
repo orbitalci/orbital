@@ -7,22 +7,19 @@
 if [ $# -gt 0 ]; then
   count=0
   args=("$@")
-
-  wget --header="Authorization: Bearer ${args[0]}" "${args[1]}/${args[2]}.zip"
-  mkdir ${args[2]}
-
-  echo "unzipping file ${args[2]}.zip"
-  codedir=$(unzip ${args[2]}.zip | awk 'NR==3 {print $2}')
-  cp -r ${codedir}. /${args[2]}
-  # cleanup
-  rm -rf ${codedir}
-  rm ${args[2]}.zip
-
-  echo "Finished with downloading source code"
-  sleep infinity
+  bbtoken=${args[0]}
+  gitclonepath=${args[1]}
+  commit=${args[2]}
+  git clone ${gitclonepath} /${commit}
+  echo "cloned repo to /${commit}"
+  cd /${commit}
+  git checkout ${commit}
+  echo "Ocelot has finished with downloading source code"
+  while sleep 3600; do :; done
 else
     echo "no arguments were passed in"
 fi
+
 
 
 

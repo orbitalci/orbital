@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const DefaultBitbucketURL = "https://bitbucket.org/%s/get"
+const DefaultBitbucketURL = "https://x-token-auth:%s@bitbucket.org/%s.git"
 const DefaultGithubURL = ""
 
 type Basher struct {
@@ -44,9 +44,9 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	case "bitbucket":
 		//if download url is not the default, then we assume whoever set it knows exactly what they're doing and no replacements
 		if b.GetBbDownloadURL() != DefaultBitbucketURL {
-			downloadCode = append(downloadCode, ".ocelot/bb_download.sh", werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
+			downloadCode = append(downloadCode, "/.ocelot/bb_download.sh", werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
 		} else {
-			downloadCode = append(downloadCode, ".ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.FullName), werk.CheckoutHash)
+			downloadCode = append(downloadCode, "/.ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash)
 		}
 	case "github":
 		ocelog.Log().Error("not implemented")
