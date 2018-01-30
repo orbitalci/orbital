@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"fmt"
 	"github.com/namsral/flag"
+	"os"
 )
 
 func main() {
@@ -17,12 +18,13 @@ func main() {
 	var logLevel string
 	var insecure bool
 
-	flag.StringVar(&port, "port", "10000", "admin server port")
-	flag.StringVar(&consulHost, "consul-host", "localhost", "consul host")
-	flag.IntVar(&consulPort, "consul-port", 8500, "consul port")
-	flag.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
-	flag.BoolVar(&insecure, "insecure", false, "use insecure certs")
-	flag.Parse()
+	adminFlags := flag.NewFlagSet("admin", flag.ExitOnError)
+	adminFlags.StringVar(&port, "port", "10000", "admin server port")
+	adminFlags.StringVar(&consulHost, "consul-host", "localhost", "consul host")
+	adminFlags.IntVar(&consulPort, "consul-port", 8500, "consul port")
+	adminFlags.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
+	adminFlags.BoolVar(&insecure, "insecure", false, "use insecure certs")
+	adminFlags.Parse(os.Args[1:])
 
 	ocelog.InitializeLog(logLevel)
 

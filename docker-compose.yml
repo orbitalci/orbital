@@ -3,7 +3,7 @@ services:
   # Ocelot services
   admin:
     image: ocelot-admin
-    command: /admin -log-level=debug -consul-host=172.17.0.1
+    command: /admin -log-level=debug
     build:
       context: .
       dockerfile: admin/Dockerfile
@@ -19,8 +19,10 @@ services:
     ports:
       - "10000:10000"
     environment:
-      VAULT_TOKEN: 4e156fee-03f4-11b8-5ae8-2445e6fd438f
+      VAULT_TOKEN: ffd0dd25-b21f-45a4-a452-46f28a570361
       VAULT_ADDR: http://172.18.0.1:8200
+#      CONSUL_HTTP_ADDR: http://172.18.0.1:8500
+      CONSUL_HOST: http://172.17.0.1
       NSQLOOKUPD_IP: 172.18.0.1
       NSQD_IP: 172.18.0.1
   hookhandler:
@@ -39,9 +41,9 @@ services:
     ports:
       - "8088:8088"
     environment:
-      VAULT_TOKEN: 4e156fee-03f4-11b8-5ae8-2445e6fd438f
+      VAULT_TOKEN: ffd0dd25-b21f-45a4-a452-46f28a570361
       VAULT_ADDR: http://172.18.0.1:8200
-      CONSUL_HTTP_ADDR: http://172.18.0.1:8500
+#      CONSUL_HTTP_ADDR: http://172.18.0.1:8500
       CONSUL_HOST: http://172.17.0.1
       LOG_LEVEL: debug
       NSQD_IP: 172.17.0.1
@@ -57,8 +59,10 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
+      VAULT_TOKEN: ffd0dd25-b21f-45a4-a452-46f28a570361
       VAULT_ADDR: http://172.18.0.1:8200
-      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
+#      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
+      CONSUL_HOST: http://172.17.0.1
       NSQD_IP: 172.17.0.1
       NSQLOOKUPD_IP: 172.17.0.1
     logging:

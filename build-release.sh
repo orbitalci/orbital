@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+
+# make sure that all of our dependencies are up to date
+dep ensure -v
+
 # This build assumes you have your ssh key added to L11 bitbucket
 # We need ssh keys to clone from the private bitbucket.
 
