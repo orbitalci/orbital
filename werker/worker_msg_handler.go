@@ -87,7 +87,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	start := time.Now()
 	for _, stage := range werk.BuildConf.Stages {
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
-		ocelog.Log().Info("finished stage", stage.Name)
+		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)
 		stageResults = append(stageResults, stageResult)
 		// todo: should this check go before or after special build stuffs? i guess if it fails, there won't be
 		// any deployment

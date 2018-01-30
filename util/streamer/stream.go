@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -13,7 +14,7 @@ import (
 // it will wait 0.1s before checking array again for new content
 func StreamFromArray(array StreamArray, stream Streamable, debug func(...interface{})) (err error) {
 	var index int
-	var previousIndex int
+	//var previousIndex int
 	for {
 		time.Sleep(100) // todo: set polling to be configurable
 		numLines := len(array.GetData())
@@ -32,14 +33,15 @@ func StreamFromArray(array StreamArray, stream Streamable, debug func(...interfa
 			continue
 		}
 		//dataArray := array.GetData()[index:]
-		previousIndex = index
+		//previousIndex = index
 		index, err = iterateOverByteArray(array, stream, index)
 		if err != nil {
 			debug("ERROR! " + err.Error())
-			continue
+			debug("len array is: ", strconv.Itoa(len(array.GetData())))
+			return
 			//return err
 		}
-		debug(fmt.Sprintf("lines sent: %d | index: %d | previousIndex: %d | length: %d", index - previousIndex, index, previousIndex, len(array.GetData())))
+		//debug(fmt.Sprintf("lines sent: %d | index: %d | previousIndex: %d | length: %d", index - previousIndex, index, previousIndex, len(array.GetData())))
 	}
 	return
 }

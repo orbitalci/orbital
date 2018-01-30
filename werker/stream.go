@@ -21,6 +21,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -153,13 +154,18 @@ func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 	appCtx.buildInfo[transport.Hash] = build
 	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
 	for i := range transport.InfoChan {
+		build.Lock()
 		build.buildData = append(build.buildData, i)
+		build.Unlock()
+		// i think wihtout this it eats all the cpu..
+		time.Sleep(time.Millisecond)
 	}
 	ocelog.Log().Debug("done with build ", transport.Hash)
 	out := &models.BuildOutput{
 		BuildId: transport.DbId,
 		Output: string(bytes.Join(build.buildData, []byte("\n"))),
 	}
+	ocelog.Log().Debug(string(len(out.Output)))
 	err := appCtx.out.AddOut(out)
 	// even if it didn't store properly, we need to set the build in the map as "done" so
 	// that the streams that connect when the build is still happening know to close the connection

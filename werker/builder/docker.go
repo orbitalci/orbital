@@ -219,24 +219,21 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 
 
 func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byte) {
-	for {
-		//TODO: if we swap to scanner will it outputs nicer?
-		str, err := rd.ReadString('\n')
-
-		if err != nil {
-			if err != io.EOF {
-				ocelog.Log().Error("Read Error:", err)
-			} else {
-				ocelog.Log().Debug("EOF, finished writing to Info")
-			}
-			return
-		}
-
+	scanner := bufio.NewScanner(rd)
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
+	for scanner.Scan() {
+		str := string(scanner.Bytes())
 		infochan <- []byte(stage + str)
-
 		//our setup script will echo this to stdout, telling us script is finished downloading. This is HACK for keeping container alive
-		if str == "Finished with downloading source code\r\n" {
+		if strings.Contains(str, "Ocelot has finished with downloading source code") {
+			ocelog.Log().Debug("finished with source code, returning out of writeToInfo")
 			return
 		}
+	}
+	ocelog.Log().Debug("finished writing to channel for stage ", stage)
+	if err := scanner.Err(); err != nil {
+		ocelog.IncludeErrField(err).Error("error outputing to info channel!")
+		infochan <- []byte("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING STAGE INPUT")
 	}
 }

@@ -99,7 +99,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 	if err != nil {
 		if _, ok := err.(*rt.ErrBuildDone); ok {
 			var builds = map[string]*models.BuildRuntimeInfo{
-				bq.Hash: {Done: true},
+				bq.Hash: {Done: true, Hash: bq.Hash},
 			}
 			return &models.Builds{Builds: builds}, nil
 		}

@@ -72,6 +72,7 @@ func (c *cmd) Run(args []string) int {
 	var build *models.Builds
 	var err error
 	if c.buildId != 0 {
+		// todo: this is now broken. just fyi
 		builds := make(map[string]*models.BuildRuntimeInfo)
 		builds["br"] = &models.BuildRuntimeInfo{Done: true}
 		build = &models.Builds{Builds:builds}
