@@ -3,6 +3,7 @@ package cred
 import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/hashicorp/consul/testutil"
 	"github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/vault"
@@ -184,6 +185,36 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	if _, ok = creds["github/mariannefeng"]; !ok {
 		t.Error("there should still be admin credentials at github/mariannefeng")
 	}
+}
+
+func TestRemoteConfig_GetStorageType(t *testing.T) {
+	testRemoteConfig, vaultListener, consulServer := testSetupVaultAndConsul(t)
+	defer teardownVaultAndConsul(vaultListener, consulServer)
+	// check that default will be file
+	storeType, err := testRemoteConfig.GetStorageType()
+	if err != nil {
+		t.Fatal("should be able to get storage type, err: " + err.Error())
+	}
+	if storeType != storage.FileSystem {
+		t.Error(test.GenericStrFormatErrors("type", storage.FileSystem, storeType))
+	}
+	consulServer.SetKV(t, "config/ocelot/storagetype", []byte("filesystem"))
+	storeType, err = testRemoteConfig.GetStorageType()
+	if err != nil {
+		t.Fatal("should be able to get storage type, err: " + err.Error())
+	}
+	if storeType != storage.FileSystem {
+		t.Error(test.GenericStrFormatErrors("store type enum", storage.FileSystem, storeType))
+	}
+	consulServer.SetKV(t, "config/ocelot/storagetype", []byte("postgres"))
+	storeType, err = testRemoteConfig.GetStorageType()
+	if err != nil {
+		t.Fatal("should be able to get storage type, err: " + err.Error())
+	}
+	if storeType != storage.Postgres {
+		t.Error(test.GenericStrFormatErrors("store type enum", storage.Postgres, storeType))
+	}
+
 }
 
 
