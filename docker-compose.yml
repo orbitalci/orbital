@@ -21,6 +21,8 @@ services:
     environment:
       VAULT_TOKEN: 4e156fee-03f4-11b8-5ae8-2445e6fd438f
       VAULT_ADDR: http://172.18.0.1:8200
+      CONSUL_HTTP_ADDR: http://172.18.0.1:8500
+      CONSUL_HOST: http://172.17.0.1
       NSQLOOKUPD_IP: 172.18.0.1
       NSQD_IP: 172.18.0.1
   hookhandler:
