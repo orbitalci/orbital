@@ -55,7 +55,13 @@ func (mrc *MockRemoteConfig) AddCreds(path string, anyCred cred.RemoteConfigCred
 }
 
 func (mrc *MockRemoteConfig) GetStorageCreds(typ storage.Dest) (*cred.StorageCreds, error) {
-	return nil, nil
+	return &cred.StorageCreds{
+		DbName: "postgres",
+		Location: "localhost",
+		User: "postgres",
+		Port: 5432,
+		Password: "mysecretpassword",
+	}, nil
 }
 
 func (mrc *MockRemoteConfig) GetStorageType() (storage.Dest, error) {
@@ -83,6 +89,7 @@ func (mrc *MockRemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	default:
 		return nil, errors.New("unknown type")
 	}
+	return nil, errors.New("could not grab ocelot storage")
 }
 
 ////mock vault////
