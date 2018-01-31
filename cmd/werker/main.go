@@ -98,7 +98,7 @@ func main() {
 
 //performs whatever setup is needed by werker, right now copies over bb_download.sh to $HOME/.ocelot
 //
-//***WARINING**** this assumes you're inside of ocelot root dir
+//***WARINING**** this assumes you're inside of OCELOT ROOT DIR
 func setupWerker() {
 	pwd, _ := os.Getwd()
 	downloadFile, err := os.Open(pwd + "/template/bb_download.sh")
