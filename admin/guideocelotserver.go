@@ -9,13 +9,13 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	md "bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
 )
 
 //this is our grpc server struct
@@ -113,7 +113,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 	return builds, err
 }
 
-// todo: calling Logs should stream from build storage, this is doing nothing
+
 func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
 	if !rt.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
 		stream.Send(&models.LogResponse{OutputLine: "build is not finished, use BuildRuntime method and stream from the werker registered",})
@@ -125,13 +125,20 @@ func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelo
 		} else {
 			out, err = g.Storage.RetrieveLastOutByHash(bq.Hash)
 		}
+		fmt.Printf("LENGTH! %d", len(out.Output))
 		if err != nil {
 			return status.Error(codes.DataLoss, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		scanner := bufio.NewScanner(strings.NewReader(out.Output))
+		scanner := bufio.NewScanner(bytes.NewReader(out.Output))
+		buf := make([]byte, 0, 64*1024)
+		scanner.Buffer(buf, 1024*1024)
 		for scanner.Scan() {
 			resp := &models.LogResponse{OutputLine: scanner.Text()}
 			stream.Send(resp)
+		}
+		if err := scanner.Err(); err != nil {
+			log.IncludeErrField(err).Error("error encountered scanning from " + g.Storage.StorageType())
+			return status.Error(codes.DataLoss, fmt.Sprintf("Error was encountered while sending data from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
 	}
 	return nil
