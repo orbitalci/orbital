@@ -31,6 +31,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/pkg/errors"
 )
 
 
@@ -163,6 +164,11 @@ func (f *FileBuildStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, e
 
 	}
 	return sums, nil
+}
+
+//todo: implement sometime in the future who cares
+func (f *FileBuildStorage) RetrieveSumStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+	return nil, errors.New("nope")
 }
 
 func (f *FileBuildStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {

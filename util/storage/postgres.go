@@ -114,6 +114,32 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 	return sums, nil
 }
 
+func (p *PostgresStorage) RetrieveSumStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+	var sums []models.BuildSummary
+	if err := p.Connect(); err != nil {
+		return sums, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	rows, err := p.db.Query(`SELECT * FROM build_summary WHERE hash = $1`, gitHash)
+	if err != nil {
+		return sums, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		sum := models.BuildSummary{}
+		err = rows.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return sums, BuildSumNotFound(gitHash)
+			}
+			return sums, err
+		}
+		//fmt.Println(hi)
+		sums = append(sums, sum)
+	}
+	return sums, nil
+}
+
 // RetrieveLatestSum will return the latest entry of build_summary where hash=gitHash
 func (p *PostgresStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
 	var sum models.BuildSummary
