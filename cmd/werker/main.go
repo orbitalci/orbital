@@ -111,14 +111,6 @@ func setupWerker() {
 
 	destFile, _ := homedir.Expand("~/.ocelot/bb_download.sh")
 
-	_, err = os.Stat(destFile)
-	if !os.IsNotExist(err) {
-		err = os.Remove(destFile)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("failed to remove file at ~/.ocelot/bb_download.sh")
-			return
-		}
-	}
 	// just get rid of old file
 	err = os.Remove(destFile)
 	if err != nil {
