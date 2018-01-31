@@ -5,6 +5,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
+	"bytes"
 	"strings"
 	"testing"
 	"time"
@@ -63,7 +64,7 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	reader := strings.NewReader(out.Output)
+	reader := bytes.NewReader(out.Output)
 	var actualData [][]byte
 	// todo: this is a dumb and lazy and nonperformant way but its late
 	sc := bufio.NewScanner(reader)
