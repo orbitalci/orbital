@@ -3,10 +3,10 @@ package streamer
 import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -70,7 +70,7 @@ func StreamFromStorage(store storage.BuildOut, stream Streamable, storageKey int
 	if err != nil {
 		stream.SendError([]byte("could not retrieve persisted build data"))
 	}
-	reader := strings.NewReader(output.Output)
+	reader := bytes.NewReader(output.Output)
 	s := bufio.NewScanner(reader)
 	for s.Scan() {
 		if err := stream.SendIt(s.Bytes()); err != nil {
