@@ -2,11 +2,18 @@ package models
 
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"fmt"
 	"google.golang.org/grpc"
+	"strings"
 )
 
+func NewRepoCreds() *RepoCreds {
+	return &RepoCreds{
+		RepoUrl: make(map[string]string),
+	}
+}
 
 // these methods are attached to the proto object RepoCreds
 func (m *RepoCreds) SetAcctNameAndType(name string, typ string) {
@@ -27,10 +34,14 @@ func (m *RepoCreds) GetClientSecret() string {
 }
 
 func (m *RepoCreds) SetAdditionalFields(infoType string, val string) {
-	switch infoType {
-	case "repourl":
-		m.RepoUrl = val
-	case "username":
+	if strings.Contains(infoType, "repourl") {
+		paths := strings.Split(infoType, "/")
+		if len(paths) > 2 {
+			panic("WHAT THE FUCK?")
+		}
+		m.RepoUrl[paths[1]] = val
+	}
+	if infoType == "username" {
 		m.Username = val
 	}
 }
@@ -39,12 +50,21 @@ func (m *RepoCreds) AddAdditionalFields(consule *consul.Consulet, path string) (
 	if err := consule.AddKeyValue(path + "/username", []byte(m.Username)); err != nil {
 		return err
 	}
-	if err = consule.AddKeyValue(path + "/repourl", []byte(m.RepoUrl)); err != nil {
-		return err
+	for reponame, url := range m.RepoUrl {
+		if err = consule.AddKeyValue(path + "/repourl/" + reponame, []byte(url)); err != nil {
+			return err
+		}
 	}
 	return err
 }
 
+func (m *RepoCreds) Spawn() cred.RemoteConfigCred {
+	return &RepoCreds{RepoUrl: make(map[string]string)}
+}
+
+func NewVCSCreds() *VCSCreds {
+	return &VCSCreds{}
+}
 
 // these methods are to enable remoteconfig cred save with the proto VCSCreds object
 func (m *VCSCreds) SetAcctNameAndType(name string, typ string) {
@@ -79,6 +99,10 @@ func (m *VCSCreds) AddAdditionalFields(consule *consul.Consulet, path string) er
 		return err
 	}
 	return err
+}
+
+func (m *VCSCreds) Spawn() cred.RemoteConfigCred {
+	return &VCSCreds{}
 }
 
 // wrapper interface around models.BuildRuntimeInfo

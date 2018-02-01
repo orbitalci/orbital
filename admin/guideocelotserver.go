@@ -31,7 +31,8 @@ type guideOcelotServer struct {
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	log.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
-	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
+	vcs := models.NewVCSCreds()
+	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, vcs)
 	if err != nil {
 		return credWrapper, err
 	}
@@ -60,7 +61,8 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
-	creds, err := g.RemoteConfig.GetCredAt(cred.RepoPath, true, cred.Repo)
+	repo := models.NewRepoCreds()
+	creds, err := g.RemoteConfig.GetCredAt(cred.RepoPath, true, repo)
 	if err != nil {
 		return credWrapper, err
 	}

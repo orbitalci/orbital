@@ -55,9 +55,10 @@ message RepoCredWrapper {
 message RepoCreds {
     string username = 1;
     string password = 2;
-    string repoUrl = 3;
+    map<string, string> repoUrl= 6;
     string acctName = 4;
     string type = 5;
+    string projectName = 7;
 }
 
 message BuildQuery {

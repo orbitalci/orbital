@@ -38,7 +38,7 @@ func (mrc *MockRemoteConfig) GetVault() ocevault.Vaulty {
 	return &MockVaulty{}
 }
 func (mrc *MockRemoteConfig) SetVault(vault ocevault.Vaulty) {}
-func (mrc *MockRemoteConfig) GetCredAt(path string, hideSecret bool, ocyType cred.OcyCredType) (map[string]cred.RemoteConfigCred, error) {
+func (mrc *MockRemoteConfig) GetCredAt(path string, hideSecret bool, rcc cred.RemoteConfigCred) (map[string]cred.RemoteConfigCred, error) {
 	mockMap := make(map[string]cred.RemoteConfigCred)
 	mockVcsCreds := &models.VCSCreds{}
 

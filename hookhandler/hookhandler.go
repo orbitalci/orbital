@@ -234,7 +234,8 @@ func getCredConfig() *models.VCSCreds {
 
 //returns config if it exists, bitbucket token, and err
 func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
-	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, cred.Vcs)
+	vcs := models.NewVCSCreds()
+	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, vcs)
 	cf := bbCreds["bitbucket/"+acctName]
 	cfg, ok := cf.(*models.VCSCreds)
 
