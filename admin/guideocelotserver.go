@@ -125,7 +125,6 @@ func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelo
 		} else {
 			out, err = g.Storage.RetrieveLastOutByHash(bq.Hash)
 		}
-		fmt.Printf("LENGTH! %d", len(out.Output))
 		if err != nil {
 			return status.Error(codes.DataLoss, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
