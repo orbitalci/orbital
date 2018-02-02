@@ -1,0 +1,8 @@
+image: golang
+buildTool: go
+branches: 
+  - master
+stages:
+  - name : build
+    script:
+      - ./run-tests.sh
