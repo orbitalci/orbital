@@ -90,7 +90,7 @@ func NoDataHeader(ui cli.Ui) {
 
 func Prettify(cred *models.RepoCreds) string {
 	pretty := `Username: {{.Username}}
-Password: {{.Password}}'
+Password: {{.Password}}
 RepoUrls: {{ range $name, $url := .RepoUrl }}
    {{ $name }}: {{ $url }} {{ end }}
 AcctName: {{.AcctName}}

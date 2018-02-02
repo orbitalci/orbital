@@ -100,6 +100,10 @@ func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 	rc.Vault = vault
 }
 
+// BuildCredKey returns the key for the map[string]RemoteConfigCred map that GetCredAt returns.
+func BuildCredKey(credType string, acctName string) string {
+	return credType + "/" + acctName
+}
 
 // GetCred at will return a map w/ key <cred_type>/<acct_name> to credentials. depending on the OcyCredType,
 //   the appropriate credential struct will be instantiated and filled with data from consul and vault.
@@ -119,7 +123,7 @@ func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, rcc RemoteConfig
 		}
 		for _, v := range configs {
 			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
-			mapKey := credType + "/" + acctName
+			mapKey := BuildCredKey(credType, acctName)
 			foundConfig, ok := creds[mapKey]
 			if !ok {
 				foundConfig = rcc.Spawn()

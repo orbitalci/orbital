@@ -65,7 +65,7 @@ func TestFileBuildStorage_BigOlTestBoi(t *testing.T) {
 			// now for testing build output
 			out := &models.BuildOutput{
 				BuildId: id,
-				Output: fs.output,
+				Output: []byte(fs.output),
 			}
 			if err := fbs.AddOut(out); err != nil {
 				t.Error("should have added build output appropriatedly. error: ", err.Error())
