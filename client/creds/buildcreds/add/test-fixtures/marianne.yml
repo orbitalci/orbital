@@ -1,0 +1,7 @@
+vcsCreds:
+  vcs:
+  - clientId: wSfJHcfpHP4dzHv8ak
+    clientSecret: jQqXJmn52wupDzqSheckKu62NqpvnFuR
+    tokenURL: https://bitbucket.org/site/oauth2/access_token
+    acctName: mariannefeng
+    type: bitbucket

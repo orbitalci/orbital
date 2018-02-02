@@ -68,7 +68,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	//defers are stacked, will be executed FILO
 
 	defer close(w.infochan)
-	defer builder.Cleanup()
+	defer builder.Cleanup(w.infochan)
 	//TODO: write stages to db
 	//TODO: write build data to db
 
@@ -100,9 +100,9 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 			}
 			break
 		}
-		// build is special because we deploy after this
+		// build is special because we save artifacts after this
 		if stage.Name == "build" {
-			// todo: deploy to nexus
+			builder.SaveArtifact(w.infochan, werk)
 			continue
 		}
 	}

@@ -57,8 +57,17 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	return downloadCode
 }
 
-func (b *Basher) BuildAndDeploy(cmds []string, commitHash string) []string {
+func (b *Basher) BuildScript(cmds []string, commitHash string) []string {
 	build := append([]string{"cd /" + commitHash}, cmds...)
 	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(build, " && ")})
 	return buildAndDeploy
+}
+
+func (b *Basher) PushToNexus(commitHash string) []string {
+	push := []string{"cd /" + commitHash}
+	//TODO: how to tell if generated artifact is jar? What if they generate other artifact types?
+	//mvnCmd := "mvn deploy:deploy-file -DgeneratePom=false -Dpackaging=jar -DrepositoryId=nexus -Durl=http://52.26.105.112:8081/nexus/content/repositories/snapshots -Dfile=/home/mariannefeng/git/test/test-ocelot/target/exampleboot-0.0.1-SNAPSHOT.jar -DpomFile=/home/mariannefeng/git/test/test-ocelot/pom.xml"
+	//push = append(push, mvnCmd)
+	runPush := append([]string{"/bin/sh", "-c", strings.Join(push, " && ")})
+	return runPush
 }
