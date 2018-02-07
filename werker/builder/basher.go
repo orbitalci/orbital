@@ -57,6 +57,10 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	return downloadCode
 }
 
+func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
+	return []string {"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + settingsXML}
+}
+
 func (b *Basher) BuildScript(cmds []string, commitHash string) []string {
 	build := append([]string{"cd /" + commitHash}, cmds...)
 	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(build, " && ")})

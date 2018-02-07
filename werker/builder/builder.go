@@ -2,12 +2,13 @@ package builder
 
 import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"strings"
 )
 
 
 type Builder interface {
-	Setup(logout chan []byte, werk *pb.WerkerTask) *Result
+	Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig) *Result
 	Execute(actions *pb.Stage, logout chan []byte, commitHash string) *Result
 	SaveArtifact(logout chan []byte, stage *pb.WerkerTask) *Result
 	Cleanup(logout chan []byte)

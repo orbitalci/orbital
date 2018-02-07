@@ -161,11 +161,12 @@ func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 		time.Sleep(time.Millisecond)
 	}
 	ocelog.Log().Debug("done with build ", transport.Hash)
+	fmt.Println(string(bytes.Join(build.buildData, []byte("\n"))))
 	out := &models.BuildOutput{
 		BuildId: transport.DbId,
 		Output: bytes.Join(build.buildData, []byte("\n")),
 	}
-	ocelog.Log().Debug(string(len(out.Output)))
+	//ocelog.Log().Debug(string(len(out.Output)))
 	err := appCtx.out.AddOut(out)
 	// even if it didn't store properly, we need to set the build in the map as "done" so
 	// that the streams that connect when the build is still happening know to close the connection

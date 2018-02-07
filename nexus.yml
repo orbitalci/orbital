@@ -1,0 +1,9 @@
+repo:
+- username: admin
+  password: admin123
+  repoUrl:
+    snapshots: https://nexus.metaverse.l11.com/repository/maven-snapshots/
+    releases: https://nexus.metaverse.l11.com/repository/maven-releases/
+    docker: docker.metaverse.l11.com
+  acctName: jessishank
+  type: nexus

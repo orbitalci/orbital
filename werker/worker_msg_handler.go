@@ -69,13 +69,11 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 
 	defer close(w.infochan)
 	defer builder.Cleanup(w.infochan)
-	//TODO: write stages to db
-	//TODO: write build data to db
 
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 	var stageResults []*b.Result
 
-	setupResult := builder.Setup(w.infochan, werk)
+	setupResult := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig)
 	stageResults = append(stageResults, setupResult)
 	// todo: this is causing panic: runtime error: invalid memory address or nil pointer dereference
 	// on the builder.Cleanup

@@ -2,7 +2,9 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/integrations/nexus"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bufio"
 	"context"
 	"errors"
@@ -13,7 +15,6 @@ import (
 	"io"
 	"strings"
 	"fmt"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
 )
 
 type Docker struct{
@@ -27,7 +28,7 @@ func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 
-func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
+func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig) *Result {
 	su := InitStageUtil("setup")
 
 	logout <- []byte(su.GetStageLabel() + "Setting up...")
@@ -78,6 +79,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	}
 
 	homeDirectory, _ := homedir.Expand("~/.ocelot")
+	// todo: render settingsxml if necessary
 	//host config binds are mount points
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
@@ -102,7 +104,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	logout <- []byte(su.GetStageLabel() + "Container created with ID " + resp.ID)
 
 	d.ContainerId = resp.ID
-
+	ocelog.Log().Debug("starting up container")
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return &Result{
 			Stage:  su.GetStage(),
@@ -131,7 +133,21 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	d.Log = containerLog
 	bufReader = bufio.NewReader(containerLog)
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
-
+	if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
+		_, ok := err.(*nexus.NoCreds)
+		if !ok {
+			return &Result{
+				Stage: su.GetStage(),
+				Status: FAIL,
+				Error:  err,
+			}
+		}
+	} else {
+		ocelog.Log().Debug("writing maven settings.xml")
+		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
+		//d.writeToInfo(su.GetStageLabel() , bufReader, logout)
+		return result
+	}
 	return &Result{
 		Stage:  su.GetStage(),
 		Status: PASS,

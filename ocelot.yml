@@ -1,0 +1,12 @@
+image: docker/compose
+buildTool: go
+branches:
+  - jesstest
+stages:
+  - name: tag ocelot builder for local use
+    script:
+      - docker pull jessishank/ocelot-build
+      - docker tag jessishank/ocelot-build ocelot-build:latest
+  - name: build
+    script:
+      - docker-compose build
