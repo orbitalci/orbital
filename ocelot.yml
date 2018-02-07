@@ -1,5 +1,7 @@
 image: tmaier/docker-compose
 buildTool: go
+branches:
+  - nexus
 stages:
   - name: tag ocelot builder for local use
     script:
