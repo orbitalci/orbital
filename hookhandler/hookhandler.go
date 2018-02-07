@@ -97,8 +97,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
-	//TODO: need to check and make sure that New.Type == branch
-	if validateBuild(ctx, buildConf, repopush.Push.Changes[0].New.Name) {
+	if validateBuild(ctx, buildConf, branch) {
 		list := strings.Split(repopush.Repository.FullName, "/")
 		account := list[0]
 		repo := list[1]

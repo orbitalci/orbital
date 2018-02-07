@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/vault/api"
 	"io/ioutil"
 	"os"
+	"fmt"
+	"errors"
 )
 
 type MockHookHandlerContext struct {
@@ -53,16 +55,41 @@ func (mrc *MockRemoteConfig) AddCreds(path string, anyCred cred.RemoteConfigCred
 }
 
 func (mrc *MockRemoteConfig) GetStorageCreds(typ storage.Dest) (*cred.StorageCreds, error) {
-	return nil, nil
+	return &cred.StorageCreds{
+		DbName: "postgres",
+		Location: "localhost",
+		User: "postgres",
+		Port: 5432,
+		Password: "mysecretpassword",
+	}, nil
 }
 
 func (mrc *MockRemoteConfig) GetStorageType() (storage.Dest, error) {
-	return storage.FileSystem, nil
+	return storage.Postgres, nil
+	//return storage.FileSystem, nil
 }
 
-// in dev mode, just get have it be file build storage
 func (mrc *MockRemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
-	return storage.NewFileBuildStorage("~/.ocelot/storage"), nil
+	typ, err := mrc.GetStorageType()
+	if err != nil {
+		return nil, err
+	}
+	if typ == storage.Postgres {
+		fmt.Println("postgres storage")
+	}
+	creds, err := mrc.GetStorageCreds(typ)
+	if err != nil {
+		return nil, err
+	}
+	switch typ {
+	case storage.FileSystem:
+		return storage.NewFileBuildStorage(creds.Location), nil
+	case storage.Postgres:
+		return storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName), nil
+	default:
+		return nil, errors.New("unknown type")
+	}
+	return nil, errors.New("could not grab ocelot storage")
 }
 
 ////mock vault////

@@ -10,6 +10,7 @@ if [ $# -gt 0 ]; then
   bbtoken=${args[0]}
   gitclonepath=${args[1]}
   commit=${args[2]}
+  echo "cloning repo belonging to hash ${commit}"
   git clone ${gitclonepath} /${commit}
   echo "cloned repo to /${commit}"
   cd /${commit}

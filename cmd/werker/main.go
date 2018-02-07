@@ -97,11 +97,10 @@ func main() {
 }
 
 //performs whatever setup is needed by werker, right now copies over bb_download.sh to $HOME/.ocelot
-//***WARINING**** this assumes you're inside of cmd/werker folder
+//
+//***WARINING**** this assumes you're inside of OCELOT ROOT DIR
 func setupWerker() {
 	pwd, _ := os.Getwd()
-
-	//TODO: this may eventually iterate over template directory and copy all files to .ocelot AND DON'T HARDCODE FILE NAME!!!
 	downloadFile, err := os.Open(pwd + "/template/bb_download.sh")
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("failed to open code download file")
@@ -111,14 +110,6 @@ func setupWerker() {
 
 	destFile, _ := homedir.Expand("~/.ocelot/bb_download.sh")
 
-	_, err = os.Stat(destFile)
-	if !os.IsNotExist(err) {
-		err = os.Remove(destFile)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("failed to remove file at ~/.ocelot/bb_download.sh")
-			return
-		}
-	}
 	// just get rid of old file
 	err = os.Remove(destFile)
 	if err != nil {
