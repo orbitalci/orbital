@@ -265,4 +265,6 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	default:
 		return nil, errors.New("unknown type")
 	}
+	return nil, errors.New("could not grab ocelot storage")
 }
+

@@ -139,15 +139,12 @@ func addFileToWerker(originPath string, destFile string) (err error) {
 		return
 	}
 	defer downloadFile.Close()
-	_, err = os.Stat(destFile)
-	if !os.IsNotExist(err) {
-		err = os.Remove(destFile)
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("failed to remove file at ", destFile)
-			return
-		}
+	// just get rid of old file
+	err = os.Remove(destFile)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("failed to remove old file at ", destFile)
 	}
-	ocelog.Log().Info("successfully removed old file at ", destFile)
+	ocelog.Log().Info("removed old file at ", destFile)
 
 	destDownloadFile, err := os.Create(destFile)
 	if err != nil {

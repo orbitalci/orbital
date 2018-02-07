@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 )
 
 var (
@@ -84,10 +85,8 @@ func SetBuildDone(consulete *consul.Consulet, gitHash string) error {
 // then it will makes sure it can find it in storage
 func CheckIfBuildDone(consulete *consul.Consulet, summary storage.BuildSum, gitHash string) bool {
 	kv, err := consulete.GetKeyValue(fmt.Sprintf(buildRegister, gitHash))
-	fmt.Println("KV!", kv)
 	if err != nil {
-		// log here what the err is, etc
-		fmt.Println(err)
+		ocelog.IncludeErrField(err).Error()
 		return false
 	}
 	if kv != nil {
@@ -97,9 +96,8 @@ func CheckIfBuildDone(consulete *consul.Consulet, summary storage.BuildSum, gitH
 		_, err := summary.RetrieveLatestSum(gitHash)
 		if err != nil {
 			if _, ok := err.(*storage.ErrNotFound); !ok {
-				// log here what the err is, etc
-				fmt.Println(err)
-				 return false
+				ocelog.IncludeErrField(err).Error()
+				return false
 			} else { return true }
 		}
 		return true

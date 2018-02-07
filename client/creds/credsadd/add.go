@@ -62,25 +62,32 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		c.UI.Error("Did not read any credentials! Is your yaml formatted correctly?")
 		return 1
 	}
-	for _, configVal := range credWrap.VcsCreds.Vcs {
-		_, err = c.config.Client.SetVCSCreds(ctx, configVal)
-		if err != nil {
-			c.UI.Error(fmt.Sprintf("Could not add vcs credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
-			errOccured = true
-		} else {
-			c.UI.Info(fmt.Sprintf("Added vcs credentials for account: %s", configVal.AcctName))
+
+	if credWrap.VcsCreds != nil {
+		for _, configVal := range credWrap.VcsCreds.Vcs {
+			_, err = c.config.Client.SetVCSCreds(ctx, configVal)
+			if err != nil {
+				c.UI.Error(fmt.Sprintf("Could not add vcs credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
+				errOccured = true
+			} else {
+				c.UI.Info(fmt.Sprintf("Added vcs credentials for account: %s", configVal.AcctName))
+			}
 		}
 	}
 
-	for _, configVal := range credWrap.RepoCreds.Repo {
-		_, err = c.config.Client.SetRepoCreds(ctx, configVal)
-		if err != nil {
-			c.UI.Error(fmt.Sprintf("Could not add repo credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
-			errOccured = true
-		} else {
-			c.UI.Info(fmt.Sprintf("Added repo credentials for account: %s", configVal.AcctName))
+
+	if credWrap.RepoCreds != nil {
+		for _, configVal := range credWrap.RepoCreds.Repo {
+			_, err = c.config.Client.SetRepoCreds(ctx, configVal)
+			if err != nil {
+				c.UI.Error(fmt.Sprintf("Could not add repo credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
+				errOccured = true
+			} else {
+				c.UI.Info(fmt.Sprintf("Added repo credentials for account: %s", configVal.AcctName))
+			}
 		}
 	}
+
 	if errOccured {
 		return 1
 	}
