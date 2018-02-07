@@ -1,4 +1,4 @@
-image: tmaier/docker-compose
+image: jessishank/dockercomposegit
 buildTool: go
 branches:
   - nexus
