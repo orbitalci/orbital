@@ -9,7 +9,9 @@ if [ $# -gt 0 ]; then
     echo ${mvnsettings} >> ~/.m2/settings.xml
   else
     echo "maven settings variable empty, saving nothing to settings.xml"
+    exit 1
   fi
 else
     echo "no arguments were passed in"
+    exit 1
 fi

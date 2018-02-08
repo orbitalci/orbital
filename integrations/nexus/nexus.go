@@ -22,6 +22,21 @@ var settingsXml = `<?xml version="1.0" encoding="UTF-8"?>
     </server>
   {{ end }}
   </servers>
+  <profiles>
+    <profile>
+      <id>level11consulting</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <repositories>
+        <repository>
+          <id>ocelotNexus</id>
+          <name>Ocelot Rendered</name>
+          <url>${env.NEXUS_PUBLIC_M2}</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
 </settings>`
 
 //var templ = template.Must(template.New("settingsxml").Parse(settingsXml))

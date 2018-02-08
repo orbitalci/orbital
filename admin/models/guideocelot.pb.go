@@ -149,7 +149,7 @@ func (m *RepoCredWrapper) GetRepo() []*RepoCreds {
 	}
 	return nil
 }
-
+// docker.metaverse.l11.com
 type RepoCreds struct {
 	Username    string            `protobuf:"bytes,1,opt,name=username" json:"username,omitempty"`
 	Password    string            `protobuf:"bytes,2,opt,name=password" json:"password,omitempty"`

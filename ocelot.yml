@@ -1,7 +1,7 @@
 image: jessishank/ocelot-build
 buildTool: go
 branches:
-  - nexus
+  - <all>
 stages:
   - name: build
     script:
@@ -9,3 +9,17 @@ stages:
   - name: test
     script:
       - go test ./...
+  - name: upload
+    script:
+      - mvn deploy
+  - name: deploy
+      trigger:
+        commit:
+          - QA_READY
+        branches:
+          - master
+          - staging
+      script:
+        - ./push-deploy.sh target/app*.jar
+#  - name: integration
+#    script:

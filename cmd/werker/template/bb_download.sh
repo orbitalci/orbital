@@ -18,6 +18,7 @@ if [ $# -gt 0 ]; then
   while sleep 3600; do :; done
 else
     echo "no arguments were passed in"
+    exit 1
 fi
 
 
