@@ -16,10 +16,9 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"os"
 )
 
-//TODO: floe integration??? just putting this note here so we remember
+//TODO: floe integration? putting this note here so we remember
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
@@ -54,7 +53,8 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	mux.Handle("/", gwmux)
 	//serves up client file
 	mux.HandleFunc("/ocelot", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, os.Getenv("GOPATH") + "/bin/ocelot")
+		log.Log().Debug("serving up client from s3")
+		http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/ocelot.zip", 301)
 	})
 
 	conn, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
