@@ -54,7 +54,7 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	mux.Handle("/", gwmux)
 	//serves up client file
 	mux.HandleFunc("/ocelot", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, os.Getenv("GOPATH") + "/bin/ocelot")
+		http.ServeFile(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/ocelot")
 	})
 
 	conn, err := net.Listen("tcp", fmt.Sprintf(":%v", port))

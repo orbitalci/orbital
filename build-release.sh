@@ -4,6 +4,12 @@
 # make sure that all of our dependencies are up to date
 dep ensure -v
 
+# build some binaries
+go install ./...
+
+# copy the client binary into s3
+aws s3 cp $HOME/go/bin/ocelot s3://ocelotty/ocelot
+
 # This build assumes you have your ssh key added to L11 bitbucket
 # We need ssh keys to clone from the private bitbucket.
 
