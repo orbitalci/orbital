@@ -4,9 +4,6 @@
 # make sure that all of our dependencies are up to date
 dep ensure -v
 
-# admin host should be set here
-export ADMIN_HOST=ec2-34-212-13-136.us-west-2.compute.amazonaws.com
-
 echo "building go project"
 env GOOS=darwin GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
 
