@@ -53,6 +53,7 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	mux.Handle("/", gwmux)
 	//serves up client file
 	mux.HandleFunc("/ocelot", func(w http.ResponseWriter, r *http.Request) {
+		log.Log().Debug("serving up client from s3")
 		http.ServeFile(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/ocelot")
 	})
 
