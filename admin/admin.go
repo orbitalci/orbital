@@ -16,7 +16,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"os"
 )
 
 //TODO: floe integration??? just putting this note here so we remember
