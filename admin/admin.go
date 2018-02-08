@@ -54,8 +54,8 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	//serves up client file
 	mux.HandleFunc("/ocelot", func(w http.ResponseWriter, r *http.Request) {
 		log.Log().Debug("serving up client from s3")
-		http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/ocelot", 301)
-		//http.ServeFile(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/ocelot")
+		//http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/ocelot.zip", 301)
+		http.ServeFile(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/ocelot.zip")
 	})
 
 	conn, err := net.Listen("tcp", fmt.Sprintf(":%v", port))

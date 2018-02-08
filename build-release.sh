@@ -10,8 +10,11 @@ export ADMIN_HOST=ec2-34-212-13-136.us-west-2.compute.amazonaws.com
 # build some binaries
 go install ./...
 
-# copy the client binary into s3
-aws s3 cp --content-type=application/octet-stream $HOME/go/bin/ocelot s3://ocelotty/ocelot
+# zip up the client binary
+zip ocelot.zip $HOME/go/bin/ocelot
+
+# upload zipped client binary into s3
+aws s3 cp --acl public-read-write ocelot.zip s3://ocelotty/ocelot.zip
 
 # This build assumes you have your ssh key added to L11 bitbucket
 # We need ssh keys to clone from the private bitbucket.
