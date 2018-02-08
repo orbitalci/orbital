@@ -8,8 +8,8 @@ dep ensure -v
 export ADMIN_HOST=ec2-34-212-13-136.us-west-2.compute.amazonaws.com
 
 echo "building go project"
-# build some binaries
-go install ./...
+# build binary (RIGHT NOW WILL ONLY BUILD FOR MAC)
+env GOOS=linux GOARCH=amd64 go install ./...
 
 echo "uploading client binary"
 # zip up the client binary
