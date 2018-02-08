@@ -5,6 +5,7 @@
 dep ensure -v
 
 echo "building go project"
+# TODO: this only builds mac binary right now - swap to building other ones when we need it
 env GOOS=darwin GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
 
 echo "uploading client binary"
