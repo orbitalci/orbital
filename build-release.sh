@@ -7,18 +7,23 @@ dep ensure -v
 # admin host should be set here
 export ADMIN_HOST=ec2-34-212-13-136.us-west-2.compute.amazonaws.com
 
+echo "building go project"
 # build some binaries
 go install ./...
 
+echo "uploading client binary"
 # zip up the client binary
-zip ocelot.zip $HOME/go/bin/ocelot
+cd $HOME/go/bin
+zip -r ocelot.zip ocelot
 
 # upload zipped client binary into s3
-aws s3 cp --acl public-read-write ocelot.zip s3://ocelotty/ocelot.zip
+aws s3 cp --acl public-read-write --content-disposition attachment ocelot.zip s3://ocelotty/ocelot.zip
+
+# go back to original directory since we're going to build and stuff
+cd -
 
 # This build assumes you have your ssh key added to L11 bitbucket
 # We need ssh keys to clone from the private bitbucket.
-
 if [ -f ${SSH_PRIVATE_KEY:=${HOME}/.ssh/id_rsa} ]; then
    echo "Using private key: ${SSH_PRIVATE_KEY}"
 else
