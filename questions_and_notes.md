@@ -7,12 +7,19 @@
 
 ## in progress
 - nexus (jessi)
-- change so that we store info about every stage (marianne)
+- `ocelot status` - asks admin to get build runtime (marianne) 
+    - current / past stage info to be added to build_stage_details (currently build_failure_reason)
+    - queryable by:
+        - acctname 
+        - acctname/repoName
+        - git hash
+         
 
 ## BIG TODOs:
 - actions to only take based on branch or w/e 
     - possible solution: add `trigger` section to stage yml?
         - implementation: when hookhandler receives a message, it will filter on new commit messages and branch to take out stages that do not fit trigger requirements
+- tag built projects by custom group name, that way you can filter to see all repos belonging to your group
 - sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand:
     - failed validation at hookhandler stage 
     - failed setup stage
@@ -21,22 +28,16 @@
          - panic recovery on main function 
             - cleanup consul entry / notify _someone_ of status 
             - [RECOVERY!!!](https://blog.golang.org/defer-panic-and-recover)
-- docker login? - our repo creds model works for this currently, need to implement
+- docker login? - our repo creds model works for this currently, just need to implement part that actually runs docker login
 - tighter maven integration?
 - `ocelot kill <hash>` - add a quit channel 
 - return to old package install list??
     - [docker get script for ex](https://get.docker.com/)    
     
-## little TODOs?: 
+## little TODOs?:  
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
-- `ocelot status` - asks admin to get build runtime 
-    - current / past stage info to be added to build_stage_details (currently build_failure_reason)
-    - queryable by:
-        - acctname 
-        - acctname/repoName
-        - git hash
-         
 - polling option? idk 
+- be able to properly handle KILLS (what happens when build is killed halfway?)
 
 ## bugs: 
 - fix goddamn tests
@@ -46,4 +47,5 @@
 - fix dev mode (maybe fuck this)
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)
 
-## finished
+## done: 
+- store stages to db

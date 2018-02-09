@@ -11,6 +11,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"strings"
 	"time"
+	"math"
 )
 
 const synopsis = "show summary table of specific repo"
@@ -101,26 +102,71 @@ func (c *cmd) Run(args []string) int {
 	}
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
-	writ.SetHeader([]string{"Hash", "Account", "Repo", "Branch", "Failed", "Build Duration (s)", "Start Time", "Build ID"})
+	//writ.SetBorder(false)
+	writ.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: true})
+	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
+	writ.SetColumnSeparator(" ")
+	writ.SetHeader([]string{"Build ID", "Repo", "Build Duration", "Start Time", "Result", "Branch", "Hash"})
+	writ.SetHeaderColor(
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
+
+	//writ.SetHeader([]string{"Hash", "Account", "Repo", "Branch", "Failed", "Build Duration (s)", "Start Time", "Build ID"})
 	for _, sum := range summaries.Sums {
 		writ.Append(generateTableRow(sum))
 	}
 	writ.Render()
-	c.UI.Info(writer.String())
+	c.UI.Info("\n" + writer.String())
 	return 0
 }
 
 func generateTableRow(summary *models.BuildSummary) []string {
 	tym := time.Unix(summary.BuildTime.Seconds, int64(summary.BuildTime.Nanos))
-	row := []string{
-		summary.Hash,
-		summary.Account,
-		summary.Repo,
-		summary.Branch,
-		fmt.Sprintf("%t", summary.Failed),
-		fmt.Sprintf("%.3f", summary.BuildDuration),
-		tym.Format("Mon Jan 2 15:04:05"),
-		fmt.Sprintf("%d", summary.BuildId),
+	var row []string
+	var color int
+	var status string
+	//we color line output based on success/failure
+	if summary.Failed {
+		status = "FAIL"
+		//status = "\u2717"
+		color = 31
+	} else {
+		status = "PASS"
+		//status = "\u2713"
+		color = 32
 	}
+	row = append(row,
+		fmt.Sprintf("\033[0;%dm%d",color, summary.BuildId),
+		summary.Repo,
+		prettifyTime(summary.BuildDuration),
+		tym.Format("Mon Jan 2 15:04:05"),
+		status,
+		summary.Branch,
+		fmt.Sprintf("%v\033[0m",summary.Hash),
+	)
 	return row
+}
+
+//prettifyTime takes in time in seconds and returns a pretty string representation of it
+func prettifyTime(timeInSecs float64) string {
+	if timeInSecs < 0 {
+		return "running"
+	}
+	var prettyTime []string
+	minutes := int(timeInSecs/60)
+	if minutes > 0 {
+		prettyTime = append(prettyTime, fmt.Sprintf("%v minutes", minutes))
+	}
+	seconds := int(math.Mod(timeInSecs, 60))
+	if len(prettyTime) > 0 {
+		prettyTime = append(prettyTime, "and")
+	}
+	prettyTime = append(prettyTime, fmt.Sprintf("%v seconds", seconds))
+	return strings.Join(prettyTime, " ")
+
 }
