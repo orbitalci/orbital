@@ -102,7 +102,6 @@ func (c *cmd) Run(args []string) int {
 	}
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
-	//writ.SetBorder(false)
 	writ.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: true})
 	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
 	writ.SetColumnSeparator(" ")
@@ -116,7 +115,6 @@ func (c *cmd) Run(args []string) int {
 		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
 		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
 
-	//writ.SetHeader([]string{"Hash", "Account", "Repo", "Branch", "Failed", "Build Duration (s)", "Start Time", "Build ID"})
 	for _, sum := range summaries.Sums {
 		writ.Append(generateTableRow(sum))
 	}
