@@ -8,12 +8,20 @@
 ## in progress
 - nexus (jessi)
 - `ocelot status` - asks admin to get build runtime (marianne) 
-    - current / past stage info to be added to build_stage_details (currently build_failure_reason)
+    ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
     - queryable by:
         - acctname 
         - acctname/repoName
         - git hash
-         
+    
+## bugs: 
+- fix goddamn tests
+- hash matching only works when you pass in full hash
+    - when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command
+- change client's --validate command to take in a value just like all the other commands
+- be able to properly handle KILLS (what happens when build is killed halfway?)
+- fix dev mode (maybe fuck this)
+- fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
 ## BIG TODOs:
 - actions to only take based on branch or w/e 
@@ -36,16 +44,8 @@
     
 ## little TODOs?:  
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
-- polling option? idk 
-- be able to properly handle KILLS (what happens when build is killed halfway?)
-
-## bugs: 
-- fix goddamn tests
-- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command
-- change client's --validate command to take in a value just like all the other commands
-- hash matching only works when you pass in full hash
-- fix dev mode (maybe fuck this)
-- fix html viewer displaying *oldest* matching git hash (maybe fuck this)
+- polling option? idk
+- would be cool if we could take in regex like `--acct-repo=level11consulting/orchestr8*` ?  
 
 ## done: 
-- store stages to db
+~~- store stages to db~~

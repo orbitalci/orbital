@@ -20,13 +20,13 @@ Usage: ocelot summary -acct-repo <acct>/<repo>
   Retrieve summary table of a specific repo (i.e. level11consulting/ocelot). If -limit is not specified, then the 
   limit will be set to 5, and only the last 5 runs will be shown.
   Full usage:
-    $ ocelot summary -acct-repo jessishank/mytestocy -limit 2
-    +----------+------------+-----------+--------+--------+--------------------+---------------------+----------+
-    |  HASH    |  ACCOUNT   |   REPO    | BRANCH | FAILED | BUILD DURATION (S) |     START TIME      | BUILD ID |
-    +----------+------------+-----------+--------+--------+--------------------+---------------------+----------+
-    | ..75e9.. | jessishank | mytestocy | master | false  |             14.120 | Wed Jan 17 08:32:27 |       70 |
-    | ..7860.. | jessishank | mytestocy | master | false  |             14.249 | Wed Jan 17 08:29:12 |       69 |
-    +----------+------------+-----------+--------+--------+--------------------+---------------------+----------+
+    $ ocelot summary -acct-repo level11consulting/orchestr8-locationservices -limit 2
+
+  BUILD ID              REPO                   BUILD DURATION            START TIME       RESULT    BRANCH                      HASH
++----------+----------------------------+--------------------------+--------------------+--------+----------+------------------------------------------+
+  27         orchestr8-locationservices   5 minutes and 15 seconds   Thu Feb 8 11:40:55   FAIL     jesstest   ec8ea5f46cdd198c135c1ba73984ac6d6192cc16
+  26         orchestr8-locationservices   4 minutes and 58 seconds   Thu Feb 8 11:33:34   FAIL     jesstest   ec8ea5f46cdd198c135c1ba73984ac6d6192cc16
++----------+----------------------------+--------------------------+--------------------+--------+----------+------------------------------------------+
 
 `
 
