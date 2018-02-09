@@ -5,7 +5,6 @@ import (
 )
 
 
-//TODO: think about where deployment to nexus fits in - do we want this in its own method? Or will it be up to builder implementations to embed into their 'build' stage?
 type Builder interface {
 	Setup(logout chan []byte, werk *pb.WerkerTask) *Result
 	Execute(actions *pb.Stage, logout chan []byte, commitHash string) *Result
@@ -14,14 +13,14 @@ type Builder interface {
 
 type Result struct {
 	Stage    string
-	Status   StageResult
+	Status   StageResultVal
 	Error    error
 	Messages []string
 }
 
-type StageResult int32
+type StageResultVal int32
 
 const (
-	PASS	StageResult = 0
-	FAIL	StageResult = 1
+	PASS	StageResultVal = 0
+	FAIL	StageResultVal = 1
 )

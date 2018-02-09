@@ -69,16 +69,20 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 
 	defer close(w.infochan)
 	defer builder.Cleanup()
-	//TODO: write stages to db
-	//TODO: write build data to db
 
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
-	var stageResults []*b.Result
 
+	setupStart := time.Now()
 	setupResult := builder.Setup(w.infochan, werk)
-	stageResults = append(stageResults, setupResult)
-	// todo: this is causing panic: runtime error: invalid memory address or nil pointer dereference
-	// on the builder.Cleanup
+	setupDura := time.Now().Sub(setupStart)
+	if err := w.Store.AddStageDetail(&models.StageResult{
+		BuildId: werk.Id,
+		Result: setupResult,
+	}, setupStart, setupDura.Seconds()); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't store build output")
+	}
+
+
 	if setupResult.Status == b.FAIL {
 		ocelog.Log().Error(setupResult.Error)
 		return
@@ -86,25 +90,37 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	fail := false
 	start := time.Now()
 	for _, stage := range werk.BuildConf.Stages {
+		stageStart := time.Now()
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
 		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)
-		stageResults = append(stageResults, stageResult)
-		// todo: should this check go before or after special build stuffs? i guess if it fails, there won't be
 		// any deployment
 		if stageResult.Status == b.FAIL {
 			fail = true
-			ocelog.Log().Error(stageResult.Error)
-			// todo: update failure reasons
-			if err := w.Store.AddFail(convertResultToFailureReasons(stageResult, werk.Id)); err != nil {
-				ocelog.IncludeErrField(err).Error("couldn't add failure reasons")
+
+			//store failed output to db
+			stageDura := time.Now().Sub(stageStart)
+			if err := w.Store.AddStageDetail(&models.StageResult{
+				BuildId: werk.Id,
+				Result: stageResult,
+			}, stageStart, stageDura.Seconds()); err != nil {
+				ocelog.IncludeErrField(err).Error("couldn't store build output")
 			}
 			break
 		}
 		// build is special because we deploy after this
 		if stage.Name == "build" {
 			// todo: deploy to nexus
-			continue
 		}
+
+		//store stage output to db
+		stageDura := time.Now().Sub(stageStart)
+		if err := w.Store.AddStageDetail(&models.StageResult{
+			BuildId: werk.Id,
+			Result: stageResult,
+		}, stageStart, stageDura.Seconds()); err != nil {
+			ocelog.IncludeErrField(err).Error("couldn't store build output")
+		}
+
 	}
 	dura := time.Now().Sub(start)
 	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
@@ -115,21 +131,21 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 }
 
 
-func convertResultToFailureReasons(res *b.Result, id int64) *models.BuildFailureReason {
-	var err string
-	if res.Error == nil {
-		err = ""
-	} else {
-		err = res.Error.Error()
-	}
-	fr :=  &models.FailureReasons{
-				Stage: res.Stage,
-				Status: int32(res.Status),
-				Error: err,
-				Messages: res.Messages,
-			}
-	return &models.BuildFailureReason{
-		BuildId: id,
-		FailureReasons: fr,
-	}
-}
+//func convertResultToFailureReasons(res *b.Result, id int64) *models.BuildFailureReason {
+//	var err string
+//	if res.Error == nil {
+//		err = ""
+//	} else {
+//		err = res.Error.Error()
+//	}
+//	fr :=  &models.FailureReasons{
+//				Stage: res.Stage,
+//				Status: int32(res.Status),
+//				Error: err,
+//				Messages: res.Messages,
+//			}
+//	return &models.BuildFailureReason{
+//		BuildId: id,
+//		FailureReasons: fr,
+//	}
+//}

@@ -45,16 +45,21 @@ type BuildSum interface {
 	RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error)
 }
 
-type FailReason interface {
-	AddFail(reason *models.BuildFailureReason) error
-	RetrieveFail(buildId int64) (models.BuildFailureReason, error)
+//type FailReason interface {
+//	AddFail(reason *models.BuildFailureReason) error
+//	RetrieveFail(buildId int64) (models.BuildFailureReason, error)
+//}
+
+type BuildStage interface {
+	AddStageDetail(stageResult *models.StageResult, stageStart time.Time, stageDur float64) error
 }
 
 
 type OcelotStorage interface {
 	BuildOut
 	BuildSum
-	FailReason
+	BuildStage
+	//FailReason
 	Stringy
 }
 

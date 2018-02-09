@@ -12,6 +12,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"io"
 	"strings"
+	"fmt"
 )
 
 type Docker struct{
@@ -26,6 +27,7 @@ func NewDockerBuilder(b *Basher) Builder {
 }
 
 func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
+	setupMessages := []string{}
 	//TODO: do some sort of util for the stage name + formatting
 	stage := "setup"
 	stagePrintln := "SETUP | "
@@ -53,8 +55,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
+			Messages: setupMessages,
 		}
 	}
+	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s \u2713", imageName))
 	//var byt []byte
 	//buf := bufio.NewReader(out)
 	//buf.Read(byt)
@@ -87,13 +91,17 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")
 
+
 	if err != nil {
 		return &Result{
 			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
+			Messages: setupMessages,
 		}
 	}
+
+	setupMessages = append(setupMessages, fmt.Sprint("created build container \u2713"))
 
 	for _, warning := range resp.Warnings {
 		logout <- []byte(warning)
@@ -108,6 +116,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 			Stage:  stage,
 			Status: FAIL,
 			Error:  err,
+			Messages: setupMessages,
 		}
 	}
 
@@ -125,6 +134,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 			Stage: stage,
 			Status: FAIL,
 			Error:  err,
+			Messages: setupMessages,
 		}
 	}
 
@@ -132,10 +142,12 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	bufReader = bufio.NewReader(containerLog)
 	d.writeToInfo(stagePrintln, bufReader, logout)
 
+	setupMessages = append(setupMessages, "completed setup stage \u2713")
 	return &Result{
 		Stage:  stage,
 		Status: PASS,
 		Error:  nil,
+		Messages: setupMessages,
 	}
 }
 
@@ -156,6 +168,8 @@ func (d *Docker) Cleanup() {
 }
 
 func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string) *Result {
+	stageMessages := []string{}
+
 	if len(d.ContainerId) == 0 {
 		return &Result {
 			Stage: stage.Name,
@@ -179,6 +193,7 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 			Stage:  stage.Name,
 			Status: FAIL,
 			Error:  err,
+			Messages: stageMessages,
 		}
 	}
 
@@ -195,25 +210,24 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 
 	d.writeToInfo(strings.ToUpper(stage.Name) + " | ", attachedExec.Reader, logout)
 	inspector, err := d.DockerClient.ContainerExecInspect(ctx, resp.ID)
-	if inspector.ExitCode != 0 {
+
+
+	if inspector.ExitCode != 0 || err != nil {
+		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage \u2717", stage.Name))
 		return &Result{
 			Stage: stage.Name,
 			Status: FAIL,
-			Error: nil,
-			Messages: []string{"exit code was not zero"},
+			Error: err,
+			Messages: stageMessages,
 		}
 	}
-	if err != nil {
-		return &Result{
-			Stage:  stage.Name,
-			Status: FAIL,
-			Error:  err,
-		}
-	}
+
+	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", stage.Name))
 	return &Result{
 		Stage:  stage.Name,
 		Status: PASS,
 		Error:  nil,
+		Messages: stageMessages,
 	}
 }
 
