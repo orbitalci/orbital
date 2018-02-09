@@ -95,21 +95,30 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.Builds, error) {
+	//find matching hashes in consul
 	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 	if err != nil {
-		if _, ok := err.(*rt.ErrBuildDone); ok {
-			var builds = map[string]*models.BuildRuntimeInfo{
-				bq.Hash: {Done: true, Hash: bq.Hash},
-			}
-			return &models.Builds{Builds: builds}, nil
+		if _, ok := err.(*rt.ErrBuildDone); !ok {
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	//add matching hashes in db if exists and add acctname/repo to ones found in consul
+	dbResults, err := g.Storage.RetrieveHashStartsWith(bq.Hash)
+	for _, build := range dbResults {
+		if _, ok := buildRtInfo[build.Hash]; !ok {
+			buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{
+				Hash: build.Hash,
+				Done: true,
+			}
+		}
+		buildRtInfo[build.Hash].AcctName = build.Account
+		buildRtInfo[build.Hash].RepoName = build.Repo
 	}
 
 	builds := &models.Builds{
 		Builds : buildRtInfo,
 	}
-
 	return builds, err
 }
 

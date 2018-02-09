@@ -41,39 +41,31 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*mo
 	}
 	rt := make(map[string]*models.BuildRuntimeInfo)
 	if len(pairs) == 0 {
-		//rt.Done = true
 		return rt, &ErrBuildDone{"no build found in consul"}
 	}
 
 	for _, pair := range pairs {
 		key := pair.Key[strings.LastIndex(pair.Key, "/") + 1:]
 		keySub := pair.Key[:strings.LastIndex(pair.Key, "/")]
-		gitHash := keySub[strings.LastIndex(keySub, "/") + 1:]
-		_, ok := rt[gitHash]
+		fullHash := keySub[strings.LastIndex(keySub, "/") + 1:]
+		_, ok := rt[fullHash]
 		if !ok {
-			rt[gitHash] = &models.BuildRuntimeInfo{
-				Hash: gitHash,
+			rt[fullHash] = &models.BuildRuntimeInfo{
+				Hash: fullHash,
 			}
 		}
 
 		switch key {
 		case "done":
-			rt[gitHash].Done = true
+			rt[fullHash].Done = true
 		case "werker_ip":
-			rt[gitHash].Ip = string(pair.Value)
+			rt[fullHash].Ip = string(pair.Value)
 		case "werker_grpc_port":
-			rt[gitHash].GrpcPort = string(pair.Value)
+			rt[fullHash].GrpcPort = string(pair.Value)
 		case "werker_ws_port":
 			// don't use this right now
 		}
 	}
-
-
-	//TODO: retrieve hashes from DB
-
-	//if val, ok := dict["foo"]; ok {
-	//	//do something here
-	//}
 
 	return rt, nil
 }

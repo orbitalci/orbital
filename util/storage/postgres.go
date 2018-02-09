@@ -9,7 +9,6 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"time"
-	"crypto"
 )
 
 func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc string) *PostgresStorage {
@@ -116,20 +115,20 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 }
 
 //RetrieveHashStartsWith will return a list of all hashes starting with the partial string in db
-func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]string, error) {
-	var hashes []string
+func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+	var hashes []models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return hashes, errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	rows, err := p.db.Query(`select distinct hash from build_summary where hash ilike '$1%'`, partialGitHash)
+	rows, err := p.db.Query(`select distinct (hash), account, repo from build_summary where hash ilike $1`, partialGitHash + "%")
 	if err != nil {
 		return hashes, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var result string
-		err = rows.Scan(&result)
+		var result models.BuildSummary
+		err = rows.Scan(&result.Hash, &result.Account, &result.Repo)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return hashes, BuildSumNotFound(partialGitHash)

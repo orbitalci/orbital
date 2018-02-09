@@ -102,6 +102,7 @@ func (c *cmd) Run(args []string) int {
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
 	writ.SetHeader([]string{"Hash", "Account", "Repo", "Branch", "Failed", "Build Duration (s)", "Start Time", "Build ID"})
+
 	for _, sum := range summaries.Sums {
 		writ.Append(generateTableRow(sum))
 	}
