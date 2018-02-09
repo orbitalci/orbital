@@ -67,6 +67,14 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*mo
 			// don't use this right now
 		}
 	}
+
+
+	//TODO: retrieve hashes from DB
+
+	//if val, ok := dict["foo"]; ok {
+	//	//do something here
+	//}
+
 	return rt, nil
 }
 
