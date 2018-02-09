@@ -7,7 +7,7 @@
 
 ## in progress
 - nexus (jessi)
-- `ocelot status` - asks admin to get build runtime (marianne) 
+- **[BLOCKED (gotta talk to somebody)]** `ocelot status` - asks admin to get build runtime (marianne) 
     ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
     - queryable by:
         - acctname 
@@ -45,6 +45,7 @@
 ## little TODOs?:  
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
 - polling option? idk
+- `ocelot summary` comand takes in --acct or --hash ????
 - would be cool if we could take in regex like `--acct-repo=level11consulting/orchestr8*` ?  
 
 ## done: 

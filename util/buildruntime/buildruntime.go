@@ -33,6 +33,8 @@ func (e *ErrBuildDone) Error() string {
 	return e.msg
 }
 
+//GetBuildRuntime will return BuildRuntimeInfo about matching partial git hashes.
+//It does this by first asking consul for state of builds, and then db storage
 func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*models.BuildRuntimeInfo, error) {
 	path := fmt.Sprintf(buildPath, gitHash)
 	pairs, err := consulete.GetKeyValues(path)
