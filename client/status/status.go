@@ -8,6 +8,9 @@ import (
 	"context"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
+	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
+	"bytes"
+	"github.com/olekukonko/tablewriter"
 )
 
 const synopsis = "show status of specific acctname, acctname/repo, or hash"
@@ -89,15 +92,16 @@ func (c *cmd) Run(args []string) int {
 		if len(builds.Builds) == 0 {
 			c.UI.Info(fmt.Sprintf("no data found for hash %s", c.hash))
 			return 0
+		} else if len(builds.Builds) > 1 {
+			c.UI.Info(fmt.Sprintf("%d hashes matching `%s`, please select a more complete git hash: ", len(builds.Builds), c.hash))
+			c.UI.Output(cmd_table.SelectFromHashes(builds))
+			return 0
 		}
-		//
+
 		//writer := &bytes.Buffer{}
 		//writ := tablewriter.NewWriter(writer)
-		////writ.SetBorder(false)
-		//writ.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: true})
 		//writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
-		//writ.SetColumnSeparator(" ")
-		//writ.SetHeader([]string{"Build ID", "Repo", "Build Duration", "Start Time", "Result", "Branch", "Hash"})
+		//writ.SetHeader([]string{"Build ID", "Running", "Build Duration", "Start Time", "Result", "Branch", "Hash"})
 		//writ.SetHeaderColor(
 		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
 		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
@@ -107,11 +111,12 @@ func (c *cmd) Run(args []string) int {
 		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
 		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
 		//
+		//
 		//for _, build := range builds.Builds {
-		//	writ.Append(generateTableRow(sum))
+		//	//writ.Append(generateTableRow(sum))
 		//}
 		//writ.Render()
-		//c.UI.Info("\n" + writer.String())
+		//c.UI.Output("\n" + writer.String())
 		return 0
 	}
 

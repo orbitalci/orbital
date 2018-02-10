@@ -46,6 +46,7 @@
 
     
 ## little TODOs?: 
+- add ability to query for logs by build id `ocelot logs --build-id 3`
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook         
 - polling option? idk
 - `ocelot summary` comand takes in --acct or --hash ????

@@ -20,13 +20,14 @@ Usage: ocelot summary -acct-repo <acct>/<repo>
   Retrieve summary table of a specific repo (i.e. level11consulting/ocelot). If -limit is not specified, then the 
   limit will be set to 5, and only the last 5 runs will be shown.
   Full usage:
-    $ ocelot summary -acct-repo level11consulting/orchestr8-locationservices -limit 2
+    $ ocelot summary -acct-repo mariannefeng/test-ocelot -limit 2
 
-  BUILD ID              REPO                   BUILD DURATION            START TIME       RESULT    BRANCH                      HASH
-+----------+----------------------------+--------------------------+--------------------+--------+----------+------------------------------------------+
-  27         orchestr8-locationservices   5 minutes and 15 seconds   Thu Feb 8 11:40:55   FAIL     jesstest   ec8ea5f46cdd198c135c1ba73984ac6d6192cc16
-  26         orchestr8-locationservices   4 minutes and 58 seconds   Thu Feb 8 11:33:34   FAIL     jesstest   ec8ea5f46cdd198c135c1ba73984ac6d6192cc16
-+----------+----------------------------+--------------------------+--------------------+--------+----------+------------------------------------------+
++----------+-------------+--------------------------+--------------------+--------+--------+------------------------------------------+
+| BUILD ID |    REPO     |      BUILD DURATION      |     START TIME     | RESULT | BRANCH |                   HASH                   |
++----------+-------------+--------------------------+--------------------+--------+--------+------------------------------------------+
+| 20       | test-ocelot | 2 minutes and 37 seconds | Thu Feb 8 10:58:36 | PASS   | master | 2f4117d4a38eede1d7c8db27d94253491bf2064d |
+| 19       | test-ocelot | running                  | Thu Feb 8 10:54:06 | FAIL   | master | 2f4117d4a38eede1d7c8db27d94253491bf2064d |
++----------+-------------+--------------------------+--------------------+--------+--------+------------------------------------------+
 
 `
 
@@ -66,11 +67,9 @@ func (c *cmd) Help() string {
 	return help
 }
 
-
-
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.accountRepo, "acct-repo", "ERROR", "*REQUIRED*  <account>/<repo> to track")
+	c.flags.StringVar(&c.accountRepo, "acct-repo", "ERROR", "<account>/<repo> to display build summaries for ")
 	c.flags.IntVar(&c.limit, "limit", 5, "number of rows to fetch")
 }
 
