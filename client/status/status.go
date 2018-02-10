@@ -90,8 +90,7 @@ func (c *cmd) Run(args []string) int {
 			c.UI.Info(fmt.Sprintf("no data found for hash %s", c.hash))
 			return 0
 		}
-
-		//TODO: display the result
+		//
 		//writer := &bytes.Buffer{}
 		//writ := tablewriter.NewWriter(writer)
 		////writ.SetBorder(false)

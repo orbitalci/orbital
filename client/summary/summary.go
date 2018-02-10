@@ -102,9 +102,7 @@ func (c *cmd) Run(args []string) int {
 	}
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
-	writ.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: true})
 	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
-	writ.SetColumnSeparator(" ")
 	writ.SetHeader([]string{"Build ID", "Repo", "Build Duration", "Start Time", "Result", "Branch", "Hash"})
 	writ.SetHeaderColor(
 		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
@@ -119,7 +117,7 @@ func (c *cmd) Run(args []string) int {
 		writ.Append(generateTableRow(sum))
 	}
 	writ.Render()
-	c.UI.Info("\n" + writer.String())
+	c.UI.Output("\n" + writer.String())
 	return 0
 }
 
