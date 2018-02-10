@@ -6,7 +6,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bufio"
 	"bytes"
-	"strings"
 	"testing"
 	"time"
 )
