@@ -9,8 +9,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
 	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
-	"bytes"
-	"github.com/olekukonko/tablewriter"
 )
 
 const synopsis = "show status of specific acctname, acctname/repo, or hash"
@@ -98,6 +96,12 @@ func (c *cmd) Run(args []string) int {
 			return 0
 		}
 
+		//it's okay to iterate here cause list will always contain 1 value
+		//for _, build := range builds.Builds {
+			//buildSum := c.
+			//writ.Append(generateTableRow(sum))
+		//}
+
 		//writer := &bytes.Buffer{}
 		//writ := tablewriter.NewWriter(writer)
 		//writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
@@ -112,9 +116,7 @@ func (c *cmd) Run(args []string) int {
 		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
 		//
 		//
-		//for _, build := range builds.Builds {
-		//	//writ.Append(generateTableRow(sum))
-		//}
+
 		//writ.Render()
 		//c.UI.Output("\n" + writer.String())
 		return 0

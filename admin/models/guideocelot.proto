@@ -5,6 +5,7 @@ package models;
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 service GuideOcelot {
     rpc GetVCSCreds (google.protobuf.Empty) returns (CredWrapper) {
@@ -29,6 +30,7 @@ service GuideOcelot {
     rpc BuildRuntime (BuildQuery) returns (Builds) {}
     rpc Logs (BuildQuery) returns (stream LogResponse) {}
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {}
+    rpc StatusByPartialHash (google.protobuf.StringValue) returns (Status) {}
 }
 
 message AllCredsWrapper {
@@ -87,6 +89,20 @@ message RepoAccount {
     string repo = 1;
     string account = 2;
     int32  limit = 3;
+}
+
+message Status {
+    BuildSummary buildSum = 1;
+    repeated Stage stages = 2;
+}
+
+message Stage {
+    string stage = 1;
+    string error = 2;
+    int32 status = 3;
+    repeated string messages = 4;
+    google.protobuf.Timestamp startTime = 5;
+    double stageDuration = 6;
 }
 
 message BuildSummary {

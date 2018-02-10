@@ -13,6 +13,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -172,6 +173,29 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 		summaries.Sums = append(summaries.Sums, summary)
 	}
 	return summaries, nil
+
+}
+
+func (g *guideOcelotServer) StatusByPartialHash(ctx context.Context, partialHash *wrappers.StringValue) (*models.Status, error) {
+	var status = &models.Status{}
+	//modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
+	//if err != nil {
+	//	return nil, status.Error(codes.Internal, err.Error())
+	//}
+	//for _, model := range modelz {
+	//	summary := &models.BuildSummary{
+	//		Hash: model.Hash,
+	//		Failed: model.Failed,
+	//		BuildTime: &timestamp.Timestamp{Seconds: model.BuildTime.UTC().Unix()},
+	//		Account: model.Account,
+	//		BuildDuration: model.BuildDuration,
+	//		Repo: model.Repo,
+	//		Branch: model.Branch,
+	//		BuildId: model.BuildId,
+	//	}
+	//	summaries.Sums = append(summaries.Sums, summary)
+	//}
+	return status, nil
 
 }
 
