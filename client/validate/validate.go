@@ -39,7 +39,8 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 }
 
 func (c *cmd) init() {
-	c.flags = flag.NewFlagSet("", flag.ExitOnError)
+	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	c.flags.StringVar(&c.ocelotFileLoc, "file-loc", "ERROR", "*REQUIRED* location of your ocelot.yml file")
 }
 
 
@@ -76,15 +77,14 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
-		c.UI.Error("an error occurred while parsing flags")
 		return 1
 	}
 
-	if len(args) == 0 {
-		return cli.RunResultHelp
+	if c.ocelotFileLoc == "ERROR" {
+		c.UI.Error("flag --file-loc is required and must be a local path to an ocelot.yml file")
+		return 1
 	}
 
-	c.ocelotFileLoc = args[0]
 	ctx := context.Background()
 	return c.validateOcelotYaml(ctx)
 }
@@ -99,8 +99,8 @@ func (c *cmd) Help() string {
 
 const helpcmdSynopsis = "built-in validator"
 const helpcmdHelp = `
-Usage: ocelot validate [options] [args]
+Usage: ocelot validate -file-loc <full_path_to_your_ocelot_file>
   Interacting with ocelot validator
   This client takes in an argument as a path to a local ocelot.yaml file
-  Example: ocelot validate /home/mariannef/git/MyProject/ocelot.yml
+  Example: ocelot validate -file-loc /home/mariannef/git/MyProject/ocelot.yml
 `

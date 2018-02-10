@@ -7,7 +7,7 @@
 
 ## in progress
 - nexus (jessi)
-- **[BLOCKED (gotta talk to somebody)]** `ocelot status` - asks admin to get build runtime (marianne) 
+- `ocelot status` - asks admin to get build runtime (marianne) 
     ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
     - queryable by:
         - acctname 
@@ -16,12 +16,10 @@
     
 ## bugs: 
 - fix goddamn tests
-- hash matching only works when you pass in full hash
-    - when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command
-- change client's --validate command to take in a value just like all the other commands
 - be able to properly handle KILLS (what happens when build is killed halfway?)
 - fix dev mode (maybe fuck this)
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
+
 
 ## BIG TODOs:
 - actions to only take based on branch or w/e 
@@ -37,6 +35,7 @@
             - cleanup consul entry / notify _someone_ of status 
             - [RECOVERY!!!](https://blog.golang.org/defer-panic-and-recover)
 - docker login? - our repo creds model works for this currently, just need to implement part that actually runs docker login
+- do the pipeline thing
 - tighter maven integration?
 - `ocelot kill <hash>` - add a quit channel 
 - return to old package install list??
@@ -50,3 +49,7 @@
 
 ## done: 
 ~~- store stages to db~~
+~~- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
+~~- change client's --validate command to take in a value just like all the other commands~~
+~~- hash matching only works when you pass in full hash~~
+    ~~- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~

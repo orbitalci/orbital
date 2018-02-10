@@ -166,8 +166,8 @@ func (f *FileBuildStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, e
 	return sums, nil
 }
 
-//todo: implement sometime in the future who cares
-func (f *FileBuildStorage) RetrieveSumStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+//todo: implement sometime in the future?
+func (f *FileBuildStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
 	return nil, errors.New("nope")
 }
 

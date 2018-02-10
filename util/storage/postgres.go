@@ -115,30 +115,30 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 	return sums, nil
 }
 
-func (p *PostgresStorage) RetrieveSumStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
-	var sums []models.BuildSummary
-	//if err := p.Connect(); err != nil {
-	//	return sums, errors.New("could not connect to postgres: " + err.Error())
-	//}
-	//defer p.Disconnect()
-	//rows, err := p.db.Query(`SELECT * FROM build_summary WHERE hash = $1`, gitHash)
-	//if err != nil {
-	//	return sums, err
-	//}
-	//defer rows.Close()
-	//for rows.Next() {
-	//	sum := models.BuildSummary{}
-	//	err = rows.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch)
-	//	if err != nil {
-	//		if err == sql.ErrNoRows {
-	//			return sums, BuildSumNotFound(gitHash)
-	//		}
-	//		return sums, err
-	//	}
-	//	//fmt.Println(hi)
-	//	sums = append(sums, sum)
-	//}
-	return sums, nil
+//RetrieveHashStartsWith will return a list of all hashes starting with the partial string in db
+func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+	var hashes []models.BuildSummary
+	if err := p.Connect(); err != nil {
+		return hashes, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	rows, err := p.db.Query(`select distinct (hash), account, repo from build_summary where hash ilike $1`, partialGitHash + "%")
+	if err != nil {
+		return hashes, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var result models.BuildSummary
+		err = rows.Scan(&result.Hash, &result.Account, &result.Repo)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return hashes, BuildSumNotFound(partialGitHash)
+			}
+			return hashes, err
+		}
+		hashes = append(hashes, result)
+	}
+	return hashes, nil
 }
 
 // RetrieveLatestSum will return the latest entry of build_summary where hash=gitHash
