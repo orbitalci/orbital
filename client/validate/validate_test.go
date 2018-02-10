@@ -14,11 +14,10 @@ func TestCmd_RunPathNoFile(t *testing.T) {
 	ui := cli.NewMockUi()
 	cmdd := &cmd{
 		UI: ui,
+		ocelotFileLoc: "/abc/def/test",
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
-
-	args := []string{"/abc/def/test"}
-
+	var args []string
 	expectedError := `Could not read file at /abc/def/test
 Error: open /abc/def/test: no such file or directory
 `
@@ -38,16 +37,17 @@ func TestCmd_RunPathFileNoProcess(t *testing.T) {
 	pwd, _ := os.Getwd()
 	cmdd := &cmd{
 		UI: ui,
+		ocelotFileLoc: pwd + "/test-fixtures/wrong-ocelot.yml",
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
 
-	fileNoExist := []string{pwd + "/test-fixtures/wrong-ocelot.yml"}
+	var args []string
 	filepth := os.ExpandEnv("$HOME/go/src/bitbucket.org/level11consulting/ocelot/client/validate/test-fixtures/wrong-ocelot.yml")
 	expectedError := fmt.Sprintf(`Could not process file, please check make sure the file at %s exists
 Error: yaml: unmarshal errors:
   line 1: cannot unmarshal !!str ` + "`wrong`" + ` into protos.BuildConfig
 `, filepth)
-	if exit := cmdd.Run(fileNoExist); exit != 1 {
+	if exit := cmdd.Run(args); exit != 1 {
 		t.Error("should exit with error code 1", exit)
 	}
 
@@ -63,14 +63,14 @@ func TestCmd_RunPathFileName(t *testing.T) {
 	pwd, _ := os.Getwd()
 	cmdd := &cmd{
 		UI: ui,
+		ocelotFileLoc: pwd + "/test-fixtures/bad-name.yml",
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
 
-	badName := []string{pwd + "/test-fixtures/bad-name.yml"}
-
+	var args []string
 	expectedError := `Your file must be named ocelot.yml
 `
-	if exit := cmdd.Run(badName); exit != 1 {
+	if exit := cmdd.Run(args); exit != 1 {
 		t.Error("should exit with error code 1", exit)
 	}
 
@@ -86,14 +86,14 @@ func TestCmd_RunPathFileWrongFormat(t *testing.T) {
 	pwd, _ := os.Getwd()
 	cmdd := &cmd{
 		UI: ui,
+		ocelotFileLoc: pwd + "/test-fixtures/ocelot.yml",
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
 
-	badName := []string{pwd + "/test-fixtures/ocelot.yml"}
-
+	var args []string
 	expectedError := `Invalid ocelot.yml file: BuildTool must be specified
 `
-	if exit := cmdd.Run(badName); exit != 1 {
+	if exit := cmdd.Run(args); exit != 1 {
 		t.Error("should exit with error code 1", exit)
 	}
 

@@ -9,6 +9,7 @@
 - nexus (jessi)
 - change so that we store info about every stage (marianne)
 
+
 ## BIG TODOs:
 - actions to only take based on branch or w/e 
     - possible solution: add `trigger` section to stage yml?
@@ -39,10 +40,8 @@
 - polling option? idk 
 
 ## bugs: 
-- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command
-- change client's --validate command to take in a value just like all the other commands
-- hash matching only works when you pass in full hash
+~~- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
+~~- change client's --validate command to take in a value just like all the other commands~~
+~~- hash matching only works when you pass in full hash~~
 - fix dev mode (maybe fuck this)
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)
-
-## finished
