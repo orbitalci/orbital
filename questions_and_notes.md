@@ -20,8 +20,9 @@
 - fix dev mode (maybe fuck this)
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
-
 ## BIG TODOs:
+- actually parse out exit codes, not just shit itself if it gets a non-zero one
+- failure notifications
 - actions to only take based on branch or w/e 
     - possible solution: add `trigger` section to stage yml?
         - implementation: when hookhandler receives a message, it will filter on new commit messages and branch to take out stages that do not fit trigger requirements
@@ -37,15 +38,24 @@
 - docker login? - our repo creds model works for this currently, just need to implement part that actually runs docker login
 - do the pipeline thing
 - tighter maven integration?
-- `ocelot kill <hash>` - add a quit channel 
+- `ocelot kill <hash>` - add a quit channel
+- check out worker queue
+	- storing how long your commit waited on the queue 
 - return to old package install list??
     - [docker get script for ex](https://get.docker.com/)    
+
     
-## little TODOs?:  
-- `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
+## little TODOs?: 
+- `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook         
 - polling option? idk
 - `ocelot summary` comand takes in --acct or --hash ????
 - would be cool if we could take in regex like `--acct-repo=level11consulting/orchestr8*` ?  
+- add `who triggered this` value to summary table
+- add *what* triggered this build
+	- command line trigger
+	- pr trigger
+	- commit trigger
+	- etc. 
 
 ## done: 
 ~~- store stages to db~~
