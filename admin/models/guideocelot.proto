@@ -76,6 +76,8 @@ message BuildRuntimeInfo {
     string ip       = 2;
     string grpcPort = 3;
     string hash = 4;
+    string acctName = 5;
+    string repoName = 6;
 }
 
 message LogResponse {
