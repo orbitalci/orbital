@@ -17,11 +17,11 @@ func TestGetConf_fromEnv(t *testing.T) {
 		LogLevel: "error",
 		RegisterIP: "55.259.12.197",
 	}
-	os.Setenv("WERKER_WS_PORT", testConf.servicePort)
-	os.Setenv("WERKER_TYPE", "kubernetes")
-	os.Setenv("WERKER_NAME", testConf.WerkerName)
-	os.Setenv("WERKER_LOG_LEVEL", testConf.LogLevel)
-	os.Setenv("WERKER_REGISTER_IP", testConf.RegisterIP)
+	os.Setenv("WS_PORT", testConf.servicePort)
+	os.Setenv("TYPE", "kubernetes")
+	os.Setenv("NAME", testConf.WerkerName)
+	os.Setenv("LOG_LEVEL", testConf.LogLevel)
+	os.Setenv("REGISTER_IP", testConf.RegisterIP)
 	conf, err := GetConf()
 	if err != nil {
 		t.Fatal("no go ", err)

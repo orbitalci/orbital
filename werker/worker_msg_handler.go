@@ -68,20 +68,22 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	//defers are stacked, will be executed FILO
 
 	defer close(w.infochan)
-	defer builder.Cleanup()
+	defer builder.Cleanup(w.infochan)
 
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
 	setupStart := time.Now()
-	setupResult := builder.Setup(w.infochan, werk)
+	setupResult := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig)
 	setupDura := time.Now().Sub(setupStart)
 	if err := w.Store.AddStageDetail(&models.StageResult{
 		BuildId: werk.Id,
-		Result: setupResult,
+		Stage: setupResult.Stage,
+		Status: int(setupResult.Status),
+		Error: setupResult.Error,
+		Messages: setupResult.Messages,
 	}, setupStart, setupDura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 	}
-
 
 	if setupResult.Status == b.FAIL {
 		ocelog.Log().Error(setupResult.Error)
@@ -101,22 +103,24 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 			stageDura := time.Now().Sub(stageStart)
 			if err := w.Store.AddStageDetail(&models.StageResult{
 				BuildId: werk.Id,
-				Result: stageResult,
+				Stage: stageResult.Stage,
+				Status: int(stageResult.Status),
+				Error: stageResult.Error,
+				Messages: stageResult.Messages,
 			}, stageStart, stageDura.Seconds()); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
 			}
 			break
-		}
-		// build is special because we deploy after this
-		if stage.Name == "build" {
-			// todo: deploy to nexus
 		}
 
 		//store stage output to db
 		stageDura := time.Now().Sub(stageStart)
 		if err := w.Store.AddStageDetail(&models.StageResult{
 			BuildId: werk.Id,
-			Result: stageResult,
+			Stage: stageResult.Stage,
+			Status: int(stageResult.Status),
+			Error: stageResult.Error,
+			Messages: stageResult.Messages,
 		}, stageStart, stageDura.Seconds()); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't store build output")
 		}

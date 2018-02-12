@@ -35,7 +35,8 @@ func splitConsulCredPath(path string) (typ OcyCredType, acctName, credType, info
 	typ = OcyCredMap[pathKeys[1]]
 	acctName = pathKeys[2]
 	credType = pathKeys[3]
-	infoType = pathKeys[4]
+	infoType = strings.Join(pathKeys[4:], "/")
+
 	return
 }
 

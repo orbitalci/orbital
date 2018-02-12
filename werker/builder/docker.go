@@ -2,7 +2,9 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bufio"
 	"context"
 	"errors"
@@ -26,13 +28,13 @@ func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 
-func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
-	setupMessages := []string{}
-	//TODO: do some sort of util for the stage name + formatting
-	stage := "setup"
-	stagePrintln := "SETUP | "
 
-	logout <- []byte(stagePrintln + "Setting up...")
+func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig) *Result {
+	var setupMessages []string
+
+	su := InitStageUtil("setup")
+
+	logout <- []byte(su.GetStageLabel() + "Setting up...")
 
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
@@ -40,7 +42,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	if err != nil {
 		return &Result{
-			Stage:  stage,
+			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 		}
@@ -52,23 +54,20 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't pull image!")
 		return &Result{
-			Stage:  stage,
+			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 			Messages: setupMessages,
 		}
 	}
 	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s \u2713", imageName))
-	//var byt []byte
-	//buf := bufio.NewReader(out)
-	//buf.Read(byt)
-	//fmt.Println(string(byt))
+
 	defer out.Close()
 
 	bufReader := bufio.NewReader(out)
-	d.writeToInfo(stagePrintln, bufReader, logout)
+	d.writeToInfo(su.GetStageLabel(), bufReader, logout)
 
-	logout <- []byte(stagePrintln + "Creating container...")
+	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
 	//container configurations
 	containerConfig := &container.Config{
@@ -82,6 +81,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 	}
 
 	homeDirectory, _ := homedir.Expand("~/.ocelot")
+	// todo: render settingsxml if necessary
 	//host config binds are mount points
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
@@ -94,7 +94,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	if err != nil {
 		return &Result{
-			Stage:  stage,
+			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 			Messages: setupMessages,
@@ -107,20 +107,20 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 		logout <- []byte(warning)
 	}
 
-	logout <- []byte(stagePrintln + "Container created with ID " + resp.ID)
+	logout <- []byte(su.GetStageLabel() + "Container created with ID " + resp.ID)
 
 	d.ContainerId = resp.ID
-
+	ocelog.Log().Debug("starting up container")
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return &Result{
-			Stage:  stage,
+			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 			Messages: setupMessages,
 		}
 	}
 
-	logout <- []byte(stagePrintln + "Container " + resp.ID + " started")
+	logout <- []byte(su.GetStageLabel()  + "Container " + resp.ID + " started")
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
 	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
@@ -131,7 +131,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	if err != nil {
 		return &Result{
-			Stage: stage,
+			Stage: su.GetStage(),
 			Status: FAIL,
 			Error:  err,
 			Messages: setupMessages,
@@ -140,18 +140,37 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask) *Result {
 
 	d.Log = containerLog
 	bufReader = bufio.NewReader(containerLog)
-	d.writeToInfo(stagePrintln, bufReader, logout)
+
+	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
+	if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
+		_, ok := err.(*nexus.NoCreds)
+		if !ok {
+			return &Result{
+				Stage: su.GetStage(),
+				Status: FAIL,
+				Error:  err,
+			}
+		}
+	} else {
+		ocelog.Log().Debug("writing maven settings.xml")
+		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
+		return result
+	}
 
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
+
 	return &Result{
-		Stage:  stage,
+		Stage:  su.GetStage(),
 		Status: PASS,
 		Error:  nil,
 		Messages: setupMessages,
 	}
 }
 
-func (d *Docker) Cleanup() {
+func (d *Docker) Cleanup(logout chan []byte) {
+	su := InitStageUtil("cleanup")
+	logout <- []byte(su.GetStageLabel() + "Performing build cleanup...")
+
 	//TODO: review, should we be creating new contexts for every stage?
 	cleanupCtx := context.Background()
 	if d.Log != nil {
@@ -167,9 +186,8 @@ func (d *Docker) Cleanup() {
 	d.DockerClient.Close()
 }
 
-func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string) *Result {
-	stageMessages := []string{}
 
+func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string) *Result {
 	if len(d.ContainerId) == 0 {
 		return &Result {
 			Stage: stage.Name,
@@ -177,6 +195,13 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 			Error: errors.New("no container exists, setup before executing"),
 		}
 	}
+
+	su := InitStageUtil(stage.Name)
+	return d.Exec(su.GetStage(), su.GetStageLabel(), stage.Env, d.CDAndRunCmds(stage.Script, commitHash), logout)
+}
+
+func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
+	var stageMessages []string
 	ctx := context.Background()
 
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
@@ -184,13 +209,13 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 		AttachStdin: true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env: stage.Env,
-		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
+		Env: env,
+		Cmd: cmds,
 	})
 
 	if err != nil {
 		return &Result{
-			Stage:  stage.Name,
+			Stage:  currStage,
 			Status: FAIL,
 			Error:  err,
 			Messages: stageMessages,
@@ -202,29 +227,29 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 		AttachStdin: true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env: stage.Env,
-		Cmd: d.BuildAndDeploy(stage.Script, commitHash),
+		Env: env,
+		Cmd: cmds,
 	})
 
 	defer attachedExec.Conn.Close()
 
-	d.writeToInfo(strings.ToUpper(stage.Name) + " | ", attachedExec.Reader, logout)
+	d.writeToInfo(currStageStr, attachedExec.Reader, logout)
 	inspector, err := d.DockerClient.ContainerExecInspect(ctx, resp.ID)
 
 
 	if inspector.ExitCode != 0 || err != nil {
-		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage \u2717", stage.Name))
+		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage \u2717", currStage))
 		return &Result{
-			Stage: stage.Name,
+			Stage: currStage,
 			Status: FAIL,
 			Error: err,
 			Messages: stageMessages,
 		}
 	}
 
-	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", stage.Name))
+	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
 	return &Result{
-		Stage:  stage.Name,
+		Stage:  currStage,
 		Status: PASS,
 		Error:  nil,
 		Messages: stageMessages,

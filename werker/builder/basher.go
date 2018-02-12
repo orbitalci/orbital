@@ -37,6 +37,7 @@ func (b *Basher) SetGithubDownloadURL(downloadURL string) {
 	b.GithubDownloadURL = downloadURL
 }
 
+//DownloadCodebase builds bash commands to be executed for downloading the codebase
 func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	var downloadCode []string
 
@@ -57,7 +58,13 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	return downloadCode
 }
 
-func (b *Basher) BuildAndDeploy(cmds []string, commitHash string) []string {
+func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
+	return []string{"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + "'" + settingsXML + "'"}
+}
+
+
+//CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
+func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
 	build := append([]string{"cd /" + commitHash}, cmds...)
 	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(build, " && ")})
 	return buildAndDeploy

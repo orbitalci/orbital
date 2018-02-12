@@ -29,7 +29,10 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"io"
+	"io/ioutil"
 	"os"
+	"path"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -96,43 +99,68 @@ func main() {
 	}
 }
 
-//performs whatever setup is needed by werker, right now copies over bb_download.sh to $HOME/.ocelot
-//
-//***WARINING**** this assumes you're inside of OCELOT ROOT DIR
+//performs whatever setup is needed by werker, right now copies over everything in cmd/werker/templates to $HOME/.ocelot
+// this no longer requires starting werker from a specific place, runtime.Caller(0) knows where this main.go is, and we
+// can build off of that
 func setupWerker() {
-	pwd, _ := os.Getwd()
-	downloadFile, err := os.Open(pwd + "/template/bb_download.sh")
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		ocelog.Log().Error("could not call runtime.Caller? this has never happened before")
+		os.Exit(1)
+	}
+	templdir := path.Join(path.Dir(filename), "template")
+	files, err := ioutil.ReadDir(templdir)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("failed to open code download file")
+		ocelog.IncludeErrField(err).Error("unable to read directory")
+		os.Exit(1)
+	}
+	fmt.Println(templdir)
+	// todo: right now this will only support all the files in template. if we wanna recurse that's cool
+	for _, file := range files {
+		if file.IsDir() {continue}
+		downloadFP := path.Join(templdir, file.Name())
+		destFile, err := homedir.Expand("~/.ocelot/"+file.Name())
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("unable to expand homedir")
+			os.Exit(1)
+		}
+		err = addFileToWerker(downloadFP, destFile)
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("unable to create file ", destFile)
+			os.Exit(1)
+		}
+	}
+}
+
+func addFileToWerker(originPath string, destFile string) (err error) {
+	downloadFile, err := os.Open(originPath)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("failed to open file at ", originPath)
 		return
 	}
 	defer downloadFile.Close()
-
-	destFile, _ := homedir.Expand("~/.ocelot/bb_download.sh")
-
 	// just get rid of old file
 	err = os.Remove(destFile)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("failed to remove old file at ~/.ocelot/bb_download.sh")
+		ocelog.IncludeErrField(err).Error("failed to remove old file at ", destFile)
 	}
-	ocelog.Log().Info("removed old bb_download")
+	ocelog.Log().Info("removed old file at ", destFile)
 
 	destDownloadFile, err := os.Create(destFile)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("failed to create file at ~/.ocelot/bb_download.sh")
+		ocelog.IncludeErrField(err).Error("failed to create file at ", destFile)
 		return
 	}
 	defer destDownloadFile.Close()
-
 	if _, err = io.Copy(destDownloadFile, downloadFile); err != nil {
-		ocelog.IncludeErrField(err).Error("failed to copy file to ~/.ocelot/bb_download.sh")
+		ocelog.IncludeErrField(err).Error("failed to copy file to ", destFile)
 		return
 	}
-
 	err = os.Chmod(destFile, 0555)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("could not change file to be executable")
 		return
 	}
-	ocelog.Log().Info("successfully installed bb_download.sh for use in containers.")
+	ocelog.Log().Info("successfully installed ", destFile, " for use in containers.")
+	return
 }
