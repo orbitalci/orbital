@@ -3,7 +3,6 @@ package storage
 import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
-	//"bytes"
 	"testing"
 	"time"
 	"bytes"
@@ -100,45 +99,22 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 
 }
 
-//func TestPostgresStorage_AddFail(t *testing.T) {
-//	pg, id, cleanup := insertDependentData(t)
-//	defer cleanup(t)
-//	adtl := make(models.FailureData)
-//	adtl["sup"] = "123"
-//	fails := &models.FailureReasons{
-//		Stage: "weeeee",
-//		Status: 0,
-//		Error: "ayyyyyy it broke mayn",
-//		Messages: []string{"why u broken????"},
-//		Additional: adtl,
-//
-//	}
-//	bfr := &models.BuildFailureReason{
-//		BuildId: id,
-//		FailureReasons: fails,
-//	}
-//	err := pg.AddFail(bfr)
-//	defer pg.db.QueryRow(`delete from build_failure_reason where build_id = $1`, id)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	retrieved, err := pg.RetrieveFail(id)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	if retrieved.FailureReasons.Stage != "weeeee" {
-//		t.Error(test.StrFormatErrors("stage", "weeeee", retrieved.FailureReasons.Stage))
-//	}
-//	if retrieved.FailureReasons.Error != "ayyyyyy it broke mayn" {
-//		t.Error(test.StrFormatErrors("error", "ayyyyyy it broke mayn", retrieved.FailureReasons.Error))
-//	}
-//	if retrieved.FailureReasons.Messages[0] != "why u broken????" {
-//		t.Error(test.StrFormatErrors("first message", "why u broken????", retrieved.FailureReasons.Messages[0]))
-//	}
-//	if retrieved.FailureReasons.Additional["sup"] != "123" {
-//		t.Fail()
-//	}
-//	t.Log(retrieved.FailureReasons.Additional)
-//
-//}
+//TODO: finish once I have retrieval down
+func TestPostgresStorage_AddFail(t *testing.T) {
+	pg, id, cleanup := insertDependentData(t)
+	defer cleanup(t)
+	stageResult := &models.StageResult{
+		BuildId: id,
+		Stage: "marianne",
+		Status: 1,
+		Error: nil,
+		Messages: []string{"wow I am amazing"},
+
+	}
+	const shortForm = "2006-01-02 15:04:05"
+	startTime, _ := time.Parse(shortForm,"2018-01-14 18:38:59")
+	err := pg.AddStageDetail(stageResult, startTime, 100)
+	if err != nil {
+		t.Fatal("could not add stage details")
+	}
+}
