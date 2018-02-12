@@ -6,6 +6,7 @@ import (
 	//"bytes"
 	"testing"
 	"time"
+	"bytes"
 )
 
 func TestPostgresStorage_AddSumStart(t *testing.T) {
@@ -74,30 +75,30 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	}
 }
 
-//func TestPostgresStorage_AddOut(t *testing.T) {
-//	pg, id, cleanup := insertDependentData(t)
-//	defer cleanup(t)
-//	txt := "a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf"
-//	out := &models.BuildOutput{
-//		BuildId: id,
-//		Output: txt,
-//	}
-//	err := pg.AddOut(out)
-//	if err != nil {
-//		t.Fatal("could not add out: ", err)
-//	}
-//	retrieved, err := pg.RetrieveOut(id)
-//	if err != nil {
-//		t.Fatal("could not retrieve out: ", err)
-//	}
-//	if retrieved.BuildId != id {
-//		t.Error(test.GenericStrFormatErrors("build id", id, retrieved.BuildId))
-//	}
-//	if retrieved.Output != txt {
-//		t.Error(test.StrFormatErrors("output", txt, retrieved.Output))
-//	}
-//
-//}
+func TestPostgresStorage_AddOut(t *testing.T) {
+	pg, id, cleanup := insertDependentData(t)
+	defer cleanup(t)
+	txt := []byte("a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf")
+	out := &models.BuildOutput{
+		BuildId: id,
+		Output: txt,
+	}
+	err := pg.AddOut(out)
+	if err != nil {
+		t.Fatal("could not add out: ", err)
+	}
+	retrieved, err := pg.RetrieveOut(id)
+	if err != nil {
+		t.Fatal("could not retrieve out: ", err)
+	}
+	if retrieved.BuildId != id {
+		t.Error(test.GenericStrFormatErrors("build id", id, retrieved.BuildId))
+	}
+	if bytes.Compare(retrieved.Output, txt) != 0{
+		t.Error(test.GenericStrFormatErrors("output", txt, retrieved.Output))
+	}
+
+}
 
 //func TestPostgresStorage_AddFail(t *testing.T) {
 //	pg, id, cleanup := insertDependentData(t)
