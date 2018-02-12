@@ -14,7 +14,6 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"io"
 	"strings"
-	"fmt"
 )
 
 type Docker struct{
@@ -185,41 +184,8 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 	}
 
 	su := InitStageUtil(stage.Name)
-	return d.Exec(su.GetStage(), su.GetStageLabel(), stage.Env, d.BuildScript(stage.Script, commitHash), logout)
+	return d.Exec(su.GetStage(), su.GetStageLabel(), stage.Env, d.CDAndRunCmds(stage.Script, commitHash), logout)
 }
-
-//uses the repo creds from admin to store artifact(s)
-func (d *Docker) SaveArtifact(logout chan []byte, task *pb.WerkerTask) *Result {
-	su := &StageUtil{
-		Stage: "SaveArtifact",
-		StageLabel: "SAVE_ARTIFACT | ",
-	}
-
-	logout <- []byte(su.GetStageLabel() + "Saving artifact...")
-
-	if len(d.ContainerId) == 0 {
-		return &Result {
-			Stage: su.GetStage(),
-			Status: FAIL,
-			Error: errors.New("no container exists, setup before executing"),
-		}
-	}
-
-	//check if build tool if set to maven (cause that's the only thing that we use to push to nexus right now)
-	if strings.Compare(task.BuildConf.BuildTool, "maven") != 0 {
-		logout <- []byte(fmt.Sprintf(su.GetStageLabel() + "build tool %s not part of accepted values: %s...", task.BuildConf.BuildTool, "maven"))
-		return &Result {
-			Stage: su.GetStage(),
-			Status: FAIL,
-			Error: errors.New(fmt.Sprintf("build tool %s not part of accepted values: %s...", task.BuildConf.BuildTool, "maven")),
-		}
-	}
-
-	//TODO: check if nexus creds exist
-
-	return d.Exec(su.GetStage(), su.GetStageLabel(), nil, d.PushToNexus(task.CheckoutHash), logout)
-}
-
 
 func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
 	ctx := context.Background()
@@ -258,7 +224,7 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 		return &Result{
 			Stage: currStage,
 			Status: FAIL,
-			Error: nil,
+			Error: err,
 			Messages: []string{"exit code was not zero"},
 		}
 	}

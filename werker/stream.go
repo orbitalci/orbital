@@ -161,7 +161,6 @@ func writeInfoChanToInMemMap(transport *Transport, appCtx *werkerStreamer) {
 		time.Sleep(time.Millisecond)
 	}
 	ocelog.Log().Debug("done with build ", transport.Hash)
-	fmt.Println(string(bytes.Join(build.buildData, []byte("\n"))))
 	out := &models.BuildOutput{
 		BuildId: transport.DbId,
 		Output: bytes.Join(build.buildData, []byte("\n")),

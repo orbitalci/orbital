@@ -98,11 +98,6 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 			}
 			break
 		}
-		// build is special because we save artifacts after this
-		if stage.Name == "build" {
-			builder.SaveArtifact(w.infochan, werk)
-			continue
-		}
 	}
 	dura := time.Now().Sub(start)
 	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {

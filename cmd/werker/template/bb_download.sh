@@ -15,7 +15,7 @@ if [ $# -gt 0 ]; then
   cd /${commit}
   git checkout ${commit}
   echo "Ocelot has finished with downloading source code"
-  while sleep 3600; do :; done
+  while true; do sleep 3800; done
 else
     echo "no arguments were passed in"
     exit 1

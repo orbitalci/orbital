@@ -37,6 +37,7 @@ func (b *Basher) SetGithubDownloadURL(downloadURL string) {
 	b.GithubDownloadURL = downloadURL
 }
 
+//DownloadCodebase builds bash commands to be executed for downloading the codebase
 func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	var downloadCode []string
 
@@ -58,20 +59,13 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 }
 
 func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
-	return []string {"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + settingsXML}
+	return []string{"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + "'" + settingsXML + "'"}
 }
 
-func (b *Basher) BuildScript(cmds []string, commitHash string) []string {
+
+//CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
+func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
 	build := append([]string{"cd /" + commitHash}, cmds...)
 	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(build, " && ")})
 	return buildAndDeploy
-}
-
-func (b *Basher) PushToNexus(commitHash string) []string {
-	push := []string{"cd /" + commitHash}
-	//TODO: how to tell if generated artifact is jar? What if they generate other artifact types?
-	//mvnCmd := "mvn deploy:deploy-file -DgeneratePom=false -Dpackaging=jar -DrepositoryId=nexus -Durl=http://52.26.105.112:8081/nexus/content/repositories/snapshots -Dfile=/home/mariannefeng/git/test/test-ocelot/target/exampleboot-0.0.1-SNAPSHOT.jar -DpomFile=/home/mariannefeng/git/test/test-ocelot/pom.xml"
-	//push = append(push, mvnCmd)
-	runPush := append([]string{"/bin/sh", "-c", strings.Join(push, " && ")})
-	return runPush
 }

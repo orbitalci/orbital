@@ -10,7 +10,6 @@ import (
 type Builder interface {
 	Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig) *Result
 	Execute(actions *pb.Stage, logout chan []byte, commitHash string) *Result
-	SaveArtifact(logout chan []byte, stage *pb.WerkerTask) *Result
 	Cleanup(logout chan []byte)
 }
 

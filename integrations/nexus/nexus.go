@@ -14,13 +14,15 @@ var settingsXml = `<?xml version="1.0" encoding="UTF-8"?>
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd">
   <servers>
-  {{ $name, $url := range .RepoUrl }}
+	{{$username:=.Username}}
+	{{$password:=.Password}}
+	{{ range $name, $url := .RepoUrl }}
     <server>
       <id>{{$name}}</id>
-      <username>{{.Username}}</username>
-      <password>{{.Password}}</password>
+      <username>{{$username}}</username>
+      <password>{{$password}}</password>
     </server>
-  {{ end }}
+	{{ end }}
   </servers>
   <profiles>
     <profile>
