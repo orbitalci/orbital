@@ -19,4 +19,7 @@ const (
 	ConfigPath = "creds"
 	VCSPath = ConfigPath + "/vcs"
 	RepoPath = ConfigPath + "/repo"
+	// nexus stuff
+	Nexus = RepoPath + "/%s/nexus"
+	NexusUrlPath = Nexus + "/repourl"
 )

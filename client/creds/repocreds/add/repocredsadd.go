@@ -84,15 +84,17 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat st
 	if creds.Username, err = UI.Ask("Username: "); err != nil {
 		errorConcat += "\n" + "Username Err: " +  err.Error()
 	}
-	if creds.Type, err = UI.Ask("Type (nexus or artifactory): "); err != nil {
+	if creds.Type, err = UI.Ask("Type (currently nexus is only supported): "); err != nil {
 		errorConcat += "\n" + "Type Err: " +  err.Error()
 	}
 	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
 		errorConcat += "\n" + "Account Name Err: " +  err.Error()
 	}
-	if creds.RepoUrl, err = UI.Ask("Repo URL for uploading repo artifacts: "); err != nil {
-		errorConcat += "\n" + "Repo URL Err: " + err.Error()
-	}
+	//if creds.RepoUrl, err = UI.Ask("Repo Domain for uploading repo artifacts: "); err != nil {
+	//	errorConcat += "\n" + "Repo URL Err: " + err.Error()
+	//} else if strings.Contains(creds.RepoUrl, "http") {
+	//	errorConcat += "\n" + "Repo Domain must not include <http|s://>, see --help"
+	//}
 	if creds.Password, err = UI.AskSecret("Password for Repo Integration: "); err != nil {
 		errorConcat += "\n" + "Password Err: " + err.Error()
 	}
@@ -141,6 +143,7 @@ const synopsis = "Add credentials or a set of them for artifact repositories"
 const help = `
 Usage: ocelot creds repo add
   Add one set of credentials or a list of them.
+  Warning: RepoURL must be just the domain name such as nexus.level11.com or nexus.metaverse.l11.com, as it is only used for filtering at the moment.
   If you specify a filename using:
     ocelot creds add -credfile-loc=<yaml file>
   The client will expect that the yaml is a repo credentials object with an array of artifact repository creds.
@@ -148,9 +151,10 @@ Usage: ocelot creds repo add
     credentials:
     - username: <ARTIFACT_USER>     ---> username for logging into artifact repo (i.e. artifactory / nexus)
       password: <PASSWORD>          ---> password for logging into artifact repo
-      repoUrl: <REPO_URL>           ---> e.g. !!!! get url example from marianne !!!!
+      repoUrl: <REPO_URL>           ---> e.g. nexus.metaverse.l11.com
       acctName: <ACCOUNT_NAME>      ---> e.g. level11consulting
       type: <REPO_TYPE>             ---> e.g. nexus
 
   Retrieves all credentials that ocelot uses to integrate with artifact repositories
+
 `

@@ -68,14 +68,12 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	//defers are stacked, will be executed FILO
 
 	defer close(w.infochan)
-	defer builder.Cleanup()
-	//TODO: write stages to db
-	//TODO: write build data to db
+	defer builder.Cleanup(w.infochan)
 
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 	var stageResults []*b.Result
 
-	setupResult := builder.Setup(w.infochan, werk)
+	setupResult := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig)
 	stageResults = append(stageResults, setupResult)
 	// todo: this is causing panic: runtime error: invalid memory address or nil pointer dereference
 	// on the builder.Cleanup
@@ -99,11 +97,6 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 				ocelog.IncludeErrField(err).Error("couldn't add failure reasons")
 			}
 			break
-		}
-		// build is special because we deploy after this
-		if stage.Name == "build" {
-			// todo: deploy to nexus
-			continue
 		}
 	}
 	dura := time.Now().Sub(start)

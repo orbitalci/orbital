@@ -3,6 +3,7 @@ package storage
 import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	"bytes"
 	"testing"
 	"time"
 )
@@ -76,7 +77,7 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 func TestPostgresStorage_AddOut(t *testing.T) {
 	pg, id, cleanup := insertDependentData(t)
 	defer cleanup(t)
-	txt := "a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf"
+	txt := []byte("a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf")
 	out := &models.BuildOutput{
 		BuildId: id,
 		Output: txt,
@@ -92,8 +93,8 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 	if retrieved.BuildId != id {
 		t.Error(test.GenericStrFormatErrors("build id", id, retrieved.BuildId))
 	}
-	if retrieved.Output != txt {
-		t.Error(test.StrFormatErrors("output", txt, retrieved.Output))
+	if !bytes.Equal(retrieved.Output, txt) {
+		t.Error(test.StrFormatErrors("output", string(txt), string(retrieved.Output)))
 	}
 
 }

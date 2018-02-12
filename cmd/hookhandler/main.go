@@ -43,6 +43,7 @@ func main() {
 	if strings.EqualFold(mode, "dev") {
 		hookHandlerContext = &hh.MockHookHandlerContext{}
 		hookHandlerContext.SetRemoteConfig(&hh.MockRemoteConfig{})
+		ocelog.Log().Info("hookhandler running in dev mode")
 
 	} else {
 		hookHandlerContext = &hh.HookHandlerContext{}

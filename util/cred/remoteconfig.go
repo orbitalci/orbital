@@ -4,7 +4,6 @@ import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"fmt"
 	"github.com/pkg/errors"
@@ -73,7 +72,7 @@ type CVRemoteConfig interface {
 	SetConsul(consul *consul.Consulet)
 	GetVault() ocevault.Vaulty
 	SetVault(vault ocevault.Vaulty)
-	GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error)
+	GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
 	GetPassword(path string) (string, error)
 	AddCreds(path string, anyCred RemoteConfigCred) (err error)
 	StorageCred
@@ -101,18 +100,9 @@ func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 	rc.Vault = vault
 }
 
-// instantiateCredObject is what we will have to add too when we add new credential integrations
-// (ie slack, w/e)
-// todo: find out a way to use either this method or GetCredAt to remove the cred package's dependency on models
-func instantiateCredObject(ocyType OcyCredType) RemoteConfigCred {
-	switch ocyType {
-	case Vcs:
-		return &models.VCSCreds{}
-	case Repo:
-		return &models.RepoCreds{}
-	default:
-		panic("ahh!")
-	}
+// BuildCredKey returns the key for the map[string]RemoteConfigCred map that GetCredAt returns.
+func BuildCredKey(credType string, acctName string) string {
+	return credType + "/" + acctName
 }
 
 // GetCred at will return a map w/ key <cred_type>/<acct_name> to credentials. depending on the OcyCredType,
@@ -123,7 +113,7 @@ func instantiateCredObject(ocyType OcyCredType) RemoteConfigCred {
 //   Example:
 //      creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
 //      vcsCreds := creds.(*models.VCSCreds)
-func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredType) (map[string]RemoteConfigCred, error) {
+func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error) {
 	creds := map[string]RemoteConfigCred{}
 	var err error
 	if rc.Consul.Connected {
@@ -133,10 +123,10 @@ func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, ocyType OcyCredT
 		}
 		for _, v := range configs {
 			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
-			mapKey := credType + "/" + acctName
+			mapKey := BuildCredKey(credType, acctName)
 			foundConfig, ok := creds[mapKey]
 			if !ok {
-				foundConfig = instantiateCredObject(ocyType)
+				foundConfig = rcc.Spawn()
 				foundConfig.SetAcctNameAndType(acctName, credType)
 				if hideSecret {
 					foundConfig.SetSecret("*********")
@@ -277,3 +267,4 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	}
 	return nil, errors.New("could not grab ocelot storage")
 }
+

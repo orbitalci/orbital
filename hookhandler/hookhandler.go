@@ -233,10 +233,11 @@ func getCredConfig() *models.VCSCreds {
 
 //returns config if it exists, bitbucket token, and err
 func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
-	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, cred.Vcs)
+	vcs := models.NewVCSCreds()
+	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, vcs)
 	cf := bbCreds["bitbucket/"+acctName]
 	cfg, ok := cf.(*models.VCSCreds)
-
+	// todo: this error happens even if there are no creds there, need a nil check for better error, and also to save to database?? for visibility
 	if !ok {
 		err = errors.New(fmt.Sprintf("could not cast config as models.VCSCreds, config: %v", cf))
 		return

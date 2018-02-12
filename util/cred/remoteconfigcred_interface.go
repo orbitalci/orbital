@@ -13,4 +13,5 @@ type RemoteConfigCred interface {
 	SetAdditionalFields(key string, val string)
 	AddAdditionalFields(consule *consul.Consulet, path string) error
 	BuildCredPath(credType string, acctName string) string
+	Spawn() RemoteConfigCred
 }
