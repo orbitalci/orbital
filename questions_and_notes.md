@@ -12,7 +12,7 @@
     - queryable by:
         - acctname 
         - acctname/repoName
-        - git hash
+        ~~- git hash~~
     
 ## bugs: 
 - be able to properly handle KILLS (what happens when build is killed halfway?)
@@ -46,6 +46,7 @@
 
     
 ## little TODOs?: 
+- assume that the git = whatever you last pushed up (run `git rev-parse` command) 
 - add ability to query for logs by build id `ocelot logs --build-id 3`
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook         
 - polling option? idk
