@@ -102,32 +102,30 @@ func main() {
 //performs whatever setup is needed by werker, right now copies over everything in cmd/werker/templates to $HOME/.ocelot
 // this no longer requires starting werker from a specific place, runtime.Caller(0) knows where this main.go is, and we
 // can build off of that
+//TODO: this does not work when werker is spawned inside of a docker container. My fix is to make it not exit, bu just log. Profusely.
 func setupWerker() {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		ocelog.Log().Error("could not call runtime.Caller? this has never happened before")
-		os.Exit(1)
 	}
+
 	templdir := path.Join(path.Dir(filename), "template")
 	files, err := ioutil.ReadDir(templdir)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error(fmt.Sprintf("unable to read directory at: %s", templdir))
-		os.Exit(1)
 	}
-	fmt.Println(templdir)
-	// todo: right now this will only support all the files in template. if we wanna recurse that's cool
+
+
 	for _, file := range files {
 		if file.IsDir() {continue}
 		downloadFP := path.Join(templdir, file.Name())
 		destFile, err := homedir.Expand("~/.ocelot/"+file.Name())
 		if err != nil {
 			ocelog.IncludeErrField(err).Error("unable to expand homedir")
-			os.Exit(1)
 		}
 		err = addFileToWerker(downloadFP, destFile)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error("unable to create file ", destFile)
-			os.Exit(1)
 		}
 	}
 }

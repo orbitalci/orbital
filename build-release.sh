@@ -9,10 +9,9 @@ echo "building go project"
 env GOOS=darwin GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
 
 echo "uploading client binary"
-# zip up the client binary
 zip -r ocelot.zip ocelot
 
-# upload zipped client binary into s3
+# upload zipped client binary to s3
 aws s3 cp --acl public-read-write --content-disposition attachment ocelot.zip s3://ocelotty/ocelot.zip
 
 # This build assumes you have your ssh key added to L11 bitbucket
