@@ -81,7 +81,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	}
 
 	homeDirectory, _ := homedir.Expand("~/.ocelot")
-	// todo: render settingsxml if necessary
 	//host config binds are mount points
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable

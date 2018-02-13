@@ -11,6 +11,9 @@ import (
 	"google.golang.org/grpc"
 	"io"
 	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
+	"os"
+	"os/exec"
+	"strings"
 )
 
 const synopsis = "stream logs on running or completed build"
@@ -80,6 +83,30 @@ func (c *cmd) Run(args []string) int {
 		build = &models.Builds{Builds:builds}
 	} else {
 		if c.hash == "ERROR" {
+
+			var (
+				cmdOut []byte
+				cmdHash []byte
+				err    error
+			)
+
+			cmdName := "git"
+
+			getBranch := []string{"rev-parse", "--abbrev-ref",  "HEAD"}
+			if cmdOut, err = exec.Command(cmdName, getBranch...).Output(); err != nil {
+				fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the current branch: ", err)
+			}
+
+			branch := string(cmdOut)
+			getHash := []string{"rev-parse", "origin/" + branch}
+			fmt.Println("ze command: " + strings.Join(getHash, " "))
+			if cmdHash, err = exec.Command(cmdName, getHash...).Output(); err != nil {
+				fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the most recently pushed commit: ", err)
+			}
+
+			sha := string(cmdHash)
+
+			c.UI.Error("hash: " + sha)
 			c.UI.Error("flag --hash is required, otherwise there is no build to tail")
 			return 1
 		}
