@@ -11,9 +11,6 @@ import (
 	"google.golang.org/grpc"
 	"io"
 	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
-	"os"
-	"os/exec"
-	"strings"
 )
 
 const synopsis = "stream logs on running or completed build"
@@ -83,28 +80,10 @@ func (c *cmd) Run(args []string) int {
 		build = &models.Builds{Builds:builds}
 	} else {
 		if c.hash == "ERROR" {
-
-			var (
-				cmdOut []byte
-				err    error
-			)
-
-			cmdName := "git"
-
-			getBranch := []string{"rev-parse", "--abbrev-ref",  "HEAD"}
-			if cmdOut, err = exec.Command(cmdName, getBranch...).Output(); err != nil {
-				fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the current branch: ", err)
-			}
-
-			remoteBranch := fmt.Sprintf("origin/%s", string(cmdOut))
-			if cmdOut, err = exec.Command(cmdName, "rev-parse", strings.TrimSpace(remoteBranch)).Output(); err != nil {
-				fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the most recently pushed commit: ", err)
-			}
-
-			sha := string(cmdOut)
+			sha := commandhelper.FindCurrentHash()
 
 			if len(sha) > 0 {
-				c.UI.Info(fmt.Sprintf("no -hash passed, using detected hash %s", sha))
+				c.UI.Info(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
 				c.hash = sha
 			} else {
 				c.UI.Error("flag --hash is required, otherwise there is no build to tail")
@@ -112,7 +91,6 @@ func (c *cmd) Run(args []string) int {
 			}
 		}
 
-		fmt.Println("BUILD RESP LEN: " + c.hash)
 		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.hash})
 		if err != nil {
 			c.UI.Error("unable to get build runtime! error: " + err.Error())

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"os"
+	"os/exec"
 )
 
 
@@ -37,4 +39,30 @@ func PrettifyTime(timeInSecs float64) string {
 	}
 	prettyTime = append(prettyTime, fmt.Sprintf("%v seconds", seconds))
 	return strings.Join(prettyTime, " ")
+}
+
+//FindCurrentHash will attempt to grab a hash based on the current directory's git data
+func FindCurrentHash() string {
+	var (
+		cmdOut []byte
+		cmdHash []byte
+		err    error
+	)
+
+	cmdName := "git"
+
+	getBranch := []string{"rev-parse", "--abbrev-ref",  "HEAD"}
+	if cmdOut, err = exec.Command(cmdName, getBranch...).Output(); err != nil {
+		fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the current branch: ", err)
+	}
+
+	if len(getBranch) > 0 {
+		remoteBranch := fmt.Sprintf("origin/%s", string(cmdOut))
+		if cmdHash, err = exec.Command(cmdName, "rev-parse", strings.TrimSpace(remoteBranch)).Output(); err != nil {
+			fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the most recently pushed commit: ", err)
+		}
+	}
+
+	sha := strings.TrimSpace(string(cmdHash))
+	return sha
 }
