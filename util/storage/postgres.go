@@ -269,7 +269,8 @@ func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResul
 	for rows.Next() {
 		stage := models.StageResult{}
 		var errString sql.NullString //using sql's NullString because calling .Scan
-		var messages models.JsonStringArray
+		var messages models.JsonStringArray //have to use custom class because messages are stored in json format
+
 		if err = rows.Scan(&stage.StageResultId, &stage.BuildId, &errString, &stage.StartTime, &stage.StageDuration, &stage.Status, &messages, &stage.Stage); err != nil {
 			if err == sql.ErrNoRows {
 				return stages, StagesNotFound(fmt.Sprintf("build id: %v", buildId))
@@ -277,7 +278,6 @@ func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResul
 			return stages, err
 		}
 
-		//if err string is valid, then we set the value in the response
 		if errString.Valid {
 			stage.Error = errString.String
 		}
