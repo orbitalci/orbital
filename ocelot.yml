@@ -3,7 +3,7 @@ buildTool: go
 branches:
   - master
 stages:
-  - name: set_me_up_giiiiirl
+  - name: set_up_please
     script:
       - mkdir -p $GOPATH/src/mah_code
       - cp -r * $GOPATH/src/mah_code
