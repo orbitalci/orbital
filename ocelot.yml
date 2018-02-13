@@ -6,6 +6,6 @@ stages:
   - name: run_tests_giiiiirl
     script:
       - ./run-tests.sh
-  - name: installin_imagez
+  - name: build
     script:
       - ./build-release.sh
