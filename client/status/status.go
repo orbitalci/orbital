@@ -77,7 +77,6 @@ func (c *cmd) Run(args []string) int {
 		}
 	}
 
-
 	ctx := context.Background()
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1

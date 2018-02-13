@@ -97,29 +97,43 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.Builds, error) {
-	log.Log().Debug("requesting buildruntime for " + bq.Hash)
-	//find matching hashes in consul
-	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
-	if err != nil {
-		if _, ok := err.(*rt.ErrBuildDone); !ok {
-			log.IncludeErrField(err)
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-	}
-	log.Log().Debug("build runtimes from consul: " + string(len(buildRtInfo)))
+	var buildRtInfo map[string]*models.BuildRuntimeInfo
+	var err error
 
-	//add matching hashes in db if exists and add acctname/repo to ones found in consul
-	dbResults, err := g.Storage.RetrieveHashStartsWith(bq.Hash)
-	log.Log().Debug("build runtimes from db: " + string(len(dbResults)))
-	for _, build := range dbResults {
-		if _, ok := buildRtInfo[build.Hash]; !ok {
-			buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{
-				Hash: build.Hash,
-				Done: true,
+	if len(bq.Hash) > 0 {
+		//find matching hashes in consul by git hash
+		buildRtInfo, err = rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
+		if err != nil {
+			if _, ok := err.(*rt.ErrBuildDone); !ok {
+				log.IncludeErrField(err)
+				return nil, status.Error(codes.Internal, err.Error())
 			}
 		}
-		buildRtInfo[build.Hash].AcctName = build.Account
-		buildRtInfo[build.Hash].RepoName = build.Repo
+
+		//add matching hashes in db if exists and add acctname/repo to ones found in consul
+		dbResults, err := g.Storage.RetrieveHashStartsWith(bq.Hash)
+
+		if err != nil {
+			return &models.Builds{
+				Builds : buildRtInfo,
+			}, err
+		}
+
+		for _, build := range dbResults {
+			if _, ok := buildRtInfo[build.Hash]; !ok {
+				buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{
+					Hash: build.Hash,
+					Done: true,
+				}
+			}
+			buildRtInfo[build.Hash].AcctName = build.Account
+			buildRtInfo[build.Hash].RepoName = build.Repo
+		}
+	}
+
+	//if a valid build id passed, go ask db for entries
+	if bq.BuildId > 0 {
+
 	}
 
 	builds := &models.Builds{

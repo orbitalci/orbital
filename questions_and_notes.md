@@ -50,12 +50,10 @@
 ## little TODOs?: 
 - add ability to specify if you want all branches built
 - fix `ocelot logs ` retrieval by build_id 
-- assume that the git = whatever you last pushed up (run `git rev-parse` command) 
 - add ability to query for logs by build id `ocelot logs --build-id 3`
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
 - polling option? idk
-- `ocelot summary` comand takes in --acct or --hash ????
-- would be cool if we could take in regex like `--acct-repo=level11consulting/orchestr8*` ?  
+- `ocelot summary` command takes in -repo or --hash?
 - add `who triggered this` value to summary table
 - add *what* triggered this build
 	- command line trigger
@@ -64,6 +62,7 @@
 	- etc. 
 
 ## done:
+~~- assume that the git = whatever you last pushed up (run `git rev-parse` command) ~~
 ~~- fix goddamn tests~~ 
 ~~- store stages to db~~
 ~~- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
