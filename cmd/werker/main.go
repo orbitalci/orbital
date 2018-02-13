@@ -111,7 +111,7 @@ func setupWerker() {
 	templdir := path.Join(path.Dir(filename), "template")
 	files, err := ioutil.ReadDir(templdir)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to read directory")
+		ocelog.IncludeErrField(err).Error(fmt.Sprintf("unable to read directory at: %s", templdir))
 		os.Exit(1)
 	}
 	fmt.Println(templdir)
