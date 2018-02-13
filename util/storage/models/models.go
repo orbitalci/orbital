@@ -106,6 +106,8 @@ func (e *ErrInvalid) Error() string {
 	return e.message
 }
 
+//JsonStringArray exists because list of messages belonging to stages is stored as json in db. To get it to
+//unparse from DB correctly, we have to implement custom Value() + Scan(). Check postgres.go for usage
 type JsonStringArray []string
 
 func (f JsonStringArray) Value() (driver.Value, error) {
