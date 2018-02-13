@@ -66,6 +66,7 @@ services:
       CONSUL_HOST: 172.18.0.1
       NSQD_IP: 172.17.0.1
       NSQLOOKUPD_IP: 172.17.0.1
+      REGISTER_IP: ec2-34-212-13-136.us-west-2.compute.amazonaws.com
     logging:
       driver: "json-file"
       options:
