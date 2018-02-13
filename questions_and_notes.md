@@ -22,6 +22,7 @@
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
 ## BIG TODOs:
+- remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3 
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
 - failure notifications
 - actions to only take based on branch or w/e 
@@ -42,7 +43,7 @@
 - tighter maven integration?
 - `ocelot kill <hash>` - add a quit channel
 - check out worker queue
-	- storing how long your commit waited on the queue 
+	- storing how long your commit waited on the queue
 - return to old package install list??
     - [docker get script for ex](https://get.docker.com/)    
 
