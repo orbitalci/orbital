@@ -11,7 +11,6 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"strings"
 	"time"
-	"math"
 )
 
 const synopsis = "show summary table of specific repo"
@@ -138,7 +137,7 @@ func generateTableRow(summary *models.BuildSummary) []string {
 	row = append(row,
 		fmt.Sprintf("\033[0;%dm%d",color, summary.BuildId),
 		summary.Repo,
-		prettifyTime(summary.BuildDuration),
+		commandhelper.PrettifyTime(summary.BuildDuration),
 		tym.Format("Mon Jan 2 15:04:05"),
 		status,
 		summary.Branch,
@@ -147,21 +146,3 @@ func generateTableRow(summary *models.BuildSummary) []string {
 	return row
 }
 
-//prettifyTime takes in time in seconds and returns a pretty string representation of it
-func prettifyTime(timeInSecs float64) string {
-	if timeInSecs < 0 {
-		return "running"
-	}
-	var prettyTime []string
-	minutes := int(timeInSecs/60)
-	if minutes > 0 {
-		prettyTime = append(prettyTime, fmt.Sprintf("%v minutes", minutes))
-	}
-	seconds := int(math.Mod(timeInSecs, 60))
-	if len(prettyTime) > 0 {
-		prettyTime = append(prettyTime, "and")
-	}
-	prettyTime = append(prettyTime, fmt.Sprintf("%v seconds", seconds))
-	return strings.Join(prettyTime, " ")
-
-}

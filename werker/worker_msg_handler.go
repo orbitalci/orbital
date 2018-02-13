@@ -65,8 +65,8 @@ func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 // MakeItSo will call appropriate builder functions
 func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
-	//defers are stacked, will be executed FILO
 
+	//defers are stacked, will be executed FILO
 	defer close(w.infochan)
 	defer builder.Cleanup(w.infochan)
 
@@ -79,9 +79,11 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 		BuildId: werk.Id,
 		Stage: setupResult.Stage,
 		Status: int(setupResult.Status),
-		Error: setupResult.Error,
+		Error: setupResult.Error.Error(),
 		Messages: setupResult.Messages,
-	}, setupStart, setupDura.Seconds()); err != nil {
+		StartTime: setupStart,
+		StageDuration: setupDura.Seconds(),
+	}); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 	}
 
@@ -105,9 +107,11 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 				BuildId: werk.Id,
 				Stage: stageResult.Stage,
 				Status: int(stageResult.Status),
-				Error: stageResult.Error,
+				Error: stageResult.Error.Error(),
 				Messages: stageResult.Messages,
-			}, stageStart, stageDura.Seconds()); err != nil {
+				StartTime: stageStart,
+				StageDuration: stageDura.Seconds(),
+			}); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
 			}
 			break
@@ -119,9 +123,11 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 			BuildId: werk.Id,
 			Stage: stageResult.Stage,
 			Status: int(stageResult.Status),
-			Error: stageResult.Error,
+			Error: stageResult.Error.Error(),
 			Messages: stageResult.Messages,
-		}, stageStart, stageDura.Seconds()); err != nil {
+			StartTime: stageStart,
+			StageDuration: stageDura.Seconds(),
+		}); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't store build output")
 		}
 
@@ -133,23 +139,3 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
 }
-
-
-//func convertResultToFailureReasons(res *b.Result, id int64) *models.BuildFailureReason {
-//	var err string
-//	if res.Error == nil {
-//		err = ""
-//	} else {
-//		err = res.Error.Error()
-//	}
-//	fr :=  &models.FailureReasons{
-//				Stage: res.Stage,
-//				Status: int32(res.Status),
-//				Error: err,
-//				Messages: res.Messages,
-//			}
-//	return &models.BuildFailureReason{
-//		BuildId: id,
-//		FailureReasons: fr,
-//	}
-//}

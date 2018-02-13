@@ -53,7 +53,7 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 	}, nil
 }
 
-func (g *fakeGuideOcelotClient) StatusByPartialHash(ctx context.Context, partialHash *wrappers.StringValue, opts ...grpc.CallOption) (*Status, error) {
+func (g *fakeGuideOcelotClient) StatusByHash(ctx context.Context, partialHash *wrappers.StringValue, opts ...grpc.CallOption) (*Status, error) {
 	return &Status{}, nil
 }
 

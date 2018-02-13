@@ -30,7 +30,7 @@ service GuideOcelot {
     rpc BuildRuntime (BuildQuery) returns (Builds) {}
     rpc Logs (BuildQuery) returns (stream LogResponse) {}
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {}
-    rpc StatusByPartialHash (google.protobuf.StringValue) returns (Status) {}
+    rpc StatusByHash (google.protobuf.StringValue) returns (Status) {}
 }
 
 message AllCredsWrapper {

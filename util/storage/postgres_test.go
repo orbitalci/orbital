@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 	"bytes"
+	"runtime"
 )
 
 func TestPostgresStorage_AddSumStart(t *testing.T) {
@@ -103,17 +104,19 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 func TestPostgresStorage_AddFail(t *testing.T) {
 	pg, id, cleanup := insertDependentData(t)
 	defer cleanup(t)
+
+	const shortForm = "2006-01-02 15:04:05"
+	startTime, _ := time.Parse(shortForm,"2018-01-14 18:38:59")
 	stageResult := &models.StageResult{
 		BuildId: id,
 		Stage: "marianne",
 		Status: 1,
 		Error: nil,
 		Messages: []string{"wow I am amazing"},
-
+		StartTime: startTime,
+		StageDuration: 100,
 	}
-	const shortForm = "2006-01-02 15:04:05"
-	startTime, _ := time.Parse(shortForm,"2018-01-14 18:38:59")
-	err := pg.AddStageDetail(stageResult, startTime, 100)
+	err := pg.AddStageDetail(stageResult)
 	if err != nil {
 		t.Fatal("could not add stage details")
 	}

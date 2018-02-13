@@ -215,7 +215,6 @@ func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error)
 	}
 	defer p.Disconnect()
 	queryStr := `SELECT * FROM build_output WHERE build_id=$1`
-	//fmt.Println(queryStr, string(buildId))
 	if err := p.db.QueryRow(queryStr, buildId).Scan(&out.BuildId, &out.Output, &out.OutputId); err != nil {
 		return out, err
 	}
@@ -237,7 +236,7 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 }
 
 // AddStageDetail will store the stage data along with a starttime and duration to db
-func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult, stageStart time.Time, stageDur float64) error {
+func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -250,10 +249,42 @@ func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult, stageS
 	if err != nil {
 		return err
 	}
-	if _, err := p.db.Query(queryStr, stageResult.BuildId, stageResult.Stage, stageResult.Error, stageStart.Format(TimeFormat), stageDur, stageResult.Status, string(jsonStr)); err != nil {
+	if _, err := p.db.Query(queryStr, stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime.Format(TimeFormat), stageResult.StageDuration, stageResult.Status, string(jsonStr)); err != nil {
 		return err
 	}
 	return nil
+}
+
+// Retrieve StageDetail will return all stages matching build id
+func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
+	var stages []models.StageResult
+	queryStr := "select * from build_stage_details where build_id = $1 order by starttime asc;"
+	if err := p.Connect(); err != nil {
+		return stages, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	rows, err := p.db.Query(queryStr, buildId)
+
+	defer rows.Close()
+	for rows.Next() {
+		stage := models.StageResult{}
+		var errString sql.NullString //using sql's NullString because calling .Scan
+		var messages models.JsonStringArray
+		if err = rows.Scan(&stage.StageResultId, &stage.BuildId, &errString, &stage.StartTime, &stage.StageDuration, &stage.Status, &messages, &stage.Stage); err != nil {
+			if err == sql.ErrNoRows {
+				return stages, StagesNotFound(fmt.Sprintf("build id: %v", buildId))
+			}
+			return stages, err
+		}
+
+		//if err string is valid, then we set the value in the response
+		if errString.Valid {
+			stage.Error = errString.String
+		}
+		stage.Messages = messages
+		stages = append(stages, stage)
+	}
+	return stages, err
 }
 
 func (p *PostgresStorage) StorageType() string {

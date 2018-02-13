@@ -178,26 +178,46 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 }
 
-func (g *guideOcelotServer) StatusByPartialHash(ctx context.Context, partialHash *wrappers.StringValue) (*models.Status, error) {
-	var status = &models.Status{}
-	//modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
-	//if err != nil {
-	//	return nil, status.Error(codes.Internal, err.Error())
-	//}
-	//for _, model := range modelz {
-	//	summary := &models.BuildSummary{
-	//		Hash: model.Hash,
-	//		Failed: model.Failed,
-	//		BuildTime: &timestamp.Timestamp{Seconds: model.BuildTime.UTC().Unix()},
-	//		Account: model.Account,
-	//		BuildDuration: model.BuildDuration,
-	//		Repo: model.Repo,
-	//		Branch: model.Branch,
-	//		BuildId: model.BuildId,
-	//	}
-	//	summaries.Sums = append(summaries.Sums, summary)
-	//}
-	return status, nil
+func (g *guideOcelotServer) StatusByHash(ctx context.Context, partialHash *wrappers.StringValue) (*models.Status, error) {
+	buildSum, err := g.Storage.RetrieveLatestSum(partialHash.Value)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	//TODO: is there a way around iterating over results and copying over values?
+	var parsedStages []*models.Stage
+	for _, result := range stageResults {
+		stageDupe := &models.Stage{
+			Stage: result.Stage,
+			Error: result.Error,
+			Status: int32(result.Status),
+			Messages: result.Messages,
+			StartTime: &timestamp.Timestamp{Seconds: result.StartTime.UTC().Unix()},
+			StageDuration: result.StageDuration,
+		}
+		parsedStages = append(parsedStages, stageDupe)
+	}
+
+	hashStatus := &models.Status{
+		BuildSum: &models.BuildSummary{
+			Hash: buildSum.Hash,
+			Failed: buildSum.Failed,
+			BuildTime: &timestamp.Timestamp{Seconds: buildSum.BuildTime.UTC().Unix()},
+			Account: buildSum.Account,
+			BuildDuration: buildSum.BuildDuration,
+			Repo: buildSum.Repo,
+			Branch: buildSum.Branch,
+			BuildId: buildSum.BuildId,
+		},
+		Stages: parsedStages,
+	}
+
+	return hashStatus, nil
 
 }
 

@@ -15,8 +15,8 @@
         - git hash
     
 ## bugs: 
-- fix goddamn tests
 - be able to properly handle KILLS (what happens when build is killed halfway?)
+    - [stackoverflow](https://stackoverflow.com/questions/11268943/is-it-possible-to-capture-a-ctrlc-signal-and-run-a-cleanup-function-in-a-defe)
 - fix dev mode (maybe fuck this)
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
@@ -58,7 +58,8 @@
 	- commit trigger
 	- etc. 
 
-## done: 
+## done:
+~~- fix goddamn tests~~ 
 ~~- store stages to db~~
 ~~- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
 ~~- change client's --validate command to take in a value just like all the other commands~~

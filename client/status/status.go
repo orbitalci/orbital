@@ -9,6 +9,10 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
 	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
+	"github.com/golang/protobuf/ptypes/wrappers"
+	"bytes"
+	"github.com/olekukonko/tablewriter"
+	"time"
 )
 
 const synopsis = "show status of specific acctname, acctname/repo, or hash"
@@ -84,7 +88,7 @@ func (c *cmd) Run(args []string) int {
 			Hash: c.hash,
 		})
 		if err != nil {
-			c.UI.Error(fmt.Sprintf("error retrieving status for hash %s. Error: %s", c.hash, err.Error()))
+			c.UI.Error(fmt.Sprintf("error retrieving build runtime for hash %s. Error: %s", c.hash, err.Error()))
 			return 1
 		}
 		if len(builds.Builds) == 0 {
@@ -96,29 +100,47 @@ func (c *cmd) Run(args []string) int {
 			return 0
 		}
 
+
 		//it's okay to iterate here cause list will always contain 1 value
-		//for _, build := range builds.Builds {
-			//buildSum := c.
-			//writ.Append(generateTableRow(sum))
-		//}
+		for _, build := range builds.Builds {
+			//TODO: review w/ somebody - should I just change RetrieveLatestSum to take in partial hash and then we can avoid additional client call?
+			hashStages, err := c.GetClient().StatusByHash(ctx, &wrappers.StringValue{Value: build.Hash})
+			if err != nil {
+				c.UI.Error(fmt.Sprintf("error retrieving status for hash %s. Error: %s", c.hash, err.Error()))
+				return 1
+			}
 
-		//writer := &bytes.Buffer{}
-		//writ := tablewriter.NewWriter(writer)
-		//writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
-		//writ.SetHeader([]string{"Build ID", "Running", "Build Duration", "Start Time", "Result", "Branch", "Hash"})
-		//writ.SetHeaderColor(
-		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		//	tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
-		//
-		//
+			c.UI.Output(fmt.Sprintf("build id %s", hashStages.BuildSum.BuildId))
+			writer := &bytes.Buffer{}
+			writ := tablewriter.NewWriter(writer)
+			writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
+			writ.SetHeader([]string{"Build ID", "Start Time", "Stage Duration", "Status", "Stage", "Messages"})
+			writ.SetHeaderColor(
+				tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+				tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+				tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+				tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+				tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+				tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
 
-		//writ.Render()
-		//c.UI.Output("\n" + writer.String())
+
+			for _, stage := range hashStages.Stages {
+				tym := time.Unix(stage.StartTime.Seconds, int64(stage.StartTime.Nanos))
+				writ.Append([]string{
+					fmt.Sprintf("%v", hashStages.BuildSum.BuildId),
+					tym.Format("Mon Jan 2 15:04:05"),
+					commandhelper.PrettifyTime(stage.StageDuration),
+					fmt.Sprintf("%v", stage.Status),
+					stage.Stage,
+					strings.Join(stage.Messages, "\n")})
+			}
+
+			writ.Render()
+			c.UI.Output("\n" + writer.String())
+			return 0
+		}
+
+
 		return 0
 	}
 
