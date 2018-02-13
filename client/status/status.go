@@ -28,7 +28,7 @@ type cmd struct {
 	config *commandhelper.ClientConfig
 
 	accountRepo string
-	account string
+	repo string
 	hash string
 }
 
@@ -57,7 +57,7 @@ func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	//we accept all 3 flags, but prioritize output in the following order: hash, acct-repo, acct
 	c.flags.StringVar(&c.hash, "hash", "ERROR", "[optional]  <hash> to display build status")
-	c.flags.StringVar(&c.account, "acct", "ERROR", "[optional]  <account> to display build status")
+	c.flags.StringVar(&c.repo, "repo", "ERROR", "[optional]  <repo> to display build status")
 	c.flags.StringVar(&c.accountRepo, "acct-repo", "ERROR", "[optional]  <account>/<repo> to display build status")
 }
 
@@ -66,9 +66,15 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	if c.accountRepo == "ERROR" && c.account == "ERROR" && c.hash == "ERROR" {
-		c.UI.Error("one of the following flags must be set: -acct-repo, -acct, -hash. see --help")
-		return 1
+	if c.accountRepo == "ERROR" && c.repo == "ERROR" && c.hash == "ERROR" {
+		sha := commandhelper.FindCurrentHash()
+		if len(sha) > 0 {
+			c.UI.Warn(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
+			c.hash = sha
+		} else {
+			c.UI.Error("one of the following flags must be set: -acct-repo, -repo, -hash. see --help")
+			return 1
+		}
 	}
 
 
@@ -105,6 +111,9 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	//respect acct-repo next
+	if c.repo != "ERROR" {
+
+	}
 
 	//acct is last
 

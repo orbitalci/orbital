@@ -8,8 +8,9 @@
 - nexus (jessi)
 - `ocelot status` - asks admin to get build runtime (marianne) 
     ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
+    - this should really give you success/failure of some sort
     - queryable by:
-        - acctname 
+        - repoName 
         - acctname/repoName
         ~~- git hash~~
     

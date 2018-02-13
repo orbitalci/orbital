@@ -83,7 +83,7 @@ func (c *cmd) Run(args []string) int {
 			sha := commandhelper.FindCurrentHash()
 
 			if len(sha) > 0 {
-				c.UI.Info(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
+				c.UI.Warn(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
 				c.hash = sha
 			} else {
 				c.UI.Error("flag --hash is required, otherwise there is no build to tail")
