@@ -9,6 +9,7 @@ stages:
       - cp -r * $GOPATH/src/mah_code
       - cd $GOPATH/src/mah_code
       - go get -v -u github.com/golang/dep/cmd/dep
+      - ssh -o "StrictHostKeyChecking no" git@bitbucket.org
       - git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.org/"
       - dep ensure -v
       - ./run-tests.sh
