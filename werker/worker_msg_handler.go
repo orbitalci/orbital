@@ -75,15 +75,8 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	setupStart := time.Now()
 	setupResult := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig)
 	setupDura := time.Now().Sub(setupStart)
-	if err := w.Store.AddStageDetail(&models.StageResult{
-		BuildId: werk.Id,
-		Stage: setupResult.Stage,
-		Status: int(setupResult.Status),
-		Error: setupResult.Error.Error(),
-		Messages: setupResult.Messages,
-		StartTime: setupStart,
-		StageDuration: setupDura.Seconds(),
-	}); err != nil {
+
+	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 	}
 
@@ -97,37 +90,17 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 		stageStart := time.Now()
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
 		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)
-		// any deployment
 		if stageResult.Status == b.FAIL {
 			fail = true
-
-			//store failed output to db
 			stageDura := time.Now().Sub(stageStart)
-			if err := w.Store.AddStageDetail(&models.StageResult{
-				BuildId: werk.Id,
-				Stage: stageResult.Stage,
-				Status: int(stageResult.Status),
-				Error: stageResult.Error.Error(),
-				Messages: stageResult.Messages,
-				StartTime: stageStart,
-				StageDuration: stageDura.Seconds(),
-			}); err != nil {
+			if err := storeStageToDb(w.Store, werk.Id, stageResult, stageStart, stageDura.Seconds()); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
 			}
 			break
 		}
 
-		//store stage output to db
 		stageDura := time.Now().Sub(stageStart)
-		if err := w.Store.AddStageDetail(&models.StageResult{
-			BuildId: werk.Id,
-			Stage: stageResult.Stage,
-			Status: int(stageResult.Status),
-			Error: stageResult.Error.Error(),
-			Messages: stageResult.Messages,
-			StartTime: stageStart,
-			StageDuration: stageDura.Seconds(),
-		}); err != nil {
+		if err := storeStageToDb(w.Store, werk.Id, stageResult, stageStart, stageDura.Seconds()); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't store build output")
 		}
 
@@ -138,4 +111,31 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	}
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
+}
+
+
+//storeStageToDb is a helper function for storing stages to db - this runs on completion of every stage
+func storeStageToDb(storage storage.OcelotStorage, buildId int64, stageResult *b.Result, start time.Time, dur float64) error {
+	var stageErr string
+
+	//convert error to string for storing to db if exists
+	if stageResult.Error != nil {
+		stageErr = stageResult.Error.Error()
+	}
+
+	err := storage.AddStageDetail(&models.StageResult{
+		BuildId: buildId,
+		Stage: stageResult.Stage,
+		Status: int(stageResult.Status),
+		Error: stageErr,
+		Messages: stageResult.Messages,
+		StartTime: start,
+		StageDuration: dur,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
