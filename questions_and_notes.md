@@ -1,7 +1,6 @@
 # more code more problems
 
 ## Questions
-- handling ssh keys or just  `go` & `dep ensure` problems 
 - one repo, multiple pipelines? how to handle that 
     - for example, the docker builder pattern. when deps are updated, the docker base image shoudl be as well. that's all in one repo, but its widely different behavior than build/testing source code.
 
@@ -15,6 +14,7 @@
         ~~- git hash~~
     
 ## bugs: 
+- GOTTA FIGURE OUT WHAT TO DO ABOUT HANDLING SSH KEYS
 - be able to properly handle KILLS (what happens when build is killed halfway?)
     - [stackoverflow](https://stackoverflow.com/questions/11268943/is-it-possible-to-capture-a-ctrlc-signal-and-run-a-cleanup-function-in-a-defe)
 - fix dev mode (maybe fuck this)

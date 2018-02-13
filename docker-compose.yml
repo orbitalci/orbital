@@ -58,6 +58,8 @@ services:
       cache_from:
         - golang:1.9-alpine
     volumes:
+#      this is temporary I just wanna see our stuff build
+      - "/home/ec2-user/.ssh:~/.ssh"
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
       VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
