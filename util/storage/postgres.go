@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const TimeFormat = "2006-01-02 15:04:05"
+
 func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc string) *PostgresStorage {
 	pg := &PostgresStorage{
 		user: user,
@@ -67,9 +69,8 @@ func (p *PostgresStorage) AddSumStart(hash string, starttime time.Time, account 
 	}
 	defer p.Disconnect()
 	var id int64
-	//"2006-01-02 15:04:05"
 	if err := p.db.QueryRow(`INSERT INTO build_summary(hash, starttime, account, repo, branch, failed, buildtime) values ($1,$2,$3,$4,$5,true,-99.999) RETURNING id`,
-		hash, starttime.Format("2006-01-02 15:04:05"), account, repo, branch).Scan(&id); err != nil {
+		hash, starttime.Format(TimeFormat), account, repo, branch).Scan(&id); err != nil {
 			return id, err
 	}
 	return id, nil
@@ -214,7 +215,6 @@ func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error)
 	}
 	defer p.Disconnect()
 	queryStr := `SELECT * FROM build_output WHERE build_id=$1`
-	//fmt.Println(queryStr, string(buildId))
 	if err := p.db.QueryRow(queryStr, buildId).Scan(&out.BuildId, &out.Output, &out.OutputId); err != nil {
 		return out, err
 	}
@@ -235,40 +235,56 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 	return out, err
 }
 
-//
-func (p *PostgresStorage) AddFail(reason *models.BuildFailureReason) error {
+// AddStageDetail will store the stage data along with a starttime and duration to db
+func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-
-	if err := reason.Validate(); err != nil {
+	if err := stageResult.Validate(); err != nil {
 		return err
 	}
-	queryStr := `INSERT INTO build_failure_reason(build_id, reasons) values($1, $2)`
-	jsonStr, err := json.Marshal(reason.FailureReasons)
+	queryStr := `INSERT INTO build_stage_details(build_id, stage, error, starttime, runtime, status, messages) values ($1, $2, $3, $4, $5, $6, $7)`
+	jsonStr, err := json.Marshal(stageResult.Messages)
 	if err != nil {
 		return err
 	}
-	if _, err := p.db.Query(queryStr, reason.BuildId, string(jsonStr)); err != nil {
+	if _, err := p.db.Query(queryStr, stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime.Format(TimeFormat), stageResult.StageDuration, stageResult.Status, string(jsonStr)); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *PostgresStorage) RetrieveFail(buildId int64) (models.BuildFailureReason, error) {
-	out := models.BuildFailureReason{}
+// Retrieve StageDetail will return all stages matching build id
+func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
+	var stages []models.StageResult
+	queryStr := "select id, build_id, error, starttime, runtime, status, messages, stage from build_stage_details where build_id = $1 order by starttime asc;"
 	if err := p.Connect(); err != nil {
-		return out, errors.New("could not connect to postgres: " + err.Error())
+		return stages, errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
+	rows, err := p.db.Query(queryStr, buildId)
 
-	queryStr := `SELECT * FROM build_failure_reason WHERE build_id=$1`
-	if err := p.db.QueryRow(queryStr, buildId).Scan(&out.BuildId, &out.FailureReasons, &out.FailureReasonId); err != nil {
-		return out, err
+	defer rows.Close()
+	for rows.Next() {
+		stage := models.StageResult{}
+		var errString sql.NullString //using sql's NullString because calling .Scan
+		var messages models.JsonStringArray //have to use custom class because messages are stored in json format
+
+		if err = rows.Scan(&stage.StageResultId, &stage.BuildId, &errString, &stage.StartTime, &stage.StageDuration, &stage.Status, &messages, &stage.Stage); err != nil {
+			if err == sql.ErrNoRows {
+				return stages, StagesNotFound(fmt.Sprintf("build id: %v", buildId))
+			}
+			return stages, err
+		}
+
+		if errString.Valid {
+			stage.Error = errString.String
+		}
+		stage.Messages = messages
+		stages = append(stages, stage)
 	}
-	return out, nil
-
+	return stages, err
 }
 
 func (p *PostgresStorage) StorageType() string {

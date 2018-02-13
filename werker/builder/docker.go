@@ -2,7 +2,7 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/integrations/nexus"
+	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bufio"
@@ -14,6 +14,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"io"
 	"strings"
+	"fmt"
 )
 
 type Docker struct{
@@ -27,7 +28,10 @@ func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 
+
 func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig) *Result {
+	var setupMessages []string
+
 	su := InitStageUtil("setup")
 
 	logout <- []byte(su.GetStageLabel() + "Setting up...")
@@ -53,12 +57,11 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
+			Messages: setupMessages,
 		}
 	}
-	//var byt []byte
-	//buf := bufio.NewReader(out)
-	//buf.Read(byt)
-	//fmt.Println(string(byt))
+	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s \u2713", imageName))
+
 	defer out.Close()
 
 	bufReader := bufio.NewReader(out)
@@ -88,13 +91,17 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")
 
+
 	if err != nil {
 		return &Result{
 			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
+			Messages: setupMessages,
 		}
 	}
+
+	setupMessages = append(setupMessages, fmt.Sprint("created build container \u2713"))
 
 	for _, warning := range resp.Warnings {
 		logout <- []byte(warning)
@@ -109,6 +116,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
+			Messages: setupMessages,
 		}
 	}
 
@@ -126,11 +134,13 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			Stage: su.GetStage(),
 			Status: FAIL,
 			Error:  err,
+			Messages: setupMessages,
 		}
 	}
 
 	d.Log = containerLog
 	bufReader = bufio.NewReader(containerLog)
+
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 	if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
 		_, ok := err.(*nexus.NoCreds)
@@ -144,13 +154,16 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	} else {
 		ocelog.Log().Debug("writing maven settings.xml")
 		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
-		//d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 		return result
 	}
+
+	setupMessages = append(setupMessages, "completed setup stage \u2713")
+
 	return &Result{
 		Stage:  su.GetStage(),
 		Status: PASS,
 		Error:  nil,
+		Messages: setupMessages,
 	}
 }
 
@@ -188,6 +201,7 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 }
 
 func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
+	var stageMessages []string
 	ctx := context.Background()
 
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
@@ -204,6 +218,7 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 			Stage:  currStage,
 			Status: FAIL,
 			Error:  err,
+			Messages: stageMessages,
 		}
 	}
 
@@ -220,26 +235,24 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 
 	d.writeToInfo(currStageStr, attachedExec.Reader, logout)
 	inspector, err := d.DockerClient.ContainerExecInspect(ctx, resp.ID)
-	if inspector.ExitCode != 0 {
+
+
+	if inspector.ExitCode != 0 || err != nil {
+		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage \u2717", currStage))
 		return &Result{
 			Stage: currStage,
 			Status: FAIL,
 			Error: err,
-			Messages: []string{"exit code was not zero"},
+			Messages: stageMessages,
 		}
 	}
 
-	if err != nil {
-		return &Result{
-			Stage:  currStage,
-			Status: FAIL,
-			Error:  err,
-		}
-	}
+	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
 	return &Result{
 		Stage:  currStage,
 		Status: PASS,
 		Error:  nil,
+		Messages: stageMessages,
 	}
 }
 

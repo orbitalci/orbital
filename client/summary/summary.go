@@ -19,13 +19,14 @@ Usage: ocelot summary -acct-repo <acct>/<repo>
   Retrieve summary table of a specific repo (i.e. level11consulting/ocelot). If -limit is not specified, then the 
   limit will be set to 5, and only the last 5 runs will be shown.
   Full usage:
-    $ ocelot summary -acct-repo jessishank/mytestocy -limit 2
-    +----------+------------+-----------+--------+--------+--------------------+---------------------+----------+
-    |  HASH    |  ACCOUNT   |   REPO    | BRANCH | FAILED | BUILD DURATION (S) |     START TIME      | BUILD ID |
-    +----------+------------+-----------+--------+--------+--------------------+---------------------+----------+
-    | ..75e9.. | jessishank | mytestocy | master | false  |             14.120 | Wed Jan 17 08:32:27 |       70 |
-    | ..7860.. | jessishank | mytestocy | master | false  |             14.249 | Wed Jan 17 08:29:12 |       69 |
-    +----------+------------+-----------+--------+--------+--------------------+---------------------+----------+
+    $ ocelot summary -acct-repo mariannefeng/test-ocelot -limit 2
+
++----------+-------------+--------------------------+--------------------+--------+--------+------------------------------------------+
+| BUILD ID |    REPO     |      BUILD DURATION      |     START TIME     | RESULT | BRANCH |                   HASH                   |
++----------+-------------+--------------------------+--------------------+--------+--------+------------------------------------------+
+| 20       | test-ocelot | 2 minutes and 37 seconds | Thu Feb 8 10:58:36 | PASS   | master | 2f4117d4a38eede1d7c8db27d94253491bf2064d |
+| 19       | test-ocelot | running                  | Thu Feb 8 10:54:06 | FAIL   | master | 2f4117d4a38eede1d7c8db27d94253491bf2064d |
++----------+-------------+--------------------------+--------------------+--------+--------+------------------------------------------+
 
 `
 
@@ -65,11 +66,9 @@ func (c *cmd) Help() string {
 	return help
 }
 
-
-
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.accountRepo, "acct-repo", "ERROR", "*REQUIRED*  <account>/<repo> to track")
+	c.flags.StringVar(&c.accountRepo, "acct-repo", "ERROR", "<account>/<repo> to display build summaries for ")
 	c.flags.IntVar(&c.limit, "limit", 5, "number of rows to fetch")
 }
 
@@ -101,27 +100,49 @@ func (c *cmd) Run(args []string) int {
 	}
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
-	writ.SetHeader([]string{"Hash", "Account", "Repo", "Branch", "Failed", "Build Duration (s)", "Start Time", "Build ID"})
+	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
+	writ.SetHeader([]string{"Build ID", "Repo", "Build Duration", "Start Time", "Result", "Branch", "Hash"})
+	writ.SetHeaderColor(
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
 
 	for _, sum := range summaries.Sums {
 		writ.Append(generateTableRow(sum))
 	}
 	writ.Render()
-	c.UI.Info(writer.String())
+	c.UI.Output("\n" + writer.String())
 	return 0
 }
 
 func generateTableRow(summary *models.BuildSummary) []string {
 	tym := time.Unix(summary.BuildTime.Seconds, int64(summary.BuildTime.Nanos))
-	row := []string{
-		summary.Hash,
-		summary.Account,
-		summary.Repo,
-		summary.Branch,
-		fmt.Sprintf("%t", summary.Failed),
-		fmt.Sprintf("%.3f", summary.BuildDuration),
-		tym.Format("Mon Jan 2 15:04:05"),
-		fmt.Sprintf("%d", summary.BuildId),
+	var row []string
+	var color int
+	var status string
+	//we color line output based on success/failure
+	if summary.Failed {
+		status = "FAIL"
+		//status = "\u2717"
+		color = 31
+	} else {
+		status = "PASS"
+		//status = "\u2713"
+		color = 32
 	}
+	row = append(row,
+		fmt.Sprintf("\033[0;%dm%d",color, summary.BuildId),
+		summary.Repo,
+		commandhelper.PrettifyTime(summary.BuildDuration),
+		tym.Format("Mon Jan 2 15:04:05"),
+		status,
+		summary.Branch,
+		fmt.Sprintf("%v\033[0m",summary.Hash),
+	)
 	return row
 }
+

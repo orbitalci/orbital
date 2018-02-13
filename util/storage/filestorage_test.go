@@ -18,11 +18,10 @@ var fileStorage = []struct {
 	duration float64
 	id int64
 	output string
-	failureReason *models.FailureReasons
 }{
-	{"1238ejs7", time.Now(), "jessi", "toast", "better_branch", false, 19238.834, 0, "apoweiuraoijdncvklsdixgyuaw;elkkmafs8ery239283490", nil},
-	{"alsdkurnv", time.Now().Add(time.Second*25), "scooby", "snacks", "mystic", false, 129.87238, 0, "a;lswe39mnfxco985m.ncxzilo", nil},
-	{"123cc34", time.Now().Add(time.Second*400), "brunswick", "york", "jersey", false, 689.3128, 0, "38a.cxv89uew,.mzxkl82!!!!!", nil},
+	{"1238ejs7", time.Now(), "jessi", "toast", "better_branch", false, 19238.834, 0, "apoweiuraoijdncvklsdixgyuaw;elkkmafs8ery239283490"},
+	{"alsdkurnv", time.Now().Add(time.Second*25), "scooby", "snacks", "mystic", false, 129.87238, 0, "a;lswe39mnfxco985m.ncxzilo"},
+	{"123cc34", time.Now().Add(time.Second*400), "brunswick", "york", "jersey", false, 689.3128, 0, "38a.cxv89uew,.mzxkl82!!!!!"},
 }
 
 func TestFileBuildStorage_BigOlTestBoi(t *testing.T) {

@@ -10,8 +10,7 @@ import (
 	"github.com/mitchellh/cli"
 	"google.golang.org/grpc"
 	"io"
-	"bytes"
-	"github.com/olekukonko/tablewriter"
+	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
 )
 
 const synopsis = "stream logs on running or completed build"
@@ -93,38 +92,8 @@ func (c *cmd) Run(args []string) int {
 
 	if len(build.Builds) > 1 {
 		c.UI.Info(fmt.Sprintf("it's your lucky day, there's %d hashes matching that str. Please enter a more complete git hash", len(build.Builds)))
-
-		writer := &bytes.Buffer{}
-		writ := tablewriter.NewWriter(writer)
-		writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
-		writ.SetHeader([]string{"Hash", "Repo", "Account Name"})
-		writ.SetHeaderColor(
-			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
-
-		for _, build := range build.Builds {
-			var buildLine []string
-			buildLine = append(buildLine, build.Hash)
-			repoName := build.RepoName
-			acctName := build.AcctName
-
-			if len(repoName) == 0 {
-				repoName = "---"
-			}
-
-			if len(acctName) == 0 {
-				acctName = "---"
-			}
-
-			buildLine = append(buildLine, repoName)
-			buildLine = append(buildLine, acctName)
-
-			writ.Append(buildLine)
-		}
-
-		writ.Render()
-		c.UI.Output(writer.String())
+		c.UI.Output(cmd_table.SelectFromHashes(build))
+		return 0
 	} else if len(build.Builds) == 1 {
 		for _, build := range build.Builds {
 			if build.Done {

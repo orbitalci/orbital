@@ -13,20 +13,9 @@ const (
 	Postgres
 )
 
-
-
-
 type Stringy interface {
 	StorageType() string
 }
-// Interface for any storage type that we pick (mongo, mysql, filesystem..)
-// BuildOutput is for storing build output from docker container.
-//type BuildOutput interface {
-//	Retrieve(gitHash string) ([]byte, error)
-//	StoreOutput(gitHash string, data []byte) error
-//	Stringy
-//}
-
 
 type BuildOut interface {
 	AddOut(output *models.BuildOutput) error
@@ -45,25 +34,24 @@ type BuildSum interface {
 	RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error)
 }
 
-type FailReason interface {
-	AddFail(reason *models.BuildFailureReason) error
-	RetrieveFail(buildId int64) (models.BuildFailureReason, error)
+type BuildStage interface {
+	AddStageDetail(stageResult *models.StageResult) error
+	RetrieveStageDetail(buildId int64) ([]models.StageResult, error)
 }
 
 
 type OcelotStorage interface {
 	BuildOut
 	BuildSum
-	FailReason
+	BuildStage
 	Stringy
 }
 
 var (
 	BUILD_SUM_404 = "no build summary found for %s"
-	FAIL_REASON_404 = "no failure reasons found for %s"
+	STAGE_REASON_404 = "no stages found for %s"
 	BUILD_OUT_404 = "no build output found for %s"
 )
-
 
 
 func BuildSumNotFound(id string) *ErrNotFound {
@@ -74,8 +62,8 @@ func BuildOutNotFound(id string) *ErrNotFound {
 	return &ErrNotFound{fmt.Sprintf(BUILD_OUT_404, id)}
 }
 
-func FailReasonNotFound(id string) *ErrNotFound {
-	return &ErrNotFound{fmt.Sprintf(FAIL_REASON_404, id)}
+func StagesNotFound(id string) *ErrNotFound {
+	return &ErrNotFound{fmt.Sprintf(STAGE_REASON_404, id)}
 }
 
 type ErrNotFound struct {

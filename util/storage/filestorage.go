@@ -261,11 +261,11 @@ func (f *FileBuildStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOu
 	return out, err
 }
 
-// todo; implement add fail / retrieve fail
-func (f *FileBuildStorage) AddFail(reason *models.BuildFailureReason) error {
+// todo; implement stages
+func (f *FileBuildStorage) AddStageDetail(stageResult *models.StageResult) error {
 	return nil
 }
 
-func (f *FileBuildStorage) RetrieveFail(buildId int64) (models.BuildFailureReason, error) {
-	return models.BuildFailureReason{}, nil
+func(f *FileBuildStorage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
+	return []models.StageResult{}, nil
 }

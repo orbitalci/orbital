@@ -15,16 +15,16 @@ type Builder interface {
 
 type Result struct {
 	Stage    string
-	Status   StageResult
+	Status   StageResultVal
 	Error    error
 	Messages []string
 }
 
-type StageResult int32
+type StageResultVal int32
 
 const (
-	PASS	StageResult = 0
-	FAIL	StageResult = 1
+	PASS	StageResultVal = 0
+	FAIL	StageResultVal = 1
 )
 
 //helper functions for stages, doesn't handle camelcase right now so if you want that set the values

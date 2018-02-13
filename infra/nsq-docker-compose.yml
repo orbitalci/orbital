@@ -5,7 +5,7 @@ services:
     image: nsqio/nsq
     command: >
       /nsqlookupd
-      -broadcast-address 172.17.0.1:4160
+      -broadcast-address localhost:4160
     ports:
       - 4160:4160
       - 4161:4161
@@ -18,7 +18,7 @@ services:
     image: nsqio/nsq
     command: >
       /nsqd
-      -broadcast-address 172.17.0.1
+      -broadcast-address localhost
       -lookupd-tcp-address nsqlookupd:4160
     ports:
       - 4150:4150

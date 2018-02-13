@@ -13,12 +13,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-//this is our grpc server struct
+//this is our grpc server, it responds to client requests
 type guideOcelotServer struct {
 	RemoteConfig   cred.CVRemoteConfig
 	Deserializer   *deserialize.Deserializer
@@ -27,7 +28,6 @@ type guideOcelotServer struct {
 	Storage 	   storage.OcelotStorage
 }
 
-//TODO: what about adding error field to response? Do something nice about
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	log.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
@@ -174,6 +174,50 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 		summaries.Sums = append(summaries.Sums, summary)
 	}
 	return summaries, nil
+
+}
+
+//StatusByHash will retrieve you the status (build summary + stages) of a partial git hash. Not currently used anywhere
+func (g *guideOcelotServer) StatusByHash(ctx context.Context, partialHash *wrappers.StringValue) (*models.Status, error) {
+	buildSum, err := g.Storage.RetrieveLatestSum(partialHash.Value)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	//TODO: is there a way around iterating over results and copying over values?
+	var parsedStages []*models.Stage
+	for _, result := range stageResults {
+		stageDupe := &models.Stage{
+			Stage: result.Stage,
+			Error: result.Error,
+			Status: int32(result.Status),
+			Messages: result.Messages,
+			StartTime: &timestamp.Timestamp{Seconds: result.StartTime.UTC().Unix()},
+			StageDuration: result.StageDuration,
+		}
+		parsedStages = append(parsedStages, stageDupe)
+	}
+
+	hashStatus := &models.Status{
+		BuildSum: &models.BuildSummary{
+			Hash: buildSum.Hash,
+			Failed: buildSum.Failed,
+			BuildTime: &timestamp.Timestamp{Seconds: buildSum.BuildTime.UTC().Unix()},
+			Account: buildSum.Account,
+			BuildDuration: buildSum.BuildDuration,
+			Repo: buildSum.Repo,
+			Branch: buildSum.Branch,
+			BuildId: buildSum.BuildId,
+		},
+		Stages: parsedStages,
+	}
+
+	return hashStatus, nil
 
 }
 

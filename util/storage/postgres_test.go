@@ -3,9 +3,9 @@ package storage
 import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
-	"bytes"
 	"testing"
 	"time"
+	"bytes"
 )
 
 func TestPostgresStorage_AddSumStart(t *testing.T) {
@@ -93,51 +93,61 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 	if retrieved.BuildId != id {
 		t.Error(test.GenericStrFormatErrors("build id", id, retrieved.BuildId))
 	}
-	if !bytes.Equal(retrieved.Output, txt) {
-		t.Error(test.StrFormatErrors("output", string(txt), string(retrieved.Output)))
+	if bytes.Compare(retrieved.Output, txt) != 0{
+		t.Error(test.GenericStrFormatErrors("output", txt, retrieved.Output))
 	}
 
 }
 
-func TestPostgresStorage_AddFail(t *testing.T) {
+func TestPostgresStorage_AddStageDetail(t *testing.T) {
 	pg, id, cleanup := insertDependentData(t)
 	defer cleanup(t)
-	adtl := make(models.FailureData)
-	adtl["sup"] = "123"
-	fails := &models.FailureReasons{
-		Stage: "weeeee",
-		Status: 0,
-		Error: "ayyyyyy it broke mayn",
-		Messages: []string{"why u broken????"},
-		Additional: adtl,
 
-	}
-	bfr := &models.BuildFailureReason{
+	const shortForm = "2006-01-02 15:04:05"
+	startTime, _ := time.Parse(shortForm,"2018-01-14 18:38:59")
+	stageMessage := []string{"wow I am amazing"}
+
+	stageResult := &models.StageResult{
 		BuildId: id,
-		FailureReasons: fails,
+		Error: "",
+		StartTime: startTime,
+		StageDuration: 100,
+		Status: 1,
+		Messages: stageMessage,
+		Stage: "marianne",
 	}
-	err := pg.AddFail(bfr)
-	defer pg.db.QueryRow(`delete from build_failure_reason where build_id = $1`, id)
+	err := pg.AddStageDetail(stageResult)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("could not add stage details", err)
 	}
 
-	retrieved, err := pg.RetrieveFail(id)
+	stageResults, err := pg.RetrieveStageDetail(id)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("could not get stage details", err)
 	}
-	if retrieved.FailureReasons.Stage != "weeeee" {
-		t.Error(test.StrFormatErrors("stage", "weeeee", retrieved.FailureReasons.Stage))
-	}
-	if retrieved.FailureReasons.Error != "ayyyyyy it broke mayn" {
-		t.Error(test.StrFormatErrors("error", "ayyyyyy it broke mayn", retrieved.FailureReasons.Error))
-	}
-	if retrieved.FailureReasons.Messages[0] != "why u broken????" {
-		t.Error(test.StrFormatErrors("first message", "why u broken????", retrieved.FailureReasons.Messages[0]))
-	}
-	if retrieved.FailureReasons.Additional["sup"] != "123" {
-		t.Fail()
-	}
-	t.Log(retrieved.FailureReasons.Additional)
 
+	if len(stageResults) != 1 {
+		t.Error(test.GenericStrFormatErrors("stage length", 1, len(stageResults)))
+	}
+
+	for _, stage := range stageResults {
+		if stage.StageResultId != 1 {
+			t.Error(test.GenericStrFormatErrors("postgres assigned stage result id", 1, stage.StageResultId))
+		}
+		if stage.BuildId != 1 {
+			t.Error(test.GenericStrFormatErrors("test build id", 1, stage.BuildId))
+		}
+		if len(stage.Error) != 0 {
+			t.Error(test.GenericStrFormatErrors("stage err length", 0, len(stage.Error)))
+		}
+		if stage.Stage != "marianne" {
+			t.Error(test.GenericStrFormatErrors("stage name", "marianne", stage.Stage))
+		}
+		if len(stage.Messages) != len(stageMessage) || stage.Messages[0] != stageMessage[0] {
+			t.Error(test.GenericStrFormatErrors("stage messages", stageMessage, stage.Messages))
+		}
+		if stage.StageDuration != 100 {
+			t.Error(test.GenericStrFormatErrors("stage duration", 100, stage.Messages))
+		}
+	}
 }
