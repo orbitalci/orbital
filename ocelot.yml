@@ -5,7 +5,9 @@ branches:
 stages:
   - name: set_me_up_giiiiirl
     script:
+      - cd $GOPATH/src
       - go get github.com/golang/dep/cmd/dep
+      - cd -
       - dep ensure -v
       - ./run-tests.sh
   - name: build
