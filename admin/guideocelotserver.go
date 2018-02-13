@@ -97,16 +97,20 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.Builds, error) {
+	log.Log().Debug("requesting buildruntime for " + bq.Hash)
 	//find matching hashes in consul
 	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 	if err != nil {
 		if _, ok := err.(*rt.ErrBuildDone); !ok {
+			log.IncludeErrField(err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
+	log.Log().Debug("build runtimes from consul: " + string(len(buildRtInfo)))
 
 	//add matching hashes in db if exists and add acctname/repo to ones found in consul
 	dbResults, err := g.Storage.RetrieveHashStartsWith(bq.Hash)
+	log.Log().Debug("build runtimes from db: " + string(len(dbResults)))
 	for _, build := range dbResults {
 		if _, ok := buildRtInfo[build.Hash]; !ok {
 			buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{

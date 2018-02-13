@@ -112,6 +112,7 @@ func (c *cmd) Run(args []string) int {
 			}
 		}
 
+		fmt.Println("BUILD RESP LEN: " + c.hash)
 		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.hash})
 		if err != nil {
 			c.UI.Error("unable to get build runtime! error: " + err.Error())
