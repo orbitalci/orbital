@@ -1,4 +1,4 @@
-image: golang:1.9
+image: b529a217dbb4
 buildTool: go
 branches:
   - master
