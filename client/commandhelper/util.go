@@ -41,7 +41,7 @@ func PrettifyTime(timeInSecs float64) string {
 	return strings.Join(prettyTime, " ")
 }
 
-//FindCurrentHash will attempt to grab a hash based on the current directory's git data
+//FindCurrentHash will attempt to grab a hash based on running git commands - see client/output/output.go for usage
 func FindCurrentHash() string {
 	var (
 		cmdOut []byte

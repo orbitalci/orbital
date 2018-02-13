@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-const DefaultCallbackURL = "http://52.26.105.112/bitbucket"
+const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
 //TODO: callback url is set as env. variable on admin, or passed in via command line

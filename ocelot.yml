@@ -2,7 +2,6 @@ image: golang:1.9-alpine
 buildTool: go
 branches:
   - master
-  - detect_hash
 stages:
   - name: set_me_up_giiiiirl
     script:
