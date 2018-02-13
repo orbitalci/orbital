@@ -9,6 +9,7 @@ stages:
       - cp -r * $GOPATH/src/mah_code
       - cd $GOPATH/src/mah_code
       - go get -v -u github.com/golang/dep/cmd/dep
+      - ssh -o "StrictHostKeyChecking no" git@bitbucket.org
       - dep ensure -v
       - ./run-tests.sh
   - name: build
