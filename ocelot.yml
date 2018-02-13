@@ -1,10 +1,11 @@
-image: jessishank/ocelot-build
+image: golang:1.9-alpine
 buildTool: go
 branches:
   - master
 stages:
-  - name: run_tests_giiiiirl
+  - name: set_me_up_giiiiirl
     script:
+      - dep ensure -v
       - ./run-tests.sh
   - name: build
     script:

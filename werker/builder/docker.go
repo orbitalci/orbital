@@ -142,27 +142,30 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	bufReader = bufio.NewReader(containerLog)
 
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
-	if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
-		_, ok := err.(*nexus.NoCreds)
-		if !ok {
-			return &Result{
-				Stage: su.GetStage(),
-				Status: FAIL,
-				Error:  err,
+
+	//only if the build tool is maven do we worry about settings.xml
+	if werk.BuildConf.BuildTool == "maven" {
+		if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
+			_, ok := err.(*nexus.NoCreds)
+			if !ok {
+				return &Result{
+					Stage: su.GetStage(),
+					Status: FAIL,
+					Error:  err,
+				}
 			}
+		} else {
+			ocelog.Log().Debug("writing maven settings.xml")
+			result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
+			return result
 		}
-	} else {
-		ocelog.Log().Debug("writing maven settings.xml")
-		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
-		return result
 	}
 
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
-
 	return &Result{
 		Stage:  su.GetStage(),
 		Status: PASS,
-		Error:  nil,
+		Error:  err,
 		Messages: setupMessages,
 	}
 }
@@ -255,7 +258,6 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 		Messages: stageMessages,
 	}
 }
-
 
 func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byte) {
 	scanner := bufio.NewScanner(rd)
