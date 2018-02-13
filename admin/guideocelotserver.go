@@ -97,7 +97,7 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.Builds, error) {
-	var buildRtInfo map[string]*models.BuildRuntimeInfo
+	buildRtInfo := make(map[string]*models.BuildRuntimeInfo)
 	var err error
 
 	if len(bq.Hash) > 0 {
@@ -133,7 +133,19 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 
 	//if a valid build id passed, go ask db for entries
 	if bq.BuildId > 0 {
+		buildSum, err := g.Storage.RetrieveSumByBuildId(bq.BuildId)
+		if err != nil {
+			return &models.Builds{
+				Builds : buildRtInfo,
+			}, err
+		}
 
+		buildRtInfo[buildSum.Hash] = &models.BuildRuntimeInfo{
+			Hash: buildSum.Hash,
+			Done: true,
+			AcctName: buildSum.Account,
+			RepoName: buildSum.Repo,
+		}
 	}
 
 	builds := &models.Builds{

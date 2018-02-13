@@ -5,7 +5,6 @@
     - for example, the docker builder pattern. when deps are updated, the docker base image shoudl be as well. that's all in one repo, but its widely different behavior than build/testing source code.
 
 ## in progress
-- nexus (jessi)
 - `ocelot status` - asks admin to get build runtime (marianne) 
     ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
     - this should really give you success/failure of some sort
@@ -50,8 +49,6 @@
     
 ## little TODOs?: 
 - add ability to specify if you want all branches built
-- fix `ocelot logs ` retrieval by build_id 
-- add ability to query for logs by build id `ocelot logs --build-id 3`
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
 - polling option? idk
 - `ocelot summary` command takes in -repo or --hash?
@@ -63,6 +60,8 @@
 	- etc. 
 
 ## done:
+~~- fix `ocelot logs ` retrieval by build_id~~
+~~- nexus (jessi)~~
 ~~- assume that the git = whatever you last pushed up (run `git rev-parse` command) ~~
 ~~- fix goddamn tests~~ 
 ~~- store stages to db~~
