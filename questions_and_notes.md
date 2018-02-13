@@ -47,6 +47,7 @@
 
     
 ## little TODOs?: 
+- add ability to specify if you want all branches built
 - fix `ocelot logs ` retrieval by build_id 
 - assume that the git = whatever you last pushed up (run `git rev-parse` command) 
 - add ability to query for logs by build id `ocelot logs --build-id 3`
