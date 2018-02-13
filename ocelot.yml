@@ -5,9 +5,13 @@ branches:
 stages:
   - name: set_me_up_giiiiirl
     script:
+      - mkdir -p $GOPATH/src/mah_code
+      - cp * $GOPATH/src/mah_code
+      - cd $GOPATH/src/mah_code
       - go get -v -u github.com/golang/dep/cmd/dep
       - dep ensure -v
       - ./run-tests.sh
   - name: build
     script:
+      - cd $GOPATH/src/mah_code
       - ./build-release.sh
