@@ -258,7 +258,7 @@ func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error 
 // Retrieve StageDetail will return all stages matching build id
 func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
 	var stages []models.StageResult
-	queryStr := "select * from build_stage_details where build_id = $1 order by starttime asc;"
+	queryStr := "select id, build_id, error, starttime, runtime, status, messages, stage from build_stage_details where build_id = $1 order by starttime asc;"
 	if err := p.Connect(); err != nil {
 		return stages, errors.New("could not connect to postgres: " + err.Error())
 	}

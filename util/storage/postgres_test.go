@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 	"bytes"
-	"runtime"
 )
 
 func TestPostgresStorage_AddSumStart(t *testing.T) {
@@ -100,24 +99,55 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 
 }
 
-//TODO: finish once I have retrieval down
-func TestPostgresStorage_AddFail(t *testing.T) {
+func TestPostgresStorage_AddStageDetail(t *testing.T) {
 	pg, id, cleanup := insertDependentData(t)
 	defer cleanup(t)
 
 	const shortForm = "2006-01-02 15:04:05"
 	startTime, _ := time.Parse(shortForm,"2018-01-14 18:38:59")
+	stageMessage := []string{"wow I am amazing"}
+
 	stageResult := &models.StageResult{
 		BuildId: id,
-		Stage: "marianne",
-		Status: 1,
-		Error: nil,
-		Messages: []string{"wow I am amazing"},
+		Error: "",
 		StartTime: startTime,
 		StageDuration: 100,
+		Status: 1,
+		Messages: stageMessage,
+		Stage: "marianne",
 	}
 	err := pg.AddStageDetail(stageResult)
 	if err != nil {
-		t.Fatal("could not add stage details")
+		t.Fatal("could not add stage details", err)
+	}
+
+	stageResults, err := pg.RetrieveStageDetail(id)
+	if err != nil {
+		t.Fatal("could not get stage details", err)
+	}
+
+	if len(stageResults) != 1 {
+		t.Error(test.GenericStrFormatErrors("stage length", 1, len(stageResults)))
+	}
+
+	for _, stage := range stageResults {
+		if stage.StageResultId != 1 {
+			t.Error(test.GenericStrFormatErrors("postgres assigned stage result id", 1, stage.StageResultId))
+		}
+		if stage.BuildId != 1 {
+			t.Error(test.GenericStrFormatErrors("test build id", 1, stage.BuildId))
+		}
+		if len(stage.Error) != 0 {
+			t.Error(test.GenericStrFormatErrors("stage err length", 0, len(stage.Error)))
+		}
+		if stage.Stage != "marianne" {
+			t.Error(test.GenericStrFormatErrors("stage name", "marianne", stage.Stage))
+		}
+		if len(stage.Messages) != len(stageMessage) || stage.Messages[0] != stageMessage[0] {
+			t.Error(test.GenericStrFormatErrors("stage messages", stageMessage, stage.Messages))
+		}
+		if stage.StageDuration != 100 {
+			t.Error(test.GenericStrFormatErrors("stage duration", 100, stage.Messages))
+		}
 	}
 }

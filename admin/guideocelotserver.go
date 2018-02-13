@@ -19,7 +19,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//this is our grpc server struct
+//this is our grpc server, it responds to client requests
 type guideOcelotServer struct {
 	RemoteConfig   cred.CVRemoteConfig
 	Deserializer   *deserialize.Deserializer
@@ -28,7 +28,6 @@ type guideOcelotServer struct {
 	Storage 	   storage.OcelotStorage
 }
 
-//TODO: what about adding error field to response? Do something nice about
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	log.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
@@ -178,6 +177,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 }
 
+//StatusByHash will retrieve you the status (build summary + stages) of a partial git hash. Not currently used anywhere
 func (g *guideOcelotServer) StatusByHash(ctx context.Context, partialHash *wrappers.StringValue) (*models.Status, error) {
 	buildSum, err := g.Storage.RetrieveLatestSum(partialHash.Value)
 	if err != nil {
