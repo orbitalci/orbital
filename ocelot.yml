@@ -1,0 +1,11 @@
+image: jessishank/ocelot-build
+buildTool: go
+branches:
+  - master
+stages:
+  - name: run_tests_giiiiirl
+    script:
+      - ./run-tests.sh
+  - name: installin_imagez
+    script:
+      - ./build-release.sh
