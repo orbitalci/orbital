@@ -101,6 +101,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	}
 
 	setupMessages = append(setupMessages, fmt.Sprint("created build container \u2713"))
+	ocelog.Log().Info("JUST PRINTED build container checkmark MSG")
 
 	for _, warning := range resp.Warnings {
 		logout <- []byte(warning)
@@ -120,6 +121,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	}
 
 	logout <- []byte(su.GetStageLabel()  + "Container " + resp.ID + " started")
+	ocelog.Log().Info("JUST PRINTED CONTAINER STARTED")
+
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
 	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
@@ -141,6 +144,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	bufReader = bufio.NewReader(containerLog)
 
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
+
+	ocelog.Log().Info("PLEASE SHOW UP IN THE LOGS")
 
 	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
 	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadSSHKey(
