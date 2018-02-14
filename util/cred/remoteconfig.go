@@ -151,12 +151,12 @@ func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, rcc RemoteConfig
 	return creds, err
 }
 
-// AddSSHKey adds repo ssh private key to vault
+// AddSSHKey adds repo ssh private key to vault at the usual vault path + /ssh
 func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
 	if rc.Vault != nil {
 		secret := make(map[string]interface{})
 		secret["sshKey"] = sshKeyFile
-		if _, err = rc.Vault.AddUserAuthData(path, secret); err != nil {
+		if _, err = rc.Vault.AddUserAuthData(path + "/ssh", secret); err != nil {
 			return
 		}
 	} else {

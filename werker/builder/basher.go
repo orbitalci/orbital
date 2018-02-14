@@ -58,8 +58,9 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	return downloadCode
 }
 
+//DownloadSSHKey will using the vault token to try to download the ssh key located at the path + `/ssh`
 func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
-	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath)}
+	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath + "/ssh")}
 }
 
 func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
