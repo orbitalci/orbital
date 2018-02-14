@@ -107,6 +107,9 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 			if _, ok := err.(*rt.ErrBuildDone); !ok {
 				log.IncludeErrField(err)
 				return nil, status.Error(codes.Internal, err.Error())
+			} else {
+				//we set error back to nil so that we can continue with the rest of the logic here
+				err = nil
 			}
 		}
 

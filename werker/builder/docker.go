@@ -142,7 +142,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 
-
 	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
 	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadSSHKey(
 		werk.VaultToken,

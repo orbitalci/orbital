@@ -155,7 +155,7 @@ func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, rcc RemoteConfig
 func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
 	if rc.Vault != nil {
 		secret := make(map[string]interface{})
-		secret["sshKey"] = sshKeyFile
+		secret["sshKey"] = string(sshKeyFile)
 		if _, err = rc.Vault.AddUserAuthData(path + "/ssh", secret); err != nil {
 			return
 		}
