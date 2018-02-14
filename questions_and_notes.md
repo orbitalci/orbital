@@ -49,6 +49,7 @@
 
     
 ## little TODOs?: 
+- add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
 - add ability to specify if you want all branches built
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
 - polling option? idk
