@@ -58,6 +58,12 @@ func (g *fakeGuideOcelotClient) StatusByHash(ctx context.Context, partialHash *w
 }
 
 
+func (f *fakeGuideOcelotClient)	SetVCSPrivateKey(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+
+
 //todo: implement for testing
 func (f *fakeGuideOcelotClient) LastFewSummaries(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*Summaries, error) {
 	return &Summaries{}, nil

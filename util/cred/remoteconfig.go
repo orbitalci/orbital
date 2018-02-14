@@ -65,7 +65,7 @@ type StorageCred interface {
 }
 
 
-//RemoteConfig is an abstraction for retrieving/setting creds for ocelot
+//CVRemoteConfig is an abstraction for retrieving/setting creds for ocelot
 //currently uses consul + vault
 type CVRemoteConfig interface {
 	GetConsul()	*consul.Consulet
@@ -75,6 +75,7 @@ type CVRemoteConfig interface {
 	GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
 	GetPassword(path string) (string, error)
 	AddCreds(path string, anyCred RemoteConfigCred) (err error)
+	AddSSHKey(path string, sshKeyFile []byte) (err error)
 	StorageCred
 }
 
@@ -148,6 +149,20 @@ func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, rcc RemoteConfig
 		return creds, errors.New("not connected to consul, unable to retrieve credentials")
 	}
 	return creds, err
+}
+
+// AddSSHKey adds repo ssh private key to vault
+func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
+	if rc.Vault != nil {
+		secret := make(map[string]interface{})
+		secret["sshKey"] = sshKeyFile
+		if _, err = rc.Vault.AddUserAuthData(path, secret); err != nil {
+			return
+		}
+	} else {
+		err = errors.New("no connection to vault, unable to add SSH Key")
+	}
+	return
 }
 
 //GetPassword will return to you the vault password at specified path

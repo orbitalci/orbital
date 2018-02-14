@@ -5,7 +5,6 @@
 # todo: handle sigterm gracefully, after this container should shut down
 
 if [ $# -gt 0 ]; then
-  count=0
   args=("$@")
   bbtoken=${args[0]}
   gitclonepath=${args[1]}

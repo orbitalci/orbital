@@ -58,6 +58,10 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	return downloadCode
 }
 
+func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
+	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath)}
+}
+
 func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
 	return []string{"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + "'" + settingsXML + "'"}
 }

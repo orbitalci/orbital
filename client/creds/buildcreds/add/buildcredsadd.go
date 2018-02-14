@@ -23,6 +23,9 @@ type cmd struct {
 	UI      cli.Ui
 	flags   *flag.FlagSet
 	fileloc string
+	sshKeyFile string
+	acctName string
+	buildType string
 	config  *commandhelper.ClientConfig
 }
 
@@ -41,8 +44,11 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.fileloc, "credfile-loc", "",
-		"Location of yaml file containing creds to upload")
+	c.flags.StringVar(&c.sshKeyFile, "sshfile-loc", "", "location of ssh private key to upload")
+	c.flags.StringVar(&c.acctName, "acctname", "", "account name matching with sshfile-loc")
+	c.flags.StringVar(&c.buildType, "type", "", "build type for this sshfile. Ex: bitbucket")
+
+	c.flags.StringVar(&c.fileloc, "credfile-loc", "","Location of yaml file containing creds to upload")
 }
 
 func (c *cmd) runCredFileUpload(ctx context.Context) int {
@@ -114,6 +120,28 @@ func (c *cmd) runStdinUpload(ctx context.Context) int {
 	return 0
 }
 
+func (c *cmd) uploadSSHKeyFile (ctx context.Context) int {
+	sshKey, err := ioutil.ReadFile(c.sshKeyFile)
+	if err != nil {
+		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
+		return 1
+	}
+
+	_, err = c.config.Client.SetVCSPrivateKey(ctx, &models.SSHKeyWrapper{
+		AcctName: c.acctName,
+		Type: c.buildType,
+		PrivateKey: sshKey,
+	})
+
+	if err != nil {
+		c.UI.Error(fmt.Sprintf("Could not upload private key at %s \nError: %s", c.sshKeyFile, err.Error()))
+		return 1
+	}
+
+	c.UI.Info(fmt.Sprintf("Successfully uploaded private key at %s for %s/%s", c.sshKeyFile, c.buildType, c.acctName))
+	return 0
+}
+
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
@@ -125,10 +153,16 @@ func (c *cmd) Run(args []string) int {
 
 	if c.fileloc != "" {
 		return c.runCredFileUpload(ctx)
-	} else {
+	} else if c.acctName == "" && c.sshKeyFile == "" && c.buildType == "" {
 		return c.runStdinUpload(ctx)
 	}
-	return 0
+
+	if c.acctName != "" && c.sshKeyFile != "" && c.buildType != "" {
+		return c.uploadSSHKeyFile(ctx)
+	} else {
+		c.UI.Error("-acctname, -sshfile-loc and -type must be passed together, -acctname should correspond with the account you'd like the ssh key file to be associated with, and -type should correspond with your acctname")
+		return 1
+	}
 }
 
 func (c *cmd) Synopsis() string {

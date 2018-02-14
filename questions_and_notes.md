@@ -15,6 +15,7 @@
     
 ## bugs: 
 - GOTTA FIGURE OUT WHAT TO DO ABOUT HANDLING SSH KEYS
+    - take in a private key via command line for an account name
 - be able to properly handle KILLS (what happens when build is killed halfway?)
     - [stackoverflow](https://stackoverflow.com/questions/11268943/is-it-possible-to-capture-a-ctrlc-signal-and-run-a-cleanup-function-in-a-defe)
 - fix dev mode (maybe fuck this)
@@ -51,7 +52,7 @@
 - add ability to specify if you want all branches built
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
 - polling option? idk
-- `ocelot summary` command takes in -repo or --hash?
+- `ocelot summary` command takes in -repo or --hash? 
 - add `who triggered this` value to summary table
 - add *what* triggered this build
 	- command line trigger

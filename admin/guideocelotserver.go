@@ -248,7 +248,15 @@ func (g *guideOcelotServer) StatusByHash(ctx context.Context, partialHash *wrapp
 	}
 
 	return hashStatus, nil
+}
 
+func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {
+	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.Type, sshKeyWrapper.AcctName, cred.Vcs)
+	err := g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
+	if err != nil {
+		return &empty.Empty{}, err
+	}
+	return &empty.Empty{}, nil
 }
 
 func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.OcelotStorage) models.GuideOcelotServer {

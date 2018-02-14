@@ -84,7 +84,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	//host config binds are mount points
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
-		Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock", "/home/ec2-user/.ssh:/root/.ssh"},
+		Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
 	}
 
@@ -142,6 +142,17 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 
+
+	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
+	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadSSHKey(
+		werk.VaultToken,
+		cred.BuildCredPath(werk.VcsType, strings.Split(werk.FullName, "/")[0], cred.Vcs)), logout)
+	if result.Error != nil {
+		result.Messages = append(result.Messages, setupMessages...)
+		return result
+	}
+
+
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
 		if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
@@ -156,6 +167,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 		} else {
 			ocelog.Log().Debug("writing maven settings.xml")
 			result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
+			result.Messages = append(result.Messages, setupMessages...)
 			return result
 		}
 	}
