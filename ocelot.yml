@@ -4,7 +4,7 @@ branches:
   - low_hanging_fruits
   - master
 stages:
-  - name: testingg
+  - name: testing
     script:
       - mkdir -p $GOPATH/src/mah_code
       - cp -r * $GOPATH/src/mah_code
