@@ -148,14 +148,17 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	ocelog.Log().Info("PLEASE SHOW UP IN THE LOGS")
 
 	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
+	ocelog.Log().Info(fmt.Println("just said that we're retrieving ssh key and fullname is %s", werk.FullName))
+
+	acctName := strings.Split(werk.FullName, "/")[0]
 	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadSSHKey(
 		werk.VaultToken,
-		cred.BuildCredPath(werk.VcsType, strings.Split(werk.FullName, "/")[0], cred.Vcs)), logout)
+		cred.BuildCredPath(werk.VcsType, acctName, cred.Vcs)), logout)
 	if result.Error != nil {
+		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
 		result.Messages = append(result.Messages, setupMessages...)
 		return result
 	}
-
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
@@ -177,12 +180,14 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	}
 
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
-	return &Result{
-		Stage:  su.GetStage(),
-		Status: PASS,
-		Error:  err,
-		Messages: setupMessages,
-	}
+	result.Messages = append(result.Messages, setupMessages...)
+	return result
+	//return &Result{
+	//	Stage:  su.GetStage(),
+	//	Status: PASS,
+	//	Error:  err,
+	//	Messages: setupMessages,
+	//}
 }
 
 func (d *Docker) Cleanup(logout chan []byte) {
