@@ -1,6 +1,7 @@
 image: golang:1.9
 buildTool: go
 branches:
+  - low_hanging_fruit
   - master
 stages:
   - name: set_up_please
