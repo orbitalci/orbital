@@ -49,6 +49,7 @@
 
     
 ## little TODOs?: 
+- something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
 - add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
 - add ability to specify if you want all branches built
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook

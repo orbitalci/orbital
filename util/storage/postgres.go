@@ -46,6 +46,7 @@ func (p *PostgresStorage) Connect() error {
 }
 
 func (p *PostgresStorage) Disconnect() {
+	fmt.Println("DISCONNECT HO")
 	p.db.Close()
 }
 /*
