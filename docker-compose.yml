@@ -57,6 +57,8 @@ services:
       dockerfile: werker/Dockerfile
       cache_from:
         - golang:1.9-alpine
+    ports:
+      - "9090:9090"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
