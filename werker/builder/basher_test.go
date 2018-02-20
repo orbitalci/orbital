@@ -15,20 +15,17 @@ func TestBasher_DownloadCodebaseDefault(t *testing.T) {
 		VcsType: "bitbucket",
 	}
 	defaultResult := b.DownloadCodebase(wt)
-	if len(defaultResult) != 4 {
-		t.Error(test.GenericStrFormatErrors("default download length", 4, len(defaultResult)))
+	if len(defaultResult) != 3 {
+		t.Error(test.GenericStrFormatErrors("default download length", 3, len(defaultResult)))
 	}
-	if defaultResult[0] != "/.ocelot/bb_download.sh" {
-		t.Error(test.GenericStrFormatErrors("download first param", "/.ocelot/bb_download.sh", defaultResult[0]))
+	if defaultResult[0] != "/bin/sh" {
+		t.Error(test.GenericStrFormatErrors("download first param", "/bin/sh", defaultResult[0]))
 	}
-	if defaultResult[1] != "something" {
-		t.Error(test.GenericStrFormatErrors("download second param(token)", "something", defaultResult[1]))
+	if defaultResult[1] != "-c" {
+		t.Error(test.GenericStrFormatErrors("download second param", "-c", defaultResult[1]))
 	}
-	if defaultResult[2] != "https://x-token-auth:something@bitbucket.org/marianne.git" {
-		t.Error(test.GenericStrFormatErrors("download third param(url)", "https://x-token-auth:something@bitbucket.org/marianne.git", defaultResult[2]))
-	}
-	if defaultResult[3] != "123" {
-		t.Error(test.GenericStrFormatErrors("download fourth param(git hash)", "123", defaultResult[3]))
+	if defaultResult[2] != "/.ocelot/bb_download.sh something https://x-token-auth:something@bitbucket.org/marianne.git 123" {
+		t.Error(test.GenericStrFormatErrors("download third param", "/.ocelot/bb_download.sh something https://x-token-auth:something@bitbucket.org/marianne.git 123", defaultResult[2]))
 	}
 }
 
@@ -42,20 +39,17 @@ func TestBasher_DownloadCodebaseNotDefault(t *testing.T) {
 		VcsType: "bitbucket",
 	}
 	defaultResult := b.DownloadCodebase(wt)
-	if len(defaultResult) != 4 {
-		t.Error(test.GenericStrFormatErrors("default download length", 4, len(defaultResult)))
+	if len(defaultResult) != 3 {
+		t.Error(test.GenericStrFormatErrors("default download length", 3, len(defaultResult)))
 	}
-	if defaultResult[0] != "/.ocelot/bb_download.sh" {
-		t.Error(test.GenericStrFormatErrors("download first param", "/.ocelot/bb_download.sh", defaultResult[0]))
+	if defaultResult[0] != "/bin/sh" {
+		t.Error(test.GenericStrFormatErrors("download first param", "/bin/sh", defaultResult[0]))
 	}
-	if defaultResult[1] != "" {
-		t.Error(test.GenericStrFormatErrors("download second param(token)", "", defaultResult[1]))
+	if defaultResult[1] != "-c" {
+		t.Error(test.GenericStrFormatErrors("download second param", "-c", defaultResult[1]))
 	}
-	if defaultResult[2] != "https://localhost:9090/marianne/is/number/one" {
-		t.Error(test.GenericStrFormatErrors("download third param(url)", "https://localhost:9090/marianne/is/number/one", defaultResult[2]))
-	}
-	if defaultResult[3] != "123" {
-		t.Error(test.GenericStrFormatErrors("download fourth param(git hash)", "123", defaultResult[3]))
+	if defaultResult[2] != "/.ocelot/bb_download.sh  https://localhost:9090/marianne/is/number/one 123" {
+		t.Error(test.GenericStrFormatErrors("download first param", "/.ocelot/bb_download.sh", defaultResult[2]))
 	}
 }
 

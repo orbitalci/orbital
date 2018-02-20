@@ -101,7 +101,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	}
 
 	setupMessages = append(setupMessages, fmt.Sprint("created build container \u2713"))
-	ocelog.Log().Info("JUST PRINTED build container checkmark MSG")
 
 	for _, warning := range resp.Warnings {
 		logout <- []byte(warning)
@@ -121,7 +120,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	}
 
 	logout <- []byte(su.GetStageLabel()  + "Container " + resp.ID + " started")
-	ocelog.Log().Info("JUST PRINTED CONTAINER STARTED")
 
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
@@ -145,8 +143,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 
-	ocelog.Log().Info("PLEASE SHOW UP IN THE LOGS")
-
 	downloadCodebase := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
 	if downloadCodebase.Error != nil {
 		ocelog.Log().Error("an err happened trying to download codebase", downloadCodebase.Error)
@@ -157,7 +153,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 
 	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
-	ocelog.Log().Info(fmt.Println("just said that we're retrieving ssh key and fullname is %s", werk.FullName))
 	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
 
 
@@ -195,12 +190,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
 	result.Messages = append(result.Messages, setupMessages...)
 	return result
-	//return &Result{
-	//	Stage:  su.GetStage(),
-	//	Status: PASS,
-	//	Error:  err,
-	//	Messages: setupMessages,
-	//}
 }
 
 func (d *Docker) Cleanup(logout chan []byte) {
