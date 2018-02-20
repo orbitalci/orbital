@@ -11,7 +11,6 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/mitchellh/go-homedir"
 	"io"
 	"strings"
 	"fmt"
@@ -29,7 +28,7 @@ func NewDockerBuilder(b *Basher) Builder {
 }
 
 
-func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig) *Result {
+func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) *Result {
 	var setupMessages []string
 
 	su := InitStageUtil("setup")
@@ -73,18 +72,19 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	containerConfig := &container.Config{
 		Image: imageName,
 		Env: werk.BuildConf.Env,
-		Cmd: d.DownloadCodebase(werk),
+		Cmd: d.DownloadTemplateFiles(werkerPort),
 		AttachStderr: true,
 		AttachStdout: true,
 		AttachStdin:true,
 		Tty:true,
 	}
 
-	homeDirectory, _ := homedir.Expand("~/.ocelot")
+	//homeDirectory, _ := homedir.Expand("~/.ocelot")
 	//host config binds are mount points
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
-		Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
+		Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
+		//Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
 	}
 
@@ -147,8 +147,19 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	ocelog.Log().Info("PLEASE SHOW UP IN THE LOGS")
 
+	downloadCodebase := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
+	if downloadCodebase.Error != nil {
+		ocelog.Log().Error("an err happened trying to download codebase", downloadCodebase.Error)
+		setupMessages = append(setupMessages, "failed to download codebase")
+		downloadCodebase.Messages = append(downloadCodebase.Messages, setupMessages...)
+		return downloadCodebase
+	}
+
+
 	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
 	ocelog.Log().Info(fmt.Println("just said that we're retrieving ssh key and fullname is %s", werk.FullName))
+	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
+
 
 	acctName := strings.Split(werk.FullName, "/")[0]
 	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadSSHKey(
@@ -159,6 +170,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 		result.Messages = append(result.Messages, setupMessages...)
 		return result
 	}
+
+	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName))
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
@@ -287,7 +300,7 @@ func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byt
 		str := string(scanner.Bytes())
 		infochan <- []byte(stage + str)
 		//our setup script will echo this to stdout, telling us script is finished downloading. This is HACK for keeping container alive
-		if strings.Contains(str, "Ocelot has finished with downloading source code") {
+		if strings.Contains(str, "Ocelot has finished with downloading templates") {
 			ocelog.Log().Debug("finished with source code, returning out of writeToInfo")
 			return
 		}

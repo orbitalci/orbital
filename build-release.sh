@@ -14,6 +14,22 @@ zip -r ocelot.zip ocelot
 # upload zipped client binary to s3
 aws s3 cp --acl public-read-write --content-disposition attachment ocelot.zip s3://ocelotty/ocelot.zip
 
+
+
+echo "uploading werker's template files"
+cd cmd/werker/template
+zip -r werker_files.zip *
+
+# upload zipped werker files to s3
+aws s3 cp --acl public-read-write --content-disposition attachment werker_files.zip s3://ocelotty/werker_files.zip
+
+# cleanup the files we created for s3
+rm werker_files.zip
+cd -
+rm ocelot.zip
+rm ocelot
+
+
 # This build assumes you have your ssh key added to L11 bitbucket
 # We need ssh keys to clone from the private bitbucket.
 if [ -f ${SSH_PRIVATE_KEY:=${HOME}/.ssh/id_rsa} ]; then

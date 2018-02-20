@@ -124,7 +124,7 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 // processTransport deals with adding info to consul, and calling writeInfoChanToInMemMap
 func processTransport(transport *Transport, appCtx *werkerStreamer) {
 	// question: does this support unicode?
-	if err := rt.Register(appCtx.consul, transport.Hash, appCtx.conf.RegisterIP, appCtx.conf.grpcPort, appCtx.conf.servicePort); err != nil {
+	if err := rt.Register(appCtx.consul, transport.Hash, appCtx.conf.RegisterIP, appCtx.conf.grpcPort, appCtx.conf.ServicePort); err != nil {
 		ocelog.IncludeErrField(err).Error("could not register with consul")
 	} else {
 		ocelog.Log().Infof("registered ip %s running build %s with consul", appCtx.conf.RegisterIP, transport.Hash)
@@ -212,7 +212,7 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf, store storage.Ocel
 	ocelog.Log().Debug("saving build info channels to in memory map")
 	go cacheProcessor(transportChan, werkStream)
 
-	ocelog.Log().Info("serving websocket on port: ", conf.servicePort)
+	ocelog.Log().Info("serving websocket on port: ", conf.ServicePort)
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{werkStream, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
@@ -223,8 +223,14 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf, store storage.Ocel
 		muxi.PathPrefix("/dev/").Handler(http.StripPrefix("/dev/", http.FileServer(http.Dir("./dev"))))
 	}
 
+	//serve up zip files that spawned containers need
+	muxi.HandleFunc("/do_things.zip", func(w http.ResponseWriter, r *http.Request) {
+		ocelog.Log().Debug("serving up zip files from s3")
+		http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/werker_files.zip", 301)
+	})
+
 	n := ocenet.InitNegroni("werker", muxi)
-	go n.Run(":" + conf.servicePort)
+	go n.Run(":" + conf.ServicePort)
 
 	ocelog.Log().Info("serving grpc streams of build data on port: ", conf.grpcPort)
 	con, err := net.Listen("tcp", ":"+conf.grpcPort)

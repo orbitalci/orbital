@@ -13,8 +13,7 @@ if [ $# -gt 0 ]; then
   echo "cloned repo to /${commit}"
   cd /${commit}
   git checkout ${commit}
-  echo "Ocelot has finished with downloading source code"
-  while true; do sleep 3800; done
+  echo "Finished with downloading source code"
 else
     echo "no arguments were passed in"
     exit 1

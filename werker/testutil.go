@@ -24,7 +24,7 @@ func (t *testWerkerProcessor) RunPRBundle(bund *protos.PRBuildBundle, infoChan c
 
 func testGetConf() *WerkerConf {
 	return &WerkerConf{
-		servicePort:     "9090",
+		ServicePort:     "9090",
 		WerkerName:      "test agent",
 		werkerType:      Docker,
 		//werkerProcessor: &testWerkerProcessor{},
