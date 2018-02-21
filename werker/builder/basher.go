@@ -61,7 +61,6 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 
 //DownloadSSHKey will using the vault token to try to download the ssh key located at the path + `/ssh`
 func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
-	ocelog.Log().Info(fmt.Sprintf("inside of basher's downloadSSHKEYYYY %s %s", vaultKey, vaultPath))
 	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath + "/ssh")}
 }
 
