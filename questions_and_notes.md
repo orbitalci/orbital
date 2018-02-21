@@ -5,6 +5,8 @@
     - for example, the docker builder pattern. when deps are updated, the docker base image shoudl be as well. that's all in one repo, but its widely different behavior than build/testing source code.
 
 ## in progress
+- remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3 
+- make it so that we can query whether or not there's a key uploaded for this accountname
 - `ocelot status` - asks admin to get build runtime (marianne) 
     ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
     - this should really give you success/failure of some sort
@@ -34,7 +36,6 @@
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
 ## BIG TODOs:
-- remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3 
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
 - put a limit on number of running containers at once
 - failure notifications
@@ -61,7 +62,6 @@
 - add optional to specify working directory inside of ocelot.yml
 - `ocelot watch` - create a new webhook
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
-- make it so that we can query whether or not there's a key uploaded for this accountname
 - polling option to add new repos with ocelot.yml
 - `ocelot summary` command takes in -repo or --hash? 
 - add `who triggered this` value to summary table
