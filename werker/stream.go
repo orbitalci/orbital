@@ -224,9 +224,9 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf, store storage.Ocel
 	}
 
 	//serve up zip files that spawned containers need
-	muxi.HandleFunc("/do_things.zip", func(w http.ResponseWriter, r *http.Request) {
+	muxi.HandleFunc("/do_things.tar", func(w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debug("serving up zip files from s3")
-		http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/werker_files.zip", 301)
+		http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/werker_files.tar", 301)
 	})
 
 	n := ocenet.InitNegroni("werker", muxi)

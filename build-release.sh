@@ -18,14 +18,13 @@ aws s3 cp --acl public-read-write --content-disposition attachment ocelot.zip s3
 
 echo "uploading werker's template files"
 cd cmd/werker/template
-# TODO: dammit need to change this to tar
-zip -r werker_files.zip *
+tar -cvf werker_files.tar *
 
 # upload zipped werker files to s3
-aws s3 cp --acl public-read-write --content-disposition attachment werker_files.zip s3://ocelotty/werker_files.zip
+aws s3 cp --acl public-read-write --content-disposition attachment werker_files.tar s3://ocelotty/werker_files.tar
 
 # cleanup the files we created for s3
-rm werker_files.zip
+rm werker_files.tar
 cd -
 rm ocelot.zip
 rm ocelot

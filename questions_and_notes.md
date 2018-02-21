@@ -59,9 +59,10 @@
 - add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
 - add ability to specify if you want all branches built
 - add optional to specify working directory inside of ocelot.yml
+- `ocelot watch` - create a new webhook
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
 - make it so that we can query whether or not there's a key uploaded for this accountname
-- polling option? idk
+- polling option to add new repos with ocelot.yml
 - `ocelot summary` command takes in -repo or --hash? 
 - add `who triggered this` value to summary table
 - add *what* triggered this build
