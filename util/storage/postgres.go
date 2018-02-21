@@ -157,6 +157,22 @@ func (p *PostgresStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary
 	return sum, err
 }
 
+// RetrieveSumByBuildId will return a build summary based on build id
+func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error) {
+	var sum models.BuildSummary
+	if err := p.Connect(); err != nil {
+		return sum, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	querystr := `SELECT * FROM build_summary WHERE id = $1 ORDER BY starttime DESC LIMIT 1`
+	row := p.db.QueryRow(querystr, buildId)
+	err := row.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch)
+	if err == sql.ErrNoRows {
+		return sum, BuildSumNotFound(string(buildId))
+	}
+	return sum, err
+}
+
 // RetrieveLastFewSums will return <limit> number of summaries that correlate with a repo and account.
 func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
 	var sums []models.BuildSummary
@@ -234,6 +250,7 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 	err := p.db.QueryRow(queryStr, gitHash).Scan(&out.BuildId, &out.Output, &out.OutputId)
 	return out, err
 }
+
 
 // AddStageDetail will store the stage data along with a starttime and duration to db
 func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error {

@@ -97,29 +97,58 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.Builds, error) {
-	log.Log().Debug("requesting buildruntime for " + bq.Hash)
-	//find matching hashes in consul
-	buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
-	if err != nil {
-		if _, ok := err.(*rt.ErrBuildDone); !ok {
-			log.IncludeErrField(err)
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-	}
-	log.Log().Debug("build runtimes from consul: " + string(len(buildRtInfo)))
+	buildRtInfo := make(map[string]*models.BuildRuntimeInfo)
+	var err error
 
-	//add matching hashes in db if exists and add acctname/repo to ones found in consul
-	dbResults, err := g.Storage.RetrieveHashStartsWith(bq.Hash)
-	log.Log().Debug("build runtimes from db: " + string(len(dbResults)))
-	for _, build := range dbResults {
-		if _, ok := buildRtInfo[build.Hash]; !ok {
-			buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{
-				Hash: build.Hash,
-				Done: true,
+	if len(bq.Hash) > 0 {
+		//find matching hashes in consul by git hash
+		buildRtInfo, err = rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
+		if err != nil {
+			if _, ok := err.(*rt.ErrBuildDone); !ok {
+				log.IncludeErrField(err)
+				return nil, status.Error(codes.Internal, err.Error())
+			} else {
+				//we set error back to nil so that we can continue with the rest of the logic here
+				err = nil
 			}
 		}
-		buildRtInfo[build.Hash].AcctName = build.Account
-		buildRtInfo[build.Hash].RepoName = build.Repo
+
+		//add matching hashes in db if exists and add acctname/repo to ones found in consul
+		dbResults, err := g.Storage.RetrieveHashStartsWith(bq.Hash)
+
+		if err != nil {
+			return &models.Builds{
+				Builds : buildRtInfo,
+			}, err
+		}
+
+		for _, build := range dbResults {
+			if _, ok := buildRtInfo[build.Hash]; !ok {
+				buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{
+					Hash: build.Hash,
+					Done: true,
+				}
+			}
+			buildRtInfo[build.Hash].AcctName = build.Account
+			buildRtInfo[build.Hash].RepoName = build.Repo
+		}
+	}
+
+	//if a valid build id passed, go ask db for entries
+	if bq.BuildId > 0 {
+		buildSum, err := g.Storage.RetrieveSumByBuildId(bq.BuildId)
+		if err != nil {
+			return &models.Builds{
+				Builds : buildRtInfo,
+			}, err
+		}
+
+		buildRtInfo[buildSum.Hash] = &models.BuildRuntimeInfo{
+			Hash: buildSum.Hash,
+			Done: true,
+			AcctName: buildSum.Account,
+			RepoName: buildSum.Repo,
+		}
 	}
 
 	builds := &models.Builds{
@@ -222,7 +251,15 @@ func (g *guideOcelotServer) StatusByHash(ctx context.Context, partialHash *wrapp
 	}
 
 	return hashStatus, nil
+}
 
+func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {
+	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.Type, sshKeyWrapper.AcctName, cred.Vcs)
+	err := g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
+	if err != nil {
+		return &empty.Empty{}, err
+	}
+	return &empty.Empty{}, nil
 }
 
 func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.OcelotStorage) models.GuideOcelotServer {

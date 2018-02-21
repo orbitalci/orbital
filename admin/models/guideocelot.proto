@@ -21,6 +21,8 @@ service GuideOcelot {
 		};
     }
 
+    rpc SetVCSPrivateKey (SSHKeyWrapper) returns (google.protobuf.Empty) {}
+
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {}
     rpc SetRepoCreds (RepoCreds) returns (google.protobuf.Empty) {}
 
@@ -40,6 +42,12 @@ message AllCredsWrapper {
 
 message CredWrapper {
     repeated VCSCreds vcs = 2;
+}
+
+message SSHKeyWrapper {
+    string acctName = 1;
+    bytes privateKey = 2;
+    string type = 3;
 }
 
 message VCSCreds {

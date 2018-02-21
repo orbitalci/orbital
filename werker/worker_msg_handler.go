@@ -73,7 +73,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
 	setupStart := time.Now()
-	setupResult := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig)
+	setupResult := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
 	setupDura := time.Now().Sub(setupStart)
 
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {

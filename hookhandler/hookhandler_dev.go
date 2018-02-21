@@ -64,6 +64,10 @@ func (mrc *MockRemoteConfig) GetStorageCreds(typ storage.Dest) (*cred.StorageCre
 	}, nil
 }
 
+func (mrc *MockRemoteConfig) AddSSHKey(path string, sshKeyFile []byte) error {
+	return nil
+}
+
 func (mrc *MockRemoteConfig) GetStorageType() (storage.Dest, error) {
 	return storage.Postgres, nil
 	//return storage.FileSystem, nil

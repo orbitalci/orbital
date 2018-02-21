@@ -39,15 +39,15 @@ func (b *Basher) SetGithubDownloadURL(downloadURL string) {
 
 //DownloadCodebase builds bash commands to be executed for downloading the codebase
 func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
-	var downloadCode []string
-
+	downloadCode := []string {"/bin/sh", "-c"}
+	var downloadCmd string
 	switch werk.VcsType {
 	case "bitbucket":
 		//if download url is not the default, then we assume whoever set it knows exactly what they're doing and no replacements
 		if b.GetBbDownloadURL() != DefaultBitbucketURL {
-			downloadCode = append(downloadCode, "/.ocelot/bb_download.sh", werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
+			downloadCmd = fmt.Sprintf("/.ocelot/bb_download.sh %s %s %s", werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
 		} else {
-			downloadCode = append(downloadCode, "/.ocelot/bb_download.sh", werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash)
+			downloadCmd = fmt.Sprintf("/.ocelot/bb_download.sh %s %s %s", werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash)
 		}
 	case "github":
 		ocelog.Log().Error("not implemented")
@@ -55,13 +55,25 @@ func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 		ocelog.Log().Error("werker VCS type not recognized")
 	}
 
+	downloadCode = append(downloadCode, downloadCmd)
 	return downloadCode
+}
+
+//DownloadSSHKey will using the vault token to try to download the ssh key located at the path + `/ssh`
+func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
+	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath + "/ssh")}
 }
 
 func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
 	return []string{"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + "'" + settingsXML + "'"}
 }
 
+//DownloadTemplateFiles will download template files necessary to build containers from werker
+func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
+	//downloadLink := fmt.Sprintf("http://docker.for.mac.localhost:%s/do_things.zip", werkerPort)
+	downloadLink := fmt.Sprintf("http://172.17.0.1:%s/do_things.tar", werkerPort)
+	return []string{"/bin/sh", "-c", "mkdir /.ocelot && wget " + downloadLink + " && tar -xf do_things.tar -C /.ocelot && cd /.ocelot && chmod +x * && echo \"Ocelot has finished with downloading templates\" && sleep infinity"}
+}
 
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {

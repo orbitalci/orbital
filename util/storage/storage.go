@@ -28,6 +28,7 @@ type BuildSum interface {
 	// AddSumStart will
 	AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error)
 	UpdateSum(failed bool, duration float64, id int64) error
+	RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error)
 	RetrieveSum(gitHash string) ([]models.BuildSummary, error)
 	RetrieveLatestSum(gitHash string) (models.BuildSummary, error)
 	RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error)

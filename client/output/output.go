@@ -74,10 +74,7 @@ func (c *cmd) Run(args []string) int {
 	var err error
 
 	if c.buildId != 0 {
-		// todo: this is now broken. just fyi
-		builds := make(map[string]*models.BuildRuntimeInfo)
-		builds["br"] = &models.BuildRuntimeInfo{Done: true}
-		build = &models.Builds{Builds:builds}
+		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{BuildId: int64(c.buildId)})
 	} else {
 		if c.hash == "ERROR" {
 			sha := commandhelper.FindCurrentHash()
@@ -92,10 +89,11 @@ func (c *cmd) Run(args []string) int {
 		}
 
 		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.hash})
-		if err != nil {
-			c.UI.Error("unable to get build runtime! error: " + err.Error())
-			return 1
-		}
+	}
+
+	if err != nil {
+		c.UI.Error("unable to get build runtime! error: " + err.Error())
+		return 1
 	}
 
 	if len(build.Builds) > 1 {

@@ -10,14 +10,14 @@ import (
 // i'm really testing namsrals flag code, i dont trust it.
 func TestGetConf_fromEnv(t *testing.T) {
 	testConf := &WerkerConf{
-		servicePort: "9899",
+		ServicePort: "9899",
 		grpcPort: defaultGrpcPort,
 		WerkerName: "oh_YEEEAH",
 		werkerType: Kubernetes,
 		LogLevel: "error",
 		RegisterIP: "55.259.12.197",
 	}
-	os.Setenv("WS_PORT", testConf.servicePort)
+	os.Setenv("WS_PORT", testConf.ServicePort)
 	os.Setenv("TYPE", "kubernetes")
 	os.Setenv("NAME", testConf.WerkerName)
 	os.Setenv("LOG_LEVEL", testConf.LogLevel)
@@ -30,8 +30,8 @@ func TestGetConf_fromEnv(t *testing.T) {
 	if conf.werkerType != testConf.werkerType {
 		t.Error(test.GenericStrFormatErrors("werker type", testConf.werkerType, conf.werkerType))
 	}
-	if conf.servicePort != testConf.servicePort {
-		t.Error(test.StrFormatErrors("service ws port", testConf.servicePort, conf.servicePort))
+	if conf.ServicePort != testConf.ServicePort {
+		t.Error(test.StrFormatErrors("service ws port", testConf.ServicePort, conf.ServicePort))
 	}
 	if conf.grpcPort != testConf.grpcPort {
 		t.Error(test.StrFormatErrors("grpc port", testConf.grpcPort, conf.grpcPort))

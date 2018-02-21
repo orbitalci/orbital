@@ -171,6 +171,12 @@ func (f *FileBuildStorage) RetrieveHashStartsWith(partialGitHash string) ([]mode
 	return nil, errors.New("nope")
 }
 
+//TODO: implement
+func (f *FileBuildStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error) {
+	return models.BuildSummary{}, nil
+}
+
+
 func (f *FileBuildStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
 	var summary models.BuildSummary
 	cab := NewCabinet("sum.json")
