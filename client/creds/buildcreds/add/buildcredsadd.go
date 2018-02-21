@@ -173,6 +173,7 @@ func (c *cmd) Help() string {
 	return help
 }
 
+//TODO: update to explain how acctname/sshfile-loc/type
 const synopsis = "Add credentials or a set of them"
 const help = `
 Usage: ocelot creds vcs add

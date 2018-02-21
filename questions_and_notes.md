@@ -8,10 +8,22 @@
 - `ocelot status` - asks admin to get build runtime (marianne) 
     ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
     - this should really give you success/failure of some sort
+        - if running or failed, display stages + corresponding messages 
     - queryable by:
         - repoName 
         - acctname/repoName
         ~~- git hash~~
+- sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)
+    - failed validation at hookhandler stage 
+    - failed setup stage
+        - should probably start printing out the actual docker errors...
+    - more verbose for other stage failures
+    - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
+         - panic recovery on main function 
+            - cleanup consul entry / notify _someone_ of status 
+            - [RECOVERY!!!](https://blog.golang.org/defer-panic-and-recover)
+            - cleanup docker containers
+            - add item back to queue for build 
     
 ## bugs: 
 ~~- GOTTA FIGURE OUT WHAT TO DO ABOUT HANDLING SSH KEYS~~
@@ -24,22 +36,15 @@
 ## BIG TODOs:
 - remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3 
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
+- put a limit on number of running containers at once
 - failure notifications
 - actions to only take based on branch or w/e 
-    - possible solution: add `trigger` section to stage yml?
+    - solution: add `trigger/skip` section to stage yml?
         - implementation: when hookhandler receives a message, it will filter on new commit messages and branch to take out stages that do not fit trigger requirements
 - tag built projects by custom group name, that way you can filter to see all repos belonging to your group
-- sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand:
-    - failed validation at hookhandler stage 
-    - failed setup stage
-        - should probably start printing out the actual docker errors...
-    - more verbose for other stage failures
-    - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
-         - panic recovery on main function 
-            - cleanup consul entry / notify _someone_ of status 
-            - [RECOVERY!!!](https://blog.golang.org/defer-panic-and-recover)
 - docker login? - our repo creds model works for this currently, just need to implement part that actually runs docker login
 - do the pipeline thing
+- make it so that successful builds will edit the commit message and you can see in commit history whether or not that build was successful 
 - tighter maven integration?
 - `ocelot kill <hash>` - add a quit channel
 - check out worker queue
@@ -48,10 +53,12 @@
     - [docker get script for ex](https://get.docker.com/)    
 
     
-## little TODOs?: 
+## little TODOs?:
+- something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
 - add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
 - add ability to specify if you want all branches built
+- add optional to specify working directory inside of ocelot.yml
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
 - make it so that we can query whether or not there's a key uploaded for this accountname
 - polling option? idk
