@@ -15,11 +15,7 @@
         - repoName 
         - acctname/repoName
         ~~- git hash~~
-- sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)
-    - ~~failed validation at hook handler stage~~ 
-    - ~~failed setup stage~~
-        - ~~should probably start printing out the actual docker errors...~~
-    - ~~more verbose for other stage failures --  already done by marianne?~~                                                 
+- sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)                                     
     - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
          - panic recovery on main function 
             - cleanup consul entry / notify _someone_ of status 
@@ -72,12 +68,16 @@
 	- etc. 
 
 ## done:
-~~- fix `ocelot logs ` retrieval by build_id~~
-~~- nexus (jessi)~~
-~~- assume that the git = whatever you last pushed up (run `git rev-parse` command) ~~
-~~- fix goddamn tests~~ 
-~~- store stages to db~~
-~~- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
-~~- change client's --validate command to take in a value just like all the other commands~~
-~~- hash matching only works when you pass in full hash~~
-    ~~- when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
+- ~~fix `ocelot logs ` retrieval by build_id~~
+- ~~nexus (jessi)~~
+- ~~assume that the git = whatever you last pushed up (run `git rev-parse` command) ~~
+- ~~fix goddamn tests~~ 
+- ~~store stages to db~~
+- ~~when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
+- ~~change client's --validate command to take in a value just like all the other commands~~
+- ~~hash matching only works when you pass in full hash~~
+    - ~~when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
+- ~~failed validation at hook handler stage~~ 
+- ~~failed setup stage~~
+    - ~~should probably start printing out the actual docker errors...~~
+- ~~more verbose for other stage failures --  already done by marianne?~~            
