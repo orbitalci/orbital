@@ -29,7 +29,6 @@ type guideOcelotServer struct {
 }
 
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
-	log.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
 	vcs := models.NewVCSCreds()
 	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, vcs)
@@ -38,7 +37,15 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 	}
 
 	for _, v := range creds {
-		credWrapper.Vcs = append(credWrapper.Vcs, v.(*models.VCSCreds))
+		vcsCred := v.(*models.VCSCreds)
+		sshKeyPath := cred.BuildCredPath(vcsCred.Type, vcsCred.AcctName, cred.Vcs)
+		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
+		if err != nil {
+			vcsCred.SshFileLoc = "\033[0;33mNo SSH Key\033[0m"
+		} else {
+			vcsCred.SshFileLoc = "\033[0;34mSSH Key on file\033[0m"
+		}
+		credWrapper.Vcs = append(credWrapper.Vcs, vcsCred)
 	}
 	return credWrapper, nil
 }
@@ -48,7 +55,6 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 	return &empty.Empty{}, nil
 }
 
-
 func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
 	err := g.AdminValidator.ValidateConfig(credentials)
 	if err != nil {
@@ -57,7 +63,6 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 	err = SetupCredentials(g, credentials)
 	return &empty.Empty{}, err
 }
-
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
@@ -156,7 +161,6 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 	}
 	return builds, err
 }
-
 
 func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
 	if !rt.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {

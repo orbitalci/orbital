@@ -29,6 +29,7 @@ func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty
 }
 
 func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	in.SshFileLoc = "THIS IS A TEST"
 	f.creds.Vcs = append(f.creds.Vcs, in)
 	return &empty.Empty{}, nil
 }

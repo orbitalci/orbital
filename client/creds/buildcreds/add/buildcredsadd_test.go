@@ -54,7 +54,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
 				Type:         "bitbucket",
-				SshFileLoc:   "/home/mariannefeng/.ssh/id_rsa",
+				SshFileLoc:   "THIS IS A TEST",
 			},
 		},
 	}
@@ -64,7 +64,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	}
 	uploadErrMsg := strings.TrimSpace(ui.ErrorWriter.String())
 	expectedSSHErrMsg := `Could not read file at ./test-fixtures/newcreds.yml 
-Error: open /home/mariannefeng/.ssh/id_rsa: no such file or directory`
+Error: open THIS IS A TEST: no such file or directory`
 	if uploadErrMsg != expectedSSHErrMsg {
 		t.Error(test.StrFormatErrors("ssh key file error ouput", expectedSSHErrMsg, uploadErrMsg))
 	}
@@ -96,6 +96,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
 				Type:         "bitbucket",
+				SshFileLoc:   "THIS IS A TEST",
 			},
 		},
 	}
