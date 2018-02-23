@@ -5,8 +5,7 @@
     - for example, the docker builder pattern. when deps are updated, the docker base image shoudl be as well. that's all in one repo, but its widely different behavior than build/testing source code.
 
 ## in progress
-- remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3 
-- make it so that we can query whether or not there's a key uploaded for this accountname
+- make it so that we can query whether or not there's a key uploaded for this accountname (also update help)
 - `ocelot status` - asks admin to get build runtime (marianne) 
     ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
     - this should really give you success/failure of some sort
@@ -31,6 +30,23 @@
 - fix dev mode (maybe fuck this)
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
+## little TODOs?:
+- something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
+- something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
+- add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
+- add ability to specify if you want all branches built
+- add optional to specify working directory inside of ocelot.yml
+- `ocelot watch` - create a new webhook
+- `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
+- polling option to add new repos with ocelot.yml
+- `ocelot summary` command takes in -repo or --hash? 
+- add `who triggered this` value to summary table
+- add *what* triggered this build
+	- command line trigger
+	- pr trigger
+	- commit trigger
+	- etc. 
+
 ## BIG TODOs:
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
 - put a limit on number of running containers at once
@@ -49,35 +65,7 @@
 - return to old package install list??
     - [docker get script for ex](https://get.docker.com/)    
 
-    
-## little TODOs?:
-- something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
-- something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
-- add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
-- add ability to specify if you want all branches built
-- add optional to specify working directory inside of ocelot.yml
-- `ocelot watch` - create a new webhook
-- `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
-- polling option to add new repos with ocelot.yml
-- `ocelot summary` command takes in -repo or --hash? 
-- add `who triggered this` value to summary table
-- add *what* triggered this build
-	- command line trigger
-	- pr trigger
-	- commit trigger
-	- etc. 
 
-## done:
-- ~~fix `ocelot logs ` retrieval by build_id~~
-- ~~nexus (jessi)~~
-- ~~assume that the git = whatever you last pushed up (run `git rev-parse` command) ~~
-- ~~fix goddamn tests~~ 
-- ~~store stages to db~~
-- ~~when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
-- ~~change client's --validate command to take in a value just like all the other commands~~
-- ~~hash matching only works when you pass in full hash~~
-    - ~~when printing matching git hashes, should display corresponding acctname/repo like `ocelot summary` command~~
-- ~~failed validation at hook handler stage~~ 
-- ~~failed setup stage~~
-    - ~~should probably start printing out the actual docker errors...~~
-- ~~more verbose for other stage failures --  already done by marianne?~~            
+## done:    
+- ~~remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3~~ 
+     

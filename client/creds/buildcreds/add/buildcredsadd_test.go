@@ -9,6 +9,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 	"testing"
+	"strings"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 // testNew will return the bare minimum. flags and fileloc of yaml will have to be set after instantiation
@@ -30,9 +32,20 @@ func testNew(inputReaderData []byte) *cmd {
 
 func Test_cmd_Run_Yaml(t *testing.T) {
 	var input []byte
-	cmd := testNew(input)
+	ui := cli.NewMockUi()
+	if len(input) >= 0 {
+		ui.InputReader = bytes.NewReader(input)
+	}
+	c := &cmd{
+		UI: ui,
+		config: commandhelper.NewTestClientConfig([]string{}),
+	}
+	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	c.flags.StringVar(&c.fileloc, "credfile-loc", "",
+		"Location of yaml file containing creds to upload")
+
 	ctx := context.Background()
-	cmd.fileloc = "./test-fixtures/newcreds.yml"
+	c.fileloc = "./test-fixtures/newcreds.yml"
 	expectedCreds := &models.CredWrapper{
 		Vcs: []*models.VCSCreds{
 			{
@@ -41,14 +54,22 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
 				Type:         "bitbucket",
+				SshFileLoc:   "/home/mariannefeng/.ssh/id_rsa",
 			},
 		},
 	}
 	var args []string
-	if exit := cmd.Run(args); exit != 0 {
-		t.Fatal("should return exit 0")
+	if exit := c.Run(args); exit != 1 {
+		t.Fatal("should return exit 1 because SSH Key path doesn't exist")
 	}
-	actualCreds, err := cmd.config.Client.GetVCSCreds(ctx, &empty.Empty{})
+	uploadErrMsg := strings.TrimSpace(ui.ErrorWriter.String())
+	expectedSSHErrMsg := `Could not read file at ./test-fixtures/newcreds.yml 
+Error: open /home/mariannefeng/.ssh/id_rsa: no such file or directory`
+	if uploadErrMsg != expectedSSHErrMsg {
+		t.Error(test.StrFormatErrors("ssh key file error ouput", expectedSSHErrMsg, uploadErrMsg))
+	}
+
+	actualCreds, err := c.config.Client.GetVCSCreds(ctx, &empty.Empty{})
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}

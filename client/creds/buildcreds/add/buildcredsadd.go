@@ -75,6 +75,14 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 			errOccured = true
 		} else {
 			c.UI.Info(fmt.Sprintf("Added credentials for account: %s", configVal.AcctName))
+
+			//after creds are successfully uploaded via file, upload ssh key file accordingly
+			if len(configVal.SshFileLoc) > 0 {
+				c.acctName = configVal.AcctName
+				c.buildType = configVal.Type
+				c.sshKeyFile = configVal.SshFileLoc
+				return c.uploadSSHKeyFile(ctx)
+			}
 		}
 	}
 	if errOccured {
@@ -173,21 +181,24 @@ func (c *cmd) Help() string {
 	return help
 }
 
-//TODO: update to explain how acctname/sshfile-loc/type
 const synopsis = "Add credentials or a set of them"
 const help = `
 Usage: ocelot creds vcs add
-  Add one set of credentials or a list of them.
-  If you specify a filename using:
+  Add one set of credentials or a list of them. Credentials may also need an SSH key file, if an ssh key path is populated, the file will be uploaded to vault and associated with the specified account/type. 
+  You can specify a filename using:
     ocelot creds add vcs -credfile-loc=<yaml file>
   The client will expect that the yaml is a credentials object with an array of creds you would like to integrate with ocelot.
   For example:
     credentials:
-    - clientId: <OAUTH_CLIENT_ID>   ---> client id correlated with clientSecret
-      clientSecret: <OAUTH_SECRET>  ---> generated when you add an oauth access
-      tokenURL: <OAUTH_TOKEN_URL>   ---> e.g. https://bitbucket.org/site/oauth2/access_token
-      acctName: <ACCOUNT_NAME>      ---> e.g. level11consulting
-      type: <SCM_TYPE>              ---> e.g. bitbucket
+    - clientId: <OAUTH_CLIENT_ID>     ---> client id correlated with clientSecret
+      clientSecret: <OAUTH_SECRET>    ---> generated when you add an oauth access
+      tokenURL: <OAUTH_TOKEN_URL>     ---> e.g. https://bitbucket.org/site/oauth2/access_token
+      acctName: <ACCOUNT_NAME>        ---> e.g. level11consulting
+      type: <SCM_TYPE>                ---> e.g. bitbucket
+	  sshFileLoc: <SSH_KEY_FILE_PATH> ---> e.g. /home/mariannefeng/.ssh/id_rsa
+	
+  sshFileLoc is not a required field, if you'd to add it later after a vcs account has already been added to ocelot, it can be uploaded via CLI like so:
+    ocelot creds add vcs -acctname <ACCOUNT_NAME> -sshfile-loc <SSH_KEY_FILE_PATH> -type <SCM_TYPE>
 
-  Retrieves all credentials that ocelot uses to track repositories
+  Adds credentials for ocelot to use in tracking repositories
 `

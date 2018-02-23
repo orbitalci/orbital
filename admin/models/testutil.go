@@ -179,6 +179,9 @@ func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 		if cred.ClientId != credB.ClientId {
 			return false
 		}
+		if cred.SshFileLoc != credB.SshFileLoc {
+			return false
+		}
 	}
 	return true
 }
