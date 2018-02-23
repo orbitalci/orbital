@@ -8,6 +8,11 @@ import (
 	"errors"
 )
 
+var (
+	HOOKHANDLER_VALIDATION = "pre-build-validation"
+	CHECKMARK = "\u2713"
+)
+
 type BuildSummary struct {
 	Hash 		  string		`json:"hash,omitempty"`
 	Failed 		  bool			`json:"failed,omitempty"`

@@ -208,6 +208,7 @@ func getWerkerStreamer(conf *WerkerConf, store storage.OcelotStorage) *werkerStr
 
 //ServeMe will start HTTP Server as needed for streaming build output by hash
 func ServeMe(transportChan chan *Transport, conf *WerkerConf, store storage.OcelotStorage) {
+	// todo: defer a recovery here
 	werkStream := getWerkerStreamer(conf, store)
 	ocelog.Log().Debug("saving build info channels to in memory map")
 	go cacheProcessor(transportChan, werkStream)

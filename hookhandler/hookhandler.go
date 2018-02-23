@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	smods "bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"errors"
 	"fmt"
 	"net/http"
@@ -97,21 +98,28 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
-	if validateBuild(ctx, buildConf, branch) {
-		list := strings.Split(repopush.Repository.FullName, "/")
-		account := list[0]
-		repo := list[1]
-		ocelog.Log().Debug("LETS STORE THIS SHIT")
-		store, err := ctx.GetRemoteConfig().GetOcelotStorage()
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("unable to get storage")
-		}
-		id := notifyStorage(store, hash, time.Now(), repo, branch, account)
-		ocelog.Log().Debug("notified storage ")
+	ocelog.Log().Debug("Storing initial results in db")
+	account, repo := getAcctRepo(repopush.Repository.FullName)
+	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("unable to get storage!")
+	}
+	startTime := time.Now()
+	id := notifyStorage(store, hash, startTime, repo, branch, account)
+	sr := getHookhandlerStageResult(startTime, id)
+	// stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
+	if err := validateBuild(ctx, buildConf, branch); err == nil {
 		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
 		ocelog.Log().Debug("told werker!")
+		sr.Status = 0 //todo: i don't really want to hook in the builder package from werker into here to use the vars... idk how to do this
+		sr.Messages = []string{"Passed initial validation " + smods.CHECKMARK}
 	} else {
-		//TODO: tell db we couldn't build
+		sr.Status = 1
+		sr.Error = err.Error()
+		sr.Messages = []string{"Failed initial validation. Error: " + err.Error()}
+	}
+	if err = store.AddStageDetail(sr); err != nil {
+		ocelog.IncludeErrField(err).Error("unable to add hookhandler stage details")
 	}
 }
 
@@ -139,39 +147,51 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
 		return
 	}
-
-	if validateBuild(ctx, buildConf, "") {
-		list := strings.Split(pr.Repository.FullName, "/")
-		account := list[0]
-		repo := list[1]
-		store, err := ctx.GetRemoteConfig().GetOcelotStorage()
-		if err != nil {
-			ocelog.IncludeErrField(err).Error("unable to get storage")
-		}
-		id := notifyStorage(store, hash, time.Now(), repo, pr.Pullrequest.Source.Branch.Name, account)
+	account, repo := getAcctRepo(pr.Repository.FullName)
+	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("unable to get storage")
+	}
+	startTime := time.Now()
+	id := notifyStorage(store, hash, startTime, repo, pr.Pullrequest.Source.Branch.Name, account)
+	sr := getHookhandlerStageResult(startTime, id)
+	if err := validateBuild(ctx, buildConf, ""); err == nil {
 		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
+		sr.Status = 0
+		sr.Messages = []string{"Passed initial validation " + smods.CHECKMARK}
 	} else {
-		//TODO: tell db we couldn't build
+		// todo get rid of repetition between PR and RepoPush
+		sr.Status = 1
+		sr.Error = err.Error()
+		sr.Messages = []string{"Failed initial validation. Error: " + err.Error()}
 	}
 }
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
 // - check if commit branch matches with ocelot.yaml branch and validate
-func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) bool {
+func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) error {
 	err := ctx.GetValidator().ValidateConfig(buildConf, nil)
 
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("failed validation")
-		return false
+		return err
 	}
 
 	for _, buildBranch := range buildConf.Branches {
 		if buildBranch == branch {
-			return true
+			return nil
 		}
 	}
 	ocelog.Log().Errorf("build does not match any branches listed: %v", buildConf.Branches)
-	return false
+	return errors.New(fmt.Sprintf("build does not match any branches listed: %v", buildConf.Branches))
+}
+
+// helper
+func getAcctRepo(fullName string) (acct string, repo string) {
+	list := strings.Split(fullName, "/")
+	acct = list[0]
+	repo = list[1]
+	return
 }
 
 func notifyStorage(store storage.BuildSum, hash string, starttime time.Time, repo string, branch string, account string) int64 {
@@ -218,6 +238,15 @@ func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	default:
 		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
+	}
+}
+
+func getHookhandlerStageResult(start time.Time, id int64) *smods.StageResult {
+	return &smods.StageResult{
+		BuildId: id,
+		Stage: smods.HOOKHANDLER_VALIDATION,
+		StartTime: start,
+		StageDuration: -99.99, // is this the best way? prob not
 	}
 }
 

@@ -45,9 +45,9 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 			time.Sleep(10 * time.Second)
 		} else {
 			mode := os.Getenv("ENV")
-			basher := &builder.Basher{}
+			basher := &builder.Basher{LoopbackIp:conf.LoopBackIp}
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
-				basher.SetBbDownloadURL("docker.for.mac.localhost:9090/dev")
+				basher.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
 			}
 
 			handler := &werker.WorkerMsgHandler{
@@ -89,6 +89,9 @@ func main() {
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewProtoConsume()
+		// todo: add in ability to change number of concurrent processes handling requests; right now it will just take the nsqpb default of 5
+		// eg:
+		//   protoConsume.Config.MaxInFlight = GetFromEnv
 		go listen(protoConsume, topic, conf, tunnel, store)
 		consumers = append(consumers, protoConsume)
 	}

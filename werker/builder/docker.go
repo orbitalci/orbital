@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"io"
+	"io/ioutil"
 	"strings"
 	"fmt"
 )
@@ -40,6 +41,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	d.DockerClient = cli
 
 	if err != nil {
+		ocelog.Log().Debug("returning failed stage because could not create docker env client")
 		return &Result{
 			Stage:  su.GetStage(),
 			Status: FAIL,
@@ -51,7 +53,13 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't pull image!")
+		ocelog.IncludeErrField(err).Error("couldn't pull image; returning failed")
+		failedOutput := bufio.NewReader(out)
+		outTxt, err2 := ioutil.ReadAll(failedOutput)
+		if err2 != nil {
+			ocelog.IncludeErrField(err2).Error("unable to read output of failed image pull")
+		}
+		setupMessages = append(setupMessages, fmt.Sprintf("could not pull image!"), string(outTxt))
 		return &Result{
 			Stage:  su.GetStage(),
 			Status: FAIL,
@@ -92,6 +100,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 
 	if err != nil {
+		ocelog.IncludeErrField(err).Error("returning failed because could not create container")
 		return &Result{
 			Stage:  su.GetStage(),
 			Status: FAIL,
@@ -111,6 +120,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	d.ContainerId = resp.ID
 	ocelog.Log().Debug("starting up container")
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		ocelog.IncludeErrField(err).Error("returning failed because could not start container")
 		return &Result{
 			Stage:  su.GetStage(),
 			Status: FAIL,
@@ -130,6 +140,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	})
 
 	if err != nil {
+		ocelog.IncludeErrField(err).Error("returning failed setup because could not get logs of container")
 		return &Result{
 			Stage: su.GetStage(),
 			Status: FAIL,
@@ -173,6 +184,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 		if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
 			_, ok := err.(*nexus.NoCreds)
 			if !ok {
+				ocelog.IncludeErrField(err).Error("returning failed setup because could not get settings.xml")
 				return &Result{
 					Stage: su.GetStage(),
 					Status: FAIL,
