@@ -51,7 +51,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 		builder = b.NewDockerBuilder(w.Basher)
 	}
 
-	go w.MakeItSo(werkerTask, builder)
+	w.MakeItSo(werkerTask, builder)
 	return nil
 }
 
@@ -81,7 +81,11 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	}
 
 	if setupResult.Status == b.FAIL {
-		ocelog.Log().Error(setupResult.Error)
+		errStr := "setup stage failed "
+		if setupResult.Error != nil {
+			errStr = errStr + setupResult.Error.Error()
+		}
+		ocelog.Log().Error(errStr)
 		return
 	}
 	fail := false

@@ -253,6 +253,8 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 
 
 // AddStageDetail will store the stage data along with a starttime and duration to db
+//  The fields required on stageResult to insert into stage detail table are:
+// 		stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
 func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())

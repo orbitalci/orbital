@@ -16,10 +16,10 @@
         - acctname/repoName
         ~~- git hash~~
 - sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)
-    - failed validation at hookhandler stage 
-    - failed setup stage
-        - should probably start printing out the actual docker errors...
-    - more verbose for other stage failures
+    - ~~failed validation at hook handler stage~~ 
+    - ~~failed setup stage~~
+        - ~~should probably start printing out the actual docker errors...~~
+    - ~~more verbose for other stage failures --  already done by marianne?~~                                                 
     - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
          - panic recovery on main function 
             - cleanup consul entry / notify _someone_ of status 

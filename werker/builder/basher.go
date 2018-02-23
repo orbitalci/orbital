@@ -1,9 +1,9 @@
 package builder
 
 import (
-	"fmt"
-	"bitbucket.org/level11consulting/ocelot/protos"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/protos"
+	"fmt"
 	"strings"
 )
 
@@ -11,8 +11,9 @@ const DefaultBitbucketURL = "https://x-token-auth:%s@bitbucket.org/%s.git"
 const DefaultGithubURL = ""
 
 type Basher struct {
-	BbDownloadURL string
+	BbDownloadURL 	  string
 	GithubDownloadURL string
+	LoopbackIp        string
 }
 
 func (b *Basher) GetBbDownloadURL() string {
@@ -70,9 +71,10 @@ func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
 
 //DownloadTemplateFiles will download template files necessary to build containers from werker
 func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
-	//downloadLink := fmt.Sprintf("http://docker.for.mac.localhost:%s/do_things.zip", werkerPort)
-	downloadLink := fmt.Sprintf("http://172.17.0.1:%s/do_things.tar", werkerPort)
-	return []string{"/bin/sh", "-c", "mkdir /.ocelot && wget " + downloadLink + " && tar -xf do_things.tar -C /.ocelot && cd /.ocelot && chmod +x * && echo \"Ocelot has finished with downloading templates\" && sleep infinity"}
+	downloadLink := fmt.Sprintf("http://%s:%s/do_things.tar", b.LoopbackIp, werkerPort)
+	//downloadLink := fmt.Sprintf("http://172.17.0.1:%s/do_things.tar", werkerPort)
+	//warning: sleep has to be a integer; infinity doesn't exist everywhere.
+	return []string{"/bin/sh", "-c", "mkdir /.ocelot && wget " + downloadLink + " && tar -xf do_things.tar -C /.ocelot && cd /.ocelot && chmod +x * && echo \"Ocelot has finished with downloading templates\" && sleep 3600"}
 }
 
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
