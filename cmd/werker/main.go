@@ -23,6 +23,7 @@ package main
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
+	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/werker"
 	"bitbucket.org/level11consulting/ocelot/werker/builder"
@@ -85,6 +86,12 @@ func main() {
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("COULD NOT GET OCELOT STORAGE! BAILING!")
 	}
+	consulet := conf.RemoteConfig.GetConsul()
+	uuid, err := buildruntime.Register(consulet, conf.RegisterIP, conf.GrpcPort, conf.ServicePort)
+	if err != nil {
+		ocelog.IncludeErrField(err).Fatal("unable to register werker with consul, this is vital. BAILING!")
+	}
+	conf.WerkerUuid = uuid
 
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
