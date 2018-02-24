@@ -36,6 +36,7 @@ func SetupRepoCredentials(gosss adminModel.GuideOcelotServer, config *adminModel
 	return err
 }
 
+//ParseStagesByBuildId will combine the buildsummary + stages to a single object called "Status"
 func ParseStagesByBuildId(buildSum storeModel.BuildSummary, stageResults []storeModel.StageResult) *adminModel.Status {
 	var parsedStages []*adminModel.Stage
 	for _, result := range stageResults {

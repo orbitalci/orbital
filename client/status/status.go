@@ -85,6 +85,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
+	//TODO: talk about this with Jessi - what is criteria for project is RUNNING???
 	// always respect hash first
 	if c.hash != "ERROR" && len(c.hash) > 0 {
 		builds, err := c.GetClient().BuildRuntime(ctx, &models.BuildQuery{
@@ -146,7 +147,18 @@ func (c *cmd) Run(args []string) int {
 
 	//repo is last
 	if c.repo != "ERROR" {
-
+		query := &models.StatusQuery{
+			PartialRepo: c.repo,
+		}
+		statuses, err := c.GetClient().GetStatus(ctx, query)
+		if err != nil {
+			c.UI.Error(err.Error())
+			return 1
+		}
+		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		c.UI.Output(buildStatus + stageStatus)
+		return 0
 	}
 
 	return 0

@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 //this is our grpc server, it responds to client requests
@@ -258,7 +259,37 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 
 
 	if len(query.PartialRepo) > 0 {
-		//TODO: match by partial repo name
+		buildSums, err := g.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if len(buildSums) == 1 {
+			buildSum, err := g.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+
+			stageResults, err := g.Storage.RetrieveStageDetail(buildSum[0].BuildId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			result := ParseStagesByBuildId(buildSum[0], stageResults)
+			return result, nil
+		} else {
+			var uhOh error
+			if len(buildSums) == 0 {
+				uhOh = errors.New(fmt.Sprintf("there are no repositories starting with %s", query.PartialRepo))
+			} else {
+				var matches []string
+				for _, buildSum := range buildSums {
+					matches = append(matches, buildSum.Account + "/" + buildSum.Repo)
+				}
+				uhOh = errors.New(fmt.Sprintf("there are %v repositories starting with %s: %s", len(buildSums), query.PartialRepo, strings.Join(matches, ",")))
+			}
+			log.IncludeErrField(uhOh)
+			return nil, status.Error(codes.Internal, uhOh.Error())
+		}
 	}
 
 	return &models.Status{}, nil

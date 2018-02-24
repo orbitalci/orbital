@@ -82,7 +82,7 @@ func PrintStatusStages(isRunning bool, statuses *models.Status) (string, int, st
 		}
 	}
 
-	if statuses != nil {
+	if statuses != nil && len(statuses.Stages) > 0 {
 		for _, stage := range statuses.Stages {
 			var stageStatusStr string
 			if stage.Status == 0 {
@@ -98,8 +98,9 @@ func PrintStatusStages(isRunning bool, statuses *models.Status) (string, int, st
 				}
 			}
 		}
+		stageStatus += "\n"
 	}
-	return stageStatus + "\n", color, status
+	return stageStatus, color, status
 }
 
 func PrintStatusOverview(color int, acctName, repoName, hash, status string) string {

@@ -199,6 +199,32 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 	return sums, nil
 }
 
+// RetrieveAcctRepo will return to you a list of accountname + repositories that matches starting with partialRepo
+func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
+	var sums []models.BuildSummary
+	if err := p.Connect(); err != nil {
+		return sums, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	queryRow := fmt.Sprintf(`select distinct on (account, repo) account, repo from build_summary where repo ilike $1;`)
+	rows, err := p.db.Query(queryRow, partialRepo + "%")
+	if err != nil {
+		return sums, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		sum := models.BuildSummary{}
+		if err = rows.Scan(&sum.Account, &sum.Repo); err != nil {
+			if err == sql.ErrNoRows {
+				return sums, BuildSumNotFound("repository starting with" + partialRepo)
+			}
+			return sums, err
+		}
+		sums = append(sums, sum)
+	}
+	return sums, nil
+}
+
 /*
   Column  |       Type        | Collation | Nullable
 ----------+-------------------+-----------+-----------
