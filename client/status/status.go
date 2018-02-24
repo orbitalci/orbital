@@ -8,13 +8,8 @@ import (
 	"context"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/wrappers"
 )
-
-const synopsis = "show status of specific acctname, acctname/repo, or hash"
-//TODO: finish writing help once I know how it works
-const help = `
-Usage: ocelot status -acct-repo <acct>/<repo>
-`
 
 func New(ui cli.Ui) *cmd {
 	c := &cmd{UI: ui, config: commandhelper.Config}
@@ -93,17 +88,37 @@ func (c *cmd) Run(args []string) int {
 		}
 		//it's okay to iterate here cause list will always contain 1 value
 		for hash, build := range builds.Builds {
-			var status string
+			var status, stagesPrintln string
 			var color int
+
+			statuses, err := c.GetClient().StatusByHash(ctx, &wrappers.StringValue{Value: hash})
+			// just because we couldn't get stage details for this hash, doesn't mean it should fail
+			if err != nil {
+				stagesPrintln = "\t" + err.Error()
+			}
+
 			if len(build.Ip) > 0 {
 				status = "Running"
 				color = 33
+				//TODO: print out messages from running stage
 			} else {
-				status = "Finished "
-				color = 34
+				if !statuses.BuildSum.Failed {
+					status = "PASS"
+					color = 32
+				} else {
+					status = "FAIL"
+					color = 31
+				}
+				for _, stage := range statuses.Stages {
+					stagesPrintln += fmt.Sprintf("\n\t\t\033[0;35m%s\033[0m in %s", stage.Stage, commandhelper.PrettifyTime(stage.StageDuration))
+					if statuses.BuildSum.Failed {
+						stagesPrintln += fmt.Sprintf("\n\t\t  %s", strings.Join(stage.Messages, "\n\t\t  "))
+						stagesPrintln += fmt.Sprintf("\n\t\t  \033[0;31m%s\033[0m", stage.Error)
+					}
+				}
 			}
-			buildStatus := fmt.Sprintf("\033[0;%dm\t %s/%s \t %s \t %s\033[0m", color, build.AcctName, build.RepoName, hash, strings.ToUpper(status))
-			c.UI.Output(buildStatus)
+			buildStatus := fmt.Sprintf("\033[0;%dm\t %s/%s \t %s \t %s\033[0m", color, build.AcctName, build.RepoName, hash, status)
+			c.UI.Output(buildStatus + stagesPrintln)
 			return 0
 		}
 		return 0
@@ -123,7 +138,11 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-
-
 	return 0
 }
+
+const synopsis = "show status of specific acctname, acctname/repo, or hash"
+//TODO: finish writing help once I know how it works
+const help = `
+Usage: ocelot status -acct-repo <acct>/<repo>
+`

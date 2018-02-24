@@ -31,6 +31,7 @@
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
 ## little TODOs?:
+- add nexus to infra
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
 - add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
@@ -48,6 +49,7 @@
 	- etc. 
 
 ## BIG TODOs:
+- our fucking BUILD IS BROKEN
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
 - put a limit on number of running containers at once
 - failure notifications

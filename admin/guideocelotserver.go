@@ -214,7 +214,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 }
 
-//StatusByHash will retrieve you the status (build summary + stages) of a partial git hash. Not currently used anywhere
+//StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
 func (g *guideOcelotServer) StatusByHash(ctx context.Context, partialHash *wrappers.StringValue) (*models.Status, error) {
 	buildSum, err := g.Storage.RetrieveLatestSum(partialHash.Value)
 	if err != nil {

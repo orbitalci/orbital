@@ -66,7 +66,6 @@ func GetConf() (*WerkerConf, error) {
 	var storageTypeStr string
 	var consuladdr string
 	var consulport int
-	//todo: idk about this env prefix thing, might not be necessary
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
 	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes or docker")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
