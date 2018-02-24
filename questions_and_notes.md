@@ -5,7 +5,6 @@
     - for example, the docker builder pattern. when deps are updated, the docker base image shoudl be as well. that's all in one repo, but its widely different behavior than build/testing source code.
 
 ## in progress
-- make it so that we can query whether or not there's a key uploaded for this accountname (also update help)
 - `ocelot status` - asks admin to get build runtime (marianne) 
     ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
     - this should really give you success/failure of some sort
@@ -49,6 +48,8 @@
 	- etc. 
 
 ## BIG TODOs:
+- make the client colors for everything configurable
+    - this would also include making it so that the ocelot client can be configured via a config.yml 
 - our fucking BUILD IS BROKEN
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
 - put a limit on number of running containers at once
@@ -70,4 +71,6 @@
 
 ## done:    
 - ~~remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3~~ 
+- ~~make it so that we can query whether or not there's a key uploaded for this accountname (also update help)~~
+
      

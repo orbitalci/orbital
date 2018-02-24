@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bytes"
 	"github.com/olekukonko/tablewriter"
+	"fmt"
 )
 
 // cmd_table package contains utils for drawing tables
@@ -49,5 +50,6 @@ func SelectFromHashes(build *models.Builds) string {
 	}
 
 	writ.Render()
-	return writer.String()
+	explanationMsg := fmt.Sprintf("\033[0;34mit's your lucky day, there's %d hashes matching that value. Please enter a more complete git hash\n\033[m", len(build.Builds))
+	return explanationMsg + writer.String()
 }

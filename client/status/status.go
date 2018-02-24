@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -86,7 +87,12 @@ func (c *cmd) Run(args []string) int {
 			c.UI.Error(fmt.Sprintf("error retrieving build runtime for hash %s. Error: %s", c.hash, err.Error()))
 			return 1
 		}
-		//it's okay to iterate here cause list will always contain 1 value
+
+		if len(builds.Builds) > 1 {
+			c.UI.Output(cmd_table.SelectFromHashes(builds))
+			return 0
+		}
+
 		for hash, build := range builds.Builds {
 			var status, stagesPrintln string
 			var color int
@@ -100,8 +106,7 @@ func (c *cmd) Run(args []string) int {
 			if len(build.Ip) > 0 {
 				status = "Running"
 				color = 33
-				//TODO: print out messages from running stage
-			} else {
+			} else if statuses != nil {
 				if !statuses.BuildSum.Failed {
 					status = "PASS"
 					color = 32
@@ -109,18 +114,24 @@ func (c *cmd) Run(args []string) int {
 					status = "FAIL"
 					color = 31
 				}
+			}
+
+			if statuses != nil {
 				for _, stage := range statuses.Stages {
 					stagesPrintln += fmt.Sprintf("\n\t\t\033[0;35m%s\033[0m in %s", stage.Stage, commandhelper.PrettifyTime(stage.StageDuration))
 					if statuses.BuildSum.Failed {
 						stagesPrintln += fmt.Sprintf("\n\t\t  %s", strings.Join(stage.Messages, "\n\t\t  "))
-						stagesPrintln += fmt.Sprintf("\n\t\t  \033[0;31m%s\033[0m", stage.Error)
+						if len(stage.Error) > 0 {
+							stagesPrintln += fmt.Sprintf(": \033[1;30m%s\033[0m", stage.Error)
+						}
 					}
 				}
 			}
+
 			buildStatus := fmt.Sprintf("\033[0;%dm\t %s/%s \t %s \t %s\033[0m", color, build.AcctName, build.RepoName, hash, status)
 			c.UI.Output(buildStatus + stagesPrintln)
-			return 0
 		}
+
 		return 0
 	}
 
@@ -130,8 +141,6 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	//acct is last
-
-
 	data := strings.Split(c.accountRepo, "/")
 	if len(data) != 2  {
 		c.UI.Error("flag -acct-repo must be in the format <account>/<repo>. see --help")
