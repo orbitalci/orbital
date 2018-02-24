@@ -13,10 +13,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/pkg/errors"
 )
 
 //this is our grpc server, it responds to client requests
@@ -214,47 +214,54 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 }
 
+
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
-func (g *guideOcelotServer) StatusByHash(ctx context.Context, partialHash *wrappers.StringValue) (*models.Status, error) {
-	buildSum, err := g.Storage.RetrieveLatestSum(partialHash.Value)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	//TODO: is there a way around iterating over results and copying over values?
-	var parsedStages []*models.Stage
-	for _, result := range stageResults {
-		stageDupe := &models.Stage{
-			Stage: result.Stage,
-			Error: result.Error,
-			Status: int32(result.Status),
-			Messages: result.Messages,
-			StartTime: &timestamp.Timestamp{Seconds: result.StartTime.UTC().Unix()},
-			StageDuration: result.StageDuration,
+func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQuery) (*models.Status, error) {
+	//hash first
+	if len(query.Hash) > 0 {
+		partialHash := query.Hash
+		buildSum, err := g.Storage.RetrieveLatestSum(partialHash)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-		parsedStages = append(parsedStages, stageDupe)
+
+		stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		result := ParseStagesByBuildId(buildSum, stageResults)
+		return result, nil
 	}
 
-	hashStatus := &models.Status{
-		BuildSum: &models.BuildSummary{
-			Hash: buildSum.Hash,
-			Failed: buildSum.Failed,
-			BuildTime: &timestamp.Timestamp{Seconds: buildSum.BuildTime.UTC().Unix()},
-			Account: buildSum.Account,
-			BuildDuration: buildSum.BuildDuration,
-			Repo: buildSum.Repo,
-			Branch: buildSum.Branch,
-			BuildId: buildSum.BuildId,
-		},
-		Stages: parsedStages,
+	if len(query.AcctName) > 0 && len(query.RepoName) > 0 {
+		buildSums, err := g.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if len(buildSums) == 1 {
+			buildSum := buildSums[0]
+
+			stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			result := ParseStagesByBuildId(buildSum, stageResults)
+			return result, nil
+		} else {
+			uhOh := errors.New(fmt.Sprintf("there is no ONE entry that matches the acctname/repo %s/%s", query.AcctName, query.RepoName))
+			log.IncludeErrField(uhOh)
+			return nil, status.Error(codes.Internal, uhOh.Error())
+		}
 	}
 
-	return hashStatus, nil
+
+	if len(query.PartialRepo) > 0 {
+		//TODO: match by partial repo name
+	}
+
+	return &models.Status{}, nil
 }
 
 func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {

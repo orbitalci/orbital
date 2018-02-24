@@ -8,9 +8,16 @@ import (
 	"context"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
 )
+
+const synopsis = "show status of specific acctname/repo, repo or hash"
+const help = `
+Usage: ocelot status 
+	-hash <hash> [optional] if specified, this is the one that takes precendence over other arguments
+	-acct-repo <acctname/repo> [optional] if specified, takes precedence over -repo argument
+	-repo <repo> [optional] returns status of all repos starting with value
+`
 
 func New(ui cli.Ui) *cmd {
 	c := &cmd{UI: ui, config: commandhelper.Config}
@@ -79,7 +86,7 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	// always respect hash first
-	if c.hash != "ERROR" {
+	if c.hash != "ERROR" && len(c.hash) > 0 {
 		builds, err := c.GetClient().BuildRuntime(ctx, &models.BuildQuery{
 			Hash: c.hash,
 		})
@@ -91,67 +98,56 @@ func (c *cmd) Run(args []string) int {
 		if len(builds.Builds) > 1 {
 			c.UI.Output(cmd_table.SelectFromHashes(builds))
 			return 0
+		} else if len(builds.Builds) == 0 {
+			c.UI.Warn(fmt.Sprintf("no builds found for hash %s", c.hash))
+			return 0
 		}
 
 		for hash, build := range builds.Builds {
-			var status, stagesPrintln string
-			var color int
-
-			statuses, err := c.GetClient().StatusByHash(ctx, &wrappers.StringValue{Value: hash})
+			var possibleErr string
+			query := &models.StatusQuery{
+				Hash: hash,
+			}
+			statuses, err := c.GetClient().GetStatus(ctx, query)
 			// just because we couldn't get stage details for this hash, doesn't mean it should fail
 			if err != nil {
-				stagesPrintln = "\t" + err.Error()
+				possibleErr = "\t" + err.Error()
 			}
-
-			if len(build.Ip) > 0 {
-				status = "Running"
-				color = 33
-			} else if statuses != nil {
-				if !statuses.BuildSum.Failed {
-					status = "PASS"
-					color = 32
-				} else {
-					status = "FAIL"
-					color = 31
-				}
-			}
-
-			if statuses != nil {
-				for _, stage := range statuses.Stages {
-					stagesPrintln += fmt.Sprintf("\n\t\t\033[0;35m%s\033[0m in %s", stage.Stage, commandhelper.PrettifyTime(stage.StageDuration))
-					if statuses.BuildSum.Failed {
-						stagesPrintln += fmt.Sprintf("\n\t\t  %s", strings.Join(stage.Messages, "\n\t\t  "))
-						if len(stage.Error) > 0 {
-							stagesPrintln += fmt.Sprintf(": \033[1;30m%s\033[0m", stage.Error)
-						}
-					}
-				}
-			}
-
-			buildStatus := fmt.Sprintf("\033[0;%dm\t %s/%s \t %s \t %s\033[0m", color, build.AcctName, build.RepoName, hash, status)
-			c.UI.Output(buildStatus + stagesPrintln)
+			stagesDetail, color, status := cmd_table.PrintStatusStages(len(build.Ip) > 0, statuses)
+			buildStatus := cmd_table.PrintStatusOverview(color, build.AcctName, build.RepoName, hash, status)
+			c.UI.Output(buildStatus + possibleErr + stagesDetail)
 		}
-
 		return 0
 	}
 
 	//respect acct-repo next
+	if c.accountRepo != "ERROR" {
+		data := strings.Split(c.accountRepo, "/")
+		if len(data) != 2  {
+			c.UI.Error("flag -acct-repo must be in the format <account>/<repo>. see --help")
+			return 1
+		}
+
+		query := &models.StatusQuery{
+			AcctName: data[0],
+			RepoName: data[1],
+		}
+		statuses, err := c.GetClient().GetStatus(ctx, query)
+		if err != nil {
+			c.UI.Error(err.Error())
+			return 1
+		}
+
+		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		c.UI.Output(buildStatus + stageStatus)
+		return 0
+	}
+
+	//repo is last
 	if c.repo != "ERROR" {
 
 	}
 
-	//acct is last
-	data := strings.Split(c.accountRepo, "/")
-	if len(data) != 2  {
-		c.UI.Error("flag -acct-repo must be in the format <account>/<repo>. see --help")
-		return 1
-	}
-
 	return 0
 }
-
-const synopsis = "show status of specific acctname, acctname/repo, or hash"
-//TODO: finish writing help once I know how it works
-const help = `
-Usage: ocelot status -acct-repo <acct>/<repo>
-`
