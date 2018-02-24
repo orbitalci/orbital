@@ -126,6 +126,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 			if _, ok := buildRtInfo[build.Hash]; !ok {
 				buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{
 					Hash: build.Hash,
+					// if a result was found in the database but not in GetBuildRuntime, the build is done
 					Done: true,
 				}
 			}

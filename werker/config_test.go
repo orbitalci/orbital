@@ -11,11 +11,11 @@ import (
 func TestGetConf_fromEnv(t *testing.T) {
 	testConf := &WerkerConf{
 		ServicePort: "9899",
-		grpcPort: defaultGrpcPort,
-		WerkerName: "oh_YEEEAH",
-		werkerType: Kubernetes,
-		LogLevel: "error",
-		RegisterIP: "55.259.12.197",
+		GrpcPort:    defaultGrpcPort,
+		WerkerName:  "oh_YEEEAH",
+		werkerType:  Kubernetes,
+		LogLevel:    "error",
+		RegisterIP:  "55.259.12.197",
 	}
 	os.Setenv("WS_PORT", testConf.ServicePort)
 	os.Setenv("TYPE", "kubernetes")
@@ -33,8 +33,8 @@ func TestGetConf_fromEnv(t *testing.T) {
 	if conf.ServicePort != testConf.ServicePort {
 		t.Error(test.StrFormatErrors("service ws port", testConf.ServicePort, conf.ServicePort))
 	}
-	if conf.grpcPort != testConf.grpcPort {
-		t.Error(test.StrFormatErrors("grpc port", testConf.grpcPort, conf.grpcPort))
+	if conf.GrpcPort != testConf.GrpcPort {
+		t.Error(test.StrFormatErrors("grpc port", testConf.GrpcPort, conf.GrpcPort))
 	}
 	if conf.WerkerName != testConf.WerkerName {
 		t.Error(test.StrFormatErrors("werker name", testConf.WerkerName, conf.WerkerName))
