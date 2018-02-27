@@ -8,7 +8,7 @@ import (
 
 
 type Builder interface {
-	Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) *Result
+	Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *Result, uuid string)
 	Execute(actions *pb.Stage, logout chan []byte, commitHash string) *Result
 	Cleanup(logout chan []byte)
 }

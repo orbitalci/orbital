@@ -34,20 +34,20 @@ func initServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestSer
 //	c  *consulet.Consulet
 //	ts *testutil.TestServer
 //}
-
-//SetBuildDone(consulete *consul.Consulet, gitHash string) error
-func Test_SetBuildDone(t *testing.T) {
-	hash := "OHAi"
-	consu, serv, _ := initServerAndConsulet(t)
-	defer serv.Stop()
-	if err := SetBuildDone(consu, hash); err != nil {
-		t.Fatal("could not set build done, err ", err.Error())
-	}
-	done := serv.GetKV(t, fmt.Sprintf(buildDonePath, hash))
-	if string(done) != "true" {
-		t.Error(test.StrFormatErrors("done flag", "true", string(done)))
-	}
-}
+//
+////SetBuildDone(consulete *consul.Consulet, gitHash string) error
+//func Test_SetBuildDone(t *testing.T) {
+//	hash := "OHAi"
+//	consu, serv, _ := initServerAndConsulet(t)
+//	defer serv.Stop()
+//	if err := SetBuildDone(consu, hash); err != nil {
+//		t.Fatal("could not set build done, err ", err.Error())
+//	}
+//	done := serv.GetKV(t, fmt.Sprintf(buildDonePath, hash))
+//	if string(done) != "true" {
+//		t.Error(test.StrFormatErrors("done flag", "true", string(done)))
+//	}
+//}
 
 //// func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
 func Test_CheckIfBuildDone(t *testing.T) {
@@ -79,13 +79,13 @@ func testAddFullBuildSummary(hash string, store storage.BuildSum, t *testing.T) 
 
 // func Register(consulete *consul.Consulet, gitHash string, ip string, grpcPort string, wsPort string) (err error) {
 func Test_Register(t *testing.T) {
-	hash := "1231231231"
+	//hash := "1231231231"
 	ip := "10.1.1.0"
 	grpcPort := "1020"
 	wsPort := "4030"
 	consu, serv, _ := initServerAndConsulet(t)
 	defer serv.Stop()
-	err := Register(consu, hash, ip, grpcPort, wsPort)
+	uuid, err := Register(consu, ip, grpcPort, wsPort)
 	if err != nil {
 		t.Fatal("could not register with consul, err: ", err)
 	}
@@ -95,34 +95,68 @@ func Test_Register(t *testing.T) {
 	//	t.Error("should not have set done flag, set to: ", done)
 	//}
 	t.Log("gettin grpc")
-	grp := serv.GetKVString(t, fmt.Sprintf(buildGrpcPort, hash))
+	grp := serv.GetKVString(t, fmt.Sprintf(werkerGrpc, uuid.String()))
 	if grp != grpcPort {
 		t.Error(test.StrFormatErrors("grpc port", grpcPort, grp))
 	}
 	t.Log("gettin wsp")
-	wsP := serv.GetKVString(t, fmt.Sprintf(buildWsPort, hash))
+	wsP := serv.GetKVString(t, fmt.Sprintf(werkerWs, uuid.String()))
 	if wsP != wsPort {
 		t.Error(test.StrFormatErrors("websocket port", wsPort, wsP))
 	}
 	t.Log("gettin ip")
-	registeredIP := serv.GetKVString(t, fmt.Sprintf(buildRegister, hash))
+	registeredIP := serv.GetKVString(t, fmt.Sprintf(werkerIp, uuid.String()))
 	if registeredIP != ip {
 		t.Error(test.StrFormatErrors("registered ip", ip, registeredIP))
 	}
 
 }
+
+func Test_RegisterBuild(t *testing.T) {
+	hash := "1231231231"
+	ip := "10.1.1.0"
+	grpcPort := "1020"
+	wsPort := "4030"
+	dockerUuid := "1111-2222-3333-asdf"
+	consu, serv, _ := initServerAndConsulet(t)
+	defer serv.Stop()
+	uuid, err := Register(consu, ip, grpcPort, wsPort)
+	if err != nil {
+		t.Fatal("could not register with consul, err: ", err)
+	}
+	if err = RegisterStartedBuild(consu, uuid.String(), hash); err != nil {
+		t.Fatal("unable to register start of build, err: ", err.Error())
+	}
+	mapPath := MakeBuildMapPath(hash)
+	if werkerId := serv.GetKVString(t, mapPath); werkerId != uuid.String() {
+		t.Error("werker uuid", uuid.String(), werkerId)
+	}
+	if err = RegisterBuild(consu, uuid.String(), hash, dockerUuid); err != nil {
+		t.Fatal("unable to register the build")
+	}
+	dockerUuidByte := serv.GetKV(t, MakeDockerUuidPath(uuid.String(), hash))
+	returnedUuid := string(dockerUuidByte)
+	if dockerUuid != returnedUuid {
+		test.StrFormatErrors("docker uuid", dockerUuid, returnedUuid)
+	}
+
+}
+
 //
 //// func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (*BuildRuntime, error) {
 func Test_GetBuildRuntime(t *testing.T) {
 	hash := "1231231231"
 	ip := "10.1.1.0"
 	grpcPort := "1020"
+	werkerId := "werkerId"
 	wsPort := "4030"
 	consu, serv, _ := initServerAndConsulet(t)
 	defer serv.Stop()
-	serv.SetKV(t, fmt.Sprintf(buildGrpcPort, hash), []byte(grpcPort))
-	serv.SetKV(t, fmt.Sprintf(buildWsPort, hash), []byte(wsPort))
-	serv.SetKV(t, fmt.Sprintf(buildRegister, hash), []byte(ip))
+	serv.SetKV(t, fmt.Sprintf(werkerGrpc, werkerId), []byte(grpcPort))
+	serv.SetKV(t, fmt.Sprintf(werkerWs, werkerId), []byte(wsPort))
+	serv.SetKV(t, fmt.Sprintf(werkerIp, werkerId), []byte(ip))
+	serv.SetKV(t, fmt.Sprintf(buildDockerUuid, werkerId, hash), []byte("dockerId"))
+	serv.SetKV(t, fmt.Sprintf(werkerBuildMap, hash), []byte(werkerId))
 	brt, err := GetBuildRuntime(consu, hash)
 	if err != nil {
 		t.Fatal("unable to get build runtime, err: ", err.Error())
@@ -141,6 +175,34 @@ func Test_GetBuildRuntime(t *testing.T) {
 		if val.Ip != ip {
 			t.Error(test.StrFormatErrors("registered ip", ip, val.Ip))
 		}
+	}
+
+}
+
+func Test_Delete(t *testing.T) {
+	werkerId := "werkerId"
+	hash := "1231231231"
+	dockerUuid := "12312324/81dfasd"
+	consu, serv, _ := initServerAndConsulet(t)
+	defer serv.Stop()
+	serv.SetKV(t, fmt.Sprintf(buildDockerUuid, werkerId, hash), []byte(dockerUuid))
+	serv.SetKV(t, fmt.Sprintf(werkerBuildMap, hash), []byte(werkerId))
+	if err := Delete(consu, hash); err != nil {
+		t.Fatal("could not delete!", err)
+	}
+	liveUuid, err := consu.GetKeyValue(fmt.Sprintf(buildDockerUuid, werkerId, hash))
+	if err != nil {
+		t.Fatal("unable to connect to consu ", err.Error())
+	}
+	if liveUuid != nil {
+		t.Error("liveUuid path should not exist after delete")
+	}
+	werkerIdd, err := consu.GetKeyValue(fmt.Sprintf(werkerBuildMap, hash))
+	if err != nil {
+		t.Fatal("unable to connect to conu ", err.Error())
+	}
+	if werkerIdd != nil {
+		t.Error("werkerId path should not exist after delete")
 	}
 
 }

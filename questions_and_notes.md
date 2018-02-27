@@ -17,7 +17,7 @@
     - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
          - panic recovery on main function 
             - cleanup consul entry / notify _someone_ of status 
-            - [RECOVERY!!!](https://blog.golang.org/defer-panic-and-recover)
+            - [1](https://blog.golang.org/defer-panic-and-recover), [2](https://golangbot.com/panic-and-recover/)
             - cleanup docker containers
             - add item back to queue for build 
     
