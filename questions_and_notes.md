@@ -7,6 +7,7 @@
 
 
 ## in progress
+- our fucking BUILD IS BROKEN
 - sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)                                     
     - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
          - panic recovery on main function 
@@ -44,7 +45,6 @@
 ## BIG TODOs:
 - make the client colors for everything configurable
     - this would also include making it so that the ocelot client can be configured via a config.yml 
-- our fucking BUILD IS BROKEN
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
 - put a limit on number of running containers at once
 - failure notifications
