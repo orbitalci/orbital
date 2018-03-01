@@ -59,11 +59,11 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 		},
 	}
 	var args []string
-	if exit := c.Run(args); exit != 1 {
-		t.Fatal("should return exit 1 because SSH Key path doesn't exist")
+	if exit := c.Run(args); exit != 0 {
+		t.Fatal("should return exit 0 because even though SSH Key path doesn't exist, it doesn't mean failure")
 	}
 	uploadErrMsg := strings.TrimSpace(ui.ErrorWriter.String())
-	expectedSSHErrMsg := `Could not read file at ./test-fixtures/newcreds.yml 
+	expectedSSHErrMsg := `Could not read file at THIS IS A TEST 
 Error: open THIS IS A TEST: no such file or directory`
 	if uploadErrMsg != expectedSSHErrMsg {
 		t.Error(test.StrFormatErrors("ssh key file error ouput", expectedSSHErrMsg, uploadErrMsg))
