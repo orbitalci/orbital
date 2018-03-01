@@ -178,7 +178,7 @@ func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) er
 	}
 
 	for _, buildBranch := range buildConf.Branches {
-		if buildBranch == branch {
+		if buildBranch == "[all]" || buildBranch == branch {
 			return nil
 		}
 	}

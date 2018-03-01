@@ -24,10 +24,8 @@
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
 ## little TODOs?:
-- set environment properties that are always avilable on a build container
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
-- add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
 - add ability to specify if you want all branches built
 - add optional to specify working directory inside of ocelot.yml
 - `ocelot watch` - create a new webhook
@@ -63,6 +61,8 @@
 
 
 ## done:   
+~~- don't create webhook unless they have an ocelot.yaml file~~
+~~- set environment properties that are always avilable on a build container~~
 ~~- GOTTA FIGURE OUT WHAT TO DO ABOUT HANDLING SSH KEYS~~
     ~~- take in a private key via command line for an account name~~ 
 ~~- add nexus to infra~~

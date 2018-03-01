@@ -14,7 +14,6 @@ const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
 //TODO: callback url is set as env. variable on admin, or passed in via command line
-
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
 func GetBitbucketHandler(adminConfig *models.VCSCreds, client ocenet.HttpClient) VCSHandler {
 	bb := &Bitbucket{
@@ -122,14 +121,38 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 	}
 
 	for _, v := range repositories.GetValues() {
-		ocelog.Log().Debug("found repo %v\n", v.GetFullName())
-		err = bb.CreateWebhook(v.GetLinks().GetHooks().GetHref())
+		ocelog.Log().Debug(fmt.Sprintf("found repo %v", v.GetFullName()))
+		err = bb.recurseOverFiles(v.GetLinks().GetSource().GetHref(), v.GetLinks().GetHooks().GetHref())
 		if err != nil {
 			return err
 		}
 	}
 	return bb.recurseOverRepos(repositories.GetNext())
 }
+
+
+//recursively iterates over all source files trying to find build file
+func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) error {
+	if sourceFileUrl == "" {
+		return nil
+	}
+	repositories := &pb.PaginatedRootDirs{}
+	err := bb.Client.GetUrl(sourceFileUrl, repositories)
+	if err != nil {
+		return err
+	}
+	for _, v := range repositories.GetValues() {
+		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == models.BuildFileName {
+			ocelog.Log().Debug("holy crap we actually an ocelot.yml file")
+			err = bb.CreateWebhook(webhookUrl)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return bb.recurseOverFiles(repositories.GetNext(), webhookUrl)
+}
+
 
 //recursively iterates over all webhooks and returns true (matches our callback urls) if one already exists
 func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {

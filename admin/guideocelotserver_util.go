@@ -17,12 +17,8 @@ func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCS
 		bitbucketClient := &ocenet.OAuthClient{}
 		bitbucketClient.Setup(config)
 
-		_ = handler.GetBitbucketHandler(config, bitbucketClient)
-		//TODO: I COMMENTED THIS OUT BECAUSE WE NEED TO STOP ADDING WEBHOOKS
-		//err := bbHandler.Walk()
-		//if err != nil {
-		//	return err
-		//}
+		bbHandler := handler.GetBitbucketHandler(config, bitbucketClient)
+		go bbHandler.Walk() //spawning walk in a different thread because we don't want client to wait if there's a lot of repos/files to check
 	}
 	configPath := config.BuildCredPath(config.Type, config.AcctName)
 	err := gos.RemoteConfig.AddCreds(configPath, config)
