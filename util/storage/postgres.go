@@ -141,18 +141,18 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]model
 	return hashes, nil
 }
 
-// RetrieveLatestSum will return the latest entry of build_summary where hash=gitHash
-func (p *PostgresStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
+// RetrieveLatestSum will return the latest entry of build_summary where hash starts with `gitHash`
+func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.BuildSummary, error) {
 	var sum models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sum, errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	querystr := `SELECT * FROM build_summary WHERE hash = $1 ORDER BY starttime DESC LIMIT 1`
-	row := p.db.QueryRow(querystr, gitHash)
+	querystr := `SELECT * FROM build_summary WHERE hash ilike $1 ORDER BY starttime DESC LIMIT 1;`
+	row := p.db.QueryRow(querystr, partialGitHash + "%")
 	err := row.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch)
 	if err == sql.ErrNoRows {
-		return sum, BuildSumNotFound(gitHash)
+		return sum, BuildSumNotFound(partialGitHash)
 	}
 	return sum, err
 }

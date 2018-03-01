@@ -4,15 +4,9 @@
 - one repo, multiple pipelines? how to handle that 
     - for example, the docker builder pattern. when deps are updated, the docker base image shoudl be as well. that's all in one repo, but its widely different behavior than build/testing source code.
 
+
+
 ## in progress
-- `ocelot status` - asks admin to get build runtime (marianne) 
-    ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
-    - this should really give you success/failure of some sort
-        - if running or failed, display stages + corresponding messages 
-    - queryable by:
-        - repoName 
-        - acctname/repoName
-        ~~- git hash~~
 - sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)                                     
     - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
          - panic recovery on main function 
@@ -20,6 +14,7 @@
             - [1](https://blog.golang.org/defer-panic-and-recover), [2](https://golangbot.com/panic-and-recover/)
             - cleanup docker containers
             - add item back to queue for build 
+
     
 ## bugs: 
 ~~- GOTTA FIGURE OUT WHAT TO DO ABOUT HANDLING SSH KEYS~~
@@ -30,7 +25,6 @@
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
 ## little TODOs?:
-- add nexus to infra
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
 - add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
@@ -70,7 +64,16 @@
 
 
 ## done:    
+~~- add nexus to infra~~
 - ~~remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3~~ 
 - ~~make it so that we can query whether or not there's a key uploaded for this accountname (also update help)~~
+~~- [BLOCKED GO TALK TO JESSI] `ocelot status` - asks admin to get build runtime (marianne)~~ 
+    ~~- current / past stage info to be added to build_stage_details (currently build_failure_reason)~~
+    ~~- this should really give you success/failure of some sort~~
+        - ~~if running or failed, display stages + corresponding messages~~ 
+    ~~- queryable by:~~
+        ~~- repoName ~~
+        ~~- acctname/repoName~~
+        ~~- git hash~~
 
      

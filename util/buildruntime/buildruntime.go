@@ -13,7 +13,6 @@ How an active build would actually look in consul:
 	$ consul kv get ci/werker_build_map/abcgithash
 	werker123
 	$ consul kv get -recurse ci/builds/werker123/abcgithash
-	ci/builds/werker123/abcgithash/done:false
 	ci/builds/werker123/abcgithash/docker_uuid:1233-5679-5894-1111
 	$ # this would enable a lookup of all active builds under a werker
 	$ consul kv get -recurse ci/builds/werker123/
@@ -90,17 +89,6 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*mo
 
 	return rt, nil
 }
-//
-//// SetBuildDone adds the flag `ci/builds/<werkerId>/<gitHash>/done` to consul
-//func SetBuildDone(consulete *consul.Consulet, gitHash string, werkerId string) error {
-//	// todo: add byte of 0/1.. have ot use binary library though and idk how to use that yet
-//	// and not motivated enough to do it right now
-//	err := consulete.AddKeyValue(fmt.Sprintf(buildDonePath, werkerId, gitHash), []byte("true"))
-//	if err != nil {
-//		 return err
-//	}
-//	return nil
-//}
 
 // CheckIfBuildDone will check in consul to make sure there is nothing in runtime configuration anymore,
 // then it will makes sure it can find it in storage

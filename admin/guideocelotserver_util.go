@@ -17,11 +17,12 @@ func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCS
 		bitbucketClient := &ocenet.OAuthClient{}
 		bitbucketClient.Setup(config)
 
-		bbHandler := handler.GetBitbucketHandler(config, bitbucketClient)
-		err := bbHandler.Walk()
-		if err != nil {
-			return err
-		}
+		_ = handler.GetBitbucketHandler(config, bitbucketClient)
+		//TODO: I COMMENTED THIS OUT BECAUSE WE NEED TO STOP ADDING WEBHOOKS
+		//err := bbHandler.Walk()
+		//if err != nil {
+		//	return err
+		//}
 	}
 	configPath := config.BuildCredPath(config.Type, config.AcctName)
 	err := gos.RemoteConfig.AddCreds(configPath, config)

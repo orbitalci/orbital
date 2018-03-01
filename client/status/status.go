@@ -85,39 +85,20 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	//TODO: talk about this with Jessi - what is criteria for project is RUNNING???
 	// always respect hash first
 	if c.hash != "ERROR" && len(c.hash) > 0 {
-		builds, err := c.GetClient().BuildRuntime(ctx, &models.BuildQuery{
+		query := &models.StatusQuery{
 			Hash: c.hash,
-		})
+		}
+		statuses, err := c.GetClient().GetStatus(ctx, query)
 		if err != nil {
-			c.UI.Error(fmt.Sprintf("error retrieving build runtime for hash %s. Error: %s", c.hash, err.Error()))
+			c.UI.Error(err.Error())
 			return 1
 		}
 
-		if len(builds.Builds) > 1 {
-			c.UI.Output(cmd_table.SelectFromHashes(builds))
-			return 0
-		} else if len(builds.Builds) == 0 {
-			c.UI.Warn(fmt.Sprintf("no builds found for hash %s", c.hash))
-			return 0
-		}
-
-		for hash, build := range builds.Builds {
-			var possibleErr string
-			query := &models.StatusQuery{
-				Hash: hash,
-			}
-			statuses, err := c.GetClient().GetStatus(ctx, query)
-			// just because we couldn't get stage details for this hash, doesn't mean it should fail
-			if err != nil {
-				possibleErr = "\t" + err.Error()
-			}
-			stagesDetail, color, status := cmd_table.PrintStatusStages(len(build.Ip) > 0, statuses)
-			buildStatus := cmd_table.PrintStatusOverview(color, build.AcctName, build.RepoName, hash, status)
-			c.UI.Output(buildStatus + possibleErr + stagesDetail)
-		}
+		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		c.UI.Output(buildStatus + stageStatus)
 		return 0
 	}
 

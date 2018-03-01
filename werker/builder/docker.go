@@ -181,6 +181,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
+		setupMessages = append(setupMessages, "detected build tool is maven, checking for nexus credentials")
 		if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
 			_, ok := err.(*nexus.NoCreds)
 			if !ok {
@@ -193,9 +194,13 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			}
 		} else {
 			ocelog.Log().Debug("writing maven settings.xml")
-			result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
-			result.Messages = append(result.Messages, setupMessages...)
-			return result, d.ContainerId
+			setupMessages = append(setupMessages, "nexus credentials detected, setting up settings.xml")
+			copyResult := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
+
+			if copyResult.Error != nil {
+				copyResult.Messages = append(setupMessages, copyResult.Messages...)
+				return copyResult, d.ContainerId
+			}
 		}
 	}
 
