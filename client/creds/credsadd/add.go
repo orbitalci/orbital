@@ -71,6 +71,12 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 				errOccured = true
 			} else {
 				c.UI.Info(fmt.Sprintf("Added vcs credentials for account: %s", configVal.AcctName))
+
+				//after creds are successfully uploaded via file, upload ssh key file accordingly
+				if len(configVal.SshFileLoc) > 0 {
+					c.UI.Info(fmt.Sprintf("\tdetected ssh file location: %s", configVal.SshFileLoc))
+					commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, configVal.AcctName, configVal.Type, configVal.SshFileLoc)
+				}
 			}
 		}
 	}
@@ -134,6 +140,7 @@ Usage: ocelot creds add --credfile-loc ~/credfile-yaml.yaml
 		tokenURL: https://ocelot.perf/site/oauth2/access_token
 		acctName: lamb-shank
 		type: bitbucket
+		sshFileLoc: path_to_your_ssh_key
 	repoCreds:
 	  repo:
 	  - username: thisBeMyUserName
@@ -141,5 +148,8 @@ Usage: ocelot creds add --credfile-loc ~/credfile-yaml.yaml
 		repoUrl: https://ocelot.perf/nexus-yo
 		acctName: jessishank
 		type: nexus
+
+  sshFileLoc is an optional field to set when uploading your vcs credentials, if added, it will be used 
+  for cloning repositories belonging to that account
 `
 

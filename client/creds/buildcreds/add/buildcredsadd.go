@@ -76,12 +76,10 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		} else {
 			c.UI.Info(fmt.Sprintf("Added credentials for account: %s", configVal.AcctName))
 
-			//after creds are successfully uploaded via file, upload ssh key file accordingly
+			//after creds are successfully uploaded via file, upload ssh key file
 			if len(configVal.SshFileLoc) > 0 {
-				c.acctName = configVal.AcctName
-				c.buildType = configVal.Type
-				c.sshKeyFile = configVal.SshFileLoc
-				return c.uploadSSHKeyFile(ctx)
+				c.UI.Info(fmt.Sprintf("\tdetected ssh file location: %s", configVal.SshFileLoc))
+				commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, configVal.AcctName, configVal.Type, configVal.SshFileLoc)
 			}
 		}
 	}
@@ -128,28 +126,6 @@ func (c *cmd) runStdinUpload(ctx context.Context) int {
 	return 0
 }
 
-func (c *cmd) uploadSSHKeyFile (ctx context.Context) int {
-	sshKey, err := ioutil.ReadFile(c.sshKeyFile)
-	if err != nil {
-		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
-		return 1
-	}
-
-	_, err = c.config.Client.SetVCSPrivateKey(ctx, &models.SSHKeyWrapper{
-		AcctName: c.acctName,
-		Type: c.buildType,
-		PrivateKey: sshKey,
-	})
-
-	if err != nil {
-		c.UI.Error(fmt.Sprintf("Could not upload private key at %s \nError: %s", c.sshKeyFile, err.Error()))
-		return 1
-	}
-
-	c.UI.Info(fmt.Sprintf("Successfully uploaded private key at %s for %s/%s", c.sshKeyFile, c.buildType, c.acctName))
-	return 0
-}
-
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
@@ -166,7 +142,7 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	if c.acctName != "" && c.sshKeyFile != "" && c.buildType != "" {
-		return c.uploadSSHKeyFile(ctx)
+		return commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, c.acctName, c.buildType, c.sshKeyFile)
 	} else {
 		c.UI.Error("-acctname, -sshfile-loc and -type must be passed together, -acctname should correspond with the account you'd like the ssh key file to be associated with, and -type should correspond with your acctname")
 		return 1
