@@ -8,8 +8,8 @@ if [ $# -gt 0 ]; then
   vaulttoken=${args[0]}
   vaultpath=${args[1]}
 #  this line that's commented out will work if you are running consul/vault/werker/hookhandler/admin all locally
-#  keyFile=$(curl --header "X-Vault-Token: ${vaulttoken}" "http://docker.for.mac.localhost:8200/v1/secret/${vaultpath}" | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["data"]["sshKey"]')
-  keyFile=$(curl --header "X-Vault-Token: ${vaulttoken}" "http://localhost:8200/v1/secret/${vaultpath}" | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["data"]["sshKey"]')
+  keyFile=$(curl --header "X-Vault-Token: ${vaulttoken}" "http://docker.for.mac.localhost:8200/v1/secret/${vaultpath}" | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["data"]["sshKey"]')
+#  keyFile=$(curl --header "X-Vault-Token: ${vaulttoken}" "http://localhost:8200/v1/secret/${vaultpath}" | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["data"]["sshKey"]')
   mkdir -p ~/.ssh
   # we have to set IFS to empty so that keyfile's newlines will be preserved
   IFS=

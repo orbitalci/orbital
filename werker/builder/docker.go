@@ -76,10 +76,14 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
+	//add environment variables that will always be avilable on the machine - GIT_HASH, BUILD_ID
+	paddedEnvs := []string{fmt.Sprint("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%s", werk.Id)}
+	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
+
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,
-		Env: werk.BuildConf.Env,
+		Env: paddedEnvs,
 		Cmd: d.DownloadTemplateFiles(werkerPort),
 		AttachStderr: true,
 		AttachStdout: true,
