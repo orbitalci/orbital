@@ -24,6 +24,7 @@
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
 ## little TODOs?:
+- set environment properties that are always avilable on a build container
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
 - add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
