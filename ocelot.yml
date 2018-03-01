@@ -4,7 +4,7 @@ branches:
   - master
   - little_todos
 stages:
-  - name: echoenv
+  - name: echoenvars
     script:
       - echo "WOWOWOWOW WE ARE ON $BUILD_ID"
   - name: testing
