@@ -26,7 +26,6 @@
 ## little TODOs?:
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
-- add ability to specify if you want all branches built
 - add optional to specify working directory inside of ocelot.yml
 - `ocelot watch` - create a new webhook
 - `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
@@ -40,6 +39,7 @@
 	- etc. 
 
 ## BIG TODOs:
+- add ability to specify if you want all branches built
 - make the client colors for everything configurable
     - this would also include making it so that the ocelot client can be configured via a config.yml 
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
