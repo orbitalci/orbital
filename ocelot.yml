@@ -1,7 +1,6 @@
 image: golang:1.9
 buildTool: go
 branches:
-  - little_todos
   - master
 stages:
   - name: testing
