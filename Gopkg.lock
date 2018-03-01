@@ -12,8 +12,8 @@
     "test",
     "vault"
   ]
-  revision = "157ffee2a4199b9a396a58032fd2604ad3c8417b"
-  version = "0.1.6"
+  revision = "33002c58d734e76ff7bcf20657aac1a494be4e14"
+  version = "0.1.7"
 
 [[projects]]
   name = "github.com/Jeffail/gabs"
@@ -710,6 +710,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0193aedbc8b71f099ca5d2f87f5187abbddd6fdae526d46f605380579a317d91"
+  inputs-digest = "40fbdb101d6df22fdb89679aa4746c7b1aa34b75ebdc9517c44f3b31e775f852"
   solver-name = "gps-cdcl"
   solver-version = 1

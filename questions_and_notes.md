@@ -18,8 +18,6 @@
 
     
 ## bugs: 
-~~- GOTTA FIGURE OUT WHAT TO DO ABOUT HANDLING SSH KEYS~~
-    ~~- take in a private key via command line for an account name~~
 - be able to properly handle KILLS (what happens when build is killed halfway?)
     - [stackoverflow](https://stackoverflow.com/questions/11268943/is-it-possible-to-capture-a-ctrlc-signal-and-run-a-cleanup-function-in-a-defe)
 - fix dev mode (maybe fuck this)
@@ -63,7 +61,9 @@
     - [docker get script for ex](https://get.docker.com/)    
 
 
-## done:    
+## done:   
+~~- GOTTA FIGURE OUT WHAT TO DO ABOUT HANDLING SSH KEYS~~
+    ~~- take in a private key via command line for an account name~~ 
 ~~- add nexus to infra~~
 - ~~remove volume mounts on spawned build containers - they should be downloading the bash scripts out of s3~~ 
 - ~~make it so that we can query whether or not there's a key uploaded for this accountname (also update help)~~
