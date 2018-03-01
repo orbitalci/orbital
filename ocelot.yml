@@ -8,7 +8,7 @@ stages:
     script:
       - mkdir -p $GOPATH/src/bitbucket.org/level11consulting/ocelot
       - cp -r * $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cp -r .* $GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cp -r .git* $GOPATH/src/bitbucket.org/level11consulting/ocelot
       - cd $GOPATH/src/bitbucket.org/level11consulting/ocelot
       - go get -v -u github.com/golang/dep/cmd/dep
       - ssh -o "StrictHostKeyChecking no" git@bitbucket.org
