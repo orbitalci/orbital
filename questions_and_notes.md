@@ -7,7 +7,6 @@
 
 
 ## in progress
-- `ocelot build jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook (marianne)
 - sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)                                     
     - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
          - panic recovery on main function 
@@ -15,6 +14,28 @@
             - [1](https://blog.golang.org/defer-panic-and-recover), [2](https://golangbot.com/panic-and-recover/)
             - cleanup docker containers
             - add item back to queue for build 
+
+
+
+
+## little TODOs?:
+- env variable for vault address to be used by get_ssh_key.sh from s3
+- fix PR's triggering builds
+- something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
+- something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
+- add something so that containers aren't removed (easy debugging for us) 
+- add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
+- add optional to specify working directory inside of ocelot.yml
+- polling option to add new repos with ocelot.yml
+- `ocelot summary` command takes in -repo or --hash? 
+- add `who triggered this` value to summary table
+- add *what* triggered this build
+	- command line trigger
+	- pr trigger
+	- commit trigger
+	- etc. 
+
+
 
     
 ## bugs: 
@@ -25,20 +46,7 @@
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
 
-## little TODOs?:
-- env variable for vault address to be used by get_ssh_key.sh from s3
-- something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
-- something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
-- add something so that containers aren't removed (easy debugging for us) 
-- add optional to specify working directory inside of ocelot.yml
-- polling option to add new repos with ocelot.yml
-- `ocelot summary` command takes in -repo or --hash? 
-- add `who triggered this` value to summary table
-- add *what* triggered this build
-	- command line trigger
-	- pr trigger
-	- commit trigger
-	- etc. 
+
 
 
 ## BIG TODOs:
@@ -61,27 +69,11 @@
     - [docker get script for ex](https://get.docker.com/)
     - this also needs to save the image to nexus and reuse    
 
-    
-## little TODOs?:
-- fix PR's triggering builds
-- something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
-- something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
-- add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
-- add ability to specify if you want all branches built
-- add optional to specify working directory inside of ocelot.yml
-- `ocelot watch` - create a new webhook
-- `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
-- polling option to add new repos with ocelot.yml
-- `ocelot summary` command takes in -repo or --hash? 
-- add `who triggered this` value to summary table
-- add *what* triggered this build
-	- command line trigger
-	- pr trigger
-	- commit trigger
-	- etc. 
 
 
 ## done:
+~~- `ocelot watch` - create a new webhook~~
+~~- `ocelot build jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook (marianne)~~
 ~~- `ocelot watch` - create a new webhook (marianne)~~
 ~~- add ability to specify if you want all branches built~~   
 ~~- don't create webhook unless they have an ocelot.yaml file~~

@@ -11,7 +11,7 @@ import (
 )
 
 
-const synopsis = "watch a repo"
+const synopsis = "add a repo to ocelot"
 const help = `
 Usage: ocelot watch -acct-repo <acct>/<repo>
 	If an ocelot.yml exists in the root directory of the project, new commits to 
