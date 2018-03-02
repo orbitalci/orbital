@@ -84,7 +84,6 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	if err := ValidateBuild(buildConf, branch, validator); err == nil {
 		TellWerker(buildConf, vaulty, producer, hash, account + "/" + repo, bbToken, id)
 		ocelog.Log().Debug("told werker!")
-
 		sr.Status = 0
 		sr.Messages = []string{"Passed initial validation " + smods.CHECKMARK}
 	} else {
@@ -93,6 +92,7 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 		sr.Messages = []string{"Failed initial validation. Error: " + err.Error()}
 	}
 
+	sr.StageDuration = time.Now().Sub(sr.StartTime).Seconds()
 	if err := store.AddStageDetail(sr); err != nil {
 		ocelog.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err
