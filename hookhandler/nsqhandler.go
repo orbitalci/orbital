@@ -20,7 +20,6 @@ type BuildHookHandler struct {
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
 func (b *BuildHookHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
-	//ocelog.Log().Debug("unmarshaling build obj and processing")
 	buildTask := &models.AcctRepoAndHash{}
 	if err := proto.Unmarshal(msg, buildTask); err != nil {
 		ocelog.IncludeErrField(err).Warning("unmarshal error")
@@ -33,19 +32,22 @@ func (b *BuildHookHandler) UnmarshalAndProcess(msg []byte, done chan int) error 
 		return err
 	}
 
+	fullHash := buildTask.PartialHash
+
 	buildSum, err := store.RetrieveLatestSum(buildTask.PartialHash)
-	if err != nil {
-		ocelog.IncludeErrField(err).Warning(fmt.Sprintf("could not retrieve latest sum for %s", buildTask.PartialHash))
-		return err
+	if err != nil { //continue after error because maybe they're passing full hash that's just not in our db yet
+		ocelog.IncludeErrField(err).Warning(fmt.Sprintf("there is no build matching hash %s in db", buildTask.PartialHash))
+	} else {
+		fullHash = buildSum.Hash
 	}
 
-	buildConf, token, err := GetBBConfig(b.RemoteConfig, buildTask.AcctRepo, buildSum.Hash, b.Deserializer)
+	buildConf, token, err := GetBBConfig(b.RemoteConfig, buildTask.AcctRepo, fullHash, b.Deserializer)
 	if err != nil {
 		ocelog.IncludeErrField(err).Warning(fmt.Sprintf("could not retrieve build configuration for for %s", buildTask.PartialHash))
 		return err
 	}
 
-	if err = QueueAndStore(buildSum.Hash, buildSum.Branch, buildTask.AcctRepo, token, b.RemoteConfig, buildConf, b.Validator, b.Producer, store); err != nil {
+	if err = QueueAndStore(fullHash, buildSum.Branch, buildTask.AcctRepo, token, b.RemoteConfig, buildConf, b.Validator, b.Producer, store); err != nil {
 		ocelog.IncludeErrField(err).Warning(fmt.Sprintf("could not queue up build for %s", buildTask.PartialHash))
 		return err
 	}

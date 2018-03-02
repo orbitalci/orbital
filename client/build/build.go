@@ -54,6 +54,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
+	//TODO: trigger also by build id? Need to standardize across commands
 	c.flags.StringVar(&c.accountRepo, "acct-repo", "ERROR", "<account>/<repo> to build")
 	c.flags.StringVar(&c.hash, "hash", "ERROR", "hash to build")
 }
