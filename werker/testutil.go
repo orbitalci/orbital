@@ -26,7 +26,7 @@ func testGetConf() *WerkerConf {
 	return &WerkerConf{
 		ServicePort:     "9090",
 		WerkerName:      "test agent",
-		werkerType:      Docker,
+		WerkerType:      Docker,
 		//werkerProcessor: &testWerkerProcessor{},
 		LogLevel:        "info",
 	}

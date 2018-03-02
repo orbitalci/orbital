@@ -34,6 +34,13 @@ service GuideOcelot {
     rpc Logs (BuildQuery) returns (stream LogResponse) {}
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {}
     rpc GetStatus (StatusQuery) returns (Status) {}
+    rpc WatchRepo (RepoAccount) returns (google.protobuf.Empty) {}
+    rpc BuildRepoAndHash (AcctRepoAndHash) returns (BuildSummary) {}
+}
+
+message AcctRepoAndHash {
+    string acctRepo = 1;
+    string partialHash = 2;
 }
 
 message AllCredsWrapper {

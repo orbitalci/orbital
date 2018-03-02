@@ -5,23 +5,14 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/validate"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/handler"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
-	smods "bitbucket.org/level11consulting/ocelot/util/storage/models"
-	"errors"
-	"fmt"
 	"net/http"
-	"strings"
-	"time"
 )
 
 
 type HookHandler interface {
-	GetBitbucketClient(cfg *models.VCSCreds) (handler.VCSHandler, string, error)
 	GetRemoteConfig() cred.CVRemoteConfig
 	SetRemoteConfig(remoteConfig cred.CVRemoteConfig)
 	GetProducer() *nsqpb.PbProduce
@@ -38,17 +29,6 @@ type HookHandlerContext struct {
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
 	OcelotValidator *validate.OcelotValidator
-}
-
-//Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
-func (hhc *HookHandlerContext) GetBitbucketClient(cfg *models.VCSCreds) (handler.VCSHandler, string, error) {
-	bbClient := &ocenet.OAuthClient{}
-	token, err := bbClient.Setup(cfg)
-	if err != nil {
-		return nil, "", err
-	}
-	bb := handler.GetBitbucketHandler(cfg, bbClient)
-	return bb, token, nil
 }
 
 func (hhc *HookHandlerContext) GetRemoteConfig() cred.CVRemoteConfig {
@@ -87,8 +67,9 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	fullName := repopush.Repository.FullName
 	hash := repopush.Push.Changes[0].New.Target.Hash
 	branch := repopush.Push.Changes[0].New.Name
-	acctName := repopush.Repository.Owner.Username
-	buildConf, bbToken, err := GetBBConfig(ctx, acctName, fullName, hash)
+	//acctName := repopush.Repository.Owner.Username
+
+	buildConf, bbToken, err := GetBBConfig(ctx.GetRemoteConfig(), fullName, hash, ctx.GetDeserializer())
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -98,28 +79,16 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
 		return
 	}
-	ocelog.Log().Debug("Storing initial results in db")
-	account, repo := getAcctRepo(repopush.Repository.FullName)
+
 	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to get storage!")
+		ocelog.IncludeErrField(err).Error("unable to get storage")
+		return
 	}
-	startTime := time.Now()
-	id := notifyStorage(store, hash, startTime, repo, branch, account)
-	sr := getHookhandlerStageResult(startTime, id)
-	// stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
-	if err := validateBuild(ctx, buildConf, branch); err == nil {
-		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
-		ocelog.Log().Debug("told werker!")
-		sr.Status = 0 //todo: i don't really want to hook in the builder package from werker into here to use the vars... idk how to do this
-		sr.Messages = []string{"Passed initial validation " + smods.CHECKMARK}
-	} else {
-		sr.Status = 1
-		sr.Error = err.Error()
-		sr.Messages = []string{"Failed initial validation. Error: " + err.Error()}
-	}
-	if err = store.AddStageDetail(sr); err != nil {
-		ocelog.IncludeErrField(err).Error("unable to add hookhandler stage details")
+
+	if err = QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
+		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
+		return
 	}
 }
 
@@ -135,94 +104,30 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	ocelog.Log().Debug(r.Body)
 	fullName := pr.Pullrequest.Source.Repository.FullName
 	hash := pr.Pullrequest.Source.Commit.Hash
-	acctName := pr.Pullrequest.Source.Repository.Owner.Username
+	//acctName := pr.Pullrequest.Source.Repository.Owner.Username
+	branch := pr.Pullrequest.Source.Branch.Name
 
-	buildConf, bbToken, err := GetBBConfig(ctx, acctName, fullName, hash)
+	buildConf, bbToken, err := GetBBConfig(ctx.GetRemoteConfig(), fullName, hash, ctx.GetDeserializer())
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
 			ocelog.IncludeErrField(err).Error("unable to get build conf")
 			return
 		}
-		ocelog.Log().Debugf("no ocelot yml found for repo %s", pr.Pullrequest.Source.Repository.FullName)
+		ocelog.Log().Debugf("no ocelot yml found for repo %s", fullName)
 		return
 	}
-	account, repo := getAcctRepo(pr.Repository.FullName)
+
 	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to get storage")
-	}
-	startTime := time.Now()
-	id := notifyStorage(store, hash, startTime, repo, pr.Pullrequest.Source.Branch.Name, account)
-	sr := getHookhandlerStageResult(startTime, id)
-	if err := validateBuild(ctx, buildConf, ""); err == nil {
-		tellWerker(ctx, buildConf, hash, fullName, bbToken, id)
-		sr.Status = 0
-		sr.Messages = []string{"Passed initial validation " + smods.CHECKMARK}
-	} else {
-		// todo get rid of repetition between PR and RepoPush
-		sr.Status = 1
-		sr.Error = err.Error()
-		sr.Messages = []string{"Failed initial validation. Error: " + err.Error()}
-	}
-}
-
-//before we build pipeline config for werker, validate and make sure this is good candidate
-// - check if commit branch matches with ocelot.yaml branch and validate
-func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) error {
-	err := ctx.GetValidator().ValidateConfig(buildConf, nil)
-
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("failed validation")
-		return err
-	}
-
-	for _, buildBranch := range buildConf.Branches {
-		if buildBranch == "ALL" || buildBranch == branch {
-			return nil
-		}
-	}
-	ocelog.Log().Errorf("build does not match any branches listed: %v", buildConf.Branches)
-	return errors.New(fmt.Sprintf("build does not match any branches listed: %v", buildConf.Branches))
-}
-
-// helper
-func getAcctRepo(fullName string) (acct string, repo string) {
-	list := strings.Split(fullName, "/")
-	acct = list[0]
-	repo = list[1]
-	return
-}
-
-func notifyStorage(store storage.BuildSum, hash string, starttime time.Time, repo string, branch string, account string) int64 {
-	//AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error)
-	id, err := store.AddSumStart(hash, starttime, account, repo, branch)
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("could not kick off summary")
-	}
-	return id
-}
-
-
-func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string, dbid int64) {
-	// get one-time token use for access to vault
-	token, err := ctx.GetRemoteConfig().GetVault().CreateThrowawayToken()
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
 
-	werkerTask := &pb.WerkerTask{
-		VaultToken:   token,
-		CheckoutHash: hash,
-		BuildConf: buildConf,
-		VcsToken: bbToken,
-		VcsType: "bitbucket",
-		FullName: fullName,
-		Id: dbid,
+	if err = QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
+		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
+		return
 	}
-
-	go ctx.GetProducer().WriteProto(werkerTask, "build")
 }
 
 func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
@@ -238,58 +143,4 @@ func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
-}
-
-func getHookhandlerStageResult(start time.Time, id int64) *smods.StageResult {
-	return &smods.StageResult{
-		BuildId: id,
-		Stage: smods.HOOKHANDLER_VALIDATION,
-		StartTime: start,
-		StageDuration: -99.99, // is this the best way? prob not
-	}
-}
-
-// for testing
-func getCredConfig() *models.VCSCreds {
-	return &models.VCSCreds{
-		ClientId:     "QEBYwP5cKAC3ykhau4",
-		ClientSecret: "gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb",
-		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",
-		AcctName:     "jessishank",
-	}
-}
-
-//returns config if it exists, bitbucket token, and err
-func GetBBConfig(ctx HookHandler, acctName string, repoFullName string, checkoutCommit string) (conf *pb.BuildConfig, token string, err error) {
-	vcs := models.NewVCSCreds()
-	bbCreds, err := ctx.GetRemoteConfig().GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, vcs)
-	cf := bbCreds["bitbucket/"+acctName]
-	cfg, ok := cf.(*models.VCSCreds)
-	// todo: this error happens even if there are no creds there, need a nil check for better error, and also to save to database?? for visibility
-	if !ok {
-		err = errors.New(fmt.Sprintf("could not cast config as models.VCSCreds, config: %v", cf))
-		return
-	}
-
-	bbClient := &ocenet.OAuthClient{}
-	bbClient.Setup(cfg)
-
-	bb, token, err := ctx.GetBitbucketClient(cfg)
-	if err != nil {
-		return
-	}
-
-	fileBitz, err := bb.GetFile("ocelot.yml", repoFullName, checkoutCommit)
-	if err != nil {
-		return
-	}
-	conf = &pb.BuildConfig{}
-	if err != nil {
-		return
-	}
-	fmt.Println(string(fileBitz))
-	if err = ctx.GetDeserializer().YAMLToStruct(fileBitz, conf); err != nil {
-		return
-	}
-	return
 }

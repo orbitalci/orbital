@@ -4,6 +4,7 @@ package hookhandler
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
@@ -39,6 +40,7 @@ func (mrc *MockRemoteConfig) SetConsul(consul *consul.Consulet) {}
 func (mrc *MockRemoteConfig) GetVault() ocevault.Vaulty {
 	return &MockVaulty{}
 }
+
 func (mrc *MockRemoteConfig) SetVault(vault ocevault.Vaulty) {}
 func (mrc *MockRemoteConfig) GetCredAt(path string, hideSecret bool, rcc cred.RemoteConfigCred) (map[string]cred.RemoteConfigCred, error) {
 	mockMap := make(map[string]cred.RemoteConfigCred)
@@ -138,6 +140,10 @@ type MockVCSHandler struct {}
 
 func (mvh *MockVCSHandler) Walk() error {
 	return nil
+}
+
+func (mvh *MockVCSHandler) GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error) {
+	return pb.PaginatedRepository_RepositoryValues{}, nil
 }
 
 //****WARNING**** this assumes you're running this inside of the hookhandler folder

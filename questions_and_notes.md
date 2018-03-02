@@ -31,7 +31,6 @@
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
 - add something so that containers aren't removed (easy debugging for us) 
 - add optional to specify working directory inside of ocelot.yml
-- `ocelot watch` - create a new webhook
 - polling option to add new repos with ocelot.yml
 - `ocelot summary` command takes in -repo or --hash? 
 - add `who triggered this` value to summary table
@@ -83,6 +82,7 @@
 
 
 ## done:
+~~- `ocelot watch` - create a new webhook (marianne)~~
 ~~- add ability to specify if you want all branches built~~   
 ~~- don't create webhook unless they have an ocelot.yaml file~~
 ~~- set environment properties that are always avilable on a build container~~

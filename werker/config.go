@@ -50,7 +50,7 @@ type WerkerConf struct {
 	ServicePort string
 	GrpcPort    string
 	WerkerName  string
-	werkerType  WerkType
+	WerkerType  WerkType
 	//werkerProcessor builder.Processor
 	LogLevel        string
 	RegisterIP      string
@@ -81,8 +81,8 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
 	flrg.Parse(os.Args[1:])
-	werker.werkerType = strToWerkType(werkerTypeStr)
-	if werker.werkerType == -1 {
+	werker.WerkerType = strToWerkType(werkerTypeStr)
+	if werker.WerkerType == -1 {
 		return nil, errors.New("werker type can only be: k8s, kubernetes, docker")
 	}
 	if werker.WerkerName == "" {

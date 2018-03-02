@@ -7,7 +7,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bufio"
 	"context"
-	"errors"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -28,8 +27,7 @@ func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 
-
-func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*Result, string) {
+func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	var setupMessages []string
 
 	su := InitStageUtil("setup")
@@ -42,10 +40,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	if err != nil {
 		ocelog.Log().Debug("returning failed stage because could not create docker env client")
-		return &Result{
+		return &pb.Result {
 			Stage:  su.GetStage(),
-			Status: FAIL,
-			Error:  err,
+			Status: pb.StageResultVal_FAIL,
+			Error: err.Error(),
 		}, ""
 	}
 
@@ -60,10 +58,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			ocelog.IncludeErrField(err2).Error("unable to read output of failed image pull")
 		}
 		setupMessages = append(setupMessages, fmt.Sprintf("could not pull image!"), string(outTxt))
-		return &Result{
+		return &pb.Result{
 			Stage:  su.GetStage(),
-			Status: FAIL,
-			Error:  err,
+			Status: pb.StageResultVal_FAIL,
+			Error:  err.Error(),
 			Messages: setupMessages,
 		}, ""
 	}
@@ -105,10 +103,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("returning failed because could not create container")
-		return &Result{
+		return &pb.Result{
 			Stage:  su.GetStage(),
-			Status: FAIL,
-			Error:  err,
+			Status: pb.StageResultVal_FAIL,
+			Error:  err.Error(),
 			Messages: setupMessages,
 		}, ""
 	}
@@ -125,10 +123,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	ocelog.Log().Debug("starting up container")
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		ocelog.IncludeErrField(err).Error("returning failed because could not start container")
-		return &Result{
+		return &pb.Result{
 			Stage:  su.GetStage(),
-			Status: FAIL,
-			Error:  err,
+			Status: pb.StageResultVal_FAIL,
+			Error:  err.Error(),
 			Messages: setupMessages,
 		}, ""
 	}
@@ -145,10 +143,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("returning failed setup because could not get logs of container")
-		return &Result{
+		return &pb.Result{
 			Stage: su.GetStage(),
-			Status: FAIL,
-			Error:  err,
+			Status: pb.StageResultVal_FAIL,
+			Error:  err.Error(),
 			Messages: setupMessages,
 		}, d.ContainerId
 	}
@@ -159,7 +157,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 
 	downloadCodebase := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
-	if downloadCodebase.Error != nil {
+	if len(downloadCodebase.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download codebase", downloadCodebase.Error)
 		setupMessages = append(setupMessages, "failed to download codebase")
 		downloadCodebase.Messages = append(downloadCodebase.Messages, setupMessages...)
@@ -175,7 +173,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadSSHKey(
 		werk.VaultToken,
 		cred.BuildCredPath(werk.VcsType, acctName, cred.Vcs)), logout)
-	if result.Error != nil {
+	if len(result.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
 		result.Messages = append(result.Messages, setupMessages...)
 		return result, d.ContainerId
@@ -190,10 +188,10 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			_, ok := err.(*nexus.NoCreds)
 			if !ok {
 				ocelog.IncludeErrField(err).Error("returning failed setup because could not get settings.xml")
-				return &Result{
+				return &pb.Result{
 					Stage: su.GetStage(),
-					Status: FAIL,
-					Error:  err,
+					Status: pb.StageResultVal_FAIL,
+					Error:  err.Error(),
 				}, d.ContainerId
 			}
 		} else {
@@ -201,7 +199,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			setupMessages = append(setupMessages, "nexus credentials detected, setting up settings.xml")
 			copyResult := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
 
-			if copyResult.Error != nil {
+			if len(copyResult.Error) > 0 {
 				copyResult.Messages = append(setupMessages, copyResult.Messages...)
 				return copyResult, d.ContainerId
 			}
@@ -233,12 +231,12 @@ func (d *Docker) Cleanup(logout chan []byte) {
 }
 
 
-func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string) *Result {
+func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	if len(d.ContainerId) == 0 {
-		return &Result {
+		return &pb.Result {
 			Stage: stage.Name,
-			Status: FAIL,
-			Error: errors.New("no container exists, setup before executing"),
+			Status: pb.StageResultVal_FAIL,
+			Error: "no container exists, setup before executing",
 		}
 	}
 
@@ -246,7 +244,7 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 	return d.Exec(su.GetStage(), su.GetStageLabel(), stage.Env, d.CDAndRunCmds(stage.Script, commitHash), logout)
 }
 
-func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
+func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *pb.Result {
 	var stageMessages []string
 	ctx := context.Background()
 
@@ -260,10 +258,10 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 	})
 
 	if err != nil {
-		return &Result{
+		return &pb.Result{
 			Stage:  currStage,
-			Status: FAIL,
-			Error:  err,
+			Status: pb.StageResultVal_FAIL,
+			Error:  err.Error(),
 			Messages: stageMessages,
 		}
 	}
@@ -285,19 +283,26 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 
 	if inspector.ExitCode != 0 || err != nil {
 		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage \u2717", currStage))
-		return &Result{
+		var errStr string
+		if err == nil {
+			errStr = "exit code was not 0"
+		} else {
+			errStr = err.Error()
+		}
+
+		return &pb.Result{
 			Stage: currStage,
-			Status: FAIL,
-			Error: err,
+			Status: pb.StageResultVal_FAIL,
+			Error: errStr,
 			Messages: stageMessages,
 		}
 	}
 
 	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
-	return &Result{
+	return &pb.Result{
 		Stage:  currStage,
-		Status: PASS,
-		Error:  nil,
+		Status: pb.StageResultVal_PASS,
+		Error:  "",
 		Messages: stageMessages,
 	}
 }

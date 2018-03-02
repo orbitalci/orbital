@@ -3,9 +3,12 @@ package admin
 import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	"bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	rt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	md "bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"bufio"
@@ -14,9 +17,9 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/pkg/errors"
 	"strings"
 )
 
@@ -26,8 +29,19 @@ type guideOcelotServer struct {
 	Deserializer   *deserialize.Deserializer
 	AdminValidator *AdminValidator
 	RepoValidator  *RepoValidator
-	Storage 	   storage.OcelotStorage
+	Storage        storage.OcelotStorage
+	Producer       *nsqpb.PbProduce
 }
+
+func (g *guideOcelotServer) BuildRepoAndHash(ctx context.Context, buildReq *models.AcctRepoAndHash) (*models.BuildSummary, error) {
+	if buildReq == nil || len(buildReq.AcctRepo) == 0 || len(buildReq.PartialHash) == 0{
+		return nil, errors.New("please pass a valid account/repo_name and hash")
+	}
+	go g.Producer.WriteProto(buildReq, "build_please")
+	//TODO: something here that spams db for build status?
+	return &models.BuildSummary{}, nil
+}
+
 
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	credWrapper := &models.CredWrapper{}
@@ -124,7 +138,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 
 		if err != nil {
 			return &models.Builds{
-				Builds : buildRtInfo,
+				Builds: buildRtInfo,
 			}, err
 		}
 
@@ -146,27 +160,27 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 		buildSum, err := g.Storage.RetrieveSumByBuildId(bq.BuildId)
 		if err != nil {
 			return &models.Builds{
-				Builds : buildRtInfo,
+				Builds: buildRtInfo,
 			}, err
 		}
 
 		buildRtInfo[buildSum.Hash] = &models.BuildRuntimeInfo{
-			Hash: buildSum.Hash,
-			Done: true,
+			Hash:     buildSum.Hash,
+			Done:     true,
 			AcctName: buildSum.Account,
 			RepoName: buildSum.Repo,
 		}
 	}
 
 	builds := &models.Builds{
-		Builds : buildRtInfo,
+		Builds: buildRtInfo,
 	}
 	return builds, err
 }
 
 func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
 	if !rt.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
-		stream.Send(&models.LogResponse{OutputLine: "build is not finished, use BuildRuntime method and stream from the werker registered",})
+		stream.Send(&models.LogResponse{OutputLine: "build is not finished, use BuildRuntime method and stream from the werker registered"})
 	} else {
 		var out md.BuildOutput
 		var err error
@@ -201,14 +215,14 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 	}
 	for _, model := range modelz {
 		summary := &models.BuildSummary{
-			Hash: model.Hash,
-			Failed: model.Failed,
-			BuildTime: &timestamp.Timestamp{Seconds: model.BuildTime.UTC().Unix()},
-			Account: model.Account,
+			Hash:          model.Hash,
+			Failed:        model.Failed,
+			BuildTime:     &timestamp.Timestamp{Seconds: model.BuildTime.UTC().Unix()},
+			Account:       model.Account,
 			BuildDuration: model.BuildDuration,
-			Repo: model.Repo,
-			Branch: model.Branch,
-			BuildId: model.BuildId,
+			Repo:          model.Repo,
+			Branch:        model.Branch,
+			BuildId:       model.BuildId,
 		}
 		summaries.Sums = append(summaries.Sums, summary)
 	}
@@ -216,6 +230,37 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 }
 
+func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.RepoAccount) (*empty.Empty, error) {
+	var vcs *models.VCSCreds
+
+	bbCreds, err := g.RemoteConfig.GetCredAt(cred.BuildCredPath("bitbucket", repoAcct.Account, cred.Vcs), false, vcs)
+	if err != nil {
+		return &empty.Empty{}, err
+	}
+
+	//TODO: what do we even do if there's more than one?
+	for _, v := range bbCreds {
+		vcs = v.(*models.VCSCreds)
+		bbClient := &net.OAuthClient{}
+		bbClient.Setup(vcs)
+
+		bbHandler := handler.GetBitbucketHandler(vcs, bbClient)
+
+		repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
+		if err != nil {
+			return nil, err
+		}
+
+		webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
+		err = bbHandler.CreateWebhook(webhookURL)
+
+		if err != nil {
+			return nil, err
+		}
+		return &empty.Empty{}, nil
+	}
+	return &empty.Empty{}, nil
+}
 
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
 func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQuery) (*models.Status, error) {
@@ -258,7 +303,6 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 		}
 	}
 
-
 	if len(query.PartialRepo) > 0 {
 		buildSums, err := g.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
 		if err != nil {
@@ -284,7 +328,7 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 			} else {
 				var matches []string
 				for _, buildSum := range buildSums {
-					matches = append(matches, buildSum.Account + "/" + buildSum.Repo)
+					matches = append(matches, buildSum.Account+"/"+buildSum.Repo)
 				}
 				uhOh = errors.New(fmt.Sprintf("there are %v repositories starting with %s: %s", len(buildSums), query.PartialRepo, strings.Join(matches, ",")))
 			}
@@ -309,11 +353,12 @@ func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserialize
 	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
 	// purdier to me anyway
 	guideOcelotServer := &guideOcelotServer{
-		RemoteConfig: config,
-		Deserializer: d,
+		RemoteConfig:   config,
+		Deserializer:   d,
 		AdminValidator: adminV,
-		RepoValidator: repoV,
-		Storage: storage,
+		RepoValidator:  repoV,
+		Storage:        storage,
+		Producer:       nsqpb.GetInitProducer(),
 	}
 	return guideOcelotServer
 }
