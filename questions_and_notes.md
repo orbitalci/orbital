@@ -7,7 +7,6 @@
 
 
 ## in progress
-- our fucking BUILD IS BROKEN
 - sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)                                     
     - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
          - panic recovery on main function 
@@ -18,6 +17,7 @@
 
     
 ## bugs: 
+- our fucking build is broken
 - be able to properly handle KILLS (what happens when build is killed halfway?)
     - [stackoverflow](https://stackoverflow.com/questions/11268943/is-it-possible-to-capture-a-ctrlc-signal-and-run-a-cleanup-function-in-a-defe)
 - fix dev mode (maybe fuck this)
