@@ -97,7 +97,6 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	if len(build.Builds) > 1 {
-		c.UI.Info(fmt.Sprintf("it's your lucky day, there's %d hashes matching that str. Please enter a more complete git hash", len(build.Builds)))
 		c.UI.Output(cmd_table.SelectFromHashes(build))
 		return 0
 	} else if len(build.Builds) == 1 {

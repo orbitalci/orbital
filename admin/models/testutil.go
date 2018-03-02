@@ -6,7 +6,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"io"
-	"github.com/golang/protobuf/ptypes/wrappers"
 )
 //type GuideOcelotClient interface {
 //	GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error)
@@ -29,6 +28,7 @@ func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty
 }
 
 func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	in.SshFileLoc = "THIS IS A TEST"
 	f.creds.Vcs = append(f.creds.Vcs, in)
 	return &empty.Empty{}, nil
 }
@@ -53,7 +53,7 @@ func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empt
 	}, nil
 }
 
-func (g *fakeGuideOcelotClient) StatusByHash(ctx context.Context, partialHash *wrappers.StringValue, opts ...grpc.CallOption) (*Status, error) {
+func (g *fakeGuideOcelotClient) GetStatus(ctx context.Context, query *StatusQuery, opts ...grpc.CallOption) (*Status, error) {
 	return &Status{}, nil
 }
 
@@ -177,6 +177,9 @@ func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 			return false
 		}
 		if cred.ClientId != credB.ClientId {
+			return false
+		}
+		if cred.SshFileLoc != credB.SshFileLoc {
 			return false
 		}
 	}

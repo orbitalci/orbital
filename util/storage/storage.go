@@ -33,6 +33,7 @@ type BuildSum interface {
 	RetrieveLatestSum(gitHash string) (models.BuildSummary, error)
 	RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error)
 	RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error)
+	RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error)
 }
 
 type BuildStage interface {

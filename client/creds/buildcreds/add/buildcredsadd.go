@@ -75,6 +75,12 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 			errOccured = true
 		} else {
 			c.UI.Info(fmt.Sprintf("Added credentials for account: %s", configVal.AcctName))
+
+			//after creds are successfully uploaded via file, upload ssh key file
+			if len(configVal.SshFileLoc) > 0 {
+				c.UI.Info(fmt.Sprintf("\tdetected ssh file location: %s", configVal.SshFileLoc))
+				commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, configVal.AcctName, configVal.Type, configVal.SshFileLoc)
+			}
 		}
 	}
 	if errOccured {
@@ -120,28 +126,6 @@ func (c *cmd) runStdinUpload(ctx context.Context) int {
 	return 0
 }
 
-func (c *cmd) uploadSSHKeyFile (ctx context.Context) int {
-	sshKey, err := ioutil.ReadFile(c.sshKeyFile)
-	if err != nil {
-		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
-		return 1
-	}
-
-	_, err = c.config.Client.SetVCSPrivateKey(ctx, &models.SSHKeyWrapper{
-		AcctName: c.acctName,
-		Type: c.buildType,
-		PrivateKey: sshKey,
-	})
-
-	if err != nil {
-		c.UI.Error(fmt.Sprintf("Could not upload private key at %s \nError: %s", c.sshKeyFile, err.Error()))
-		return 1
-	}
-
-	c.UI.Info(fmt.Sprintf("Successfully uploaded private key at %s for %s/%s", c.sshKeyFile, c.buildType, c.acctName))
-	return 0
-}
-
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
@@ -158,7 +142,7 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	if c.acctName != "" && c.sshKeyFile != "" && c.buildType != "" {
-		return c.uploadSSHKeyFile(ctx)
+		return commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, c.acctName, c.buildType, c.sshKeyFile)
 	} else {
 		c.UI.Error("-acctname, -sshfile-loc and -type must be passed together, -acctname should correspond with the account you'd like the ssh key file to be associated with, and -type should correspond with your acctname")
 		return 1
@@ -173,21 +157,24 @@ func (c *cmd) Help() string {
 	return help
 }
 
-//TODO: update to explain how acctname/sshfile-loc/type
 const synopsis = "Add credentials or a set of them"
 const help = `
 Usage: ocelot creds vcs add
-  Add one set of credentials or a list of them.
-  If you specify a filename using:
+  Add one set of credentials or a list of them. Credentials may also need an SSH key file, if an ssh key path is populated, the file will be uploaded to vault and associated with the specified account/type. 
+  You can specify a filename using:
     ocelot creds add vcs -credfile-loc=<yaml file>
   The client will expect that the yaml is a credentials object with an array of creds you would like to integrate with ocelot.
   For example:
     credentials:
-    - clientId: <OAUTH_CLIENT_ID>   ---> client id correlated with clientSecret
-      clientSecret: <OAUTH_SECRET>  ---> generated when you add an oauth access
-      tokenURL: <OAUTH_TOKEN_URL>   ---> e.g. https://bitbucket.org/site/oauth2/access_token
-      acctName: <ACCOUNT_NAME>      ---> e.g. level11consulting
-      type: <SCM_TYPE>              ---> e.g. bitbucket
+    - clientId: <OAUTH_CLIENT_ID>     ---> client id correlated with clientSecret
+      clientSecret: <OAUTH_SECRET>    ---> generated when you add an oauth access
+      tokenURL: <OAUTH_TOKEN_URL>     ---> e.g. https://bitbucket.org/site/oauth2/access_token
+      acctName: <ACCOUNT_NAME>        ---> e.g. level11consulting
+      type: <SCM_TYPE>                ---> e.g. bitbucket
+	  sshFileLoc: <SSH_KEY_FILE_PATH> ---> e.g. /home/mariannefeng/.ssh/id_rsa
+	
+  sshFileLoc is not a required field, if you'd to add it later after a vcs account has already been added to ocelot, it can be uploaded via CLI like so:
+    ocelot creds add vcs -acctname <ACCOUNT_NAME> -sshfile-loc <SSH_KEY_FILE_PATH> -type <SCM_TYPE>
 
-  Retrieves all credentials that ocelot uses to track repositories
+  Adds credentials for ocelot to use in tracking repositories
 `
