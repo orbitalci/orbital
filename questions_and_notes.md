@@ -41,7 +41,7 @@
 - tag built projects by custom group name, that way you can filter to see all repos belonging to your group
 - docker login? - our repo creds model works for this currently, just need to implement part that actually runs docker login
 - do the pipeline thing
-- make it so that successful builds will edit the commit message and you can see in commit history whether or not that build was successful 
+- make it so that successful builds FROM PR'S will edit the PR comments and say whether or not that build was successful 
 - tighter maven integration?
 - `ocelot kill <hash>` - add a quit channel
 - check out worker queue
@@ -51,6 +51,7 @@
 
     
 ## little TODOs?:
+- fix PR's triggering builds
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
 - add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
