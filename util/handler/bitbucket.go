@@ -53,7 +53,6 @@ func (bb *Bitbucket) Walk() error {
 func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	ocelog.Log().Debug("inside GetFile")
 	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
-	ocelog.Log().Info("OMGGGG PATH: " + path)
 	bytez, err = bb.Client.GetUrlRawData(fmt.Sprintf(bb.GetBaseURL(), path))
 	if err != nil {
 		ocelog.IncludeErrField(err)
