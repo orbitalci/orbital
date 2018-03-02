@@ -38,7 +38,7 @@ func Test_parseGenericBuildPath(t *testing.T) {
 	expectWerkerId := "1234-8974-3818-asdf"
 	expectGitHash := "123nd9xz"
 	herepathbe := "ci/builds/1234-8974-3818-asdf/123nd9xz/docker_uuid"
-	werkerId, gitHash := parseGenericBuildPath(herepathbe)
+	werkerId, gitHash, _ := parseGenericBuildPath(herepathbe)
 	if werkerId != expectWerkerId {
 		test.StrFormatErrors("werker id ", expectWerkerId, werkerId)
 	}
@@ -46,7 +46,7 @@ func Test_parseGenericBuildPath(t *testing.T) {
 		test.StrFormatErrors("git hash", expectGitHash, gitHash)
 	}
 	herepathbe2 := "ci/builds/1234-8974-3818-asdf/123nd9xz/docker_uuid/"
-	werkerId, gitHash = parseGenericBuildPath(herepathbe2)
+	werkerId, gitHash, _ = parseGenericBuildPath(herepathbe2)
 	if werkerId != expectWerkerId {
 		test.StrFormatErrors("werker id ", expectWerkerId, werkerId)
 	}
@@ -54,11 +54,11 @@ func Test_parseGenericBuildPath(t *testing.T) {
 		test.StrFormatErrors("git hash", expectGitHash, gitHash)
 	}
 	herepathbe3 := "ci/builds/1234-8974-3818-asdf/123nd9xz"
-	werkerId, gitHash = parseGenericBuildPath(herepathbe3)
+	werkerId, gitHash, _ = parseGenericBuildPath(herepathbe3)
 	if werkerId != expectWerkerId {
 		test.StrFormatErrors("werker id ", expectWerkerId, werkerId)
 	}
-	if gitHash != expectGitHash {
+	if gitHash, _ != expectGitHash {
 		test.StrFormatErrors("git hash", expectGitHash, gitHash)
 	}
 }

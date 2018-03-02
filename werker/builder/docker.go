@@ -2,19 +2,19 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"io"
 	"io/ioutil"
 	"strings"
-	"fmt"
 )
 
 type Docker struct{
@@ -249,7 +249,7 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 		Env: env,
 		Cmd: cmds,
 	})
-
+	panic("GOOD LORD! EVERYBODY GET OUT OF HERE! ITS A DISASTER!")
 	if err != nil {
 		return &Result{
 			Stage:  currStage,

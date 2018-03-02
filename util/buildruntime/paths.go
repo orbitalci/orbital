@@ -7,8 +7,14 @@ import (
 )
 const (
 	buildBase		= "ci/builds/"
+	buildIdOnly     = buildBase + "%s" // werkerId
 	buildPath 	    = buildBase + "%s/%s" // werkerId, hash
-	buildDockerUuid = buildPath + "/docker_uuid"
+	dockerUuidKey   = "docker_uuid"
+	buildDockerUuid = buildPath + "/" + dockerUuidKey
+	summaryId       = "build_id"
+	buildSummaryId  = buildPath + "/" + summaryId
+	currentStage    = "current_stage"
+	bldCurrentStage = buildPath + "/" + currentStage
 
 	werkerBuildBase = "ci/werker_build_map/"
 	werkerBuildMap  = werkerBuildBase + "%s" // %s is hash
@@ -19,38 +25,17 @@ const (
 	werkerGrpc      = werkerLocation + "/werker_grpc_port"
 	werkerWs	    = werkerLocation + "/werker_ws_port"
 )
-//
-//type Identifiers struct {
-//	WerkerId string
-//	GitHash  string
-//	Paths *RenderedPaths
-//}
-//
-//type RenderedPaths struct {
-//	BuildPath string
-//	DockerUuidPath string
-//	BuildMap string
-//	WerkerLoc string
-//	WerkerIp string
-//	WerkerGrpc string
-//	WerkerWs string
-//}
-//
-//func (i *Identifiers) RenderAll() {
-//	paths := &RenderedPaths{
-//		BuildPath: 		fmt.Sprintf(buildPath, i.WerkerId, i.GitHash),
-//		DockerUuidPath: fmt.Sprintf(buildDockerUuid, i.WerkerId, i.GitHash),
-//		BuildMap: 		fmt.Sprintf(werkerBuildMap, i.GitHash),
-//		WerkerLoc: 		fmt.Sprintf(werkerLocation, i.WerkerId),
-//		WerkerIp: 		fmt.Sprintf(werkerIp, i.WerkerId),
-//		WerkerGrpc: 	fmt.Sprintf(werkerGrpc, i.WerkerId),
-//		WerkerWs: 		fmt.Sprintf(werkerWs, i.WerkerId),
-//	}
-//	i.Paths = paths
-//}
 
 func MakeBuildPath(werkerId string, gitHash string) string {
 	return fmt.Sprintf(buildPath, werkerId, gitHash)
+}
+
+func MakeBuildWerkerIdPath(werkerId string) string {
+	return fmt.Sprintf(buildIdOnly, werkerId)
+}
+
+func MakeBuildSummaryIdPath(werkerId string, gitHash string) string {
+	return fmt.Sprintf(buildSummaryId, werkerId, gitHash)
 }
 
 func MakeDockerUuidPath(werkerId string, gitHash string) string {
@@ -82,10 +67,11 @@ func MakeWerkerWsPath(werkerId string) string {
 // parseGenericBuildPath will return the werkerId and hash out of a key related to the build path
 // must be fully qualified key path, not prefix
 // ie: ci/builds/<werkerId>/<hash>/docker_uuid
-func parseGenericBuildPath(buildPath string) (werkerId string, hash string) {
+func parseGenericBuildPath(buildPath string) (werkerId string, hash string, key string) {
 	split := strings.Split(buildPath, "/")
 	werkerId = split[2]
 	hash = split[3]
+	key = split[4]
 	return
 }
 

@@ -1,6 +1,6 @@
 vcs:
-    - clientId: QEBYwP5cKAC3ykhau4
-      clientSecret: gKY2S3NGnFzJKBtUTGjQKc4UNvQqa2Vb
+    - clientId: 3wu3GtQvj4bAG7LNac
+      clientSecret: SfpQ3vTRxNLTvAVaaZFNv5N953GFaMJ3
       tokenURL: https://bitbucket.org/site/oauth2/access_token
       acctName: jessishank
       type: bitbucket

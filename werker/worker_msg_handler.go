@@ -8,7 +8,10 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
+	"bitbucket.org/level11consulting/ocelot/werker/recovery"
+	"fmt"
 	"github.com/golang/protobuf/proto"
+	//"runtime/debug"
 	"time"
 )
 
@@ -64,29 +67,37 @@ func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 	w.ChanChan <- transport
 }
 
+//todo: build kill
 // MakeItSo will call appropriate builder functions
 func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
+	// setting recover agent here instead of making it an attrib on WorkerMsgHandler because want it to be one
+	// entry per build
+	recoverAgent := recovery.NewRecovery(w.WerkConf.RemoteConfig, w.WerkConf.WerkerUuid)
+	recoverAgent.BuildId = werk.Id
+	defer recoverAgent.MakeItSoDed()
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 
 	defer close(w.infochan)
 	defer builder.Cleanup(w.infochan)
-
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
 	consul := w.WerkConf.RemoteConfig.GetConsul()
+	if err := buildruntime.RegisterBuildSummaryId(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, fmt.Sprintf("%d", werk.Id)); err != nil {
+		ocelog.IncludeErrField(err).Error("could not register build summary id into consul! huge deal!")
+	}
 	if err := buildruntime.RegisterStartedBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")
 	}
 
-	setupStart := time.Now()
+	recoverAgent.Reset("setup")
 	setupResult, uuid := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
-	setupDura := time.Now().Sub(setupStart)
+	setupDura := time.Now().Sub(recoverAgent.StartTime)
 	//defers are stacked, will be executed FILO
 	if err := buildruntime.RegisterBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, uuid); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")
 	}
 
-	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
+	if err := storeStageToDb(w.Store, werk.Id, setupResult, recoverAgent.StartTime, setupDura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 	}
 
@@ -101,7 +112,8 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	fail := false
 	start := time.Now()
 	for _, stage := range werk.BuildConf.Stages {
-		stageStart := time.Now()
+		recoverAgent.Reset(stage.Name)
+		stageStart := recoverAgent.StartTime
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
 		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)
 		if stageResult.Status == b.FAIL {

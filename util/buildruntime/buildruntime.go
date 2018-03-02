@@ -26,6 +26,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"fmt"
 	"github.com/google/uuid"
 	"strings"
 )
@@ -45,6 +46,13 @@ type ErrBuildDone struct {
 
 func (e *ErrBuildDone) Error() string {
 	return e.msg
+}
+
+type HashRuntime struct {
+	DockerUuid   string
+	BuildId 	 string
+	CurrentStage string
+	Hash         string
 }
 
 
@@ -147,6 +155,12 @@ func Register(consulete *consul.Consulet, ip string, grpcPort string, wsPort str
 	return
 }
 
+func UnRegister(consulete *consul.Consulet, werkerId string) error {
+	err := consulete.RemoveValues(MakeWerkerIpPath(werkerId))
+	return err
+}
+
+
 func RegisterStartedBuild(consulete *consul.Consulet, werkerId string, gitHash string) error {
 	if err := consulete.AddKeyValue(MakeBuildMapPath(gitHash), []byte(werkerId)); err != nil {
 		return err
@@ -158,6 +172,72 @@ func RegisterBuild(consulete *consul.Consulet, werkerId string, gitHash string, 
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("docker_uuid", dockerUuid).Info("registering build")
 	err := consulete.AddKeyValue(MakeDockerUuidPath(werkerId, gitHash), []byte(dockerUuid))
 	return err
+}
+
+func RegisterBuildSummaryId(consulete *consul.Consulet, werkerId string, gitHash string, buildId string) error {
+	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("buildId", buildId).Info("registering build")
+	err := consulete.AddKeyValue(MakeBuildSummaryIdPath(werkerId, gitHash), []byte(buildId))
+	return err
+}
+
+// todo: idk if we really need to do this... going to do everything else first
+func RegisterBuildStage(consulete *consul.Consulet, werkerId string, gitHash string, buildStage string) error {
+	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("buildStage", buildStage).Info("registering build")
+	err := consulete.AddKeyValue(MakeBuildSummaryIdPath(werkerId, gitHash), []byte(buildStage))
+	return err
+}
+
+
+func GetDockerUuidsByWerkerId(consulete *consul.Consulet, werkerId string) (uuids []string, err error) {
+	pairs, err := consulete.GetKeyValues(MakeBuildWerkerIdPath(werkerId))
+	if err != nil {
+		return
+	}
+	for _, pair := range pairs {
+		if strings.Contains(pair.Key, dockerUuidKey) {
+			uuids = append(uuids, string(pair.Value))
+		}
+	}
+	return
+}
+
+func GetHashRuntimesByWerker(consulete *consul.Consulet, werkerId string) (hrts map[string]*HashRuntime, err error){
+	pairs, err := consulete.GetKeyValues(MakeBuildWerkerIdPath(werkerId))
+	hrts = make(map[string]*HashRuntime)
+	if err != nil { return }
+	for _, pair := range pairs {
+		_, hash, key := parseGenericBuildPath(pair.Key)
+		_, ok := hrts[hash]
+		if !ok {
+			hrts[hash] = &HashRuntime{
+				Hash: hash,
+			}
+		}
+		switch key {
+		case dockerUuidKey:
+			hrts[hash].DockerUuid = string(pair.Value)
+		case summaryId:
+			hrts[hash].BuildId = string(pair.Value)
+		case currentStage:
+			hrts[hash].CurrentStage = string(pair.Value)
+		}
+	}
+	return
+}
+
+
+func GetWerkerActiveBuilds(consulete *consul.Consulet, werkerId string) (hashes []string, err error) {
+	// todo: allow for a different separator? will we ever be using a different one? probably not, but technically you can...
+	keys, err := consulete.GetKeys(MakeBuildWerkerIdPath(werkerId))
+	if err != nil {
+		return
+	}
+	for _, key := range keys {
+		fmt.Println(key)
+		ind := strings.LastIndex(key, "/")
+		hashes = append(hashes, key[ind+1:])
+	}
+	return
 }
 
 // Delete will remove everything related to that werker's build of the gitHash out of consul

@@ -149,6 +149,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 	account, repo := getAcctRepo(pr.Repository.FullName)
 	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to get storage")
 	}

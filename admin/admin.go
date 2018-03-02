@@ -6,7 +6,7 @@ import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/handler"
+	//"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"crypto/tls"
 	"fmt"
@@ -112,11 +112,11 @@ func SetupCredentials(gosss models.GuideOcelotServer, config *models.VCSCreds) e
 		bitbucketClient := &ocenet.OAuthClient{}
 		bitbucketClient.Setup(config)
 
-		bbHandler := handler.GetBitbucketHandler(config, bitbucketClient)
-		err := bbHandler.Walk()
-		if err != nil {
-			return err
-		}
+		//bbHandler := handler.GetBitbucketHandler(config, bitbucketClient)
+		////err := bbHandler.Walk()
+		//if err != nil {
+		//	return err
+		//}
 	}
 	configPath := config.BuildCredPath(config.Type, config.AcctName)
 	err := gos.RemoteConfig.AddCreds(configPath, config)
