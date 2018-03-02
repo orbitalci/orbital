@@ -7,6 +7,7 @@
 
 
 ## in progress
+- `ocelot build jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook (marianne)
 - sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)                                     
     - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
          - panic recovery on main function 
@@ -23,12 +24,14 @@
 - fix dev mode (maybe fuck this)
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
 
+
 ## little TODOs?:
+- env variable for vault address to be used by get_ssh_key.sh from s3
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
 - something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
+- add something so that containers aren't removed (easy debugging for us) 
 - add optional to specify working directory inside of ocelot.yml
 - `ocelot watch` - create a new webhook
-- `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
 - polling option to add new repos with ocelot.yml
 - `ocelot summary` command takes in -repo or --hash? 
 - add `who triggered this` value to summary table
@@ -38,13 +41,13 @@
 	- commit trigger
 	- etc. 
 
+
 ## BIG TODOs:
-- add ability to specify if you want all branches built
 - make the client colors for everything configurable
     - this would also include making it so that the ocelot client can be configured via a config.yml 
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
 - put a limit on number of running containers at once
-- failure notifications
+- failure notifications (integration with email or slack)
 - actions to only take based on branch or w/e 
     - solution: add `trigger/skip` section to stage yml?
         - implementation: when hookhandler receives a message, it will filter on new commit messages and branch to take out stages that do not fit trigger requirements
@@ -52,15 +55,16 @@
 - docker login? - our repo creds model works for this currently, just need to implement part that actually runs docker login
 - do the pipeline thing
 - make it so that successful builds will edit the commit message and you can see in commit history whether or not that build was successful 
-- tighter maven integration?
 - `ocelot kill <hash>` - add a quit channel
 - check out worker queue
 	- storing how long your commit waited on the queue
 - return to old package install list??
-    - [docker get script for ex](https://get.docker.com/)    
+    - [docker get script for ex](https://get.docker.com/)
+    - this also needs to save the image to nexus and reuse    
 
 
-## done:   
+## done:
+~~- add ability to specify if you want all branches built~~   
 ~~- don't create webhook unless they have an ocelot.yaml file~~
 ~~- set environment properties that are always avilable on a build container~~
 ~~- GOTTA FIGURE OUT WHAT TO DO ABOUT HANDLING SSH KEYS~~
