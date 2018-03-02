@@ -58,7 +58,7 @@ func (c *cmd) Run(args []string) int {
 	if len(msg.RepoCreds.Repo) > 0 {
 		repocredslist.Header(c.UI)
 		for _, oneline := range msg.RepoCreds.Repo {
-			c.UI.Info(repocredslist.Prettify(oneline))
+			c.UI.Output(repocredslist.Prettify(oneline))
 		}
 	} else {
 		repocredslist.NoDataHeader(c.UI)
@@ -67,7 +67,7 @@ func (c *cmd) Run(args []string) int {
 	if len(msg.VcsCreds.Vcs) > 0 {
 		buildcredslist.Header(c.UI)
 		for _, oneline :=  range msg.VcsCreds.Vcs {
-			c.UI.Info(buildcredslist.Prettify(oneline))
+			c.UI.Output(buildcredslist.Prettify(oneline))
 		}
 	} else {
 		buildcredslist.NoDataHeader(c.UI)

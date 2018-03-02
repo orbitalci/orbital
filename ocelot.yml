@@ -1,19 +1,21 @@
 image: golang:1.9
 buildTool: go
 branches:
-  - low_hanging_fruits
-  - master
+  - ALL
 stages:
+  - name: echoenvars
+    script:
+      - echo "WOWOWOWOW WE ARE ON $BUILD_ID"
   - name: testing
     script:
-      - mkdir -p $GOPATH/src/mah_code
-      - cp -r * $GOPATH/src/mah_code
-      - cd $GOPATH/src/mah_code
+      - mkdir -p $GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cp -r /$GIT_HASH $GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cd /$GOPATH/src/bitbucket.org/level11consulting/ocelot
       - go get -v -u github.com/golang/dep/cmd/dep
       - ssh -o "StrictHostKeyChecking no" git@bitbucket.org
       - dep ensure -v
       - ./run-tests.sh
   - name: build
     script:
-      - cd $GOPATH/src/mah_code
+      - cd $GOPATH/src/bitbucket.org/level11consulting/ocelot
       - ./build-release.sh

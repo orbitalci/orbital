@@ -58,7 +58,8 @@ func TestCmd_Run(t *testing.T) {
 	//if err != nil {
 	//	t.Fatal("could not read stdout from buffer")
 	//}
-	expectedText := `--- Repo Credentials ---
+	expectedText := `
+--- Repo Credentials ---
 
 Username: thisBeMyUserName
 Password: SHH-BE-QUIET-ITS-A-SECRET

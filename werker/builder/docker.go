@@ -29,7 +29,7 @@ func NewDockerBuilder(b *Basher) Builder {
 }
 
 
-func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) *Result {
+func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*Result, string) {
 	var setupMessages []string
 
 	su := InitStageUtil("setup")
@@ -46,7 +46,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			Stage:  su.GetStage(),
 			Status: FAIL,
 			Error:  err,
-		}
+		}, ""
 	}
 
 	imageName := werk.BuildConf.Image
@@ -65,7 +65,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			Status: FAIL,
 			Error:  err,
 			Messages: setupMessages,
-		}
+		}, ""
 	}
 	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s \u2713", imageName))
 
@@ -76,10 +76,14 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
+	//add environment variables that will always be avilable on the machine - GIT_HASH, BUILD_ID
+	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id)}
+	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
+
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,
-		Env: werk.BuildConf.Env,
+		Env: paddedEnvs,
 		Cmd: d.DownloadTemplateFiles(werkerPort),
 		AttachStderr: true,
 		AttachStdout: true,
@@ -106,7 +110,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			Status: FAIL,
 			Error:  err,
 			Messages: setupMessages,
-		}
+		}, ""
 	}
 
 	setupMessages = append(setupMessages, fmt.Sprint("created build container \u2713"))
@@ -126,7 +130,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			Status: FAIL,
 			Error:  err,
 			Messages: setupMessages,
-		}
+		}, ""
 	}
 
 	logout <- []byte(su.GetStageLabel()  + "Container " + resp.ID + " started")
@@ -146,7 +150,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 			Status: FAIL,
 			Error:  err,
 			Messages: setupMessages,
-		}
+		}, d.ContainerId
 	}
 
 	d.Log = containerLog
@@ -159,7 +163,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 		ocelog.Log().Error("an err happened trying to download codebase", downloadCodebase.Error)
 		setupMessages = append(setupMessages, "failed to download codebase")
 		downloadCodebase.Messages = append(downloadCodebase.Messages, setupMessages...)
-		return downloadCodebase
+		return downloadCodebase, d.ContainerId
 	}
 
 
@@ -174,13 +178,14 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	if result.Error != nil {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
 		result.Messages = append(result.Messages, setupMessages...)
-		return result
+		return result, d.ContainerId
 	}
 
 	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName))
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
+		setupMessages = append(setupMessages, "detected build tool is maven, checking for nexus credentials")
 		if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
 			_, ok := err.(*nexus.NoCreds)
 			if !ok {
@@ -189,19 +194,23 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 					Stage: su.GetStage(),
 					Status: FAIL,
 					Error:  err,
-				}
+				}, d.ContainerId
 			}
 		} else {
 			ocelog.Log().Debug("writing maven settings.xml")
-			result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
-			result.Messages = append(result.Messages, setupMessages...)
-			return result
+			setupMessages = append(setupMessages, "nexus credentials detected, setting up settings.xml")
+			copyResult := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
+
+			if copyResult.Error != nil {
+				copyResult.Messages = append(setupMessages, copyResult.Messages...)
+				return copyResult, d.ContainerId
+			}
 		}
 	}
 
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
 	result.Messages = append(result.Messages, setupMessages...)
-	return result
+	return result, d.ContainerId
 }
 
 func (d *Docker) Cleanup(logout chan []byte) {

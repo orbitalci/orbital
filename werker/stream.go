@@ -123,17 +123,11 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 
 // processTransport deals with adding info to consul, and calling writeInfoChanToInMemMap
 func processTransport(transport *Transport, appCtx *werkerStreamer) {
-	// question: does this support unicode?
-	if err := rt.Register(appCtx.consul, transport.Hash, appCtx.conf.RegisterIP, appCtx.conf.grpcPort, appCtx.conf.ServicePort); err != nil {
-		ocelog.IncludeErrField(err).Error("could not register with consul")
-	} else {
-		ocelog.Log().Infof("registered ip %s running build %s with consul", appCtx.conf.RegisterIP, transport.Hash)
-	}
 	writeInfoChanToInMemMap(transport, appCtx)
 	// get rid of hash from cache, set build done in consul
-	if err := rt.SetBuildDone(appCtx.consul, transport.Hash); err != nil {
-		ocelog.IncludeErrField(err).Error("could not set build done")
-	}
+	//if err := rt.SetBuildDone(appCtx.consul, transport.Hash); err != nil {
+	//	ocelog.IncludeErrField(err).Error("could not set build done")
+	//}
 	ocelog.Log().Debugf("removing hash %s from readerCache, channelDict, and consul", transport.Hash)
 	delete(appCtx.buildInfo, transport.Hash)
 	if err := rt.Delete(appCtx.consul, transport.Hash); err != nil {
@@ -233,8 +227,8 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf, store storage.Ocel
 	n := ocenet.InitNegroni("werker", muxi)
 	go n.Run(":" + conf.ServicePort)
 
-	ocelog.Log().Info("serving grpc streams of build data on port: ", conf.grpcPort)
-	con, err := net.Listen("tcp", ":"+conf.grpcPort)
+	ocelog.Log().Info("serving grpc streams of build data on port: ", conf.GrpcPort)
+	con, err := net.Listen("tcp", ":"+conf.GrpcPort)
 	if err != nil {
 		ocelog.Log().Fatal("womp womp")
 	}

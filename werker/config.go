@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/namsral/flag"
 	"os"
 )
@@ -46,15 +47,16 @@ func strToStorageImplement(str string) storage.BuildOut {
 // WerkerConf is all the configuration for the Werker to do its job properly. this is where the
 // storage type is set (ie filesystem, etc..) and the processor is set (ie Docker, kubernetes, etc..)
 type WerkerConf struct {
-	ServicePort     string
-	grpcPort        string
-	WerkerName      string
-	werkerType      WerkType
+	ServicePort string
+	GrpcPort    string
+	WerkerName  string
+	werkerType  WerkType
 	//werkerProcessor builder.Processor
 	LogLevel        string
 	RegisterIP      string
 	LoopBackIp      string
 	RemoteConfig    cred.CVRemoteConfig
+	WerkerUuid		uuid.UUID
 }
 
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
@@ -66,12 +68,11 @@ func GetConf() (*WerkerConf, error) {
 	var storageTypeStr string
 	var consuladdr string
 	var consulport int
-	//todo: idk about this env prefix thing, might not be necessary
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
 	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes or docker")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
 	flrg.StringVar(&werker.ServicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
-	flrg.StringVar(&werker.grpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
+	flrg.StringVar(&werker.GrpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
 	flrg.StringVar(&werker.LogLevel, "log-level", "info", "log level")
 	flrg.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
 	flrg.StringVar(&werker.RegisterIP, "register-ip", "localhost", "ip to register with consul when picking up builds")

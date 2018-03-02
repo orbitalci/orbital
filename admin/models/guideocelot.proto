@@ -5,7 +5,7 @@ package models;
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/wrappers.proto";
+//import "google/protobuf/wrappers.proto"; //use this when you have to pass a string value
 
 service GuideOcelot {
     rpc GetVCSCreds (google.protobuf.Empty) returns (CredWrapper) {
@@ -21,6 +21,8 @@ service GuideOcelot {
 		};
     }
 
+    rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
     rpc SetVCSPrivateKey (SSHKeyWrapper) returns (google.protobuf.Empty) {}
 
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {}
@@ -28,11 +30,10 @@ service GuideOcelot {
 
     rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
 
-    rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
     rpc BuildRuntime (BuildQuery) returns (Builds) {}
     rpc Logs (BuildQuery) returns (stream LogResponse) {}
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {}
-    rpc StatusByHash (google.protobuf.StringValue) returns (Status) {}
+    rpc GetStatus (StatusQuery) returns (Status) {}
 }
 
 message AllCredsWrapper {
@@ -56,6 +57,7 @@ message VCSCreds {
     string tokenURL = 3;
     string acctName = 4;
     string type = 5;
+    string sshFileLoc = 6;
 }
 
 message RepoCredWrapper {
@@ -71,11 +73,17 @@ message RepoCreds {
     string projectName = 7;
 }
 
+message StatusQuery {
+    string hash = 1;
+    string acctName = 2;
+    string repoName = 3;
+    string partialRepo = 4;
+}
+
 message BuildQuery {
     string hash = 1;
     int64 buildId = 2;
 }
-
 
 message Builds {
     map<string, BuildRuntimeInfo> builds = 1;

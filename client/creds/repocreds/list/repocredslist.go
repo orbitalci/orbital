@@ -61,7 +61,7 @@ func (c *cmd) Run(args []string) int {
 	Header(c.UI)
 	for _, oneline := range msg.Repo {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
-			c.UI.Info(Prettify(oneline))
+			c.UI.Output(Prettify(oneline))
 			printed = true
 		}
 	}
@@ -81,11 +81,11 @@ func (c *cmd) Help() string {
 
 
 func Header(ui cli.Ui) {
-	ui.Info("--- Repo Credentials ---\n")
+	ui.Output("\n--- Repo Credentials ---\n")
 }
 
 func NoDataHeader(ui cli.Ui) {
-	ui.Warn("--- No Repo Credentials Found! ---")
+	ui.Warn("\n--- No Repo Credentials Found! ---")
 }
 
 func Prettify(cred *models.RepoCreds) string {

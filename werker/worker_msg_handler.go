@@ -4,6 +4,7 @@ import (
 	d "bitbucket.org/level11consulting/go-til/deserialize"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
@@ -31,7 +32,7 @@ type WorkerMsgHandler struct {
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
-func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
+func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
 	ocelog.Log().Debug("unmarshaling build obj and processing")
 	werkerTask := &pb.WerkerTask{}
 	if err := proto.Unmarshal(msg, werkerTask); err != nil {
@@ -52,6 +53,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte) error {
 	}
 
 	w.MakeItSo(werkerTask, builder)
+	done <- 1
 	return nil
 }
 
@@ -66,15 +68,23 @@ func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 
-	//defers are stacked, will be executed FILO
 	defer close(w.infochan)
 	defer builder.Cleanup(w.infochan)
 
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
+	consul := w.WerkConf.RemoteConfig.GetConsul()
+	if err := buildruntime.RegisterStartedBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't register build")
+	}
+
 	setupStart := time.Now()
-	setupResult := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
+	setupResult, uuid := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
 	setupDura := time.Now().Sub(setupStart)
+	//defers are stacked, will be executed FILO
+	if err := buildruntime.RegisterBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, uuid); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't register build")
+	}
 
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")

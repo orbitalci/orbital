@@ -13,10 +13,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/pkg/errors"
+	"strings"
 )
 
 //this is our grpc server, it responds to client requests
@@ -29,7 +30,6 @@ type guideOcelotServer struct {
 }
 
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
-	log.Log().Debug("well at least we made it in teheheh")
 	credWrapper := &models.CredWrapper{}
 	vcs := models.NewVCSCreds()
 	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, vcs)
@@ -38,7 +38,15 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 	}
 
 	for _, v := range creds {
-		credWrapper.Vcs = append(credWrapper.Vcs, v.(*models.VCSCreds))
+		vcsCred := v.(*models.VCSCreds)
+		sshKeyPath := cred.BuildCredPath(vcsCred.Type, vcsCred.AcctName, cred.Vcs)
+		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
+		if err != nil {
+			vcsCred.SshFileLoc = "\033[0;33mNo SSH Key\033[0m"
+		} else {
+			vcsCred.SshFileLoc = "\033[0;34mSSH Key on file\033[0m"
+		}
+		credWrapper.Vcs = append(credWrapper.Vcs, vcsCred)
 	}
 	return credWrapper, nil
 }
@@ -48,7 +56,6 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 	return &empty.Empty{}, nil
 }
 
-
 func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
 	err := g.AdminValidator.ValidateConfig(credentials)
 	if err != nil {
@@ -57,7 +64,6 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 	err = SetupCredentials(g, credentials)
 	return &empty.Empty{}, err
 }
-
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
@@ -126,6 +132,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 			if _, ok := buildRtInfo[build.Hash]; !ok {
 				buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{
 					Hash: build.Hash,
+					// if a result was found in the database but not in GetBuildRuntime, the build is done
 					Done: true,
 				}
 			}
@@ -156,7 +163,6 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 	}
 	return builds, err
 }
-
 
 func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
 	if !rt.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
@@ -210,47 +216,84 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 }
 
-//StatusByHash will retrieve you the status (build summary + stages) of a partial git hash. Not currently used anywhere
-func (g *guideOcelotServer) StatusByHash(ctx context.Context, partialHash *wrappers.StringValue) (*models.Status, error) {
-	buildSum, err := g.Storage.RetrieveLatestSum(partialHash.Value)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
 
-	stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	//TODO: is there a way around iterating over results and copying over values?
-	var parsedStages []*models.Stage
-	for _, result := range stageResults {
-		stageDupe := &models.Stage{
-			Stage: result.Stage,
-			Error: result.Error,
-			Status: int32(result.Status),
-			Messages: result.Messages,
-			StartTime: &timestamp.Timestamp{Seconds: result.StartTime.UTC().Unix()},
-			StageDuration: result.StageDuration,
+//StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
+func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQuery) (*models.Status, error) {
+	//hash first
+	if len(query.Hash) > 0 {
+		partialHash := query.Hash
+		buildSum, err := g.Storage.RetrieveLatestSum(partialHash)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-		parsedStages = append(parsedStages, stageDupe)
+
+		stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		result := ParseStagesByBuildId(buildSum, stageResults)
+		return result, nil
 	}
 
-	hashStatus := &models.Status{
-		BuildSum: &models.BuildSummary{
-			Hash: buildSum.Hash,
-			Failed: buildSum.Failed,
-			BuildTime: &timestamp.Timestamp{Seconds: buildSum.BuildTime.UTC().Unix()},
-			Account: buildSum.Account,
-			BuildDuration: buildSum.BuildDuration,
-			Repo: buildSum.Repo,
-			Branch: buildSum.Branch,
-			BuildId: buildSum.BuildId,
-		},
-		Stages: parsedStages,
+	if len(query.AcctName) > 0 && len(query.RepoName) > 0 {
+		buildSums, err := g.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if len(buildSums) == 1 {
+			buildSum := buildSums[0]
+
+			stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			result := ParseStagesByBuildId(buildSum, stageResults)
+			return result, nil
+		} else {
+			uhOh := errors.New(fmt.Sprintf("there is no ONE entry that matches the acctname/repo %s/%s", query.AcctName, query.RepoName))
+			log.IncludeErrField(uhOh)
+			return nil, status.Error(codes.Internal, uhOh.Error())
+		}
 	}
 
-	return hashStatus, nil
+
+	if len(query.PartialRepo) > 0 {
+		buildSums, err := g.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if len(buildSums) == 1 {
+			buildSum, err := g.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+
+			stageResults, err := g.Storage.RetrieveStageDetail(buildSum[0].BuildId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			result := ParseStagesByBuildId(buildSum[0], stageResults)
+			return result, nil
+		} else {
+			var uhOh error
+			if len(buildSums) == 0 {
+				uhOh = errors.New(fmt.Sprintf("there are no repositories starting with %s", query.PartialRepo))
+			} else {
+				var matches []string
+				for _, buildSum := range buildSums {
+					matches = append(matches, buildSum.Account + "/" + buildSum.Repo)
+				}
+				uhOh = errors.New(fmt.Sprintf("there are %v repositories starting with %s: %s", len(buildSums), query.PartialRepo, strings.Join(matches, ",")))
+			}
+			log.IncludeErrField(uhOh)
+			return nil, status.Error(codes.Internal, uhOh.Error())
+		}
+	}
+
+	return &models.Status{}, nil
 }
 
 func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {
