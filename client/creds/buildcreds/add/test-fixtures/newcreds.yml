@@ -4,3 +4,4 @@ vcs:
   tokenURL: https://ocelot.perf/site/oauth2/access_token
   acctName: lamb-shank
   type: bitbucket
+  sshFileLoc: /home/mariannefeng/.ssh/id_rsa

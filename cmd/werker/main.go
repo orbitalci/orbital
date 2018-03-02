@@ -108,7 +108,7 @@ func main() {
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()
 		protoConsume.ConsumerRecovery = recov.WerkerDed
-		protoConsume.MessageRecovery = recov.MsgDed
+		//protoConsume.MessageRecovery = recov.MsgDed
 		// todo: add in ability to change number of concurrent processes handling requests; right now it will just take the nsqpb default of 5
 		// eg:
 		//   protoConsume.Config.MaxInFlight = GetFromEnv

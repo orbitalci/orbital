@@ -179,7 +179,7 @@ func validateBuild(ctx HookHandler, buildConf *pb.BuildConfig, branch string) er
 	}
 
 	for _, buildBranch := range buildConf.Branches {
-		if buildBranch == branch {
+		if buildBranch == "ALL" || buildBranch == branch {
 			return nil
 		}
 	}
@@ -205,7 +205,6 @@ func notifyStorage(store storage.BuildSum, hash string, starttime time.Time, rep
 }
 
 
-//TODO: this code needs to store status into db
 func tellWerker(ctx HookHandler, buildConf *pb.BuildConfig, hash string, fullName string, bbToken string, dbid int64) {
 	// get one-time token use for access to vault
 	token, err := ctx.GetRemoteConfig().GetVault().CreateThrowawayToken()

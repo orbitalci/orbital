@@ -8,6 +8,9 @@ import (
 	"strings"
 	"os"
 	"os/exec"
+	"io/ioutil"
+	"context"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
 )
 
 
@@ -65,4 +68,27 @@ func FindCurrentHash() string {
 
 	sha := strings.TrimSpace(string(cmdHash))
 	return sha
+}
+
+//UploadSSHKeyFile will upload the ssh key for a vcs account. This is used by buildcredsadd.go and cred's add.go
+func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOcelotClient, acctName, buildType, sshKeyPath string) int {
+	sshKey, err := ioutil.ReadFile(sshKeyPath)
+	if err != nil {
+		ui.Error(fmt.Sprintf("\tCould not read file at %s \nError: %s", sshKeyPath, err.Error()))
+		return 1
+	}
+
+	_, err = oceClient.SetVCSPrivateKey(ctx, &models.SSHKeyWrapper{
+		AcctName: acctName,
+		Type: buildType,
+		PrivateKey: sshKey,
+	})
+
+	if err != nil {
+		ui.Error(fmt.Sprintf("\tCould not upload private key at %s \nError: %s", sshKeyPath, err.Error()))
+		return 1
+	}
+
+	ui.Info(fmt.Sprintf("\tSuccessfully uploaded private key at %s for %s/%s", sshKeyPath, buildType, acctName))
+	return 0
 }

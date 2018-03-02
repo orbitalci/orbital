@@ -141,18 +141,18 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]model
 	return hashes, nil
 }
 
-// RetrieveLatestSum will return the latest entry of build_summary where hash=gitHash
-func (p *PostgresStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
+// RetrieveLatestSum will return the latest entry of build_summary where hash starts with `gitHash`
+func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.BuildSummary, error) {
 	var sum models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sum, errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	querystr := `SELECT * FROM build_summary WHERE hash = $1 ORDER BY starttime DESC LIMIT 1`
-	row := p.db.QueryRow(querystr, gitHash)
+	querystr := `SELECT * FROM build_summary WHERE hash ilike $1 ORDER BY starttime DESC LIMIT 1;`
+	row := p.db.QueryRow(querystr, partialGitHash + "%")
 	err := row.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch)
 	if err == sql.ErrNoRows {
-		return sum, BuildSumNotFound(gitHash)
+		return sum, BuildSumNotFound(partialGitHash)
 	}
 	return sum, err
 }
@@ -191,6 +191,32 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 		if err = rows.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch); err != nil {
 			if err == sql.ErrNoRows {
 				return sums, BuildSumNotFound("account: " + account + "and repo: " + repo)
+			}
+			return sums, err
+		}
+		sums = append(sums, sum)
+	}
+	return sums, nil
+}
+
+// RetrieveAcctRepo will return to you a list of accountname + repositories that matches starting with partialRepo
+func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
+	var sums []models.BuildSummary
+	if err := p.Connect(); err != nil {
+		return sums, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	queryRow := fmt.Sprintf(`select distinct on (account, repo) account, repo from build_summary where repo ilike $1;`)
+	rows, err := p.db.Query(queryRow, partialRepo + "%")
+	if err != nil {
+		return sums, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		sum := models.BuildSummary{}
+		if err = rows.Scan(&sum.Account, &sum.Repo); err != nil {
+			if err == sql.ErrNoRows {
+				return sums, BuildSumNotFound("repository starting with" + partialRepo)
 			}
 			return sums, err
 		}

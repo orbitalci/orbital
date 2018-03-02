@@ -7,11 +7,9 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"
-	"github.com/nsqio/go-nsq"
 
 	"os"
 	"runtime/debug"

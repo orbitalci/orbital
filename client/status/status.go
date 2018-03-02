@@ -8,12 +8,15 @@ import (
 	"context"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"fmt"
+	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
 )
 
-const synopsis = "show status of specific acctname, acctname/repo, or hash"
-//TODO: finish writing help once I know how it works
+const synopsis = "show status of specific acctname/repo, repo or hash"
 const help = `
-Usage: ocelot status -acct-repo <acct>/<repo>
+Usage: ocelot status 
+	-hash <hash> [optional] if specified, this is the one that takes precendence over other arguments
+	-acct-repo <acctname/repo> [optional] if specified, takes precedence over -repo argument
+	-repo <repo> [optional] returns status of all repos starting with value
 `
 
 func New(ui cli.Ui) *cmd {
@@ -83,47 +86,61 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	// always respect hash first
-	if c.hash != "ERROR" {
-		builds, err := c.GetClient().BuildRuntime(ctx, &models.BuildQuery{
+	if c.hash != "ERROR" && len(c.hash) > 0 {
+		query := &models.StatusQuery{
 			Hash: c.hash,
-		})
+		}
+		statuses, err := c.GetClient().GetStatus(ctx, query)
 		if err != nil {
-			c.UI.Error(fmt.Sprintf("error retrieving build runtime for hash %s. Error: %s", c.hash, err.Error()))
+			c.UI.Error(err.Error())
 			return 1
 		}
-		//it's okay to iterate here cause list will always contain 1 value
-		for hash, build := range builds.Builds {
-			var status string
-			var color int
-			if len(build.Ip) > 0 {
-				status = "Running"
-				color = 33
-			} else {
-				status = "Finished "
-				color = 34
-			}
-			buildStatus := fmt.Sprintf("\033[0;%dm\t %s/%s \t %s \t %s\033[0m", color, build.AcctName, build.RepoName, hash, strings.ToUpper(status))
-			c.UI.Output(buildStatus)
-			return 0
-		}
+
+		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		c.UI.Output(buildStatus + stageStatus)
 		return 0
 	}
 
 	//respect acct-repo next
+	if c.accountRepo != "ERROR" {
+		data := strings.Split(c.accountRepo, "/")
+		if len(data) != 2  {
+			c.UI.Error("flag -acct-repo must be in the format <account>/<repo>. see --help")
+			return 1
+		}
+
+		query := &models.StatusQuery{
+			AcctName: data[0],
+			RepoName: data[1],
+		}
+		statuses, err := c.GetClient().GetStatus(ctx, query)
+		if err != nil {
+			c.UI.Error(err.Error())
+			return 1
+		}
+
+		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		c.UI.Output(buildStatus + stageStatus)
+		return 0
+	}
+
+	//repo is last
 	if c.repo != "ERROR" {
-
+		query := &models.StatusQuery{
+			PartialRepo: c.repo,
+		}
+		statuses, err := c.GetClient().GetStatus(ctx, query)
+		if err != nil {
+			c.UI.Error(err.Error())
+			return 1
+		}
+		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		c.UI.Output(buildStatus + stageStatus)
+		return 0
 	}
-
-	//acct is last
-
-
-	data := strings.Split(c.accountRepo, "/")
-	if len(data) != 2  {
-		c.UI.Error("flag -acct-repo must be in the format <account>/<repo>. see --help")
-		return 1
-	}
-
-
 
 	return 0
 }
