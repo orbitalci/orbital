@@ -2,6 +2,7 @@ package cred
 
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
+	"bitbucket.org/level11consulting/go-til/vault"
 	"fmt"
 	"strings"
 )
@@ -136,4 +137,31 @@ func (m *RepoConfig) GetType() string {
 
 func (m *RepoConfig) GetRepoUrl() map[string]string {
 	return m.RepoUrl
+}
+
+
+func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName string, location string, port string, username string, pw string) (err error){
+	err = consulet.AddKeyValue(StorageType, []byte("postgres"))
+	if err != nil {
+		return
+	}
+	err = consulet.AddKeyValue(PostgresDatabaseName, []byte(dbName))
+	if err != nil {
+		return
+	}
+	err = consulet.AddKeyValue(PostgresLocation, []byte(location))
+	if err != nil {
+		return
+	}
+	err = consulet.AddKeyValue(PostgresPort, []byte(port))
+	if err != nil {
+		return
+	}
+	err = consulet.AddKeyValue(PostgresUsername, []byte(username))
+	if err != nil {
+		return
+	}
+	var a = map[string]interface{} {PostgresPasswordKey: pw}
+	_, err = vaulty.AddVaultData(PostgresPasswordLoc, a)
+	return err
 }

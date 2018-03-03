@@ -25,9 +25,13 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	//"encoding/binary"
+	//"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"strconv"
 	"strings"
+	"time"
 )
 
 
@@ -49,9 +53,10 @@ func (e *ErrBuildDone) Error() string {
 
 type HashRuntime struct {
 	DockerUuid   string
-	BuildId 	 string
+	BuildId 	 int64
 	CurrentStage string
 	Hash         string
+	StageStart   time.Time
 }
 
 
@@ -144,7 +149,7 @@ func Register(consulete *consul.Consulet, ip string, grpcPort string, wsPort str
 }
 
 func UnRegister(consulete *consul.Consulet, werkerId string) error {
-	err := consulete.RemoveValues(MakeWerkerIpPath(werkerId))
+	err := consulete.RemoveValues(MakeWerkerLocPath(werkerId))
 	return err
 }
 
@@ -162,16 +167,23 @@ func RegisterBuild(consulete *consul.Consulet, werkerId string, gitHash string, 
 	return err
 }
 
-func RegisterBuildSummaryId(consulete *consul.Consulet, werkerId string, gitHash string, buildId string) error {
+func RegisterBuildSummaryId(consulete *consul.Consulet, werkerId string, gitHash string, buildId int64) error {
+	str := fmt.Sprintf("%d", buildId)
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("buildId", buildId).Info("registering build")
-	err := consulete.AddKeyValue(MakeBuildSummaryIdPath(werkerId, gitHash), []byte(buildId))
+	err := consulete.AddKeyValue(MakeBuildSummaryIdPath(werkerId, gitHash), []byte(str))
 	return err
 }
 
-// todo: idk if we really need to do this... going to do everything else first
+
 func RegisterBuildStage(consulete *consul.Consulet, werkerId string, gitHash string, buildStage string) error {
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("buildStage", buildStage).Info("registering build")
-	err := consulete.AddKeyValue(MakeBuildSummaryIdPath(werkerId, gitHash), []byte(buildStage))
+	err := consulete.AddKeyValue(MakeBuildStagePath(werkerId, gitHash), []byte(buildStage))
+	return err
+}
+
+func RegisterStageStartTime(consulete *consul.Consulet, werkerId string, gitHash string, start time.Time) error {
+	str := fmt.Sprintf("%d", start.Unix()) // todo: figure out a better way to do this conversion using bit shifting or something because i know this isnt the "right" way to do it
+	err := consulete.AddKeyValue(MakeBuildStartpath(werkerId, gitHash), []byte(str))
 	return err
 }
 
@@ -205,13 +217,33 @@ func GetHashRuntimesByWerker(consulete *consul.Consulet, werkerId string) (hrts 
 		case dockerUuidKey:
 			hrts[hash].DockerUuid = string(pair.Value)
 		case summaryId:
-			hrts[hash].BuildId = string(pair.Value)
+			var id int64
+			id, err = convertArrayToInt(pair.Value)
+			hrts[hash].BuildId = id
 		case currentStage:
 			hrts[hash].CurrentStage = string(pair.Value)
+		case startTime:
+			var unix int64
+			unix, err = convertArrayToInt(pair.Value)
+			startTime := time.Unix(unix, 0)
+			hrts[hash].StageStart = startTime
 		}
 	}
 	return
 }
+
+func convertArrayToInt(array []byte) (int64, error) {
+	integ, err := strconv.Atoi(string(array))
+	return int64(integ), err
+}
+
+//func main() {
+//	var n int64
+//	b := [8]byte{1, 2}
+//	buf := bytes.NewBuffer(&b)
+//	binary.Read(buf, binary.LittleEndian, &n)
+//	fmt.Println(n, b)
+//}
 
 
 func GetWerkerActiveBuilds(consulete *consul.Consulet, werkerId string) (hashes []string, err error) {
@@ -220,10 +252,18 @@ func GetWerkerActiveBuilds(consulete *consul.Consulet, werkerId string) (hashes 
 	if err != nil {
 		return
 	}
+	s := map[string]bool{}
 	for _, key := range keys {
-		fmt.Println(key)
-		ind := strings.LastIndex(key, "/")
-		hashes = append(hashes, key[ind+1:])
+		//fmt.Println(key)
+		//ind := strings.LastIndex(key, "/")
+		//hashInd := strings.LastIndex(key[:ind+1], "/")
+		//hashes = append(hashes, key[hashInd+1:])
+		_, hash, _ := parseGenericBuildPath(key)
+		_, ok := s[hash]
+		if !ok {
+			hashes = append(hashes, hash)
+			s[hash] = true
+		}
 	}
 	return
 }

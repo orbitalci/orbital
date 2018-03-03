@@ -5,32 +5,78 @@ import (
 	"testing"
 )
 
-func Test_generateBuildPath(t *testing.T) {
+var idAndHashTests = []struct {
+	field string
+	werkerId string
+	gitHash string
+	buildFunc func(string,string)string
+	expected string
+}{
+	{"build path", "1234-8974-3818-asdf", "123nd9xz", MakeBuildPath, "ci/builds/1234-8974-3818-asdf/123nd9xz"},
+	{"build summary", "123123123123", "hashhashhash", MakeBuildSummaryIdPath, "ci/builds/123123123123/hashhashhash/build_id"},
+	{"build stage","123123123123", "hashhashhash", MakeBuildStagePath, "ci/builds/123123123123/hashhashhash/current_stage"},
+	{"build start time","123123123123", "hashhashhash", MakeBuildStartpath, "ci/builds/123123123123/hashhashhash/start_time"},
+	{"build docker uuid","123123123123", "hashhashhash", MakeDockerUuidPath, "ci/builds/123123123123/hashhashhash/docker_uuid"},
+}
+
+var singleFieldTests = []struct {
+	field string
+	fieldvalue string
+	buildFunc func(string) string
+	expected string
+}{
+	{"werker id path", "werkerwerks", MakeBuildWerkerIdPath, "ci/builds/werkerwerks"},
+	{"build map path", "hashyhashy", MakeBuildMapPath, "ci/werker_build_map/hashyhashy"},
+	{"werker loc path", "werkerid", MakeWerkerLocPath, "ci/werker_location/werkerid"},
+	{"werker ip path", "werkerid", MakeWerkerIpPath, "ci/werker_location/werkerid/werker_ip"},
+	{"werker grpc path", "werkerid", MakeWerkerGrpcPath, "ci/werker_location/werkerid/werker_grpc_port"},
+	{"werker ws path", "werkerid", MakeWerkerWsPath, "ci/werker_location/werkerid/werker_ws_port"},
+}
+
+func Test_IdAndHashBuilders(t *testing.T) {
+	for _, tst := range idAndHashTests {
+		path := tst.buildFunc(tst.werkerId, tst.gitHash)
+		if path != tst.expected {
+			t.Error(test.StrFormatErrors(tst.field, tst.expected, path))
+		}
+	}
+}
+
+func Test_singleFieldTests(t *testing.T) {
+	for _, tst := range singleFieldTests {
+		path := tst.buildFunc(tst.fieldvalue)
+		if path != tst.expected {
+			t.Error(test.StrFormatErrors(tst.field, tst.expected, path))
+		}
+	}
+}
+
+func Test_MakeBuildPath(t *testing.T) {
 	werkerId := "1234-8974-3818-asdf"
 	gitHash := "123nd9xz"
 	expectedPath := "ci/builds/1234-8974-3818-asdf/123nd9xz"
 	path := MakeBuildPath(werkerId, gitHash)
 	if path != expectedPath {
-		test.StrFormatErrors("build runtime path", expectedPath, path)
+		t.Error(test.StrFormatErrors("build runtime path", expectedPath, path))
 	}
 }
 
 
-func Test_generateBuildMapPath(t *testing.T) {
+func Test_MakeBuildMapPath(t *testing.T) {
 	gitHash := "123123"
 	expectedPath := "ci/werker_build_map/123123"
 	path := MakeBuildMapPath(gitHash)
 	if path != expectedPath {
-		test.StrFormatErrors("werker build map path", expectedPath, path)
+		t.Error(test.StrFormatErrors("werker build map path", expectedPath, path))
 	}
 }
 
-func Test_generateWerkerLocPath(t *testing.T) {
+func Test_MakeWerkerLocPath(t *testing.T) {
 	werkerId := "werkeridnum"
 	expectedPath := "ci/werker_location/werkeridnum"
 	path := MakeWerkerLocPath(werkerId)
 	if expectedPath != path {
-		test.StrFormatErrors("werker location path", expectedPath, path)
+		t.Error(test.StrFormatErrors("werker location path", expectedPath, path))
 	}
 }
 
@@ -53,12 +99,12 @@ func Test_parseGenericBuildPath(t *testing.T) {
 	if gitHash != expectGitHash {
 		test.StrFormatErrors("git hash", expectGitHash, gitHash)
 	}
-	herepathbe3 := "ci/builds/1234-8974-3818-asdf/123nd9xz"
+	herepathbe3 := "ci/builds/1234-8974-3818-asdf/123nd9xz/SPECIAL_KEY"
 	werkerId, gitHash, _ = parseGenericBuildPath(herepathbe3)
 	if werkerId != expectWerkerId {
 		test.StrFormatErrors("werker id ", expectWerkerId, werkerId)
 	}
-	if gitHash, _ != expectGitHash {
+	if gitHash != expectGitHash {
 		test.StrFormatErrors("git hash", expectGitHash, gitHash)
 	}
 }

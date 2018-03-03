@@ -258,7 +258,6 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 		Env: env,
 		Cmd: cmds,
 	})
-	panic("GOOD LORD! EVERYBODY GET OUT OF HERE! ITS A DISASTER!")
 	if err != nil {
 		return &Result{
 			Stage:  currStage,
@@ -292,7 +291,7 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 			Messages: stageMessages,
 		}
 	}
-
+	//panic("AH!")
 	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
 	return &Result{
 		Stage:  currStage,

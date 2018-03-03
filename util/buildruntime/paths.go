@@ -15,6 +15,8 @@ const (
 	buildSummaryId  = buildPath + "/" + summaryId
 	currentStage    = "current_stage"
 	bldCurrentStage = buildPath + "/" + currentStage
+	startTime       = "start_time"
+	bldStartTime    = buildPath + "/" + startTime
 
 	werkerBuildBase = "ci/werker_build_map/"
 	werkerBuildMap  = werkerBuildBase + "%s" // %s is hash
@@ -36,6 +38,14 @@ func MakeBuildWerkerIdPath(werkerId string) string {
 
 func MakeBuildSummaryIdPath(werkerId string, gitHash string) string {
 	return fmt.Sprintf(buildSummaryId, werkerId, gitHash)
+}
+
+func MakeBuildStagePath(werkerId string, gitHash string) string {
+	return fmt.Sprintf(bldCurrentStage, werkerId, gitHash)
+}
+
+func MakeBuildStartpath(werkerId string, gitHash string) string {
+	return fmt.Sprintf(bldStartTime, werkerId, gitHash)
 }
 
 func MakeDockerUuidPath(werkerId string, gitHash string) string {

@@ -107,7 +107,7 @@ func main() {
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()
-		protoConsume.ConsumerRecovery = recov.WerkerDed
+		//protoConsume.ConsumerRecovery = recov.WerkerDed
 		//protoConsume.MessageRecovery = recov.MsgDed
 		// todo: add in ability to change number of concurrent processes handling requests; right now it will just take the nsqpb default of 5
 		// eg:

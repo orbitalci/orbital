@@ -9,7 +9,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
 	"bitbucket.org/level11consulting/ocelot/werker/recovery"
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	//"runtime/debug"
 	"time"
@@ -82,14 +81,14 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
 	consul := w.WerkConf.RemoteConfig.GetConsul()
-	if err := buildruntime.RegisterBuildSummaryId(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, fmt.Sprintf("%d", werk.Id)); err != nil {
+	if err := buildruntime.RegisterBuildSummaryId(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, werk.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("could not register build summary id into consul! huge deal!")
 	}
 	if err := buildruntime.RegisterStartedBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")
 	}
 
-	recoverAgent.Reset("setup")
+	recoverAgent.Reset("setup", werk.CheckoutHash)
 	setupResult, uuid := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
 	setupDura := time.Now().Sub(recoverAgent.StartTime)
 	//defers are stacked, will be executed FILO
@@ -112,7 +111,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 	fail := false
 	start := time.Now()
 	for _, stage := range werk.BuildConf.Stages {
-		recoverAgent.Reset(stage.Name)
+		recoverAgent.Reset(stage.Name, werk.CheckoutHash)
 		stageStart := recoverAgent.StartTime
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
 		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)
