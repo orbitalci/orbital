@@ -67,7 +67,7 @@ func TestRecovery(t *testing.T) {
 	}
 	// test hash runtimes store failure
 	hrt := addHashRuntimeData(t, serv, uid.String(), hash, id)
-	rcvr.StoreFailure()
+	rcvr.StoreInterrupt(Panic)
 	stages, err := store.RetrieveStageDetail(hrt.BuildId)
 	if err != nil {
 		t.Fatal(err)
@@ -78,11 +78,18 @@ func TestRecovery(t *testing.T) {
 	if len(stages) == 0 {
 		t.Fatal("couldn't retrieve any stages")
 	}
-	if stages[0].Error != "A panic occured!" {
+	if stages[0].Error != "An interrupt of type Panic occurred!" {
 		t.Error(test.StrFormatErrors("error message", "A panic occured!", stages[0].Error))
 	}
 	if stages[0].Stage != hrt.CurrentStage {
 		t.Error(test.StrFormatErrors("stage", hrt.CurrentStage, stages[0].Stage))
+	}
+	summary, err := store.RetrieveSumByBuildId(hrt.BuildId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if summary.BuildDuration < 0 {
+		t.Error("the build summary build duration should have been updated to be greater than zero when StoreInterrupt is called.")
 	}
 	serv.SetKVString(t, buildruntime.MakeDockerUuidPath(uid.String(), hash), hrt.DockerUuid)
 	serv.SetKVString(t, buildruntime.MakeWerkerIpPath(uid.String()), "localheist")

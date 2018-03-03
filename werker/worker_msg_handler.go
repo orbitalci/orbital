@@ -34,8 +34,13 @@ type WorkerMsgHandler struct {
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
-func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
-	ocelog.Log().Debug("unmarshaling build obj and processing")
+// It uses two channels to communicate with nsqpb, done and finish.
+// the done channel is just sent at the end and is used in nsqpb to ensure that the queue is "Touch"ed at a
+// set interval so that the message doesn't time out. The finish channel is for improper exits; ie panic recover
+// or signal handling (TODO: figure out how to SIGNAL HANDLE)
+// The nsqpb will call msg.Finish() when it receives on this channel.
+func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
+	ocelog.Log().Debug("unmarshal-ing build obj and processing")
 	werkerTask := &pb.WerkerTask{}
 	if err := proto.Unmarshal(msg, werkerTask); err != nil {
 		ocelog.IncludeErrField(err).Warning("unmarshal error")
@@ -45,7 +50,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
 	w.infochan = make(chan []byte)
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
-
+	//
 	var builder b.Builder
 	switch w.WerkConf.werkerType {
 	case Docker:
@@ -54,7 +59,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
 		builder = b.NewDockerBuilder(w.Basher)
 	}
 
-	w.MakeItSo(werkerTask, builder)
+	w.MakeItSo(werkerTask, builder, finish)
 	done <- 1
 	return nil
 }
@@ -68,12 +73,12 @@ func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 
 //todo: build kill
 // MakeItSo will call appropriate builder functions
-func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
+func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, finish chan int) {
 	// setting recover agent here instead of making it an attrib on WorkerMsgHandler because want it to be one
 	// entry per build
 	recoverAgent := recovery.NewRecovery(w.WerkConf.RemoteConfig, w.WerkConf.WerkerUuid)
 	recoverAgent.BuildId = werk.Id
-	defer recoverAgent.MakeItSoDed()
+	defer recoverAgent.MakeItSoDed(finish)
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 
 	defer close(w.infochan)
@@ -106,6 +111,9 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 			errStr = errStr + setupResult.Error.Error()
 		}
 		ocelog.Log().Error(errStr)
+		if err := w.Store.UpdateSum(true, setupDura.Seconds(), werk.Id); err != nil {
+			ocelog.IncludeErrField(err).Error("couldn't update summary in database")
+		}
 		return
 	}
 	fail := false

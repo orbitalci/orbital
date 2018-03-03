@@ -14,6 +14,13 @@ import (
 	"runtime/debug"
 	"time"
 )
+//go:generate stringer -type=Interrupt
+type Interrupt int
+
+const (
+	Signal Interrupt = iota
+	Panic
+)
 
 type Recovery struct {
 	RemoteConfig    cred.CVRemoteConfig
@@ -41,9 +48,9 @@ func (r *Recovery) Reset(newStage string, hash string) error {
 	return err
 }
 
-// StoreFailure will look up in consul all of the associated active builds with the werker and their current
-// runtime state. jit will
-func (r *Recovery) StoreFailure() {
+// StoreInterrupt will look up in consul all of the associated active builds with the werker and their current
+// runtime state. It will then save each build's current stage details with an
+func (r *Recovery) StoreInterrupt(typ Interrupt) {
 	store, err := r.RemoteConfig.GetOcelotStorage()
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to get storage when panic occured")
@@ -55,17 +62,38 @@ func (r *Recovery) StoreFailure() {
 		log.IncludeErrField(err).Error("unable to get hash runtimes")
 		return
 	}
+	var messages []string
+	switch typ {
+	case Panic:
+		messages = append(messages, string(debug.Stack()))
+	case Signal:
+		messages = append(messages, "The werker was interrupted with a signal")
+	}
+
 	for _, hrt := range hrts {
+		duration := time.Now().Sub(hrt.StageStart).Seconds()
 		detail := &models.StageResult{
 			BuildId: hrt.BuildId,
-			StageDuration: float64(time.Now().Sub(hrt.StageStart)/time.Second),
+			StageDuration: duration,
 			Stage: hrt.CurrentStage,
-			Error: "A panic occured!",
-			Messages: []string{string(debug.Stack())},
+			Error: "An interrupt of type " + typ.String() + " occurred!",
+			Messages: messages,
 			StartTime: hrt.StageStart,
 		}
 		if err := store.AddStageDetail(detail); err != nil {
 			log.IncludeErrField(err).Error("couldn't store stage detail!")
+		} else {
+			log.Log().Info("updated stage detail")
+		}
+		sum, err := store.RetrieveSumByBuildId(hrt.BuildId)
+		if err != nil {
+			log.IncludeErrField(err).Error("could not retrieve summary for update")
+		}
+		fullDuration := time.Now().Sub(sum.BuildTime).Seconds()
+		if err := store.UpdateSum(true, fullDuration, hrt.BuildId); err != nil {
+			log.IncludeErrField(err).Error("couldn't update summary in database")
+		} else {
+			log.Log().Info("updated summary table in database")
 		}
 	}
 }
@@ -119,13 +147,14 @@ func (r *Recovery) Cleanup() {
 
 }
 
-func (r *Recovery) MakeItSoDed() {
+func (r *Recovery) MakeItSoDed(finish chan int) {
 	if rec := recover(); rec != nil {
 		defer os.Exit(1)
 		fmt.Println(rec)
 		log.Log().WithField("stack", string(debug.Stack())).Error("recovering from panic")
-		r.StoreFailure()
+		r.StoreInterrupt(Panic)
 		r.Cleanup()
+		finish <- 1
 	}
 }
 //

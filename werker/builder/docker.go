@@ -249,7 +249,6 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
 	var stageMessages []string
 	ctx := context.Background()
-
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
 		Tty: true,
 		AttachStdin: true,
@@ -291,7 +290,6 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 			Messages: stageMessages,
 		}
 	}
-	//panic("AH!")
 	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
 	return &Result{
 		Stage:  currStage,
