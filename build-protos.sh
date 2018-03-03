@@ -1,4 +1,6 @@
-#!/usr/bin/env sh
+#!/bin/bash
+
+
 # ===============
 cd protos 
 ./build-protos.sh

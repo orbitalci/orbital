@@ -237,6 +237,10 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.Repo
 		return &empty.Empty{}, err
 	}
 
+	if bbCreds == nil || len(bbCreds) == 0 {
+		return &empty.Empty{}, errors.New(fmt.Sprintf("could not find credentials belonging to %s", repoAcct.Account))
+	}
+
 	//TODO: what do we even do if there's more than one?
 	for _, v := range bbCreds {
 		vcs = v.(*models.VCSCreds)
@@ -244,20 +248,20 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.Repo
 		bbClient.Setup(vcs)
 
 		bbHandler := handler.GetBitbucketHandler(vcs, bbClient)
-
 		repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
-		if err != nil {
-			return nil, err
+		if repoDetail.Type == "error" || err != nil {
+			return &empty.Empty{}, errors.New(fmt.Sprintf("could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo))
 		}
 
 		webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
 		err = bbHandler.CreateWebhook(webhookURL)
 
 		if err != nil {
-			return nil, err
+			return &empty.Empty{}, err
 		}
 		return &empty.Empty{}, nil
 	}
+
 	return &empty.Empty{}, nil
 }
 
