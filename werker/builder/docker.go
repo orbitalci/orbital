@@ -78,6 +78,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id)}
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 
+
+	//TODO: change this to be root user and see if that fixes gradle builds
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,

@@ -19,6 +19,7 @@
 
 
 ## little TODOs?:
+- create `ocelot init` command
 - env variable for vault address to be used by get_ssh_key.sh from s3
 - fix PR's triggering builds
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
@@ -50,6 +51,9 @@
 
 
 ## BIG TODOs:
+- create a nice fancy markdown page explaining; 
+    - how to get started
+    - all the useful commands
 - make the client colors for everything configurable
     - this would also include making it so that the ocelot client can be configured via a config.yml 
 - actually parse out exit codes, not just shit itself if it gets a non-zero one

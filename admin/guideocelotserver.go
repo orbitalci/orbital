@@ -38,7 +38,6 @@ func (g *guideOcelotServer) BuildRepoAndHash(ctx context.Context, buildReq *mode
 		return nil, errors.New("please pass a valid account/repo_name and hash")
 	}
 	go g.Producer.WriteProto(buildReq, "build_please")
-	//TODO: something here that spams db for build status?
 	return &models.BuildSummary{}, nil
 }
 
