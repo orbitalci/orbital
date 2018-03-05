@@ -8,7 +8,9 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
+	"bitbucket.org/level11consulting/ocelot/werker/recovery"
 	"github.com/golang/protobuf/proto"
+	//"runtime/debug"
 	"time"
 )
 
@@ -32,8 +34,13 @@ type WorkerMsgHandler struct {
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
-func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
-	ocelog.Log().Debug("unmarshaling build obj and processing")
+// It uses two channels to communicate with nsqpb, done and finish.
+// the done channel is just sent at the end and is used in nsqpb to ensure that the queue is "Touch"ed at a
+// set interval so that the message doesn't time out. The finish channel is for improper exits; ie panic recover
+// or signal handling (TODO: figure out how to SIGNAL HANDLE)
+// The nsqpb will call msg.Finish() when it receives on this channel.
+func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
+	ocelog.Log().Debug("unmarshal-ing build obj and processing")
 	werkerTask := &pb.WerkerTask{}
 	if err := proto.Unmarshal(msg, werkerTask); err != nil {
 		ocelog.IncludeErrField(err).Warning("unmarshal error")
@@ -43,7 +50,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
 	w.infochan = make(chan []byte)
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
-
+	//
 	var builder b.Builder
 	switch w.WerkConf.werkerType {
 	case Docker:
@@ -52,7 +59,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
 		builder = b.NewDockerBuilder(w.Basher)
 	}
 
-	w.MakeItSo(werkerTask, builder)
+	w.MakeItSo(werkerTask, builder, finish)
 	done <- 1
 	return nil
 }
@@ -64,29 +71,37 @@ func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 	w.ChanChan <- transport
 }
 
+//todo: build kill
 // MakeItSo will call appropriate builder functions
-func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
+func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, finish chan int) {
+	// setting recover agent here instead of making it an attrib on WorkerMsgHandler because want it to be one
+	// entry per build
+	recoverAgent := recovery.NewRecovery(w.WerkConf.RemoteConfig, w.WerkConf.WerkerUuid)
+	recoverAgent.BuildId = werk.Id
+	defer recoverAgent.MakeItSoDed(finish)
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 
 	defer close(w.infochan)
 	defer builder.Cleanup(w.infochan)
-
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
 	consul := w.WerkConf.RemoteConfig.GetConsul()
+	if err := buildruntime.RegisterBuildSummaryId(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, werk.Id); err != nil {
+		ocelog.IncludeErrField(err).Error("could not register build summary id into consul! huge deal!")
+	}
 	if err := buildruntime.RegisterStartedBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")
 	}
 
-	setupStart := time.Now()
+	recoverAgent.Reset("setup", werk.CheckoutHash)
 	setupResult, uuid := builder.Setup(w.infochan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
-	setupDura := time.Now().Sub(setupStart)
+	setupDura := time.Now().Sub(recoverAgent.StartTime)
 	//defers are stacked, will be executed FILO
 	if err := buildruntime.RegisterBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, uuid); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")
 	}
 
-	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
+	if err := storeStageToDb(w.Store, werk.Id, setupResult, recoverAgent.StartTime, setupDura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 	}
 
@@ -96,12 +111,16 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder) {
 			errStr = errStr + setupResult.Error.Error()
 		}
 		ocelog.Log().Error(errStr)
+		if err := w.Store.UpdateSum(true, setupDura.Seconds(), werk.Id); err != nil {
+			ocelog.IncludeErrField(err).Error("couldn't update summary in database")
+		}
 		return
 	}
 	fail := false
 	start := time.Now()
 	for _, stage := range werk.BuildConf.Stages {
-		stageStart := time.Now()
+		recoverAgent.Reset(stage.Name, werk.CheckoutHash)
+		stageStart := recoverAgent.StartTime
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
 		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)
 		if stageResult.Status == b.FAIL {

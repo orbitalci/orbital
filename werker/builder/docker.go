@@ -2,19 +2,19 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"io"
 	"io/ioutil"
 	"strings"
-	"fmt"
 )
 
 type Docker struct{
@@ -249,7 +249,6 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
 	var stageMessages []string
 	ctx := context.Background()
-
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
 		Tty: true,
 		AttachStdin: true,
@@ -258,7 +257,6 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 		Env: env,
 		Cmd: cmds,
 	})
-
 	if err != nil {
 		return &Result{
 			Stage:  currStage,
@@ -292,7 +290,6 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 			Messages: stageMessages,
 		}
 	}
-
 	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
 	return &Result{
 		Stage:  currStage,
