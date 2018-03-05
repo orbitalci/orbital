@@ -192,6 +192,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	for _, stage := range werk.BuildConf.Stages {
 		for _, cmd := range stage.Script {
 			if strings.Contains(cmd, "docker") {
+				ocelog.Log().WithField("fullName", werk.FullName).Info("adding docker credentials")
 				result = d.dockerSetup(rc, werk, su, setupMessages, logout)
 				if result.Status == FAIL {
 					return result, d.ContainerId
