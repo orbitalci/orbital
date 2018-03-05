@@ -2,19 +2,20 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"io"
 	"io/ioutil"
 	"strings"
-	"fmt"
 )
 
 type Docker struct{
@@ -28,7 +29,7 @@ func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 
-
+// todo: this function is lookin wily (ie long and hard to read). should we break this bish up?
 func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*Result, string) {
 	var setupMessages []string
 
@@ -181,27 +182,94 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
-		if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
-			_, ok := err.(*nexus.NoCreds)
-			if !ok {
-				ocelog.IncludeErrField(err).Error("returning failed setup because could not get settings.xml")
-				return &Result{
-					Stage: su.GetStage(),
-					Status: FAIL,
-					Error:  err,
-				}, d.ContainerId
-			}
-		} else {
-			ocelog.Log().Debug("writing maven settings.xml")
-			result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
-			result.Messages = append(result.Messages, setupMessages...)
+		result = d.mavenSetup(rc, werk, su, setupMessages, logout)
+		if result.Status == FAIL {
 			return result, d.ContainerId
 		}
 	}
+	// todo: i don't like all this iteration its annoying.. should we add an integrations block?
+	// also because sometimes a docker push can be embedded in maven/gradle scripts
+	for _, stage := range werk.BuildConf.Stages {
+		for _, cmd := range stage.Script {
+			if strings.Contains(cmd, "docker") {
+				result = d.dockerSetup(rc, werk, su, setupMessages, logout)
+				if result.Status == FAIL {
+					return result, d.ContainerId
+				}
+			}
+		}
+	}
 
+	// todo | question: for docker, should we just check all the cmds for a `docker` call?
+	// todo | that's the only solution i could think of. can't just do a docker login for everything,
+	// todo |  in case it doesn't include docker in the image
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
 	result.Messages = append(result.Messages, setupMessages...)
 	return result, d.ContainerId
+}
+
+// should mavenSetup and all our other integration just be a part of the interface? since that'll be the same for
+// all integrations
+func (d *Docker) mavenSetup(rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *Result) {
+	if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
+		_, ok := err.(*nexus.NoCreds)
+		if !ok {
+			ocelog.IncludeErrField(err).Error("returning failed setup because could not get settings.xml")
+			return &Result{
+				Stage: su.GetStage(),
+				Status: FAIL,
+				Error:  err,
+			}
+		}
+	} else {
+		ocelog.Log().Debug("writing maven settings.xml")
+		result = d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
+		result.Messages = append(result.Messages, msgs...)
+	}
+	return result
+}
+
+func (d *Docker) dockerSetup(rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *Result) {
+	repoCreds := models.NewRepoCreds()
+	acct := strings.Split(werk.FullName, "/")[0]
+	credz, err := rc.GetCredAt(cred.BuildCredPath("docker", acct, cred.Repo), false, repoCreds)
+	if err != nil {
+		return &Result{
+			Stage: su.GetStage(),
+			Status: FAIL,
+			Error:  err,
+		}
+	}
+	rcs, ok := credz[werk.FullName]
+	if !ok {
+		return &Result{
+			Stage: su.GetStage(),
+			Status: FAIL,
+			Error: errors.New("could not find docker login creds"),
+		}
+	}
+	repo, ok := rcs.(*models.RepoCreds)
+	if !ok {
+		return &Result{
+			Stage: su.GetStage(),
+			Status: FAIL,
+			Error: errors.New("could not cast as repo creds, should not happen"),
+		}
+	}
+
+	for name, loginUrl := range repo.RepoUrl {
+		ocelog.Log().Debug("docker logging in at ", name)
+		loginmsg := fmt.Sprintf("docker login -u %s -p %s %s", repo.Username, repo.Password, loginUrl)
+		//d.Exec(su.GetStage())
+		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, []string{loginmsg}, logout)
+		return result
+	}
+
+	return &Result{
+		Stage: su.GetStage(),
+		Status:FAIL,
+		Error: errors.New("didn't find docker login credentials."),
+	}
 }
 
 func (d *Docker) Cleanup(logout chan []byte) {
