@@ -54,13 +54,32 @@
 - tag built projects by custom group name, that way you can filter to see all repos belonging to your group
 - docker login? - our repo creds model works for this currently, just need to implement part that actually runs docker login
 - do the pipeline thing
-- make it so that successful builds will edit the commit message and you can see in commit history whether or not that build was successful 
+- make it so that successful builds FROM PR'S will edit the PR comments and say whether or not that build was successful 
 - `ocelot kill <hash>` - add a quit channel
 - check out worker queue
 	- storing how long your commit waited on the queue
 - return to old package install list??
     - [docker get script for ex](https://get.docker.com/)
     - this also needs to save the image to nexus and reuse    
+
+    
+## little TODOs?:
+- fix PR's triggering builds
+- something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
+- something to take care of removing dead docker containers + images from werker's host (this shit builds up fast)
+- add ability to remove webhooks??? (this would be handy while we're playing around with stuff)
+- add ability to specify if you want all branches built
+- add optional to specify working directory inside of ocelot.yml
+- `ocelot watch` - create a new webhook
+- `ocelot trigger jessishank/mytestocy <hash>` - to put on queue w/o bitbucket webhook
+- polling option to add new repos with ocelot.yml
+- `ocelot summary` command takes in -repo or --hash? 
+- add `who triggered this` value to summary table
+- add *what* triggered this build
+	- command line trigger
+	- pr trigger
+	- commit trigger
+	- etc. 
 
 
 ## done:
