@@ -176,6 +176,10 @@ func (f *FileBuildStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSumm
 	return models.BuildSummary{}, nil
 }
 
+//TODO: implement
+func (f *FileBuildStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
+	return []models.BuildSummary{}, nil
+}
 
 func (f *FileBuildStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
 	var summary models.BuildSummary

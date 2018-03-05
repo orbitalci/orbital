@@ -76,6 +76,7 @@ type CVRemoteConfig interface {
 	GetPassword(path string) (string, error)
 	AddCreds(path string, anyCred RemoteConfigCred) (err error)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
+	CheckSSHKeyExists(path string) (error)
 	StorageCred
 }
 
@@ -163,6 +164,22 @@ func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
 		err = errors.New("no connection to vault, unable to add SSH Key")
 	}
 	return
+}
+
+// CheckSSHKey returns a boolean indicating whether or not an ssh key has been uploaded
+func (rc *RemoteConfig) CheckSSHKeyExists(path string) (error) {
+	var err error
+
+	if rc.Vault != nil {
+		_, err := rc.Vault.GetUserAuthData(path + "/ssh")
+		if err != nil {
+			return err
+		}
+	} else {
+		err = errors.New("no connection to vault, unable to add SSH Key")
+	}
+
+	return err
 }
 
 //GetPassword will return to you the vault password at specified path

@@ -27,14 +27,17 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/werker"
 	"bitbucket.org/level11consulting/ocelot/werker/builder"
+	"bitbucket.org/level11consulting/ocelot/werker/recovery"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -92,10 +95,21 @@ func main() {
 		ocelog.IncludeErrField(err).Fatal("unable to register werker with consul, this is vital. BAILING!")
 	}
 	conf.WerkerUuid = uuid
-
+	// kick off ctl-c signal handling
+	recov := recovery.NewRecovery(conf.RemoteConfig, conf.WerkerUuid)
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		ocelog.Log().Info("received interrupt, cleaning up after myself...")
+		recov.StoreInterrupt(recovery.Signal)
+		recov.Cleanup()
+		os.Exit(1)
+	}()
+	// start consumers
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
-		protoConsume := nsqpb.NewProtoConsume()
+		protoConsume := nsqpb.NewDefaultProtoConsume()
 		// todo: add in ability to change number of concurrent processes handling requests; right now it will just take the nsqpb default of 5
 		// eg:
 		//   protoConsume.Config.MaxInFlight = GetFromEnv

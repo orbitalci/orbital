@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -38,10 +39,9 @@ func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing
 func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password string, port int) {
 	port = 5555
 	password = "mysecretpassword"
-	path, err := filepath.Abs("./test-fixtures/")
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(filename)
+	path := filepath.Join(dir, "test-fixtures")
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("docker run -p %d:5432  -v %s:/docker-entrypoint-initdb.d -e POSTGRES_PASSWORD=%s --name pgtest -d postgres", port, path, password))
 	var outbe, errbe bytes.Buffer
 	cmd.Stdout = &outbe

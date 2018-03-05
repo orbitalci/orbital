@@ -77,10 +77,14 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
+	//add environment variables that will always be avilable on the machine - GIT_HASH, BUILD_ID
+	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id)}
+	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
+
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,
-		Env: werk.BuildConf.Env,
+		Env: paddedEnvs,
 		Cmd: d.DownloadTemplateFiles(werkerPort),
 		AttachStderr: true,
 		AttachStdout: true,
@@ -182,7 +186,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
-		result = d.mavenSetup(rc, werk, su, setupMessages, logout)
+		//result = d.mavenSetup(rc, werk, su, setupMessages, logout)
 		if result.Status == FAIL {
 			return result, d.ContainerId
 		}
@@ -309,7 +313,6 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *Result {
 	var stageMessages []string
 	ctx := context.Background()
-
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
 		Tty: true,
 		AttachStdin: true,
@@ -318,7 +321,6 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 		Env: env,
 		Cmd: cmds,
 	})
-
 	if err != nil {
 		return &Result{
 			Stage:  currStage,
@@ -352,7 +354,6 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 			Messages: stageMessages,
 		}
 	}
-
 	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
 	return &Result{
 		Stage:  currStage,

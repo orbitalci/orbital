@@ -60,7 +60,7 @@ func (c *cmd) Run(args []string) int {
 	Header(c.UI)
 	for _, oneline := range msg.Vcs {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
-			c.UI.Info(Prettify(oneline))
+			c.UI.Output(Prettify(oneline))
 			printed = true
 		}
 	}
@@ -79,11 +79,11 @@ func (c *cmd) Help() string {
 }
 
 func Header(ui cli.Ui) {
-	ui.Info("--- Admin Credentials ---\n")
+	ui.Output("\n--- Admin Credentials ---\n")
 }
 
 func NoDataHeader(ui cli.Ui) {
-	ui.Warn("--- No Admin Credentials Found ---\n")
+	ui.Warn("\n--- No Admin Credentials Found ---\n")
 }
 
 
@@ -93,9 +93,10 @@ ClientSecret: %s
 TokenURL: %s
 AcctName: %s
 Type: %s
+[%s]
 
 `
-	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, cred.Type)
+	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, cred.Type, cred.SshFileLoc)
 }
 
 
