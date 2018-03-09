@@ -22,5 +22,5 @@ const (
 	// nexus stuff
 	Nexus = RepoPath + "/%s/nexus"
 	NexusUrlPath = Nexus + "/repourl"
-	Docker = RepoPath + "/%/docker"
+	Docker = RepoPath + "/%s/docker"
 )

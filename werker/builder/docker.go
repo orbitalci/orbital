@@ -2,9 +2,10 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/repo"
+	"bitbucket.org/level11consulting/ocelot/util/repo/dockr"
 	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	"bufio"
 	"context"
@@ -217,7 +218,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 // all integrations
 func (d *Docker) mavenSetup(rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *Result) {
 	if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
-		_, ok := err.(*nexus.NoCreds)
+		_, ok := err.(*repo.NoCreds)
 		if !ok {
 			ocelog.IncludeErrField(err).Error("returning failed setup because could not get settings.xml")
 			return &Result{
@@ -235,46 +236,22 @@ func (d *Docker) mavenSetup(rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *Sta
 }
 
 func (d *Docker) dockerSetup(rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *Result) {
-	repoCreds := models.NewRepoCreds()
-	acct := strings.Split(werk.FullName, "/")[0]
-	credz, err := rc.GetCredAt(cred.BuildCredPath("docker", acct, cred.Repo), false, repoCreds)
-	if err != nil {
-		return &Result{
-			Stage: su.GetStage(),
-			Status: FAIL,
-			Error:  err,
+	// todo: needs to check to see if there is a docker entry in the repo, then if there is call dockr.GetDockerConfig() and write to file
+	if dockerEncoded, err := dockr.GetDockerConfig(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
+		_, ok := err.(*repo.NoCreds)
+		if !ok {
+			ocelog.IncludeErrField(err).Error("returning failed setup because could not get config.json")
+			return &Result{
+				Stage: su.GetStage(),
+				Status: FAIL,
+				Error: err,
+			}
 		}
+	} else {
+		ocelog.Log().Debug("writing docker config json for authentication")
+		result = d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteDockerJson(dockerEncoded), logout)
 	}
-	rcs, ok := credz[werk.FullName]
-	if !ok {
-		return &Result{
-			Stage: su.GetStage(),
-			Status: FAIL,
-			Error: errors.New("could not find docker login creds"),
-		}
-	}
-	repo, ok := rcs.(*models.RepoCreds)
-	if !ok {
-		return &Result{
-			Stage: su.GetStage(),
-			Status: FAIL,
-			Error: errors.New("could not cast as repo creds, should not happen"),
-		}
-	}
-
-	for name, loginUrl := range repo.RepoUrl {
-		ocelog.Log().Debug("docker logging in at ", name)
-		loginmsg := fmt.Sprintf("docker login -u %s -p %s %s", repo.Username, repo.Password, loginUrl)
-		//d.Exec(su.GetStage())
-		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, []string{loginmsg}, logout)
-		return result
-	}
-
-	return &Result{
-		Stage: su.GetStage(),
-		Status:FAIL,
-		Error: errors.New("didn't find docker login credentials."),
-	}
+	return result
 }
 
 func (d *Docker) Cleanup(logout chan []byte) {
