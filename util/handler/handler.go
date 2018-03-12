@@ -1,5 +1,10 @@
 package handler
 
+import (
+	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
+)
 
 type VCSHandler interface {
 	//Walk will iterate over all repositories for specified vcs account, and create webhooks at specified webhook url
@@ -26,4 +31,18 @@ type VCSHandler interface {
 
 	//FindWebhooks iterates over existing webhooks and returns true (matches our callback urls) if one already exists
 	FindWebhooks(getWebhookURL string) bool
+
+	//Get Repository details by account name + repo name
+	GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error)
+}
+
+//Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
+func GetBitbucketClient(cfg *models.VCSCreds) (VCSHandler, string, error) {
+	bbClient := &ocenet.OAuthClient{}
+	token, err := bbClient.Setup(cfg)
+	if err != nil {
+		return nil, "", err
+	}
+	bb := GetBitbucketHandler(cfg, bbClient)
+	return bb, token, nil
 }

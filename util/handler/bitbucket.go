@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com/bitbucket"
+const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
 //TODO: callback url is set as env. variable on admin, or passed in via command line
@@ -55,9 +55,19 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
 	bytez, err = bb.Client.GetUrlRawData(fmt.Sprintf(bb.GetBaseURL(), path))
 	if err != nil {
+		ocelog.IncludeErrField(err)
 		return
 	}
 	return
+}
+
+func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error){
+	repoVal := &pb.PaginatedRepository_RepositoryValues{}
+	err := bb.Client.GetUrl(fmt.Sprintf(DefaultRepoBaseURL, acctRepo), repoVal)
+	if err != nil {
+		return *repoVal, err
+	}
+	return *repoVal, nil
 }
 
 //CreateWebhook will create webhook at specified webhook url

@@ -23,6 +23,10 @@ type fakeGuideOcelotClient struct {
 	logLines []string
 }
 
+func (f *fakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *AcctRepoAndHash, opts ...grpc.CallOption) (*BuildSummary, error) {
+	return &BuildSummary{}, nil
+}
+
 func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
 	return f.creds, nil
 }
@@ -30,6 +34,10 @@ func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty
 func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	in.SshFileLoc = "THIS IS A TEST"
 	f.creds.Vcs = append(f.creds.Vcs, in)
+	return &empty.Empty{}, nil
+}
+
+func (f *fakeGuideOcelotClient) WatchRepo(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 

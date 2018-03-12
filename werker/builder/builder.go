@@ -8,24 +8,10 @@ import (
 
 
 type Builder interface {
-	Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *Result, uuid string)
-	Execute(actions *pb.Stage, logout chan []byte, commitHash string) *Result
+	Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
+	Execute(actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
 	Cleanup(logout chan []byte)
 }
-
-type Result struct {
-	Stage    string
-	Status   StageResultVal
-	Error    error
-	Messages []string
-}
-
-type StageResultVal int32
-
-const (
-	PASS	StageResultVal = 0
-	FAIL	StageResultVal = 1
-)
 
 //helper functions for stages, doesn't handle camelcase right now so if you want that set the values
 //yourself explicitly

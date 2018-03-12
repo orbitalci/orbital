@@ -52,7 +52,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
 	//
 	var builder b.Builder
-	switch w.WerkConf.werkerType {
+	switch w.WerkConf.WerkerType {
 	case Docker:
 		builder = b.NewDockerBuilder(w.Basher)
 	default:
@@ -105,10 +105,10 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 	}
 
-	if setupResult.Status == b.FAIL {
+	if setupResult.Status == pb.StageResultVal_FAIL {
 		errStr := "setup stage failed "
-		if setupResult.Error != nil {
-			errStr = errStr + setupResult.Error.Error()
+		if len(setupResult.Error) > 0 {
+			errStr = errStr + setupResult.Error
 		}
 		ocelog.Log().Error(errStr)
 		if err := w.Store.UpdateSum(true, setupDura.Seconds(), werk.Id); err != nil {
@@ -123,7 +123,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 		stageStart := recoverAgent.StartTime
 		stageResult := builder.Execute(stage, w.infochan, werk.CheckoutHash)
 		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)
-		if stageResult.Status == b.FAIL {
+		if stageResult.Status == pb.StageResultVal_FAIL {
 			fail = true
 			stageDura := time.Now().Sub(stageStart)
 			if err := storeStageToDb(w.Store, werk.Id, stageResult, stageStart, stageDura.Seconds()); err != nil {
@@ -148,19 +148,12 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 
 
 //storeStageToDb is a helper function for storing stages to db - this runs on completion of every stage
-func storeStageToDb(storage storage.OcelotStorage, buildId int64, stageResult *b.Result, start time.Time, dur float64) error {
-	var stageErr string
-
-	//convert error to string for storing to db if exists
-	if stageResult.Error != nil {
-		stageErr = stageResult.Error.Error()
-	}
-
+func storeStageToDb(storage storage.OcelotStorage, buildId int64, stageResult *pb.Result, start time.Time, dur float64) error {
 	err := storage.AddStageDetail(&models.StageResult{
 		BuildId: buildId,
 		Stage: stageResult.Stage,
 		Status: int(stageResult.Status),
-		Error: stageErr,
+		Error: stageResult.Error,
 		Messages: stageResult.Messages,
 		StartTime: start,
 		StageDuration: dur,

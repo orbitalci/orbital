@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/lib/pq"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"time"
 )
 
@@ -39,6 +40,7 @@ type PostgresStorage struct {
 func (p *PostgresStorage) Connect() error {
 	db, err := sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.user, p.dbLoc, p.password, p.location, p.port))
 	if err != nil {
+		ocelog.IncludeErrField(err)
 		return err
 	}
 	p.db = db
@@ -46,7 +48,10 @@ func (p *PostgresStorage) Connect() error {
 }
 
 func (p *PostgresStorage) Disconnect() {
-	p.db.Close()
+	err := p.db.Close()
+	if err != nil {
+		ocelog.IncludeErrField(err)
+	}
 }
 /*
 Column   |            Type             |
@@ -71,7 +76,8 @@ func (p *PostgresStorage) AddSumStart(hash string, starttime time.Time, account 
 	var id int64
 	if err := p.db.QueryRow(`INSERT INTO build_summary(hash, starttime, account, repo, branch, failed, buildtime) values ($1,$2,$3,$4,$5,true,-99.999) RETURNING id`,
 		hash, starttime.Format(TimeFormat), account, repo, branch).Scan(&id); err != nil {
-			return id, err
+		ocelog.IncludeErrField(err)
+		return id, err
 	}
 	return id, nil
 }
@@ -84,6 +90,7 @@ func (p *PostgresStorage) UpdateSum(failed bool, duration float64, id int64) err
 	defer p.Disconnect()
 	querystr := `UPDATE build_summary SET failed=$1, buildtime=$2 WHERE id=$3`
 	if _, err := p.db.Query(querystr, failed, duration, id); err != nil {
+		ocelog.IncludeErrField(err)
 		return err
 	}
 	return nil
@@ -97,6 +104,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 	defer p.Disconnect()
 	rows, err := p.db.Query(`SELECT * FROM build_summary WHERE hash = $1`, gitHash)
 	if err != nil {
+		ocelog.IncludeErrField(err)
 		return sums, err
 	}
 	defer rows.Close()
@@ -107,6 +115,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 			if err == sql.ErrNoRows {
 				return sums, BuildSumNotFound(gitHash)
 			}
+			ocelog.IncludeErrField(err)
 			return sums, err
 		}
 		//fmt.Println(hi)
@@ -124,6 +133,7 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]model
 	defer p.Disconnect()
 	rows, err := p.db.Query(`select distinct (hash), account, repo from build_summary where hash ilike $1`, partialGitHash + "%")
 	if err != nil {
+		ocelog.IncludeErrField(err)
 		return hashes, err
 	}
 	defer rows.Close()
@@ -152,6 +162,7 @@ func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.Build
 	row := p.db.QueryRow(querystr, partialGitHash + "%")
 	err := row.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch)
 	if err == sql.ErrNoRows {
+		ocelog.IncludeErrField(err)
 		return sum, BuildSumNotFound(partialGitHash)
 	}
 	return sum, err
@@ -168,6 +179,7 @@ func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSumma
 	row := p.db.QueryRow(querystr, buildId)
 	err := row.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch)
 	if err == sql.ErrNoRows {
+		ocelog.IncludeErrField(err)
 		return sum, BuildSumNotFound(string(buildId))
 	}
 	return sum, err
@@ -183,6 +195,7 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 	queryRow := fmt.Sprintf(`SELECT * FROM build_summary WHERE repo=$1 and account=$2 ORDER BY starttime DESC LIMIT %d`, limit)
 	rows, err := p.db.Query(queryRow, repo, account)
 	if err != nil {
+		ocelog.IncludeErrField(err)
 		return sums, err
 	}
 	defer rows.Close()
@@ -209,6 +222,7 @@ func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSu
 	queryRow := fmt.Sprintf(`select distinct on (account, repo) account, repo from build_summary where repo ilike $1;`)
 	rows, err := p.db.Query(queryRow, partialRepo + "%")
 	if err != nil {
+		ocelog.IncludeErrField(err)
 		return sums, err
 	}
 	defer rows.Close()
@@ -218,6 +232,7 @@ func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSu
 			if err == sql.ErrNoRows {
 				return sums, BuildSumNotFound("repository starting with" + partialRepo)
 			}
+			ocelog.IncludeErrField(err)
 			return sums, err
 		}
 		sums = append(sums, sum)
@@ -240,6 +255,7 @@ func (p *PostgresStorage) AddOut(output *models.BuildOutput) error {
 	}
 	defer p.Disconnect()
 	if err := output.Validate(); err != nil {
+		ocelog.IncludeErrField(err)
 		return err
 	}
 	queryStr := `INSERT INTO build_output(build_id, output) values ($1,$2)`
@@ -258,6 +274,7 @@ func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error)
 	defer p.Disconnect()
 	queryStr := `SELECT * FROM build_output WHERE build_id=$1`
 	if err := p.db.QueryRow(queryStr, buildId).Scan(&out.BuildId, &out.Output, &out.OutputId); err != nil {
+		ocelog.IncludeErrField(err)
 		return out, err
 	}
 	return out, nil
@@ -287,14 +304,17 @@ func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error 
 	}
 	defer p.Disconnect()
 	if err := stageResult.Validate(); err != nil {
+		ocelog.IncludeErrField(err)
 		return err
 	}
 	queryStr := `INSERT INTO build_stage_details(build_id, stage, error, starttime, runtime, status, messages) values ($1, $2, $3, $4, $5, $6, $7)`
 	jsonStr, err := json.Marshal(stageResult.Messages)
 	if err != nil {
+		ocelog.IncludeErrField(err)
 		return err
 	}
 	if _, err := p.db.Query(queryStr, stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime.Format(TimeFormat), stageResult.StageDuration, stageResult.Status, string(jsonStr)); err != nil {
+		ocelog.IncludeErrField(err)
 		return err
 	}
 	return nil
@@ -320,6 +340,7 @@ func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResul
 			if err == sql.ErrNoRows {
 				return stages, StagesNotFound(fmt.Sprintf("build id: %v", buildId))
 			}
+			ocelog.IncludeErrField(err)
 			return stages, err
 		}
 

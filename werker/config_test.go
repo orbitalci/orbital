@@ -13,7 +13,7 @@ func TestGetConf_fromEnv(t *testing.T) {
 		ServicePort: "9899",
 		GrpcPort:    defaultGrpcPort,
 		WerkerName:  "oh_YEEEAH",
-		werkerType:  Kubernetes,
+		WerkerType:  Kubernetes,
 		LogLevel:    "error",
 		RegisterIP:  "55.259.12.197",
 	}
@@ -27,8 +27,8 @@ func TestGetConf_fromEnv(t *testing.T) {
 		t.Fatal("no go ", err)
 	}
 
-	if conf.werkerType != testConf.werkerType {
-		t.Error(test.GenericStrFormatErrors("werker type", testConf.werkerType, conf.werkerType))
+	if conf.WerkerType != testConf.WerkerType {
+		t.Error(test.GenericStrFormatErrors("werker type", testConf.WerkerType, conf.WerkerType))
 	}
 	if conf.ServicePort != testConf.ServicePort {
 		t.Error(test.StrFormatErrors("service ws port", testConf.ServicePort, conf.ServicePort))
@@ -46,7 +46,7 @@ func TestGetConf_fromEnv(t *testing.T) {
 		t.Error(test.StrFormatErrors("register ip", testConf.RegisterIP, conf.RegisterIP))
 	}
 
-	if conf.werkerType != Kubernetes {
+	if conf.WerkerType != Kubernetes {
 		t.Error("whuy doooo")
 	}
 }
