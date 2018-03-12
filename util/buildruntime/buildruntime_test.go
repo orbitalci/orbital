@@ -2,57 +2,19 @@ package buildruntime
 
 
 import (
-	consulet "bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/util"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"fmt"
-	"github.com/hashicorp/consul/testutil"
 	"os"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 )
-// todo: put these in util
-func modifyServerConfig(c *testutil.TestServerConfig) {
-	c.LogLevel = "err"
-}
-// todo: put these in util
-func initServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestServer, storage.BuildSum) {
-	testServer, err := testutil.NewTestServerConfig(modifyServerConfig)
-	if err != nil {
-		t.Fatal("Couldn't create consul test server, error: ", err)
-	}
-	ayy := strings.Split(testServer.HTTPAddr, ":")
-	port, _ := strconv.ParseInt(ayy[1], 10, 32)
-	consul, _ := consulet.New(ayy[0], int(port))
-	store := storage.NewFileBuildStorage("./test-fixtures/storage")
-	return consul, testServer, store
-}
-//
-//type ConsulShtuff struct {
-//	c  *consulet.Consulet
-//	ts *testutil.TestServer
-//}
-//
-////SetBuildDone(consulete *consul.Consulet, gitHash string) error
-//func Test_SetBuildDone(t *testing.T) {
-//	hash := "OHAi"
-//	consu, serv, _ := initServerAndConsulet(t)
-//	defer serv.Stop()
-//	if err := SetBuildDone(consu, hash); err != nil {
-//		t.Fatal("could not set build done, err ", err.Error())
-//	}
-//	done := serv.GetKV(t, fmt.Sprintf(buildDonePath, hash))
-//	if string(done) != "true" {
-//		t.Error(test.StrFormatErrors("done flag", "true", string(done)))
-//	}
-//}
 
 //// func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
 func Test_CheckIfBuildDone(t *testing.T) {
 	hash := "sup"
-	consu, serv, store := initServerAndConsulet(t)
+	consu, serv, store := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	testAddFullBuildSummary(hash, store, t)
 	defer os.RemoveAll("./test-fixtures/storage")
@@ -83,7 +45,7 @@ func Test_Register(t *testing.T) {
 	ip := "10.1.1.0"
 	grpcPort := "1020"
 	wsPort := "4030"
-	consu, serv, _ := initServerAndConsulet(t)
+	consu, serv, _ := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	uuid, err := Register(consu, ip, grpcPort, wsPort)
 	if err != nil {
@@ -118,7 +80,7 @@ func Test_RegisterBuild(t *testing.T) {
 	grpcPort := "1020"
 	wsPort := "4030"
 	dockerUuid := "1111-2222-3333-asdf"
-	consu, serv, _ := initServerAndConsulet(t)
+	consu, serv, _ := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	uuid, err := Register(consu, ip, grpcPort, wsPort)
 	if err != nil {
@@ -150,7 +112,7 @@ func Test_GetBuildRuntime(t *testing.T) {
 	grpcPort := "1020"
 	werkerId := "werkerId"
 	wsPort := "4030"
-	consu, serv, _ := initServerAndConsulet(t)
+	consu, serv, _ := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	serv.SetKV(t, fmt.Sprintf(werkerGrpc, werkerId), []byte(grpcPort))
 	serv.SetKV(t, fmt.Sprintf(werkerWs, werkerId), []byte(wsPort))
@@ -183,7 +145,7 @@ func Test_Delete(t *testing.T) {
 	werkerId := "werkerId"
 	hash := "1231231231"
 	dockerUuid := "12312324/81dfasd"
-	consu, serv, _ := initServerAndConsulet(t)
+	consu, serv, _ := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	serv.SetKV(t, fmt.Sprintf(buildDockerUuid, werkerId, hash), []byte(dockerUuid))
 	serv.SetKV(t, fmt.Sprintf(werkerBuildMap, hash), []byte(werkerId))

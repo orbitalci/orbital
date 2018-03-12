@@ -119,6 +119,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 
 	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to get storage")
 		return

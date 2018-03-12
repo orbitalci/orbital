@@ -90,7 +90,7 @@ func main() {
 	var consumers []*nsqpb.ProtoConsume
 	supportedTopics := []string{"build_please"}
 	for _, topic := range supportedTopics {
-		protoConsume := nsqpb.NewProtoConsume()
+		protoConsume := nsqpb.NewDefaultProtoConsume()
 		go listen(protoConsume, consulHost, consulPort, topic, name)
 		consumers = append(consumers, protoConsume)
 	}

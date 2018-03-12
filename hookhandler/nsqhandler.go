@@ -19,7 +19,14 @@ type BuildHookHandler struct {
 }
 
 // UnmarshalAndProcess is called by the nsq consumer to handle the build message
-func (b *BuildHookHandler) UnmarshalAndProcess(msg []byte, done chan int) error {
+func (b *BuildHookHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
+	defer func(){
+		if r := recover(); r != nil {
+			// add to finish channel so that we don't requeue
+			finish <- 1
+			ocelog.Log().Fatal("a panic occurred, exiting: ", r)
+		}
+	}()
 	buildTask := &models.AcctRepoAndHash{}
 	if err := proto.Unmarshal(msg, buildTask); err != nil {
 		ocelog.IncludeErrField(err).Warning("unmarshal error")
