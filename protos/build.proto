@@ -2,6 +2,7 @@ syntax = "proto3";
 package protos;
 
 import "webhook.proto";
+import "google/protobuf/any.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
@@ -19,6 +20,19 @@ message Stage {
     repeated string script = 2;
     string name = 3;
 }
+
+message Result {
+    string stage = 1;
+    StageResultVal status = 2;
+    string error = 3;
+    repeated string messages = 4;
+}
+
+enum StageResultVal {
+    PASS = 0;
+    FAIL = 1;
+}
+
 
 message WerkerTask {
     string vaultToken = 1;

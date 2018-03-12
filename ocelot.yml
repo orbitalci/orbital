@@ -3,14 +3,15 @@ buildTool: go
 branches:
   - ALL
 stages:
-  - name: echoenvars
+  - name: be_useful
     script:
-      - echo "WOWOWOWOW WE ARE ON $BUILD_ID"
+      - echo "building $BUILD_ID with has $GIT_HASH"
   - name: testing
     script:
       - mkdir -p $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cp -r /$GIT_HASH $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cd /$GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cp -r * $GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cp -r .git* $GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cd $GOPATH/src/bitbucket.org/level11consulting/ocelot
       - go get -v -u github.com/golang/dep/cmd/dep
       - ssh -o "StrictHostKeyChecking no" git@bitbucket.org
       - dep ensure -v
