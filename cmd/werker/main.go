@@ -138,8 +138,11 @@ func setupWerker() {
 	if err != nil {
 		ocelog.IncludeErrField(err).Error(fmt.Sprintf("unable to read directory at: %s", templdir))
 	}
-
-
+	ocelotDir := os.ExpandEnv("$HOME/.ocelot")
+	err = os.MkdirAll(ocelotDir, 0555)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("unable to create directory at ", ocelotDir)
+	}
 	for _, file := range files {
 		if file.IsDir() {continue}
 		downloadFP := path.Join(templdir, file.Name())
