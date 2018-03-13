@@ -4,6 +4,8 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/repo"
+	"bitbucket.org/level11consulting/ocelot/util/repo/dockr"
 	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
 	"bufio"
 	"context"
@@ -172,7 +174,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 
 	acctName := strings.Split(werk.FullName, "/")[0]
-	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadSSHKey(
+	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + rc.GetVault().GetAddress())
+	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+rc.GetVault().GetAddress()}, d.DownloadSSHKey(
 		werk.VaultToken,
 		cred.BuildCredPath(werk.VcsType, acctName, cred.Vcs)), logout)
 	if len(result.Error) > 0 {
@@ -185,33 +188,57 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
-		setupMessages = append(setupMessages, "detected build tool is maven, checking for nexus credentials")
-		if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
-			_, ok := err.(*nexus.NoCreds)
-			if !ok {
-				ocelog.IncludeErrField(err).Error("returning failed setup because could not get settings.xml")
-				return &pb.Result{
-					Stage: su.GetStage(),
-					Status: pb.StageResultVal_FAIL,
-					Error:  err.Error(),
-				}, d.ContainerId
-			}
-		} else {
-			ocelog.Log().Debug("writing maven settings.xml")
-			setupMessages = append(setupMessages, "nexus credentials detected, setting up settings.xml")
-			copyResult := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
-
-			if len(copyResult.Error) > 0 {
-				copyResult.Messages = append(setupMessages, copyResult.Messages...)
-				return copyResult, d.ContainerId
-			}
+		result := d.RepoIntegrationSetup(nexus.GetSettingsXml, d.WriteMavenSettingsXml, "maven", rc, werk, su, setupMessages, logout)
+		if result.Status == pb.StageResultVal_FAIL {
+			return result, d.ContainerId
 		}
 	}
+	result = d.RepoIntegrationSetup(dockr.GetDockerConfig, d.WriteDockerJson, "docker login", rc, werk, su, setupMessages, logout)
 
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
 	result.Messages = append(result.Messages, setupMessages...)
 	return result, d.ContainerId
 }
+
+type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
+type RepoExecFunc func(string) []string
+
+
+
+func (d *Docker) RepoIntegrationSetup(setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
+	if renderedString, err := setupFunc(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
+		_, ok := err.(*repo.NoCreds)
+		if !ok {
+			ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
+			return &pb.Result{
+				Stage: su.GetStage(),
+				Status: pb.StageResultVal_FAIL,
+				Error: err.Error(),
+			}
+		} else {
+			msgs = append(msgs, "no integration data found for " + integrationName + " so assuming integration not necessary")
+			result = &pb.Result{
+				Stage: su.GetStage(),
+				Status: pb.StageResultVal_PASS,
+				Error: "",
+				Messages: msgs,
+			}
+			return result
+		}
+	} else {
+		ocelog.Log().Debug("writing integration for ", integrationName)
+		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, execFunc(renderedString), logout)
+		if result.Messages == nil {
+			result.Messages = msgs
+		} else {
+			result.Messages = append(result.Messages, msgs...)
+		}
+		return result
+	}
+	ocelog.Log().Error("SHOULD NEVER REACH THIS POINT!!!")
+	return result
+}
+
 
 func (d *Docker) Cleanup(logout chan []byte) {
 	su := InitStageUtil("cleanup")

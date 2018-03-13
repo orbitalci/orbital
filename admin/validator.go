@@ -57,9 +57,9 @@ func (RepoValidator) ValidateConfig(repoCreds *models.RepoCreds) error {
 		return errors.New("field username is required")
 	}
 	switch repoCreds.Type {
-	case "nexus", "maven":
+	case "nexus", "maven", "docker":
 		return nil
 	default:
-		return errors.New("repo creds must be one of the following type: nexus | maven")
+		return errors.New("repo creds must be one of the following type: nexus | maven | docker")
 	}
 }

@@ -28,7 +28,7 @@ func main() {
 
 	ocelog.InitializeLog(logLevel)
 
-	serverRunsAt := fmt.Sprintf("localhost:%v", port)
+	serverRunsAt := fmt.Sprintf(":%v", port)
 	ocelog.Log().Debug(serverRunsAt)
 
 	configInstance, err := cred.GetInstance(consulHost, consulPort, "")

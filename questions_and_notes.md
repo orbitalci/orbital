@@ -45,7 +45,7 @@
     - [stackoverflow](https://stackoverflow.com/questions/11268943/is-it-possible-to-capture-a-ctrlc-signal-and-run-a-cleanup-function-in-a-defe)
 - fix dev mode (maybe fuck this)
 - fix html viewer displaying *oldest* matching git hash (maybe fuck this)     
-
+- all services should check on startup if they can connect to everything they depend on, then either bail or profusely log / do retries 
 
 
 

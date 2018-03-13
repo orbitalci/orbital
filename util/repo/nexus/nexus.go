@@ -2,6 +2,7 @@ package nexus
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/repo"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bytes"
 	"errors"
@@ -50,14 +51,14 @@ func GetSettingsXml(rc cred.CVRemoteConfig, accountName string) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	repo := models.NewRepoCreds()
-	credz, err := rc.GetCredAt(fmt.Sprintf(cred.Nexus, accountName), false, repo)
+	repod := models.NewRepoCreds()
+	credz, err := rc.GetCredAt(fmt.Sprintf(cred.Nexus, accountName), false, repod)
 	if err != nil {
 		return "", err
 	}
 	nexusCred, ok := credz[cred.BuildCredKey("nexus", accountName)]
 	if !ok {
-		return "", NCErr("no creds found")
+		return "", repo.NCErr("no creds found")
 	}
 	casted, ok := nexusCred.(*models.RepoCreds)
 	if !ok {
@@ -69,17 +70,4 @@ func GetSettingsXml(rc cred.CVRemoteConfig, accountName string) (string, error) 
 		return "", errors.New("unable to render settings.xml template for nexus credentials. error: " + err.Error())
 	}
 	return settings.String(), nil
-}
-
-
-func NCErr(msg string) *NoCreds {
-	return &NoCreds{msg:msg}
-}
-
-type NoCreds struct {
-	msg string
-}
-
-func (n *NoCreds) Error() string {
-	return n.msg
 }

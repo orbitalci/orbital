@@ -6,7 +6,7 @@ COPY . .
 
 RUN cd cmd/${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -v -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .
 
-FROM scratch
+FROM alpine:3.7
 ENV SERVICE_NAME werker
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/${SERVICE_NAME} /
