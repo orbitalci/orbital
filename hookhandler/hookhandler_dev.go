@@ -110,6 +110,14 @@ func (mv *MockVaulty) AddUserAuthData(user string, data map[string]interface{}) 
 	return nil, nil
 }
 
+func (mv *MockVaulty) GetAddress() string{
+	return ""
+}
+
+func (mv *MockVaulty) DeleteSecret(path string) error {
+	return nil
+}
+
 func (mv *MockVaulty) GetUserAuthData(user string) (map[string]interface{}, error) {
 	mockMap := make(map[string]interface{})
 	return mockMap, nil

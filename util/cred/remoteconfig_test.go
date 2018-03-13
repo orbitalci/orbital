@@ -30,8 +30,8 @@ func TestRemoteConfig_ErrorHandling(t *testing.T) {
 }
 
 func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
-	testRemoteConfig, vaultListener, consulServer := testSetupVaultAndConsul(t)
-	defer teardownVaultAndConsul(vaultListener, consulServer)
+	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+	defer TeardownVaultAndConsul(vaultListener, consulServer)
 
 	adminConfig := &VcsConfig{
 		ClientSecret: "top-secret",
@@ -187,8 +187,8 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 }
 
 func TestRemoteConfig_GetStorageType(t *testing.T) {
-	testRemoteConfig, vaultListener, consulServer := testSetupVaultAndConsul(t)
-	defer teardownVaultAndConsul(vaultListener, consulServer)
+	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+	defer TeardownVaultAndConsul(vaultListener, consulServer)
 	// check that default will be file
 	storeType, err := testRemoteConfig.GetStorageType()
 	if err != nil {
@@ -228,31 +228,4 @@ func Test_BuildCredPath(t *testing.T) {
 	if liveRepo != expectedRepo {
 		t.Error(test.StrFormatErrors("repo cred path", expectedRepo, liveRepo))
 	}
-}
-
-//////test setup and tear down///////
-
-func testSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testutil.TestServer) {
-	//set up unsealed vault for testing
-	core, _, token := vault.TestCoreUnsealed(t)
-	ln, addr := http.TestServer(t, core)
-	os.Setenv("VAULT_ADDR", addr)
-	os.Setenv("VAULT_TOKEN", token)
-
-	//setup consul for testing
-	testServer, err := testutil.NewTestServer()
-	if err != nil {
-		t.Fatal("Couldn't create consul test server, error: ", err)
-	}
-	ayy := strings.Split(testServer.HTTPAddr, ":")
-	port, _ := strconv.ParseInt(ayy[1], 10, 32)
-
-	remoteConfig, err := GetInstance(ayy[0], int(port), token)
-
-	return remoteConfig, ln, testServer
-}
-
-func teardownVaultAndConsul(testvault net.Listener, testconsul *testutil.TestServer) {
-	testconsul.Stop()
-	testvault.Close()
 }

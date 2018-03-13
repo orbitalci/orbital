@@ -4,23 +4,10 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/repo"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 )
-
-const dockerConfig = `{
-	"auths": {
-			{{ range $name, $url := .RepoUrl }}
-			"{{$url}}": {
-				"auth": "{{.EncodedAuth}}"
-			}
-	},
-	"HttpHeaders": {
-			"User-Agent": "Docker-Client/17.12.0-ce (linux)"
-	}
-}`
 
 
 type auth map[string]string
@@ -52,14 +39,14 @@ func GetDockerConfig(rc cred.CVRemoteConfig, accountName string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	configEncoded := base64.StdEncoding.EncodeToString(bitz)
+	configEncoded := repo.BitzToBase64(bitz)
 	return configEncoded, err
 }
 
 
 func RCtoDockerConfig(creds *models.RepoCreds) ([]byte, error) {
 	authstring := fmt.Sprintf("%s:%s", creds.Username, creds.Password)
-	b64authstring := base64.StdEncoding.EncodeToString([]byte(authstring))
+	b64authstring := repo.StrToBase64(authstring)
 	authz := make(map[string]auth)
 	for _, url := range creds.RepoUrl {
 		authz[url] = map[string]string{"auth":b64authstring}

@@ -174,7 +174,8 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 
 	acctName := strings.Split(werk.FullName, "/")[0]
-	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadSSHKey(
+	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + rc.GetVault().GetAddress())
+	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+rc.GetVault().GetAddress()}, d.DownloadSSHKey(
 		werk.VaultToken,
 		cred.BuildCredPath(werk.VcsType, acctName, cred.Vcs)), logout)
 	if len(result.Error) > 0 {
@@ -187,59 +188,57 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
-		result = d.mavenSetup(rc, werk, su, setupMessages, logout)
+		result := d.RepoIntegrationSetup(nexus.GetSettingsXml, d.WriteMavenSettingsXml, "maven", rc, werk, su, setupMessages, logout)
 		if result.Status == pb.StageResultVal_FAIL {
 			return result, d.ContainerId
 		}
 	}
+	result = d.RepoIntegrationSetup(dockr.GetDockerConfig, d.WriteDockerJson, "docker login", rc, werk, su, setupMessages, logout)
 
-	// todo | question: for docker, should we just check all the cmds for a `docker` call?
-	// todo | that's the only solution i could think of. can't just do a docker login for everything,
-	// todo |  in case it doesn't include docker in the image
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
 	result.Messages = append(result.Messages, setupMessages...)
 	return result, d.ContainerId
 }
 
-// should mavenSetup and all our other integration just be a part of the interface? since that'll be the same for
-// all integrations
-func (d *Docker) mavenSetup(rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
-	if settingsXML, err := nexus.GetSettingsXml(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
-		_, ok := err.(*repo.NoCreds)
-		if !ok {
-			ocelog.IncludeErrField(err).Error("returning failed setup because could not get settings.xml")
-			return &pb.Result{
-				Stage: su.GetStage(),
-				Status: pb.StageResultVal_FAIL,
-				Error:  err.Error(),
-			}
-		}
-	} else {
-		ocelog.Log().Debug("writing maven settings.xml")
-		result = d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteMavenSettingsXml(settingsXML), logout)
-		result.Messages = append(result.Messages, msgs...)
-	}
-	return result
-}
+type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
+type RepoExecFunc func(string) []string
 
-func (d *Docker) dockerSetup(rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
-	// todo: needs to check to see if there is a docker entry in the repo, then if there is call dockr.GetDockerConfig() and write to file
-	if dockerEncoded, err := dockr.GetDockerConfig(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
+
+
+func (d *Docker) RepoIntegrationSetup(setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
+	if renderedString, err := setupFunc(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
 		_, ok := err.(*repo.NoCreds)
 		if !ok {
-			ocelog.IncludeErrField(err).Error("returning failed setup because could not get config.json")
+			ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
 			return &pb.Result{
 				Stage: su.GetStage(),
 				Status: pb.StageResultVal_FAIL,
 				Error: err.Error(),
 			}
+		} else {
+			msgs = append(msgs, "no integration data found for " + integrationName + " so assuming integration not necessary")
+			result = &pb.Result{
+				Stage: su.GetStage(),
+				Status: pb.StageResultVal_PASS,
+				Error: "",
+				Messages: msgs,
+			}
+			return result
 		}
 	} else {
-		ocelog.Log().Debug("writing docker config json for authentication")
-		result = d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.WriteDockerJson(dockerEncoded), logout)
+		ocelog.Log().Debug("writing integration for ", integrationName)
+		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, execFunc(renderedString), logout)
+		if result.Messages == nil {
+			result.Messages = msgs
+		} else {
+			result.Messages = append(result.Messages, msgs...)
+		}
+		return result
 	}
+	ocelog.Log().Error("SHOULD NEVER REACH THIS POINT!!!")
 	return result
 }
+
 
 func (d *Docker) Cleanup(logout chan []byte) {
 	su := InitStageUtil("cleanup")

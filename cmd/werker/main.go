@@ -46,9 +46,11 @@ import (
 func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
+			ocelog.Log().Debug("i am about to sleep for 10s because i couldn't find the topic at ", p.Config.LookupDAddress())
 			time.Sleep(10 * time.Second)
 		} else {
 			mode := os.Getenv("ENV")
+			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
 			basher := &builder.Basher{LoopbackIp:conf.LoopBackIp}
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
 				basher.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
@@ -62,7 +64,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 				Store:  store,
 			}
 			p.Handler = handler
-			p.ConsumeMessages(topic, conf.WerkerName)
+			p.ConsumeMessages(topic, "werker")
 			ocelog.Log().Info("Consuming messages for topic ", topic)
 			break
 		}
@@ -113,6 +115,7 @@ func main() {
 		// todo: add in ability to change number of concurrent processes handling requests; right now it will just take the nsqpb default of 5
 		// eg:
 		//   protoConsume.Config.MaxInFlight = GetFromEnv
+		ocelog.Log().Debug("I AM ABOUT TO LISTEN")
 		go listen(protoConsume, topic, conf, tunnel, store)
 		consumers = append(consumers, protoConsume)
 	}
