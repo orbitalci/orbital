@@ -23,37 +23,12 @@ type HookHandler interface {
 	SetValidator(validator *validate.OcelotValidator)
 }
 
-
+//context contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	RemoteConfig cred.CVRemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
 	OcelotValidator *validate.OcelotValidator
-}
-
-func (hhc *HookHandlerContext) GetRemoteConfig() cred.CVRemoteConfig {
-	return hhc.RemoteConfig
-}
-func (hhc *HookHandlerContext) SetRemoteConfig(remoteConfig cred.CVRemoteConfig) {
-	hhc.RemoteConfig = remoteConfig
-}
-func (hhc *HookHandlerContext) GetProducer() *nsqpb.PbProduce {
-	return hhc.Producer
-}
-func (hhc *HookHandlerContext) SetProducer(producer *nsqpb.PbProduce) {
-	hhc.Producer = producer
-}
-func (hhc *HookHandlerContext) GetDeserializer() *deserialize.Deserializer {
-	return hhc.Deserializer
-}
-func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deserializer) {
-	hhc.Deserializer = deserializer
-}
-func (hhc *HookHandlerContext) SetValidator(validator *validate.OcelotValidator) {
-	hhc.OcelotValidator = validator
-}
-func (hhc *HookHandlerContext) GetValidator() *validate.OcelotValidator {
-	return hhc.OcelotValidator
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -119,6 +94,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 
 	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
+
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to get storage")
 		return
@@ -143,4 +119,29 @@ func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
+}
+
+func (hhc *HookHandlerContext) GetRemoteConfig() cred.CVRemoteConfig {
+	return hhc.RemoteConfig
+}
+func (hhc *HookHandlerContext) SetRemoteConfig(remoteConfig cred.CVRemoteConfig) {
+	hhc.RemoteConfig = remoteConfig
+}
+func (hhc *HookHandlerContext) GetProducer() *nsqpb.PbProduce {
+	return hhc.Producer
+}
+func (hhc *HookHandlerContext) SetProducer(producer *nsqpb.PbProduce) {
+	hhc.Producer = producer
+}
+func (hhc *HookHandlerContext) GetDeserializer() *deserialize.Deserializer {
+	return hhc.Deserializer
+}
+func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deserializer) {
+	hhc.Deserializer = deserializer
+}
+func (hhc *HookHandlerContext) SetValidator(validator *validate.OcelotValidator) {
+	hhc.OcelotValidator = validator
+}
+func (hhc *HookHandlerContext) GetValidator() *validate.OcelotValidator {
+	return hhc.OcelotValidator
 }

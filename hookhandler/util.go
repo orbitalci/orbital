@@ -17,6 +17,7 @@ import (
 	"time"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"github.com/docker/docker/volume/store"
 )
 
 
@@ -72,17 +73,15 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 					producer *nsqpb.PbProduce,
 					store storage.OcelotStorage) error {
 	ocelog.Log().Debug("Storing initial results in db")
-	startTime := time.Now()
-
 	account, repo := getAcctRepo(accountRepo)
 	vaulty := remoteConfig.GetVault()
 
-	id := notifyStorage(store, hash, startTime, repo, branch, account)
-	sr := getHookhandlerStageResult(startTime, id)
+	id := storeSummaryToDb(store, hash, repo, branch, account)
+	sr := getHookhandlerStageResult(id)
 	// stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
 
-	if err := ValidateBuild(buildConf, branch, validator); err == nil {
-		TellWerker(buildConf, vaulty, producer, hash, account + "/" + repo, bbToken, id)
+	if err := validateBuild(buildConf, branch, validator); err == nil {
+		tellWerker(buildConf, vaulty, producer, hash, account + "/" + repo, bbToken, id)
 		ocelog.Log().Debug("told werker!")
 		sr.Status = 0
 		sr.Messages = []string{"Passed initial validation " + smods.CHECKMARK}
@@ -100,7 +99,8 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	return nil
 }
 
-func TellWerker(buildConf *pb.BuildConfig,
+//tellWerker is a private helper function for building a werker task and giving it to nsq
+func tellWerker(buildConf *pb.BuildConfig,
 	vaulty ocevault.Vaulty,
 	producer *nsqpb.PbProduce,
 	hash string,
@@ -129,7 +129,7 @@ func TellWerker(buildConf *pb.BuildConfig,
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
 // - check if commit branch matches with ocelot.yaml branch and validate
-func ValidateBuild(buildConf *pb.BuildConfig, branch string, validator *validate.OcelotValidator) error {
+func validateBuild(buildConf *pb.BuildConfig, branch string, validator *validate.OcelotValidator) error {
 	err := validator.ValidateConfig(buildConf, nil)
 
 	if err != nil {
@@ -154,20 +154,30 @@ func getAcctRepo(fullName string) (acct string, repo string) {
 	return
 }
 
-func getHookhandlerStageResult(start time.Time, id int64) *smods.StageResult {
+func getHookhandlerStageResult(id int64) *smods.StageResult {
+	start := time.Now()
+
 	return &smods.StageResult{
 		BuildId:       id,
 		Stage:         smods.HOOKHANDLER_VALIDATION,
 		StartTime:     start,
-		StageDuration: -99.99, // is this the best way? prob not
+		StageDuration: -99.99,
 	}
 }
 
-func notifyStorage(store storage.BuildSum, hash string, starttime time.Time, repo string, branch string, account string) int64 {
-	//AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error)
+func storeStageToDb(store storage.BuildStage, stageResult *smods.StageResult) error {
+	if err := store.AddStageDetail(stageResult); err != nil {
+		ocelog.IncludeErrField(err).Error("unable to store hookhandler stage details to db")
+		return err
+	}
+	return nil
+}
+
+func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string) int64 {
+	starttime := time.Now()
 	id, err := store.AddSumStart(hash, starttime, account, repo, branch)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("could not kick off summary")
+		ocelog.IncludeErrField(err).Error("unable to store summary details to db")
 	}
 	return id
 }

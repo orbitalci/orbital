@@ -59,6 +59,7 @@ type WerkerConf struct {
 	WerkerUuid		uuid.UUID
 }
 
+
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
 // alright because it only happens on startup of the application
 func GetConf() (*WerkerConf, error) {

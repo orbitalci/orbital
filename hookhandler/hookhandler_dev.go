@@ -9,11 +9,11 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"errors"
+	"fmt"
 	"github.com/hashicorp/vault/api"
 	"io/ioutil"
 	"os"
-	"fmt"
-	"errors"
 )
 
 type MockHookHandlerContext struct {

@@ -38,6 +38,7 @@ type BuildSum interface {
 
 type BuildStage interface {
 	AddStageDetail(stageResult *models.StageResult) error
+	UpdateStageDetail(status int, duration float64, id int64) error
 	RetrieveStageDetail(buildId int64) ([]models.StageResult, error)
 }
 
