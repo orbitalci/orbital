@@ -11,5 +11,4 @@ ENV SERVICE_NAME werker
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/${SERVICE_NAME} /
 COPY --from=builder /sbin/tini /sbin/
-COPY cmd/werker/template /go/src/bitbucket.org/level11consulting/ocelot/cmd/werker/template
 CMD ["/sbin/tini", "--", "/werker"]
