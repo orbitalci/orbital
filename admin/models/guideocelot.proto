@@ -76,6 +76,7 @@ message RepoCreds {
     string password = 2;
     map<string, string> repoUrl= 6;
     string acctName = 4;
+    // todo: should this be an enum?
     string type = 5;
     string projectName = 7;
 }

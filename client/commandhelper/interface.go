@@ -20,6 +20,7 @@ type GuideOcelotCmd interface {
 func CheckConnection(cmd GuideOcelotCmd, ctx context.Context) error {
 	_, err := cmd.GetClient().CheckConn(ctx, &empty.Empty{})
 	if err != nil {
+		cmd.GetUI().Error(err.Error())
 		cmd.GetUI().Error(fmt.Sprintf("could not connect to server at %s", cmd.GetConfig().AdminLocation))
 	}
 	return err

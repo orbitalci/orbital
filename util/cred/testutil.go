@@ -4,7 +4,14 @@ import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/vault"
 	"fmt"
+	"github.com/hashicorp/consul/testutil"
+	"github.com/hashicorp/vault/http"
+	hashiVault "github.com/hashicorp/vault/vault"
+	"net"
+	"os"
+	"strconv"
 	"strings"
+	"testing"
 )
 
 //dummy vcscred obj so we don't have to depend on models anymore
@@ -164,4 +171,61 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 	var a = map[string]interface{} {PostgresPasswordKey: pw}
 	_, err = vaulty.AddVaultData(PostgresPasswordLoc, a)
 	return err
+}
+
+
+//////test setup and tear down///////
+
+func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testutil.TestServer) {
+	//set up unsealed vault for testing
+	core, _, token := hashiVault.TestCoreUnsealed(t)
+	ln, addr := http.TestServer(t, core)
+	os.Setenv("VAULT_ADDR", addr)
+	os.Setenv("VAULT_TOKEN", token)
+
+	//setup consul for testing
+	testServer, err := testutil.NewTestServer()
+	if err != nil {
+		t.Fatal("Couldn't create consul test server, error: ", err)
+	}
+	ayy := strings.Split(testServer.HTTPAddr, ":")
+	port, _ := strconv.ParseInt(ayy[1], 10, 32)
+
+	remoteConfig, err := GetInstance(ayy[0], int(port), token)
+
+	return remoteConfig, ln, testServer
+}
+
+func TeardownVaultAndConsul(testvault net.Listener, testconsul *testutil.TestServer) {
+	testconsul.Stop()
+	testvault.Close()
+}
+
+func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
+	creds := &RepoConfig{
+		Password: password,
+		Username: username,
+		RepoUrl: map[string]string{"url":repourl},
+		Type: "docker",
+		AcctName: acctName,
+		ProjectName: projectName,
+	}
+	//err := testRemoteConfig.AddCreds(BuildCredPath("github", "mariannefeng", Vcs), adminConfig)
+	if err := rc.AddCreds(BuildCredPath("docker", acctName, Repo), creds); err != nil {
+		t.Fatal("couldnt add creds, error: ", err.Error())
+	}
+}
+
+func AddMvnRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
+	creds := &RepoConfig{
+		Password: password,
+		Username: username,
+		RepoUrl: map[string]string{"registry":repourl},
+		Type: "maven",
+		AcctName: acctName,
+		ProjectName: projectName,
+	}
+	if err := rc.AddCreds(BuildCredPath("maven", acctName, Repo), creds); err != nil {
+		t.Fatal("couldnt' add maven creds, error: ", err.Error())
+	}
 }

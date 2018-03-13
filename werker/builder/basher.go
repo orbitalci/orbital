@@ -69,6 +69,11 @@ func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
 	return []string{"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + "'" + settingsXML + "'"}
 }
 
+func (b *Basher) WriteDockerJson(encodedDocker string) []string {
+	return []string{"/bin/sh", "-c", "/.ocelot/render_docker.sh " + "'" + encodedDocker + "'"}
+}
+
+
 //DownloadTemplateFiles will download template files necessary to build containers from werker
 func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
 	downloadLink := fmt.Sprintf("http://%s:%s/do_things.tar", b.LoopbackIp, werkerPort)

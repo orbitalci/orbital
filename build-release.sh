@@ -17,7 +17,7 @@ aws s3 cp --acl public-read-write --content-disposition attachment ocelot.zip s3
 
 
 echo "uploading werker's template files"
-cd cmd/werker/template
+cd werker/builder/template
 tar -cvf werker_files.tar *
 
 # upload zipped werker files to s3
