@@ -17,7 +17,6 @@ import (
 	"time"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"github.com/docker/docker/volume/store"
 )
 
 
@@ -67,6 +66,7 @@ func GetBBConfig(remoteConfig cred.CVRemoteConfig, repoFullName string, checkout
 
 //QueueAndStore will create a werker task and put it on the queue, then update database
 func QueueAndStore(hash, branch, accountRepo, bbToken string,
+					messages []string,
 					remoteConfig cred.CVRemoteConfig,
 					buildConf *pb.BuildConfig,
 					validator *validate.OcelotValidator,
@@ -77,25 +77,28 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	vaulty := remoteConfig.GetVault()
 
 	id := storeSummaryToDb(store, hash, repo, branch, account)
-	sr := getHookhandlerStageResult(id)
+	sr := getHookhandlerStageResult(id, messages)
 	// stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
 
 	if err := validateBuild(buildConf, branch, validator); err == nil {
 		tellWerker(buildConf, vaulty, producer, hash, account + "/" + repo, bbToken, id)
 		ocelog.Log().Debug("told werker!")
 		sr.Status = 0
-		sr.Messages = []string{"Passed initial validation " + smods.CHECKMARK}
+		sr.Messages = append(sr.Messages, "Passed initial validation " + smods.CHECKMARK)
+		//sr.Messages = []string{"Passed initial validation " + smods.CHECKMARK}
 	} else {
 		sr.Status = 1
 		sr.Error = err.Error()
-		sr.Messages = []string{"Failed initial validation. Error: " + err.Error()}
+		sr.Messages = append(sr.Messages, "Failed initial validation. Error: " + err.Error())
+		//sr.Messages = []string{"Failed initial validation. Error: " + err.Error()}
 	}
 
 	sr.StageDuration = time.Now().Sub(sr.StartTime).Seconds()
-	if err := store.AddStageDetail(sr); err != nil {
+	if err := storeStageToDb(store, sr); err != nil {
 		ocelog.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err
 	}
+
 	return nil
 }
 
@@ -154,10 +157,11 @@ func getAcctRepo(fullName string) (acct string, repo string) {
 	return
 }
 
-func getHookhandlerStageResult(id int64) *smods.StageResult {
+func getHookhandlerStageResult(id int64, messages []string) *smods.StageResult {
 	start := time.Now()
 
 	return &smods.StageResult{
+		Messages: 	   messages,
 		BuildId:       id,
 		Stage:         smods.HOOKHANDLER_VALIDATION,
 		StartTime:     start,

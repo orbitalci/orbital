@@ -150,6 +150,10 @@ func (mvh *MockVCSHandler) Walk() error {
 	return nil
 }
 
+func (mvh *MockVCSHandler) GetHashDetail(acctRepo, hash string) (pb.PaginatedRepository_RepositoryValues, error) {
+	return pb.PaginatedRepository_RepositoryValues{}, nil
+}
+
 func (mvh *MockVCSHandler) GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error) {
 	return pb.PaginatedRepository_RepositoryValues{}, nil
 }

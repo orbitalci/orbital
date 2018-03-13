@@ -61,7 +61,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
+	if err = QueueAndStore(hash, branch, fullName, bbToken, []string{}, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
 		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
 		return
 	}
@@ -100,7 +100,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
+	if err = QueueAndStore(hash, branch, fullName, bbToken, []string{}, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
 		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
 		return
 	}

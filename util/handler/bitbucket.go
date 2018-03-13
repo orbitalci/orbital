@@ -118,6 +118,10 @@ func (bb *Bitbucket) GetBaseURL() string {
 	return DefaultRepoBaseURL
 }
 
+func (bb *Bitbucket) GetHashDetail(acctRepo, hash string) (pb.PaginatedRepository_RepositoryValues, error) {
+	return pb.PaginatedRepository_RepositoryValues{}, nil
+}
+
 //recursively iterates over all repositories and creates webhook
 func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 	if repoUrl == "" {
