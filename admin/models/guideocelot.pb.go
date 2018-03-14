@@ -220,12 +220,13 @@ func (m *RepoCredWrapper) GetRepo() []*RepoCreds {
 }
 
 type RepoCreds struct {
-	Username    string            `protobuf:"bytes,1,opt,name=username" json:"username,omitempty"`
-	Password    string            `protobuf:"bytes,2,opt,name=password" json:"password,omitempty"`
-	RepoUrl     map[string]string `protobuf:"bytes,6,rep,name=repoUrl" json:"repoUrl,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	AcctName    string            `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty"`
-	Type        string            `protobuf:"bytes,5,opt,name=type" json:"type,omitempty"`
-	ProjectName string            `protobuf:"bytes,7,opt,name=projectName" json:"projectName,omitempty"`
+	Username string            `protobuf:"bytes,1,opt,name=username" json:"username,omitempty"`
+	Password string            `protobuf:"bytes,2,opt,name=password" json:"password,omitempty"`
+	RepoUrl  map[string]string `protobuf:"bytes,6,rep,name=repoUrl" json:"repoUrl,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	AcctName string            `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty"`
+	// todo: should this be an enum?
+	Type        string `protobuf:"bytes,5,opt,name=type" json:"type,omitempty"`
+	ProjectName string `protobuf:"bytes,7,opt,name=projectName" json:"projectName,omitempty"`
 }
 
 func (m *RepoCreds) Reset()                    { *m = RepoCreds{} }

@@ -6,13 +6,27 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strconv"
 	"time"
 )
 
+type StreamCancelled struct {
+	message string
+}
+
+func (sc *StreamCancelled) Error() string {
+	return sc.message
+}
+
+func NewStreamCancelled(msg string) *StreamCancelled {
+	return &StreamCancelled{message: msg}
+}
+
 // StreamFromArray will do exactly that, it will write to the Streamable stream from an array.
 // it will wait 0.1s before checking array again for new content
-func StreamFromArray(array StreamArray, stream Streamable, debug func(...interface{})) (err error) {
+func StreamFromArray(array StreamArray, stream Streamable, log Loggy) (err error) {
 	var index int
 	//var previousIndex int
 	for {
@@ -20,7 +34,7 @@ func StreamFromArray(array StreamArray, stream Streamable, debug func(...interfa
 		numLines := len(array.GetData())
 		fullArrayStreamed := numLines == index
 		if array.CheckDone() && fullArrayStreamed {
-			debug("done streaming from array")
+			log.Info("done streaming from array")
 			return
 		}
 		// if no new data has been sent, don't even try
@@ -29,19 +43,22 @@ func StreamFromArray(array StreamArray, stream Streamable, debug func(...interfa
 			continue
 		}
 		if index > numLines {
-			debug(fmt.Sprintf("WOAH THERE. SOMETHING IS STUPID WRONG. Index: %d, numLines: %d", index, numLines))
+			log.Error(fmt.Sprintf("WOAH THERE. SOMETHING IS STUPID WRONG. Index: %d, numLines: %d", index, numLines))
 			continue
 		}
 		//dataArray := array.GetData()[index:]
 		//previousIndex = index
 		index, err = iterateOverByteArray(array, stream, index)
 		if err != nil {
-			debug("ERROR! " + err.Error())
-			debug("len array is: ", strconv.Itoa(len(array.GetData())))
+			if _, ok := err.(*StreamCancelled); !ok {
+				log.Error("Error! ", err.Error(), " arraylength: ", strconv.Itoa(len(array.GetData())))
+			} else {
+				// if the stream was cancelled by the client, that's alright. we don't care about that.
+				log.Info("ocelot client cancelled stream")
+				err = nil
+			}
 			return
-			//return err
 		}
-		//debug(fmt.Sprintf("lines sent: %d | index: %d | previousIndex: %d | length: %d", index - previousIndex, index, previousIndex, len(array.GetData())))
 	}
 	return
 }
@@ -53,9 +70,16 @@ func iterateOverByteArray(array StreamArray, stream Streamable, index int) (int,
 	for _, dataLine := range data {
 		if dataLine == nil {
 			fmt.Println("WHY!!!!!!!")
+			array.Unlock()
 			return index, errors.New("data line was nil! how tf")
 		}
 		if err := stream.SendIt(dataLine); err != nil {
+			array.Unlock()
+			stat, _ := status.FromError(err)
+			// if the operation was cancelled by the client, don't report an error
+			if stat.Code() == codes.Canceled {
+				return index, NewStreamCancelled("cancelled by client")
+			}
 			return index, err
 		}
 		// adding the number of lines added to index so streamFromArray knows where to start on the next pass

@@ -91,7 +91,7 @@ func main() {
 	supportedTopics := []string{"build_please"}
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()
-		go listen(protoConsume, consulHost, consulPort, topic, name)
+		go listen(protoConsume, consulHost, consulPort, topic, "hookhandler")
 		consumers = append(consumers, protoConsume)
 	}
 

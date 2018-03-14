@@ -72,9 +72,13 @@ func (c *cmd) Run(args []string) int {
 			c.hash = sha
 		}
 	}
-
-	if c.accountRepo == "ERROR" || c.hash == "ERROR" {
-		c.UI.Error("flag -acct-repo must be in the format <account>/<repo> and -hash must be the start of a valid hash")
+	// split these up to make the err msgs less confusing
+	if c.accountRepo == "ERROR" {
+		c.UI.Error("flag -acct-repo is required and must be in the format <account>/<repo>")
+		return 1
+	}
+	if c.hash == "ERROR" {
+		c.UI.Error("flag -hash either must be provided or must be detectable by git. it must also be the start of a valid hash")
 		return 1
 	}
 
