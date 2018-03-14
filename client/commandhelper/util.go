@@ -60,6 +60,7 @@ func FindCurrentHash() string {
 	}
 
 	if len(getBranch) > 0 {
+		// todo: add origin assumption to docs
 		remoteBranch := fmt.Sprintf("origin/%s", string(cmdOut))
 		if cmdHash, err = exec.Command(cmdName, "rev-parse", strings.TrimSpace(remoteBranch)).Output(); err != nil {
 			fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the most recently pushed commit: ", err)
