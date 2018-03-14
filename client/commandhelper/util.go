@@ -92,3 +92,11 @@ func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOce
 	ui.Info(fmt.Sprintf("\tSuccessfully uploaded private key at %s for %s/%s", sshKeyPath, buildType, acctName))
 	return 0
 }
+
+//Debuggit will write given message to WARN of a1 GuideOcelotCmd if there is an environment varible "$DEBUGGIT"
+// maybe make it a flag later, not really worried about the performance of all the lookups though since its for debugging
+func Debuggit(cmd GuideOcelotCmd, msg string) {
+	if _, ok := os.LookupEnv("DEBUGGIT"); ok {
+		cmd.GetUI().Warn(msg)
+	}
+}

@@ -3,6 +3,7 @@ package output
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
 	pb "bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"context"
 	"flag"
@@ -10,7 +11,9 @@ import (
 	"github.com/mitchellh/cli"
 	"google.golang.org/grpc"
 	"io"
-	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 const synopsis = "stream logs on running or completed build"
@@ -102,8 +105,10 @@ func (c *cmd) Run(args []string) int {
 	} else if len(build.Builds) == 1 {
 		for _, build := range build.Builds {
 			if build.Done {
+				commandhelper.Debuggit(c, "streaming from storage")
 				return c.fromStorage(ctx, build.Hash)
 			} else {
+				commandhelper.Debuggit(c, "streaming from werker")
 				return c.fromWerker(ctx, build)
 			}
 		}
@@ -149,6 +154,7 @@ func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 	// right now werker is insecure
 	opts = append(opts, grpc.WithInsecure())
 	client, err := build.CreateBuildClient(opts)
+	commandhelper.Debuggit(c, fmt.Sprintf("dialing werker at %s:%s", build.GetIp(), build.GetGrpcPort()))
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.GetIp(), build.GetGrpcPort(), err.Error()))
 		return 1
@@ -159,7 +165,16 @@ func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1
 	}
+	interrupt := make(chan os.Signal, 2)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-interrupt
+		c.UI.Info("received ctl-c, exiting")
+		stream.CloseSend()
+		os.Exit(1)
+	}()
 	for {
+		commandhelper.Debuggit(c, "receiving stream")
 		line, err := stream.Recv()
 		if err == io.EOF {
 			stream.CloseSend()

@@ -13,3 +13,9 @@ type Streamable interface {
 	SendError(errorDesc []byte)
 	Finish(chan int)
 }
+
+type Loggy interface {
+	Debug(args ...interface{})
+	Error(args ...interface{})
+	Info(args ...interface{})
+}

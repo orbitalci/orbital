@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/streamer"
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -44,6 +45,14 @@ type buildDatum struct {
 }
 
 func (b *buildDatum) GetData() [][]byte{
+	// just an idea for if we get _more_ problems
+	//var copied [][]byte
+	//b.Lock()
+	//defer b.Unlock()
+	//copyLen := copy(b.buildData, copied)
+	//if copyLen != len(b.buildData) {
+	//	fmt.Println("LENGTHS NOT THE SAME! ", copyLen, leN(b.buildData))
+	//}
 	return b.buildData
 }
 
@@ -58,6 +67,9 @@ func (w *werkerStreamer) BuildInfo(request *protobuf.Request, stream protobuf.Bu
 	stream.Send(resp)
 	stream.Send(&protobuf.Response{
 		OutputLine: w.conf.WerkerName,
+	})
+	stream.Send(&protobuf.Response{
+		OutputLine: w.conf.RegisterIP,
 	})
 	pumpDone := make(chan int)
 	streamable := &protobuf.BuildStreamableServer{Server: stream}
@@ -107,10 +119,12 @@ func pumpBundle(stream streamer.Streamable, appCtx *werkerStreamer, hash string,
 	} else {
 		ocelog.Log().Debug("pumping info array data to web socket")
 		buildInfo, ok := appCtx.buildInfo[hash]
+		ocelog.Log().Debug("length of array to stream is %d", len(buildInfo.GetData()))
 		if ok {
-			err := streamer.StreamFromArray(buildInfo, stream, ocelog.Log().Debug)
+			err := streamer.StreamFromArray(buildInfo, stream, ocelog.Log())
 			if err != nil {
 				ocelog.IncludeErrField(err).Error("could not stream from array!")
+				return
 			}
 			ocelog.Log().Debug("streamed build data from array")
 		} else {
@@ -186,6 +200,24 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, path.Dir(filename) + "/test.html")
 }
 
+func (w *werkerStreamer) dumpData(wr http.ResponseWriter, r *http.Request) {
+	ocelog.Log().Info("writing out data for buildInfo")
+	wr.Header().Set("content-type", "application/json")
+	dataMap := make(map[string]int)
+	dataMap["time"] = int(time.Now().Unix())
+	wr.WriteHeader(http.StatusOK)
+	for hash, bytearray := range w.buildInfo {
+		dataMap[hash] = len(bytearray.GetData())
+	}
+	bit, err := json.Marshal(dataMap)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't marshal for dump")
+		wr.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	wr.Write(bit)
+}
+
 func getWerkerStreamer(conf *WerkerConf, store storage.OcelotStorage) *werkerStreamer {
 	werkerConsul, err := consulet.Default()
 	if err != nil {
@@ -211,6 +243,7 @@ func ServeMe(transportChan chan *Transport, conf *WerkerConf, store storage.Ocel
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{werkStream, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
+	muxi.HandleFunc("/DUMP", werkStream.dumpData).Methods("GET")
 
 	//if we're in dev mode, serve everything out of test-fixtures at /dev
 	mode := os.Getenv("ENV")
