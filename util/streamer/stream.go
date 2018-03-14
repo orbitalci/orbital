@@ -66,15 +66,14 @@ func StreamFromArray(array StreamArray, stream Streamable, log Loggy) (err error
 
 func iterateOverByteArray(array StreamArray, stream Streamable, index int) (int, error) {
 	array.Lock()
+	defer array.Unlock()
 	data := array.GetData()[index:]
 	for _, dataLine := range data {
 		if dataLine == nil {
 			fmt.Println("WHY!!!!!!!")
-			array.Unlock()
 			return index, errors.New("data line was nil! how tf")
 		}
 		if err := stream.SendIt(dataLine); err != nil {
-			array.Unlock()
 			stat, _ := status.FromError(err)
 			// if the operation was cancelled by the client, don't report an error
 			if stat.Code() == codes.Canceled {
@@ -85,7 +84,6 @@ func iterateOverByteArray(array StreamArray, stream Streamable, index int) (int,
 		// adding the number of lines added to index so streamFromArray knows where to start on the next pass
 		index += 1
 	}
-	array.Unlock()
 	return index, nil
 }
 

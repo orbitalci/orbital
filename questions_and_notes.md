@@ -20,6 +20,10 @@
 
 ## little TODOs?:
 - create `ocelot init` command
+- detect acct/repo using `git config --get remote.origin.url`
+    - ocelot summary
+    - ocelot build (marianne will do)
+    - ocelot watch
 - env variable for vault address to be used by get_ssh_key.sh from s3
 - fix PR's triggering builds
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 
