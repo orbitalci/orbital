@@ -115,11 +115,11 @@ func (c *fakeGuideOcelotLogsClient) CloseSend() error {
 	return nil
 }
 
-func (c *fakeGuideOcelotLogsClient) Recv() (*LogResponse, error) {
+func (c *fakeGuideOcelotLogsClient) Recv() (*LineResponse, error) {
 	if c.index + 1 > len(c.outputLines) {
 		return nil, io.EOF
 	}
-	resp := &LogResponse{OutputLine: c.outputLines[c.index]}
+	resp := &LineResponse{OutputLine: c.outputLines[c.index]}
 	c.index++
 	return resp, nil
 }

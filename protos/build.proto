@@ -2,7 +2,6 @@ syntax = "proto3";
 package protos;
 
 import "webhook.proto";
-import "google/protobuf/any.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {

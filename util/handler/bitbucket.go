@@ -13,6 +13,8 @@ import (
 const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
+const ChangeSetRepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v/changesets/%v"
+
 //TODO: callback url is set as env. variable on admin, or passed in via command line
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
 func GetBitbucketHandler(adminConfig *models.VCSCreds, client ocenet.HttpClient) VCSHandler {
@@ -118,8 +120,18 @@ func (bb *Bitbucket) GetBaseURL() string {
 	return DefaultRepoBaseURL
 }
 
-func (bb *Bitbucket) GetHashDetail(acctRepo, hash string) (pb.PaginatedRepository_RepositoryValues, error) {
-	return pb.PaginatedRepository_RepositoryValues{}, nil
+func (bb *Bitbucket) GetHashDetail(acctRepo, hash string) (pb.ChangeSetV1, error) {
+	if len(acctRepo) == 0 || len(hash) == 0 {
+		return pb.ChangeSetV1{}, errors.New("please pass a valid acct/repo and hash")
+	}
+	hashDetail := &pb.ChangeSetV1{}
+	err := bb.Client.GetUrl(fmt.Sprintf(ChangeSetRepoBaseURL, acctRepo, hash), hashDetail)
+	if err != nil {
+		ocelog.IncludeErrField(err)
+		return *hashDetail, err
+	}
+
+	return *hashDetail, nil
 }
 
 //recursively iterates over all repositories and creates webhook

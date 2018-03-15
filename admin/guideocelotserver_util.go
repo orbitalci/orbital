@@ -64,3 +64,7 @@ func ParseStagesByBuildId(buildSum storeModel.BuildSummary, stageResults []store
 
 	return hashStatus
 }
+
+func RespWrap(msg string) *adminModel.LineResponse {
+	return &adminModel.LineResponse{OutputLine: msg}
+}

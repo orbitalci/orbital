@@ -12,34 +12,8 @@ import (
 	"github.com/namsral/flag"
 	"os"
 	"strings"
-	"time"
 )
 
-
-func listen(p *nsqpb.ProtoConsume, consulHost string, consulPort int, topic, hhName string) {
-	for {
-		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
-			time.Sleep(100 * time.Millisecond)
-			//time.Sleep(10 * time.Second)
-		} else {
-			consumeConfig, err := cred.GetInstance(consulHost, consulPort, "")
-			if err != nil {
-				ocelog.Log().Fatal(err)
-			}
-
-			handler := &hh.BuildHookHandler {
-				RemoteConfig: consumeConfig,
-				Deserializer: deserialize.New(),
-				Validator: validate.GetOcelotValidator(),
-				Producer: nsqpb.GetInitProducer(),
-			}
-			p.Handler = handler
-			p.ConsumeMessages(topic, hhName)
-			ocelog.Log().Info("Consuming messages for topic ", topic)
-			break
-		}
-	}
-}
 
 func main() {
 	//ocelog.InitializeLog("debug")
@@ -85,19 +59,7 @@ func main() {
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
 	hookHandlerContext.SetValidator(validate.GetOcelotValidator())
 
-	go startServer(hookHandlerContext, port)
-	//subscribe to build topic for builds triggered via command line
-	var consumers []*nsqpb.ProtoConsume
-	supportedTopics := []string{"build_please"}
-	for _, topic := range supportedTopics {
-		protoConsume := nsqpb.NewDefaultProtoConsume()
-		go listen(protoConsume, consulHost, consulPort, topic, name)
-		consumers = append(consumers, protoConsume)
-	}
-
-	for _, consumer := range consumers {
-		<-consumer.StopChan
-	}
+	startServer(hookHandlerContext, port)
 }
 
 func startServer(ctx interface{}, port string) {

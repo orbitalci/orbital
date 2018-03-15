@@ -125,6 +125,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 }
 
 //RetrieveHashStartsWith will return a list of all hashes starting with the partial string in db
+//** THIS WILL ONLY RETURN HASH, ACCOUNT, AND REPO **
 func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
 	var hashes []models.BuildSummary
 	if err := p.Connect(); err != nil {
