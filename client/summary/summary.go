@@ -78,8 +78,14 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	if c.accountRepo == "ERROR" {
-		c.UI.Error("flag -acct-repo must be in the format <account>/<repo>. see --help")
-		return 1
+		acctRepo, err := commandhelper.FindAcctRepo()
+		// should we even be reporting this error to the user? that git command failed?
+		if err != nil {
+			commandhelper.Debuggit(c, "error!!! " + err.Error())
+			c.UI.Error("flag -acct-repo must be in the format <account>/<repo> or you must be in the directory you wish to view a summary of. see --help")
+			return 1
+		}
+		c.accountRepo = acctRepo
 	}
 	data := strings.Split(c.accountRepo, "/")
 	if len(data) != 2  {
@@ -98,6 +104,7 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error("unable to get build summaries! error: " + err.Error())
 		return 1
 	}
+	// todo: need a check/error for when nothing is found, right now just generated an empty table
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
 	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
