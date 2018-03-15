@@ -74,9 +74,16 @@ func (c *cmd) Run(args []string) int {
 	}
 	// split these up to make the err msgs less confusing
 	if c.accountRepo == "ERROR" {
-		c.UI.Error("flag -acct-repo is required and must be in the format <account>/<repo>")
-		return 1
+		acctRepo, err := commandhelper.FindAcctRepo()
+		// should we even be reporting this error to the user? that git command failed?
+		if err != nil {
+			commandhelper.Debuggit(c, "error!!! " + err.Error())
+			c.UI.Error("flag -acct-repo must be in the format <account>/<repo> or you must be in the directory you wish to view a summary of. see --help")
+			return 1
+		}
+		c.accountRepo = acctRepo
 	}
+
 	if c.hash == "ERROR" {
 		c.UI.Error("flag -hash either must be provided or must be detectable by git. it must also be the start of a valid hash")
 		return 1
