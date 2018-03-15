@@ -27,6 +27,7 @@ func (oh *OcyHelper) DetectRepo(cmd GuideOcelotCmd) error {
 		if err := oh.SplitAndSetAcctRepo(cmd); err != nil {
 			return err
 		}
+		cmd.GetUI().Info(fmt.Sprintf("Detected repository %s and account %s", oh.Repo, oh.Account))
 	}
 	return nil
 }
@@ -59,6 +60,7 @@ func (oh *OcyHelper) DetectAcctRepo(cmd GuideOcelotCmd) error {
 			oh.WriteUi(cmd.GetUI().Error, "flag -acct-repo must be in the format <account>/<repo> or you must be in the directory you wish to view a summary of. see --help")
 			return err
 		}
+		cmd.GetUI().Info("Detected: " + acctRepo)
 		oh.AcctRepo = acctRepo
 	}
 	return nil
