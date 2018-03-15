@@ -1,11 +1,14 @@
 package admin
 
 import (
-	"bitbucket.org/level11consulting/ocelot/util/handler"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	adminModel "bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/handler"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	storeModel "bitbucket.org/level11consulting/ocelot/util/storage/models"
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
@@ -63,4 +66,13 @@ func ParseStagesByBuildId(buildSum storeModel.BuildSummary, stageResults []store
 	}
 
 	return hashStatus
+}
+
+
+// handleStorageError  will attempt to decipher if err is not found. if so, iwll set the appropriate grpc status code and return new grpc status error
+func handleStorageError(err error) error {
+	if _, ok := err.(*storage.ErrNotFound); ok {
+		return status.Error(codes.NotFound, err.Error())
+	}
+	return status.Error(codes.Internal, err.Error())
 }
