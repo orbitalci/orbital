@@ -2,7 +2,6 @@ package build
 
 import (
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"strings"
 	"fmt"
 	"github.com/mitchellh/cli"
 	"flag"
@@ -15,10 +14,13 @@ const synopsis = "build a project hash"
 const help = `
 Usage: ocelot build -acct-repo <acct>/<repo> -hash <git_hash>
 	Triggers a build to happen for the specified account/repository and hash starting with <git_hash>
+	If you running this command from the directory of your cloned git repo, ocelot will run some git commands
+	to detect the account and repo name from the origin url, and it will detect the last pushed commit. 
+	Those values will be used to trigger the build.
 `
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: commandhelper.Config}
+	c := &cmd{UI: ui, config: commandhelper.Config, OcyHelper: &commandhelper.OcyHelper{}}
 	c.init()
 	return c
 }
@@ -27,8 +29,7 @@ type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
 	config *commandhelper.ClientConfig
-	accountRepo string
-	hash string
+	*commandhelper.OcyHelper
 }
 
 
@@ -55,44 +56,28 @@ func (c *cmd) Help() string {
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	//TODO: trigger also by build id? Need to standardize across commands
-	c.flags.StringVar(&c.accountRepo, "acct-repo", "ERROR", "<account>/<repo> to build")
-	c.flags.StringVar(&c.hash, "hash", "ERROR", "hash to build")
+	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to build")
+	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR", "hash to build")
 }
 
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
+		commandhelper.Debuggit(c, err.Error())
 		return 1
 	}
 
-	if c.hash == "ERROR" {
-		sha := commandhelper.FindCurrentHash()
-		if len(sha) > 0 {
-			c.UI.Warn(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
-			c.hash = sha
-		}
-	}
-	// split these up to make the err msgs less confusing
-	if c.accountRepo == "ERROR" {
-		acctRepo, err := commandhelper.FindAcctRepo()
-		// should we even be reporting this error to the user? that git command failed?
-		if err != nil {
-			commandhelper.Debuggit(c, "error!!! " + err.Error())
-			c.UI.Error("flag -acct-repo must be in the format <account>/<repo> or you must be in the directory you wish to view a summary of. see --help")
-			return 1
-		}
-		c.accountRepo = acctRepo
-	}
-
-	if c.hash == "ERROR" {
-		c.UI.Error("flag -hash either must be provided or must be detectable by git. it must also be the start of a valid hash")
+	if err := c.OcyHelper.DetectHash(c); err != nil {
+		commandhelper.Debuggit(c, err.Error())
 		return 1
 	}
 
-	data := strings.Split(c.accountRepo, "/")
-	if len(data) != 2  {
-		c.UI.Error("flag -acct-repo must be in the format <account>/<repo>. see --help")
+	if err := c.OcyHelper.DetectAcctRepo(c); err != nil {
+		commandhelper.Debuggit(c, err.Error())
 		return 1
+	}
+	if err := c.OcyHelper.SplitAndSetAcctRepo(c); err != nil {
+		commandhelper.Debuggit(c, err.Error())
 	}
 
 	ctx := context.Background()
@@ -101,15 +86,15 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	_, err := c.config.Client.BuildRepoAndHash(ctx, &models.AcctRepoAndHash{
-		AcctRepo: c.accountRepo,
-		PartialHash: c.hash,
+		AcctRepo: c.OcyHelper.AcctRepo,
+		PartialHash: c.OcyHelper.Hash,
 	})
 
 	if err != nil {
-		c.UI.Error(fmt.Sprintf("unable to build repo %s! error: %s", c.accountRepo, err.Error()))
+		c.UI.Error(fmt.Sprintf("unable to build repo %s! error: %s", c.OcyHelper.AcctRepo, err.Error()))
 		return 1
 	}
 
-	c.UI.Info(fmt.Sprintf("triggered build for %s", c.accountRepo))
+	c.UI.Info(fmt.Sprintf("triggered build for %s", c.OcyHelper.AcctRepo))
 	return 0
 }

@@ -138,7 +138,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 		if err != nil {
 			return &models.Builds{
 				Builds: buildRtInfo,
-			}, err
+			}, handleStorageError(err)
 		}
 
 		for _, build := range dbResults {
@@ -160,7 +160,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 		if err != nil {
 			return &models.Builds{
 				Builds: buildRtInfo,
-			}, err
+			}, handleStorageError(err)
 		}
 
 		buildRtInfo[buildSum.Hash] = &models.BuildRuntimeInfo{
@@ -210,7 +210,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 	var summaries = &models.Summaries{}
 	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, handleStorageError(err)
 	}
 	for _, model := range modelz {
 		summary := &models.BuildSummary{
@@ -272,12 +272,12 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 		partialHash := query.Hash
 		buildSum, err := g.Storage.RetrieveLatestSum(partialHash)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, handleStorageError(err)
 		}
 
 		stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, handleStorageError(err)
 		}
 
 		result := ParseStagesByBuildId(buildSum, stageResults)
@@ -287,7 +287,7 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 	if len(query.AcctName) > 0 && len(query.RepoName) > 0 {
 		buildSums, err := g.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, handleStorageError(err)
 		}
 
 		if len(buildSums) == 1 {
@@ -295,11 +295,12 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 
 			stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
 			if err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
+				return nil, handleStorageError(err)
 			}
 			result := ParseStagesByBuildId(buildSum, stageResults)
 			return result, nil
 		} else {
+			// todo: this is logging even when there isn't a match in the db, probably an issue with REtrieveLastFewSums not returning error if there are no rows
 			uhOh := errors.New(fmt.Sprintf("there is no ONE entry that matches the acctname/repo %s/%s", query.AcctName, query.RepoName))
 			log.IncludeErrField(uhOh)
 			return nil, status.Error(codes.Internal, uhOh.Error())
@@ -309,18 +310,18 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 	if len(query.PartialRepo) > 0 {
 		buildSums, err := g.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, handleStorageError(err)
 		}
 
 		if len(buildSums) == 1 {
 			buildSum, err := g.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
 			if err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
+				return nil, handleStorageError(err)
 			}
 
 			stageResults, err := g.Storage.RetrieveStageDetail(buildSum[0].BuildId)
 			if err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
+				return nil, handleStorageError(err)
 			}
 			result := ParseStagesByBuildId(buildSum[0], stageResults)
 			return result, nil

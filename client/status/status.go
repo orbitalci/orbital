@@ -1,14 +1,15 @@
 package status
 
 import (
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"github.com/mitchellh/cli"
-	"flag"
-	"strings"
-	"context"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
-	"fmt"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
+	"context"
+	"flag"
+	"fmt"
+	"github.com/mitchellh/cli"
+	"google.golang.org/grpc/codes"
+	grpcStatus "google.golang.org/grpc/status"
 )
 
 const synopsis = "show status of specific acctname/repo, repo or hash"
@@ -20,7 +21,9 @@ Usage: ocelot status
 `
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: commandhelper.Config}
+	// suppress ui here because there's an ordering to status and the error messages that come stock
+	// with OcyHelper may be confusing
+	c := &cmd{UI: ui, config: commandhelper.Config, OcyHelper: &commandhelper.OcyHelper{SuppressUI: true,}}
 	c.init()
 	return c
 }
@@ -30,9 +33,7 @@ type cmd struct {
 	flags   *flag.FlagSet
 	config *commandhelper.ClientConfig
 
-	accountRepo string
-	repo string
-	hash string
+	*commandhelper.OcyHelper
 }
 
 
@@ -59,23 +60,34 @@ func (c *cmd) Help() string {
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	//we accept all 3 flags, but prioritize output in the following order: hash, acct-repo, acct
-	c.flags.StringVar(&c.hash, "hash", "ERROR", "[optional]  <hash> to display build status")
-	c.flags.StringVar(&c.repo, "repo", "ERROR", "[optional]  <repo> to display build status")
-	c.flags.StringVar(&c.accountRepo, "acct-repo", "ERROR", "[optional]  <account>/<repo> to display build status")
+	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR", "[optional]  <hash> to display build status")
+	c.flags.StringVar(&c.OcyHelper.Repo, "repo", "ERROR", "[optional]  <repo> to display build status")
+	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "[optional]  <account>/<repo> to display build status")
+}
+
+func (c *cmd) writeStatusErr(err error) {
+	status, ok := grpcStatus.FromError(err)
+	// if we can't parse the status, just return the shitty error.
+	if !ok {
+		c.UI.Error(err.Error())
+	}
+	if status.Code() == codes.NotFound {
+		c.UI.Error(fmt.Sprintf("Status for %s was not found in the database. It may have not been processed yet.", c.OcyHelper.Hash))
+	} else {
+		// here we should post to admin
+		c.UI.Error("Error retrieving status, message: " + status.Message())
+	}
 }
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
-
-	if c.accountRepo == "ERROR" && c.repo == "ERROR" && c.hash == "ERROR" {
-		sha := commandhelper.FindCurrentHash()
-		if len(sha) > 0 {
-			c.UI.Warn(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
-			c.hash = sha
-		} else {
-			c.UI.Error("one of the following flags must be set: -acct-repo, -repo, -hash. see --help")
+	// if nothing is set, attempt to detect hash
+	if c.OcyHelper.AcctRepo == "ERROR" && c.OcyHelper.Repo == "ERROR" && c.OcyHelper.Hash == "ERROR" {
+		if err := c.OcyHelper.DetectHash(c); err != nil {
+			commandhelper.Debuggit(c, err.Error())
+			c.UI.Error("You must either be in the repository you want to track, one of the following flags must be set: -acct-repo, -repo, -hash. see --help")
 			return 1
 		}
 	}
@@ -86,54 +98,52 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	// always respect hash first
-	if c.hash != "ERROR" && len(c.hash) > 0 {
+	if c.OcyHelper.Hash != "ERROR" && len(c.OcyHelper.Hash) > 0 {
 		query := &models.StatusQuery{
-			Hash: c.hash,
+			Hash: c.OcyHelper.Hash ,
 		}
 		statuses, err := c.GetClient().GetStatus(ctx, query)
 		if err != nil {
-			c.UI.Error(err.Error())
+			c.writeStatusErr(err)
 			return 1
 		}
 
-		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
-		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		stageStatus, color, statuss := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
 		c.UI.Output(buildStatus + stageStatus)
 		return 0
 	}
 
 	//respect acct-repo next
-	if c.accountRepo != "ERROR" {
-		data := strings.Split(c.accountRepo, "/")
-		if len(data) != 2  {
-			c.UI.Error("flag -acct-repo must be in the format <account>/<repo>. see --help")
+	if c.OcyHelper.AcctRepo != "ERROR" {
+		if err := c.OcyHelper.SplitAndSetAcctRepo(c); err != nil {
 			return 1
 		}
 
 		query := &models.StatusQuery{
-			AcctName: data[0],
-			RepoName: data[1],
+			AcctName: c.OcyHelper.Account,
+			RepoName: c.OcyHelper.Repo,
 		}
 		statuses, err := c.GetClient().GetStatus(ctx, query)
 		if err != nil {
-			c.UI.Error(err.Error())
+			c.writeStatusErr(err)
 			return 1
 		}
 
-		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
-		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		stageStatus, color, statuss := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
 		c.UI.Output(buildStatus + stageStatus)
 		return 0
 	}
 
 	//repo is last
-	if c.repo != "ERROR" {
+	if c.OcyHelper.Repo != "ERROR" {
 		query := &models.StatusQuery{
-			PartialRepo: c.repo,
+			PartialRepo: c.OcyHelper.Repo,
 		}
 		statuses, err := c.GetClient().GetStatus(ctx, query)
 		if err != nil {
-			c.UI.Error(err.Error())
+			c.writeStatusErr(err)
 			return 1
 		}
 		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
