@@ -59,6 +59,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 		builder = b.NewDockerBuilder(w.Basher)
 	}
 
+	//TODO: why are we waiting for build to get stored before we tell nsq we're done processing the message?
 	w.MakeItSo(werkerTask, builder, finish)
 	done <- 1
 	return nil

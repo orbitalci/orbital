@@ -13,8 +13,6 @@ import (
 const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
-const ChangeSetRepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v/changesets/%v"
-
 //TODO: callback url is set as env. variable on admin, or passed in via command line
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
 func GetBitbucketHandler(adminConfig *models.VCSCreds, client ocenet.HttpClient) VCSHandler {
