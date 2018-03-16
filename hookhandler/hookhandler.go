@@ -5,10 +5,9 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/client/validate"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util"
+	"bitbucket.org/level11consulting/ocelot/util/build"
 	"net/http"
 )
 
@@ -20,8 +19,8 @@ type HookHandler interface {
 	SetProducer(producer *nsqpb.PbProduce)
 	GetDeserializer() *deserialize.Deserializer
 	SetDeserializer(deserializer *deserialize.Deserializer)
-	GetValidator() *validate.OcelotValidator
-	SetValidator(validator *validate.OcelotValidator)
+	GetValidator() *build.OcelotValidator
+	SetValidator(validator *build.OcelotValidator)
 }
 
 //context contains long lived resources. See bottom for getters/setters
@@ -29,7 +28,7 @@ type HookHandlerContext struct {
 	RemoteConfig cred.CVRemoteConfig
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
-	OcelotValidator *validate.OcelotValidator
+	OcelotValidator *build.OcelotValidator
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -45,7 +44,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	branch := repopush.Push.Changes[0].New.Name
 	//acctName := repopush.Repository.Owner.Username
 
-	buildConf, bbToken, err := util.GetBBConfig(ctx.GetRemoteConfig(), fullName, hash, ctx.GetDeserializer(), nil)
+	buildConf, bbToken, err := build.GetBBConfig(ctx.GetRemoteConfig(), fullName, hash, ctx.GetDeserializer(), nil)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -62,7 +61,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = util.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
+	if err = build.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
 		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
 		return
 	}
@@ -83,7 +82,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	//acctName := pr.Pullrequest.Source.Repository.Owner.Username
 	branch := pr.Pullrequest.Source.Branch.Name
 
-	buildConf, bbToken, err := util.GetBBConfig(ctx.GetRemoteConfig(), fullName, hash, ctx.GetDeserializer(), nil)
+	buildConf, bbToken, err := build.GetBBConfig(ctx.GetRemoteConfig(), fullName, hash, ctx.GetDeserializer(), nil)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -95,13 +94,12 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 
 	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
-
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to get storage")
 		return
 	}
 
-	if err = util.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
+	if err = build.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
 		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
 		return
 	}
@@ -140,9 +138,9 @@ func (hhc *HookHandlerContext) GetDeserializer() *deserialize.Deserializer {
 func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deserializer) {
 	hhc.Deserializer = deserializer
 }
-func (hhc *HookHandlerContext) SetValidator(validator *validate.OcelotValidator) {
+func (hhc *HookHandlerContext) SetValidator(validator *build.OcelotValidator) {
 	hhc.OcelotValidator = validator
 }
-func (hhc *HookHandlerContext) GetValidator() *validate.OcelotValidator {
+func (hhc *HookHandlerContext) GetValidator() *build.OcelotValidator {
 	return hhc.OcelotValidator
 }

@@ -7,14 +7,10 @@
 
 
 ## in progress
-- sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)                                     
-    - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
-         - panic recovery on main function 
-            - cleanup consul entry / notify _someone_ of status 
-            - [1](https://blog.golang.org/defer-panic-and-recover), [2](https://golangbot.com/panic-and-recover/)
-            - cleanup docker containers
-            - add item back to queue for build 
-
+- detect acct/repo using `git config --get remote.origin.url`
+    - ~~ocelot summary~~
+    - ocelot build (marianne will do)
+    - ocelot watch
 
 
 
@@ -95,5 +91,12 @@
         ~~- repoName ~~
         ~~- acctname/repoName~~
         ~~- git hash~~
+- sweep through repo and add updates to db at any point of failure; some areas that i can think of off hand: (jessi)                                     
+    - werker dies... should update that hash somehow with build failure reason -> dead werker (at least, possibly also a re-queue)
+         - panic recovery on main function 
+            - cleanup consul entry / notify _someone_ of status 
+            - [1](https://blog.golang.org/defer-panic-and-recover), [2](https://golangbot.com/panic-and-recover/)
+            - cleanup docker containers
+            - add item back to queue for build 
 
-     
+ 

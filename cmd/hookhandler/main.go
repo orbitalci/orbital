@@ -5,13 +5,13 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/client/validate"
 	hh "bitbucket.org/level11consulting/ocelot/hookhandler"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"github.com/gorilla/mux"
 	"github.com/namsral/flag"
 	"os"
 	"strings"
+	"bitbucket.org/level11consulting/ocelot/util/build"
 )
 
 
@@ -57,7 +57,7 @@ func main() {
 
 	hookHandlerContext.SetDeserializer(deserialize.New())
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
-	hookHandlerContext.SetValidator(validate.GetOcelotValidator())
+	hookHandlerContext.SetValidator(build.GetOcelotValidator())
 
 	startServer(hookHandlerContext, port)
 }

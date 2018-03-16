@@ -1,4 +1,4 @@
-package util
+package build
 
 import (
 	"strings"
@@ -15,7 +15,6 @@ import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"bitbucket.org/level11consulting/ocelot/client/validate"
 	"time"
 )
 
@@ -59,7 +58,7 @@ func GetVcsCreds(repoFullName string, remoteConfig cred.CVRemoteConfig) (*models
 func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	remoteConfig cred.CVRemoteConfig,
 	buildConf *pb.BuildConfig,
-	validator *validate.OcelotValidator,
+	validator *OcelotValidator,
 	producer *nsqpb.PbProduce,
 	store storage.OcelotStorage) error {
 	ocelog.Log().Debug("Storing initial results in db")
@@ -149,7 +148,7 @@ func CheckForBuildFile(buildFile []byte, deserializer *deserialize.Deserializer)
 //it passes
 func ValidateAndQueue(buildConf *pb.BuildConfig,
 	branch string,
-	validator *validate.OcelotValidator,
+	validator *OcelotValidator,
 	vaulty ocevault.Vaulty,
 	producer *nsqpb.PbProduce,
 	sr *smods.StageResult,
@@ -194,7 +193,7 @@ func tellWerker(buildConf *pb.BuildConfig,
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
 // - check if commit branch matches with ocelot.yaml branch and validate
-func validateBuild(buildConf *pb.BuildConfig, branch string, validator *validate.OcelotValidator) error {
+func validateBuild(buildConf *pb.BuildConfig, branch string, validator *OcelotValidator) error {
 	err := validator.ValidateConfig(buildConf, nil)
 
 	if err != nil {

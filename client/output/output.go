@@ -3,6 +3,7 @@ package output
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
 	pb "bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"context"
 	"flag"
@@ -10,7 +11,9 @@ import (
 	"github.com/mitchellh/cli"
 	"google.golang.org/grpc"
 	"io"
-	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 const synopsis = "stream logs on running or completed build"
@@ -28,7 +31,7 @@ Usage: ocelot logs --hash <git_hash>
 
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: commandhelper.Config}
+	c := &cmd{UI: ui, config: commandhelper.Config, OcyHelper: &commandhelper.OcyHelper{}}
 	c.init()
 	return c
 }
@@ -37,8 +40,8 @@ type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
 	config *commandhelper.ClientConfig
-	hash string
 	buildId int
+	*commandhelper.OcyHelper
 }
 
 
@@ -57,7 +60,7 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.hash, "hash", "ERROR",
+	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR",
 		"*REQUIRED* hash to get build data of")
 	c.flags.IntVar(&c.buildId, "build-id", 0, "build id from build_summary table, if you do not want to get the last")
 }
@@ -76,19 +79,11 @@ func (c *cmd) Run(args []string) int {
 	if c.buildId != 0 {
 		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{BuildId: int64(c.buildId)})
 	} else {
-		if c.hash == "ERROR" {
-			sha := commandhelper.FindCurrentHash()
-
-			if len(sha) > 0 {
-				c.UI.Warn(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
-				c.hash = sha
-			} else {
-				c.UI.Error("flag --hash is required, otherwise there is no build to tail")
-				return 1
-			}
+		if err := c.OcyHelper.DetectHash(c); err != nil {
+			commandhelper.Debuggit(c, err.Error())
+			return 1
 		}
-
-		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.hash})
+		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.OcyHelper.Hash})
 	}
 
 	if err != nil {
@@ -102,13 +97,15 @@ func (c *cmd) Run(args []string) int {
 	} else if len(build.Builds) == 1 {
 		for _, build := range build.Builds {
 			if build.Done {
+				commandhelper.Debuggit(c, "streaming from storage")
 				return c.fromStorage(ctx, build.Hash)
 			} else {
+				commandhelper.Debuggit(c, "streaming from werker")
 				return c.fromWerker(ctx, build)
 			}
 		}
 	} else {
-		c.UI.Info(fmt.Sprintf("no builds found for entry: %s", c.hash))
+		c.UI.Warn(fmt.Sprintf("Warning: No builds found for entry: %s", c.OcyHelper.Hash))
 		return 0
 	}
 	return 0
@@ -149,6 +146,7 @@ func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 	// right now werker is insecure
 	opts = append(opts, grpc.WithInsecure())
 	client, err := build.CreateBuildClient(opts)
+	commandhelper.Debuggit(c, fmt.Sprintf("dialing werker at %s:%s", build.GetIp(), build.GetGrpcPort()))
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.GetIp(), build.GetGrpcPort(), err.Error()))
 		return 1
@@ -159,7 +157,16 @@ func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1
 	}
+	interrupt := make(chan os.Signal, 2)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-interrupt
+		c.UI.Info("received ctl-c, exiting")
+		stream.CloseSend()
+		os.Exit(1)
+	}()
 	for {
+		commandhelper.Debuggit(c, "receiving stream")
 		line, err := stream.Recv()
 		if err == io.EOF {
 			stream.CloseSend()

@@ -23,10 +23,6 @@ type fakeGuideOcelotClient struct {
 	logLines []string
 }
 
-func (f *fakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *AcctRepoAndHash, opts ...grpc.CallOption) (*BuildSummary, error) {
-	return &BuildSummary{}, nil
-}
-
 func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
 	return f.creds, nil
 }
@@ -99,6 +95,10 @@ func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery
 // todo: make this useful
 func (f *fakeGuideOcelotClient) Logs(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (GuideOcelot_LogsClient, error) {
 	return NewFakeGuideOcelotLogsCli(f.logLines), nil
+}
+
+func (f *fakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *AcctRepoAndHash, opts ...grpc.CallOption) (GuideOcelot_BuildRepoAndHashClient, error) {
+	return nil, nil
 }
 
 func NewFakeGuideOcelotLogsCli(lines []string) *fakeGuideOcelotLogsClient {

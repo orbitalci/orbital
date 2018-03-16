@@ -1,4 +1,4 @@
-package validate
+package build
 
 import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"

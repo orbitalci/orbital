@@ -21,8 +21,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"strings"
-	"bitbucket.org/level11consulting/ocelot/util"
-	cliv "bitbucket.org/level11consulting/ocelot/client/validate"
+	"bitbucket.org/level11consulting/ocelot/util/build"
 )
 
 //this is our grpc server, it responds to client requests
@@ -31,7 +30,7 @@ type guideOcelotServer struct {
 	Deserializer   *deserialize.Deserializer
 	AdminValidator *AdminValidator
 	RepoValidator  *RepoValidator
-	OcyValidator   *cliv.OcelotValidator
+	OcyValidator   *build.OcelotValidator
 	Storage        storage.OcelotStorage
 	Producer       *nsqpb.PbProduce
 }
@@ -132,7 +131,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 		if err != nil {
 			return &models.Builds{
 				Builds: buildRtInfo,
-			}, err
+			}, handleStorageError(err)
 		}
 
 		for _, build := range dbResults {
@@ -154,7 +153,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 		if err != nil {
 			return &models.Builds{
 				Builds: buildRtInfo,
-			}, err
+			}, handleStorageError(err)
 		}
 
 		buildRtInfo[buildSum.Hash] = &models.BuildRuntimeInfo{
@@ -200,30 +199,31 @@ func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelo
 	return nil
 }
 
+//TODO; fuck all this bs, just ask for branch
 func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.AcctRepoAndHash, stream models.GuideOcelot_BuildRepoAndHashServer) error {
 	if buildReq == nil || len(buildReq.AcctRepo) == 0 || len(buildReq.PartialHash) == 0 {
 		return errors.New("please pass a valid account/repo_name and hash")
 	}
 
-	stream.Send(RespWrap("Searching for VCS creds belonging to " + buildReq.AcctRepo))
-	cfg, err := util.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
+	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
+	cfg, err := build.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
 	if err != nil {
 		log.IncludeErrField(err)
 		return err
 	}
-	stream.Send(RespWrap("Successfully found VCS credentials belonging to " + buildReq.AcctRepo))
-
+	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, md.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
 	bbHandler, token, err := handler.GetBitbucketClient(cfg)
+	fmt.Println("tokeenjkksdjfkjlsdf: " + token)
 	if err != nil {
 		log.IncludeErrField(err)
 		return err
 	}
-	stream.Send(RespWrap("Successfully used VCS Credentials to obtain a token"))
+	stream.Send(RespWrap(fmt.Sprintf("Successfully used VCS Credentials to obtain a token %s", md.CHECKMARK)))
 
 	var branch string
 	var fullHash string
-	stream.Send(RespWrap("Looking in previous builds for " + buildReq.PartialHash))
+	stream.Send(RespWrap(fmt.Sprintf("Looking in previous builds for %s...", buildReq.PartialHash)))
 	buildSum, err := g.Storage.RetrieveLatestSum(buildReq.PartialHash)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
@@ -231,38 +231,45 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.AcctRepoAndHash, s
 			return err
 		}
 		//at this point error must be because we couldn't find hash starting with query
-		warnMsg := fmt.Sprintf("there is no build starting with hash %s in db", buildReq.PartialHash)
+		warnMsg := fmt.Sprintf("There are no previous builds starting with hash %s...", buildReq.PartialHash)
 		log.IncludeErrField(err).Warning(warnMsg)
 		stream.Send(RespWrap(warnMsg))
 
 		commitChangeSet, err := bbHandler.GetHashDetail(buildReq.AcctRepo, buildReq.PartialHash)
+
 		if err != nil {
 			log.IncludeErrField(err)
 			return err
 		}
+		//if the hash doesn't exist, we don't even get any goddamn errors so we have to check ourselves
+		if len(commitChangeSet.RawNode) == 0 || len(commitChangeSet.Branch) == 0 {
+			noCommitErr := errors.New(fmt.Sprintf("Commit %s was not found for %s", buildReq.PartialHash, buildReq.AcctRepo))
+			log.IncludeErrField(noCommitErr)
+			return noCommitErr
+		}
 
+		fullHash = buildReq.PartialHash
 		branch = commitChangeSet.Branch
-		stream.Send(RespWrap(fmt.Sprintf("Successfully found a hash matching %s, building branch %s", buildReq.PartialHash, branch)))
+		stream.Send(RespWrap(fmt.Sprintf("Successfully found a hash matching %s, building branch %s %s", fullHash, branch, md.CHECKMARK)))
 	} else {
 		branch = buildSum.Branch
 		fullHash = buildSum.Hash
-		stream.Send(RespWrap(fmt.Sprintf("Found a previous build starting with hash %s, now building branch %s", buildReq.PartialHash, branch)))
+		stream.Send(RespWrap(fmt.Sprintf("Found a previous build starting with hash %s, now building branch %s %s", buildReq.PartialHash, branch, md.CHECKMARK)))
 	}
 
-	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s", buildReq.AcctRepo)))
-	buildConf, _, err := util.GetBBConfig(g.RemoteConfig, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
+	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s...", buildReq.AcctRepo)))
+	buildConf, _, err := build.GetBBConfig(g.RemoteConfig, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
 	if err != nil {
 		log.IncludeErrField(err)
 		return err
 	}
-	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s", buildReq.AcctRepo)))
-
-	stream.Send(RespWrap(fmt.Sprintf("Storing build data for %s", buildReq.AcctRepo)))
-	if err = util.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
+	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, md.CHECKMARK)))
+	stream.Send(RespWrap(fmt.Sprintf("Storing build data for %s...", buildReq.AcctRepo)))
+	if err = build.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
 		log.IncludeErrField(err)
 		return err
 	}
-	stream.Send(RespWrap("Passed pre-validation stage! Build started."))
+	stream.Send(RespWrap(fmt.Sprintf("Passed pre-validation stage! Build started for %s %s", fullHash, md.CHECKMARK)))
 	return nil
 }
 
@@ -271,7 +278,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 	var summaries = &models.Summaries{}
 	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, handleStorageError(err)
 	}
 	for _, model := range modelz {
 		summary := &models.BuildSummary{
@@ -333,12 +340,12 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 		partialHash := query.Hash
 		buildSum, err := g.Storage.RetrieveLatestSum(partialHash)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, handleStorageError(err)
 		}
 
 		stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, handleStorageError(err)
 		}
 
 		result := ParseStagesByBuildId(buildSum, stageResults)
@@ -348,7 +355,7 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 	if len(query.AcctName) > 0 && len(query.RepoName) > 0 {
 		buildSums, err := g.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, handleStorageError(err)
 		}
 
 		if len(buildSums) == 1 {
@@ -356,11 +363,12 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 
 			stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
 			if err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
+				return nil, handleStorageError(err)
 			}
 			result := ParseStagesByBuildId(buildSum, stageResults)
 			return result, nil
 		} else {
+			// todo: this is logging even when there isn't a match in the db, probably an issue with REtrieveLastFewSums not returning error if there are no rows
 			uhOh := errors.New(fmt.Sprintf("there is no ONE entry that matches the acctname/repo %s/%s", query.AcctName, query.RepoName))
 			log.IncludeErrField(uhOh)
 			return nil, status.Error(codes.Internal, uhOh.Error())
@@ -370,18 +378,18 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 	if len(query.PartialRepo) > 0 {
 		buildSums, err := g.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, handleStorageError(err)
 		}
 
 		if len(buildSums) == 1 {
 			buildSum, err := g.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
 			if err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
+				return nil, handleStorageError(err)
 			}
 
 			stageResults, err := g.Storage.RetrieveStageDetail(buildSum[0].BuildId)
 			if err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
+				return nil, handleStorageError(err)
 			}
 			result := ParseStagesByBuildId(buildSum[0], stageResults)
 			return result, nil
@@ -417,7 +425,7 @@ func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserialize
 	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
 	// purdier to me anyway
 	guideOcelotServer := &guideOcelotServer{
-		OcyValidator:   cliv.GetOcelotValidator(),
+		OcyValidator:   build.GetOcelotValidator(),
 		RemoteConfig:   config,
 		Deserializer:   d,
 		AdminValidator: adminV,

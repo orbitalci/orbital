@@ -7,7 +7,6 @@ import (
 	"math"
 	"strings"
 	"os"
-	"os/exec"
 	"io/ioutil"
 	"context"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
@@ -44,31 +43,6 @@ func PrettifyTime(timeInSecs float64) string {
 	return strings.Join(prettyTime, " ")
 }
 
-//FindCurrentHash will attempt to grab a hash based on running git commands - see client/output/output.go for usage
-func FindCurrentHash() string {
-	var (
-		cmdOut []byte
-		cmdHash []byte
-		err    error
-	)
-
-	cmdName := "git"
-
-	getBranch := []string{"rev-parse", "--abbrev-ref",  "HEAD"}
-	if cmdOut, err = exec.Command(cmdName, getBranch...).Output(); err != nil {
-		fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the current branch: ", err)
-	}
-
-	if len(getBranch) > 0 {
-		remoteBranch := fmt.Sprintf("origin/%s", string(cmdOut))
-		if cmdHash, err = exec.Command(cmdName, "rev-parse", strings.TrimSpace(remoteBranch)).Output(); err != nil {
-			fmt.Fprintln(os.Stderr, "There was an error running git rev-parse command to find the most recently pushed commit: ", err)
-		}
-	}
-
-	sha := strings.TrimSpace(string(cmdHash))
-	return sha
-}
 
 //UploadSSHKeyFile will upload the ssh key for a vcs account. This is used by buildcredsadd.go and cred's add.go
 func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOcelotClient, acctName, buildType, sshKeyPath string) int {
@@ -91,4 +65,12 @@ func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOce
 
 	ui.Info(fmt.Sprintf("\tSuccessfully uploaded private key at %s for %s/%s", sshKeyPath, buildType, acctName))
 	return 0
+}
+
+//Debuggit will write given message to WARN of a1 GuideOcelotCmd if there is an environment varible "$DEBUGGIT"
+// maybe make it a flag later, not really worried about the performance of all the lookups though since its for debugging
+func Debuggit(cmd GuideOcelotCmd, msg string) {
+	if _, ok := os.LookupEnv("DEBUGGIT"); ok {
+		cmd.GetUI().Warn(msg)
+	}
 }
