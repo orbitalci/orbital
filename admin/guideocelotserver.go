@@ -199,9 +199,8 @@ func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelo
 	return nil
 }
 
-//TODO; fuck all this bs, just ask for branch
-func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.AcctRepoAndHash, stream models.GuideOcelot_BuildRepoAndHashServer) error {
-	if buildReq == nil || len(buildReq.AcctRepo) == 0 || len(buildReq.PartialHash) == 0 {
+func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream models.GuideOcelot_BuildRepoAndHashServer) error {
+	if buildReq == nil || len(buildReq.AcctRepo) == 0 || len(buildReq.Hash) == 0 {
 		return errors.New("please pass a valid account/repo_name and hash")
 	}
 
@@ -214,7 +213,6 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.AcctRepoAndHash, s
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, md.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
 	bbHandler, token, err := handler.GetBitbucketClient(cfg)
-	fmt.Println("tokeenjkksdjfkjlsdf: " + token)
 	if err != nil {
 		log.IncludeErrField(err)
 		return err
@@ -223,38 +221,44 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.AcctRepoAndHash, s
 
 	var branch string
 	var fullHash string
-	stream.Send(RespWrap(fmt.Sprintf("Looking in previous builds for %s...", buildReq.PartialHash)))
-	buildSum, err := g.Storage.RetrieveLatestSum(buildReq.PartialHash)
+	stream.Send(RespWrap(fmt.Sprintf("Looking in previous builds for %s...", buildReq.Hash)))
+	buildSum, err := g.Storage.RetrieveLatestSum(buildReq.Hash)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
 			log.IncludeErrField(err)
 			return err
 		}
 		//at this point error must be because we couldn't find hash starting with query
-		warnMsg := fmt.Sprintf("There are no previous builds starting with hash %s...", buildReq.PartialHash)
+		warnMsg := fmt.Sprintf("There are no previous builds starting with hash %s...", buildReq.Hash)
 		log.IncludeErrField(err).Warning(warnMsg)
 		stream.Send(RespWrap(warnMsg))
 
-		commitChangeSet, err := bbHandler.GetHashDetail(buildReq.AcctRepo, buildReq.PartialHash)
-
-		if err != nil {
-			log.IncludeErrField(err)
-			return err
-		}
-		//if the hash doesn't exist, we don't even get any goddamn errors so we have to check ourselves
-		if len(commitChangeSet.RawNode) == 0 || len(commitChangeSet.Branch) == 0 {
-			noCommitErr := errors.New(fmt.Sprintf("Commit %s was not found for %s", buildReq.PartialHash, buildReq.AcctRepo))
-			log.IncludeErrField(noCommitErr)
-			return noCommitErr
+		if len(buildReq.Branch) == 0 {
+			noBranchErr := errors.New("Branch is a required field if a previous build starting with the specified hash cannot be found. Please pass the branch flag and try again!")
+			log.IncludeErrField(noBranchErr)
+			return noBranchErr
 		}
 
-		fullHash = buildReq.PartialHash
-		branch = commitChangeSet.Branch
-		stream.Send(RespWrap(fmt.Sprintf("Successfully found a hash matching %s, building branch %s %s", fullHash, branch, md.CHECKMARK)))
+		fullHash = buildReq.Hash
+		branch = buildReq.Branch
 	} else {
-		branch = buildSum.Branch
+		acct, repo := build.GetAcctRepo(buildReq.AcctRepo)
+		if buildSum.Repo != repo || buildSum.Account != acct {
+			mismatchErr := errors.New(fmt.Sprintf("The account/repo passed (%s) doesn't match with the account/repo (%s) associated with build #%v", buildReq.AcctRepo, buildSum.Account + "/" + buildSum.Repo, buildSum.BuildId))
+			log.IncludeErrField(mismatchErr)
+			return mismatchErr
+		}
+
+
+		if len(buildReq.Branch) == 0 {
+			stream.Send(RespWrap(fmt.Sprintf("No branch was passed, using `%s` from build #%v instead...", buildSum.Branch, buildSum.BuildId)))
+			branch = buildSum.Branch
+		} else {
+			branch = buildReq.Branch
+		}
+
 		fullHash = buildSum.Hash
-		stream.Send(RespWrap(fmt.Sprintf("Found a previous build starting with hash %s, now building branch %s %s", buildReq.PartialHash, branch, md.CHECKMARK)))
+		stream.Send(RespWrap(fmt.Sprintf("Found a previous build starting with hash %s, now building branch %s %s", buildReq.Hash, branch, md.CHECKMARK)))
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s...", buildReq.AcctRepo)))
@@ -269,7 +273,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.AcctRepoAndHash, s
 		log.IncludeErrField(err)
 		return err
 	}
-	stream.Send(RespWrap(fmt.Sprintf("Passed pre-validation stage! Build started for %s %s", fullHash, md.CHECKMARK)))
+	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", fullHash, buildReq.AcctRepo, md.CHECKMARK)))
 	return nil
 }
 

@@ -203,8 +203,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
 type RepoExecFunc func(string) []string
 
-
-
 func (d *Docker) RepoIntegrationSetup(setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
 	if renderedString, err := setupFunc(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
 		_, ok := err.(*repo.NoCreds)

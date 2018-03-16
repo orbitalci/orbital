@@ -97,7 +97,7 @@ func (f *fakeGuideOcelotClient) Logs(ctx context.Context, in *BuildQuery, opts .
 	return NewFakeGuideOcelotLogsCli(f.logLines), nil
 }
 
-func (f *fakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *AcctRepoAndHash, opts ...grpc.CallOption) (GuideOcelot_BuildRepoAndHashClient, error) {
+func (f *fakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *BuildReq, opts ...grpc.CallOption) (GuideOcelot_BuildRepoAndHashClient, error) {
 	return nil, nil
 }
 

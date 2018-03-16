@@ -20,7 +20,6 @@ var (
 )
 
 func matchThis(data []byte) (string, error) {
-	fmt.Println("ZE DATA IS: " + string(data))
 	for _, regex := range regexes {
 		if mtch := regex.FindSubmatch(data); mtch != nil {
 			// match should only be 2 matches + the original text....

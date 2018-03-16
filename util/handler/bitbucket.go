@@ -120,20 +120,6 @@ func (bb *Bitbucket) GetBaseURL() string {
 	return DefaultRepoBaseURL
 }
 
-func (bb *Bitbucket) GetHashDetail(acctRepo, hash string) (pb.ChangeSetV1, error) {
-	if len(acctRepo) == 0 || len(hash) == 0 {
-		return pb.ChangeSetV1{}, errors.New("please pass a valid acct/repo and hash")
-	}
-	hashDetail := &pb.ChangeSetV1{}
-	err := bb.Client.GetUrl(fmt.Sprintf(ChangeSetRepoBaseURL, acctRepo, hash), hashDetail)
-	if err != nil {
-		ocelog.IncludeErrField(err)
-		return *hashDetail, err
-	}
-
-	return *hashDetail, nil
-}
-
 //recursively iterates over all repositories and creates webhook
 func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 	if repoUrl == "" {
