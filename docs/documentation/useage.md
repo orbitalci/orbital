@@ -27,7 +27,7 @@ vcs:
     acctName: <account name in bitbucket> 
     type: bitbucket
 ```
-Run `ocelot creds vcs add -credfile-loc /path/to/yaml`.   
+Run `ocelot creds vcs add -credfile-loc /path/to/yaml` 
 You can also run `ocelot creds vcs add` from the command line and it will prompt you for these values. 
 
 ### Repo Credentials
@@ -36,7 +36,7 @@ For credentials relating to items within your build, such as docker, gradle, or 
 
 
 ## `ocelot.yml`
-Ocelot uses a file in the root of a git project to configure how to build, `ocelot.yml`. 
+Ocelot uses a file in the root of a git project to configure how to build, `ocelot.yml` 
 
 Once you write the ocelot file, you can validate using `ocelot validate -file-loc=/path/to/ocelot.yml`
 
