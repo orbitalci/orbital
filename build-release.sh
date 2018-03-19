@@ -4,7 +4,7 @@
 # make sure that all of our dependencies are up to date
 dep ensure -v
 
-echo "building go project"
+echo "building ocelot client"
 # TODO: this only builds mac binary right now - swap to building other ones when we need it
 env GOOS=darwin GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
 

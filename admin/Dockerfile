@@ -4,7 +4,7 @@ ARG SERVICE_NAME=admin
 WORKDIR /go/src/bitbucket.org/level11consulting/ocelot/
 COPY . .
 
-RUN cd cmd/${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -v -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .
+RUN cd cmd/${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .
 
 FROM alpine:3.7
 ENV SERVICE_NAME admin

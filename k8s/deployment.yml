@@ -19,15 +19,24 @@ spec:
       - name: privkey-volume
         secret: 
           secretName: ocelot
+      - name: docker-sock-volume
+        hostPath:
+          # location on host
+          path: /var/run/docker.sock
+          # this field is optional
+          type: File
       # - name: crt-volume
       #   secret:
       #     secretName: metaverse-secret
       containers:
       - name: admin-ocelot
-        image: jessishank/ocelot-admin:razzie
+        image: jessishank/ocelot-admin:razzie1
+        imagePullPolicy: Always
         volumeMounts:
           - name: privkey-volume
             mountPath: "/etc/letsencrypt/live/ocelot.hq.l11.com"
+          - mountPath: /var/run/docker.sock
+            name: docker-sock-volume
         ports:
         - containerPort: 10000
         env:
@@ -92,7 +101,8 @@ spec:
           type: File
       containers:
       - name:  hookhandler-ocelot
-        image: jessishank/ocelot-hookhandler:razzie
+        image: jessishank/ocelot-hookhandler:razzie1
+        imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock
             name: docker-sock-volume

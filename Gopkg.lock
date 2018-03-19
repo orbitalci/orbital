@@ -4,6 +4,7 @@
 [[projects]]
   name = "bitbucket.org/level11consulting/go-til"
   packages = ["consul","deserialize","log","net","nsqpb","test","vault"]
+  revision = ""
   version = "0.2.0"
 
 [[projects]]
@@ -477,6 +478,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "898bf2e406600be2d614e2069216f65f7467e6a4a01090b830e187edd337d554"
+  inputs-digest = "a510b9253219a44ee78d80bb2f340f647148acef5875e393b024199af541a05b"
   solver-name = "gps-cdcl"
   solver-version = 1
