@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-ocelot-deployment
+  namespace: prod-eng
+  labels:
+    app: admin-ocelot
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: admin-ocelot
+  template:
+    metadata:
+      labels:
+        app: admin-ocelot
+    spec:
+      volumes:
+      - name: privkey-volume
+        secret: 
+          secretName: ocelot
+      # - name: crt-volume
+      #   secret:
+      #     secretName: metaverse-secret
+      containers:
+      - name: admin-ocelot
+        image: jessishank/ocelot-admin:razzie
+        volumeMounts:
+          - name: privkey-volume
+            mountPath: "/etc/letsencrypt/live/ocelot.hq.l11.com"
+        ports:
+        - containerPort: 10000
+        env:
+          - name: CONSUL_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: VAULT_ADDR
+            value: http://10.1.72.190:8200
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: vault-token
+                key: token
+          - name: NSQLOOKUPD_IP
+            value: nsqlookupd-svc.prod-eng
+          - name: NSQD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: CONSUL_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: VAULT_ADDR
+            value: http://10.1.72.190:8200
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: vault-token
+                key: token      
+        command: ["/admin"]
+        args: 
+          # - sleep
+          # - "3600"
+          # - -private-key=/etc/certs/tls.key
+          # - -cert-loc=/etc/certs/tls.crt
+          - -consul-host=$(CONSUL_HOST)
+          - -log-level=debug
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hookhandler-ocelot-deployment
+  namespace: prod-eng
+  labels:
+    app: hookhandler-ocelot
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hookhandler-ocelot
+  template:
+    metadata:
+      labels:
+        app: hookhandler-ocelot
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          path: /var/run/docker.sock
+          type: File
+      containers:
+      - name:  hookhandler-ocelot
+        image: jessishank/ocelot-hookhandler:razzie
+        volumeMounts:
+          - mountPath: /var/run/docker.sock
+            name: docker-sock-volume
+        ports:
+        - containerPort: 8088
+        env:
+          - name: NSQLOOKUPD_IP
+            value: nsqlookupd-svc.prod-eng
+          - name: NSQD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: CONSUL_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: VAULT_ADDR
+            value: http://10.1.72.190:8200
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: vault-token
+                key: token
+        command: ["/hookhandler"]
+
+        args: 
+          - -consul-host=$(CONSUL_HOST)
+          - -log-level=debug
