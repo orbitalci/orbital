@@ -208,8 +208,8 @@ CLEANUP | Performing build cleanup...
 15:14:16 jesseshank jessishank /Users/jesseshank/code/test_ocelot master
 ```
 
- ### Getting a summary
- `ocelot summary -acct-repo <account name>/<repo name>`  
+### Getting a summary
+`ocelot summary -acct-repo <account name>/<repo name>`  
 You can also set the `-limit` flag to reduce or expand the number of results shown. The default limit is 5. 
  
 ```bash
