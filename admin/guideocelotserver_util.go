@@ -68,6 +68,10 @@ func ParseStagesByBuildId(buildSum storeModel.BuildSummary, stageResults []store
 	return hashStatus
 }
 
+//RespWrap will wrap streaming messages in a LineResponse object to be sent by the server stream
+func RespWrap(msg string) *adminModel.LineResponse {
+	return &adminModel.LineResponse{OutputLine: msg}
+}
 
 // handleStorageError  will attempt to decipher if err is not found. if so, iwll set the appropriate grpc status code and return new grpc status error
 func handleStorageError(err error) error {

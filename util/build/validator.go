@@ -1,4 +1,4 @@
-package validate
+package build
 
 import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
@@ -18,6 +18,10 @@ func GetOcelotValidator() *OcelotValidator {
 
 //validates config, takes in an optional cli out
 func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) error {
+	if len(config.Image) == 0 {
+		return errors.New("uh-oh, there is no image listed inside of your ocelot yaml file")
+	}
+
 	if len(config.BuildTool) == 0 {
 		return errors.New("BuildTool must be specified")
 	}

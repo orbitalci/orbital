@@ -14,7 +14,9 @@ var (
 	sshGit = regexp.MustCompile(`git\@\w+\.\w+\:([^\/.]*)\/([^\..]*)\.git`)
 	httpsGithub = regexp.MustCompile(`https:\/\/github\.com\/([^\/.]*)\/([^\..]*)\.git`)
 	httpsBb = regexp.MustCompile(`https:\/\/\w+\@\w+\.org\/([^\/.]*)\/([^\..]*)\.git`)
-	regexes = []*regexp.Regexp{sshGit, httpsGithub, httpsBb}
+	httpsBbNoUser = regexp.MustCompile(`https:\/\/\w+\.org\/([^\/.]*)\/([^\..]*)\.git`)
+
+	regexes = []*regexp.Regexp{sshGit, httpsGithub, httpsBb, httpsBbNoUser}
 )
 
 func matchThis(data []byte) (string, error) {

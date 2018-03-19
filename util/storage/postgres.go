@@ -125,6 +125,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 }
 
 //RetrieveHashStartsWith will return a list of all hashes starting with the partial string in db
+//** THIS WILL ONLY RETURN HASH, ACCOUNT, AND REPO **
 func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
 	var hashes []models.BuildSummary
 	if err := p.Connect(); err != nil {
@@ -298,6 +299,7 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 // AddStageDetail will store the stage data along with a starttime and duration to db
 //  The fields required on stageResult to insert into stage detail table are:
 // 		stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
+
 func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
@@ -313,10 +315,19 @@ func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error 
 		ocelog.IncludeErrField(err)
 		return err
 	}
-	if _, err := p.db.Query(queryStr, stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime.Format(TimeFormat), stageResult.StageDuration, stageResult.Status, string(jsonStr)); err != nil {
+
+	var rows *sql.Rows
+
+	if rows, err = p.db.Query(queryStr, stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime.Format(TimeFormat), stageResult.StageDuration, stageResult.Status, string(jsonStr)); err != nil {
 		ocelog.IncludeErrField(err)
 		return err
 	}
+
+	//don't know why at this point it would also be null
+	if rows != nil {
+		rows.Scan()
+	}
+
 	return nil
 }
 

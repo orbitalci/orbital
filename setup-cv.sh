@@ -4,7 +4,7 @@
 consul kv put config/ocelot/storagetype postgres
 
 consul kv put config/ocelot/postgres/db postgres
-consul kv put config/ocelot/postgres/localhost localhost
+consul kv put config/ocelot/postgres/location localhost
 consul kv put config/ocelot/postgres/port 5432
 consul kv put config/ocelot/postgres/username postgres
 

@@ -23,10 +23,6 @@ type fakeGuideOcelotClient struct {
 	logLines []string
 }
 
-func (f *fakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *AcctRepoAndHash, opts ...grpc.CallOption) (*BuildSummary, error) {
-	return &BuildSummary{}, nil
-}
-
 func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
 	return f.creds, nil
 }
@@ -101,6 +97,10 @@ func (f *fakeGuideOcelotClient) Logs(ctx context.Context, in *BuildQuery, opts .
 	return NewFakeGuideOcelotLogsCli(f.logLines), nil
 }
 
+func (f *fakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *BuildReq, opts ...grpc.CallOption) (GuideOcelot_BuildRepoAndHashClient, error) {
+	return nil, nil
+}
+
 func NewFakeGuideOcelotLogsCli(lines []string) *fakeGuideOcelotLogsClient {
 	return &fakeGuideOcelotLogsClient{outputLines: lines}
 }
@@ -115,11 +115,11 @@ func (c *fakeGuideOcelotLogsClient) CloseSend() error {
 	return nil
 }
 
-func (c *fakeGuideOcelotLogsClient) Recv() (*LogResponse, error) {
+func (c *fakeGuideOcelotLogsClient) Recv() (*LineResponse, error) {
 	if c.index + 1 > len(c.outputLines) {
 		return nil, io.EOF
 	}
-	resp := &LogResponse{OutputLine: c.outputLines[c.index]}
+	resp := &LineResponse{OutputLine: c.outputLines[c.index]}
 	c.index++
 	return resp, nil
 }

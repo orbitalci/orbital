@@ -60,3 +60,14 @@ message PaginatedRepository {
     double page = 4;
     string next = 5;
 }
+
+//some fields are omitted from the response, but if you need anything else,
+//see https://confluence.atlassian.com/bitbucket/changesets-resource-296095208.html#changesetsResource-GETanindividualchangeset
+//for a list of avilable data on changesets
+message ChangeSetV1 {
+    string node = 1;
+    string raw_author = 2;
+    string author = 3;
+    string raw_node = 4;
+    string branch = 5;
+}

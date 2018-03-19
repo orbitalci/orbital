@@ -31,16 +31,17 @@ service GuideOcelot {
     rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
 
     rpc BuildRuntime (BuildQuery) returns (Builds) {}
-    rpc Logs (BuildQuery) returns (stream LogResponse) {}
+    rpc Logs (BuildQuery) returns (stream LineResponse) {}
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {}
     rpc GetStatus (StatusQuery) returns (Status) {}
     rpc WatchRepo (RepoAccount) returns (google.protobuf.Empty) {}
-    rpc BuildRepoAndHash (AcctRepoAndHash) returns (BuildSummary) {}
+    rpc BuildRepoAndHash (BuildReq) returns (stream LineResponse) {}
 }
 
-message AcctRepoAndHash {
+message BuildReq {
     string acctRepo = 1;
-    string partialHash = 2;
+    string hash = 2;
+    string branch = 3;
 }
 
 message AllCredsWrapper {
@@ -106,7 +107,7 @@ message BuildRuntimeInfo {
     string repoName = 6;
 }
 
-message LogResponse {
+message LineResponse {
     string outputLine = 1;
 }
 

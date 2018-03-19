@@ -11,6 +11,7 @@ import (
 	"strings"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/build"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -64,7 +65,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 		return 1
 	}
 
-	fileValidator := GetOcelotValidator()
+	fileValidator := build.GetOcelotValidator()
 	err = fileValidator.ValidateConfig(conf, c.UI)
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Invalid ocelot.yml file: %s", err.Error()))
