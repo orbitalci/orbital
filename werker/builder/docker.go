@@ -2,6 +2,7 @@ package builder
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/go-til/vault"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/repo"
@@ -174,8 +175,9 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 
 	acctName := strings.Split(werk.FullName, "/")[0]
-	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + rc.GetVault().GetAddress())
-	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+rc.GetVault().GetAddress()}, d.DownloadSSHKey(
+	vaultAddr := d.getVaultAddr(rc.GetVault())
+	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + vaultAddr)
+	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
 		cred.BuildCredPath(werk.VcsType, acctName, cred.Vcs)), logout)
 	if len(result.Error) > 0 {
@@ -200,6 +202,17 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	return result, d.ContainerId
 }
 
+func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
+	registerdAddr := vaulty.GetAddress()
+	// if on localhost, set to basher's loopback ip
+	if strings.Contains(registerdAddr, "127.0.0.1") {
+		start := strings.Index(registerdAddr, "127.0.0.1")
+		end := start + 9
+		registerdAddr = registerdAddr[:start] + d.Basher.LoopbackIp + registerdAddr[end:]
+		ocelog.Log().Info("using build loopback address ", registerdAddr)
+	}
+	return registerdAddr
+}
 type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
 type RepoExecFunc func(string) []string
 
