@@ -318,7 +318,7 @@ func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds 
 	d.writeToInfo(currStageStr, attachedExec.Reader, logout)
 	inspector, err := d.DockerClient.ContainerExecInspect(ctx, resp.ID)
 
-
+	// todo: have stage have exit code in case a stage doesn't care if exit code is nonzero (tj recommendation)
 	if inspector.ExitCode != 0 || err != nil {
 		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage \u2717", currStage))
 		var errStr string
