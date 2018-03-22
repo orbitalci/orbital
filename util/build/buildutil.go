@@ -72,7 +72,8 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	sr := getHookhandlerStageResult(id)
 	// stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
 	if err = ValidateAndQueue(buildConf, branch, validator, vaulty, producer, sr, id, hash, accountRepo, bbToken); err != nil {
-		ocelog.IncludeErrField(err).Error("failed validation")
+		// don't need to say failed validation, already did that in validateBuild
+		//ocelog.IncludeErrField(err).Error("failed validation")
 		// we do want to add a runtime here
 		err = store.UpdateSum(true, 0, id)
 		if err != nil {
