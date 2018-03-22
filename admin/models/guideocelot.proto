@@ -36,6 +36,7 @@ service GuideOcelot {
     rpc GetStatus (StatusQuery) returns (Status) {}
     rpc WatchRepo (RepoAccount) returns (google.protobuf.Empty) {}
     rpc BuildRepoAndHash (BuildReq) returns (stream LineResponse) {}
+    rpc PollRepo(PollRequest) returns (google.protobuf.Empty) {}
 }
 
 message BuildReq {
@@ -144,4 +145,12 @@ message BuildSummary {
 
 message Summaries {
     repeated BuildSummary sums = 1;
+}
+
+message PollRequest {
+    string account = 1;
+    string repo = 2;
+    bool isUpdate = 3; // maybe we don't care about if its an update?
+    string cron = 4;
+    string branches = 5;
 }

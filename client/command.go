@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bitbucket.org/level11consulting/ocelot/client/build"
 	"bitbucket.org/level11consulting/ocelot/client/creds"
 	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds"
 	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/add"
@@ -11,13 +12,13 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
 	"bitbucket.org/level11consulting/ocelot/client/output"
+	"bitbucket.org/level11consulting/ocelot/client/poll"
 	"bitbucket.org/level11consulting/ocelot/client/status"
 	"bitbucket.org/level11consulting/ocelot/client/summary"
 	"bitbucket.org/level11consulting/ocelot/client/validate"
 	"bitbucket.org/level11consulting/ocelot/client/watch"
 	"github.com/mitchellh/cli"
 	"os"
-	"bitbucket.org/level11consulting/ocelot/client/build"
 )
 
 var Commands map[string]cli.CommandFactory
@@ -41,5 +42,6 @@ func init() {
 		"status":          func() (cli.Command, error) { return status.New(ui), nil },
 		"watch":           func() (cli.Command, error) { return watch.New(ui), nil },
 		"build":           func() (cli.Command, error) { return build.New(ui), nil },
+		"poll":            func() (cli.Command, error) { return poll.New(ui), nil },
 	}
 }

@@ -86,6 +86,12 @@
   version = "v1.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/favadi/protoc-go-inject-tag"
+  packages = ["pb"]
+  revision = "3081f5cfa6dfbad7e359dd6c410177aa7ac3db6a"
+
+[[projects]]
   name = "github.com/ghodss/yaml"
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
@@ -126,6 +132,12 @@
   packages = ["."]
   revision = "064e2069ce9c359c118179501254f67d7d37ba24"
   version = "0.2"
+
+[[projects]]
+  name = "github.com/gorhill/cronexpr"
+  packages = ["."]
+  revision = "a557574d6c024ed6e36acc8b610f5f211c91568a"
+  version = "1.0.0"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -478,6 +490,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a510b9253219a44ee78d80bb2f340f647148acef5875e393b024199af541a05b"
+  inputs-digest = "014e9c7cbb638c35014d0f6f757b5b93f645c0543b82965f39d500a8765b1dcf"
   solver-name = "gps-cdcl"
   solver-version = 1

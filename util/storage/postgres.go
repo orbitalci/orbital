@@ -9,6 +9,7 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"strings"
 	"time"
 )
 
@@ -363,6 +364,115 @@ func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResul
 	}
 	return stages, err
 }
+
+
+func (p *PostgresStorage) InsertPoll(account string, repo string, activeCron bool, cronString string, branches string) (err error) {
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	queryStr := `INSERT INTO polling_repos(account, repo, cron_ed, cron_string, branches, last_cron_time) values ($1, $2, $3, $4, $5, $6)`
+	if _, err = p.db.Exec(queryStr, account, repo, activeCron, cronString, branches, time.Now()); err != nil {
+		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).WithField("cronString", cronString).Error("could not insert poll entry into database")
+		return
+	}
+	return
+}
+
+func (p *PostgresStorage) UpdatePoll(account string, repo string, activeCron bool, cronString string, branches string) (err error) {
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	queryStr := `UPDATE polling_repos SET (cron_ed, cron_string, branches) = ($1,$2,$3) WHERE (account,repo) = ($4,$5);`
+	if _, err = p.db.Exec(queryStr, activeCron, cronString, branches, account, repo); err != nil {
+		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).WithField("cronString", cronString).Error("could not update poll entry in database")
+		return
+	}
+	return
+}
+
+func (p *PostgresStorage) SetLastCronTime(account string, repo string) (err error) {
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	//starttime.Format(TimeFormat)
+	queryStr := `UPDATE polling_repos SET (last_cron_time) = ROW($1) WHERE (account,repo) = ($2,$3);`
+	if _, err := p.db.Exec(queryStr, time.Now().Format(TimeFormat), account, repo); err != nil {
+		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).Error("could not update last_cron_time in database")
+	}
+	return
+}
+
+func (p *PostgresStorage) GetLastCronTime(accountRepo string) (timestamp time.Time, err error) {
+	if err := p.Connect(); err != nil {
+		return time.Now(), errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	fmt.Println(p.dbLoc, p.db, p.location)
+	acctRepo := strings.Split(accountRepo, "/")
+	if len(acctRepo) != 2 {
+		return time.Now(), errors.New("length on acct repo not correct")
+	}
+	account, repo := acctRepo[0], acctRepo[1]
+	queryStr := `SELECT last_cron_time FROM polling_repos WHERE (account,repo) = ($1,$2);`
+	var row *sql.Row
+	row = p.db.QueryRow(queryStr, account, repo)
+	if row == nil {
+		err = errors.New("no rows found for " + account + "/" + repo)
+		ocelog.IncludeErrField(err).Error("cannot get last cron time")
+		return timestamp, err
+	}
+	if err = row.Scan(&timestamp); err != nil {
+		ocelog.IncludeErrField(err).Error("unable to get last cron time")
+		return timestamp, err
+	}
+	ocelog.Log().Debug("returning no errors, everything is TOTALLY FINE")
+	return timestamp, nil
+}
+
+func (p *PostgresStorage) PollExists(account string, repo string) (bool, error) {
+	if err := p.Connect(); err != nil {
+		return false, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	var count int64
+	queryStr := `select count(*) from polling_repos where (account,repo) = ($1,$2);`
+	err := p.db.QueryRow(queryStr, account, repo).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	if count == 0 {
+		return false, nil
+	} else {
+		return true, nil
+	}
+}
+
+
+func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
+	var polls []*models.PollRequest
+	if err := p.Connect(); err != nil {
+		return nil, errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	queryStr := `select account, repo, cron_string, last_cron_time, branches from polling_repos`
+	rows, err := p.db.Query(queryStr)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		pr := &models.PollRequest{}
+		if err = rows.Scan(&pr.Account, &pr.Repo, &pr.Cron, &pr.LastCron, &pr.Branches); err != nil {
+			return nil, err
+		}
+		polls = append(polls, pr)
+	}
+	return polls, rows.Err()
+}
+
+
 
 func (p *PostgresStorage) StorageType() string {
 	return fmt.Sprintf("Postgres Database at %s", p.location)

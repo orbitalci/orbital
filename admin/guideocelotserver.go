@@ -225,7 +225,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	buildSum, err := g.Storage.RetrieveLatestSum(buildReq.Hash)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
-			log.IncludeErrField(err)
+			log.IncludeErrField(err).Error("could not retrieve latest build summary")
 			return err
 		}
 		//at this point error must be because we couldn't find hash starting with query
@@ -235,7 +235,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 
 		if len(buildReq.Branch) == 0 {
 			noBranchErr := errors.New("Branch is a required field if a previous build starting with the specified hash cannot be found. Please pass the branch flag and try again!")
-			log.IncludeErrField(noBranchErr)
+			log.IncludeErrField(noBranchErr).Error("branch len is 0")
 			return noBranchErr
 		}
 
@@ -245,7 +245,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 		acct, repo := build.GetAcctRepo(buildReq.AcctRepo)
 		if buildSum.Repo != repo || buildSum.Account != acct {
 			mismatchErr := errors.New(fmt.Sprintf("The account/repo passed (%s) doesn't match with the account/repo (%s) associated with build #%v", buildReq.AcctRepo, buildSum.Account + "/" + buildSum.Repo, buildSum.BuildId))
-			log.IncludeErrField(mismatchErr)
+			log.IncludeErrField(mismatchErr).Error()
 			return mismatchErr
 		}
 
@@ -264,13 +264,13 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s...", buildReq.AcctRepo)))
 	buildConf, _, err := build.GetBBConfig(g.RemoteConfig, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
 	if err != nil {
-		log.IncludeErrField(err)
+		log.IncludeErrField(err).Error("couldn't get bb config")
 		return err
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, md.CHECKMARK)))
 	stream.Send(RespWrap(fmt.Sprintf("Storing build data for %s...", buildReq.AcctRepo)))
 	if err = build.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
-		log.IncludeErrField(err)
+		log.IncludeErrField(err).Error("couldn't add to build queue or store in db")
 		return err
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", fullHash, buildReq.AcctRepo, md.CHECKMARK)))
@@ -423,6 +423,37 @@ func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper 
 		return &empty.Empty{}, err
 	}
 	return &empty.Empty{}, nil
+}
+
+func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *models.PollRequest) (*empty.Empty, error) {
+	log.Log().Info("recieved poll request for ", poll.Account, poll.Repo, poll.Cron)
+	empti := &empty.Empty{}
+	exists, err := g.Storage.PollExists(poll.Account, poll.Repo)
+	if err != nil {
+		return empti, status.Error(codes.Internal, err.Error())
+	}
+	if exists == true {
+		log.Log().Info("updating poll in db")
+		if err = g.Storage.UpdatePoll(poll.Account, poll.Repo, true, poll.Cron, poll.Branches); err != nil {
+			msg := "unable to update poll in storage"
+			log.IncludeErrField(err).Error(msg)
+			return empti, status.Error(codes.Internal, msg + ": " + err.Error())
+		}
+	} else {
+		log.Log().Info("inserting poll in db")
+		if err = g.Storage.InsertPoll(poll.Account, poll.Repo, true, poll.Cron, poll.Branches); err != nil {
+			msg := "unable to insert poll into storage"
+			log.IncludeErrField(err).Error(msg)
+			return empti, status.Error(codes.Internal, msg + ": " + err.Error())
+		}
+	}
+	log.Log().WithField("account", poll.Account).WithField("repo", poll.Repo).Info("successfully added/updated poll in storage")
+	err = g.Producer.WriteProto(poll, "poll_please")
+	if err != nil {
+		log.IncludeErrField(err).Error("couldn't write to queue producer at poll_please")
+		return empti, status.Error(codes.Internal, err.Error())
+	}
+	return empti, nil
 }
 
 func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.OcelotStorage) models.GuideOcelotServer {

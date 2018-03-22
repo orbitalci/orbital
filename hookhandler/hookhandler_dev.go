@@ -179,3 +179,7 @@ func (mvh *MockVCSHandler) GetBaseURL() string {
 func (mvh *MockVCSHandler) FindWebhooks(getWebhookURL string) bool {
 	return true
 }
+
+func (mvh *MockVCSHandler) GetAllCommits(acctRepo string, branch string) (*pb.Commits, error) {
+	return nil, nil
+}
