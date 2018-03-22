@@ -1,4 +1,4 @@
-package main
+package poller
 
 import (
 	"bitbucket.org/level11consulting/go-til/log"
@@ -23,7 +23,7 @@ func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan 
 		log.IncludeErrField(err).Error("unmarshal error for poll msg")
 		return err
 	}
-	err := writeCronFile(pollMsg)
+	err := WriteCronFile(pollMsg)
 	if err != nil {
 		// even if we can't write cron tab, should register that it was requested
 		log.IncludeErrField(err).Error("UNABLE TO WRITE CRON TAB")
@@ -43,7 +43,7 @@ func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan 
 	return err
 }
 
-func writeCronFile(event *pb.PollRequest) error {
+func WriteCronFile(event *pb.PollRequest) error {
 	cron := fmt.Sprintf("%s root /bin/run_changecheck.sh %s/%s %s\n", event.Cron, event.Account, event.Repo, event.Branches)
 	basePath := "/etc/cron.d"
 	fullPath := filepath.Join(basePath, event.Account + "_" + event.Repo)

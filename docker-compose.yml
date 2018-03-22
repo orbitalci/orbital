@@ -75,3 +75,25 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+  poller:
+    image: ocelot-poller
+    build:
+      context: .
+      dockerfile: cmd/poller/Dockerfile
+      cache_from:
+        - golang:1.9-alpine
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
+      VAULT_ADDR: http://172.18.0.1:8200
+      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
+      CONSUL_HOST: 172.18.0.1
+      NSQD_IP: 172.17.0.1
+      NSQLOOKUPD_IP: 172.17.0.1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+

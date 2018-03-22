@@ -86,12 +86,6 @@
   version = "v1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/favadi/protoc-go-inject-tag"
-  packages = ["pb"]
-  revision = "3081f5cfa6dfbad7e359dd6c410177aa7ac3db6a"
-
-[[projects]]
   name = "github.com/ghodss/yaml"
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
@@ -490,6 +484,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "014e9c7cbb638c35014d0f6f757b5b93f645c0543b82965f39d500a8765b1dcf"
+  inputs-digest = "b415ebc6a061e171fb3df2b044467ee47bb4400eee9253a08743fb4567768d76"
   solver-name = "gps-cdcl"
   solver-version = 1
