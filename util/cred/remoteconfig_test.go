@@ -3,13 +3,6 @@ package cred
 import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"github.com/hashicorp/consul/testutil"
-	"github.com/hashicorp/vault/http"
-	"github.com/hashicorp/vault/vault"
-	"net"
-	"os"
-	"strconv"
-	"strings"
 	"testing"
 )
 
