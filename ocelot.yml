@@ -7,6 +7,8 @@ stages:
     script:
       - echo "building $BUILD_ID with has $GIT_HASH"
   - name: testing
+    env:
+      - "BUILDSERVERHACK=0"
     script:
       - mkdir -p $GOPATH/src/bitbucket.org/level11consulting/ocelot
       - cp -r * $GOPATH/src/bitbucket.org/level11consulting/ocelot

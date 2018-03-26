@@ -2,6 +2,7 @@ package commandhelper
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/util"
 	"testing"
 )
 
@@ -18,6 +19,7 @@ var goodgiturls = []struct {
 }
 
 func TestFindAcctRepo(t *testing.T) {
+	util.BuildServerHack(t)
 	acctRepo, err := FindAcctRepo()
 	if err != nil {
 		t.Fatal(err)
