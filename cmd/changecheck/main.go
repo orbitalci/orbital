@@ -71,6 +71,7 @@ func searchBranchCommits(handler handler.VCSHandler, branch string, conf *change
 	}
 	lastCommit := commits.Values[0]
 	lastCommitDt := time.Unix(lastCommit.Date.Seconds, int64(lastCommit.Date.Nanos))
+	ocelog.Log().WithField("lastCommitDt", lastCommitDt.String()).Info()
 	if lastCommitDt.After(lastPoll) {
 		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
 		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("getting bitbucket commit")
