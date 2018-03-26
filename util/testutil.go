@@ -28,7 +28,7 @@ func InitServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestSer
 
 //BuildServerHack will check the environment for a variable $BUILDSERVERHACK, will skip if it does not exist
 func BuildServerHack(t *testing.T) {
-	_, ok := os.LookupEnv("$BUILDSERVERHACK")
+	_, ok := os.LookupEnv("BUILDSERVERHACK")
 	if ok {
 		t.Skip("test flagged as build server hack, skipping.")
 	}
