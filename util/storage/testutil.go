@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+func CreateTestFileSystemStorage(t *testing.T) BuildSum {
+	return NewFileBuildStorage("./test-fixtures/storage")
+}
+
 // create a test postgres database on port 5555 using the official docker image, create the tables, and insert some
 // seed data
 func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing.T)){

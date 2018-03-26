@@ -14,7 +14,8 @@ import (
 //// func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
 func Test_CheckIfBuildDone(t *testing.T) {
 	hash := "sup"
-	consu, serv, store := util.InitServerAndConsulet(t)
+	consu, serv := util.InitServerAndConsulet(t)
+	store := storage.CreateTestFileSystemStorage(t)
 	defer serv.Stop()
 	testAddFullBuildSummary(hash, store, t)
 	defer os.RemoveAll("./test-fixtures/storage")
@@ -45,7 +46,7 @@ func Test_Register(t *testing.T) {
 	ip := "10.1.1.0"
 	grpcPort := "1020"
 	wsPort := "4030"
-	consu, serv, _ := util.InitServerAndConsulet(t)
+	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	uuid, err := Register(consu, ip, grpcPort, wsPort)
 	if err != nil {
@@ -80,7 +81,7 @@ func Test_RegisterBuild(t *testing.T) {
 	grpcPort := "1020"
 	wsPort := "4030"
 	dockerUuid := "1111-2222-3333-asdf"
-	consu, serv, _ := util.InitServerAndConsulet(t)
+	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	uuid, err := Register(consu, ip, grpcPort, wsPort)
 	if err != nil {
@@ -112,7 +113,7 @@ func Test_GetBuildRuntime(t *testing.T) {
 	grpcPort := "1020"
 	werkerId := "werkerId"
 	wsPort := "4030"
-	consu, serv, _ := util.InitServerAndConsulet(t)
+	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	serv.SetKV(t, fmt.Sprintf(werkerGrpc, werkerId), []byte(grpcPort))
 	serv.SetKV(t, fmt.Sprintf(werkerWs, werkerId), []byte(wsPort))
@@ -145,7 +146,7 @@ func Test_Delete(t *testing.T) {
 	werkerId := "werkerId"
 	hash := "1231231231"
 	dockerUuid := "12312324/81dfasd"
-	consu, serv, _ := util.InitServerAndConsulet(t)
+	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	serv.SetKV(t, fmt.Sprintf(buildDockerUuid, werkerId, hash), []byte(dockerUuid))
 	serv.SetKV(t, fmt.Sprintf(werkerBuildMap, hash), []byte(werkerId))

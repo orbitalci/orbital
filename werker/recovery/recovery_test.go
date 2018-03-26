@@ -53,7 +53,7 @@ func TestRecovery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	consu, serv, _ := util.InitServerAndConsulet(t)
+	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
 	remoteConf := &recoveryCVRemoteConfig{consul: consu, storage: store}
 	uid := uuid.New()
