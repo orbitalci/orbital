@@ -2,6 +2,7 @@ package cred
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/util"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"testing"
 )
@@ -180,6 +181,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 }
 
 func TestRemoteConfig_GetStorageType(t *testing.T) {
+	util.BuildServerHack(t)
 	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
 	defer TeardownVaultAndConsul(vaultListener, consulServer)
 	// check that default will be file
