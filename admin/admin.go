@@ -6,9 +6,10 @@ import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	//"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
-	"crypto/tls"
+
+	//"bitbucket.org/level11consulting/ocelot/util/handler"
+	//"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
@@ -19,6 +20,14 @@ import (
 )
 
 //TODO: floe integration? putting this note here so we remember
+
+//con, err := net.Listen("tcp", ":"+conf.GrpcPort)
+//if err != nil {
+//ocelog.Log().Fatal("womp womp")
+//}
+//grpcServer := grpc.NewServer()
+//protobuf.RegisterBuildServer(grpcServer, werkStream)
+//go grpcServer.Serve(con)
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
@@ -31,51 +40,17 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	}
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(), store)
 	//grpc server
-	opts := []grpc.ServerOption{
-		grpc.Creds(secure.GetNewClientTLS(serverRunsAt))}
-
-	grpcServer := grpc.NewServer(opts...)
+	con, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		log.Log().Fatal("listen: ", err)
+	}
+	grpcServer := grpc.NewServer()
 	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
-
-	ctx := context.Background()
-
-	dopts := []grpc.DialOption{grpc.WithTransportCredentials(secure.GetNewTLS(serverRunsAt))}
-	mux := http.NewServeMux()
-
-	runtime.HTTPError = CustomErrorHandler
-	gwmux := runtime.NewServeMux()
-	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gwmux, serverRunsAt, dopts)
+	err = grpcServer.Serve(con)
 	if err != nil {
-		fmt.Printf("serve: %v\n", err)
-		return
+		log.Log().Fatal("serve: ", err)
 	}
 
-	mux.Handle("/", gwmux)
-	//serves up client file
-	mux.HandleFunc("/ocelot", func(w http.ResponseWriter, r *http.Request) {
-		log.Log().Debug("serving up client from s3")
-		http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/ocelot.zip", 301)
-	})
-
-	conn, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
-	if err != nil {
-		panic(err)
-	}
-
-	srv := &http.Server{
-		Addr:    serverRunsAt,
-		Handler: grpcHandlerFunc(grpcServer, mux),
-		TLSConfig: &tls.Config{
-			Certificates: []tls.Certificate{*secure.GetKeyPair()},
-			NextProtos:   []string{"h2"},
-		},
-	}
-
-	err = srv.Serve(tls.NewListener(conn, srv.TLSConfig))
-
-	if err != nil {
-		log.Log().Fatal("ListenAndServe: ", err)
-	}
 }
 
 // see full example at: https://github.com/philips/grpc-gateway-example

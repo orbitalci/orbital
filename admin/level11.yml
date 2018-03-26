@@ -1,0 +1,6 @@
+vcs:
+    - clientId: VEhMhdw6uprevzh8Du
+      clientSecret: JtxmvZy3QR2dJQwbnwmVktCJa4jaVsJS
+      tokenURL: https://bitbucket.org/site/oauth2/access_token
+      acctName: level11consulting
+      type: bitbucket

@@ -2,7 +2,7 @@ package admin
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
+	//"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"flag"
 	"google.golang.org/grpc"
 )
@@ -14,14 +14,8 @@ var (
 
 
 func GetClient(serverAddr string, insecure bool, tlsDns string) (client models.GuideOcelotClient, err error){
-	var secure secure_grpc.SecureGrpc
-	if insecure {
-		secure = secure_grpc.NewFakeSecure()
-	} else {
-		secure = secure_grpc.NewLeSecure()
-	}
 	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithTransportCredentials(secure.GetNewClientTLS(tlsDns)))
+	opts = append(opts, grpc.WithInsecure())
 	conn, err := grpc.Dial(serverAddr, opts...)
 	client = models.NewGuideOcelotClient(conn)
 	return
