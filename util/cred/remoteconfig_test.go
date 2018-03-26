@@ -24,9 +24,9 @@ func TestRemoteConfig_ErrorHandling(t *testing.T) {
 }
 
 func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
+
 	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
 	defer TeardownVaultAndConsul(vaultListener, consulServer)
-
 	adminConfig := &VcsConfig{
 		ClientSecret: "top-secret",
 		ClientId:     "beeswax",
