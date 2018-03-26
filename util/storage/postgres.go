@@ -11,6 +11,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"strings"
 	"time"
+	"sync"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
@@ -36,24 +37,29 @@ type PostgresStorage struct {
 	port int
 	dbLoc string
 	db *sql.DB
+	once sync.Once
 }
 
 func (p *PostgresStorage) Connect() error {
-	db, err := sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.user, p.dbLoc, p.password, p.location, p.port))
-	if err != nil {
-		ocelog.IncludeErrField(err)
-		return err
-	}
-	p.db = db
+	p.once.Do(func(){
+		var err error
+		if p.db, err = sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.user, p.dbLoc, p.password, p.location, p.port)); err != nil {
+			// todo: not sure if we should _kill_ everything.
+			ocelog.IncludeErrField(err).Fatal("couldn't get postgres connection")
+		}
+		p.db.SetConnMaxLifetime(time.Millisecond)
+		p.db.SetMaxOpenConns(20)
+		p.db.SetMaxIdleConns(0)
+	})
 	return nil
 }
 
-func (p *PostgresStorage) Disconnect() {
-	err := p.db.Close()
-	if err != nil {
-		ocelog.IncludeErrField(err)
-	}
-}
+func (p *PostgresStorage) Disconnect() {}
+	//err := p.db.Close()
+	//if err != nil {
+	//	ocelog.IncludeErrField(err).Error("error closing")
+	//}
+//}
 /*
 Column   |            Type             |
 -----------+----------------------------
@@ -398,7 +404,7 @@ func (p *PostgresStorage) SetLastCronTime(account string, repo string) (err erro
 	}
 	defer p.Disconnect()
 	//starttime.Format(TimeFormat)
-	queryStr := `UPDATE polling_repos SET (last_cron_time) = ROW($1) WHERE (account,repo) = ($2,$3);`
+	queryStr := `UPDATE polling_repos SET last_cron_time=$1 WHERE (account,repo) = ($2,$3);`
 	if _, err := p.db.Exec(queryStr, time.Now().Format(TimeFormat), account, repo); err != nil {
 		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).Error("could not update last_cron_time in database")
 	}
