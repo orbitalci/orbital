@@ -72,6 +72,15 @@ func searchBranchCommits(handler handler.VCSHandler, branch string, conf *change
 	lastCommit := commits.Values[0]
 	lastCommitDt := time.Unix(lastCommit.Date.Seconds, int64(lastCommit.Date.Nanos))
 	ocelog.Log().WithField("lastCommitDt", lastCommitDt.String()).Info()
+	// no matter what, we are inside the cron job, so we should be updating the db
+	defer func(){
+		if err = store.SetLastCronTime(conf.Acct, conf.Repo); err != nil {
+			ocelog.IncludeErrField(err).WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("unable to set last cron time")
+			return
+		}
+		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("successfully set last cron time")
+		return
+	}()
 	if lastCommitDt.After(lastPoll) {
 		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
 		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("getting bitbucket commit")
@@ -84,13 +93,8 @@ func searchBranchCommits(handler handler.VCSHandler, branch string, conf *change
 		if err = build.QueueAndStore(lastCommit.Hash, branch, conf.AcctRepo, token, conf.RemoteConf, buildConf, conf.OcyValidator, conf.Producer, store); err != nil {
 			ocelog.IncludeErrField(err).WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Fatal("couldn't add to build queue or store in db")
 			return
-		}
 		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("successfully added build to build queue")
-		if err = store.SetLastCronTime(conf.Acct, conf.Repo); err != nil {
-			ocelog.IncludeErrField(err).WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("unable to set last cron time")
-			return
 		}
-		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("successfully set last cron time")
 	} else {
 		ocelog.Log().WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("no new commits found")
 	}
