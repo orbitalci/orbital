@@ -1,4 +1,4 @@
-package poll
+package polldelete
 
 
 import (
@@ -7,17 +7,16 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/gorhill/cronexpr"
 	"github.com/mitchellh/cli"
 )
 
 
-const synopsis = "set up repo to be polled by ocelot"
+const synopsis = "delete git poll for repo tracked by ocelot"
 const help = `
-Usage: ocelot poll -acct-repo <acct>/<repo> -cron <cron_string> -branches <branch_list>
-	Set up polling from vcs for your repository. Will run on the interval that you set in the cron string.
+Usage: ocelot poll delete -acct-repo <acct>/<repo> -cron <cron_string> -branches <branch_list>
+	Remove polling from vcs for your repository from ocelot.
 For example:
-    ocelot poll -acct-repo level11consulting/ocelog -cron "5 4 * * *" -branches master,test
+    ocelot poll delete -acct-repo level11consulting/ocelog 
 ` + commandhelper.AcctRepoHelp
 
 func New(ui cli.Ui) *cmd {
@@ -59,8 +58,6 @@ func (c *cmd) Help() string {
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
-	c.flags.StringVar(&c.cron, "cron", "ERROR", "cron string for polling repo ")
-	c.flags.StringVar(&c.branches, "branches", "ERROR", "comma separated list of branches to poll vcs for")
 }
 
 
@@ -74,38 +71,22 @@ func (c *cmd) Run(args []string) int {
 	if err := c.OcyHelper.SplitAndSetAcctRepo(c); err != nil {
 		return 1
 	}
-	if c.cron == "ERROR" {
-		c.UI.Error("-cron is a required flag")
-		return 1
-	}
-	if c.branches == "ERROR" {
-		c.UI.Error("-branches is a required flag")
-		return 1
-	}
 
-	if _, err := cronexpr.Parse(c.cron); err != nil {
-		errStr := `Supplied cron expression is not valid! Received: %s
-Error: %s`
-		c.UI.Error(fmt.Sprintf(errStr, c.cron, err.Error()))
-		return 1
-	}
 
 	ctx := context.Background()
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	_, err := c.config.Client.PollRepo(ctx, &models.PollRequest{
+	_, err := c.config.Client.DeletePollRepo(ctx, &models.PollRequest{
 		Account: c.OcyHelper.Account,
 		Repo: c.OcyHelper.Repo,
-		Cron: c.cron,
-		Branches: c.branches,
 	})
 
 	if err != nil {
-		c.UI.Error(fmt.Sprintf("unable to set up vcs polling for repo %s/%s! error: %s", c.OcyHelper.Repo, c.OcyHelper.Account, err.Error()))
+		c.UI.Error(fmt.Sprintf("unable to delete vcs polling from ocelot for repo %s/%s! error: %s", c.OcyHelper.Repo, c.OcyHelper.Account, err.Error()))
 		return 1
 	}
 
-	c.UI.Info(fmt.Sprintf("Now set up polling for %s! Will check vcs on the cron interval %s, and if there are changes for any of the specified branches, it will trigger a build.", c.OcyHelper.AcctRepo, c.cron))
+	c.UI.Info(fmt.Sprintf("Deleted polling for %s!", c.OcyHelper.AcctRepo))
 	return 0
 }

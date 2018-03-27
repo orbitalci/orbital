@@ -372,26 +372,26 @@ func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResul
 }
 
 
-func (p *PostgresStorage) InsertPoll(account string, repo string, activeCron bool, cronString string, branches string) (err error) {
+func (p *PostgresStorage) InsertPoll(account string, repo string, cronString string, branches string) (err error) {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	queryStr := `INSERT INTO polling_repos(account, repo, cron_ed, cron_string, branches, last_cron_time) values ($1, $2, $3, $4, $5, $6)`
-	if _, err = p.db.Exec(queryStr, account, repo, activeCron, cronString, branches, time.Now()); err != nil {
+	queryStr := `INSERT INTO polling_repos(account, repo, cron_string, branches, last_cron_time) values ($1, $2, $3, $4, $5)`
+	if _, err = p.db.Exec(queryStr, account, repo,  cronString, branches, time.Now()); err != nil {
 		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).WithField("cronString", cronString).Error("could not insert poll entry into database")
 		return
 	}
 	return
 }
 
-func (p *PostgresStorage) UpdatePoll(account string, repo string, activeCron bool, cronString string, branches string) (err error) {
+func (p *PostgresStorage) UpdatePoll(account string, repo string, cronString string, branches string) (err error) {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	queryStr := `UPDATE polling_repos SET (cron_ed, cron_string, branches) = ($1,$2,$3) WHERE (account,repo) = ($4,$5);`
-	if _, err = p.db.Exec(queryStr, activeCron, cronString, branches, account, repo); err != nil {
+	queryStr := `UPDATE polling_repos SET (cron_string, branches) = ($1,$2) WHERE (account,repo) = ($3,$4);`
+	if _, err = p.db.Exec(queryStr, cronString, branches, account, repo); err != nil {
 		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).WithField("cronString", cronString).Error("could not update poll entry in database")
 		return
 	}
@@ -454,6 +454,19 @@ func (p *PostgresStorage) PollExists(account string, repo string) (bool, error) 
 	} else {
 		return true, nil
 	}
+}
+
+func (p *PostgresStorage) DeletePoll(account string, repo string) error {
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	queryStr := `delete from polling_repos where (account, repo) =($1,$2)`
+	if _, err := p.db.Exec(queryStr, account, repo); err != nil {
+		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).Error("could not delete poll entry from database")
+		return err
+	}
+	return nil
 }
 
 

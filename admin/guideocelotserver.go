@@ -6,6 +6,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/build"
 	rt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
@@ -21,7 +22,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"strings"
-	"bitbucket.org/level11consulting/ocelot/util/build"
 )
 
 //this is our grpc server, it responds to client requests
@@ -434,14 +434,14 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *models.PollReque
 	}
 	if exists == true {
 		log.Log().Info("updating poll in db")
-		if err = g.Storage.UpdatePoll(poll.Account, poll.Repo, true, poll.Cron, poll.Branches); err != nil {
+		if err = g.Storage.UpdatePoll(poll.Account, poll.Repo, poll.Cron, poll.Branches); err != nil {
 			msg := "unable to update poll in storage"
 			log.IncludeErrField(err).Error(msg)
 			return empti, status.Error(codes.Internal, msg + ": " + err.Error())
 		}
 	} else {
 		log.Log().Info("inserting poll in db")
-		if err = g.Storage.InsertPoll(poll.Account, poll.Repo, true, poll.Cron, poll.Branches); err != nil {
+		if err = g.Storage.InsertPoll(poll.Account, poll.Repo, poll.Cron, poll.Branches); err != nil {
 			msg := "unable to insert poll into storage"
 			log.IncludeErrField(err).Error(msg)
 			return empti, status.Error(codes.Internal, msg + ": " + err.Error())
@@ -451,6 +451,20 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *models.PollReque
 	err = g.Producer.WriteProto(poll, "poll_please")
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't write to queue producer at poll_please")
+		return empti, status.Error(codes.Internal, err.Error())
+	}
+	return empti, nil
+}
+
+func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *models.PollRequest) (*empty.Empty, error) {
+	log.Log().Info("received delete poll request for ", poll.Account, " ", poll.Repo)
+	empti := &empty.Empty{}
+	if err := g.Storage.DeletePoll(poll.Account, poll.Repo); err != nil {
+		log.IncludeErrField(err).WithField("account", poll.Account).WithField("repo", poll.Repo).Error("couldn't delete poll")
+	}
+	log.Log().WithField("account", poll.Account).WithField("repo", poll.Repo).Info("successfully deleted poll in storage")
+	if err := g.Producer.WriteProto(poll, "no_poll_please"); err != nil {
+		log.IncludeErrField(err).Error("couldn't write to queue producer at no_poll_please")
 		return empti, status.Error(codes.Internal, err.Error())
 	}
 	return empti, nil

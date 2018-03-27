@@ -86,6 +86,7 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,
+		User: "root",
 		Env: paddedEnvs,
 		Cmd: d.DownloadTemplateFiles(werkerPort),
 		AttachStderr: true,

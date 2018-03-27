@@ -1,4 +1,4 @@
-package cmd_table
+package commandhelper
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// cmd_table package contains utils for drawing tables
+// package contains utils for drawing tables
 
 
 

@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"io/ioutil"
@@ -19,27 +20,40 @@ type MsgHandler struct {
 func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
 	log.Log().Debug("unmarshaling and processing a poll update msg")
 	pollMsg := &pb.PollRequest{}
+	defer func(){
+		done <- 1
+	}()
 	if err := proto.Unmarshal(msg, pollMsg); err != nil {
 		log.IncludeErrField(err).Error("unmarshal error for poll msg")
 		return err
 	}
-	err := WriteCronFile(pollMsg)
-	if err != nil {
-		// even if we can't write cron tab, should register that it was requested
-		log.IncludeErrField(err).Error("UNABLE TO WRITE CRON TAB")
+	var err error
+	switch m.Topic {
+	case "poll_please":
+		err = WriteCronFile(pollMsg)
+		if err != nil {
+			// even if we can't write cron tab, should register that it was requested
+			log.IncludeErrField(err).Error("UNABLE TO WRITE CRON TAB")
+		}
+	case "no_poll_please":
+		log.Log().Info("recieved a request for no_poll_please")
+		err = DeleteCronFile(pollMsg)
+		if err != nil {
+			log.IncludeErrField(err).Error("UNABLE TO DELETE CRON TAB")
+		} else {
+			log.Log().Info("successfully deleted cron tab")
+		}
+	default:
+		err = errors.New("only supported topics are poll_please and no_poll_please")
+		log.IncludeErrField(err).Error()
 	}
-	// this happens on admin side
-	//if pollMsg.IsUpdate {
-	//	err = m.Store.UpdatePoll(pollMsg.Account, pollMsg.Repo, true, pollMsg.Cron, pollMsg.Branches)
-	//} else {
-	//	err = m.Store.InsertPoll(pollMsg.Account, pollMsg.Repo, true, pollMsg.Cron, pollMsg.Branches)
-	//}
-	//if err != nil {
-	//	log.IncludeErrField(err).Error("unable to save cron to database!")
-	//} else {
-	//	log.Log().WithField("account", pollMsg.Account).WithField("repo", pollMsg.Repo).WithField("cron", pollMsg.Cron).Info("successfully received poll message, wrote cron job, and saved to db")
-	//}
-	done <- 1
+	return err
+}
+
+func DeleteCronFile(event *pb.PollRequest) error {
+	basePath := "/etc/cron.d"
+	fullPath := filepath.Join(basePath, event.Account + "_" + event.Repo)
+	err := os.Remove(fullPath)
 	return err
 }
 

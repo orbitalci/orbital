@@ -3,7 +3,7 @@ package status
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
+	"bitbucket.org/level11consulting/ocelot/util/commandhelper"
 	"context"
 	"flag"
 	"fmt"
@@ -108,8 +108,8 @@ func (c *cmd) Run(args []string) int {
 			return 1
 		}
 
-		stageStatus, color, statuss := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
-		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
+		stageStatus, color, statuss := commandhelper.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
 		c.UI.Output(buildStatus + stageStatus)
 		return 0
 	}
@@ -130,8 +130,8 @@ func (c *cmd) Run(args []string) int {
 			return 1
 		}
 
-		stageStatus, color, statuss := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
-		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
+		stageStatus, color, statuss := commandhelper.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
 		c.UI.Output(buildStatus + stageStatus)
 		return 0
 	}
@@ -146,8 +146,8 @@ func (c *cmd) Run(args []string) int {
 			c.writeStatusErr(err)
 			return 1
 		}
-		stageStatus, color, status := cmd_table.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
-		buildStatus := cmd_table.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
+		stageStatus, color, status := commandhelper.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
+		buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
 		c.UI.Output(buildStatus + stageStatus)
 		return 0
 	}

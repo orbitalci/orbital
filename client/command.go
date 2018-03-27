@@ -12,7 +12,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
 	"bitbucket.org/level11consulting/ocelot/client/output"
-	"bitbucket.org/level11consulting/ocelot/client/poll"
+	"bitbucket.org/level11consulting/ocelot/client/poll/add"
+	"bitbucket.org/level11consulting/ocelot/client/poll/delete"
 	"bitbucket.org/level11consulting/ocelot/client/status"
 	"bitbucket.org/level11consulting/ocelot/client/summary"
 	"bitbucket.org/level11consulting/ocelot/client/validate"
@@ -42,6 +43,8 @@ func init() {
 		"status":          func() (cli.Command, error) { return status.New(ui), nil },
 		"watch":           func() (cli.Command, error) { return watch.New(ui), nil },
 		"build":           func() (cli.Command, error) { return build.New(ui), nil },
-		"poll":            func() (cli.Command, error) { return poll.New(ui), nil },
+		"poll":            func() (cli.Command, error) { return polladd.New(ui), nil },
+		"poll delete":     func() (cli.Command, error) { return polldelete.New(ui), nil },
+		// todo: add poll list
 	}
 }

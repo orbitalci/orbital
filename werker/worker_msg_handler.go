@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
 	"bitbucket.org/level11consulting/ocelot/werker/recovery"
+	"fmt"
 	"github.com/golang/protobuf/proto"
 	//"runtime/debug"
 	"time"
@@ -48,6 +49,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	}
 	// channels get closed after the build finishes
 	w.infochan = make(chan []byte)
+	ocelog.Log().Debug(fmt.Sprintf("%v", w.infochan))
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
 	//

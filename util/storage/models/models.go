@@ -135,7 +135,6 @@ func (f *JsonStringArray) Scan(src interface{}) error {
 type PollRequest struct {
 	Account  string                      `protobuf:"bytes,1,opt,name=account" json:"account,omitempty"`
 	Repo     string                      `protobuf:"bytes,2,opt,name=repo" json:"repo,omitempty"`
-	IsUpdate bool                        `protobuf:"varint,3,opt,name=isUpdate" json:"isUpdate,omitempty"`
 	Cron     string                      `protobuf:"bytes,4,opt,name=cron" json:"cron,omitempty"`
 	Branches string                      `protobuf:"bytes,5,opt,name=branches" json:"branches,omitempty"`
 	LastCron time.Time					 `protobuf:"bytes,6,opt,name=lastCron" json:"lastCron,omitempty"`

@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/poller"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"fmt"
 	"github.com/namsral/flag"
 	"os"
 	"time"
@@ -52,7 +53,7 @@ func loadFromDb(store storage.OcelotStorage) error {
 
 func main() {
 	rc := configure()
-	supportedTopic := "poll_please"
+	supportedTopics := []string{"poll_please", "no_poll_please"}
 	store, err := rc.GetOcelotStorage()
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to get ocelot storage, bailing")
@@ -61,9 +62,16 @@ func main() {
 		ocelog.IncludeErrField(err).Fatal("unable to load old cron files from db, bailing")
 	}
 	// todo: do we need signal recovery here? wouldn't be bad to just put back on the queue
-	protoConsume := nsqpb.NewDefaultProtoConsume()
-	go consume(protoConsume, supportedTopic, store)
-	<-protoConsume.StopChan
+	var consumers []*nsqpb.ProtoConsume
+	for _, topic := range supportedTopics {
+		protoConsume := nsqpb.NewDefaultProtoConsume()
+		go consume(protoConsume, topic, store)
+		consumers = append(consumers, protoConsume)
+	}
+	fmt.Println(consumers)
+	for _, consumer := range consumers {
+		<-consumer.StopChan
+	}
 
 }
 
