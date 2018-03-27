@@ -30,7 +30,7 @@ spec:
       #     secretName: metaverse-secret
       containers:
       - name: admin-ocelot
-        image: jessishank/ocelot-admin:razzie1
+        image: jessishank/ocelot-admin:frazzle.1
         imagePullPolicy: Always
         volumeMounts:
           - name: privkey-volume
@@ -101,7 +101,7 @@ spec:
           type: File
       containers:
       - name:  hookhandler-ocelot
-        image: jessishank/ocelot-hookhandler:razzie1
+        image: jessishank/ocelot-hookhandler:frazzle
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock
@@ -129,5 +129,56 @@ spec:
         command: ["/hookhandler"]
 
         args: 
+          - -consul-host=$(CONSUL_HOST)
+          - -log-level=debug
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poller-ocelot-deployment
+  namespace: prod-eng
+  labels:
+    app: poller-ocelot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: poller-ocelot
+  template:
+    metadata:
+      labels:
+        app: poller-ocelot
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          path: /var/run/docker.sock
+          type: File
+      containers:
+      - name:  poller-ocelot
+        image: jessishank/ocelot-poller:frazzle.2
+        imagePullPolicy: Always
+        volumeMounts:
+          - mountPath: /var/run/docker.sock
+            name: docker-sock-volume
+        env:
+          - name: NSQLOOKUPD_IP
+            value: nsqlookupd-svc.prod-eng
+          - name: NSQD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: CONSUL_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: VAULT_ADDR
+            value: http://10.1.72.190:8200
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: vault-token
+                key: token
+        args:
           - -consul-host=$(CONSUL_HOST)
           - -log-level=debug

@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"bitbucket.org/level11consulting/ocelot/util"
 	"fmt"
 	"testing"
 	//"context"
@@ -33,6 +34,7 @@ Error: open /abc/def/test: no such file or directory
 }
 
 func TestCmd_RunPathFileNoProcess(t *testing.T) {
+	util.BuildServerHack(t)
 	ui := cli.NewMockUi()
 	pwd, _ := os.Getwd()
 	cmdd := &cmd{

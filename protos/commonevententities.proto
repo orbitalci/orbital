@@ -84,6 +84,12 @@ message Commit {
     google.protobuf.Timestamp date = 4;
     // ignoring the "parents" field
     Links links = 5;
+    Repository repository = 6;
+}
+
+// /2.0/repositories/{username}/{repo_slug}/commits
+message Commits {
+    repeated Commit values = 1;
 }
 
 // bitbucket api 1.0 

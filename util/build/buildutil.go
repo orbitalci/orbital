@@ -71,7 +71,16 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 
 	sr := getHookhandlerStageResult(id)
 	// stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
-	ValidateAndQueue(buildConf, branch, validator, vaulty, producer, sr, id, hash, accountRepo, bbToken)
+	if err = ValidateAndQueue(buildConf, branch, validator, vaulty, producer, sr, id, hash, accountRepo, bbToken); err != nil {
+		// we do want to add a runtime here
+		err = store.UpdateSum(true, 0, id)
+		if err != nil {
+			ocelog.IncludeErrField(err).Error("unable to update summary!")
+		}
+		// we dont' want to return here, cuz then it doesn't store
+		// unless its supposed to be saving somewhere else?
+		// return err
+	}
 	if err := storeStageToDb(store, sr); err != nil {
 		ocelog.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err
@@ -153,14 +162,17 @@ func ValidateAndQueue(buildConf *pb.BuildConfig,
 	producer *nsqpb.PbProduce,
 	sr *smods.StageResult,
 	buildId int64,
-	hash, fullAcctRepo, bbToken string) {
+	hash, fullAcctRepo, bbToken string) error {
+
 	if err := validateBuild(buildConf, branch, validator); err == nil {
 		tellWerker(buildConf, vaulty, producer, hash, fullAcctRepo, bbToken, buildId)
 		ocelog.Log().Debug("told werker!")
 		PopulateStageResult(sr, 0, "Passed initial validation " + smods.CHECKMARK, "")
 	} else {
 		PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
+		return err
 	}
+	return nil
 }
 
 //tellWerker is a private helper function for building a werker task and giving it to nsq

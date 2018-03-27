@@ -3,6 +3,7 @@ package cred
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/vault"
+	"bitbucket.org/level11consulting/ocelot/util"
 	"fmt"
 	"github.com/hashicorp/consul/testutil"
 	"github.com/hashicorp/vault/http"
@@ -178,6 +179,7 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 
 func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testutil.TestServer) {
 	//set up unsealed vault for testing
+	util.BuildServerHack(t)
 	core, _, token := hashiVault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
 	os.Setenv("VAULT_ADDR", addr)

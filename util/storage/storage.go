@@ -41,12 +41,22 @@ type BuildStage interface {
 	RetrieveStageDetail(buildId int64) ([]models.StageResult, error)
 }
 
+type PollTable interface {
+	InsertPoll(account string, repo string, cronString string, branches string) error
+	UpdatePoll(account string, repo string, cronString string, branches string) error
+	SetLastCronTime(account string, repo string) error
+	GetLastCronTime(accountRepo string) (timestamp time.Time, err error)
+	PollExists(account string, repo string) (bool, error)
+	GetAllPolls() ([]*models.PollRequest, error)
+	DeletePoll(account string, repo string) error
+}
 
 type OcelotStorage interface {
 	BuildOut
 	BuildSum
 	BuildStage
 	Stringy
+	PollTable
 }
 
 var (

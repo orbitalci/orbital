@@ -29,6 +29,7 @@ It has these top-level messages:
 	Project
 	Changeset
 	Commit
+	Commits
 	RepoSourceFile
 	PaginatedRootDirs
 	PaginatedRepository

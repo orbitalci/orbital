@@ -3,6 +3,7 @@ package streamer
 
 import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"google.golang.org/grpc"
@@ -90,7 +91,7 @@ func Test_streamFromArray(t *testing.T) {
 	var ws = ocenet.NewWebSocketConn()
 	//
 	streamobj.AddToData(testData[:fstIndex])
-	go StreamFromArray(streamobj, ws, t.Log)
+	go StreamFromArray(streamobj, ws, log.Log())
 	time.Sleep(1 * time.Second)
 	if !test.CompareByteArrays(testData[:fstIndex], ws.MsgData) {
 		t.Errorf("first slices not the same. expected: %v, actual: %v", testData[:fstIndex], streamobj.GetData())

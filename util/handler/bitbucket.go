@@ -60,6 +60,13 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 	}
 	return
 }
+///2.0/repositories/{username}/{repo_slug}/commits
+func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) (*pb.Commits, error) {
+	commits := &pb.Commits{}
+	err := bb.Client.GetUrl(fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/" + branch, commits)
+	return commits, err
+}
+
 
 func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error){
 	repoVal := &pb.PaginatedRepository_RepositoryValues{}

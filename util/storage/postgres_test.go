@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/util"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 )
 
 func TestPostgresStorage_AddSumStart(t *testing.T) {
+	util.BuildServerHack(t)
 	cleanup, pw, port := CreateTestPgDatabase(t)
 	defer cleanup(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
@@ -75,6 +77,7 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 }
 
 func TestPostgresStorage_AddOut(t *testing.T) {
+	util.BuildServerHack(t)
 	pg, id, cleanup := insertDependentData(t)
 	defer cleanup(t)
 	txt := []byte("a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf")
@@ -100,6 +103,7 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 }
 
 func TestPostgresStorage_AddStageDetail(t *testing.T) {
+	util.BuildServerHack(t)
 	pg, id, cleanup := insertDependentData(t)
 	defer cleanup(t)
 

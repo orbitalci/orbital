@@ -123,3 +123,9 @@ func (m *BuildRuntimeInfo) CreateBuildClient(opts []grpc.DialOption) (protobuf.B
 	}
 	return protobuf.NewBuildClient(conn), nil
 }
+
+func (pr *PollRequest) Validate() error {
+	pr.Cron = strings.TrimSpace(pr.Cron)
+	//todo: add validating acct/repo
+	return nil
+}

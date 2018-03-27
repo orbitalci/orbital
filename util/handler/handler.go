@@ -34,6 +34,7 @@ type VCSHandler interface {
 
 	//Get Repository details by account name + repo name
 	GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error)
+	GetAllCommits(acctRepo string, branches string) (*pb.Commits, error)
 }
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)

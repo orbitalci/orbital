@@ -19,7 +19,7 @@ func TestCmd_fromStorage(t *testing.T) {
 	cmdd := &cmd{
 		UI: ui,
 		config: cliConf,
-		hash: hash,
+		OcyHelper: &commandhelper.OcyHelper{Hash: hash},
 	}
 	ctx := context.Background()
 	exit := cmdd.fromStorage(ctx, hash)
@@ -39,9 +39,10 @@ func TestCmd_RunMultipleBuilds(t *testing.T) {
 	cmdd := &cmd{
 		UI: ui,
 		config: cliConf,
+		OcyHelper: &commandhelper.OcyHelper{Hash: hash},
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	cmdd.flags.StringVar(&cmdd.hash, "hash", hash, "goal hash")
+	cmdd.flags.StringVar(&cmdd.OcyHelper.Hash, "hash", hash, "goal hash")
 	var args []string
 	exit := cmdd.Run(args)
 
@@ -75,7 +76,7 @@ func TestCmd_fromWerker(t *testing.T) {
 		cmdd := &cmd{
 			UI: ui,
 			config: nil,
-			hash: datum.hash,
+			OcyHelper: &commandhelper.OcyHelper{Hash: datum.hash},
 		}
 		ctx := context.Background()
 		exit := cmdd.fromWerker(ctx, buildRuntime)

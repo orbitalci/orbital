@@ -2,6 +2,7 @@ package werker
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/util"
 	"os"
 	"testing"
 )
@@ -9,6 +10,7 @@ import (
 // ** this test will pass only if vault token is set as env. variable **
 // i'm really testing namsrals flag code, i dont trust it.
 func TestGetConf_fromEnv(t *testing.T) {
+	util.BuildServerHack(t)
 	testConf := &WerkerConf{
 		ServicePort: "9899",
 		GrpcPort:    defaultGrpcPort,
