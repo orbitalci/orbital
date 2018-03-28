@@ -3,9 +3,8 @@ package commandhelper
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bytes"
-	"github.com/olekukonko/tablewriter"
 	"fmt"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"github.com/olekukonko/tablewriter"
 	"strings"
 )
 
@@ -90,7 +89,7 @@ func PrintStatusStages(isRunning bool, statuses *models.Status) (string, int, st
 			} else {
 				stageStatusStr = "FAIL"
 			}
-			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.Stage, commandhelper.PrettifyTime(stage.StageDuration), stageStatusStr)
+			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.Stage, PrettifyTime(stage.StageDuration), stageStatusStr)
 			if statuses.BuildSum.Failed {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {

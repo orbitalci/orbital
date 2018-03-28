@@ -3,7 +3,6 @@ package output
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/util/cmd_table"
 	pb "bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"context"
 	"flag"

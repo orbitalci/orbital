@@ -29,6 +29,7 @@ type Recovery struct {
 	StartTime       time.Time
 	CurrentStage	string
 	BuildId			int64
+
 }
 
 func NewRecovery(rc cred.CVRemoteConfig, uid uuid.UUID) *Recovery{

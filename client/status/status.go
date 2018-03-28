@@ -3,7 +3,6 @@ package status
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/util/commandhelper"
 	"context"
 	"flag"
 	"fmt"
