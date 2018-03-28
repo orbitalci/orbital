@@ -107,8 +107,10 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
 	consul := w.WerkConf.RemoteConfig.GetConsul()
-	// this panics if can't connect to consul
-	w.BuildValet.StartBuild(consul, werk.CheckoutHash, werk.Id)
+
+	if err := w.BuildValet.StartBuild(consul, werk.CheckoutHash, werk.Id); err != nil {
+		return
+	}
 
 	setupStart := time.Now()
 	w.BuildValet.Reset("setup", werk.CheckoutHash)

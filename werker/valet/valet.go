@@ -100,17 +100,18 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 
 // StartBuild will register the uuid, hash, and database id into consul, as well as update the werker_id:hash kv in consul.
 //  StartBuild will panic if it cannot connect to consul. idk if this is the
-func (v *Valet) StartBuild(consulet *consul.Consulet, hash string, id int64) {
+func (v *Valet) StartBuild(consulet *consul.Consulet, hash string, id int64) error {
 	var err error
 	if err = brt.RegisterBuildSummaryId(consulet, v.WerkerUuid.String(), hash, id); err != nil {
 		log.IncludeErrField(err).Error("could not register build summary id into consul! huge deal!")
-		ConsulConnectionErr(err)
+		return err
 	}
 
 	if err = brt.RegisterStartedBuild(consulet, v.WerkerUuid.String(), hash); err != nil {
 		log.IncludeErrField(err).Error("couldn't register build")
-		ConsulConnectionErr(err)
+		return err
 	}
+	return nil
 }
 
 // Cleanup gets all the docker uuids running according to this werker id and attempts to kill and remove the associated containers.

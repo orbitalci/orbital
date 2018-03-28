@@ -24,7 +24,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/nsqwatch"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/werker"
 	"bitbucket.org/level11consulting/ocelot/werker/builder"
@@ -113,44 +113,13 @@ func main() {
 		go listen(protoConsume, topic, conf, tunnel, buildValet, store)
 		protoConsumers = append(protoConsumers, protoConsume)
 	}
-	go maintainHealths(store, conf.RemoteConfig, protoConsumers, 60) // todo: put this in conf
+	go nsqwatch.WatchAndPause(60, protoConsumers, conf.RemoteConfig, store) // todo: put interval in conf
 	go werker.ServeMe(tunnel, conf, store)
 	for _, consumer := range protoConsumers {
 		<-consumer.StopChan
 	}
 }
 
-func maintainHealths(store storage.OcelotStorage, rc cred.CVRemoteConfig, protoConsumers []*nsqpb.ProtoConsume, interval int64) {
-	var paused bool
-	for {
-		time.Sleep(time.Second * time.Duration(interval))
-		switch paused {
-		case false:
-			if !store.Healthy() || !rc.Healthy() {
-				ocelog.Log().Error("DEPENDENCIES ARE DOWN!! PAUSING NSQ FLOW!")
-				for _, protoConsumer := range protoConsumers {
-					protoConsumer.Pause()
-				}
-				paused = true
-			}
-		case true:
-			err := rc.Reconnect()
-			if err != nil {
-				ocelog.IncludeErrField(err).Error("could not reconnect to remote config")
-				continue
-			}
-			if store.Healthy() {
-				ocelog.Log().Info("services are back up! un-pausing nsq flow!")
-				for _, protoConsumer := range protoConsumers {
-					protoConsumer.UnPause()
-				}
-				paused = false
-				continue
-			}
-			ocelog.Log().Error("could not reconnect to database")
-		}
-	}
-}
 
 //performs whatever setup is needed by werker, right now copies over everything in cmd/werker/templates to $HOME/.ocelot
 // this no longer requires starting werker from a specific place, runtime.Caller(0) knows where this main.go is, and we
