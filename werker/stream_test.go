@@ -32,7 +32,7 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	}
 	trans := &Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: id}
 	werkerConsulet, _ := consulet.Default()
-	ctx := &werkerStreamer{
+	ctx := &WerkerContext{
 		buildInfo: make(map[string]*buildDatum),
 		out: 	    store,
 		consul:    werkerConsulet,

@@ -44,7 +44,7 @@ func testGetWorkerMsgHandler(t *testing.T, topic string) *WorkerMsgHandler {
 		Topic:    topic,
 		WerkConf: werkConf,
 		infochan: infor,
-		ChanChan: tunnel,
+		StreamChan: tunnel,
 	}
 	// set werker processor to mock one
 	return wmh

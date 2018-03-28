@@ -128,7 +128,7 @@ func CreateLivingDockerContainer(t *testing.T, imageName string) (d *Docker, cle
 	d.Log = containerLog
 	dockerCleanup := func(t *testing.T){
 		logout := make(chan[]byte, 100)
-		d.Cleanup(logout)
+		d.Cleanup(ctx, logout)
 	}
 	cleaner := &Cleanup{
 		tarCleanup: cleanupTar,
