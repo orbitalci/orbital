@@ -57,6 +57,7 @@ type OcelotStorage interface {
 	BuildStage
 	Stringy
 	PollTable
+	Healthy() bool
 }
 
 var (

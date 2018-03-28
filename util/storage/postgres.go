@@ -45,13 +45,27 @@ func (p *PostgresStorage) Connect() error {
 		var err error
 		if p.db, err = sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.user, p.dbLoc, p.password, p.location, p.port)); err != nil {
 			// todo: not sure if we should _kill_ everything.
-			ocelog.IncludeErrField(err).Fatal("couldn't get postgres connection")
+			ocelog.IncludeErrField(err).Error("couldn't get postgres connection")
+			return
 		}
 		p.db.SetConnMaxLifetime(time.Millisecond)
 		p.db.SetMaxOpenConns(20)
 		p.db.SetMaxIdleConns(0)
 	})
 	return nil
+}
+
+func (p *PostgresStorage) Healthy() bool {
+	err := p.Connect()
+	if err != nil {
+		return false
+	}
+	err = p.db.Ping()
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("ping failed for database")
+		return false
+	}
+	return true
 }
 
 func (p *PostgresStorage) Disconnect() {}

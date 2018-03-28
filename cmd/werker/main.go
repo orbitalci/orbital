@@ -24,10 +24,11 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
+	"bitbucket.org/level11consulting/ocelot/util/nsqwatch"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/werker"
 	"bitbucket.org/level11consulting/ocelot/werker/builder"
-	"bitbucket.org/level11consulting/ocelot/werker/recovery"
+	"bitbucket.org/level11consulting/ocelot/werker/valet"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"io"
@@ -43,7 +44,7 @@ import (
 
 //listen will listen for messages for a specified topic. If a message is received, a
 //message worker handler is created to process the message
-func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport, store storage.OcelotStorage) {
+func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel chan *werker.Transport, bv *valet.Valet, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			ocelog.Log().Debug("i am about to sleep for 10s because i couldn't find the topic at ", p.Config.LookupDAddress())
@@ -56,13 +57,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 				basher.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
 			}
 
-			handler := &werker.WorkerMsgHandler{
-				Topic:    topic,
-				WerkConf: conf,
-				ChanChan: tunnel,
-				Basher: basher,
-				Store:  store,
-			}
+			handler := werker.NewWorkerMsgHandler(topic, conf, basher, store, bv, tunnel)
 			p.Handler = handler
 			p.ConsumeMessages(topic, "werker")
 			ocelog.Log().Info("Consuming messages for topic ", topic)
@@ -70,6 +65,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, tunnel
 		}
 	}
 }
+
 
 func main() {
 	conf, err := werker.GetConf()
@@ -81,9 +77,6 @@ func main() {
 	tunnel := make(chan *werker.Transport)
 	ocelog.Log().Debug("starting up worker on off channels w/ ", conf.WerkerName)
 
-	var consumers []*nsqpb.ProtoConsume
-	//you should know what channels to subscribe to
-	supportedTopics := []string{"build"}
 
 	//do whatever setup stuff werker needs in this function
 	setupWerker()
@@ -98,17 +91,18 @@ func main() {
 	}
 	conf.WerkerUuid = uuid
 	// kick off ctl-c signal handling
-	recov := recovery.NewRecovery(conf.RemoteConfig, conf.WerkerUuid)
+	buildValet := valet.NewValet(conf.RemoteConfig, conf.WerkerUuid)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		ocelog.Log().Info("received interrupt, cleaning up after myself...")
-		recov.StoreInterrupt(recovery.Signal)
-		recov.Cleanup()
-		os.Exit(1)
+		buildValet.SignalRecvDed()
 	}()
-	// start consumers
+	// start protoConsumers
+	var protoConsumers []*nsqpb.ProtoConsume
+	//you should know what channels to subscribe to
+	supportedTopics := []string{"build"}
+
 	//TODO: worker message handler would parse env, if in dev mode, create dev basher and set
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()
@@ -116,15 +110,16 @@ func main() {
 		// eg:
 		//   protoConsume.Config.MaxInFlight = GetFromEnv
 		ocelog.Log().Debug("I AM ABOUT TO LISTEN")
-		go listen(protoConsume, topic, conf, tunnel, store)
-		consumers = append(consumers, protoConsume)
+		go listen(protoConsume, topic, conf, tunnel, buildValet, store)
+		protoConsumers = append(protoConsumers, protoConsume)
 	}
-
+	go nsqwatch.WatchAndPause(60, protoConsumers, conf.RemoteConfig, store) // todo: put interval in conf
 	go werker.ServeMe(tunnel, conf, store)
-	for _, consumer := range consumers {
+	for _, consumer := range protoConsumers {
 		<-consumer.StopChan
 	}
 }
+
 
 //performs whatever setup is needed by werker, right now copies over everything in cmd/werker/templates to $HOME/.ocelot
 // this no longer requires starting werker from a specific place, runtime.Caller(0) knows where this main.go is, and we

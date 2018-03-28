@@ -68,6 +68,10 @@ func (f *FileBuildStorage) StorageType() string {
 	return "FileSystem Ocelot Storage"
 }
 
+func (f *FileBuildStorage) Healthy() bool {
+	return true
+}
+
 // retrieve build data from filesystem
 func (f *FileBuildStorage) Retrieve(gitHash string) (data []byte, err error) {
 	fp := f.getTempFile(gitHash)

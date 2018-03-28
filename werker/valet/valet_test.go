@@ -1,4 +1,4 @@
-package recovery
+package valet
 
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
@@ -57,7 +57,7 @@ func TestRecovery(t *testing.T) {
 	defer serv.Stop()
 	remoteConf := &recoveryCVRemoteConfig{consul: consu, storage: store}
 	uid := uuid.New()
-	rcvr := NewRecovery(remoteConf, uid)
+	rcvr := NewValet(remoteConf, uid)
 	buildruntime.RegisterStartedBuild(consu, uid.String(), hash)
 	err = rcvr.Reset("START", hash)
 	if err != nil {
