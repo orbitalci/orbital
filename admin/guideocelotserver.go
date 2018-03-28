@@ -108,6 +108,31 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 	return allCreds, nil
 }
 
+func (g *guideOcelotServer) FindWerker(ctx context.Context, br *models.BuildReq) (*models.BuildRuntimeInfo, error) {
+	//respect hash first
+	if len(br.Hash) > 0 {
+		//find matching hashes in consul by git hash
+		buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), br.Hash)
+		if err != nil {
+			if _, ok := err.(*rt.ErrBuildDone); !ok {
+				return nil, err
+			}
+		}
+
+		if len(buildRtInfo) == 0 || len(buildRtInfo) > 1 {
+			return nil, errors.New("ONE and ONE ONLY match should be found for your hash")
+		}
+
+		for _, v := range buildRtInfo {
+			return v, nil
+		}
+	}
+	if len(br.AcctRepo) > 0 {
+		//TODO: respek acct/repo next
+	}
+	return nil, nil
+}
+
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.Builds, error) {
 	buildRtInfo := make(map[string]*models.BuildRuntimeInfo)
 	var err error

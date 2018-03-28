@@ -78,6 +78,26 @@ func (w *werkerStreamer) BuildInfo(request *protobuf.Request, stream protobuf.Bu
 	return nil
 }
 
+func (w *werkerStreamer) KillHash(request *protobuf.Request, stream protobuf.Build_KillHashServer) error {
+	//TODO: actually do the killing here
+	return nil
+	//resp := &protobuf.Response{
+	//	OutputLine: request.Hash,
+	//}
+	//stream.Send(resp)
+	//stream.Send(&protobuf.Response{
+	//	OutputLine: w.conf.WerkerName,
+	//})
+	//stream.Send(&protobuf.Response{
+	//	OutputLine: w.conf.RegisterIP,
+	//})
+	//pumpDone := make(chan int)
+	//streamable := &protobuf.BuildStreamableServer{Server: stream}
+	//go pumpBundle(streamable, w, request.Hash, pumpDone)
+	//<-pumpDone
+	//return nil
+}
+
 
 func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	a := ctx.(*werkerStreamer)

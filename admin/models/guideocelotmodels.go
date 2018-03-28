@@ -111,12 +111,16 @@ type BuildRuntime interface {
 	GetIp() string
 	GetGrpcPort() string
 	GetHash() string
-	CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error)
+	CreateBuildClient() (protobuf.BuildClient, error)
 }
 
 
 // CreateBuildClient dials the grpc server at the werker endpoints
-func (m *BuildRuntimeInfo) CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error) {
+func (m *BuildRuntimeInfo) CreateBuildClient() (protobuf.BuildClient, error) {
+	//TODO: this is insecure
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithInsecure())
+
 	conn, err :=  grpc.Dial(m.Ip + ":" + m.GrpcPort, opts...)
 	if err != nil {
 		return nil, err

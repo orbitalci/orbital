@@ -3,7 +3,6 @@ package status
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/util/commandhelper"
 	"context"
 	"flag"
 	"fmt"
@@ -85,8 +84,8 @@ func (c *cmd) Run(args []string) int {
 	}
 	// if nothing is set, attempt to detect hash
 	if c.OcyHelper.AcctRepo == "ERROR" && c.OcyHelper.Repo == "ERROR" && c.OcyHelper.Hash == "ERROR" {
-		if err := c.OcyHelper.DetectHash(c); err != nil {
-			commandhelper.Debuggit(c, err.Error())
+		if err := c.OcyHelper.DetectHash(c.UI); err != nil {
+			commandhelper.Debuggit(c.UI, err.Error())
 			c.UI.Error("You must either be in the repository you want to track, one of the following flags must be set: -acct-repo, -repo, -hash. see --help")
 			return 1
 		}
@@ -116,7 +115,7 @@ func (c *cmd) Run(args []string) int {
 
 	//respect acct-repo next
 	if c.OcyHelper.AcctRepo != "ERROR" {
-		if err := c.OcyHelper.SplitAndSetAcctRepo(c); err != nil {
+		if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
 			return 1
 		}
 
