@@ -77,6 +77,9 @@ type CVRemoteConfig interface {
 	AddCreds(path string, anyCred RemoteConfigCred) (err error)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
 	CheckSSHKeyExists(path string) (error)
+	Healthy() bool
+	Reconnect() error
+
 	StorageCred
 }
 
@@ -100,6 +103,32 @@ func (rc *RemoteConfig)  GetVault() ocevault.Vaulty {
 
 func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 	rc.Vault = vault
+}
+
+func (rc *RemoteConfig) Healthy() bool {
+	vaultConnected := true
+	_, err := rc.Vault.GetVaultData("here")
+	if err != nil {
+		vaultConnected = false
+	}
+	if !vaultConnected || !rc.Consul.Connected {
+		ocelog.Log().Error("remoteConfig is not healthy ")
+		return false
+	}
+	return true
+}
+
+func (rc *RemoteConfig) Reconnect() error {
+	_, err := rc.Vault.GetVaultData("here")
+	// if vault returns an error, then it is a connection error or something of the like. a 404 returns nil
+	if err != nil {
+		return err
+	}
+	_, err = rc.Consul.GetKeyValue("here")
+	if !rc.Consul.Connected {
+		return err
+	}
+	return nil
 }
 
 // BuildCredKey returns the key for the map[string]RemoteConfigCred map that GetCredAt returns.
