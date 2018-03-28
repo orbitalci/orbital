@@ -13,6 +13,7 @@ type NsqWatch struct {
 	pConsumers  []*nsqpb.ProtoConsume
 	remoteConf  cred.CVRemoteConfig
 	store       storage.OcelotStorage
+	paused      bool
 }
 
 func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRemoteConfig, store storage.OcelotStorage) {
@@ -26,17 +27,16 @@ func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRe
 }
 
 func (nq *NsqWatch) MaintainHealths() {
-	var paused bool
 	for {
 		time.Sleep(time.Second * time.Duration(nq.interval))
-		switch paused {
+		switch nq.paused {
 		case false:
 			if !nq.store.Healthy() || !nq.remoteConf.Healthy() {
 				ocelog.Log().Error("DEPENDENCIES ARE DOWN!! PAUSING NSQ FLOW!")
 				for _, protoConsumer := range nq.pConsumers {
 					protoConsumer.Pause()
 				}
-				paused = true
+				nq.paused = true
 			}
 		case true:
 			err := nq.remoteConf.Reconnect()
@@ -49,7 +49,7 @@ func (nq *NsqWatch) MaintainHealths() {
 				for _, protoConsumer := range nq.pConsumers {
 					protoConsumer.UnPause()
 				}
-				paused = false
+				nq.paused = false
 				continue
 			}
 			ocelog.Log().Error("could not reconnect to database")

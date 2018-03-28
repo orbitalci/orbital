@@ -99,7 +99,6 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 }
 
 // StartBuild will register the uuid, hash, and database id into consul, as well as update the werker_id:hash kv in consul.
-//  StartBuild will panic if it cannot connect to consul. idk if this is the
 func (v *Valet) StartBuild(consulet *consul.Consulet, hash string, id int64) error {
 	var err error
 	if err = brt.RegisterBuildSummaryId(consulet, v.WerkerUuid.String(), hash, id); err != nil {

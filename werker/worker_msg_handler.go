@@ -94,8 +94,6 @@ func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 //todo: build kill
 // MakeItSo will call appropriate builder functions
 func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, finish, done chan int) {
-	// setting recover agent here instead of making it an attrib on WorkerMsgHandler because want it to be one
-	// entry per build
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
@@ -107,7 +105,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
 	consul := w.WerkConf.RemoteConfig.GetConsul()
-
+	// if we can't register with consul, bail, just exit out. the maintainer will soon be pausing message flow anyway
 	if err := w.BuildValet.StartBuild(consul, werk.CheckoutHash, werk.Id); err != nil {
 		return
 	}

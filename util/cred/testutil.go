@@ -198,6 +198,7 @@ func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testu
 	return remoteConfig, ln, testServer
 }
 
+
 func TeardownVaultAndConsul(testvault net.Listener, testconsul *testutil.TestServer) {
 	testconsul.Stop()
 	testvault.Close()
