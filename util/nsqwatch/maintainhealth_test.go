@@ -48,6 +48,9 @@ func TestNsqWatch_MaintainHealths(t *testing.T) {
 	cleanCV()
 
 	cleanCV, _, consulServer, nsqw := getStructs(t, pg)
+	if nsqw.paused {
+		t.Fatal("everything is up, nsq consumer  should not be paused")
+	}
 	go nsqw.MaintainHealths()
 	time.Sleep(1*time.Second)
 	consulServer.Stop()

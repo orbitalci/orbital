@@ -113,6 +113,7 @@ func (rc *RemoteConfig) Healthy() bool {
 			vaultConnected = false
 		}
 	}
+	rc.Consul.GetKeyValue("here")
 	if !vaultConnected || !rc.Consul.Connected {
 		ocelog.Log().Error("remoteConfig is not healthy")
 		return false
