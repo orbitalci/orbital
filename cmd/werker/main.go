@@ -136,7 +136,7 @@ func maintainHealths(store storage.OcelotStorage, rc cred.CVRemoteConfig, protoC
 		case true:
 			err := rc.Reconnect()
 			if err != nil {
-				ocelog.Log().Error("could not reconnect to remote config")
+				ocelog.IncludeErrField(err).Error("could not reconnect to remote config")
 				continue
 			}
 			if store.Healthy() {

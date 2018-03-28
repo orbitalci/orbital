@@ -226,7 +226,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
 			log.IncludeErrField(err).Error("could not retrieve latest build summary")
-			return err
+			return status.Error(codes.ResourceExhausted, fmt.Sprintf("Unable to connect to the database, therefore this operation is not available at this time."))
 		}
 		//at this point error must be because we couldn't find hash starting with query
 		warnMsg := fmt.Sprintf("There are no previous builds starting with hash %s...", buildReq.Hash)

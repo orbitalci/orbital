@@ -90,10 +90,6 @@ func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
 	w.ChanChan <- transport
 }
 
-func dbConnectionErr(err error) {
-	msg := "Database connection error! Cannot continue! Error: "
-	panic(msg + err.Error())
-}
 
 //todo: build kill
 // MakeItSo will call appropriate builder functions
@@ -120,13 +116,14 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	setupDura := time.Now().Sub(setupStart)
 	//defers are stacked, will be executed FILO
 	if err := buildruntime.RegisterBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, uuid); err != nil {
-		ocelog.IncludeErrField(err).Fatal("couldn't register build")
-		valet.ConsulConnectionErr(err)
+		ocelog.IncludeErrField(err).Error("couldn't register build")
+		return
+
 	}
 
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
-		dbConnectionErr(err)
+		return
 	}
 
 	if setupResult.Status == pb.StageResultVal_FAIL {
@@ -137,7 +134,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 		ocelog.Log().Error(errStr)
 		if err := w.Store.UpdateSum(true, setupDura.Seconds(), werk.Id); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't update summary in database")
-			dbConnectionErr(err)
+			return
 		}
 		return
 	}
@@ -153,7 +150,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 			stageDura := time.Now().Sub(stageStart)
 			if err := storeStageToDb(w.Store, werk.Id, stageResult, stageStart, stageDura.Seconds()); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
-				dbConnectionErr(err)
+				return
 			}
 			break
 		}
@@ -161,14 +158,14 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 		stageDura := time.Now().Sub(stageStart)
 		if err := storeStageToDb(w.Store, werk.Id, stageResult, stageStart, stageDura.Seconds()); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't store build output")
-			dbConnectionErr(err)
+			return
 		}
 
 	}
 	dura := time.Now().Sub(start)
 	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
-		dbConnectionErr(err)
+		return
 	}
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
