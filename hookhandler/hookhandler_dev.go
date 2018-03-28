@@ -31,7 +31,9 @@ func (hhc *MockHookHandlerContext) GetRemoteConfig() cred.CVRemoteConfig {
 
 ////mock remote config/////
 
-type MockRemoteConfig struct {}
+type MockRemoteConfig struct {
+	cred.RemoteConfig
+}
 
 func (mrc *MockRemoteConfig) GetConsul()	*consul.Consulet {
 	return nil

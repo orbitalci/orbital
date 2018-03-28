@@ -3,8 +3,8 @@ package commandhelper
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bytes"
-	"github.com/olekukonko/tablewriter"
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"strings"
 )
 
