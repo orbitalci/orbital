@@ -24,7 +24,7 @@ func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
 			go func(){
 				wmh.infochan <- wd.chanData
 			}()
-			trans := <- wmh.ChanChan
+			trans := <- wmh.StreamChan
 			info := <- trans.InfoChan
 			//t.Log("recieved")
 			if bytes.Compare(info, wd.chanData) != 0 {

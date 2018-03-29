@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 	"time"
+	"golang.org/x/net/context"
 )
 
 
@@ -36,7 +37,8 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	// try to do a docker pull on private repo without creds written. this should fail.
 	out := make(chan []byte, 10000)
-	result := docker.Exec(su.GetStage(), su.GetStageLabel(), []string{}, pull, out)
+	ctx := context.Background()
+	result := docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, out)
 	if result.Status != pb.StageResultVal_FAIL {
 		data := <-out
 		t.Error("pull from metaverse should fail if there are no creds to authenticate with. stdout: " , data)
@@ -46,7 +48,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	// create config in ~/.docker directory w/ auth creds
 	logout := make(chan[]byte, 10000)
-	res := docker.RepoIntegrationSetup(dockr.GetDockerConfig, docker.WriteDockerJson, "docker login", testRemoteConfig, werk, su, []string{}, logout)
+	res := docker.RepoIntegrationSetup(ctx, dockr.GetDockerConfig, docker.WriteDockerJson, "docker login", testRemoteConfig, werk, su, []string{}, logout)
 	if res.Status == pb.StageResultVal_FAIL {
 		data := <- logout
 		t.Error("stage failed! logout data: ", string(data))
@@ -54,7 +56,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	// try to pull the image from metaverse again. this should now pass.
 	logout = make(chan[]byte, 100000)
-	res = docker.Exec(su.GetStage(), su.GetStageLabel(), []string{}, pull, logout)
+	res = docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, logout)
 	outByte := <- logout
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Error("could not pull from metaverse docker! out: ", string(outByte))

@@ -109,7 +109,6 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 func (g *guideOcelotServer) FindWerker(ctx context.Context, br *models.BuildReq) (*models.BuildRuntimeInfo, error) {
-	//respect hash first
 	if len(br.Hash) > 0 {
 		//find matching hashes in consul by git hash
 		buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), br.Hash)
@@ -126,9 +125,8 @@ func (g *guideOcelotServer) FindWerker(ctx context.Context, br *models.BuildReq)
 		for _, v := range buildRtInfo {
 			return v, nil
 		}
-	}
-	if len(br.AcctRepo) > 0 {
-		//TODO: respek acct/repo next
+	} else {
+		return nil, errors.New("Please pass a hash")
 	}
 	return nil, nil
 }

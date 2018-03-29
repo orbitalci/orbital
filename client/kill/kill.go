@@ -45,7 +45,6 @@ func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR",
 		"*REQUIRED* build hash to kill")
-	//TODO: respek acct/repo
 }
 
 func (c *cmd) Run(args []string) int {
