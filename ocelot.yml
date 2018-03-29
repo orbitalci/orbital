@@ -10,8 +10,11 @@ stages:
     env:
       - "BUILDSERVERHACK=0"
     script:
-      - cp -r $GOPATH/src/bitbucket.org/level11consulting/ocelot/vendor .
-      - ls vendor/
+      - OCELOT_GOPATH=$GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cp -r $OCELOT_GOPATH/vendor .
+      - rm -rf $OCELOT_GOPATH/*
+      - cp -r . $OCELOT_GOPATH
+      - cd $OCELOT_GOPATH
       - ./run-tests.sh
   - name: build
     script:
