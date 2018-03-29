@@ -1,4 +1,4 @@
-image: golang:1.9
+image: jessishank/ocelot-build:cheese
 buildTool: go
 branches:
   - ALL
@@ -10,13 +10,7 @@ stages:
     env:
       - "BUILDSERVERHACK=0"
     script:
-      - mkdir -p $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cp -r * $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cp -r .git* $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cd $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - go get -v -u github.com/golang/dep/cmd/dep
-      - ssh -o "StrictHostKeyChecking no" git@bitbucket.org
-      - dep ensure -v
+      - cp -r $GOPATH/src/bitbucket.org/level11consulting/ocelot/vendor .
       - ./run-tests.sh
   - name: build
     script:

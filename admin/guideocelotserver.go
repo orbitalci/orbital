@@ -207,15 +207,15 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
 	cfg, err := build.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
 	if err != nil {
-		log.IncludeErrField(err)
+		log.IncludeErrField(err).Error()
 		return err
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, md.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
 	bbHandler, token, err := handler.GetBitbucketClient(cfg)
 	if err != nil {
-		log.IncludeErrField(err)
-		return err
+		log.IncludeErrField(err).Error()
+		return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve the bitbucket client config for %s. \n Error: %s", buildReq.AcctRepo, err.Error()))
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully used VCS Credentials to obtain a token %s", md.CHECKMARK)))
 
@@ -361,7 +361,6 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 		if err != nil {
 			return nil, handleStorageError(err)
 		}
-
 		if len(buildSums) == 1 {
 			buildSum := buildSums[0]
 
@@ -468,6 +467,28 @@ func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *models.Pol
 		return empti, status.Error(codes.Internal, err.Error())
 	}
 	return empti, nil
+}
+
+// todo: add acct/repo action later
+func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*models.Polls, error) {
+	polls, err := g.Storage.GetAllPolls()
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); !ok {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	pollz := &models.Polls{}
+	for _, pll := range polls {
+		pbpoll := &models.PollRequest{
+			Account: pll.Account,
+			Repo: pll.Repo,
+			Cron: pll.Cron,
+			Branches: pll.Branches,
+		}
+		pollz.Polls = append(pollz.Polls, pbpoll)
+	}
+	return pollz, nil
 }
 
 func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.OcelotStorage) models.GuideOcelotServer {

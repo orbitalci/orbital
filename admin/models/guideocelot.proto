@@ -38,6 +38,7 @@ service GuideOcelot {
     rpc BuildRepoAndHash (BuildReq) returns (stream LineResponse) {}
     rpc PollRepo(PollRequest) returns (google.protobuf.Empty) {}
     rpc DeletePollRepo(PollRequest) returns (google.protobuf.Empty) {}
+    rpc ListPolledRepos(google.protobuf.Empty) returns (Polls) {}
 }
 
 message BuildReq {
@@ -153,4 +154,8 @@ message PollRequest {
     string repo = 2;
     string cron = 4;
     string branches = 5;
+}
+
+message Polls {
+    repeated PollRequest polls = 1;
 }
