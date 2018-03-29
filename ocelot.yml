@@ -3,22 +3,22 @@ buildTool: go
 branches:
   - ALL
 env:
-  - "OCELOT_GOPATH=$GOPATH/src/bitbucket.org/level11consulting/ocelot"
+  - "OCELOT_PATH=src/bitbucket.org/level11consulting/ocelot"
 stages:
   - name: be_useful
     script:
       - echo "building $BUILD_ID with has $GIT_HASH"
   - name: go_stuff
     script:
-      - cp -r $OCELOT_GOPATH/vendor .
-      - rm -rf $OCELOT_GOPATH/* && cp -r . $OCELOT_GOPATH
+      - cp -r $GOPATH/$OCELOT_PATH/vendor .
+      - rm -rf $GOPATH/$OCELOT_PATH/* && cp -r . $GOPATH/$OCELOT_PATH
   - name: testing
     env:
       - "BUILDSERVERHACK=0"
     script:
-      - cd $OCELOT_GOPATH
+      - cd $GOPATH/$OCELOT_PATH
       - ./run-tests.sh
   - name: build
     script:
-      - cd $OCELOT_GOPATH
+      - cd $GOPATH/$OCELOT_PATH
       - ./build-release.sh
