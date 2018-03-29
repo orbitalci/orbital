@@ -108,7 +108,7 @@ func main() {
 		go listen(protoConsume, topic, conf, streamingTunnel, buildCtxTunnel, buildValet, store)
 		protoConsumers = append(protoConsumers, protoConsume)
 	}
-	go nsqwatch.WatchAndPause(60, protoConsumers, conf.RemoteConfig, store) // todo: put interval in conf
+	go nsqwatch.WatchAndPause(1, protoConsumers, conf.RemoteConfig, store) // todo: put interval in conf
 	go werker.ServeMe(streamingTunnel, buildCtxTunnel, conf, store)
 	for _, consumer := range protoConsumers {
 		<-consumer.StopChan

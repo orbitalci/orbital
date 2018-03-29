@@ -27,6 +27,8 @@ func (w *WerkerServer) KillHash(request *protobuf.Request, stream protobuf.Build
 	build, ok := w.BuildContexts[request.Hash]; if ok {
 		stream.Send(wrap(fmt.Sprintf("An active build was found for %s, attempting to cancel...", request.Hash)))
 		build.CancelFunc()
+
+		//TODO: make this so that it will also update dbs when shit is killed if applicable
 		return nil
 	}
 	return errors.New(fmt.Sprintf("No active build was found for %s", request.Hash))

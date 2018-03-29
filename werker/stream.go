@@ -12,7 +12,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/integration-cli/cli"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
@@ -232,7 +231,6 @@ func contextCleanup(buildCtx *BuildContext, appCtx *WerkerContext, mapLock sync.
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	//pwd, _ := os.Getwd()
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("no caller???? ")
