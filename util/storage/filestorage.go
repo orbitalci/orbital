@@ -38,7 +38,7 @@ import (
 // FileBuildStorage is an implementation of BuildOutput that is for filesystem.
 type FileBuildStorage struct {
 	saveDirec string
-	PollTable //todo add this in in case we wanna use file build storage
+	*PostgresStorage
 }
 
 // NewFileBuildStorage will return an initialized FileBuildStorage with the saveDirec added to the

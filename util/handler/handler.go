@@ -1,9 +1,11 @@
 package handler
 
 import (
-	pb "bitbucket.org/level11consulting/ocelot/protos"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"errors"
+
 	ocenet "bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
 )
 
 type VCSHandler interface {
@@ -42,7 +44,7 @@ func GetBitbucketClient(cfg *models.VCSCreds) (VCSHandler, string, error) {
 	bbClient := &ocenet.OAuthClient{}
 	token, err := bbClient.Setup(cfg)
 	if err != nil {
-		return nil, "", err
+		return nil, "", errors.New("unable to retrieve token for " + cfg.AcctName + ".  Error: " + err.Error())
 	}
 	bb := GetBitbucketHandler(cfg, bbClient)
 	return bb, token, nil

@@ -25,6 +25,8 @@ import (
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/nsqwatch"
+
+	//"bitbucket.org/level11consulting/ocelot/util/nsqwatch"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/werker"
 	"bitbucket.org/level11consulting/ocelot/werker/builder"

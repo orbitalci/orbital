@@ -16,6 +16,7 @@ var (
 type BuildSummary struct {
 	Hash 		  string		`json:"hash,omitempty"`
 	Failed 		  bool			`json:"failed,omitempty"`
+	QueueTime    time.Time      `json:"queueTime,omitempty"`
 	BuildTime 	  time.Time		`json:"buildTime,omitempty"`
 	Account   	  string		`json:"account,omitempty"`
 	BuildDuration float64		`json:"buildDuration,omitempty"`
