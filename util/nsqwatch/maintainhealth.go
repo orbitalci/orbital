@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+// NsqWatch is for keeping an eye on Ocelot's dependencies and pausing the reception of messages
+//  from NSQ if any other dependency goes down. the `paused` bool will be switched to true if the queue is shut down temporarily.
 type NsqWatch struct {
 	interval 	int64
 	pConsumers  []*nsqpb.ProtoConsume
@@ -26,6 +28,7 @@ func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRe
 	nsqwatch.MaintainHealths()
 }
 
+// MaintainHealths will
 func (nq *NsqWatch) MaintainHealths() {
 	for {
 		time.Sleep(time.Second * time.Duration(nq.interval))

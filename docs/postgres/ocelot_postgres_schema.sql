@@ -2,13 +2,14 @@
 
 CREATE TABLE build_summary (
   hash character varying(50),
-  failed boolean,
-  starttime timestamp without time zone,
+  failed boolean default true,
+  starttime timestamp without time zone DEFAULT '1970-01-01 00:00:00',
   account character varying(100),
-  buildtime numeric,
+  buildtime numeric default -99.999,
   repo character varying(100),
   id SERIAL PRIMARY KEY,
-  branch character varying(100)
+  branch character varying(100),
+  queuetime timestamp without time zone DEFAULT '1970-01-01 00:00:00'
 );
 
 CREATE TABLE build_output (
@@ -29,7 +30,6 @@ CREATE TABLE build_stage_details (
   messages jsonb,
   FOREIGN KEY (build_id) REFERENCES build_summary (id) ON DELETE CASCADE
 );
-
 create table polling_repos (
   account character varying(100),
   repo character varying(100),

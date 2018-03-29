@@ -34,6 +34,7 @@ type BuildSum interface {
 	RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error)
 	RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error)
 	RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error)
+	StartBuild(id int64) error
 }
 
 type BuildStage interface {

@@ -1,24 +1,24 @@
-image: golang:1.9
+image: jessishank/ocelot-build:cheese.2
 buildTool: go
 branches:
   - ALL
+env:
+  - "OCELOT_PATH=src/bitbucket.org/level11consulting/ocelot"
 stages:
   - name: be_useful
     script:
       - echo "building $BUILD_ID with has $GIT_HASH"
+  - name: go_stuff
+    script:
+      - cp -r $GOPATH/$OCELOT_PATH/vendor .
+      - rm -rf $GOPATH/$OCELOT_PATH/* && cp -r . $GOPATH/$OCELOT_PATH
   - name: testing
     env:
       - "BUILDSERVERHACK=0"
     script:
-      - mkdir -p $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cp -r * $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cp -r .git* $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cd $GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - go get -v -u github.com/golang/dep/cmd/dep
-      - ssh -o "StrictHostKeyChecking no" git@bitbucket.org
-      - dep ensure -v
+      - cd $GOPATH/$OCELOT_PATH
       - ./run-tests.sh
   - name: build
     script:
-      - cd $GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cd $GOPATH/$OCELOT_PATH
       - ./build-release.sh

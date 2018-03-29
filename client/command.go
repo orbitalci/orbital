@@ -14,6 +14,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/output"
 	"bitbucket.org/level11consulting/ocelot/client/poll/add"
 	"bitbucket.org/level11consulting/ocelot/client/poll/delete"
+	"bitbucket.org/level11consulting/ocelot/client/poll/list"
 	"bitbucket.org/level11consulting/ocelot/client/status"
 	"bitbucket.org/level11consulting/ocelot/client/summary"
 	"bitbucket.org/level11consulting/ocelot/client/validate"
@@ -46,7 +47,7 @@ func init() {
 		"build":           func() (cli.Command, error) { return build.New(ui), nil },
 		"poll":            func() (cli.Command, error) { return polladd.New(ui), nil },
 		"poll delete":     func() (cli.Command, error) { return polldelete.New(ui), nil },
+		"poll list": 	   func() (cli.Command, error) { return polllist.New(ui), nil },
 		"kill":     func() (cli.Command, error) { return kill.New(ui), nil },
-		// todo: add poll list
 	}
 }

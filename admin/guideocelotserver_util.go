@@ -29,7 +29,7 @@ func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCS
 }
 
 func SetupRepoCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.RepoCreds) error {
-	// todo: probably should do some kind of test f they are valid or not? is there a way to test these creds
+	// todo: probably should do some kind of test if they are valid or not? is there a way to test these creds
 	gos := gosss.(*guideOcelotServer)
 	configPath := config.BuildCredPath(config.Type, config.AcctName)
 	err := gos.RemoteConfig.AddCreds(configPath, config)
@@ -61,6 +61,7 @@ func ParseStagesByBuildId(buildSum storeModel.BuildSummary, stageResults []store
 			Repo: buildSum.Repo,
 			Branch: buildSum.Branch,
 			BuildId: buildSum.BuildId,
+			QueueTime: &timestamp.Timestamp{Seconds: buildSum.QueueTime.UTC().Unix()},
 		},
 		Stages: parsedStages,
 	}

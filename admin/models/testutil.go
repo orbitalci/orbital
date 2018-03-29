@@ -116,6 +116,10 @@ func (f *fakeGuideOcelotClient) DeletePollRepo(ctx context.Context, poll *PollRe
 	return &empty.Empty{}, nil
 }
 
+func (f *fakeGuideOcelotClient) ListPolledRepos(ctx context.Context, empti *empty.Empty, opts ...grpc.CallOption) (*Polls, error) {
+	return &Polls{}, nil
+}
+
 
 func NewFakeGuideOcelotLogsCli(lines []string) *fakeGuideOcelotLogsClient {
 	return &fakeGuideOcelotLogsClient{outputLines: lines}

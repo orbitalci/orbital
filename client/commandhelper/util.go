@@ -26,7 +26,10 @@ func UIErrFromGrpc(err error, ui cli.Ui, defaultMsg string) {
 
 
 //prettifyTime takes in time in seconds and returns a pretty string representation of it
-func PrettifyTime(timeInSecs float64) string {
+func PrettifyTime(timeInSecs float64, queued bool) string {
+	if queued {
+		return "queued for build"
+	}
 	if timeInSecs < 0 {
 		return "running"
 	}

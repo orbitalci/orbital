@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 )
 
+var cronDir = "/etc/cron.d"
+
 type MsgHandler struct {
 	Topic string
 	Store storage.PollTable
@@ -51,16 +53,14 @@ func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan 
 }
 
 func DeleteCronFile(event *pb.PollRequest) error {
-	basePath := "/etc/cron.d"
-	fullPath := filepath.Join(basePath, event.Account + "_" + event.Repo)
+	fullPath := filepath.Join(cronDir, event.Account + "_" + event.Repo)
 	err := os.Remove(fullPath)
 	return err
 }
 
 func WriteCronFile(event *pb.PollRequest) error {
 	cron := fmt.Sprintf("%s root /bin/run_changecheck.sh %s/%s %s\n", event.Cron, event.Account, event.Repo, event.Branches)
-	basePath := "/etc/cron.d"
-	fullPath := filepath.Join(basePath, event.Account + "_" + event.Repo)
+	fullPath := filepath.Join(cronDir, event.Account + "_" + event.Repo)
 	isfile, err := exists(fullPath)
 	if err != nil {
 		return err

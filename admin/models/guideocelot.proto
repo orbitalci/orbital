@@ -39,6 +39,7 @@ service GuideOcelot {
     rpc PollRepo(PollRequest) returns (google.protobuf.Empty) {}
     rpc DeletePollRepo(PollRequest) returns (google.protobuf.Empty) {}
     rpc FindWerker (BuildReq) returns (BuildRuntimeInfo) {}
+    rpc ListPolledRepos(google.protobuf.Empty) returns (Polls) {}
 }
 
 message BuildReq {
@@ -123,6 +124,7 @@ message RepoAccount {
 message Status {
     BuildSummary buildSum = 1;
     repeated Stage stages = 2;
+    bool isInConsul       = 3;
 }
 
 message Stage {
@@ -143,6 +145,7 @@ message BuildSummary {
     string repo = 6;
     string branch = 7;
     int64 buildId = 8;
+    google.protobuf.Timestamp queueTime = 9;
 }
 
 message Summaries {
@@ -154,4 +157,8 @@ message PollRequest {
     string repo = 2;
     string cron = 4;
     string branches = 5;
+}
+
+message Polls {
+    repeated PollRequest polls = 1;
 }

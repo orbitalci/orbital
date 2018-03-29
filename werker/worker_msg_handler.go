@@ -68,6 +68,10 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 		ocelog.IncludeErrField(err).Warning("unmarshal error")
 		return err
 	}
+	if err := w.Store.StartBuild(werkerTask.Id); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't log start of build, returning")
+		return err
+	}
 	// channels get closed after the build finishes
 	w.infochan = make(chan []byte)
 	ocelog.Log().Debug(fmt.Sprintf("INFO CHANNEL IS!!!!!  %v     MSGHANDLER IS!!!! %#v", w.infochan, w))

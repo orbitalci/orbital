@@ -129,11 +129,13 @@ func (v *Valet) Cleanup() {
 	for _, uid := range uuids {
 		v.Cleaner.Cleanup(ctx, uid, nil) //have to explicitly reference Cleaner here because valet also has a Cleanup function
 	}
+	log.Log().Info("cleaned up docker remnants")
 	hashes, err := brt.GetWerkerActiveBuilds(consulet, v.WerkerUuid.String())
 	if err != nil {
 		log.IncludeErrField(err).Error("could not get active builds for werker")
 		return
 	}
+	log.Log().Info("deleting hashes associated with this werker out of consul.")
 	for _, hash := range hashes {
 		if err := brt.Delete(consulet, hash); err != nil {
 			log.IncludeErrField(err).WithField("gitHash", hash).Error("could not delete out of consul for build")
@@ -141,6 +143,7 @@ func (v *Valet) Cleanup() {
 			log.Log().WithField("gitHash", hash).Info("successfully delete git hashes out of build runtime consul")
 		}
 	}
+	log.Log().Info("unregister-ing myself with consul as a werker")
 	if err := brt.UnRegister(consulet, v.WerkerUuid.String()); err != nil {
 		log.IncludeErrField(err).WithField("werkerId", v.WerkerUuid.String()).Error("unable to remove werker location register out of consul.")
 	} else {

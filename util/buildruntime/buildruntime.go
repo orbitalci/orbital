@@ -291,3 +291,16 @@ func Delete(consulete *consul.Consulet, gitHash string) (err error) {
 	//err = SetBuildDone(consulete, gitHash)
 	return err
 }
+
+
+func CheckBuildInConsul(consulete *consul.Consulet, hash string) (exists bool, err error) {
+	pairPath := MakeBuildMapPath(hash)
+	kv, err := consulete.GetKeyValue(pairPath)
+	if err != nil {
+		return
+	}
+	if kv != nil {
+		exists = true
+	}
+	return
+}
