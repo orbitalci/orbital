@@ -2,21 +2,23 @@ image: jessishank/ocelot-build:cheese.2
 buildTool: go
 branches:
   - ALL
+env:
+  - "OCELOT_GOPATH=$GOPATH/src/bitbucket.org/level11consulting/ocelot"
 stages:
   - name: be_useful
     script:
       - echo "building $BUILD_ID with has $GIT_HASH"
+  - name: go_stuff
+    script:
+      - cp -r $OCELOT_GOPATH/vendor .
+      - rm -rf $OCELOT_GOPATH/* && cp -r . $OCELOT_GOPATH
   - name: testing
     env:
       - "BUILDSERVERHACK=0"
     script:
-      - OCELOT_GOPATH=$GOPATH/src/bitbucket.org/level11consulting/ocelot
-      - cp -r $OCELOT_GOPATH/vendor .
-      - rm -rf $OCELOT_GOPATH/*
-      - cp -r . $OCELOT_GOPATH
       - cd $OCELOT_GOPATH
       - ./run-tests.sh
   - name: build
     script:
-      - cd $GOPATH/src/bitbucket.org/level11consulting/ocelot
+      - cd $OCELOT_GOPATH
       - ./build-release.sh
