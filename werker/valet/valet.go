@@ -8,13 +8,13 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 	"os"
 	"runtime/debug"
 	"sync"
 	"time"
+	c "bitbucket.org/level11consulting/ocelot/werker/cleaner"
+	conf "bitbucket.org/level11consulting/ocelot/werker/config"
 )
 //go:generate stringer -type=Interrupt
 type Interrupt int
@@ -29,11 +29,14 @@ type Valet struct {
 	WerkerUuid		uuid.UUID
 	doneChannels    map[string]chan int
 	sync.Mutex
-
+	c.Cleaner
 }
 
-func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID) *Valet {
-	return &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int)}
+func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType conf.WerkType) *Valet {
+	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int)}
+	valet.Cleaner = c.GetNewCleaner(werkerType)
+
+	return valet
 }
 
 
@@ -123,27 +126,9 @@ func (v *Valet) Cleanup() {
 		return
 	}
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		log.IncludeErrField(err).Error("unable to get docker client?? ")
-		return
-	}
 	for _, uid := range uuids {
-		if err := cli.ContainerKill(ctx, uid, "SIGKILL"); err != nil {
-			log.IncludeErrField(err).WithField("dockerId", uid).Error("could not kill container")
-		} else {
-			log.Log().WithField("dockerId", uid).Info("killed container")
-		}
-		// even if ther is an error with containerKill, it might be from the container already exiting (ie bad ocelot.yml). so still try to remove.
-		log.Log().WithField("dockerId", uid).Info("removing")
-		if err := cli.ContainerRemove(ctx, uid, types.ContainerRemoveOptions{}); err != nil {
-			log.IncludeErrField(err).WithField("dockerId", uid).Error("could not rm container")
-		} else {
-			log.Log().WithField("dockerId", uid).Info("removed container")
-		}
+		v.Cleaner.Cleanup(ctx, uid, nil) //have to explicitly reference Cleaner here because valet also has a Cleanup function
 	}
-
-	cli.Close()
 	hashes, err := brt.GetWerkerActiveBuilds(consulet, v.WerkerUuid.String())
 	if err != nil {
 		log.IncludeErrField(err).Error("could not get active builds for werker")
@@ -161,9 +146,7 @@ func (v *Valet) Cleanup() {
 	} else {
 		log.Log().WithField("werkerId", v.WerkerUuid.String()).Info("successfully unregistered")
 	}
-
 }
-
 
 
 func (v *Valet) MakeItSoDed(finish chan int) {

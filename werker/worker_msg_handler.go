@@ -13,6 +13,7 @@ import (
 	//"runtime/debug"
 	"context"
 	"time"
+	"bitbucket.org/level11consulting/ocelot/werker/config"
 )
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
@@ -32,7 +33,7 @@ type BuildContext struct {
 
 type WorkerMsgHandler struct {
 	Topic           string
-	WerkConf        *WerkerConf
+	WerkConf        *config.WerkerConf
 	infochan        chan []byte
 	StreamChan   chan *Transport
 	BuildCtxChan chan *BuildContext
@@ -42,7 +43,7 @@ type WorkerMsgHandler struct {
 
 }
 
-func NewWorkerMsgHandler(topic string, wc *WerkerConf, b *b.Basher, st storage.OcelotStorage, bv *valet.Valet, tunnel chan *Transport, buildChan chan *BuildContext) *WorkerMsgHandler {
+func NewWorkerMsgHandler(topic string, wc *config.WerkerConf, b *b.Basher, st storage.OcelotStorage, bv *valet.Valet, tunnel chan *Transport, buildChan chan *BuildContext) *WorkerMsgHandler {
 	return &WorkerMsgHandler{
 		Topic: 		topic,
 		WerkConf: 	wc,
@@ -58,7 +59,7 @@ func NewWorkerMsgHandler(topic string, wc *WerkerConf, b *b.Basher, st storage.O
 // It uses two channels to communicate with nsqpb, done and finish.
 // the done channel is just sent at the end and is used in nsqpb to ensure that the queue is "Touch"ed at a
 // set interval so that the message doesn't time out. The finish channel is for improper exits; ie panic recover
-// or signal handling (TODO: figure out how to SIGNAL HANDLE)
+// or signal handling
 // The nsqpb will call msg.Finish() when it receives on this channel.
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
 	ocelog.Log().Debug("unmarshal-ing build obj and processing")
@@ -75,7 +76,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	//
 	var builder b.Builder
 	switch w.WerkConf.WerkerType {
-	case Docker:
+	case config.Docker:
 		builder = b.NewDockerBuilder(w.Basher)
 	default:
 		builder = b.NewDockerBuilder(w.Basher)
@@ -112,7 +113,6 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 
 	defer cancel()
 	defer close(w.infochan)
-	defer builder.Cleanup(ctx, w.infochan)
 
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
@@ -128,7 +128,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 
 	dockerIdChan := make (chan string)
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
-	setupResult, _ := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
+	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
 	setupDura := time.Now().Sub(setupStart)
 
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
@@ -185,6 +185,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	}
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
+	w.BuildValet.Cleaner.Cleanup(ctx, dockerUUid, w.infochan) //remove the container as a last step
 }
 
 func (w *WorkerMsgHandler) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {

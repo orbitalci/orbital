@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"context"
-	"github.com/docker/docker/client"
 	"bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
-	"github.com/docker/docker/api/types"
+	"bitbucket.org/level11consulting/ocelot/werker/cleaner"
 )
 
 //embeds the werkerappcontext so we can stream + access active builds
 type WerkerServer struct {
 	*WerkerContext
+	cleaner.Cleaner
 }
 
 //streams logs for an active build
@@ -38,13 +38,6 @@ func (w *WerkerServer) KillHash(request *protobuf.Request, stream protobuf.Build
 		// remove container
 		stream.Send(wrap("Performing build cleanup..."))
 
-		ctx := context.Background()
-		cli, err := client.NewEnvClient()
-		if err != nil {
-			log.IncludeErrField(err).Error("unable to get docker client?? ")
-			return err
-		}
-
 		hashes, err := buildruntime.GetHashRuntimesByWerker(w.consul, w.Conf.WerkerUuid.String())
 		if err != nil {
 			log.IncludeErrField(err).Error("unable to retrieve active builds from consul")
@@ -52,22 +45,7 @@ func (w *WerkerServer) KillHash(request *protobuf.Request, stream protobuf.Build
 		}
 		build := hashes[request.Hash]
 		if len(build.DockerUuid) > 0 {
-			//tODO: tHIS IS COPIED FROM VALET VERBATIM - EXTRACT?
-			if err := cli.ContainerKill(ctx, build.DockerUuid, "SIGKILL"); err != nil {
-				log.IncludeErrField(err).WithField("dockerId", build.DockerUuid).Error("could not kill container")
-			} else {
-				log.Log().WithField("dockerId", build.DockerUuid).Info("killed container")
-			}
-
-			// even if ther is an error with containerKill, it might be from the container already exiting (ie bad ocelot.yml). so still try to remove.
-			log.Log().WithField("dockerId", build.DockerUuid).Info("removing")
-			if err := cli.ContainerRemove(ctx, build.DockerUuid, types.ContainerRemoveOptions{}); err != nil {
-				log.IncludeErrField(err).WithField("dockerId", build.DockerUuid).Error("could not rm container")
-			} else {
-				log.Log().WithField("dockerId", build.DockerUuid).Info("removed container")
-			}
-
-			cli.Close()
+			w.Cleanup(context.Background(), build.DockerUuid, nil)
 			stream.Send(wrap(fmt.Sprintf("Successfully killed build for %s \u2713", request.Hash)))
 		} else {
 			stream.Send(wrap("Wow you killed your build before it even got to the setup stage??"))
@@ -81,6 +59,7 @@ func (w *WerkerServer) KillHash(request *protobuf.Request, stream protobuf.Build
 func NewWerkerServer(werkerCtx *WerkerContext) protobuf.BuildServer {
 	werkerServer := &WerkerServer{
 		WerkerContext: werkerCtx,
+		Cleaner: cleaner.GetNewCleaner(werkerCtx.Conf.WerkerType),
 	}
 	return werkerServer
 }

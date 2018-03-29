@@ -35,11 +35,12 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"bitbucket.org/level11consulting/ocelot/werker/config"
 )
 
 //listen will listen for messages for a specified topic. If a message is received, a
 //message worker handler is created to process the message
-func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, streamingChan chan *werker.Transport, buildChan chan *werker.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
+func listen(p *nsqpb.ProtoConsume, topic string, conf *config.WerkerConf, streamingChan chan *werker.Transport, buildChan chan *werker.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			ocelog.Log().Debug("i am about to sleep for 10s because i couldn't find the topic at ", p.Config.LookupDAddress())
@@ -63,7 +64,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *werker.WerkerConf, stream
 
 
 func main() {
-	conf, err := werker.GetConf()
+	conf, err := config.GetConf()
 	if err != nil {
 		fmt.Errorf("cannot get configuration, exiting.... error: %s", err)
 		return
@@ -86,7 +87,7 @@ func main() {
 	}
 	conf.WerkerUuid = uuid
 	// kick off ctl-c signal handling
-	buildValet := valet.NewValet(conf.RemoteConfig, conf.WerkerUuid)
+	buildValet := valet.NewValet(conf.RemoteConfig, conf.WerkerUuid, conf.WerkerType)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {

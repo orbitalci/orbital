@@ -11,7 +11,6 @@ import (
 type Builder interface {
 	Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
 	Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
-	Cleanup(ctx context.Context, logout chan []byte)
 }
 
 //helper functions for stages, doesn't handle camelcase right now so if you want that set the values

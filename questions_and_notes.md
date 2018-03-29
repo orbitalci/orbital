@@ -32,6 +32,7 @@
     
 ## bugs: 
 - our fucking build is broken
+- stages are updated twice on interrupt
 - be able to properly handle KILLS (what happens when build is killed halfway?)
     - [stackoverflow](https://stackoverflow.com/questions/11268943/is-it-possible-to-capture-a-ctrlc-signal-and-run-a-cleanup-function-in-a-defe)
 - fix dev mode (maybe fuck this)

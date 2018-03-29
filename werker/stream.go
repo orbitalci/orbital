@@ -23,6 +23,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"bitbucket.org/level11consulting/ocelot/werker/config"
 )
 
 var (
@@ -31,7 +32,7 @@ var (
 
 type WerkerContext struct {
 	BuildContexts map[string]*BuildContext
-	Conf          *WerkerConf
+	Conf          *config.WerkerConf
 
 	out       storage.BuildOut
 	sum       storage.BuildSum
@@ -57,7 +58,7 @@ func (w *WerkerContext) dumpData(wr http.ResponseWriter, r *http.Request) {
 	wr.Write(bit)
 }
 
-func getWerkerContext(conf *WerkerConf, store storage.OcelotStorage) *WerkerContext {
+func getWerkerContext(conf *config.WerkerConf, store storage.OcelotStorage) *WerkerContext {
 	werkerConsul, err := consulet.Default()
 	if err != nil {
 		ocelog.IncludeErrField(err)
@@ -240,7 +241,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 //ServeMe will start HTTP Server as needed for streaming build output by hash
-func ServeMe(transportChan chan *Transport, buildCtxChan chan *BuildContext, conf *WerkerConf, store storage.OcelotStorage) {
+func ServeMe(transportChan chan *Transport, buildCtxChan chan *BuildContext, conf *config.WerkerConf, store storage.OcelotStorage) {
 	// todo: defer a recovery here
 	werkStream := getWerkerContext(conf, store)
 	ocelog.Log().Debug("saving build info channels to in memory map")

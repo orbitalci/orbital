@@ -202,8 +202,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	}
 	result = d.RepoIntegrationSetup(ctx, dockr.GetDockerConfig, d.WriteDockerJson, "docker login", rc, werk, su, setupMessages, logout)
 
-	setupMessages = append(setupMessages, "completed setup stage \u2713")
-	result.Messages = append(setupMessages, result.Messages...)
+	result.Messages = append(result.Messages, "completed setup stage \u2713")
 	return result, d.ContainerId
 }
 
@@ -255,33 +254,6 @@ func (d *Docker) RepoIntegrationSetup(ctx context.Context, setupFunc RepoSetupFu
 	ocelog.Log().Error("SHOULD NEVER REACH THIS POINT!!!")
 	return result
 }
-
-
-func (d *Docker) Cleanup(ctx context.Context, logout chan []byte) {
-	su := InitStageUtil("cleanup")
-
-	defer d.DockerClient.Close()
-
-	if d.Log != nil {
-		d.Log.Close()
-	}
-	if err := d.DockerClient.ContainerKill(ctx, d.ContainerId, "SIGKILL"); err != nil {
-		if err == context.Canceled {
-			logout <- []byte("//////////REDRUM////////REDRUM////////REDRUM/////////")
-			ocelog.Log().Debugf("skipping builder's cleanup stage cause kill was detected")
-			return
-		} else {
-			ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't kill")
-		}
-
-	} else {
-		logout <- []byte(su.GetStageLabel() + "Performing build cleanup...")
-		if err := d.DockerClient.ContainerRemove(ctx, d.ContainerId, types.ContainerRemoveOptions{}); err != nil {
-			ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't rm")
-		}
-	}
-}
-
 
 func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	if len(d.ContainerId) == 0 {

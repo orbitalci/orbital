@@ -6,7 +6,6 @@ import (
 	"flag"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
-	"io"
 )
 
 

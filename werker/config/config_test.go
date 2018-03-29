@@ -1,4 +1,4 @@
-package werker
+package config
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"

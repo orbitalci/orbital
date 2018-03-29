@@ -3,6 +3,7 @@ package protobuf
 import (
 	"google.golang.org/grpc"
 	"io"
+	"golang.org/x/net/context"
 )
 
 //type BuildClient interface {
@@ -32,4 +33,24 @@ func (c *fakeBuildClient) Recv() (*Response, error) {
 	resp := &Response{OutputLine: c.outputLines[c.index]}
 	c.index++
 	return resp, nil
+}
+
+func (c *fakeBuildClient) Context() context.Context {
+	return context.TODO()
+}
+
+func (c *fakeBuildClient) SendMsg(m interface{}) error {
+	return nil
+}
+
+func (c *fakeBuildClient) RecvMsg(m interface{}) error {
+	if c.index + 1 > len(c.outputLines) {
+		return io.EOF
+	}
+	original, ok := m.(Response)
+	if ok {
+		original.OutputLine = c.outputLines[c.index]
+	}
+	c.index++
+	return nil
 }

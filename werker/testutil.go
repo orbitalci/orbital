@@ -3,6 +3,7 @@ package werker
 import (
 	"bitbucket.org/level11consulting/ocelot/protos"
 	"testing"
+	"bitbucket.org/level11consulting/ocelot/werker/config"
 )
 
 var (
@@ -22,11 +23,11 @@ func (t *testWerkerProcessor) RunPRBundle(bund *protos.PRBuildBundle, infoChan c
 	infoChan <- prBundleInfoMsg
 }
 
-func testGetConf() *WerkerConf {
-	return &WerkerConf{
+func testGetConf() *config.WerkerConf {
+	return &config.WerkerConf{
 		ServicePort:     "9090",
 		WerkerName:      "test agent",
-		WerkerType:      Docker,
+		WerkerType:      config.Docker,
 		//werkerProcessor: &testWerkerProcessor{},
 		LogLevel:        "info",
 	}
