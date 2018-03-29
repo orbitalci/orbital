@@ -11,6 +11,7 @@ stages:
       - "BUILDSERVERHACK=0"
     script:
       - cp -r $GOPATH/src/bitbucket.org/level11consulting/ocelot/vendor .
+      - ls vendor/
       - ./run-tests.sh
   - name: build
     script:
