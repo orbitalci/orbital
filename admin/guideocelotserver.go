@@ -357,6 +357,10 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 		if len(buildSums) == 1 {
 			buildSum = buildSums[0]
 			goto BUILD_FOUND
+		} else if len(buildSums) == 0 {
+			uhOh := errors.New(fmt.Sprintf("There are no entries that match the acctname/repo %s/%s", query.AcctName, query.RepoName))
+			log.IncludeErrField(uhOh).Error()
+			return nil, status.Error(codes.NotFound, uhOh.Error())
 		} else {
 			// todo: this is logging even when there isn't a match in the db, probably an issue with RetrieveLastFewSums not returning error if there are no rows
 			uhOh := errors.New(fmt.Sprintf("there is no ONE entry that matches the acctname/repo %s/%s", query.AcctName, query.RepoName))

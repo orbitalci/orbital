@@ -72,7 +72,15 @@ func (c *cmd) writeStatusErr(err error) {
 		c.UI.Error(err.Error())
 	}
 	if status.Code() == codes.NotFound {
-		c.UI.Error(fmt.Sprintf("Status for %s was not found in the database. It may have not been processed yet.", c.OcyHelper.Hash))
+		var qualifier string
+		if c.Hash != "ERROR" {
+			qualifier = c.Hash
+		} else if c.AcctRepo != "ERROR" {
+			qualifier = c.AcctRepo
+		} else if c.Repo != "ERROR" {
+			qualifier = c.Repo
+		}
+		c.UI.Error(fmt.Sprintf("Status for %s was not found in the database. It may have not been processed yet.", qualifier))
 	} else {
 		// here we should post to admin
 		c.UI.Error("Error retrieving status, message: " + status.Message())
@@ -101,6 +109,7 @@ func (c *cmd) Run(args []string) int {
 
 	// always respect hash first
 	if c.OcyHelper.Hash != "ERROR" && len(c.OcyHelper.Hash) > 0 {
+		commandhelper.Debuggit(c, "using hash for status")
 		query := &models.StatusQuery{
 			Hash: c.OcyHelper.Hash ,
 		}
@@ -115,6 +124,7 @@ func (c *cmd) Run(args []string) int {
 
 	//respect acct-repo next
 	if c.OcyHelper.AcctRepo != "ERROR" {
+		commandhelper.Debuggit(c, "using acct/repo for status")
 		if err := c.OcyHelper.SplitAndSetAcctRepo(c); err != nil {
 			return 1
 		}
@@ -133,6 +143,7 @@ func (c *cmd) Run(args []string) int {
 
 	//repo is last
 	if c.OcyHelper.Repo != "ERROR" {
+		commandhelper.Debuggit(c, "using repo for status")
 		query := &models.StatusQuery{
 			PartialRepo: c.OcyHelper.Repo,
 		}
