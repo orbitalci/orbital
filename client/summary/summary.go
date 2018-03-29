@@ -89,7 +89,7 @@ func (c *cmd) Run(args []string) int {
 	summaries, err := c.config.Client.LastFewSummaries(ctx, &models.RepoAccount{Repo: c.OcyHelper.Repo, Account: c.OcyHelper.Account, Limit: int32(c.limit)})
 	if err != nil {
 		// todo: add more descriptive error
-		c.UI.Error("unable to get build summaries! error: " + err.Error())
+		c.LastFewSummariesErr(err, c.GetUI())
 		return 1
 	}
 	// todo: need a check/error for when nothing is found, right now just generated an empty table

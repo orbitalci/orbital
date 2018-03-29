@@ -284,6 +284,9 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 	if err != nil {
 		return nil, handleStorageError(err)
 	}
+	if len(modelz) == 0 {
+		return nil, status.Error(codes.NotFound, "no entries found")
+	}
 	for _, model := range modelz {
 		summary := &models.BuildSummary{
 			Hash:          model.Hash,
