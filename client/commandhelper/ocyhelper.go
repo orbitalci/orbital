@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"io"
 	"github.com/mitchellh/cli"
+	"google.golang.org/grpc"
 )
 
 /*
@@ -91,7 +92,9 @@ func (oh *OcyHelper) DetectHash(ui cli.Ui) error {
 	return nil
 }
 
-func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream protobuf.Build_KillHashClient) error {
+//handles streaming for grpc clients,
+//***THIS ASSUMES THAT THE STREAMING SERVER HAS A FIELD CALLED OUTPUTLINE****
+func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream grpc.ClientStream) error {
 	interrupt := make(chan os.Signal, 2)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -102,7 +105,9 @@ func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream protobuf.Build_KillHashCl
 	}()
 	for {
 		Debuggit(ui, "receiving stream")
-		line, err := stream.Recv()
+		resp := new (protobuf.Response)
+		err := stream.RecvMsg(resp);
+
 		if err == io.EOF {
 			stream.CloseSend()
 			return nil
@@ -110,7 +115,7 @@ func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream protobuf.Build_KillHashCl
 			UIErrFromGrpc(err, ui, "Error streaming from werker.")
 			return err
 		}
-		ui.Info(line.GetOutputLine())
+		ui.Info(resp.GetOutputLine())
 	}
 	return nil
 }

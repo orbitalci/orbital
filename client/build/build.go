@@ -105,16 +105,10 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	for {
-		line, err := stream.Recv()
-		if err == io.EOF {
-			stream.CloseSend()
-			return 0
-		} else if err != nil {
-			commandhelper.UIErrFromGrpc(err, c.UI, "Error streaming from storage via admin.")
-			return 1
-		}
-		c.UI.Info(line.GetOutputLine())
+	err = c.HandleStreaming(c.UI, stream)
+	if err != nil {
+		c.UI.Error(err.Error())
+		return 1
 	}
 
 	return 0

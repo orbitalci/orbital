@@ -10,9 +10,10 @@ import (
 	"github.com/mitchellh/cli"
 )
 
-const synopsis = ""
+const synopsis = "kill an active build for a hash"
 const help = `
-Usage: ocelot logs [SOMETHING HERE]
+Usage: ocelot kill 
+	- hash <hash> [required] a partial or full hash of the build you'd like to kill'
 `
 
 func New(ui cli.Ui) *cmd {
@@ -43,8 +44,7 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 //NOTE: this assumes that only one build is happening with this hash!!!!!
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR",
-		"*REQUIRED* build hash to kill")
+	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR", "[REQUIRED] <hash> to kill")
 }
 
 func (c *cmd) Run(args []string) int {
