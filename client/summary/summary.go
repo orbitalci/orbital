@@ -119,8 +119,13 @@ func generateTableRow(summary *models.BuildSummary) []string {
 	var row []string
 	var color int
 	var status string
+	isQueued := summary.BuildDuration < 0 && summary.BuildTime.Seconds == 0
+	isRunning := summary.BuildDuration < 0
 	//we color line output based on success/failure
-	if summary.Failed {
+	if isRunning || isQueued {
+		status = "N/A"
+		color = 35
+	} else if summary.Failed {
 		status = "FAIL"
 		//status = "\u2717"
 		color = 31
@@ -129,10 +134,11 @@ func generateTableRow(summary *models.BuildSummary) []string {
 		//status = "\u2713"
 		color = 32
 	}
+
 	row = append(row,
 		fmt.Sprintf("\033[0;%dm%d",color, summary.BuildId),
 		summary.Repo,
-		commandhelper.PrettifyTime(summary.BuildDuration),
+		commandhelper.PrettifyTime(summary.BuildDuration, isQueued),
 		tym.Format("Mon Jan 2 15:04:05"),
 		status,
 		summary.Branch,

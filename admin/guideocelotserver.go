@@ -338,40 +338,27 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.Repo
 }
 
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
-func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQuery) (*models.Status, error) {
-	//hash first
+func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQuery) (result *models.Status, err error) {
+	var buildSum md.BuildSummary
 	if len(query.Hash) > 0 {
 		partialHash := query.Hash
-		buildSum, err := g.Storage.RetrieveLatestSum(partialHash)
+		buildSum, err = g.Storage.RetrieveLatestSum(partialHash)
 		if err != nil {
 			return nil, handleStorageError(err)
 		}
+		goto BUILD_FOUND
 
-		stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
-		if err != nil {
-			return nil, handleStorageError(err)
-		}
-
-		result := ParseStagesByBuildId(buildSum, stageResults)
-		return result, nil
 	}
-
 	if len(query.AcctName) > 0 && len(query.RepoName) > 0 {
 		buildSums, err := g.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
 		if err != nil {
 			return nil, handleStorageError(err)
 		}
 		if len(buildSums) == 1 {
-			buildSum := buildSums[0]
-
-			stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
-			if err != nil {
-				return nil, handleStorageError(err)
-			}
-			result := ParseStagesByBuildId(buildSum, stageResults)
-			return result, nil
+			buildSum = buildSums[0]
+			goto BUILD_FOUND
 		} else {
-			// todo: this is logging even when there isn't a match in the db, probably an issue with REtrieveLastFewSums not returning error if there are no rows
+			// todo: this is logging even when there isn't a match in the db, probably an issue with RetrieveLastFewSums not returning error if there are no rows
 			uhOh := errors.New(fmt.Sprintf("there is no ONE entry that matches the acctname/repo %s/%s", query.AcctName, query.RepoName))
 			log.IncludeErrField(uhOh)
 			return nil, status.Error(codes.Internal, uhOh.Error())
@@ -385,17 +372,12 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 		}
 
 		if len(buildSums) == 1 {
-			buildSum, err := g.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
+			buildSumz, err := g.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
 			if err != nil {
 				return nil, handleStorageError(err)
 			}
-
-			stageResults, err := g.Storage.RetrieveStageDetail(buildSum[0].BuildId)
-			if err != nil {
-				return nil, handleStorageError(err)
-			}
-			result := ParseStagesByBuildId(buildSum[0], stageResults)
-			return result, nil
+			buildSum = buildSumz[0]
+			goto BUILD_FOUND
 		} else {
 			var uhOh error
 			if len(buildSums) == 0 {
@@ -411,8 +393,19 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQ
 			return nil, status.Error(codes.Internal, uhOh.Error())
 		}
 	}
-
-	return &models.Status{}, nil
+	return
+BUILD_FOUND:
+	stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
+	if err != nil {
+		return nil, handleStorageError(err)
+	}
+	result = ParseStagesByBuildId(buildSum, stageResults)
+	inConsul, err := rt.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "An error occurred checking build status in consul. Cannot retrieve status at this time.\n\n" + err.Error())
+	}
+	result.IsInConsul = inConsul
+	return
 }
 
 func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {

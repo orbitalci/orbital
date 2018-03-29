@@ -10,7 +10,23 @@ import (
 
 // package contains utils for drawing tables
 
+type BuildStatus int
 
+const (
+	RUNNING BuildStatus = iota
+	QUEUED
+	DONE
+)
+
+//queued := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0
+//buildStarted := statuses.BuildSum.BuildTime.Seconds > 0 && statuses.IsInConsul
+//finished := !statuses.IsInConsul && buildStarted
+func GetStatus(queued, buildStarted, finished bool) BuildStatus {
+	if queued { return QUEUED }
+	if buildStarted { return RUNNING }
+	if finished { return DONE }
+	panic("none of these!")
+}
 
 //SelectFromHashes will draw a table that can be displayed if there's multiple matching hashes
 //+------------------------------------------+----------------------------+-------------------+
@@ -64,14 +80,18 @@ func SelectFromHashes(build *models.Builds) string {
 //it takes in a boolean argument indicating whether or not the build is running, and a protobuf Status
 //object. It returns a PASS/FAIL/Running status string, a color corresponding with that status,
 //and the string representation of stages, stage messages, and errors if exists
-func PrintStatusStages(isRunning bool, statuses *models.Status) (string, int, string) {
+func PrintStatusStages(bs BuildStatus, statuses *models.Status) (string, int, string) {
 	var status, stageStatus string
 	var color int
-
-	if isRunning {
+	switch bs {
+	case RUNNING:
 		status = "Running"
 		color = 33
-	} else if statuses != nil {
+	case QUEUED:
+		status = "Queued and waiting to be built"
+		color = 30
+		return stageStatus, color, status
+	case DONE:
 		if !statuses.BuildSum.Failed {
 			status = "PASS"
 			color = 32
@@ -89,7 +109,7 @@ func PrintStatusStages(isRunning bool, statuses *models.Status) (string, int, st
 			} else {
 				stageStatusStr = "FAIL"
 			}
-			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.Stage, PrettifyTime(stage.StageDuration), stageStatusStr)
+			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.Stage, PrettifyTime(stage.StageDuration, bs == QUEUED), stageStatusStr)
 			if statuses.BuildSum.Failed {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {
@@ -106,3 +126,4 @@ func PrintStatusOverview(color int, acctName, repoName, hash, status string) str
 	buildStatus := fmt.Sprintf("\n\033[1;%dmstatus: %s\033[0m \n\033[0;33mhash: %s\033[0m\naccount: %s \nrepo: %s\n", color, status, hash, acctName, repoName)
 	return buildStatus
 }
+

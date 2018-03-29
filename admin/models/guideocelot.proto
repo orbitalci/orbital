@@ -123,6 +123,7 @@ message RepoAccount {
 message Status {
     BuildSummary buildSum = 1;
     repeated Stage stages = 2;
+    bool isInConsul       = 3;
 }
 
 message Stage {
@@ -143,6 +144,7 @@ message BuildSummary {
     string repo = 6;
     string branch = 7;
     int64 buildId = 8;
+    google.protobuf.Timestamp queueTime = 9;
 }
 
 message Summaries {

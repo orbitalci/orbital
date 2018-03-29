@@ -9,6 +9,7 @@ import (
 	"github.com/mitchellh/cli"
 	"google.golang.org/grpc/codes"
 	grpcStatus "google.golang.org/grpc/status"
+	"time"
 )
 
 const synopsis = "show status of specific acctname/repo, repo or hash"
@@ -79,6 +80,8 @@ func (c *cmd) writeStatusErr(err error) {
 }
 
 func (c *cmd) Run(args []string) int {
+	var statuses *models.Status
+	var err error
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
@@ -101,15 +104,12 @@ func (c *cmd) Run(args []string) int {
 		query := &models.StatusQuery{
 			Hash: c.OcyHelper.Hash ,
 		}
-		statuses, err := c.GetClient().GetStatus(ctx, query)
+		statuses, err = c.GetClient().GetStatus(ctx, query)
 		if err != nil {
 			c.writeStatusErr(err)
 			return 1
 		}
-
-		stageStatus, color, statuss := commandhelper.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
-		buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
-		c.UI.Output(buildStatus + stageStatus)
+		goto STATUS_FOUND
 		return 0
 	}
 
@@ -123,16 +123,12 @@ func (c *cmd) Run(args []string) int {
 			AcctName: c.OcyHelper.Account,
 			RepoName: c.OcyHelper.Repo,
 		}
-		statuses, err := c.GetClient().GetStatus(ctx, query)
+		statuses, err = c.GetClient().GetStatus(ctx, query)
 		if err != nil {
 			c.writeStatusErr(err)
 			return 1
 		}
-
-		stageStatus, color, statuss := commandhelper.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
-		buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
-		c.UI.Output(buildStatus + stageStatus)
-		return 0
+		goto STATUS_FOUND
 	}
 
 	//repo is last
@@ -140,16 +136,23 @@ func (c *cmd) Run(args []string) int {
 		query := &models.StatusQuery{
 			PartialRepo: c.OcyHelper.Repo,
 		}
-		statuses, err := c.GetClient().GetStatus(ctx, query)
+		statuses, err = c.GetClient().GetStatus(ctx, query)
 		if err != nil {
 			c.writeStatusErr(err)
 			return 1
 		}
-		stageStatus, color, status := commandhelper.PrintStatusStages(statuses.BuildSum.BuildDuration < 0, statuses)
-		buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, status)
-		c.UI.Output(buildStatus + stageStatus)
+		goto STATUS_FOUND
 		return 0
 	}
-
+	return 0
+STATUS_FOUND:
+	queued := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0
+	buildStarted := statuses.BuildSum.BuildTime.Seconds > 0 && statuses.IsInConsul
+	finished := !statuses.IsInConsul && statuses.BuildSum.BuildTime.Seconds > 0
+	commandhelper.Debuggit(c, fmt.Sprintf("finished is %v, buildStarted is %v, queued is %v, buildTime is %v", finished, buildStarted, queued, time.Unix(statuses.BuildSum.BuildTime.Seconds, 0)))
+	//statuses.BuildSum.QueueTime time.Unix(0,0)
+	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished), statuses)
+	buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
+	c.UI.Output(buildStatus + stageStatus)
 	return 0
 }
