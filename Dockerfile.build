@@ -26,4 +26,4 @@ RUN git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.or
 
 #CMD ["python","-m","SimpleHTTPServer"]
 RUN dep ensure -v && rm /root/.ssh/private_key
-RUN apk --update --no-cache add openssl wget
+RUN apk --update --no-cache add openssl wget bash

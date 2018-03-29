@@ -1,4 +1,4 @@
-image: jessishank/ocelot-build:cheese.1
+image: jessishank/ocelot-build:cheese.2
 buildTool: go
 branches:
   - ALL
@@ -16,6 +16,3 @@ stages:
     script:
       - cd $GOPATH/src/bitbucket.org/level11consulting/ocelot
       - ./build-release.sh
-#  - name: base-image
-#    script:
-#      -
