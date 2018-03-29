@@ -125,13 +125,11 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 
 	setupStart := time.Now()
 	w.BuildValet.Reset("setup", werk.CheckoutHash)
-	setupResult, uuid := builder.Setup(ctx, w.infochan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
+
+	dockerIdChan := make (chan string)
+	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
+	setupResult, _ := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
 	setupDura := time.Now().Sub(setupStart)
-	//defers are stacked, will be executed FILO
-	if err := buildruntime.RegisterBuild(consul, w.WerkConf.WerkerUuid.String(), werk.CheckoutHash, uuid); err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't register build")
-		return
-	}
 
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
@@ -159,6 +157,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 		stageStart := time.Now()
 		stageResult := builder.Execute(ctx, stage, w.infochan, werk.CheckoutHash)
 		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)
+
 		if stageResult.Status == pb.StageResultVal_FAIL {
 			fail = true
 			stageDura := time.Now().Sub(stageStart)
@@ -169,6 +168,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 			break
 		}
 
+
 		stageDura := time.Now().Sub(stageStart)
 		if err := storeStageToDb(w.Store, werk.Id, stageResult, stageStart, stageDura.Seconds()); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't store build output")
@@ -176,6 +176,8 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 		}
 
 	}
+
+	//update build_summary table
 	dura := time.Now().Sub(start)
 	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
@@ -183,6 +185,17 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	}
 
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
+}
+
+func (w *WorkerMsgHandler) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
+	dockerUuid := <- dockerChan
+
+	if err := buildruntime.RegisterBuild(w.WerkConf.RemoteConfig.GetConsul(), w.WerkConf.WerkerUuid.String(), checkoutHash, dockerUuid); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't register build")
+		return err
+	}
+
+	return nil
 }
 
 //storeStageToDb is a helper function for storing stages to db - this runs on completion of every stage

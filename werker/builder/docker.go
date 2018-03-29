@@ -30,7 +30,7 @@ func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 
-func (d *Docker) Setup(ctx context.Context, logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
+func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	var setupMessages []string
 
 	su := InitStageUtil("setup")
@@ -120,6 +120,11 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, werk *pb.WerkerT
 		logout <- []byte(warning)
 	}
 
+	//TODO: is creating a channel to use it once overkill....
+	ocelog.Log().Debug("sweet, sending container id back and closing dockeruuid chan")
+	dockerIdChan <- resp.ID
+	close(dockerIdChan)
+
 	logout <- []byte(su.GetStageLabel() + "Container created with ID " + resp.ID)
 
 	d.ContainerId = resp.ID
@@ -159,28 +164,29 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, werk *pb.WerkerT
 
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 
+	setupMessages = append(setupMessages, "attempting to download codebase...")
 	downloadCodebase := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
 	if len(downloadCodebase.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download codebase", downloadCodebase.Error)
-		setupMessages = append(setupMessages, "failed to download codebase")
-		downloadCodebase.Messages = append(downloadCodebase.Messages, setupMessages...)
+		downloadCodebase.Messages = append(setupMessages, downloadCodebase.Messages...)
 		return downloadCodebase, d.ContainerId
 	}
 
 
 	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
-	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
 
 
 	acctName := strings.Split(werk.FullName, "/")[0]
 	vaultAddr := d.getVaultAddr(rc.GetVault())
 	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + vaultAddr)
+
+	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
 	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
 		cred.BuildCredPath(werk.VcsType, acctName, cred.Vcs)), logout)
 	if len(result.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
-		result.Messages = append(result.Messages, setupMessages...)
+		result.Messages = append(setupMessages, result.Messages...)
 		return result, d.ContainerId
 	}
 
@@ -188,6 +194,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, werk *pb.WerkerT
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
+		setupMessages = append(setupMessages, "detected maven, attempting to retrieve maven config")
 		result := d.RepoIntegrationSetup(ctx, nexus.GetSettingsXml, d.WriteMavenSettingsXml, "maven", rc, werk, su, setupMessages, logout)
 		if result.Status == pb.StageResultVal_FAIL {
 			return result, d.ContainerId
@@ -196,7 +203,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, werk *pb.WerkerT
 	result = d.RepoIntegrationSetup(ctx, dockr.GetDockerConfig, d.WriteDockerJson, "docker login", rc, werk, su, setupMessages, logout)
 
 	setupMessages = append(setupMessages, "completed setup stage \u2713")
-	result.Messages = append(result.Messages, setupMessages...)
+	result.Messages = append(setupMessages, result.Messages...)
 	return result, d.ContainerId
 }
 
@@ -252,18 +259,27 @@ func (d *Docker) RepoIntegrationSetup(ctx context.Context, setupFunc RepoSetupFu
 
 func (d *Docker) Cleanup(ctx context.Context, logout chan []byte) {
 	su := InitStageUtil("cleanup")
-	logout <- []byte(su.GetStageLabel() + "Performing build cleanup...")
+
+	defer d.DockerClient.Close()
+
 	if d.Log != nil {
 		d.Log.Close()
 	}
 	if err := d.DockerClient.ContainerKill(ctx, d.ContainerId, "SIGKILL"); err != nil {
-		ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't kill")
+		if err == context.Canceled {
+			logout <- []byte("//////////REDRUM////////REDRUM////////REDRUM/////////")
+			ocelog.Log().Debugf("skipping builder's cleanup stage cause kill was detected")
+			return
+		} else {
+			ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't kill")
+		}
+
 	} else {
+		logout <- []byte(su.GetStageLabel() + "Performing build cleanup...")
 		if err := d.DockerClient.ContainerRemove(ctx, d.ContainerId, types.ContainerRemoveOptions{}); err != nil {
 			ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't rm")
 		}
 	}
-	d.DockerClient.Close()
 }
 
 

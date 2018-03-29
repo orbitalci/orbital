@@ -9,7 +9,7 @@ import (
 
 
 type Builder interface {
-	Setup(ctx context.Context, logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
+	Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
 	Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
 	Cleanup(ctx context.Context, logout chan []byte)
 }
