@@ -26,6 +26,7 @@
 	- pr trigger
 	- commit trigger
 	- etc. 
+- combine `ocelot poll` and `ocelot watch` (you either want to poll or you want callbacks)
 
 
 

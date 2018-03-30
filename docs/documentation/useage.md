@@ -53,12 +53,15 @@ stages:
       - "BUILDENVVAR=2"
      script:
         - mvn clean install
-   - name: build
+        
+   - name: build2
      script:
         - docker build -t "docker.metaverse.l11.com/myrepo:v2_$GIT_HASH" .
+        
    - name: docker push 
      script:
         - docker push "docker.metaverse.l11.com/myrepo:v2_$GIT_HASH"
+        
    - name: echo_things
      script:
         - echo "$GIT_HASH"
