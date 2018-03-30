@@ -30,7 +30,7 @@ func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing
 		Repo: "testRepo",
 		Branch: "aBranch",
 	}
-	id, err := pg.AddSumStart(model.Hash, model.BuildTime, model.Account, model.Repo, model.Branch)
+	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch)
 	if err != nil {
 		cleanup(t)
 		t.Fatal(err)

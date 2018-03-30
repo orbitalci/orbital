@@ -81,6 +81,7 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 		// unless its supposed to be saving somewhere else?
 		// return err
 	}
+	storeQueued(store, id)
 	if err := storeStageToDb(store, sr); err != nil {
 		ocelog.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err
@@ -96,9 +97,17 @@ func storeStageToDb(store storage.BuildStage, stageResult *smods.StageResult) er
 	return nil
 }
 
+func storeQueued(store storage.BuildSum, id int64) error {
+	err := store.SetQueueTime(id)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("unable to update queue time in build summary table")
+	}
+	return err
+}
+
+
 func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string) (int64, error) {
-	starttime := time.Now()
-	id, err := store.AddSumStart(hash, starttime, account, repo, branch)
+	id, err := store.AddSumStart(hash, account, repo, branch)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("unable to store summary details to db")
 		return 0, err

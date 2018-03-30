@@ -26,7 +26,7 @@ type BuildOut interface {
 
 type BuildSum interface {
 	// AddSumStart will
-	AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error)
+	AddSumStart(hash string, account string, repo string, branch string) (int64, error)
 	UpdateSum(failed bool, duration float64, id int64) error
 	RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error)
 	RetrieveSum(gitHash string) ([]models.BuildSummary, error)
@@ -35,6 +35,8 @@ type BuildSum interface {
 	RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error)
 	RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error)
 	StartBuild(id int64) error
+	SetQueueTime(id int64) error
+
 }
 
 type BuildStage interface {

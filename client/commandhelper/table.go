@@ -16,15 +16,17 @@ const (
 	RUNNING BuildStatus = iota
 	QUEUED
 	DONE
+	FAILED_PRESTART
 )
 
 //queued := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0
 //buildStarted := statuses.BuildSum.BuildTime.Seconds > 0 && statuses.IsInConsul
 //finished := !statuses.IsInConsul && buildStarted
-func GetStatus(queued, buildStarted, finished bool) BuildStatus {
+func GetStatus(queued, buildStarted, finished, failed_validation bool) BuildStatus {
 	if queued { return QUEUED }
 	if buildStarted { return RUNNING }
 	if finished { return DONE }
+	if failed_validation { return FAILED_PRESTART }
 	panic("none of these!")
 }
 
@@ -91,6 +93,9 @@ func PrintStatusStages(bs BuildStatus, statuses *models.Status) (string, int, st
 		status = "Queued and waiting to be built"
 		color = 30
 		return stageStatus, color, status
+	case FAILED_PRESTART:
+		status = "Failed PreStart"
+		color = 31
 	case DONE:
 		if !statuses.BuildSum.Failed {
 			status = "PASS"
