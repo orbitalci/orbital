@@ -1,6 +1,7 @@
 package build
 
 import (
+	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"strings"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
@@ -61,9 +62,17 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	validator *OcelotValidator,
 	producer *nsqpb.PbProduce,
 	store storage.OcelotStorage) error {
+
 	ocelog.Log().Debug("Storing initial results in db")
 	account, repo := GetAcctRepo(accountRepo)
 	vaulty := remoteConfig.GetVault()
+	consul := remoteConfig.GetConsul()
+	alreadyBuilding, err := buildruntime.CheckBuildInConsul(consul, hash)
+	if alreadyBuilding {
+		ocelog.Log().Info("kindly refusing to add to queue because this hash is already building")
+		return errors.New("this hash is already building in ocelot, therefore not adding to queue")
+	}
+
 	id, err := storeSummaryToDb(store, hash, repo, branch, account)
 	if err != nil {
 		return err
