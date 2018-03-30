@@ -90,7 +90,6 @@ stages:
 Interactions with ocelot are driven with the command line client. 
 
 ### Install client 
-*todo: add linux (& windows) distro to ocelot client*
 
 *todo: add name of admin server, not ip*
 
@@ -100,7 +99,15 @@ ADMIN_HOST=10.1.72.229
 ADMIN_PORT=31000
 ```
 
-Download client from $ADMIN_HOST/ocelot. Unzip, and move the ocelot binary to `/usr/local/bin`
+The ocelot client can be downloaded here: 
+
+**Mac**: https://s3-us-west-2.amazonaws.com/ocelotty/mac-ocelot.zip
+
+**Windows**: https://s3-us-west-2.amazonaws.com/ocelotty/windows-ocelot.zip
+
+**Linux**: https://s3-us-west-2.amazonaws.com/ocelotty/linux-ocelot.zip
+
+Then unzip, and move the ocelot binary to `/usr/local/bin`
 
 ## Workflow
 ### Git Detection   

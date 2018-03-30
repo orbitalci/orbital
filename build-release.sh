@@ -6,15 +6,19 @@ dep ensure -v
 
 echo "building ocelot client"
 # TODO: this only builds mac binary right now - swap to building other ones when we need it
-env GOOS=darwin GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
+env GOOS=darwin GOARCH=amd64 go build -o mac-ocelot cmd/ocelot/main.go
+env GOOS=windows GOARCH=amd64 go build -o windows-ocelot cmd/ocelot/main.go
+env GOOS=linux GOARCH=amd64 go build -o linux-ocelot cmd/ocelot/main.go
 
 echo "uploading client binary"
-zip -r ocelot.zip ocelot
+zip -r mac-ocelot.zip mac-ocelot
+zip -r windows-ocelot.zip windows-ocelot
+zip -r linux-ocelot.zip linux-ocelot
 
 # upload zipped client binary to s3
-aws s3 cp --acl public-read-write --content-disposition attachment ocelot.zip s3://ocelotty/ocelot.zip
-
-
+aws s3 cp --acl public-read-write --content-disposition attachment mac-ocelot.zip s3://ocelotty/mac-ocelot.zip
+aws s3 cp --acl public-read-write --content-disposition attachment windows-ocelot.zip s3://ocelotty/windows-ocelot.zip
+aws s3 cp --acl public-read-write --content-disposition attachment linux-ocelot.zip s3://ocelotty/linux-ocelot.zip
 
 echo "uploading werker's template files"
 cd werker/builder/template
@@ -26,8 +30,12 @@ aws s3 cp --acl public-read-write --content-disposition attachment werker_files.
 # cleanup the files we created for s3
 rm werker_files.tar
 cd -
-rm ocelot.zip
-rm ocelot
+rm mac-ocelot.zip
+rm windows-ocelot.zip
+rm linux-ocelot.zip
+rm mac-ocelot
+rm windows-ocelot
+rm linux-ocelot
 
 
 # This build assumes you have your ssh key added to L11 bitbucket
