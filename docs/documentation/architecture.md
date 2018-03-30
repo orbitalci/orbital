@@ -21,6 +21,10 @@ Ocelot is a distributed system with 5 components. Four of which are for the CI t
 
 **Postgres**: This is where build data is stored 
 
+## Boring technical things
+
+Ocelot is written in [go](https://golang.org) and client/server interactions are performed with [GRPC](https://grpc.io) using [protobuf](https://developers.google.com/protocol-buffers/) as the underlying message format. Dependency management for this project is handled with [dep](https://golang.github.io/dep/docs/introduction.html). Workers are started with "types" set via environment variable. Currently, the only available type is "docker". This means that the worker will spawn new build containers using docker. The idea is that if desired, the worker type can be set to, for example `kubernetes` and magically, all new build containers will then be started by kubernetes.  
+
 ## A simplified diagram of what happens when you run `ocelot build`
 
 ![ocelot build](ocelot_build.jpg "ocelot build")

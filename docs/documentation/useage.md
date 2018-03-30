@@ -90,9 +90,17 @@ stages:
 Interactions with ocelot are driven with the command line client. 
 
 ### Install client 
-*todo: add linux (& windows? ) distro to ocelot client as well*
+*todo: add linux (& windows) distro to ocelot client*
 
-Download client from *todo add link for client*. Unzip, and move the ocelot binary to `/usr/local/bin`. 
+*todo: add name of admin server, not ip*
+
+Add the following environment variables to your .bash_profile:  
+```
+ADMIN_HOST=10.1.72.229
+ADMIN_PORT=31000
+```
+
+Download client from $ADMIN_HOST/ocelot. Unzip, and move the ocelot binary to `/usr/local/bin`
 
 ## Workflow
 ### Git Detection   
