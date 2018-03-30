@@ -95,17 +95,13 @@ Interactions with ocelot are driven with the command line client.
 
 Add the following environment variables to your .bash_profile:  
 ```
-ADMIN_HOST=10.1.72.229
-ADMIN_PORT=31000
+export ADMIN_HOST=10.1.72.229
+export ADMIN_PORT=31000
 ```
 
 The ocelot client can be downloaded here: 
 
-**Mac**: https://s3-us-west-2.amazonaws.com/ocelotty/mac-ocelot.zip
-
-**Windows**: https://s3-us-west-2.amazonaws.com/ocelotty/windows-ocelot.zip
-
-**Linux**: https://s3-us-west-2.amazonaws.com/ocelotty/linux-ocelot.zip
+[**Mac**](https://s3-us-west-2.amazonaws.com/ocelotty/mac-ocelot.zip), [**Windows**](https://s3-us-west-2.amazonaws.com/ocelotty/windows-ocelot.zip), [**Linux**](https://s3-us-west-2.amazonaws.com/ocelotty/linux-ocelot.zip)
 
 Then unzip, and move the ocelot binary to `/usr/local/bin`
 
