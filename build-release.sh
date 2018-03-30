@@ -5,15 +5,23 @@
 dep ensure -v
 
 echo "building ocelot client"
-# TODO: this only builds mac binary right now - swap to building other ones when we need it
-env GOOS=darwin GOARCH=amd64 go build -o mac-ocelot cmd/ocelot/main.go
-env GOOS=windows GOARCH=amd64 go build -o windows-ocelot cmd/ocelot/main.go
-env GOOS=linux GOARCH=amd64 go build -o linux-ocelot cmd/ocelot/main.go
+# mac
+env GOOS=darwin GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
+zip -r mac-ocelot.zip ocelot
+rm ocelot
+
+# window
+env GOOS=windows GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
+zip -r windows-ocelot.zip ocelot
+rm ocelot
+
+# linux
+env GOOS=linux GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
+zip -r linux-ocelot.zip ocelot
+rm ocelot
+
 
 echo "uploading client binary"
-zip -r mac-ocelot.zip mac-ocelot
-zip -r windows-ocelot.zip windows-ocelot
-zip -r linux-ocelot.zip linux-ocelot
 
 # upload zipped client binary to s3
 aws s3 cp --acl public-read-write --content-disposition attachment mac-ocelot.zip s3://ocelotty/mac-ocelot.zip
@@ -33,9 +41,6 @@ cd -
 rm mac-ocelot.zip
 rm windows-ocelot.zip
 rm linux-ocelot.zip
-rm mac-ocelot
-rm windows-ocelot
-rm linux-ocelot
 
 
 # This build assumes you have your ssh key added to L11 bitbucket

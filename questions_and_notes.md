@@ -46,6 +46,7 @@
 ## BIG TODOs:
 - use the [go test tagging thing](https://stackoverflow.com/questions/24030059/skip-some-tests-with-go-test)
 - polling option to add new repos with ocelot.yml
+- add versioning (ALSO MEANS ADDING `ocelot version` command!)
 - make the client colors for everything configurable
     - this would also include making it so that the ocelot client can be configured via a config.yml 
 - actually parse out exit codes, not just shit itself if it gets a non-zero one
