@@ -109,7 +109,7 @@ func (p *PostgresStorage) SetQueueTime(id int64) error {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	queryStr := `UPDATE build_summary SET queuetime=$2 WHERE id=$2`
+	queryStr := `UPDATE build_summary SET queuetime=$1 WHERE id=$2`
 	if _, err := p.db.Exec(queryStr, time.Now().Format(TimeFormat), id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err

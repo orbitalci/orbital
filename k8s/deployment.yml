@@ -30,7 +30,7 @@ spec:
       #     secretName: metaverse-secret
       containers:
       - name: admin-ocelot
-        image: jessishank/ocelot-admin:kill.3
+        image: jessishank/ocelot-admin:kill.4
         imagePullPolicy: Always
         volumeMounts:
           - name: privkey-volume
@@ -101,7 +101,7 @@ spec:
           type: File
       containers:
       - name:  hookhandler-ocelot
-        image: jessishank/ocelot-hookhandler:kill.3
+        image: jessishank/ocelot-hookhandler:kill.4
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock
@@ -156,7 +156,7 @@ spec:
           type: File
       containers:
       - name:  poller-ocelot
-        image: jessishank/ocelot-poller:kill.3
+        image: jessishank/ocelot-poller:kill.4
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock
