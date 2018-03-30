@@ -8,7 +8,7 @@ import (
 )
 
 func TestRemoteConfig_ErrorHandling(t *testing.T) {
-	brokenRemote, _ := GetInstance("", 19000, "abc")
+	brokenRemote, _ := GetInstance("localhost", 19000, "abc")
 	if brokenRemote == nil {
 		t.Error(test.GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
 	}

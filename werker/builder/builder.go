@@ -4,13 +4,13 @@ import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"strings"
+	"context"
 )
 
 
 type Builder interface {
-	Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
-	Execute(actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
-	Cleanup(logout chan []byte)
+	Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
+	Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
 }
 
 //helper functions for stages, doesn't handle camelcase right now so if you want that set the values

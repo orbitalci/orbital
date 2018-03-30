@@ -4,8 +4,20 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"os"
+	"syscall"
+	"os/signal"
+	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
+	"io"
+	"github.com/mitchellh/cli"
+	"google.golang.org/grpc"
 )
 
+/*
+This gets embedded inside of ocelot clients and performs helper functions common across all clients.
+All the helper functions will print things in the UI. Good rule of thumb is if it doesn't print things,
+then it doesn't take cli.Ui as a param.
+ */
 type OcyHelper struct {
 	Hash 	   string
 	AcctRepo   string
@@ -14,20 +26,20 @@ type OcyHelper struct {
 	SuppressUI bool
 }
 
-func (oh *OcyHelper) DetectRepo(cmd GuideOcelotCmd) error {
+func (oh *OcyHelper) DetectRepo(ui cli.Ui) error {
 	if oh.Repo == "ERROR" {
 		acctRepo, err := FindAcctRepo()
-		cmd.GetUI().Info("Flag -repo was not set, detecting account and repository using git commands")
+		ui.Info("Flag -repo was not set, detecting account and repository using git commands")
 		if err != nil {
-			Debuggit(cmd, "error!!! " + err.Error())
-			cmd.GetUI().Error("flag -repo must be set or you must be in the directory you wish to view a summary of. see --help")
+			Debuggit(ui, "error!!! " + err.Error())
+			ui.Error("flag -repo must be set or you must be in the directory you wish to view a summary of. see --help")
 			return err
 		}
 		oh.AcctRepo = acctRepo
-		if err := oh.SplitAndSetAcctRepo(cmd); err != nil {
+		if err := oh.SplitAndSetAcctRepo(ui); err != nil {
 			return err
 		}
-		cmd.GetUI().Info(fmt.Sprintf("Detected repository %s and account %s", oh.Repo, oh.Account))
+		ui.Info(fmt.Sprintf("Detected repository %s and account %s", oh.Repo, oh.Account))
 	}
 	return nil
 }
@@ -40,10 +52,10 @@ func (oh *OcyHelper) WriteUi(writer func(string), msg string) {
 }
 
 // SplitAndSetAcctRepo will split up the AcctRepo field, and write an error to ui if it doesnt meet spec
-func (oh *OcyHelper) SplitAndSetAcctRepo(cmd GuideOcelotCmd) error {
+func (oh *OcyHelper) SplitAndSetAcctRepo(ui cli.Ui) error {
 	data := strings.Split(oh.AcctRepo, "/")
 	if len(data) != 2 {
-		oh.WriteUi(cmd.GetUI().Error, "flag -acct-repo must be in the format <account>/<repo>")
+		oh.WriteUi(ui.Error, "flag -acct-repo must be in the format <account>/<repo>")
 		return errors.New("split created an array of len " + string(len(data)))
 	}
 	oh.Account = data[0]
@@ -51,31 +63,59 @@ func (oh *OcyHelper) SplitAndSetAcctRepo(cmd GuideOcelotCmd) error {
 	return nil
 }
 
-func (oh *OcyHelper) DetectAcctRepo(cmd GuideOcelotCmd) error {
+func (oh *OcyHelper) DetectAcctRepo(ui cli.Ui) error {
 	if oh.AcctRepo == "ERROR" {
 		acctRepo, err := FindAcctRepo()
-		cmd.GetUI().Info("Flag -acct-repo was not set, detecting account and repository using git commands")
+		ui.Info("Flag -acct-repo was not set, detecting account and repository using git commands")
 		if err != nil {
-			Debuggit(cmd, "error!!! " + err.Error())
-			oh.WriteUi(cmd.GetUI().Error, "flag -acct-repo must be in the format <account>/<repo> or you must be in the directory you wish to view a summary of. see --help")
+			Debuggit(ui, "error!!! " + err.Error())
+			oh.WriteUi(ui.Error, "flag -acct-repo must be in the format <account>/<repo> or you must be in the directory you wish to view a summary of. see --help")
 			return err
 		}
-		cmd.GetUI().Info("Detected: " + acctRepo)
+		ui.Info("Detected: " + acctRepo)
 		oh.AcctRepo = acctRepo
 	}
 	return nil
 }
 
-func (oh *OcyHelper) DetectHash(cmd GuideOcelotCmd) error {
+func (oh *OcyHelper) DetectHash(ui cli.Ui) error {
 	if oh.Hash == "ERROR" {
 		sha := FindCurrentHash()
 		if len(sha) > 0 {
-			cmd.GetUI().Info(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
+			ui.Info(fmt.Sprintf("no -hash flag passed, using detected hash %s", sha))
 			oh.Hash = sha
 		} else {
-			oh.WriteUi(cmd.GetUI().Error, "flag -hash is required or you must be in directory of tracked project, otherwise there is no build to tail")
+			oh.WriteUi(ui.Error, "flag -hash is required or you must be in directory of tracked project, otherwise there is no build to tail")
 			return errors.New("hash not detected, flag not passed")
 		}
+	}
+	return nil
+}
+
+//handles streaming for grpc clients,
+//***THIS ASSUMES THAT THE STREAMING SERVER HAS A FIELD CALLED OUTPUTLINE****
+func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream grpc.ClientStream) error {
+	interrupt := make(chan os.Signal, 2)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-interrupt
+		ui.Info("received ctl-c, exiting")
+		stream.CloseSend()
+		os.Exit(1)
+	}()
+	for {
+		Debuggit(ui, "receiving stream")
+		resp := new (protobuf.Response)
+		err := stream.RecvMsg(resp);
+
+		if err == io.EOF {
+			stream.CloseSend()
+			return nil
+		} else if err != nil {
+			UIErrFromGrpc(err, ui, "Error streaming from werker.")
+			return err
+		}
+		ui.Info(resp.GetOutputLine())
 	}
 	return nil
 }

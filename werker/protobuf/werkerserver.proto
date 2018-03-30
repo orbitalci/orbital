@@ -8,6 +8,7 @@ service Build {
     // type to make it as bidirectional streaming RPC method.
 
     rpc BuildInfo (Request) returns (stream Response) {}
+    rpc KillHash (Request) returns (stream Response) {}
 }
 
 message Request {

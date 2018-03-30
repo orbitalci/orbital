@@ -95,8 +95,8 @@ func (c *cmd) Run(args []string) int {
 	}
 	// if nothing is set, attempt to detect hash
 	if c.OcyHelper.AcctRepo == "ERROR" && c.OcyHelper.Repo == "ERROR" && c.OcyHelper.Hash == "ERROR" {
-		if err := c.OcyHelper.DetectHash(c); err != nil {
-			commandhelper.Debuggit(c, err.Error())
+		if err := c.OcyHelper.DetectHash(c.UI); err != nil {
+			commandhelper.Debuggit(c.UI, err.Error())
 			c.UI.Error("You must either be in the repository you want to track, one of the following flags must be set: -acct-repo, -repo, -hash. see --help")
 			return 1
 		}
@@ -109,7 +109,7 @@ func (c *cmd) Run(args []string) int {
 
 	// always respect hash first
 	if c.OcyHelper.Hash != "ERROR" && len(c.OcyHelper.Hash) > 0 {
-		commandhelper.Debuggit(c, "using hash for status")
+		commandhelper.Debuggit(c.UI, "using hash for status")
 		query := &models.StatusQuery{
 			Hash: c.OcyHelper.Hash ,
 		}
@@ -124,8 +124,8 @@ func (c *cmd) Run(args []string) int {
 
 	//respect acct-repo next
 	if c.OcyHelper.AcctRepo != "ERROR" {
-		commandhelper.Debuggit(c, "using acct/repo for status")
-		if err := c.OcyHelper.SplitAndSetAcctRepo(c); err != nil {
+		commandhelper.Debuggit(c.UI, "using acct/repo for status")
+		if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
 			return 1
 		}
 
@@ -143,7 +143,7 @@ func (c *cmd) Run(args []string) int {
 
 	//repo is last
 	if c.OcyHelper.Repo != "ERROR" {
-		commandhelper.Debuggit(c, "using repo for status")
+		commandhelper.Debuggit(c.UI, "using repo for status")
 		query := &models.StatusQuery{
 			PartialRepo: c.OcyHelper.Repo,
 		}
@@ -160,7 +160,7 @@ STATUS_FOUND:
 	queued := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0
 	buildStarted := statuses.BuildSum.BuildTime.Seconds > 0 && statuses.IsInConsul
 	finished := !statuses.IsInConsul && statuses.BuildSum.BuildTime.Seconds > 0
-	commandhelper.Debuggit(c, fmt.Sprintf("finished is %v, buildStarted is %v, queued is %v, buildTime is %v", finished, buildStarted, queued, time.Unix(statuses.BuildSum.BuildTime.Seconds, 0)))
+	commandhelper.Debuggit(c.UI, fmt.Sprintf("finished is %v, buildStarted is %v, queued is %v, buildTime is %v", finished, buildStarted, queued, time.Unix(statuses.BuildSum.BuildTime.Seconds, 0)))
 	//statuses.BuildSum.QueueTime time.Unix(0,0)
 	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished), statuses)
 	buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)

@@ -8,11 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
-	"google.golang.org/grpc"
 	"io"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 const synopsis = "stream logs on running or completed build"
@@ -78,8 +74,8 @@ func (c *cmd) Run(args []string) int {
 	if c.buildId != 0 {
 		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{BuildId: int64(c.buildId)})
 	} else {
-		if err := c.OcyHelper.DetectHash(c); err != nil {
-			commandhelper.Debuggit(c, err.Error())
+		if err := c.OcyHelper.DetectHash(c.UI); err != nil {
+			commandhelper.Debuggit(c.UI, err.Error())
 			return 1
 		}
 		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.OcyHelper.Hash})
@@ -96,10 +92,10 @@ func (c *cmd) Run(args []string) int {
 	} else if len(build.Builds) == 1 {
 		for _, build := range build.Builds {
 			if build.Done {
-				commandhelper.Debuggit(c, "streaming from storage")
+				commandhelper.Debuggit(c.UI, "streaming from storage")
 				return c.fromStorage(ctx, build.Hash)
 			} else {
-				commandhelper.Debuggit(c, "streaming from werker")
+				commandhelper.Debuggit(c.UI, "streaming from werker")
 				return c.fromWerker(ctx, build)
 			}
 		}
@@ -141,11 +137,8 @@ func (c *cmd) fromStorage(ctx context.Context, hash string) int {
 }
 
 func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
-	var opts []grpc.DialOption
-	// right now werker is insecure
-	opts = append(opts, grpc.WithInsecure())
-	client, err := build.CreateBuildClient(opts)
-	commandhelper.Debuggit(c, fmt.Sprintf("dialing werker at %s:%s", build.GetIp(), build.GetGrpcPort()))
+	client, err := build.CreateBuildClient()
+	commandhelper.Debuggit(c.UI, fmt.Sprintf("dialing werker at %s:%s", build.GetIp(), build.GetGrpcPort()))
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.GetIp(), build.GetGrpcPort(), err.Error()))
 		return 1
@@ -156,26 +149,13 @@ func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1
 	}
-	interrupt := make(chan os.Signal, 2)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-interrupt
-		c.UI.Info("received ctl-c, exiting")
-		stream.CloseSend()
-		os.Exit(1)
-	}()
-	for {
-		commandhelper.Debuggit(c, "receiving stream")
-		line, err := stream.Recv()
-		if err == io.EOF {
-			stream.CloseSend()
-			return 0
-		} else if err != nil {
-			commandhelper.UIErrFromGrpc(err, c.UI, "Error streaming from werker.")
-			return 1
-		}
-		c.UI.Info(line.GetOutputLine())
+
+	err = c.HandleStreaming(c.UI, stream)
+	if err != nil {
+		c.UI.Error(err.Error())
+		return 1
 	}
+	return 0
 }
 
 

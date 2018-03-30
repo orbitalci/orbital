@@ -58,7 +58,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
+	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
 	c.flags.StringVar(&c.cron, "cron", "ERROR", "cron string for polling repo ")
 	c.flags.StringVar(&c.branches, "branches", "ERROR", "comma separated list of branches to poll vcs for")
 }
@@ -68,10 +68,10 @@ func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
-	if err := c.OcyHelper.DetectAcctRepo(c); err != nil {
+	if err := c.OcyHelper.DetectAcctRepo(c.UI); err != nil {
 		return 1
 	}
-	if err := c.OcyHelper.SplitAndSetAcctRepo(c); err != nil {
+	if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
 		return 1
 	}
 	if c.cron == "ERROR" {

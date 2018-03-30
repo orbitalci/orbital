@@ -38,6 +38,7 @@ service GuideOcelot {
     rpc BuildRepoAndHash (BuildReq) returns (stream LineResponse) {}
     rpc PollRepo(PollRequest) returns (google.protobuf.Empty) {}
     rpc DeletePollRepo(PollRequest) returns (google.protobuf.Empty) {}
+    rpc FindWerker (BuildReq) returns (BuildRuntimeInfo) {}
     rpc ListPolledRepos(google.protobuf.Empty) returns (Polls) {}
 }
 

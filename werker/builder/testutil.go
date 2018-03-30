@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	cleaner2 "bitbucket.org/level11consulting/ocelot/werker/cleaner"
 )
 
 func tarTemplates(t *testing.T) func(t *testing.T) {
@@ -79,6 +80,7 @@ func CreateLivingDockerContainer(t *testing.T, imageName string) (d *Docker, cle
 		LoopbackIp: loopback,
 	}
 	builder := NewDockerBuilder(b)
+	dockerCleaner := &cleaner2.DockerCleaner{}
 	d = builder.(*Docker)
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
@@ -128,7 +130,7 @@ func CreateLivingDockerContainer(t *testing.T, imageName string) (d *Docker, cle
 	d.Log = containerLog
 	dockerCleanup := func(t *testing.T){
 		logout := make(chan[]byte, 100)
-		d.Cleanup(logout)
+		dockerCleaner.Cleanup(ctx, d.ContainerId, logout)
 	}
 	cleaner := &Cleanup{
 		tarCleanup: cleanupTar,

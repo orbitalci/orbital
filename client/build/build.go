@@ -6,7 +6,6 @@ import (
 	"flag"
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
-	"io"
 )
 
 
@@ -59,29 +58,29 @@ func (c *cmd) Help() string {
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	//TODO: trigger also by build id? Need to standardize across commands
-	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to build")
-	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR", "hash to build")
+	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to build")
+	c.flags.StringVar(&c.Hash, "hash", "ERROR", "hash to build")
 	c.flags.StringVar(&c.Branch, "branch", "ERROR", "branch to build (only required if passing a previously un-built hash or overriding the branch associated with a previous build)")
 }
 
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
-		commandhelper.Debuggit(c, err.Error())
+		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
 	}
 
-	if err := c.OcyHelper.DetectHash(c); err != nil {
-		commandhelper.Debuggit(c, err.Error())
+	if err := c.DetectHash(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
 	}
 
-	if err := c.OcyHelper.DetectAcctRepo(c); err != nil {
-		commandhelper.Debuggit(c, err.Error())
+	if err := c.DetectAcctRepo(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
 	}
-	if err := c.OcyHelper.SplitAndSetAcctRepo(c); err != nil {
-		commandhelper.Debuggit(c, err.Error())
+	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
 	}
 
 	ctx := context.Background()
@@ -90,8 +89,8 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	buildRequest := &models.BuildReq{
-		AcctRepo: c.OcyHelper.AcctRepo,
-		Hash: c.OcyHelper.Hash,
+		AcctRepo: c.AcctRepo,
+		Hash: c.Hash,
 	}
 
 	if c.Branch != "ERROR" && len(c.Branch) > 0 {
@@ -105,16 +104,10 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	for {
-		line, err := stream.Recv()
-		if err == io.EOF {
-			stream.CloseSend()
-			return 0
-		} else if err != nil {
-			commandhelper.UIErrFromGrpc(err, c.UI, "Error streaming from storage via admin.")
-			return 1
-		}
-		c.UI.Info(line.GetOutputLine())
+	err = c.HandleStreaming(c.UI, stream)
+	if err != nil {
+		c.UI.Error(err.Error())
+		return 1
 	}
 
 	return 0

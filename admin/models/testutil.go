@@ -92,6 +92,13 @@ func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery
 	return builds, nil
 }
 
+func (f *fakeGuideOcelotClient) FindWerker(ctx context.Context, in *BuildReq, opts ...grpc.CallOption) (*BuildRuntimeInfo, error) {
+	var build = &BuildRuntimeInfo{
+		Hash: "abc",
+	}
+	return build, nil
+}
+
 // todo: make this useful
 func (f *fakeGuideOcelotClient) Logs(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (GuideOcelot_LogsClient, error) {
 	return NewFakeGuideOcelotLogsCli(f.logLines), nil
@@ -145,6 +152,10 @@ func (t *testBuildClient) BuildInfo(ctx context.Context, in *protobuf.Request, o
 	return protobuf.NewFakeBuildClient(t.logLines), nil
 }
 
+func (t *testBuildClient) KillHash(ctx context.Context, in *protobuf.Request, opts ...grpc.CallOption) (protobuf.Build_KillHashClient, error) {
+	return protobuf.NewFakeBuildClient(t.logLines), nil
+}
+
 func NewTestBuildRuntime(done bool, ip string, grpcPort string, logLines []string) *testBuildRuntime{
 	return &testBuildRuntime{
 		Done: done,
@@ -178,7 +189,7 @@ func (t *testBuildRuntime) GetHash() string {
 	return t.Hash
 }
 
-func (t *testBuildRuntime) CreateBuildClient(opts []grpc.DialOption) (protobuf.BuildClient, error) {
+func (t *testBuildRuntime) CreateBuildClient() (protobuf.BuildClient, error) {
 	return &testBuildClient{logLines: t.logLines}, nil
 }
 

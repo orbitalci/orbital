@@ -30,14 +30,12 @@ func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
 }
 
-func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
+func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	var setupMessages []string
 
 	su := InitStageUtil("setup")
 
 	logout <- []byte(su.GetStageLabel() + "Setting up...")
-
-	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	d.DockerClient = cli
 
@@ -82,7 +80,6 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 
 
-	//TODO: change this to be root user and see if that fixes gradle builds
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,
@@ -123,6 +120,11 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 		logout <- []byte(warning)
 	}
 
+	//TODO: is creating a channel to use it once overkill....
+	ocelog.Log().Debug("sweet, sending container id back and closing dockeruuid chan")
+	dockerIdChan <- resp.ID
+	close(dockerIdChan)
+
 	logout <- []byte(su.GetStageLabel() + "Container created with ID " + resp.ID)
 
 	d.ContainerId = resp.ID
@@ -162,28 +164,29 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
 
-	downloadCodebase := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
+	setupMessages = append(setupMessages, "attempting to download codebase...")
+	downloadCodebase := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
 	if len(downloadCodebase.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download codebase", downloadCodebase.Error)
-		setupMessages = append(setupMessages, "failed to download codebase")
-		downloadCodebase.Messages = append(downloadCodebase.Messages, setupMessages...)
+		downloadCodebase.Messages = append(setupMessages, downloadCodebase.Messages...)
 		return downloadCodebase, d.ContainerId
 	}
 
 
 	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
-	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
 
 
 	acctName := strings.Split(werk.FullName, "/")[0]
 	vaultAddr := d.getVaultAddr(rc.GetVault())
 	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + vaultAddr)
-	result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+vaultAddr}, d.DownloadSSHKey(
+
+	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
+	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
 		cred.BuildCredPath(werk.VcsType, acctName, cred.Vcs)), logout)
 	if len(result.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
-		result.Messages = append(result.Messages, setupMessages...)
+		result.Messages = append(setupMessages, result.Messages...)
 		return result, d.ContainerId
 	}
 
@@ -191,15 +194,15 @@ func (d *Docker) Setup(logout chan []byte, werk *pb.WerkerTask, rc cred.CVRemote
 
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
-		result := d.RepoIntegrationSetup(nexus.GetSettingsXml, d.WriteMavenSettingsXml, "maven", rc, werk, su, setupMessages, logout)
+		setupMessages = append(setupMessages, "detected maven, attempting to retrieve maven config")
+		result := d.RepoIntegrationSetup(ctx, nexus.GetSettingsXml, d.WriteMavenSettingsXml, "maven", rc, werk, su, setupMessages, logout)
 		if result.Status == pb.StageResultVal_FAIL {
 			return result, d.ContainerId
 		}
 	}
-	result = d.RepoIntegrationSetup(dockr.GetDockerConfig, d.WriteDockerJson, "docker login", rc, werk, su, setupMessages, logout)
+	result = d.RepoIntegrationSetup(ctx, dockr.GetDockerConfig, d.WriteDockerJson, "docker login", rc, werk, su, setupMessages, logout)
 
-	setupMessages = append(setupMessages, "completed setup stage \u2713")
-	result.Messages = append(result.Messages, setupMessages...)
+	result.Messages = append(result.Messages, "completed setup stage \u2713")
 	return result, d.ContainerId
 }
 
@@ -214,10 +217,11 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 	}
 	return registerdAddr
 }
+
 type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
 type RepoExecFunc func(string) []string
 
-func (d *Docker) RepoIntegrationSetup(setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
+func (d *Docker) RepoIntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
 	if renderedString, err := setupFunc(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
 		_, ok := err.(*repo.NoCreds)
 		if !ok {
@@ -239,7 +243,7 @@ func (d *Docker) RepoIntegrationSetup(setupFunc RepoSetupFunc, execFunc RepoExec
 		}
 	} else {
 		ocelog.Log().Debug("writing integration for ", integrationName)
-		result := d.Exec(su.GetStage(), su.GetStageLabel(), []string{}, execFunc(renderedString), logout)
+		result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, execFunc(renderedString), logout)
 		if result.Messages == nil {
 			result.Messages = msgs
 		} else {
@@ -251,28 +255,7 @@ func (d *Docker) RepoIntegrationSetup(setupFunc RepoSetupFunc, execFunc RepoExec
 	return result
 }
 
-
-func (d *Docker) Cleanup(logout chan []byte) {
-	su := InitStageUtil("cleanup")
-	logout <- []byte(su.GetStageLabel() + "Performing build cleanup...")
-
-	//TODO: review, should we be creating new contexts for every stage?
-	cleanupCtx := context.Background()
-	if d.Log != nil {
-		d.Log.Close()
-	}
-	if err := d.DockerClient.ContainerKill(cleanupCtx, d.ContainerId, "SIGKILL"); err != nil {
-		ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't kill")
-	} else {
-		if err := d.DockerClient.ContainerRemove(cleanupCtx, d.ContainerId, types.ContainerRemoveOptions{}); err != nil {
-			ocelog.IncludeErrField(err).WithField("containerId", d.ContainerId).Error("couldn't rm")
-		}
-	}
-	d.DockerClient.Close()
-}
-
-
-func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
+func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	if len(d.ContainerId) == 0 {
 		return &pb.Result {
 			Stage: stage.Name,
@@ -282,12 +265,11 @@ func (d *Docker) Execute(stage *pb.Stage, logout chan []byte, commitHash string)
 	}
 
 	su := InitStageUtil(stage.Name)
-	return d.Exec(su.GetStage(), su.GetStageLabel(), stage.Env, d.CDAndRunCmds(stage.Script, commitHash), logout)
+	return d.Exec(ctx, su.GetStage(), su.GetStageLabel(), stage.Env, d.CDAndRunCmds(stage.Script, commitHash), logout)
 }
 
-func (d *Docker) Exec(currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *pb.Result {
+func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *pb.Result {
 	var stageMessages []string
-	ctx := context.Background()
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
 		Tty: true,
 		AttachStdin: true,
