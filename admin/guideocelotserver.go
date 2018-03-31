@@ -508,6 +508,7 @@ func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*mod
 			Repo: pll.Repo,
 			Cron: pll.Cron,
 			Branches: pll.Branches,
+			LastCronTime: &timestamp.Timestamp{Seconds:pll.LastCron.Unix(), Nanos:0},
 		}
 		pollz.Polls = append(pollz.Polls, pbpoll)
 	}

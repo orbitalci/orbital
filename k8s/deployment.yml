@@ -30,7 +30,7 @@ spec:
       #     secretName: metaverse-secret
       containers:
       - name: admin-ocelot
-        image: jessishank/ocelot-admin:kill.4
+        image: jessishank/ocelot-admin:kill.5
         imagePullPolicy: Always
         volumeMounts:
           - name: privkey-volume

@@ -13,6 +13,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 
@@ -83,13 +84,15 @@ func (c *cmd) Run(args []string) int {
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
 	writ.SetAlignment(tablewriter.ALIGN_LEFT)
-	writ.SetHeader([]string{"Acct/Repo", "Cron String", "Branches"})
+	writ.SetHeader([]string{"Acct/Repo", "Cron String", "Branches", "Last Polled"})
 	for _, poll := range pollz.Polls {
 		var row []string
+		thyme := time.Unix(poll.LastCronTime.Seconds, int64(poll.LastCronTime.Nanos))
 		row = append(row,
 				fmt.Sprintf("%s/%s", poll.Account, poll.Repo),
 				poll.Cron,
 				poll.Branches,
+				thyme.Format("01/02/06 15:04:05"),
 		)
 		writ.Append(row)
 	}
