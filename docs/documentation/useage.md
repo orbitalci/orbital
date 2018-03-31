@@ -53,12 +53,15 @@ stages:
       - "BUILDENVVAR=2"
      script:
         - mvn clean install
-   - name: build
+        
+   - name: build2
      script:
         - docker build -t "docker.metaverse.l11.com/myrepo:v2_$GIT_HASH" .
+        
    - name: docker push 
      script:
         - docker push "docker.metaverse.l11.com/myrepo:v2_$GIT_HASH"
+        
    - name: echo_things
      script:
         - echo "$GIT_HASH"
@@ -87,9 +90,20 @@ stages:
 Interactions with ocelot are driven with the command line client. 
 
 ### Install client 
-*todo: add linux (& windows? ) distro to ocelot client as well*
 
-Download client from *todo add link for client*. Unzip, and move the ocelot binary to `/usr/local/bin`. 
+*todo: add name of admin server, not ip*
+
+Add the following environment variables to your .bash_profile:  
+```
+export ADMIN_HOST=10.1.72.229
+export ADMIN_PORT=31000
+```
+
+The ocelot client can be downloaded here: 
+
+[**Mac**](https://s3-us-west-2.amazonaws.com/ocelotty/mac-ocelot.zip), [**Windows**](https://s3-us-west-2.amazonaws.com/ocelotty/windows-ocelot.zip), [**Linux**](https://s3-us-west-2.amazonaws.com/ocelotty/linux-ocelot.zip)
+
+Then unzip, and move the ocelot binary to `/usr/local/bin`
 
 ## Workflow
 ### Git Detection   
