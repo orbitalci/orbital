@@ -21,4 +21,4 @@ stages:
   - name: build
     script:
       - cd $GOPATH/$OCELOT_PATH
-      - ./build-release.sh
+      - ./build-release-server.sh
