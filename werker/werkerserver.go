@@ -50,6 +50,10 @@ func (w *WerkerServer) KillHash(request *protobuf.Request, stream protobuf.Build
 		} else {
 			stream.Send(wrap("Wow you killed your build before it even got to the setup stage??"))
 		}
+		if err = buildruntime.Delete(w.consul, request.Hash); err != nil {
+			log.IncludeErrField(err).Error("couldn't delete out of consul")
+			return errors.New("Couldn't delete build out of consul. Your build was killed, but cleanup didn't go as planned. Error: " + err.Error())
+		}
 
 		return nil
 	}
