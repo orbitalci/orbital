@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+set -ex
 # check for all the executables we need
 command -v docker
 if [ $? != 0 ]; then
@@ -57,6 +58,8 @@ cd -
 rm mac-ocelot.zip
 rm windows-ocelot.zip
 rm linux-ocelot.zip
+
+docker tag jessishank/ocelot-build:kill.6 ocelot-build
 
 echo "building admin"
 docker build -f admin/Dockerfile -t jessishank/ocelot-admin:latest .
