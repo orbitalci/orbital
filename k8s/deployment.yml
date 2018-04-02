@@ -156,7 +156,7 @@ spec:
           type: File
       containers:
       - name:  poller-ocelot
-        image: jessishank/ocelot-poller:kill.7
+        image: jessishank/ocelot-poller:kill.8
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock
