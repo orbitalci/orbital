@@ -41,6 +41,9 @@ func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing
 // create the postgres database using docker image, create tables using sql file in test-fixtures
 // returns a cleanup function for closing database, the password, and the port it runs on.
 func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password string, port int) {
+	if testing.Short() {
+		t.Skip("run flagged as 'short', skipping test that requires docker setup")
+	}
 	port = 5555
 	password = "mysecretpassword"
 	_, filename, _, _ := runtime.Caller(0)

@@ -17,7 +17,7 @@ stages:
       - "BUILDSERVERHACK=0"
     script:
       - cd $GOPATH/$OCELOT_PATH
-      - ./run-tests.sh
+      - go test ./... -cover -short
   - name: build
     script:
       - cd $GOPATH/$OCELOT_PATH

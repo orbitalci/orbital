@@ -28,7 +28,7 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 		Repo: "testRepo",
 		Branch: "aBranch",
 	}
-	id, err := pg.AddSumStart(model.Hash, model.BuildTime, model.Account, model.Repo, model.Branch)
+	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch)
 	if err != nil {
 		t.Fatal(err)
 	}

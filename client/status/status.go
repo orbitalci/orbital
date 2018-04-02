@@ -119,7 +119,6 @@ func (c *cmd) Run(args []string) int {
 			return 1
 		}
 		goto STATUS_FOUND
-		return 0
 	}
 
 	//respect acct-repo next
@@ -153,7 +152,6 @@ func (c *cmd) Run(args []string) int {
 			return 1
 		}
 		goto STATUS_FOUND
-		return 0
 	}
 	return 0
 STATUS_FOUND:

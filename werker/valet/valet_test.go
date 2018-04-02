@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/werker/config"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/hashicorp/consul/testutil"
@@ -49,7 +50,7 @@ func TestRecovery(t *testing.T) {
 	cleanup, pw, port := storage.CreateTestPgDatabase(t)
 	defer cleanup(t)
 	store := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
-	id, err := store.AddSumStart(hash, time.Now(), "test", "test", "test")
+	id, err := store.AddSumStart(hash, "test", "test", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +58,7 @@ func TestRecovery(t *testing.T) {
 	defer serv.Stop()
 	remoteConf := &recoveryCVRemoteConfig{consul: consu, storage: store}
 	uid := uuid.New()
-	rcvr := NewValet(remoteConf, uid)
+	rcvr := NewValet(remoteConf, uid, config.Docker)
 	buildruntime.RegisterStartedBuild(consu, uid.String(), hash)
 	err = rcvr.Reset("START", hash)
 	if err != nil {
