@@ -1,4 +1,23 @@
 #!/usr/bin/env sh
+# check for all the executables we need
+command -v docker
+if [ $? != 0 ]; then
+  echo "need docker"
+  exit 1
+fi
+
+command -v aws
+if [ $? != 0 ]; then
+  echo "need awscli"
+  exit 1
+fi
+
+command -v zip
+if [ $? != 0 ]; then
+  echo "need zip"
+  exit 1
+fi
+
 
 # on build server, we know the deps are already up to dat
 

@@ -1,4 +1,4 @@
-image: jessishank/ocelot-build:cheese.2
+image: jessishank/ocelot-build:kill.6
 buildTool: go
 branches:
   - ALL
