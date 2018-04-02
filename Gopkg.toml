@@ -91,7 +91,8 @@
   name = "gopkg.in/yaml.v2"
 
 [[constraint]]
-  version = "0.2.1"
+#  version = "0.2.1"
+  revision = "2bc1fa92c4a6c41f5af39515678d6d4fff534e21"
   name = "bitbucket.org/level11consulting/go-til"
 
 [[constraint]]
