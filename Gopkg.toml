@@ -92,7 +92,7 @@
 
 [[constraint]]
 #  version = "0.2.1"
-  revision = "45f4e37c88281598009792346e71910b1805bea5"
+  revision = "c54d999a49812e67dd1144e9e82e863a1f1529c5"
   name = "bitbucket.org/level11consulting/go-til"
 
 [[constraint]]

@@ -20,6 +20,13 @@ env GOOS=linux GOARCH=amd64 go build -o ocelot cmd/ocelot/main.go
 zip -r linux-ocelot.zip ocelot
 rm ocelot
 
+# linux
+pushd cmd/werker/
+env GOOS=linux GOARCH=amd64 go build -o werker cmd/werker/main.go
+zip -r ../../linux-werker.zip werker
+rm werker
+popd
+
 
 echo "uploading client binary"
 
@@ -27,6 +34,7 @@ echo "uploading client binary"
 aws s3 cp --acl public-read-write --content-disposition attachment mac-ocelot.zip s3://ocelotty/mac-ocelot.zip
 aws s3 cp --acl public-read-write --content-disposition attachment windows-ocelot.zip s3://ocelotty/windows-ocelot.zip
 aws s3 cp --acl public-read-write --content-disposition attachment linux-ocelot.zip s3://ocelotty/linux-ocelot.zip
+aws s3 cp --acl public-read-write --content-disposition attachment linux-werker.zip s3://ocelotty/linux-werker.zip
 
 echo "uploading werker's template files"
 cd werker/builder/template
