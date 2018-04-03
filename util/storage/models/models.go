@@ -46,7 +46,7 @@ func (s *BuildSummary) Equals(b *BuildSummary) bool {
 	if s.Branch != b.Branch ||
 		s.Repo != b.Repo ||
 			s.Failed != b.Failed ||
-				!s.BuildTime.Equal(b.BuildTime) ||
+				//!s.BuildTime.Equal(b.BuildTime) ||
 					s.Account != b.Account ||
 						s.BuildDuration != b.BuildDuration ||
 							s.Hash != b.Hash ||

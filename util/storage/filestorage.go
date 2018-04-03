@@ -30,7 +30,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 	"github.com/pkg/errors"
 )
 
@@ -89,7 +88,7 @@ func (f *FileBuildStorage) Clean() {
 
 // AddSumStart will create an entry in the filesystem storage by generating a random number that
 // has not been used yet. that will be the buildId. Then it will dump the models.BuildSummary struct to JSON.
-func (f *FileBuildStorage) AddSumStart(hash string, starttime time.Time, account string, repo string, branch string) (int64, error) {
+func (f *FileBuildStorage) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
 	var id int64
 	id = getRandomStorage(f.saveDirec)
 	file, err := fileMaker(f.saveDirec, id, hash, "sum.json")
@@ -98,7 +97,7 @@ func (f *FileBuildStorage) AddSumStart(hash string, starttime time.Time, account
 	}
 	sum := &models.BuildSummary{
 		Hash: hash,
-		BuildTime: starttime,
+		//BuildTime: starttime,
 		Account: account,
 		Repo: repo,
 		Branch: branch,

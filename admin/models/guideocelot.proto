@@ -157,6 +157,7 @@ message PollRequest {
     string repo = 2;
     string cron = 4;
     string branches = 5;
+    google.protobuf.Timestamp lastCronTime = 6;
 }
 
 message Polls {

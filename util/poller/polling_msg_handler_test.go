@@ -5,6 +5,7 @@ import (
 	pb "bitbucket.org/level11consulting/ocelot/admin/models"
 	"bytes"
 	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -15,6 +16,15 @@ func TestWriteCronFile_DeleteCronFile(t *testing.T) {
 	expected := []byte("* * * * * root /bin/run_changecheck.sh accOmns7f/d8sfasdnc3 test,master,queue\n")
 	bytez, err := ioutil.ReadFile("./test-fixtures/accOmns7f_d8sfasdnc3")
 	if err != nil {
+		t.Log(os.Getwd())
+		files, err := ioutil.ReadDir("./test-fixtures")
+		if err != nil {
+			t.Error(err)
+		}
+
+		for _, file := range files {
+			t.Log(file.Name())
+		}
 		t.Error(err)
 		return
 	}

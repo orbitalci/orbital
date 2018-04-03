@@ -4,8 +4,7 @@
 [[projects]]
   name = "bitbucket.org/level11consulting/go-til"
   packages = ["consul","deserialize","log","net","nsqpb","test","vault"]
-  revision = "4d9133f79c1ea0a96499122fc58817b0555757ad"
-  version = "0.2.1"
+  revision = "45f4e37c88281598009792346e71910b1805bea5"
 
 [[projects]]
   name = "github.com/Jeffail/gabs"
@@ -488,6 +487,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2ea951feb1ea96e2d7790c78f9c1f0eb9c04e6285acc1f7e481231f056ab742c"
+  inputs-digest = "173037cffca1d5e10122f3480ffab36ee13fa97cf3de754c6c8770ca9bac61ae"
   solver-name = "gps-cdcl"
   solver-version = 1

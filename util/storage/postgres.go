@@ -89,18 +89,32 @@ branch    | character varying
 
 // AddSumStart updates the build_summary table with the initial information that you get from a webhook
 // returning the build id that postgres generates
-func (p *PostgresStorage) AddSumStart(hash string, queuetime time.Time, account string, repo string, branch string) (int64, error) {
+func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
 	if err := p.Connect(); err != nil {
 		return 0, errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
 	var id int64
-	if err := p.db.QueryRow(`INSERT INTO build_summary(hash, queuetime, account, repo, branch) values ($1,$2,$3,$4,$5) RETURNING id`,
-		hash, queuetime.Format(TimeFormat), account, repo, branch).Scan(&id); err != nil {
+	if err := p.db.QueryRow(`INSERT INTO build_summary(hash, account, repo, branch) values ($1,$2,$3,$4) RETURNING id`,
+		hash, account, repo, branch).Scan(&id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return id, err
 	}
 	return id, nil
+}
+
+// SetQueueTime will update the QueueTime in the database to the current time
+func (p *PostgresStorage) SetQueueTime(id int64) error {
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
+	defer p.Disconnect()
+	queryStr := `UPDATE build_summary SET queuetime=$1 WHERE id=$2`
+	if _, err := p.db.Exec(queryStr, time.Now().Format(TimeFormat), id); err != nil {
+		ocelog.IncludeErrField(err).Error()
+		return err
+	}
+	return nil
 }
 
 func (p *PostgresStorage) StartBuild(id int64) error {
@@ -193,7 +207,7 @@ func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.Build
 		return sum, errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	querystr := `SELECT * FROM build_summary WHERE hash ilike $1 ORDER BY queuetime DESC LIMIT 1;`
+	querystr := `SELECT * FROM build_summary WHERE hash ilike $1 ORDER BY id DESC LIMIT 1;`
 	row := p.db.QueryRow(querystr, partialGitHash + "%")
 	err := row.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &sum.QueueTime)
 	if err == sql.ErrNoRows {
@@ -210,7 +224,7 @@ func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSumma
 		return sum, errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	querystr := `SELECT * FROM build_summary WHERE id = $1 ORDER BY queuetime DESC LIMIT 1`
+	querystr := `SELECT * FROM build_summary WHERE id = $1 ORDER BY id DESC LIMIT 1`
 	row := p.db.QueryRow(querystr, buildId)
 	err := row.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &sum.QueueTime)
 	if err == sql.ErrNoRows {
@@ -227,7 +241,7 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
 	defer p.Disconnect()
-	queryRow := fmt.Sprintf(`SELECT * FROM build_summary WHERE repo=$1 and account=$2 ORDER BY queuetime DESC LIMIT %d`, limit)
+	queryRow := fmt.Sprintf(`SELECT * FROM build_summary WHERE repo=$1 and account=$2 ORDER BY id DESC LIMIT %d`, limit)
 	rows, err := p.db.Query(queryRow, repo, account)
 	if err != nil {
 		ocelog.IncludeErrField(err)

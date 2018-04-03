@@ -277,18 +277,18 @@ func Delete(consulete *consul.Consulet, gitHash string) (err error) {
 	pairPath := MakeBuildMapPath(gitHash)
 	kv, err := consulete.GetKeyValue(pairPath)
 	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't get kv error!")
 		return
 	}
 	if kv == nil {
 		ocelog.Log().Error("THIS PAIR SHOULD NOT BE NIL! path: " + pairPath)
 		return
 	}
+	ocelog.Log().WithField("gitHash", gitHash).Info("WERKERID IS: ", string(kv.Value))
 	if err = consulete.RemoveValues(MakeBuildPath(string(kv.Value), gitHash)); err != nil {
 		return
 	}
 	err = consulete.RemoveValue(pairPath)
-	// for now, leaving in build done
-	//err = SetBuildDone(consulete, gitHash)
 	return err
 }
 

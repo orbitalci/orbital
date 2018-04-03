@@ -7,21 +7,21 @@ import (
 	"testing"
 )
 
-func TestRemoteConfig_ErrorHandling(t *testing.T) {
-	brokenRemote, _ := GetInstance("localhost", 19000, "abc")
-	if brokenRemote == nil {
-		t.Error(test.GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
-	}
-	err := brokenRemote.AddCreds("test", &VcsConfig{})
-	if err.Error() != "not connected to consul, unable to add credentials" {
-		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to add credentials", err))
-	}
-	_, err = brokenRemote.GetCredAt("test", false, &VcsConfig{})
-	if err.Error() != "not connected to consul, unable to retrieve credentials" {
-		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to retrieve credentials", err))
-	}
-
-}
+//func TestRemoteConfig_ErrorHandling(t *testing.T) {
+//	brokenRemote, _ := GetInstance("localhost", 19000, "abc")
+//	if brokenRemote == nil {
+//		t.Error(test.GenericStrFormatErrors("broken remote config", "not nil", brokenRemote))
+//	}
+//	err := brokenRemote.AddCreds("test", &VcsConfig{})
+//	if err.Error() != "not connected to consul, unable to add credentials" {
+//		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to add credentials", err))
+//	}
+//	_, err = brokenRemote.GetCredAt("test", false, &VcsConfig{})
+//	if err.Error() != "not connected to consul, unable to retrieve credentials" {
+//		t.Error(test.GenericStrFormatErrors("not connected to consul error message", "not connected to consul, unable to retrieve credentials", err))
+//	}
+//
+//}
 
 func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 

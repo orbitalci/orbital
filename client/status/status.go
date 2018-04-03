@@ -119,7 +119,6 @@ func (c *cmd) Run(args []string) int {
 			return 1
 		}
 		goto STATUS_FOUND
-		return 0
 	}
 
 	//respect acct-repo next
@@ -153,16 +152,16 @@ func (c *cmd) Run(args []string) int {
 			return 1
 		}
 		goto STATUS_FOUND
-		return 0
 	}
 	return 0
 STATUS_FOUND:
-	queued := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0
+	failed_validation := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0 && statuses.BuildSum.QueueTime.Seconds == 0
+	queued := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0 && statuses.BuildSum.QueueTime.Seconds > 0
 	buildStarted := statuses.BuildSum.BuildTime.Seconds > 0 && statuses.IsInConsul
 	finished := !statuses.IsInConsul && statuses.BuildSum.BuildTime.Seconds > 0
 	commandhelper.Debuggit(c.UI, fmt.Sprintf("finished is %v, buildStarted is %v, queued is %v, buildTime is %v", finished, buildStarted, queued, time.Unix(statuses.BuildSum.BuildTime.Seconds, 0)))
 	//statuses.BuildSum.QueueTime time.Unix(0,0)
-	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished), statuses)
+	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished, failed_validation), statuses)
 	buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
 	c.UI.Output(buildStatus + stageStatus)
 	return 0

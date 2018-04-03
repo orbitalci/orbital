@@ -26,7 +26,7 @@ var testData = [][]byte{
 
 func Test_writeInfoChanToInMemMap(t *testing.T) {
 	store := storage.NewFileBuildStorage("./test-fixtures/store")
-	id, err := store.AddSumStart("FOR_TESTING", time.Now(), "myacct", "myrepo", "BRANCH!")
+	id, err := store.AddSumStart("FOR_TESTING", "myacct", "myrepo", "BRANCH!")
 	if err != nil {
 		t.Fatal("could not create setup data, err: ", err.Error())
 	}

@@ -37,7 +37,7 @@ func TestFileBuildStorage_BigOlTestBoi(t *testing.T) {
 				Repo: fs.repo,
 				Branch: fs.branch,
 			}
-			id, err := fbs.AddSumStart(fs.hash, fs.starttime, fs.account, fs.repo, fs.branch)
+			id, err := fbs.AddSumStart(fs.hash, fs.account, fs.repo, fs.branch)
 			if err != nil {
 				t.Error("should not have errored. error: ", err.Error())
 				return

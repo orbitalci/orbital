@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 )
 
 //// func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
@@ -30,7 +29,7 @@ func Test_CheckIfBuildDone(t *testing.T) {
 }
 
 func testAddFullBuildSummary(hash string, store storage.BuildSum, t *testing.T) {
-	id, err := store.AddSumStart(hash, time.Now(), "1", "2", "3")
+	id, err := store.AddSumStart(hash, "1", "2", "3")
 	if err != nil {
 		t.Fatal(err)
 	}
