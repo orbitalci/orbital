@@ -159,8 +159,8 @@ func (v *Valet) MakeItSoDed(finish chan int) {
 		log.Log().WithField("stack", string(debug.Stack())).Error("recovering from panic")
 		v.StoreInterrupt(Panic)
 		v.Cleanup()
-		finish <- 1
 	}
+	finish <- 1
 }
 
 func (v *Valet) RegisterDoneChan(hash string, done chan int) {
@@ -177,12 +177,9 @@ func (v *Valet) RegisterDoneChan(hash string, done chan int) {
 func (v *Valet) UnregisterDoneChan(hash string) {
 	v.Lock()
 	defer v.Unlock()
-	done, ok := v.doneChannels[hash]
+	_, ok := v.doneChannels[hash]
 	if !ok {
 		log.Log().WithField("hash", hash).Warning("fyi! hash wasn't found in done channel map!")
-	} else {
-		// so i took this out of UnmarshalAndProcess and i don't know if its the best move..
-		done <- 1
 	}
 	delete(v.doneChannels, hash)
 

@@ -102,9 +102,12 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
-
 	defer w.BuildValet.MakeItSoDed(finish)
 	defer w.BuildValet.UnregisterDoneChan(werk.CheckoutHash)
+	defer func(){
+		ocelog.Log().Info("calling done for nsqpb")
+		done <- 1
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 

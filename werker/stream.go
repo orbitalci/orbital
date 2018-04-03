@@ -1,6 +1,7 @@
 package werker
 
 import (
+	_ "net/http/pprof"
 	consulet "bitbucket.org/level11consulting/go-til/consul"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
@@ -217,17 +218,15 @@ func listenBuilds(buildsChan chan *BuildContext, appCtx *WerkerContext, mapLock 
 }
 
 func contextCleanup(buildCtx *BuildContext, appCtx *WerkerContext, mapLock sync.Mutex) {
-	for {
-		select {
-			case <-buildCtx.Context.Done():
-				mapLock.Lock()
-				ocelog.Log().Debugf("build for hash %s is complete", buildCtx.Hash)
-				if _, ok := appCtx.BuildContexts[buildCtx.Hash]; ok {
-					delete(appCtx.BuildContexts, buildCtx.Hash)
-				}
-				mapLock.Lock()
-				return
-		}
+	select {
+		case <-buildCtx.Context.Done():
+			mapLock.Lock()
+			ocelog.Log().Debugf("build for hash %s is complete", buildCtx.Hash)
+			if _, ok := appCtx.BuildContexts[buildCtx.Hash]; ok {
+				delete(appCtx.BuildContexts, buildCtx.Hash)
+			}
+			mapLock.Lock()
+			return
 	}
 }
 
@@ -280,5 +279,8 @@ func ServeMe(transportChan chan *Transport, buildCtxChan chan *BuildContext, con
 	werkerServer := NewWerkerServer(werkStream)
 	protobuf.RegisterBuildServer(grpcServer, werkerServer)
 	go grpcServer.Serve(con)
+	go func() {
+		ocelog.Log().Info(http.ListenAndServe(":6060", nil))
+	}()
 
 }
