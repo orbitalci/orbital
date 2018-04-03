@@ -29,11 +29,10 @@ func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCS
 	return err
 }
 
-func SetupRCCCredentials(gosss adminModel.GuideOcelotServer, config cred.RemoteConfigCred) error {
+func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, config cred.RemoteConfigCred) error {
 	// todo: probably should do some kind of test if they are valid or not? is there a way to test these creds
-	gos := gosss.(*guideOcelotServer)
 	configPath := config.BuildCredPath(config.GetType(), config.GetAcctName())
-	err := gos.RemoteConfig.AddCreds(configPath, config)
+	err := remoteConf.AddCreds(configPath, config)
 	return err
 }
 

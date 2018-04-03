@@ -89,13 +89,13 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.Repo
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed repo creds validation! error: %s", err.Error())
 	}
-	err = SetupRCCCredentials(g, creds)
+	err = SetupRCCCredentials(g.RemoteConfig, creds)
 	return &empty.Empty{}, err
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
 	// no validation necessary, its a file upload
-	err := SetupRCCCredentials(g, creds)
+	err := SetupRCCCredentials(g.RemoteConfig, creds)
 	return &empty.Empty{}, err
 }
 
