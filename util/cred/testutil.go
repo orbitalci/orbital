@@ -24,6 +24,14 @@ type VcsConfig struct {
 	Type         string
 }
 
+func (m *VcsConfig) GetAcctName() string {
+	return m.AcctName
+}
+
+func (m *VcsConfig) GetType() string {
+	return m.Type
+}
+
 func (m *VcsConfig) GetClientSecret() string {
 	return m.ClientSecret
 }
@@ -76,6 +84,9 @@ type RepoConfig struct {
 	ProjectName string
 }
 
+func (m *RepoConfig) GetAcctName() string {
+	return m.AcctName
+}
 
 // these methods are attached to the proto object RepoConfig
 func (m *RepoConfig) SetAcctNameAndType(name string, typ string) {

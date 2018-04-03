@@ -4,7 +4,6 @@ import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
-	"fmt"
 	"google.golang.org/grpc"
 	"strings"
 )
@@ -22,7 +21,7 @@ func (m *RepoCreds) SetAcctNameAndType(name string, typ string) {
 }
 
 func (m *RepoCreds) BuildCredPath(credType string, acctName string) string {
-	return fmt.Sprintf("%s/repo/%s/%s", "creds", acctName, credType)
+	return cred.BuildCredPath(credType, acctName, cred.Repo)
 }
 
 func (m *RepoCreds) SetSecret(secret string) {
@@ -73,7 +72,7 @@ func (m *VCSCreds) SetAcctNameAndType(name string, typ string) {
 }
 
 func (m *VCSCreds) BuildCredPath(credType string, acctName string) string {
-	return fmt.Sprintf("%s/vcs/%s/%s", "creds", acctName, credType)
+	return cred.BuildCredPath(credType, acctName, cred.Vcs)
 }
 
 func (m *VCSCreds) SetSecret(secret string) {
@@ -104,6 +103,46 @@ func (m *VCSCreds) AddAdditionalFields(consule *consul.Consulet, path string) er
 func (m *VCSCreds) Spawn() cred.RemoteConfigCred {
 	return &VCSCreds{}
 }
+
+func NewK8sCreds() *K8SCreds {
+	return &K8SCreds{}
+}
+
+func (m *K8SCreds) GetClientSecret() string {
+	return m.K8SContents
+}
+
+func (m *K8SCreds) SetAcctNameAndType(name, typ string) {
+	m.AcctName = name
+	// no type here! mua ha ha. GetType() returns a dummy
+}
+
+func (m *K8SCreds) SetSecret(str string) {
+	m.K8SContents = str
+}
+
+func (m *K8SCreds) SetAdditionalFields(key string, val string) {
+	// do nothing, there is only one field.
+}
+
+func (m *K8SCreds) AddAdditionalFields(consule *consul.Consulet, path string) error {
+	err := consule.AddKeyValue(path+"/exists", []byte("true"))
+	return err
+}
+
+func (m *K8SCreds) BuildCredPath(credtype, acctName string) string {
+	return cred.BuildCredPath(credtype, acctName, cred.K8s)
+}
+
+// todo: should we maybe use type to use different kubeconfigs? idk. for now there can only be 1
+func (m *K8SCreds) GetType() string {
+	return "k8s"
+}
+
+func (m *K8SCreds) Spawn() cred.RemoteConfigCred {
+	return &K8SCreds{}
+}
+
 
 // wrapper interface around models.BuildRuntimeInfo
 type BuildRuntime interface {

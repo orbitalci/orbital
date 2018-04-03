@@ -8,6 +8,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/list"
 	"bitbucket.org/level11consulting/ocelot/client/creds/credsadd"
 	"bitbucket.org/level11consulting/ocelot/client/creds/credslist"
+	"bitbucket.org/level11consulting/ocelot/client/creds/k8s/add"
+	"bitbucket.org/level11consulting/ocelot/client/creds/k8s/list"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
@@ -39,6 +41,8 @@ func init() {
 		"creds repo":      func() (cli.Command, error) { return repocreds.New(), nil },
 		"creds repo add":  func() (cli.Command, error) { return repocredsadd.New(ui), nil },
 		"creds repo list": func() (cli.Command, error) { return repocredslist.New(ui), nil },
+		"creds k8s add":   func() (cli.Command, error) { return kubeadd.New(ui), nil },
+		"creds k8s list":   func() (cli.Command, error) { return kubelist.New(ui), nil },
 		"logs":            func() (cli.Command, error) { return output.New(ui), nil },
 		"summary":         func() (cli.Command, error) { return summary.New(ui), nil },
 		"validate":        func() (cli.Command, error) { return validate.New(ui), nil },

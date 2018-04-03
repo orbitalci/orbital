@@ -28,6 +28,9 @@ service GuideOcelot {
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {}
     rpc SetRepoCreds (RepoCreds) returns (google.protobuf.Empty) {}
 
+    rpc SetK8sCreds (K8sCreds) returns (google.protobuf.Empty) {}
+    rpc GetK8sCreds (google.protobuf.Empty) returns (K8sCredsWrapper) {}
+
     rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
 
     rpc BuildRuntime (BuildQuery) returns (Builds) {}
@@ -84,6 +87,16 @@ message RepoCreds {
     // todo: should this be an enum?
     string type = 5;
     string projectName = 7;
+}
+
+message K8sCreds {
+    string acctName = 1;
+    // todo: should we also add option for multiple kubeconfigs? how would that be organized?
+    string k8sContents = 2;
+}
+
+message K8sCredsWrapper {
+    repeated K8sCreds k8sCreds = 2;
 }
 
 message StatusQuery {

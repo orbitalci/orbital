@@ -33,6 +33,15 @@ func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, o
 	return &empty.Empty{}, nil
 }
 
+func (f *fakeGuideOcelotClient) SetK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (f *fakeGuideOcelotClient) GetK8SCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*K8SCredsWrapper, error) {
+	return nil, nil
+}
+
+
 func (f *fakeGuideOcelotClient) WatchRepo(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
