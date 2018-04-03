@@ -3,7 +3,7 @@ package dockr
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/repo"
+	"bitbucket.org/level11consulting/ocelot/util/integrations"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,7 +29,7 @@ func GetDockerConfig(rc cred.CVRemoteConfig, accountName string) (string, error)
 	}
 	dockerCred, ok := credz[cred.BuildCredKey("docker", accountName)]
 	if !ok {
-		return "", repo.NCErr("no creds found")
+		return "", integrations.NCErr("no creds found")
 	}
 	casted, ok := dockerCred.(*models.RepoCreds)
 	if !ok {
@@ -39,14 +39,14 @@ func GetDockerConfig(rc cred.CVRemoteConfig, accountName string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	configEncoded := repo.BitzToBase64(bitz)
+	configEncoded := integrations.BitzToBase64(bitz)
 	return configEncoded, err
 }
 
 
 func RCtoDockerConfig(creds *models.RepoCreds) ([]byte, error) {
 	authstring := fmt.Sprintf("%s:%s", creds.Username, creds.Password)
-	b64authstring := repo.StrToBase64(authstring)
+	b64authstring := integrations.StrToBase64(authstring)
 	authz := make(map[string]auth)
 	for _, url := range creds.RepoUrl {
 		authz[url] = map[string]string{"auth":b64authstring}

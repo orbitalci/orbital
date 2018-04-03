@@ -2,7 +2,7 @@ package nexus
 
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/repo"
+	"bitbucket.org/level11consulting/ocelot/util/integrations"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bytes"
 	"errors"
@@ -58,7 +58,7 @@ func GetSettingsXml(rc cred.CVRemoteConfig, accountName string) (string, error) 
 	}
 	nexusCred, ok := credz[cred.BuildCredKey("nexus", accountName)]
 	if !ok {
-		return "", repo.NCErr("no creds found")
+		return "", integrations.NCErr("no creds found")
 	}
 	casted, ok := nexusCred.(*models.RepoCreds)
 	if !ok {

@@ -19,6 +19,7 @@ func NewFakeGuideOcelotClient(logLines []string) *fakeGuideOcelotClient {
 type fakeGuideOcelotClient struct {
 	creds *CredWrapper
 	repoCreds *RepoCredWrapper
+	k8sCreds *K8SCredsWrapper
 	brInfo *Builds
 	logLines []string
 }
@@ -34,11 +35,12 @@ func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, o
 }
 
 func (f *fakeGuideOcelotClient) SetK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	f.k8sCreds.K8SCreds = append(f.k8sCreds.K8SCreds, in)
 	return &empty.Empty{}, nil
 }
 
 func (f *fakeGuideOcelotClient) GetK8SCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*K8SCredsWrapper, error) {
-	return nil, nil
+	return f.k8sCreds, nil
 }
 
 

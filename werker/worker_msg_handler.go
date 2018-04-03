@@ -4,6 +4,9 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/integrations/dockr"
+	"bitbucket.org/level11consulting/ocelot/util/integrations/nexus"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
@@ -132,6 +135,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 
 	dockerIdChan := make (chan string)
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
+	// do setup stage
 	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
 	setupDura := time.Now().Sub(setupStart)
 
@@ -139,23 +143,25 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 		return
 	}
-
 	if setupResult.Status == pb.StageResultVal_FAIL {
-		errStr := "setup stage failed "
-		if len(setupResult.Error) > 0 {
-			errStr = errStr + setupResult.Error
-		}
-		ocelog.Log().Error(errStr)
-		if err := w.Store.UpdateSum(true, setupDura.Seconds(), werk.Id); err != nil {
-			ocelog.IncludeErrField(err).Error("couldn't update summary in database")
-			return
-		}
+		handleFailure(setupResult, w.Store, "setup", setupDura, werk.Id)
+	}
+
+	// do integration setup stage
+	start := time.Now()
+	integrationResult, dockerUUid := doIntegrations(ctx, werk, builder, w.WerkConf.RemoteConfig, w.infochan)
+	dura := time.Now().Sub(start)
+	if err := storeStageToDb(w.Store, werk.Id, integrationResult, start, dura.Seconds()); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't store build output")
 		return
+	}
+	if integrationResult.Status == pb.StageResultVal_FAIL {
+		handleFailure(integrationResult, w.Store, "integration setup", dura, werk.Id)
 	}
 
 	//all stages listed inside of the projects's ocelot.yml are executed + stored here
 	fail := false
-	start := time.Now()
+	start = time.Now()
 	for _, stage := range werk.BuildConf.Stages {
 		w.BuildValet.Reset(stage.Name, werk.CheckoutHash)
 		stageStart := time.Now()
@@ -182,7 +188,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	}
 
 	//update build_summary table
-	dura := time.Now().Sub(start)
+	dura = time.Now().Sub(start)
 	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
 		return
@@ -220,4 +226,32 @@ func storeStageToDb(storage storage.OcelotStorage, buildId int64, stageResult *p
 	}
 
 	return nil
+}
+
+func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName string, duration time.Duration, id int64) {
+	errStr := fmt.Sprintf("%s stage failed", stageName)
+	if len(result.Error) > 0 {
+		errStr = errStr + result.Error
+	}
+	ocelog.Log().Error(errStr)
+	if err := store.UpdateSum(true, duration.Seconds(), id); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
+	}
+}
+
+func doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (*pb.Result, string) {
+	var result *pb.Result
+	var setupMessages []string
+	stage := b.InitStageUtil("INTEGRATION_UTIL")
+	//only if the build tool is maven do we worry about settings.xml
+	if werk.BuildConf.BuildTool == "maven" {
+		setupMessages = append(setupMessages, "detected maven, attempting to retrieve maven config")
+		result := bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, werk, stage, setupMessages, logout)
+		if result.Status == pb.StageResultVal_FAIL {
+			return result, bldr.GetContainerId()
+		}
+	}
+	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, werk, stage, setupMessages, logout)
+	result.Messages = append(result.Messages, "completed integration util setup stage \u2713")
+	return result, bldr.GetContainerId()
 }

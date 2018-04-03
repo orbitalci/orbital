@@ -24,4 +24,5 @@ const (
 	NexusUrlPath = Nexus + "/repourl"
 	Docker = RepoPath + "/%s/docker"
 	K8sPath = ConfigPath + "/k8s"
+	Kubernetes = K8sPath + "/%s/k8s"
 )

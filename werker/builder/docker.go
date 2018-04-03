@@ -5,9 +5,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/vault"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/repo"
-	"bitbucket.org/level11consulting/ocelot/util/repo/dockr"
-	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
+	"bitbucket.org/level11consulting/ocelot/util/integrations"
 	"bufio"
 	"context"
 	"fmt"
@@ -28,6 +26,10 @@ type Docker struct{
 
 func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
+}
+
+func (d *Docker) GetContainerId() string {
+	return d.ContainerId
 }
 
 func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
@@ -191,17 +193,6 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	}
 
 	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName))
-
-	//only if the build tool is maven do we worry about settings.xml
-	if werk.BuildConf.BuildTool == "maven" {
-		setupMessages = append(setupMessages, "detected maven, attempting to retrieve maven config")
-		result := d.RepoIntegrationSetup(ctx, nexus.GetSettingsXml, d.WriteMavenSettingsXml, "maven", rc, werk, su, setupMessages, logout)
-		if result.Status == pb.StageResultVal_FAIL {
-			return result, d.ContainerId
-		}
-	}
-	result = d.RepoIntegrationSetup(ctx, dockr.GetDockerConfig, d.WriteDockerJson, "docker login", rc, werk, su, setupMessages, logout)
-
 	result.Messages = append(result.Messages, "completed setup stage \u2713")
 	return result, d.ContainerId
 }
@@ -221,9 +212,10 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
 type RepoExecFunc func(string) []string
 
-func (d *Docker) RepoIntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
+// todo: factor this out somehow so that its called by werker msg handler
+func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
 	if renderedString, err := setupFunc(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
-		_, ok := err.(*repo.NoCreds)
+		_, ok := err.(*integrations.NoCreds)
 		if !ok {
 			ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
 			return &pb.Result{

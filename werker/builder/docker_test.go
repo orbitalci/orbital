@@ -3,7 +3,7 @@ package builder
 import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/repo/dockr"
+	"bitbucket.org/level11consulting/ocelot/util/integrations/dockr"
 	"os"
 	"testing"
 	"time"
@@ -48,7 +48,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	// create config in ~/.docker directory w/ auth creds
 	logout := make(chan[]byte, 10000)
-	res := docker.RepoIntegrationSetup(ctx, dockr.GetDockerConfig, docker.WriteDockerJson, "docker login", testRemoteConfig, werk, su, []string{}, logout)
+	res := docker.IntegrationSetup(ctx, dockr.GetDockerConfig, docker.WriteDockerJson, "docker login", testRemoteConfig, werk, su, []string{}, logout)
 	if res.Status == pb.StageResultVal_FAIL {
 		data := <- logout
 		t.Error("stage failed! logout data: ", string(data))
