@@ -122,7 +122,10 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	}
 
 	defer cancel()
-	defer close(w.infochan)
+	defer func(){
+		ocelog.Log().Info("closing infochan for ", werk.Id)
+		close(w.infochan)
+	}()
 
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
@@ -140,6 +143,8 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
 	// do setup stage
 	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
+	// this is the last defer, so it'll be the first thing to be run after the command is finished
+	defer w.BuildValet.Cleaner.Cleanup(ctx, dockerUUid, w.infochan)
 	setupDura := time.Now().Sub(setupStart)
 
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
@@ -148,11 +153,12 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	}
 	if setupResult.Status == pb.StageResultVal_FAIL {
 		handleFailure(setupResult, w.Store, "setup", setupDura, werk.Id)
+		return
 	}
 
 	// do integration setup stage
 	start := time.Now()
-	integrationResult, dockerUUid := doIntegrations(ctx, werk, builder, w.WerkConf.RemoteConfig, w.infochan)
+	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, builder, w.WerkConf.RemoteConfig, w.infochan)
 	dura := time.Now().Sub(start)
 	if err := storeStageToDb(w.Store, werk.Id, integrationResult, start, dura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
@@ -160,6 +166,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	}
 	if integrationResult.Status == pb.StageResultVal_FAIL {
 		handleFailure(integrationResult, w.Store, "integration setup", dura, werk.Id)
+		return
 	}
 
 	//all stages listed inside of the projects's ocelot.yml are executed + stored here
@@ -196,9 +203,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
 		return
 	}
-
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
-	w.BuildValet.Cleaner.Cleanup(ctx, dockerUUid, w.infochan) //remove the container as a last step
 }
 
 func (w *WorkerMsgHandler) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
@@ -242,19 +247,29 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 	}
 }
 
-func doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (*pb.Result, string) {
-	var result *pb.Result
+func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
+	result = &pb.Result{}
+	id = bldr.GetContainerId()
 	var setupMessages []string
 	stage := b.InitStageUtil("INTEGRATION_UTIL")
+	result.Messages = setupMessages
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
-		setupMessages = append(setupMessages, "detected maven, attempting to retrieve maven config")
-		result := bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, werk, stage, setupMessages, logout)
+		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, werk, stage, result.Messages, logout)
 		if result.Status == pb.StageResultVal_FAIL {
-			return result, bldr.GetContainerId()
+			return
 		}
 	}
-	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, werk, stage, setupMessages, logout)
+	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, werk, stage, result.Messages, logout)
+	if result.Status == pb.StageResultVal_FAIL {
+		return
+	}
+	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download", rc, werk, stage, result.Messages, logout)
 	result.Messages = append(result.Messages, "completed integration util setup stage \u2713")
-	return result, bldr.GetContainerId()
+	return
+}
+
+func (w *WorkerMsgHandler) returnWerkerPort(rc cred.CVRemoteConfig, accountName string) (string, error) {
+	ocelog.Log().Debug("returning werker port")
+	return  w.WerkConf.ServicePort, nil
 }

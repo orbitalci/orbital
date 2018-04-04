@@ -14,5 +14,6 @@ type OcyBash interface {
 	WriteMavenSettingsXml(settingsXML string) []string
 	WriteDockerJson(encodedDocker string) []string
 	DownloadTemplateFiles(werkerPort string) []string
+	DownloadKubectl(werkerPort string) []string
 	CDAndRunCmds(cmds []string, commitHash string) []string
 }

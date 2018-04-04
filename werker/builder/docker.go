@@ -212,7 +212,27 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
 type RepoExecFunc func(string) []string
 
-// todo: factor this out somehow so that its called by werker msg handler
+// IntegrationSetup will use the functions you input to set up integrations on the machine docker container.
+//	setupFunc (RepoSetupFunc) is used to render a string that will be passed to execFunc (RepoExecFunc), which will generate the command list to run on the container.
+//  example RepoSetupFunc:
+//		func (w *WorkerMsgHandler) returnWerkerPort(rc cred.CVRemoteConfig, accountName string) (string, error) {
+//			ocelog.Log().Debug("returning werker port")
+//			return  w.WerkConf.ServicePort, nil
+//		}
+//  example RepoExecFunc:
+//		func (b *Basher) DownloadKubectl(werkerPort string) []string {
+//			downloadLink := fmt.Sprintf("http://%s:%s/kubectl", b.LoopbackIp, werkerPort)
+//			return []string{"/bin/sh", "-c", "cd /bin && wget " + downloadLink + " && chmod +x kubectl"}
+//		}
+// the output of RepoSetupFunc will be the werkerPort in the RepoExecFunc DownloadKubectl
+// the commands generated from that will be executed on the container
+//   other inputs:
+//		the stdout will be written to logout
+//		integrationName will be for debugging/errors
+// 		rc cred.CVRemoteConfig is for using w/ the setupFunc to retrieve and creds/configuration
+// 		werk is the WerkerTask
+// 		stageUtil is the stage object for logging/writing to logout
+//		the messages are the slice of messages that will be saved to build_stage_details, and appended to over the course of a stage
 func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
 	if renderedString, err := setupFunc(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
 		_, ok := err.(*integrations.NoCreds)
@@ -235,6 +255,8 @@ func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, 
 		}
 	} else {
 		ocelog.Log().Debug("writing integration for ", integrationName)
+		msg := execFunc(renderedString)
+		ocelog.Log().Debug("messages are: ", strings.Join(msg, " "))
 		result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, execFunc(renderedString), logout)
 		if result.Messages == nil {
 			result.Messages = msgs

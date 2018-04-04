@@ -82,6 +82,11 @@ func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
 	return []string{"/bin/sh", "-c", "mkdir /.ocelot && wget " + downloadLink + " && tar -xf do_things.tar -C /.ocelot && cd /.ocelot && chmod +x * && echo \"Ocelot has finished with downloading templates\" && sleep 3600"}
 }
 
+func (b *Basher) DownloadKubectl(werkerPort string) []string {
+	downloadLink := fmt.Sprintf("http://%s:%s/kubectl", b.LoopbackIp, werkerPort)
+	return []string{"/bin/sh", "-c", "cd /bin && wget " + downloadLink + " && chmod +x kubectl"}
+}
+
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
 	build := append([]string{"cd /" + commitHash}, cmds...)
