@@ -225,8 +225,7 @@ func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSumma
 	}
 	defer p.Disconnect()
 	querystr := `SELECT * FROM build_summary WHERE id = $1 ORDER BY id DESC LIMIT 1`
-	row := p.db.QueryRow(querystr, buildId)
-	err := row.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &sum.QueueTime)
+	err := p.db.QueryRow(querystr, buildId).Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &sum.QueueTime)
 	if err == sql.ErrNoRows {
 		ocelog.IncludeErrField(err)
 		return sum, BuildSumNotFound(string(buildId))

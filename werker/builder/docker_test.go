@@ -25,7 +25,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	acctName := "test"
 	projectName := "project"
 	docker, cleanupFunc := CreateLivingDockerContainer(t, "docker:18.02.0-ce")
-	werk := &pb.WerkerTask{FullName: acctName + "/" + projectName}
+	//werk := &pb.WerkerTask{FullName: acctName + "/" + projectName}
 
 	pull := []string{"/bin/sh", "-c", "docker pull docker.metaverse.l11.com/busybox:test_do_not_delete"}
 	su := InitStageUtil("testing")
@@ -48,7 +48,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	// create config in ~/.docker directory w/ auth creds
 	logout := make(chan[]byte, 10000)
-	res := docker.IntegrationSetup(ctx, dockr.GetDockerConfig, docker.WriteDockerJson, "docker login", testRemoteConfig, werk, su, []string{}, logout)
+	res := docker.IntegrationSetup(ctx, dockr.GetDockerConfig, docker.WriteDockerJson, "docker login", testRemoteConfig, acctName, su, []string{}, logout)
 	if res.Status == pb.StageResultVal_FAIL {
 		data := <- logout
 		t.Error("stage failed! logout data: ", string(data))

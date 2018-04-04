@@ -18,6 +18,7 @@ type GuideOcelotCmd interface {
 // if the connection fails, an error will be printed to the UI and the grpc err will be returned (so you can exit 1
 // on the command line)
 func CheckConnection(cmd GuideOcelotCmd, ctx context.Context) error {
+	Debuggit(cmd.GetUI(), "checking connection of " + cmd.GetConfig().AdminLocation)
 	_, err := cmd.GetClient().CheckConn(ctx, &empty.Empty{})
 	if err != nil {
 		cmd.GetUI().Error(err.Error())

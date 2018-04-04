@@ -321,11 +321,13 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 
 
 func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *models.RepoAccount) (*models.Summaries, error) {
+	log.Log().Debug("getting last few summaries")
 	var summaries = &models.Summaries{}
 	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
 		return nil, handleStorageError(err)
 	}
+	log.Log().Debug("successfully retrieved last few summaries")
 	if len(modelz) == 0 {
 		return nil, status.Error(codes.NotFound, "no entries found")
 	}
