@@ -13,6 +13,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/werker/valet"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"strings"
+
 	//"runtime/debug"
 	"context"
 	"time"
@@ -247,7 +249,9 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 	}
 }
 
+// doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
 func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
+	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
 	id = bldr.GetContainerId()
 	var setupMessages []string
@@ -255,16 +259,16 @@ func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTa
 	result.Messages = setupMessages
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
-		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, werk, stage, result.Messages, logout)
+		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, accountName, stage, result.Messages, logout)
 		if result.Status == pb.StageResultVal_FAIL {
 			return
 		}
 	}
-	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, werk, stage, result.Messages, logout)
+	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, accountName, stage, result.Messages, logout)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
-	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download", rc, werk, stage, result.Messages, logout)
+	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download", rc, accountName, stage, result.Messages, logout)
 	result.Messages = append(result.Messages, "completed integration util setup stage \u2713")
 	return
 }

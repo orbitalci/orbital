@@ -230,11 +230,11 @@ type RepoExecFunc func(string) []string
 //		the stdout will be written to logout
 //		integrationName will be for debugging/errors
 // 		rc cred.CVRemoteConfig is for using w/ the setupFunc to retrieve and creds/configuration
-// 		werk is the WerkerTask
+// 		accountName is for passing to setupFunc to retrieve creds (if needed)
 // 		stageUtil is the stage object for logging/writing to logout
 //		the messages are the slice of messages that will be saved to build_stage_details, and appended to over the course of a stage
-func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
-	if renderedString, err := setupFunc(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
+func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, accountName string, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
+	if renderedString, err := setupFunc(rc, accountName); err != nil {
 		_, ok := err.(*integrations.NoCreds)
 		if !ok {
 			ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
