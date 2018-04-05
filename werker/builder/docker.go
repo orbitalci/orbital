@@ -5,9 +5,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/vault"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/repo"
-	"bitbucket.org/level11consulting/ocelot/util/repo/dockr"
-	"bitbucket.org/level11consulting/ocelot/util/repo/nexus"
+	"bitbucket.org/level11consulting/ocelot/util/integrations"
 	"bufio"
 	"context"
 	"fmt"
@@ -28,6 +26,10 @@ type Docker struct{
 
 func NewDockerBuilder(b *Basher) Builder {
 	return &Docker{nil, "", nil, b}
+}
+
+func (d *Docker) GetContainerId() string {
+	return d.ContainerId
 }
 
 func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
@@ -76,7 +78,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
 	//add environment variables that will always be avilable on the machine - GIT_HASH, BUILD_ID
-	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id)}
+	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id), fmt.Sprintf("GIT_HASH_SHORT=%s", werk.CheckoutHash[:7])}
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 
 
@@ -191,17 +193,6 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	}
 
 	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName))
-
-	//only if the build tool is maven do we worry about settings.xml
-	if werk.BuildConf.BuildTool == "maven" {
-		setupMessages = append(setupMessages, "detected maven, attempting to retrieve maven config")
-		result := d.RepoIntegrationSetup(ctx, nexus.GetSettingsXml, d.WriteMavenSettingsXml, "maven", rc, werk, su, setupMessages, logout)
-		if result.Status == pb.StageResultVal_FAIL {
-			return result, d.ContainerId
-		}
-	}
-	result = d.RepoIntegrationSetup(ctx, dockr.GetDockerConfig, d.WriteDockerJson, "docker login", rc, werk, su, setupMessages, logout)
-
 	result.Messages = append(result.Messages, "completed setup stage \u2713")
 	return result, d.ContainerId
 }
@@ -221,9 +212,30 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
 type RepoExecFunc func(string) []string
 
-func (d *Docker) RepoIntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, werk *pb.WerkerTask, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
-	if renderedString, err := setupFunc(rc, strings.Split(werk.FullName, "/")[0]); err != nil {
-		_, ok := err.(*repo.NoCreds)
+// IntegrationSetup will use the functions you input to set up integrations on the machine docker container.
+//	setupFunc (RepoSetupFunc) is used to render a string that will be passed to execFunc (RepoExecFunc), which will generate the command list to run on the container.
+//  example RepoSetupFunc:
+//		func (w *WorkerMsgHandler) returnWerkerPort(rc cred.CVRemoteConfig, accountName string) (string, error) {
+//			ocelog.Log().Debug("returning werker port")
+//			return  w.WerkConf.ServicePort, nil
+//		}
+//  example RepoExecFunc:
+//		func (b *Basher) DownloadKubectl(werkerPort string) []string {
+//			downloadLink := fmt.Sprintf("http://%s:%s/kubectl", b.LoopbackIp, werkerPort)
+//			return []string{"/bin/sh", "-c", "cd /bin && wget " + downloadLink + " && chmod +x kubectl"}
+//		}
+// the output of RepoSetupFunc will be the werkerPort in the RepoExecFunc DownloadKubectl
+// the commands generated from that will be executed on the container
+//   other inputs:
+//		the stdout will be written to logout
+//		integrationName will be for debugging/errors
+// 		rc cred.CVRemoteConfig is for using w/ the setupFunc to retrieve and creds/configuration
+// 		accountName is for passing to setupFunc to retrieve creds (if needed)
+// 		stageUtil is the stage object for logging/writing to logout
+//		the messages are the slice of messages that will be saved to build_stage_details, and appended to over the course of a stage
+func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, accountName string, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
+	if renderedString, err := setupFunc(rc, accountName); err != nil {
+		_, ok := err.(*integrations.NoCreds)
 		if !ok {
 			ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
 			return &pb.Result{
@@ -243,6 +255,8 @@ func (d *Docker) RepoIntegrationSetup(ctx context.Context, setupFunc RepoSetupFu
 		}
 	} else {
 		ocelog.Log().Debug("writing integration for ", integrationName)
+		msg := execFunc(renderedString)
+		ocelog.Log().Debug("messages are: ", strings.Join(msg, " "))
 		result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, execFunc(renderedString), logout)
 		if result.Messages == nil {
 			result.Messages = msgs

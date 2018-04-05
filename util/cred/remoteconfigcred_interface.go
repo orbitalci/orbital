@@ -9,6 +9,8 @@ import (
 type RemoteConfigCred interface {
 	GetClientSecret() string
 	SetAcctNameAndType(name string, typ string)
+	GetAcctName() string
+	GetType() string
 	SetSecret(string)
 	SetAdditionalFields(key string, val string)
 	AddAdditionalFields(consule *consul.Consulet, path string) error

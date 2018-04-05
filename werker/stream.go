@@ -265,6 +265,11 @@ func ServeMe(transportChan chan *Transport, buildCtxChan chan *BuildContext, con
 		http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/werker_files.tar", 301)
 	})
 
+	muxi.HandleFunc("/kubectl", func(w http.ResponseWriter, r *http.Request) {
+		ocelog.Log().Debug("serving up kubectl binary from googleapis")
+		http.Redirect(w, r, "https://storage.googleapis.com/kubernetes-release/release/v1.9.6/bin/linux/amd64/kubectl", 301)
+	})
+
 	n := ocenet.InitNegroni("werker", muxi)
 	go n.Run(":" + conf.ServicePort)
 

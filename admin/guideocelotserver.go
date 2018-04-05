@@ -89,8 +89,27 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.Repo
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed repo creds validation! error: %s", err.Error())
 	}
-	err = SetupRepoCredentials(g, creds)
+	err = SetupRCCCredentials(g.RemoteConfig, creds)
 	return &empty.Empty{}, err
+}
+
+func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
+	// no validation necessary, its a file upload
+	err := SetupRCCCredentials(g.RemoteConfig, creds)
+	return &empty.Empty{}, err
+}
+
+func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*models.K8SCredsWrapper, error) {
+	credWrapper := &models.K8SCredsWrapper{}
+	kube := models.NewK8sCreds()
+	creds, err := g.RemoteConfig.GetCredAt(cred.K8sPath, true, kube)
+	if err != nil {
+		return credWrapper, err
+	}
+	for _, v := range creds {
+		credWrapper.K8SCreds = append(credWrapper.K8SCreds, v.(*models.K8SCreds))
+	}
+	return credWrapper, nil
 }
 
 func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (*models.AllCredsWrapper, error) {
@@ -302,11 +321,13 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 
 
 func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *models.RepoAccount) (*models.Summaries, error) {
+	log.Log().Debug("getting last few summaries")
 	var summaries = &models.Summaries{}
 	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
 		return nil, handleStorageError(err)
 	}
+	log.Log().Debug("successfully retrieved last few summaries")
 	if len(modelz) == 0 {
 		return nil, status.Error(codes.NotFound, "no entries found")
 	}

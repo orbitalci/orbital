@@ -76,22 +76,25 @@ func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
-	if err := c.OcyHelper.DetectAcctRepo(c.UI); err != nil {
+
+	if err := c.DetectAcctRepo(c.UI); err != nil {
 		return 1
 	}
-	if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
+	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
 		return 1
 	}
 	ctx := context.Background()
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
+	commandhelper.Debuggit(c.UI, "getting last few summaries")
 	summaries, err := c.config.Client.LastFewSummaries(ctx, &models.RepoAccount{Repo: c.OcyHelper.Repo, Account: c.OcyHelper.Account, Limit: int32(c.limit)})
 	if err != nil {
 		// todo: add more descriptive error
 		c.LastFewSummariesErr(err, c.GetUI())
 		return 1
 	}
+	commandhelper.Debuggit(c.UI, "found them!")
 	// todo: need a check/error for when nothing is found, right now just generated an empty table
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)

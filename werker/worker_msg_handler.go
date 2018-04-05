@@ -4,12 +4,17 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/integrations/dockr"
+	"bitbucket.org/level11consulting/ocelot/util/integrations/nexus"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	b "bitbucket.org/level11consulting/ocelot/werker/builder"
 	"bitbucket.org/level11consulting/ocelot/werker/valet"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"strings"
+
 	//"runtime/debug"
 	"context"
 	"time"
@@ -119,7 +124,10 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	}
 
 	defer cancel()
-	defer close(w.infochan)
+	defer func(){
+		ocelog.Log().Info("closing infochan for ", werk.Id)
+		close(w.infochan)
+	}()
 
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
@@ -135,30 +143,37 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 
 	dockerIdChan := make (chan string)
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
+	// do setup stage
 	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
+	// this is the last defer, so it'll be the first thing to be run after the command is finished
+	defer w.BuildValet.Cleaner.Cleanup(ctx, dockerUUid, w.infochan)
 	setupDura := time.Now().Sub(setupStart)
 
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 		return
 	}
-
 	if setupResult.Status == pb.StageResultVal_FAIL {
-		errStr := "setup stage failed "
-		if len(setupResult.Error) > 0 {
-			errStr = errStr + setupResult.Error
-		}
-		ocelog.Log().Error(errStr)
-		if err := w.Store.UpdateSum(true, setupDura.Seconds(), werk.Id); err != nil {
-			ocelog.IncludeErrField(err).Error("couldn't update summary in database")
-			return
-		}
+		handleFailure(setupResult, w.Store, "setup", setupDura, werk.Id)
+		return
+	}
+
+	// do integration setup stage
+	start := time.Now()
+	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, builder, w.WerkConf.RemoteConfig, w.infochan)
+	dura := time.Now().Sub(start)
+	if err := storeStageToDb(w.Store, werk.Id, integrationResult, start, dura.Seconds()); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't store build output")
+		return
+	}
+	if integrationResult.Status == pb.StageResultVal_FAIL {
+		handleFailure(integrationResult, w.Store, "integration setup", dura, werk.Id)
 		return
 	}
 
 	//all stages listed inside of the projects's ocelot.yml are executed + stored here
 	fail := false
-	start := time.Now()
+	start = time.Now()
 	for _, stage := range werk.BuildConf.Stages {
 		w.BuildValet.Reset(stage.Name, werk.CheckoutHash)
 		stageStart := time.Now()
@@ -185,14 +200,12 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	}
 
 	//update build_summary table
-	dura := time.Now().Sub(start)
+	dura = time.Now().Sub(start)
 	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
 		return
 	}
-
 	ocelog.Log().Debugf("finished building id %s", werk.CheckoutHash)
-	w.BuildValet.Cleaner.Cleanup(ctx, dockerUUid, w.infochan) //remove the container as a last step
 }
 
 func (w *WorkerMsgHandler) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
@@ -223,4 +236,44 @@ func storeStageToDb(storage storage.OcelotStorage, buildId int64, stageResult *p
 	}
 
 	return nil
+}
+
+func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName string, duration time.Duration, id int64) {
+	errStr := fmt.Sprintf("%s stage failed", stageName)
+	if len(result.Error) > 0 {
+		errStr = errStr + result.Error
+	}
+	ocelog.Log().Error(errStr)
+	if err := store.UpdateSum(true, duration.Seconds(), id); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
+	}
+}
+
+// doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
+func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
+	accountName := strings.Split(werk.FullName, "/")[0]
+	result = &pb.Result{}
+	id = bldr.GetContainerId()
+	var setupMessages []string
+	stage := b.InitStageUtil("INTEGRATION_UTIL")
+	result.Messages = setupMessages
+	//only if the build tool is maven do we worry about settings.xml
+	if werk.BuildConf.BuildTool == "maven" {
+		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, accountName, stage, result.Messages, logout)
+		if result.Status == pb.StageResultVal_FAIL {
+			return
+		}
+	}
+	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, accountName, stage, result.Messages, logout)
+	if result.Status == pb.StageResultVal_FAIL {
+		return
+	}
+	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download", rc, accountName, stage, result.Messages, logout)
+	result.Messages = append(result.Messages, "completed integration util setup stage \u2713")
+	return
+}
+
+func (w *WorkerMsgHandler) returnWerkerPort(rc cred.CVRemoteConfig, accountName string) (string, error) {
+	ocelog.Log().Debug("returning werker port")
+	return  w.WerkConf.ServicePort, nil
 }

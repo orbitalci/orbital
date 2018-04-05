@@ -3,6 +3,7 @@ package admin
 import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	adminModel "bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	storeModel "bitbucket.org/level11consulting/ocelot/util/storage/models"
@@ -28,11 +29,10 @@ func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCS
 	return err
 }
 
-func SetupRepoCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.RepoCreds) error {
+func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, config cred.RemoteConfigCred) error {
 	// todo: probably should do some kind of test if they are valid or not? is there a way to test these creds
-	gos := gosss.(*guideOcelotServer)
-	configPath := config.BuildCredPath(config.Type, config.AcctName)
-	err := gos.RemoteConfig.AddCreds(configPath, config)
+	configPath := config.BuildCredPath(config.GetType(), config.GetAcctName())
+	err := remoteConf.AddCreds(configPath, config)
 	return err
 }
 

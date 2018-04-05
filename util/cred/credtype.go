@@ -11,11 +11,13 @@ type OcyCredType int
 const (
 	Vcs OcyCredType = iota
 	Repo
+	K8s
 )
 
 var OcyCredMap = map[string]OcyCredType{
 	"vcs": Vcs,
 	"repo": Repo,
+	"k8s": K8s,
 }
 
 
@@ -24,7 +26,8 @@ func BuildCredPath(credType string, AcctName string, ocyCredType OcyCredType) st
 	switch ocyCredType {
 	case Vcs: pattern = "%s/vcs/%s/%s"
 	case Repo: pattern = "%s/repo/%s/%s"
-	default: panic("only repo or vcs")
+	case K8s: pattern = "%s/k8s/%s/%s"
+	default: panic("only repo|vcs|k8s")
 	}
 	return fmt.Sprintf(pattern, ConfigPath, AcctName, credType)
 }

@@ -53,6 +53,7 @@ func (oh *OcyHelper) WriteUi(writer func(string), msg string) {
 
 // SplitAndSetAcctRepo will split up the AcctRepo field, and write an error to ui if it doesnt meet spec
 func (oh *OcyHelper) SplitAndSetAcctRepo(ui cli.Ui) error {
+	Debuggit(ui, "splitting and setting acct repo")
 	data := strings.Split(oh.AcctRepo, "/")
 	if len(data) != 2 {
 		oh.WriteUi(ui.Error, "flag -acct-repo must be in the format <account>/<repo>")
