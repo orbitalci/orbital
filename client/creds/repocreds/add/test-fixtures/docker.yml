@@ -1,7 +1,7 @@
 repo:
-- username: admin
-  password: admin123
+- username: level11consulting
+  password: SUPER-SECRET-BOYYY
   repoUrl:
     dockernexus: docker.metaverse.l11.com
-  acctName: level11consulting
+  acctName: jessishank
   type: docker
