@@ -26,11 +26,11 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	projectName := "project"
 	docker, cleanupFunc := CreateLivingDockerContainer(t, "docker:18.02.0-ce")
 	werk := &pb.WerkerTask{FullName: acctName + "/" + projectName}
+	defer cleanupFunc(t)
 
 	pull := []string{"/bin/sh", "-c", "docker pull docker.metaverse.l11.com/busybox:test_do_not_delete"}
 	su := InitStageUtil("testing")
 
-	defer cleanupFunc(t)
 	time.Sleep(time.Second)
 	testRemoteConfig, vaultListener, consulServer := cred.TestSetupVaultAndConsul(t)
 	defer cred.TeardownVaultAndConsul(vaultListener, consulServer)

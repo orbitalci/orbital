@@ -38,6 +38,7 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 		fmt.Println("couldn't get storage instance. error: ", err.Error())
 		return
 	}
+	defer store.Close()
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(), store)
 	//grpc server
 	con, err := net.Listen("tcp", ":"+port)

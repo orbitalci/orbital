@@ -61,6 +61,7 @@ type OcelotStorage interface {
 	Stringy
 	PollTable
 	Healthy() bool
+	Close()
 }
 
 var (

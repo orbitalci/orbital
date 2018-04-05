@@ -122,6 +122,7 @@ func main() {
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")
 	}
+	defer store.Close()
 	lastCron, err := store.GetLastCronTime(conf.AcctRepo)
 	if err != nil {
 		lastCron = time.Now().Add(-5 * time.Minute)

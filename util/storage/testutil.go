@@ -3,6 +3,7 @@ package storage
 import (
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"bytes"
+	"database/sql"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -74,4 +75,12 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 	time.Sleep(4 * time.Second)
 	return
 
+}
+
+func PostgresTeardown(t *testing.T, db *sql.DB) {
+	t.Log(db.Stats())
+	open := db.Stats().OpenConnections
+	if open > 0 {
+		t.Fatalf("failed to close %d connections", open)
+	}
 }
