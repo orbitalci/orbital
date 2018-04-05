@@ -5,6 +5,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/vault"
 	"bitbucket.org/level11consulting/ocelot/util"
 	"fmt"
+	"github.com/go-errors/errors"
 	"github.com/hashicorp/consul/testutil"
 	"github.com/hashicorp/vault/http"
 	hashiVault "github.com/hashicorp/vault/vault"
@@ -231,4 +232,28 @@ func AddMvnRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, usernam
 	if err := rc.AddCreds(BuildCredPath("maven", acctName, Repo), creds); err != nil {
 		t.Fatal("couldnt' add maven creds, error: ", err.Error())
 	}
+}
+
+//type HealthyMaintainer interface {
+//	Reconnect() error
+//	Healthy() bool
+//}
+
+func NewHealthyMaintain() *HealthyMaintain {
+	return &HealthyMaintain{true, true}
+}
+type HealthyMaintain struct {
+	SuccessfulReconnect bool
+	IsHealthy bool
+}
+
+func (h *HealthyMaintain) Reconnect() error {
+	if h.SuccessfulReconnect {
+		return nil
+	}
+	return errors.New("no reconnect for u bud")
+}
+
+func (h *HealthyMaintain) Healthy() bool {
+	return h.IsHealthy
 }

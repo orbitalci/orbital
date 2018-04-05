@@ -55,6 +55,7 @@ func (p *PostgresStorage) Connect() error {
 	return nil
 }
 
+// todo: need to write a test for this
 func (p *PostgresStorage) Healthy() bool {
 	err := p.Connect()
 	if err != nil {

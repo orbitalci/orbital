@@ -30,52 +30,37 @@ func TestNsqWatch_MaintainHealths(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping MaintainHealths test because requires docker, and multiple consul restarts and that is slooow")
 	}
-	var cleanCV func()
-	//func(), net.Listener, *testutil.TestServer, *NsqWatch
-	var vaultListener net.Listener
-	var consulServer *testutil.TestServer
-	var nsqw *NsqWatch
-	cleanup, pw, port := storage.CreateTestPgDatabase(t)
-	defer cleanup(t)
-	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
-	cleanCV, vaultListener, _, nsqw = getStructs(t, pg)
+	rcHelathy := cred.NewHealthyMaintain()
+	storeHealth := storage.NewHealthyStorage()
+	consumer := nsqpb.NewDefaultProtoConsume()
+	consumer.ConsumeMessages("testtesttesttest", "test")
+	nsqw := &NsqWatch{
+		interval: 1,
+		pConsumers: []*nsqpb.ProtoConsume{consumer},
+		remoteConf: rcHelathy,
+		store: storeHealth,
+	}
 	go nsqw.MaintainHealths()
 	if nsqw.paused {
 		t.Error("everything is up, nsq consumer  should not be paused")
-		goto clean
+
 	}
-	time.Sleep(1*time.Second)
-	vaultListener.Close()
-	time.Sleep(1*time.Second)
+	rcHelathy.IsHealthy = false
+	rcHelathy.SuccessfulReconnect = false
+	time.Sleep(2*time.Second)
 	if !nsqw.paused {
 		t.Error("vault has been shut down, nsq consumer  should be paused")
-		goto clean
+		return
 	}
-	cleanCV()
-
-	cleanCV, _, consulServer, nsqw = getStructs(t, pg)
-	if !nsqw.paused {
+	rcHelathy.IsHealthy = true
+	rcHelathy.SuccessfulReconnect = true
+	time.Sleep(2*time.Second)
+	if nsqw.paused {
 		t.Error("everything is up, nsq consumer  should not be paused")
-		goto clean
 	}
-	go nsqw.MaintainHealths()
-	time.Sleep(1*time.Second)
-	consulServer.Stop()
-	time.Sleep(1*time.Second)
-	if !nsqw.paused {
-		t.Error("consul has been shut down, nsq consumer should be paused")
-		goto clean
-	}
-	cleanCV()
-	cleanCV, _, _, nsqw = getStructs(t, pg)
-	go nsqw.MaintainHealths()
-	time.Sleep(1*time.Second)
-	cleanup(t)
-	time.Sleep(5*time.Second)
+	storeHealth.IsHealthy = false
+	time.Sleep(2*time.Second)
 	if !nsqw.paused {
 		t.Error("postgres has been shut down, nsq consumer should be paused")
-		goto clean
 	}
-clean:
-	cleanCV()
 }

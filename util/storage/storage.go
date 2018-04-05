@@ -54,13 +54,17 @@ type PollTable interface {
 	DeletePoll(account string, repo string) error
 }
 
+type HealthyChkr interface {
+	Healthy() bool
+}
+
 type OcelotStorage interface {
 	BuildOut
 	BuildSum
 	BuildStage
 	Stringy
 	PollTable
-	Healthy() bool
+	HealthyChkr
 	Close()
 }
 

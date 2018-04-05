@@ -103,3 +103,19 @@ func PostgresTeardown(t *testing.T, db *sql.DB) {
 		t.Fatalf("failed to close %d connections", open)
 	}
 }
+
+//type HealthyChkr interface {
+//	Healthy() bool
+//}
+
+func NewHealthyStorage() *HealthyStorage {
+	return &HealthyStorage{true}
+}
+
+type HealthyStorage struct {
+	IsHealthy bool
+}
+
+func (h *HealthyStorage) Healthy() bool {
+	return h.IsHealthy
+}
