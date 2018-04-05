@@ -14,6 +14,8 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	cleanup, pw, port := CreateTestPgDatabase(t)
 	defer cleanup(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	pg.Connect()
+	defer PostgresTeardown(t, pg.db)
 	const shortForm = "2006-01-02 15:04:05"
 	buildTime, err := time.Parse(shortForm,"2018-01-14 18:38:59")
 	if err != nil {
@@ -80,6 +82,7 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 	util.BuildServerHack(t)
 	pg, id, cleanup := insertDependentData(t)
 	defer cleanup(t)
+	defer PostgresTeardown(t, pg.db)
 	txt := []byte("a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf")
 	out := &models.BuildOutput{
 		BuildId: id,
@@ -106,7 +109,8 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 	util.BuildServerHack(t)
 	pg, id, cleanup := insertDependentData(t)
 	defer cleanup(t)
-
+	pg.Connect()
+	defer PostgresTeardown(t, pg.db)
 	const shortForm = "2006-01-02 15:04:05"
 	startTime, _ := time.Parse(shortForm,"2018-01-14 18:38:59")
 	stageMessage := []string{"wow I am amazing"}
@@ -121,11 +125,13 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 		Stage: "marianne",
 	}
 	err := pg.AddStageDetail(stageResult)
+	t.Log(pg.db.Stats().OpenConnections)
 	if err != nil {
 		t.Fatal("could not add stage details", err)
 	}
 
 	stageResults, err := pg.RetrieveStageDetail(id)
+	t.Log(pg.db.Stats().OpenConnections)
 	if err != nil {
 		t.Fatal("could not get stage details", err)
 	}
@@ -154,4 +160,20 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 			t.Error(test.GenericStrFormatErrors("stage duration", 100, stage.Messages))
 		}
 	}
+}
+
+func TestPostgresStorage_Healthy(t *testing.T) {
+	cleanup, pw, port := CreateTestPgDatabase(t)
+	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	time.Sleep(4*time.Second)
+	defer cleanup(t)
+	if !pg.Healthy() {
+		t.Error("postgres storage instance should return healthy, it isn't.")
+	}
+	cleanup(t)
+	time.Sleep(2*time.Second)
+	if pg.Healthy() {
+		t.Error("postgres storage instance has been shut down, should return not healthy")
+	}
+
 }

@@ -4,7 +4,7 @@
 [[projects]]
   name = "bitbucket.org/level11consulting/go-til"
   packages = ["consul","deserialize","log","net","nsqpb","test","vault"]
-  revision = "c54d999a49812e67dd1144e9e82e863a1f1529c5"
+  revision = "34065da83cb6514ceac36e6f0f46be1b4cdeaddc"
 
 [[projects]]
   name = "github.com/Jeffail/gabs"
@@ -87,6 +87,12 @@
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/go-errors/errors"
+  packages = ["."]
+  revision = "a6af135bd4e28680facf08a3d206b454abc877a4"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/go-sql-driver/mysql"
@@ -487,6 +493,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8d08454bb16b72e6d30e5a97299fa78b5d72fa10c9137b63ae01027c4e40f485"
+  inputs-digest = "261dd53b796bea536f3e1512852f1857571643cae6c062c083fdd65dd14f99bf"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -ex
+set -e
 # check for all the executables we need
 command -v docker
 if [ $? != 0 ]; then
@@ -62,17 +62,17 @@ fi
 docker tag jessishank/ocelot-build:kill.6 ocelot-build
 
 echo "building admin"
-docker build -f admin/Dockerfile -t jessishank/ocelot-admin:latest .
+docker build -f admin/Dockerfile -t docker.metaverse.l11.com/ocelot-admin:latest .
 echo "building werker"
-docker build -f werker/Dockerfile -t jessishank/ocelot-werker:latest .
+docker build -f werker/Dockerfile -t docker.metaverse.l11.com/ocelot-werker:latest .
 echo "building poller"
-docker build -f cmd/poller/Dockerfile -t jessishank/ocelot-poller:latest .
+docker build -f cmd/poller/Dockerfile -t docker.metaverse.l11.com/ocelot-poller:latest .
 echo "building hookhandler"
-docker build -f hookhandler/Dockerfile -t jessishank/ocelot-hookhandler:latest .
+docker build -f hookhandler/Dockerfile -t docker.metaverse.l11.com/ocelot-hookhandler:latest .
 
-docker push jessishank/ocelot-admin:latest
-docker push jessishank/ocelot-werker:latest
-docker push jessishank/ocelot-hookhandler:latest
-docker push jessishank/ocelot-poller:latest
+docker push docker.metaverse.l11.com/ocelot-admin:latest
+docker push docker.metaverse.l11.com/ocelot-werker:latest
+docker push docker.metaverse.l11.com/ocelot-hookhandler:latest
+docker push docker.metaverse.l11.com/ocelot-poller:latest
 
 echo "finished building for build server."

@@ -13,8 +13,8 @@ import (
 type NsqWatch struct {
 	interval 	int64
 	pConsumers  []*nsqpb.ProtoConsume
-	remoteConf  cred.CVRemoteConfig
-	store       storage.OcelotStorage
+	remoteConf  cred.HealthyMaintainer
+	store       storage.HealthyChkr
 	paused      bool
 }
 
