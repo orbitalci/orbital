@@ -1,13 +1,17 @@
 package builder
 
 import (
+	"bitbucket.org/level11consulting/go-til/net"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/integrations/dockr"
+	"github.com/gorilla/mux"
+	"golang.org/x/net/context"
+
+	"net/http"
 	"os"
 	"testing"
 	"time"
-	"golang.org/x/net/context"
 )
 
 
@@ -60,4 +64,26 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Error("could not pull from metaverse docker! out: ", string(outByte))
 	}
+	muxi := mux.NewRouter()
+	muxi.HandleFunc("/kubectl", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://storage.googleapis.com/kubernetes-release/release/v1.9.6/bin/linux/amd64/kubectl", 301)
+	})
+
+	n := net.InitNegroni("werker", muxi)
+	go n.Run(":8888")
+
+	result = docker.IntegrationSetup(ctx, func(config cred.CVRemoteConfig, acctName string)(string, error) {return "8888", nil}, docker.DownloadKubectl, "kubectl download", testRemoteConfig, acctName, su, []string{}, logout)
+	outBytes := <-logout
+	if result.Status == pb.StageResultVal_FAIL {
+		t.Error("couldn't download kubectl! oh nuuuuuu! ", string(outBytes))
+	}
+	checkKube := []string{"/bin/sh", "-c", "command -v kubectl"}
+	outd := make(chan []byte, 10000)
+	result = docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, checkKube, outd)
+	outb := <- outd
+	if result.Status == pb.StageResultVal_FAIL {
+		t.Error("kubectl not found! fail! ", string(outb))
+	}
+	t.Log(result.Status)
+	t.Log(string(outb))
 }
