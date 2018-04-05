@@ -181,11 +181,19 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testutil.TestServer) {
 	//set up unsealed vault for testing
 	util.BuildServerHack(t)
-	core, _, token := hashiVault.TestCoreUnsealed(t)
-	ln, addr := http.TestServer(t, core)
-	os.Setenv("VAULT_ADDR", addr)
-	os.Setenv("VAULT_TOKEN", token)
+	ln, token := TestSetupVault(t)
 
+	//setup consul for testing
+	testServer, host, port := TestSetupConsul(t)
+	remoteConfig, err := GetInstance(host, port, token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return remoteConfig, ln, testServer
+}
+
+
+func TestSetupConsul(t *testing.T) (*testutil.TestServer, string, int) {
 	//setup consul for testing
 	testServer, err := testutil.NewTestServer()
 	if err != nil {
@@ -193,12 +201,16 @@ func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testu
 	}
 	ayy := strings.Split(testServer.HTTPAddr, ":")
 	port, _ := strconv.ParseInt(ayy[1], 10, 32)
-
-	remoteConfig, err := GetInstance(ayy[0], int(port), token)
-
-	return remoteConfig, ln, testServer
+	return testServer, ayy[0], int(port)
 }
 
+func TestSetupVault(t *testing.T) (net.Listener, string) {
+	core, _, token := hashiVault.TestCoreUnsealed(t)
+	ln, addr := http.TestServer(t, core)
+	os.Setenv("VAULT_ADDR", addr)
+	os.Setenv("VAULT_TOKEN", token)
+	return ln, token
+}
 
 func TeardownVaultAndConsul(testvault net.Listener, testconsul *testutil.TestServer) {
 	testconsul.Stop()

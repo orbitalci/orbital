@@ -27,9 +27,6 @@ func getStructs(t *testing.T, store storage.OcelotStorage) (func(), net.Listener
 }
 
 func TestNsqWatch_MaintainHealths(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping MaintainHealths test because requires docker, and multiple consul restarts and that is slooow")
-	}
 	rcHelathy := cred.NewHealthyMaintain()
 	storeHealth := storage.NewHealthyStorage()
 	consumer := nsqpb.NewDefaultProtoConsume()

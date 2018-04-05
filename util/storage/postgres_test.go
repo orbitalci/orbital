@@ -161,3 +161,19 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgresStorage_Healthy(t *testing.T) {
+	cleanup, pw, port := CreateTestPgDatabase(t)
+	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	time.Sleep(4*time.Second)
+	defer cleanup(t)
+	if !pg.Healthy() {
+		t.Error("postgres storage instance should return healthy, it isn't.")
+	}
+	cleanup(t)
+	time.Sleep(2*time.Second)
+	if pg.Healthy() {
+		t.Error("postgres storage instance has been shut down, should return not healthy")
+	}
+
+}
