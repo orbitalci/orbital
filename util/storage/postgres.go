@@ -73,7 +73,6 @@ func (p *PostgresStorage) Close() {
 		ocelog.IncludeErrField(err).Error("error closing postgres db")
 	}
 }
-func (p *PostgresStorage) Disconnect() {}
 	//err := p.db.Close()
 	//if err != nil {
 	//	ocelog.IncludeErrField(err).Error("error closing")
@@ -98,7 +97,6 @@ func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, 
 	if err := p.Connect(); err != nil {
 		return 0, errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	var id int64
 	query := `INSERT INTO build_summary(hash, account, repo, branch) values ($1,$2,$3,$4) RETURNING id`
 	stmt, err := p.db.Prepare(query)
@@ -118,7 +116,6 @@ func (p *PostgresStorage) SetQueueTime(id int64) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	queryStr := `UPDATE build_summary SET queuetime=$1 WHERE id=$2`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
@@ -137,7 +134,6 @@ func (p *PostgresStorage) StartBuild(id int64) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 
 	queryStr := `UPDATE build_summary SET starttime=$1 WHERE id=$2`
 	stmt, err := p.db.Prepare(queryStr)
@@ -158,7 +154,6 @@ func (p *PostgresStorage) UpdateSum(failed bool, duration float64, id int64) err
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	querystr := `UPDATE build_summary SET failed=$1, buildtime=$2 WHERE id=$3`
 	stmt, err := p.db.Prepare(querystr)
 	if err != nil {
@@ -321,7 +316,6 @@ func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSu
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	querystr := fmt.Sprintf(`select distinct on (account, repo) account, repo from build_summary where repo ilike $1;`)
 	stmt, err := p.db.Prepare(querystr)
 	if err != nil {
@@ -363,7 +357,6 @@ func (p *PostgresStorage) AddOut(output *models.BuildOutput) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	if err := output.Validate(); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
@@ -429,7 +422,6 @@ func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error 
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	if err := stageResult.Validate(); err != nil {
 		ocelog.IncludeErrField(err)
 		return err
@@ -462,7 +454,6 @@ func(p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResul
 	if err := p.Connect(); err != nil {
 		return stages, errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		return nil, err
@@ -533,7 +524,6 @@ func (p *PostgresStorage) SetLastCronTime(account string, repo string) (err erro
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	//starttime.Format(TimeFormat)
 	queryStr := `UPDATE polling_repos SET last_cron_time=$1 WHERE (account,repo) = ($2,$3);`
 	stmt, err := p.db.Prepare(queryStr)
@@ -552,7 +542,6 @@ func (p *PostgresStorage) GetLastCronTime(accountRepo string) (timestamp time.Ti
 	if err := p.Connect(); err != nil {
 		return time.Now(), errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	fmt.Println(p.dbLoc, p.db, p.location)
 	acctRepo := strings.Split(accountRepo, "/")
 	if len(acctRepo) != 2 {
@@ -626,7 +615,6 @@ func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	defer p.Disconnect()
 	queryStr := `select account, repo, cron_string, last_cron_time, branches from polling_repos`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
