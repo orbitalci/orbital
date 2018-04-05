@@ -3,6 +3,7 @@ package storage
 import (
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"bytes"
+	"database/sql"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -60,7 +61,26 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 	}
 	t.Log("successfully started up test pg database on port 5555")
 	cleanup = func(t *testing.T){
-		cmd := exec.Command("/bin/sh", "-c", "docker kill pgtest")
+		t.Log("attempting to clean up db")
+		cmd := exec.Command("/bin/sh", "-c", "docker ps -a | grep pgtest")
+		err := cmd.Start()
+		var out, errr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &errr
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := cmd.Wait(); err != nil {
+			if _, ok := err.(*exec.ExitError); ok {
+				// means that exit code was not zero, so the ps
+				return
+			} else {
+				t.Fatal(err)
+			}
+		}
+		t.Log(out.String())
+		t.Log(errr.String())
+		cmd = exec.Command("/bin/sh", "-c", "docker kill pgtest")
 		if err := cmd.Run(); err != nil {
 			t.Fatal("could not kill db, err: ", err.Error())
 		}
@@ -74,4 +94,28 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 	time.Sleep(4 * time.Second)
 	return
 
+}
+
+func PostgresTeardown(t *testing.T, db *sql.DB) {
+	t.Log(db.Stats())
+	open := db.Stats().OpenConnections
+	if open > 0 {
+		t.Fatalf("failed to close %d connections", open)
+	}
+}
+
+//type HealthyChkr interface {
+//	Healthy() bool
+//}
+
+func NewHealthyStorage() *HealthyStorage {
+	return &HealthyStorage{true}
+}
+
+type HealthyStorage struct {
+	IsHealthy bool
+}
+
+func (h *HealthyStorage) Healthy() bool {
+	return h.IsHealthy
 }

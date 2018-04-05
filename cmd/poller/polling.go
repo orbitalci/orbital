@@ -55,6 +55,7 @@ func main() {
 	rc := configure()
 	supportedTopics := []string{"poll_please", "no_poll_please"}
 	store, err := rc.GetOcelotStorage()
+	defer store.Close()
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to get ocelot storage, bailing")
 	}

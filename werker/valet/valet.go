@@ -5,6 +5,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/log"
 	brt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"context"
 	"fmt"
@@ -26,14 +27,15 @@ const (
 
 type Valet struct {
 	RemoteConfig    cred.CVRemoteConfig
+	store			storage.OcelotStorage
 	WerkerUuid		uuid.UUID
 	doneChannels    map[string]chan int
 	sync.Mutex
 	c.Cleaner
 }
 
-func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType conf.WerkType) *Valet {
-	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int)}
+func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType conf.WerkType, store storage.OcelotStorage) *Valet {
+	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store:store}
 	valet.Cleaner = c.GetNewCleaner(werkerType)
 
 	return valet
@@ -54,11 +56,6 @@ func (v *Valet) Reset(newStage string, hash string) error {
 // StoreInterrupt will look up in consul all of the associated active builds with the werker and their current
 // runtime state. It will then save each build's current stage details with an
 func (v *Valet) StoreInterrupt(typ Interrupt) {
-	store, err := v.RemoteConfig.GetOcelotStorage()
-	if err != nil {
-		log.IncludeErrField(err).Error("unable to get storage when panic occured")
-		return
-	}
 	consulet := v.RemoteConfig.GetConsul()
 	hrts, err := brt.GetHashRuntimesByWerker(consulet, v.WerkerUuid.String())
 	if err != nil {
@@ -83,17 +80,17 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 			Messages: messages,
 			StartTime: hrt.StageStart,
 		}
-		if err := store.AddStageDetail(detail); err != nil {
+		if err := v.store.AddStageDetail(detail); err != nil {
 			log.IncludeErrField(err).Error("couldn't store stage detail!")
 		} else {
 			log.Log().Info("updated stage detail")
 		}
-		sum, err := store.RetrieveSumByBuildId(hrt.BuildId)
+		sum, err := v.store.RetrieveSumByBuildId(hrt.BuildId)
 		if err != nil {
 			log.IncludeErrField(err).Error("could not retrieve summary for update")
 		}
 		fullDuration := time.Now().Sub(sum.BuildTime).Seconds()
-		if err := store.UpdateSum(true, fullDuration, hrt.BuildId); err != nil {
+		if err := v.store.UpdateSum(true, fullDuration, hrt.BuildId); err != nil {
 			log.IncludeErrField(err).Error("couldn't update summary in database")
 		} else {
 			log.Log().Info("updated summary table in database")

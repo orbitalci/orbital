@@ -8,6 +8,7 @@ import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/build"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"net/http"
 )
 
@@ -21,6 +22,8 @@ type HookHandler interface {
 	SetDeserializer(deserializer *deserialize.Deserializer)
 	GetValidator() *build.OcelotValidator
 	SetValidator(validator *build.OcelotValidator)
+	GetStorage() storage.OcelotStorage
+	SetStorage(storage.OcelotStorage)
 }
 
 //context contains long lived resources. See bottom for getters/setters
@@ -29,6 +32,7 @@ type HookHandlerContext struct {
 	Producer     *nsqpb.PbProduce
 	Deserializer *deserialize.Deserializer
 	OcelotValidator *build.OcelotValidator
+	Store           storage.OcelotStorage
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -55,13 +59,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to get storage")
-		return
-	}
-
-	if err = build.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
+	if err = build.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), ctx.GetStorage()); err != nil {
 		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
 		return
 	}
@@ -93,13 +91,8 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store, err := ctx.GetRemoteConfig().GetOcelotStorage()
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to get storage")
-		return
-	}
 
-	if err = build.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), store); err != nil {
+	if err = build.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), ctx.GetStorage()); err != nil {
 		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
 		return
 	}
@@ -141,6 +134,15 @@ func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deseria
 func (hhc *HookHandlerContext) SetValidator(validator *build.OcelotValidator) {
 	hhc.OcelotValidator = validator
 }
+
 func (hhc *HookHandlerContext) GetValidator() *build.OcelotValidator {
 	return hhc.OcelotValidator
+}
+
+func (hhc *HookHandlerContext) SetStorage(ocelotStorage storage.OcelotStorage) {
+	hhc.Store = ocelotStorage
+}
+
+func (hhc *HookHandlerContext) GetStorage() storage.OcelotStorage {
+	return hhc.Store
 }

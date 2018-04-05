@@ -8,13 +8,13 @@ if [ $# -eq 1 ]; then
   docker tag ocelot-werker jessishank/ocelot-werker:${version}
   docker tag ocelot-hookhandler jessishank/ocelot-hookhandler:${version}
   docker tag ocelot-admin jessishank/ocelot-admin:${version}
-  docker tag ocelot-build jessishank/ocelot-build:${version}
+#  docker tag ocelot-build jessishank/ocelot-build:${version}
   echo "pushing"
   docker push jessishank/ocelot-poller:${version}
   docker push jessishank/ocelot-werker:${version}
   docker push jessishank/ocelot-hookhandler:${version}
   docker push jessishank/ocelot-admin:${version}
-  docker push jessishank/ocelot-build:${version}
+#  docker push jessishank/ocelot-build:${version}
 else
   echo "need an argument for tag name"
   exit 1

@@ -1,10 +1,13 @@
 package cred
 
 import (
+	"bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/go-til/vault"
 	"bitbucket.org/level11consulting/ocelot/util"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"testing"
+	"time"
 )
 
 //func TestRemoteConfig_ErrorHandling(t *testing.T) {
@@ -223,4 +226,80 @@ func Test_BuildCredPath(t *testing.T) {
 	if liveRepo != expectedRepo {
 		t.Error(test.StrFormatErrors("repo cred path", expectedRepo, liveRepo))
 	}
+}
+
+func TestRemoteConfig_Healthy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping TestRemoteConfig_Healthy because requires killing / restarting vault and consul multiple times.")
+	}
+	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+	if !testRemoteConfig.Healthy() {
+		t.Error("consul & vault are up, should return status of healthy")
+	}
+	consulServer.Stop()
+	time.Sleep(1*time.Second)
+	if testRemoteConfig.Healthy() {
+		t.Error("consul has been taken down, should return status of not healthy.")
+	}
+	newConsul, host, port := TestSetupConsul(t)
+	defer newConsul.Stop()
+	rc := testRemoteConfig.(*RemoteConfig)
+	var err error
+	rc.Consul, err = consul.New(host, port)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(1*time.Second)
+	if !testRemoteConfig.Healthy() {
+		t.Error("consul has been stood back up, should return status of healthy.")
+	}
+	vaultListener.Close()
+	time.Sleep(1*time.Second)
+	if testRemoteConfig.Healthy() {
+		t.Error("vault has been shut down, shouldn ot return status of healthy.")
+	}
+}
+
+func TestRemoteConfig_Reconnect(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping TestRemoteConfig_Reconnect because requires killing / restarting vault and consul multiple times.")
+	}
+	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+	rc := testRemoteConfig.(*RemoteConfig)
+	if err := testRemoteConfig.Reconnect(); err != nil {
+		t.Error("should be able to 'reconnect' as both vault and consul are up, instead error is ", err.Error())
+	}
+	vaultListener.Close()
+	//vaultClient, err := ocevault.NewAuthedClient(token)
+	time.Sleep(1*time.Second)
+	if err := testRemoteConfig.Reconnect(); err == nil {
+		t.Error("should not be able to 'reconnect' as vault is down.")
+	}
+	newVaultListener, token := TestSetupVault(t)
+	defer newVaultListener.Close()
+	vaultClient, err := vault.NewAuthedClient(token)
+	if err != nil {
+		t.Error(err)
+	}
+	rc.Vault = vaultClient
+	time.Sleep(500*time.Millisecond)
+	if err := testRemoteConfig.Reconnect(); err != nil {
+		t.Error("should be able to 'reconnect' because vault has been stood back up. instead the error is ", err.Error())
+	}
+	consulServer.Stop()
+	time.Sleep(3*time.Second)
+	if err := testRemoteConfig.Reconnect(); err == nil {
+		t.Error("should not be able to 'reconnect' as consul is down.")
+	}
+	newConsul, host, port := TestSetupConsul(t)
+	defer newConsul.Stop()
+	rc.Consul, err = consul.New(host, port)
+	if err != nil {
+		t.Error(err)
+	}
+	time.Sleep(2*time.Second)
+	if err := testRemoteConfig.Reconnect(); err != nil {
+		t.Error("should be able to 'reconnect' because consul has been stood back up. instead the error is ", err.Error())
+	}
+
 }

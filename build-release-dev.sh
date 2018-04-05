@@ -22,7 +22,7 @@ rm ocelot
 
 # linux
 pushd cmd/werker/
-env GOOS=linux GOARCH=amd64 go build -o werker cmd/werker/main.go
+env GOOS=linux GOARCH=amd64 go build -o werker main.go
 zip -r ../../linux-werker.zip werker
 rm werker
 popd

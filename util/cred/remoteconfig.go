@@ -64,6 +64,10 @@ type StorageCred interface {
 	GetOcelotStorage() (storage.OcelotStorage, error)
 }
 
+type HealthyMaintainer interface {
+	Reconnect() error
+	Healthy() bool
+}
 
 //CVRemoteConfig is an abstraction for retrieving/setting creds for ocelot
 //currently uses consul + vault
@@ -77,8 +81,7 @@ type CVRemoteConfig interface {
 	AddCreds(path string, anyCred RemoteConfigCred) (err error)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
 	CheckSSHKeyExists(path string) (error)
-	Healthy() bool
-	Reconnect() error
+	HealthyMaintainer
 
 	StorageCred
 }
@@ -105,6 +108,7 @@ func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 	rc.Vault = vault
 }
 
+// todo: write a test for thiiiiis!
 func (rc *RemoteConfig) Healthy() bool {
 	vaultConnected := true
 	_, err := rc.Vault.GetVaultData("here")
@@ -121,6 +125,7 @@ func (rc *RemoteConfig) Healthy() bool {
 	return true
 }
 
+//todo: write a test for this!!!
 func (rc *RemoteConfig) Reconnect() error {
 	_, err := rc.Vault.GetVaultData("here")
 	if err != nil {

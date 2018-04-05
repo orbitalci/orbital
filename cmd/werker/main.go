@@ -30,6 +30,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/werker"
 	"bitbucket.org/level11consulting/ocelot/werker/builder"
+	"bitbucket.org/level11consulting/ocelot/werker/config"
 	"bitbucket.org/level11consulting/ocelot/werker/valet"
 	"fmt"
 	"os"
@@ -37,7 +38,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	"bitbucket.org/level11consulting/ocelot/werker/config"
 )
 
 //listen will listen for messages for a specified topic. If a message is received, a
@@ -89,7 +89,7 @@ func main() {
 	}
 	conf.WerkerUuid = uuid
 	// kick off ctl-c signal handling
-	buildValet := valet.NewValet(conf.RemoteConfig, conf.WerkerUuid, conf.WerkerType)
+	buildValet := valet.NewValet(conf.RemoteConfig, conf.WerkerUuid, conf.WerkerType, store)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
