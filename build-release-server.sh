@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -ex
+set -e
 # check for all the executables we need
 command -v docker
 if [ $? != 0 ]; then

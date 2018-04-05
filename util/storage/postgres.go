@@ -9,7 +9,6 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"github.com/m-eat-up/meatup-go/db"
 	"strings"
 	"time"
 	"sync"
@@ -592,7 +591,7 @@ func (p *PostgresStorage) PollExists(account string, repo string) (bool, error) 
 		return false, err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(queryStr, account, repo).Scan(&count)
+	err = stmt.QueryRow(account, repo).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -614,7 +613,7 @@ func (p *PostgresStorage) DeletePoll(account string, repo string) error {
 		return  err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(queryStr, account, repo); err != nil {
+	if _, err := stmt.Exec(account, repo); err != nil {
 		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).Error("could not delete poll entry from database")
 		return err
 	}
@@ -635,7 +634,7 @@ func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
 		return  nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(queryStr)
+	rows, err := stmt.Query()
 	if err != nil {
 		return nil, err
 	}
