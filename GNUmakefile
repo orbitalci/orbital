@@ -85,6 +85,7 @@ docker-build:
 	@docker-compose build
 
 release:
+	protos
 	upload-clients
 	upload-templates
 	docker-base
