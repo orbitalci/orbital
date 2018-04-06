@@ -1,0 +1,257 @@
+{{/* admin service deployment */}}
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: "admin-{{ template "ocelot.fullname" . }}"
+  labels:
+    app: "admin-{{ template "ocelot.name" . }}"
+    chart: {{ template "ocelot.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.admin.replicaCount }}
+  selector:
+    matchLabels:
+      app: admin-{{ template "ocelot.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: admin-{{ template "ocelot.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          # location on host
+          path: /var/run/docker.sock
+          # this field is optional
+          type: File
+      containers:
+        - name: admin-{{ .Chart.Name }}
+          image: "{{ .Values.admin.image.repository }}:{{ .Values.admin.image.tag }}"
+          imagePullPolicy: {{ .Values.admin.image.pullPolicy }}
+          command: ["/admin"]
+          args:
+            - -consul-host=$(CONSUL_HOST)}
+          volumeMounts: 
+            - mountPath: /var/run/docker.sock
+              name: docker-sock-volume
+          ports:
+            - name: http
+              containerPort: 10000
+              protocol: TCP
+          env:
+            - name: CONSUL_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: VAULT_ADDR
+              value: "{{.Values.vault.protocol}}://{{.Values.vault.ip}}:{{.Values.vault.port}}"
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.vault.secretName}}
+                  key: {{.Values.vault.secretKey}}
+            - name: NSQLOOKUPD_IP
+              value: "{{.Values.nsq.nsqlookupd.ip}}"
+            - name: NSQLOOKUPD_PORT
+              value: "{{.Values.nsq.nsqlookupd.port}}"
+            - name: NSQD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NSQD_PORT
+              value: "{{.Values.nsq.nsqd.port}}"
+            - name: LOG_LEVEL
+              value: "{{.Values.loglevel}}"
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+{{ toYaml .Values.admin.resources | indent 12 }}
+    {{- with .Values.admin.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.admin.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.admin.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+---
+{{/* hookhandler service deployment */}}
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: "hookhandler-{{ template "ocelot.fullname" . }}"
+  labels:
+    app: "hookhandler-{{ template "ocelot.name" . }}"
+    chart: {{ template "ocelot.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.hookhandler.replicaCount }}
+  selector:
+    matchLabels:
+      app: hookhandler-{{ template "ocelot.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: hookhandler-{{ template "ocelot.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          # location on host
+          path: /var/run/docker.sock
+          # this field is optional
+          type: File
+      containers:
+        - name: hookhandler-{{ .Chart.Name }}
+          image: "{{ .Values.hookhandler.image.repository }}:{{ .Values.hookhandler.image.tag }}"
+          imagePullPolicy: {{ .Values.hookhandler.image.pullPolicy }}
+          command: ["/hookhandler"]
+          args:
+            - -consul-host=$(CONSUL_HOST)}
+          volumeMounts: 
+            - mountPath: /var/run/docker.sock
+              name: docker-sock-volume
+          ports:
+            - name: http
+              containerPort: 8088
+              protocol: TCP
+          env:
+            - name: CONSUL_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: VAULT_ADDR
+              value: "{{.Values.vault.protocol}}://{{.Values.vault.ip}}:{{.Values.vault.port}}"
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.vault.secretName}}
+                  key: {{.Values.vault.secretKey}}
+            - name: NSQLOOKUPD_IP
+              value: "{{.Values.nsq.nsqlookupd.ip}}"
+            - name: NSQLOOKUPD_PORT
+              value: "{{.Values.nsq.nsqlookupd.port}}"
+            - name: NSQD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NSQD_PORT
+              value: "{{.Values.nsq.nsqd.port}}"
+            - name: LOG_LEVEL
+              value: "{{.Values.loglevel}}"
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+{{ toYaml .Values.admin.resources | indent 12 }}
+    {{- with .Values.admin.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.admin.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.admin.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+---
+{{/* poller service deployment */}}
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: "poller-{{ template "ocelot.fullname" . }}"
+  labels:
+    app: "poller-{{ template "ocelot.name" . }}"
+    chart: {{ template "ocelot.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.poller.replicaCount }}
+  selector:
+    matchLabels:
+      app: poller-{{ template "ocelot.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: poller-{{ template "ocelot.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          # location on host
+          path: /var/run/docker.sock
+          # this field is optional
+          type: File
+      containers:
+        - name: poller-{{ .Chart.Name }}
+          image: "{{ .Values.poller.image.repository }}:{{ .Values.poller.image.tag }}"
+          imagePullPolicy: {{ .Values.poller.image.pullPolicy }}
+          command: ["/poller"]
+          args:
+            - -consul-host=$(CONSUL_HOST)}
+          volumeMounts: 
+            - mountPath: /var/run/docker.sock
+              name: docker-sock-volume
+          env:
+            - name: CONSUL_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: VAULT_ADDR
+              value: "{{.Values.vault.protocol}}://{{.Values.vault.ip}}:{{.Values.vault.port}}"
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.vault.secretName}}
+                  key: {{.Values.vault.secretKey}}
+            - name: NSQLOOKUPD_IP
+              value: "{{.Values.nsq.nsqlookupd.ip}}"
+            - name: NSQLOOKUPD_PORT
+              value: "{{.Values.nsq.nsqlookupd.port}}"
+            - name: NSQD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NSQD_PORT
+              value: "{{.Values.nsq.nsqd.port}}"
+            - name: LOG_LEVEL
+              value: "{{.Values.loglevel}}"
+          resources:
+{{ toYaml .Values.admin.resources | indent 12 }}
+    {{- with .Values.admin.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.admin.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.admin.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

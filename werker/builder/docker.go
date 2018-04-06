@@ -165,7 +165,13 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	bufReader = bufio.NewReader(containerLog)
 
 	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
-
+	setupMessages = append(setupMessages, "attempting to download ocelot package dependencies...")
+	installed := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, d.InstallPackageDeps(), logout)
+	if len(installed.Error) > 0 {
+		ocelog.Log().Error("an error happened installing package deps ", installed.Error)
+		installed.Messages = append(setupMessages, installed.Messages...)
+		return installed, d.ContainerId
+	}
 	setupMessages = append(setupMessages, "attempting to download codebase...")
 	downloadCodebase := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
 	if len(downloadCodebase.Error) > 0 {

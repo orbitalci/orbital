@@ -45,6 +45,19 @@
 
 ## BIG TODOs:
 - use the [go test tagging thing](https://stackoverflow.com/questions/24030059/skip-some-tests-with-go-test)
+- use `source /etc/os-release` to detect distro, then use that to download necessary ocelot tools if they don't exist already 
+    - openssl (for https)
+    - bash (maybe not, need to check scripts)
+    - zip
+    - tar 
+    - curl 
+    - wget 
+    - git
+    - python2 (idk maybe we should look at another way for get_ssh_key.sh)
+    - base64
+    - more?? i don't think so 
+    
+   
 - polling option to add new repos with ocelot.yml
 - add versioning (ALSO MEANS ADDING `ocelot version` command!)
 - make the client colors for everything configurable

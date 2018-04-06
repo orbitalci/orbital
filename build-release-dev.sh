@@ -49,6 +49,7 @@ cd -
 rm mac-ocelot.zip
 rm windows-ocelot.zip
 rm linux-ocelot.zip
+rm linux-werker.zip
 
 
 # This build assumes you have your ssh key added to L11 bitbucket

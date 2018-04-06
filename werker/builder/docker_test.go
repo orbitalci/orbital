@@ -28,7 +28,8 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	acctName := "test"
 	projectName := "project"
-	docker, cleanupFunc := CreateLivingDockerContainer(t, "docker:18.02.0-ce")
+	ctx := context.Background()
+	docker, cleanupFunc := CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
 	defer cleanupFunc(t)
 
 	pull := []string{"/bin/sh", "-c", "docker pull docker.metaverse.l11.com/busybox:test_do_not_delete"}
@@ -40,7 +41,6 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	// try to do a docker pull on private repo without creds written. this should fail.
 	out := make(chan []byte, 10000)
-	ctx := context.Background()
 	result := docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, out)
 	if result.Status != pb.StageResultVal_FAIL {
 		data := <-out
@@ -86,4 +86,25 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	}
 	t.Log(result.Status)
 	t.Log(string(outb))
+}
+
+// test that in docker, can run the InstallPackageDeps to multiple image types
+func TestDockerBasher_InstallPackageDeps(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping due to -short flag being set")
+	}
+	ctx := context.Background()
+	alpine, cleanupFunc := CreateLivingDockerContainer(t, ctx, "alpine:latest")
+	defer cleanupFunc(t)
+	su := InitStageUtil("alpineTest")
+	logout := make(chan[]byte, 10000)
+	result := alpine.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, alpine.InstallPackageDeps(), logout)
+	if result.Status == pb.StageResultVal_FAIL {
+		t.Error("couldn't download deps! oh nuuu!")
+	}
+	t.Log(result.Status)
+	t.Log(string(<-logout))
+	testDeps := []string{"/bin/sh", "-c", "command -v openssl && command -v bash && command -v zip && command -v wget && command -v "}
+
+
 }

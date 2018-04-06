@@ -38,6 +38,10 @@ func (b *Basher) SetGithubDownloadURL(downloadURL string) {
 	b.GithubDownloadURL = downloadURL
 }
 
+func (b *Basher) InstallPackageDeps() []string {
+	return []string{"/bin/sh", "-c", "/.ocelot/install_deps.sh"}
+}
+
 //DownloadCodebase builds bash commands to be executed for downloading the codebase
 func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
 	downloadCode := []string {"/bin/sh", "-c"}
