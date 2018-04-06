@@ -1,3 +1,4 @@
+.DEFAULT_GOAL := default
 SHELL = bash
 
 GOTAGS ?=
@@ -14,23 +15,8 @@ GIT_IMPORT=github.com/hashicorp/consul/version
 GOLDFLAGS=-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)
 
 export GOLDFLAGS
-
-# all builds binaries for all targets
-all: bin
-
-bin: tools
-	@mkdir -p bin/
-	@GOTAGS='$(GOTAGS)' sh -c "'$(CURDIR)/scripts/build.sh'"
-
-# dev creates binaries for testing locally - these are put into ./bin and $GOPATH
-#dev: changelogfmt vendorfmt dev-build
-
-#dev-build:
-#	@echo "--> Building consul"
-#	mkdir -p pkg/$(GOOS)_$(GOARCH)/ bin/
-#	go install -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)'
-#	cp $(GOPATH)/bin/consul bin/
-#	cp $(GOPATH)/bin/consul pkg/$(GOOS)_$(GOARCH)
+SSH_PRIVATE_KEY ?= $(HOME)/.ssh/id_rsa
+export SSH_PRIVATE_KEY
 
 windows-client:
 	mkdir -p pkg/windows_amd64/
@@ -55,8 +41,8 @@ all-clients: windows-client mac-client linux-client
 upload-clients:
 	all-clients
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot.zip s3://ocelotty/mac-ocelot.zip
-    @aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot.zip s3://ocelotty/windows-ocelot.zip
-    @aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot.zip s3://ocelotty/linux-ocelot.zip
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot.zip s3://ocelotty/windows-ocelot.zip
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot.zip s3://ocelotty/linux-ocelot.zip
 
 upload-templates:
 	cd werker/builder/template; tar -cvf werker_files.tar *
@@ -64,32 +50,30 @@ upload-templates:
 	rm werker/builder/template/werker_files.tar
 
 linux-werker:
+	echo $(SSH_PRIVATE_KEY)
 	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -o werker main.go; zip -r ../../linux-werker.zip werker; rm werker; cd -
 	@aws s3 cp --acl public-read-write --content-disposition attachment linux-werker.zip s3://ocelotty/linux-werker.zip
 	rm linux-werker.zip
 
-docker-base:
-	@if [ -f ${SSH_PRIVATE_KEY:=${HOME}/.ssh/id_rsa} ]; then \
-       echo "Using private key: ${SSH_PRIVATE_KEY}" \
-    else \
-       echo "Private key ${SSH_PRIVATE_KEY} not found. Set SSH_PRIVATE_KEY to your private key path" \
-       exit 1 \
-    fi \
-    docker build \
-       --build-arg SSH_PRIVATE_KEY="$(cat ${SSH_PRIVATE_KEY})" \
-       -f Dockerfile.build \
-       -t ocelot-build \
-       .
+sshexists:
+ifeq ("$(wildcard $(SSH_PRIVATE_KEY))","")
+	$(error SSH_PRIVATE_KEY must exist or ~/.ssh/id_rsa must exist!)
+endif
+
+docker-base: sshexists
+	@docker build \
+	   --build-arg SSH_PRIVATE_KEY="$$(cat $${SSH_PRIVATE_KEY})" \
+	   -f Dockerfile.build \
+	   -t ocelot-build \
+	   .
 
 docker-build:
 	@docker-compose build
 
-release:
-	protos
-	upload-clients
-	upload-templates
-	docker-base
-	docker-build
+release: protos upload-clients upload-templates docker-base docker-build
 
 protos:
 	scripts/build-protos.sh
+
+default:
+	@echo "heeey specify a target please"
