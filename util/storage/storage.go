@@ -35,6 +35,7 @@ type BuildSum interface {
 	RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error)
 	RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error)
 	StartBuild(id int64) error
+	StoreFailedValidation(id int64) error
 	SetQueueTime(id int64) error
 
 }
