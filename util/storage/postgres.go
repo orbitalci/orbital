@@ -131,10 +131,6 @@ func (p *PostgresStorage) SetQueueTime(id int64) error {
 	return nil
 }
 
-func (p *PostgresStorage) StoreFailedValidation(id int64) error {
-	
-}
-
 func (p *PostgresStorage) StartBuild(id int64) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
