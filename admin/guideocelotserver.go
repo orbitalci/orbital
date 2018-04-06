@@ -336,6 +336,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 			Hash:          model.Hash,
 			Failed:        model.Failed,
 			BuildTime:     &timestamp.Timestamp{Seconds: model.BuildTime.UTC().Unix()},
+			QueueTime:     &timestamp.Timestamp{Seconds: model.QueueTime.UTC().Unix()},
 			Account:       model.Account,
 			BuildDuration: model.BuildDuration,
 			Repo:          model.Repo,
