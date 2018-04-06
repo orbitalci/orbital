@@ -66,7 +66,7 @@ func (c *Cleanup) Clean(t *testing.T) {
 //   - tar up the template directory and serve it on :3333 for testing so the container can download the templates we need
 //   - return a cleanup function to defer in your tests
 // *assumes you have an internet connection and are running docker on linux or mac*
-func CreateLivingDockerContainer(t *testing.T, imageName string) (d *Docker, clean func(t *testing.T)) {
+func CreateLivingDockerContainer(t *testing.T, ctx context.Context, imageName string) (d *Docker, clean func(t *testing.T)) {
 	var loopback string
 	switch runtime.GOOS {
 	case "darwin":
@@ -82,7 +82,6 @@ func CreateLivingDockerContainer(t *testing.T, imageName string) (d *Docker, cle
 	builder := NewDockerBuilder(b)
 	dockerCleaner := &cleaner2.DockerCleaner{}
 	d = builder.(*Docker)
-	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		t.Fatal("couldn't create docker cli, err: ", err.Error())
