@@ -104,7 +104,14 @@ func TestDockerBasher_InstallPackageDeps(t *testing.T) {
 	}
 	t.Log(result.Status)
 	t.Log(string(<-logout))
-	testDeps := []string{"/bin/sh", "-c", "command -v openssl && command -v bash && command -v zip && command -v wget && command -v "}
+	testDeps := []string{"/bin/sh", "-c", "command -v openssl && command -v bash && command -v zip && command -v wget && command -v python"}
+	result = alpine.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, testDeps, logout)
+	if result.Status == pb.StageResultVal_FAIL {
+		t.Error("deps not found! oh nuuu!")
+	}
+	t.Log(result.Status)
+	t.Log(string(<-logout))
+
 
 
 }
