@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+
 # make sure that all of our dependencies are up to date
 dep ensure -v
 
