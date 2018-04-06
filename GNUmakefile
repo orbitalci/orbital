@@ -71,8 +71,8 @@ docker-build: ## build all images
 
 release: protos upload-clients upload-templates linux-werker docker-base docker-build ## build protos, install & upload clients, upload werker templates, install & upload linux werker, build docker base, build all images
 
-protos: # build all protos
-	scripts/build-protos.sh
+proto: ## build all protos
+	@scripts/build-protos.sh
 
 .PHONY: help
 
