@@ -82,16 +82,15 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	// stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
 	if err = ValidateAndQueue(buildConf, branch, validator, vaulty, producer, sr, id, hash, accountRepo, bbToken); err != nil {
 		// we do want to add a runtime here
-		err = store.StoreFailedValidation(id)
+		err = store.UpdateSum(true, 0, id)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error("unable to update summary!")
 		}
 		// we dont' want to return here, cuz then it doesn't store
 		// unless its supposed to be saving somewhere else?
 		// return err
-	} else {
-		storeQueued(store, id)
 	}
+	storeQueued(store, id)
 	if err := storeStageToDb(store, sr); err != nil {
 		ocelog.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err
