@@ -21,7 +21,8 @@ stages:
   - name: build
     script:
       - cd $GOPATH/$OCELOT_PATH
-      - ./build-release-server.sh
+      - scripts/build-release-server.sh
+
   - name: deploy
     env:
       - "DEPLOY_ENV=qa"

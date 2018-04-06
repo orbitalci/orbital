@@ -131,11 +131,19 @@ func (p *PostgresStorage) SetQueueTime(id int64) error {
 	return nil
 }
 
-func (p *PostgresStorage) StartBuild(id int64) error {
+//StoreFailedValidation will update the rest of the summary fields (failed:true, duration:0)
+func (p *PostgresStorage) StoreFailedValidation(id int64) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
+	err := p.UpdateSum(true, 0, id)
+	return err
+}
 
+func (p *PostgresStorage) setStartTime(id int64, stime time.Time) error {
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
 	queryStr := `UPDATE build_summary SET starttime=$1 WHERE id=$2`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
@@ -143,11 +151,16 @@ func (p *PostgresStorage) StartBuild(id int64) error {
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(time.Now().Format(TimeFormat), id); err != nil {
+	if _, err := stmt.Exec(stime.Format(TimeFormat), id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
 	return nil
+}
+
+
+func (p *PostgresStorage) StartBuild(id int64) error {
+	return p.setStartTime(id, time.Now())
 }
 
 // UpdateSum updates the remaining fields in the build_summary table

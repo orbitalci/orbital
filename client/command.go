@@ -13,6 +13,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
+	"bitbucket.org/level11consulting/ocelot/client/kill"
 	"bitbucket.org/level11consulting/ocelot/client/output"
 	"bitbucket.org/level11consulting/ocelot/client/poll/add"
 	"bitbucket.org/level11consulting/ocelot/client/poll/delete"
@@ -20,9 +21,11 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/status"
 	"bitbucket.org/level11consulting/ocelot/client/summary"
 	"bitbucket.org/level11consulting/ocelot/client/validate"
+	"bitbucket.org/level11consulting/ocelot/client/version"
 	"bitbucket.org/level11consulting/ocelot/client/watch"
-	"bitbucket.org/level11consulting/ocelot/client/kill"
+	ocyVersion "bitbucket.org/level11consulting/ocelot/version"
 	"github.com/mitchellh/cli"
+
 	"os"
 )
 
@@ -31,6 +34,7 @@ var Commands map[string]cli.CommandFactory
 func init() {
 	base := &cli.BasicUi{Writer: os.Stdout, ErrorWriter: os.Stderr, Reader: os.Stdin}
 	ui := &cli.ColoredUi{Ui: base, OutputColor: cli.UiColorNone, InfoColor: cli.UiColorBlue, ErrorColor: cli.UiColorRed, WarnColor: cli.UiColorYellow}
+	verHuman := ocyVersion.GetHumanVersion()
 	Commands = map[string]cli.CommandFactory{
 		"creds":           func() (cli.Command, error) { return creds.New(), nil },
 		"creds add":       func() (cli.Command, error) { return credsadd.New(ui), nil },
@@ -52,6 +56,7 @@ func init() {
 		"poll":            func() (cli.Command, error) { return polladd.New(ui), nil },
 		"poll delete":     func() (cli.Command, error) { return polldelete.New(ui), nil },
 		"poll list": 	   func() (cli.Command, error) { return polllist.New(ui), nil },
-		"kill":     func() (cli.Command, error) { return kill.New(ui), nil },
+		"kill":			   func() (cli.Command, error) { return kill.New(ui), nil },
+		"version": 		   func() (cli.Command, error) { return version.New(ui, verHuman), nil},
 	}
 }

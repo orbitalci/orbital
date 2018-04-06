@@ -122,12 +122,16 @@ func generateTableRow(summary *models.BuildSummary) []string {
 	var row []string
 	var color int
 	var status string
+	failedValidation := summary.QueueTime.Seconds == 0
 	isQueued := summary.BuildDuration < 0 && summary.BuildTime.Seconds == 0
 	isRunning := summary.BuildDuration < 0
 	//we color line output based on success/failure
 	if isRunning || isQueued {
 		status = "N/A"
 		color = 35
+	} else if failedValidation {
+		status = "FAILED PRESTART"
+		color = 31
 	} else if summary.Failed {
 		status = "FAIL"
 		//status = "\u2717"
