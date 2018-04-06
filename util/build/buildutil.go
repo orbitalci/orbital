@@ -105,11 +105,6 @@ func storeStageToDb(store storage.BuildStage, stageResult *smods.StageResult) er
 	}
 	return nil
 }
-
-func storeFailedValidation(store storage.BuildSum, id int64) error {
-
-}
-
 func storeQueued(store storage.BuildSum, id int64) error {
 	err := store.SetQueueTime(id)
 	if err != nil {

@@ -63,9 +63,9 @@ func Test_handleTriggers(t *testing.T) {
 		branch string
 		shouldSkip bool
 	}{
-		{"boogaloo", false},
-		{"alks;djf", false},
-		{"vibranium", true},
+		{"boogaloo", true},
+		{"alks;djf", true},
+		{"vibranium", false},
 	}
 	triggers := &pb.Triggers{Branches: []string{"apple", "banana", "quartz", "vibranium"}}
 	stage := &pb.Stage{Env: []string{}, Script: []string{"echo suuuup yooo"}, Name: "testing_triggers", Trigger: triggers}
