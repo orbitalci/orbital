@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-{{ template "ocelot.fullname" . }}
+  labels:
+    app: admin-{{ template "ocelot.name" . }}
+    chart: {{ template "ocelot.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.admin.service.type }}
+  ports:
+    - port: {{ .Values.admin.service.port }}
+      nodePort: {{.Values.admin.service.nodePort}}
+      protocol: TCP
+      name: http
+  selector:
+    app: admin-{{ template "ocelot.name" . }}
+    release: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hookhandler-{{ template "ocelot.fullname" . }}
+  labels:
+    app: hookhandler-{{ template "ocelot.name" . }}
+    chart: {{ template "ocelot.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.hookhandler.service.type }}
+  ports:
+    - port: {{ .Values.hookhandler.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: hookhandler-{{ template "ocelot.name" . }}
+    release: {{ .Release.Name }}

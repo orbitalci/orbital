@@ -1,0 +1,133 @@
+# Default values for ocelot.
+# This is a YAML-formatted file.
+fullnameOverride: ocelot
+nameOverride: ocelot
+loglevel: info
+# configuration for all services
+vault:
+  protocol: http
+  ip: 10.1.72.190
+  port: 8200
+  secretName: vault-token
+  secretKey: token
+nsq:
+  nsqlookupd:
+    ip: nsqlookupd-svc.prod-eng
+    port: 4161
+  nsqd:
+    port: 4150
+
+admin:
+  replicaCount: 3
+
+  image:
+    repository: docker.metaverse.l11.com/ocelot-admin
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    # DO NOT CHANGE -- will currently _always_ be of type NodePort 
+    type: NodePort
+    port: 10000
+    nodePort: 31000
+
+  ingress:
+    enabled: false
+    annotations: 
+      kubernetes.io/ingress.class: "nginx"
+      ingress.kubernetes.io/ssl-passthrough: "true"
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    path: /
+    hosts:
+      - ocelot-admin.metaverse.l11.com
+    tls: 
+     - secretName: metaverse-secret
+       hosts:
+         - ocelot-admin.metaverse.l11.com
+
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+hookhandler:
+  replicaCount: 3
+
+  image:
+    repository: docker.metaverse.l11.com/ocelot-hookhandler
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 8088
+
+  ingress:
+    enabled: false
+    annotations: 
+      kubernetes.io/ingress.class: "nginx"
+      ingress.kubernetes.io/ssl-passthrough: "true"
+    path: /
+    hosts:
+      - ocelot-hookhandler.metaverse.l11.com
+    tls: 
+     - secretName: metaverse-secret
+       hosts:
+         - ocelot-hookhandler.metaverse.l11.com
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+poller:
+  replicaCount: 1
+
+  image:
+    repository: docker.metaverse.l11.com/ocelot-poller
+    tag: latest
+    pullPolicy: Always
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
