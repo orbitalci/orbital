@@ -261,8 +261,8 @@ func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, 
 		}
 	} else {
 		ocelog.Log().Debug("writing integration for ", integrationName)
-		msg := execFunc(renderedString)
-		ocelog.Log().Debug("messages are: ", strings.Join(msg, " "))
+		//msg := execFunc(renderedString)
+		//ocelog.Log().Debug("messages are: ", strings.Join(msg, " "))
 		result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, execFunc(renderedString), logout)
 		if result.Messages == nil {
 			result.Messages = msgs
