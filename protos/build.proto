@@ -18,6 +18,7 @@ message Stage {
     repeated string env = 1;
     repeated string script = 2;
     string name = 3;
+    // @inject_tag: yaml:"trigger"
     Triggers trigger = 4;
 }
 

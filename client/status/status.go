@@ -32,7 +32,7 @@ type cmd struct {
 	UI cli.Ui
 	flags   *flag.FlagSet
 	config *commandhelper.ClientConfig
-
+	expanded  bool
 	*commandhelper.OcyHelper
 }
 
@@ -63,6 +63,7 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR", "[optional]  <hash> to display build status")
 	c.flags.StringVar(&c.OcyHelper.Repo, "repo", "ERROR", "[optional]  <repo> to display build status")
 	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "[optional]  <account>/<repo> to display build status")
+	c.flags.BoolVar(&c.expanded, "wide", false, "[optional] -wide to see full status description even if build passed")
 }
 
 func (c *cmd) writeStatusErr(err error) {
@@ -161,7 +162,7 @@ STATUS_FOUND:
 	finished := !statuses.IsInConsul && statuses.BuildSum.BuildTime.Seconds > 0
 	commandhelper.Debuggit(c.UI, fmt.Sprintf("finished is %v, buildStarted is %v, queued is %v, buildTime is %v", finished, buildStarted, queued, time.Unix(statuses.BuildSum.BuildTime.Seconds, 0)))
 	//statuses.BuildSum.QueueTime time.Unix(0,0)
-	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished, failed_validation), statuses)
+	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished, failed_validation), statuses, c.expanded)
 	buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
 	c.UI.Output(buildStatus + stageStatus)
 	return 0

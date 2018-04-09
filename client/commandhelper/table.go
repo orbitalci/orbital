@@ -82,7 +82,7 @@ func SelectFromHashes(build *models.Builds) string {
 //it takes in a boolean argument indicating whether or not the build is running, and a protobuf Status
 //object. It returns a PASS/FAIL/Running status string, a color corresponding with that status,
 //and the string representation of stages, stage messages, and errors if exists
-func PrintStatusStages(bs BuildStatus, statuses *models.Status) (string, int, string) {
+func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool) (string, int, string) {
 	var status, stageStatus string
 	var color int
 	switch bs {
@@ -115,7 +115,7 @@ func PrintStatusStages(bs BuildStatus, statuses *models.Status) (string, int, st
 				stageStatusStr = "FAIL"
 			}
 			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.Stage, PrettifyTime(stage.StageDuration, bs == QUEUED), stageStatusStr)
-			if statuses.BuildSum.Failed {
+			if statuses.BuildSum.Failed || wide {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {
 					stageStatus += fmt.Sprintf(": \033[1;30m%s\033[0m", stage.Error)

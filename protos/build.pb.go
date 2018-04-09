@@ -139,10 +139,11 @@ func (m *BuildConfig) GetStages() []*Stage {
 }
 
 type Stage struct {
-	Env     []string  `protobuf:"bytes,1,rep,name=env" json:"env,omitempty"`
-	Script  []string  `protobuf:"bytes,2,rep,name=script" json:"script,omitempty"`
-	Name    string    `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
-	Trigger *Triggers `protobuf:"bytes,4,opt,name=trigger" json:"trigger,omitempty"`
+	Env    []string `protobuf:"bytes,1,rep,name=env" json:"env,omitempty"`
+	Script []string `protobuf:"bytes,2,rep,name=script" json:"script,omitempty"`
+	Name   string   `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
+	// @inject_tag: yaml:"trigger"
+	Trigger *Triggers `protobuf:"bytes,4,opt,name=trigger" json:"trigger,omitempty" yaml:"trigger"`
 }
 
 func (m *Stage) Reset()                    { *m = Stage{} }
