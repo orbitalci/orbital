@@ -22,3 +22,9 @@ stages:
     script:
       - cd $GOPATH/$OCELOT_PATH
       - scripts/build-release-server.sh
+  - name: triggered
+    trigger:
+      branches:
+      - master
+    script:
+      - echo "this should only happen on master"
