@@ -50,7 +50,6 @@ type PollTable interface {
 	UpdatePoll(account string, repo string, cronString string, branches string) error
 	SetLastData(account string, repo string, lasthashes map[string]string) error
 	GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error)
-	GetLastHashMap(accountRepo string) (map[string]string, error)
 	PollExists(account string, repo string) (bool, error)
 	GetAllPolls() ([]*models.PollRequest, error)
 	DeletePoll(account string, repo string) error

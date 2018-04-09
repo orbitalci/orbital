@@ -557,37 +557,6 @@ func (p *PostgresStorage) SetLastData(account string, repo string, lasthashes ma
 	return
 }
 
-func (p *PostgresStorage) GetLastHashMap(accountRepo string) (map[string]string, error) {
-	var hashMaps = make(map[string]string)
-	if err := p.Connect(); err != nil {
-		return nil, errors.New("could not connect to postgres: " + err.Error())
-	}
-	acctRepo := strings.Split(accountRepo, "/")
-	if len(acctRepo) != 2 {
-		return nil, errors.New("length on acct repo not correct")
-	}
-	account, repo := acctRepo[0], acctRepo[1]
-	queryStr := `SELECT last_hashes FROM polling_repos WHERE (account,repo) = ($1,$2);`
-	stmt, err := p.db.Prepare(queryStr)
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
-		return nil, err
-	}
-	defer stmt.Close()
-	var bits []byte
-	if err := stmt.QueryRow(account, repo).Scan(&bits); err != nil {
-		ocelog.IncludeErrField(err).Error("could not get last hashes!")
-		return nil, err
-	}
-	if err := json.Unmarshal(bits, &hashMaps); err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't unmarshal to json!")
-		return nil, err
-	}
-	return hashMaps, nil
-
-}
-
-
 func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error) {
 	if err := p.Connect(); err != nil {
 
