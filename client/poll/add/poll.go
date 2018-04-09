@@ -7,6 +7,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"strings"
+
 	"github.com/gorhill/cronexpr"
 	"github.com/mitchellh/cli"
 )
@@ -75,6 +77,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	if c.cron == "ERROR" {
+		commandhelper.Debuggit(c.UI, strings.Join(args[:], ","))
 		c.UI.Error("-cron is a required flag")
 		return 1
 	}

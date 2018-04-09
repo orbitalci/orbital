@@ -171,6 +171,7 @@ message PollRequest {
     string cron = 4;
     string branches = 5;
     google.protobuf.Timestamp lastCronTime = 6;
+    map<string, string> lastHashes = 7;
 }
 
 message Polls {

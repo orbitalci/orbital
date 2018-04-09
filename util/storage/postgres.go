@@ -534,52 +534,95 @@ func (p *PostgresStorage) UpdatePoll(account string, repo string, cronString str
 	return
 }
 
-func (p *PostgresStorage) SetLastCronTime(account string, repo string) (err error) {
+func (p *PostgresStorage) SetLastData(account string, repo string, lasthashes map[string]string) (err error) {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	//starttime.Format(TimeFormat)
-	queryStr := `UPDATE polling_repos SET last_cron_time=$1 WHERE (account,repo) = ($2,$3);`
+	hashes, err  := json.Marshal(lasthashes)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't marshal hash map to byte??")
+		return err
+	}
+	queryStr := `UPDATE polling_repos SET (last_cron_time, last_hashes)=($1,$2) WHERE (account,repo) = ($3,$4);`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(time.Now().Format(TimeFormat), account, repo); err != nil {
+	if _, err := stmt.Exec(time.Now().Format(TimeFormat), hashes, account, repo); err != nil {
 		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).Error("could not update last_cron_time in database")
 	}
 	return
 }
 
-func (p *PostgresStorage) GetLastCronTime(accountRepo string) (timestamp time.Time, err error) {
+func (p *PostgresStorage) GetLastHashMap(accountRepo string) (map[string]string, error) {
+	var hashMaps = make(map[string]string)
 	if err := p.Connect(); err != nil {
-		return time.Now(), errors.New("could not connect to postgres: " + err.Error())
+		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	fmt.Println(p.dbLoc, p.db, p.location)
 	acctRepo := strings.Split(accountRepo, "/")
 	if len(acctRepo) != 2 {
-		return time.Now(), errors.New("length on acct repo not correct")
+		return nil, errors.New("length on acct repo not correct")
 	}
 	account, repo := acctRepo[0], acctRepo[1]
-	queryStr := `SELECT last_cron_time FROM polling_repos WHERE (account,repo) = ($1,$2);`
+	queryStr := `SELECT last_hashes FROM polling_repos WHERE (account,repo) = ($1,$2);`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
-		return time.Unix(0,0), err
+		return nil, err
 	}
 	defer stmt.Close()
-	if err = stmt.QueryRow(account, repo).Scan(&timestamp); err != nil {
+	var bits []byte
+	if err := stmt.QueryRow(account, repo).Scan(&bits); err != nil {
+		ocelog.IncludeErrField(err).Error("could not get last hashes!")
+		return nil, err
+	}
+	if err := json.Unmarshal(bits, &hashMaps); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't unmarshal to json!")
+		return nil, err
+	}
+	return hashMaps, nil
+
+}
+
+
+func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error) {
+	if err := p.Connect(); err != nil {
+
+		return time.Now(), nil, errors.New("could not connect to postgres: " + err.Error())
+	}
+	acctRepo := strings.Split(accountRepo, "/")
+	if len(acctRepo) != 2 {
+		return time.Now(), nil, errors.New("length on acct repo not correct")
+	}
+	account, repo := acctRepo[0], acctRepo[1]
+	queryStr := `SELECT last_cron_time, last_hashes FROM polling_repos WHERE (account,repo) = ($1,$2);`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return time.Unix(0,0), nil, err
+	}
+	defer stmt.Close()
+	var bits []byte
+	hashes = make(map[string]string)
+	if err = stmt.QueryRow(account, repo).Scan(&timestamp, &bits); err != nil {
 		if err == sql.ErrNoRows {
 			err = errors.New("no rows found for " + account + "/" + repo)
-			ocelog.IncludeErrField(err).Error("cannot get last cron time")
-			return timestamp, err
+			ocelog.IncludeErrField(err).Error("cannot get last cron time or last hashes")
+			return timestamp, nil, err
 		}
 		ocelog.IncludeErrField(err).Error("unable to get last cron time")
-		return timestamp, err
+		return timestamp, nil, err
 	}
+	if err = json.Unmarshal(bits, &hashes); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't unmarshal bits")
+		return
+	}
+
 	ocelog.Log().Debug("returning no errors, everything is TOTALLY FINE")
-	return timestamp, nil
+	return timestamp, hashes, nil
 }
 
 func (p *PostgresStorage) PollExists(account string, repo string) (bool, error) {
