@@ -28,3 +28,5 @@ stages:
       - master
     script:
       - echo "this should only happen on master"
+      - kubectl cluster-info
+      - kubectl -n prod-eng get all
