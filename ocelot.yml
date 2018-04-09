@@ -22,12 +22,3 @@ stages:
     script:
       - cd $GOPATH/$OCELOT_PATH
       - scripts/build-release-server.sh
-
-  - name: deploy
-    env:
-      - "DEPLOY_ENV=qa"
-    trigger:
-      branches:
-      - master
-    script:
-      - helm install -set env=$DEPLOY_ENV
