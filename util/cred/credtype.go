@@ -14,6 +14,19 @@ const (
 	K8s
 )
 
+type OcySubType int
+
+const (
+	VcsBitbucket OcySubType = iota
+	VcsGithub
+
+	RepoNexus
+	RepoMaven
+	RepoDocker
+
+	K8sK8s // may be unnecessary? idk.
+)
+
 var OcyCredMap = map[string]OcyCredType{
 	"vcs": Vcs,
 	"repo": Repo,

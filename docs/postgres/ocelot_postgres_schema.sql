@@ -30,6 +30,7 @@ CREATE TABLE build_stage_details (
   messages jsonb,
   FOREIGN KEY (build_id) REFERENCES build_summary (id) ON DELETE CASCADE
 );
+
 create table polling_repos (
   account character varying(100),
   repo character varying(100),
@@ -37,4 +38,13 @@ create table polling_repos (
   last_cron_time timestamp without time zone,
   branches character varying,
   primary key (account, repo)
+);
+
+CREATE TABLE credentials (
+  id SERIAL PRIMARY KEY,
+  account character varying(100),
+  identifier character varying(100),
+  cred_type smallint,
+  cred_sub_type smallint,
+  additional_fields jsonb
 );
