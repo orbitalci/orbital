@@ -106,7 +106,6 @@ func storeStageToDb(store storage.BuildStage, stageResult *smods.StageResult) er
 	}
 	return nil
 }
-
 func storeQueued(store storage.BuildSum, id int64) error {
 	err := store.SetQueueTime(id)
 	if err != nil {
@@ -182,9 +181,8 @@ func ValidateAndQueue(buildConf *pb.BuildConfig,
 	sr *smods.StageResult,
 	buildId int64,
 	hash, fullAcctRepo, bbToken string) error {
-
 	if err := validateBuild(buildConf, branch, validator); err == nil {
-		tellWerker(buildConf, vaulty, producer, hash, fullAcctRepo, bbToken, buildId)
+		tellWerker(buildConf, vaulty, producer, hash, fullAcctRepo, bbToken, buildId, branch)
 		ocelog.Log().Debug("told werker!")
 		PopulateStageResult(sr, 0, "Passed initial validation " + smods.CHECKMARK, "")
 	} else {
@@ -196,12 +194,13 @@ func ValidateAndQueue(buildConf *pb.BuildConfig,
 
 //tellWerker is a private helper function for building a werker task and giving it to nsq
 func tellWerker(buildConf *pb.BuildConfig,
-	vaulty ocevault.Vaulty,
-	producer *nsqpb.PbProduce,
-	hash string,
-	fullName string,
-	bbToken string,
-	dbid int64) {
+		vaulty ocevault.Vaulty,
+		producer *nsqpb.PbProduce,
+		hash string,
+		fullName string,
+		bbToken string,
+		dbid int64,
+		branch string) {
 	// get one-time token use for access to vault
 	token, err := vaulty.CreateThrowawayToken()
 	if err != nil {
@@ -212,6 +211,7 @@ func tellWerker(buildConf *pb.BuildConfig,
 	werkerTask := &pb.WerkerTask{
 		VaultToken:   token,
 		CheckoutHash: hash,
+		Branch:       branch,
 		BuildConf:    buildConf,
 		VcsToken:     bbToken,
 		VcsType:      "bitbucket",
