@@ -91,6 +91,10 @@ func (b *Basher) DownloadKubectl(werkerPort string) []string {
 	return []string{"/bin/sh", "-c", "cd /bin && wget " + downloadLink + " && chmod +x kubectl"}
 }
 
+func (b *Basher) InstallKubeconfig(encodedKubeConf string) []string {
+	return []string{"/bin/sh", "-c", "/.ocelot/render_kubeconfig.sh " + "'" + encodedKubeConf + "'"}
+}
+
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
 	build := append([]string{"cd /" + commitHash}, cmds...)
