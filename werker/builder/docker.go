@@ -77,7 +77,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
-	//add environment variables that will always be avilable on the machine - GIT_HASH, BUILD_ID
+	//add environment variables that will always be avilable on the machine - GIT_HASH, BUILD_ID, GIT_HASH_SHORT
 	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id), fmt.Sprintf("GIT_HASH_SHORT=%s", werk.CheckoutHash[:7])}
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 
