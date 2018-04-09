@@ -94,7 +94,7 @@ func searchBranchCommits(handler handler.VCSHandler, branch string, conf *change
 	// check for empty last hash now that you have the last commit info and can trigger a build
 	if lastHash == "" {
 		ocelog.Log().Info("there was no lastHash entry in the map, so running a build off of the latest commit")
-		if err := tellWerker(lastCommit, conf, branch, store, handler, token); err != nil {
+		if err = tellWerker(lastCommit, conf, branch, store, handler, token); err != nil {
 			newLastHash = lastCommit.Hash
 			return
 		}
@@ -104,7 +104,7 @@ func searchBranchCommits(handler handler.VCSHandler, branch string, conf *change
 	if lastCommitDt.After(lastPoll) || lastHash != lastCommit.Hash {
 		ocelog.Log().Infof("found a new hash %s, telling werker", lastCommit.Hash)
 		newLastHash = lastCommit.Hash
-		if err := tellWerker(lastCommit, conf, branch, store, handler, token); err != nil {
+		if err = tellWerker(lastCommit, conf, branch, store, handler, token); err != nil {
 			return
 		}
 	} else {
