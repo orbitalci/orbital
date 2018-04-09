@@ -6,13 +6,13 @@ env:
   - "OCELOT_PATH=src/bitbucket.org/level11consulting/ocelot"
 stages:
   - name: triggered
-      trigger:
-        branches:
-        - fix_poller
-      script:
-        - echo "this should only happen on master"
-        - kubectl cluster-info
-        - kubectl -n prod-eng get all
+    trigger:
+      branches:
+      - fix_poller
+    script:
+      - echo "this should only happen on master"
+      - kubectl cluster-info
+      - kubectl -n prod-eng get all
   - name: be_useful
     script:
       - echo "building $BUILD_ID with has $GIT_HASH"
