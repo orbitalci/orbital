@@ -3,6 +3,7 @@ package werker
 import (
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"bytes"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -44,8 +45,12 @@ func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
 
 type dummyBuildStage struct {
 	details []*models.StageResult
+	fail    bool
 }
 func (dbs *dummyBuildStage) AddStageDetail(stageResult *models.StageResult) error {
+	if dbs.fail {
+		return errors.New("i am failing as promised")
+	}
 	dbs.details = append(dbs.details, stageResult)
 	return nil
 }
@@ -62,18 +67,22 @@ func Test_handleTriggers(t *testing.T) {
 	var triggerData = []struct {
 		branch string
 		shouldSkip bool
+		store      *dummyBuildStage
+		shouldError bool
 	}{
-		{"boogaloo", true},
-		{"alks;djf", true},
-		{"vibranium", false},
+		{"boogaloo", true, &dummyBuildStage{details:[]*models.StageResult{}}, false},
+		{"alks;djf", false, &dummyBuildStage{details:[]*models.StageResult{}, fail: true}, true},
+		{"vibranium", false, &dummyBuildStage{details:[]*models.StageResult{}}, false},
 	}
 	triggers := &pb.Triggers{Branches: []string{"apple", "banana", "quartz", "vibranium"}}
 	stage := &pb.Stage{Env: []string{}, Script: []string{"echo suuuup yooo"}, Name: "testing_triggers", Trigger: triggers}
 
-	store := &dummyBuildStage{details:[]*models.StageResult{}}
 	for ind, wd := range triggerData {
 		t.Run(fmt.Sprintf("%d-trigger", ind), func(t *testing.T){
-			shouldSkip, _ := handleTriggers(wd.branch, 12, store, stage)
+			shouldSkip, err := handleTriggers(wd.branch, 12, wd.store, stage)
+			if err != nil && !wd.shouldError{
+				t.Fatal(err)
+			}
 			if wd.shouldSkip != shouldSkip {
 				t.Error(test.GenericStrFormatErrors("should skip", wd.shouldSkip, shouldSkip))
 			}

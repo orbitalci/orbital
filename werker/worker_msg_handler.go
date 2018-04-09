@@ -217,10 +217,11 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 //  If the current branch is not in the list of trigger branches, shouldSkip of true will be returned and the stage should not be executed.
 //  If the stage is a shouldSkip, it will also save to the database that the stage will be skipped.
 func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb.Stage) (shouldSkip bool, err error) {
+	// null value of bool is false, so shouldSkip is false until told otherwise
 	if stage.Trigger != nil {
 		if len(stage.Trigger.Branches) == 0 {
 			ocelog.Log().Info("fyi, got a trigger block with an empty list of branches. seems dumb.")
-			shouldSkip = false
+			// return false, the block is empty and there is nothing to check 
 			return
 		}
 		if !branchOk(branch, stage.Trigger.Branches) {
@@ -230,12 +231,13 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
 				return
 			}
+			// we could save to db, the branch running is not in the list of trigger branches, so we can flip the shouldSkip bool now.
 			shouldSkip = true
 			return
 		}
 		ocelog.Log().Debugf("building from trigger stage with branch %s. triggerBranches are %s", branch, strings.Join(stage.Trigger.Branches, ", "))
 	}
-	shouldSkip = false
+	// will return false
 	return
 }
 
