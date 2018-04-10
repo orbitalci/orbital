@@ -8,7 +8,7 @@ stages:
   - name: triggered
     trigger:
       branches:
-      - fix_poller
+      - master
     script:
       - echo "this should only happen on master"
       - kubectl cluster-info
@@ -30,4 +30,3 @@ stages:
     script:
       - cd $GOPATH/$OCELOT_PATH
       - scripts/build-release-server.sh
-
