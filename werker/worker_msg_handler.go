@@ -6,6 +6,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/integrations/dockr"
+	"bitbucket.org/level11consulting/ocelot/util/integrations/k8s"
 	"bitbucket.org/level11consulting/ocelot/util/integrations/nexus"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
@@ -302,6 +303,13 @@ func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTa
 		return
 	}
 	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download", rc, accountName, stage, result.Messages, logout)
+	if result.Status == pb.StageResultVal_FAIL {
+		return
+	}
+	result = bldr.IntegrationSetup(ctx, k8s.GetKubeConfig, bldr.InstallKubeconfig, "kubeconfig render", rc, accountName, stage, result.Messages, logout)
+	if result.Status == pb.StageResultVal_FAIL {
+		return
+	}
 	result.Messages = append(result.Messages, "completed integration util setup stage \u2713")
 	return
 }

@@ -48,8 +48,8 @@ type BuildStage interface {
 type PollTable interface {
 	InsertPoll(account string, repo string, cronString string, branches string) error
 	UpdatePoll(account string, repo string, cronString string, branches string) error
-	SetLastCronTime(account string, repo string) error
-	GetLastCronTime(accountRepo string) (timestamp time.Time, err error)
+	SetLastData(account string, repo string, lasthashes map[string]string) error
+	GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error)
 	PollExists(account string, repo string) (bool, error)
 	GetAllPolls() ([]*models.PollRequest, error)
 	DeletePoll(account string, repo string) error

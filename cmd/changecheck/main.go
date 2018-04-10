@@ -9,6 +9,10 @@ package main
 // 	 - update last_cron_time in db
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
@@ -17,12 +21,9 @@ import (
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"fmt"
 	"github.com/namsral/flag"
-	"os"
-	"strings"
-	"time"
 )
+
 type changeSetConfig struct {
 	RemoteConf   cred.CVRemoteConfig
 	*deserialize.Deserializer
@@ -62,8 +63,31 @@ func configure() *changeSetConfig {
 	conf.Acct, conf.Repo = acctrepolist[0], acctrepolist[1]
 	return conf
 }
+// made this interface for easy testing
+type werkerTeller interface {
+	tellWerker(lastCommit *pb.Commit, conf *changeSetConfig, branch string, store storage.OcelotStorage, handler handler.VCSHandler, token string) (err error)
+}
 
-func searchBranchCommits(handler handler.VCSHandler, branch string, conf *changeSetConfig, lastPoll time.Time, store storage.OcelotStorage, token string) (err error) {
+type aWerkerTeller struct {}
+
+func (w *aWerkerTeller) tellWerker(lastCommit *pb.Commit, conf *changeSetConfig, branch string, store storage.OcelotStorage, handler handler.VCSHandler, token string) (err error){
+	ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
+	ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("getting bitbucket commit")
+	var buildConf *pb.BuildConfig
+	buildConf, _, err = build.GetBBConfig(conf.RemoteConf, conf.AcctRepo, lastCommit.Hash, conf.Deserializer, handler)
+	if err != nil {
+		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("couldn't get build configuration")
+		return
+	}
+	if err = build.QueueAndStore(lastCommit.Hash, branch, conf.AcctRepo, token, conf.RemoteConf, buildConf, conf.OcyValidator, conf.Producer, store); err != nil {
+		ocelog.IncludeErrField(err).WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Fatal("couldn't add to build queue or store in db")
+		return
+	}
+	ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("successfully added build to build queue")
+	return
+}
+
+func searchBranchCommits(handler handler.VCSHandler, branch string, conf *changeSetConfig, lastHash string, store storage.OcelotStorage, token string, wt werkerTeller) (newLastHash string, err error) {
 	commits, err := handler.GetAllCommits(conf.AcctRepo, branch)
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("couldn't get commits ")
@@ -73,32 +97,26 @@ func searchBranchCommits(handler handler.VCSHandler, branch string, conf *change
 		ocelog.Log().Fatal("no commits found. likely a branch misconfiguration. exiting.")
 	}
 	lastCommit := commits.Values[0]
-	lastCommitDt := time.Unix(lastCommit.Date.Seconds, int64(lastCommit.Date.Nanos))
-	ocelog.Log().WithField("lastCommitDt", lastCommitDt.String()).Info()
-	// no matter what, we are inside the cron job, so we should be updating the db
-	defer func(){
-		if err = store.SetLastCronTime(conf.Acct, conf.Repo); err != nil {
-			ocelog.IncludeErrField(err).WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("unable to set last cron time")
-			return
+	//lastCommitDt := time.Unix(lastCommit.Date.Seconds, int64(lastCommit.Date.Nanos))
+	// check for empty last hash now that you have the last commit info and can trigger a build
+	if lastHash == "" {
+		newLastHash = lastCommit.Hash
+		ocelog.Log().Info("there was no lastHash entry in the map, so running a build off of the latest commit")
+		if err = wt.tellWerker(lastCommit, conf, branch, store, handler, token); err != nil {
+			ocelog.IncludeErrField(err).Error("could not queue!")
 		}
-		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("successfully set last cron time")
 		return
-	}()
-	if lastCommitDt.After(lastPoll) {
-		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
-		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("getting bitbucket commit")
-		var buildConf *pb.BuildConfig
-		buildConf, _, err = build.GetBBConfig(conf.RemoteConf, conf.AcctRepo, lastCommit.Hash, conf.Deserializer, handler)
-		if err != nil {
-			ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("couldn't get build configuration")
+	}
+	//ocelog.Log().WithField("lastCommitDt", lastCommitDt.String()).Info()
+	if lastHash != lastCommit.Hash {
+		ocelog.Log().Infof("found a new hash %s, telling werker", lastCommit.Hash)
+		newLastHash = lastCommit.Hash
+		if err = wt.tellWerker(lastCommit, conf, branch, store, handler, token); err != nil {
 			return
-		}
-		if err = build.QueueAndStore(lastCommit.Hash, branch, conf.AcctRepo, token, conf.RemoteConf, buildConf, conf.OcyValidator, conf.Producer, store); err != nil {
-			ocelog.IncludeErrField(err).WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Fatal("couldn't add to build queue or store in db")
-			return
-		ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("successfully added build to build queue")
 		}
 	} else {
+		// nothing happened, have the hash map reflect that. set the "new" value to the old one, and mosey along.
+		newLastHash = lastHash
 		ocelog.Log().WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("no new commits found")
 	}
 	return
@@ -123,16 +141,32 @@ func main() {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")
 	}
 	defer store.Close()
-	lastCron, err := store.GetLastCronTime(conf.AcctRepo)
+	_, lastHashes, err := store.GetLastData(conf.AcctRepo)
 	if err != nil {
-		lastCron = time.Now().Add(-5 * time.Minute)
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Error("couldn't get last cron time, setting last cron to 5 minutes ago")
 	}
-	ocelog.Log().Debug("last cron time is ", lastCron.String())
-	ocelog.Log().WithField("lastCronTime", lastCron.String()).Info("checking for new commits")
+	// no matter what, we are inside the cron job, so we should be updating the db
+	defer func(){
+		if err = store.SetLastData(conf.Acct, conf.Repo, lastHashes); err != nil {
+			ocelog.IncludeErrField(err).Error("unable to set last cron time")
+			return
+		}
+		ocelog.Log().Info("successfully set last cron time")
+		return
+	}()
+
 	for _, branch := range conf.Branches {
-		if err := searchBranchCommits(bbHandler, branch, conf, lastCron, store, token); err != nil {
+		lastHash, ok := lastHashes[branch]
+		if !ok {
+			ocelog.Log().Infof("no last hash found for branch %s in lash Hash map, so this branch will build no matter what", branch)
+			lastHash = ""
+		}
+		newLastHash, err := searchBranchCommits(bbHandler, branch, conf, lastHash, store, token, &aWerkerTeller{})
+		ocelog.Log().WithField("old last hash", lastHash).WithField("new last hash", newLastHash).Info("git hash data for poll")
+		lastHashes[branch] = newLastHash
+		if err != nil {
 			ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("something went wrong")
 		}
 	}
+
 }

@@ -4,9 +4,10 @@ import (
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/util"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+
+	"bytes"
 	"testing"
 	"time"
-	"bytes"
 )
 
 func TestPostgresStorage_AddSumStart(t *testing.T) {
@@ -176,4 +177,21 @@ func TestPostgresStorage_Healthy(t *testing.T) {
 		t.Error("postgres storage instance has been shut down, should return not healthy")
 	}
 
+}
+
+func TestPostgresStorage_GetLastData(t *testing.T) {
+	cleanup, pw, port := CreateTestPgDatabase(t)
+	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	time.Sleep(4*time.Second)
+	defer cleanup(t)
+	_, hashes, err := pg.GetLastData("level11consulting/ocelot")
+	if err != nil {
+		t.Error(err)
+	}
+	if last, ok := hashes["master"]; !ok {
+		t.Error("hash map should have master branch, it doesnlt")
+		t.Log(hashes)
+	} else if last != "6363a8a4ef13227218dc5c6d40e78ddfeb21b623"{
+		t.Error(test.StrFormatErrors("master last hash", "6363a8a4ef13227218dc5c6d40e78ddfeb21b623", last))
+	}
 }

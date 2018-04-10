@@ -2,6 +2,7 @@ package builder
 
 import (
 	"bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/go-til/test"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/integrations/dockr"
@@ -84,8 +85,25 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Error("kubectl not found! fail! ", string(outb))
 	}
+
+	result = docker.IntegrationSetup(ctx, func(config cred.CVRemoteConfig, acctName string)(string, error) {return "dGhpc2lzbXlrdWJlY29uZm9oaGhoYmJiYWFhYWJiYmJ5eXl5Cg==", nil}, docker.InstallKubeconfig, "kubeconfig install", testRemoteConfig, acctName, su, []string{}, logout)
+	outBytes = <-logout
+	if result.Status == pb.StageResultVal_FAIL {
+		t.Error("couldn't add kubeconfig! oh no! ", string(outBytes))
+	}
 	t.Log(result.Status)
 	t.Log(string(outb))
+	checkKubeConf := []string{"/bin/sh", "-c", "cat ~/.kube/config"}
+	outx := make(chan []byte, 10000)
+	result = docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, checkKubeConf, outx)
+	outy := <- outx
+	if result.Status == pb.StageResultVal_FAIL {
+		t.Error("kubeconf when wrong! fail! ", string(outy))
+	}
+	if string(outy) != "TESTING | thisismykubeconfohhhhbbbaaaabbbbyyyy" {
+		t.Error(test.StrFormatErrors("kubeconfig contents", "TESTING | thisismykubeconfohhhhbbbaaaabbbbyyyy", string(outy)))
+	}
+
 }
 
 // test that in docker, can run the InstallPackageDeps to multiple image types

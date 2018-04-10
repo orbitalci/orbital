@@ -15,5 +15,6 @@ type OcyBash interface {
 	WriteDockerJson(encodedDocker string) []string
 	DownloadTemplateFiles(werkerPort string) []string
 	DownloadKubectl(werkerPort string) []string
+	InstallKubeconfig(encodedKubeConf string) []string
 	CDAndRunCmds(cmds []string, commitHash string) []string
 }
