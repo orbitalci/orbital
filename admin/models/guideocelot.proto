@@ -69,30 +69,54 @@ message SSHKeyWrapper {
 message VCSCreds {
     string clientId = 1;
     string clientSecret = 2;
+    string identifier = 8;
     string tokenURL = 3;
     string acctName = 4;
-    string type = 5;
     string sshFileLoc = 6;
+    CredType type = 9;
+    SubCredType subType = 10;
 }
 
 message RepoCredWrapper {
     repeated RepoCreds repo = 3;
 }
 
+enum CredType {
+    VCS = 0;
+    REPO = 1;
+    K8S = 2;
+
+}
+
+enum SubCredType {
+    BITBUCKET = 0;
+    GITHUB = 1;
+
+    NEXUS = 2;
+    MAVEN = 3;
+
+    DOCKER = 4;
+    KUBECONF = 5;
+}
+
 message RepoCreds {
     string username = 1;
     string password = 2;
-    map<string, string> repoUrl= 6;
+    string repoUrl= 6;
+    string identifier = 8;
     string acctName = 4;
-    // todo: should this be an enum?
-    string type = 5;
-    string projectName = 7;
+    CredType type = 9;
+    SubCredType subType = 10;
+
 }
 
 message K8sCreds {
     string acctName = 1;
-    // todo: should we also add option for multiple kubeconfigs? how would that be organized?
     string k8sContents = 2;
+    string identifier = 3;
+    CredType type = 4;
+    SubCredType subType = 5;
+
 }
 
 message K8sCredsWrapper {

@@ -1,28 +1,21 @@
 package models
 
 import (
-	"bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+
+
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"google.golang.org/grpc"
-	"strings"
 )
 
+
 func NewRepoCreds() *RepoCreds {
-	return &RepoCreds{
-		RepoUrl: make(map[string]string),
-	}
+	return &RepoCreds{}
 }
 
-// these methods are attached to the proto object RepoCreds
-func (m *RepoCreds) SetAcctNameAndType(name string, typ string) {
-	m.AcctName = name
-	m.Type = typ
-}
-
-func (m *RepoCreds) BuildCredPath(credType string, acctName string) string {
-	return cred.BuildCredPath(credType, acctName, cred.Repo)
-}
 
 func (m *RepoCreds) SetSecret(secret string) {
 	m.Password = secret
@@ -32,76 +25,61 @@ func (m *RepoCreds) GetClientSecret() string {
 	return m.Password
 }
 
-func (m *RepoCreds) SetAdditionalFields(infoType string, val string) {
-	if strings.Contains(infoType, "repourl") {
-		paths := strings.Split(infoType, "/")
-		if len(paths) > 2 {
-			panic("WHAT THE FUCK?")
-		}
-		m.RepoUrl[paths[1]] = val
-	}
-	if infoType == "username" {
-		m.Username = val
-	}
+
+func (m *RepoCreds) CreateAdditionalFields() ([]byte, error) {
+	fields := make(map[string]string)
+	fields["username"] = m.Username
+	fields["url"] = m.RepoUrl
+	bytes, err := json.Marshal(fields)
+	return bytes, err
 }
 
-func (m *RepoCreds) AddAdditionalFields(consule *consul.Consulet, path string) (err error) {
-	if err := consule.AddKeyValue(path + "/username", []byte(m.Username)); err != nil {
+func (m *RepoCreds) UnmarshalAdditionalFields(fields []byte) error {
+	unmarshaled := make(map[string]string)
+	if err := json.Unmarshal(fields, unmarshaled); err != nil {
 		return err
 	}
-	for reponame, url := range m.RepoUrl {
-		if err = consule.AddKeyValue(path + "/repourl/" + reponame, []byte(url)); err != nil {
-			return err
-		}
+	var ok bool
+	if m.RepoUrl, ok = unmarshaled["url"]; !ok {
+		return errors.New(fmt.Sprintf("repo url was not in field map, map is %v", unmarshaled))
 	}
-	return err
+	if m.Username, ok = unmarshaled["username"]; !ok {
+		return errors.New(fmt.Sprintf("username was not in field map, map is %v", unmarshaled))
+	}
+	return nil
 }
 
-func (m *RepoCreds) Spawn() cred.RemoteConfigCred {
-	return &RepoCreds{RepoUrl: make(map[string]string)}
-}
 
 func NewVCSCreds() *VCSCreds {
 	return &VCSCreds{}
 }
 
-// these methods are to enable remoteconfig cred save with the proto VCSCreds object
-func (m *VCSCreds) SetAcctNameAndType(name string, typ string) {
-	m.AcctName = name
-	m.Type = typ
+
+func (m *VCSCreds) CreateAdditionalFields() ([]byte, error) {
+	fields := make(map[string]string)
+	fields["tokenUrl"] = m.TokenURL
+	fields["cliendId"] = m.ClientId
+	bytes, err := json.Marshal(fields)
+	return bytes, err
 }
 
-func (m *VCSCreds) BuildCredPath(credType string, acctName string) string {
-	return cred.BuildCredPath(credType, acctName, cred.Vcs)
-}
-
-func (m *VCSCreds) SetSecret(secret string) {
-	m.ClientSecret = secret
-}
-
-func (m *VCSCreds) SetAdditionalFields(infoType string, val string) {
-	switch infoType {
-	case "clientid":
-		m.ClientId = val
-	case "tokenurl":
-		m.TokenURL = val
-	}
-}
-
-func (m *VCSCreds) AddAdditionalFields(consule *consul.Consulet, path string) error {
-	err := consule.AddKeyValue(path+"/clientid", []byte(m.ClientId))
-	if err != nil {
+func (m *VCSCreds) UnmarshalAdditionalFields(fields []byte) error {
+	unmarshaled := make(map[string]string)
+	if err := json.Unmarshal(fields, unmarshaled); err != nil {
 		return err
 	}
-	err = consule.AddKeyValue(path+"/tokenurl", []byte(m.TokenURL))
-	if err != nil {
-		return err
+	var ok bool
+	if m.TokenURL, ok = unmarshaled["tokenUrl"]; !ok {
+		return errors.New(fmt.Sprintf("token url was not in field map, map is %v", unmarshaled))
 	}
-	return err
+	if m.ClientId, ok = unmarshaled["clientId"]; !ok {
+		return errors.New(fmt.Sprintf("client id was not in field map, map is %v", unmarshaled))
+	}
+	return nil
 }
 
-func (m *VCSCreds) Spawn() cred.RemoteConfigCred {
-	return &VCSCreds{}
+func (m *VCSCreds) SetSecret(sec string) {
+	m.ClientSecret = sec
 }
 
 func NewK8sCreds() *K8SCreds {
@@ -121,27 +99,15 @@ func (m *K8SCreds) SetSecret(str string) {
 	m.K8SContents = str
 }
 
-func (m *K8SCreds) SetAdditionalFields(key string, val string) {
-	// do nothing, there is only one field.
+
+func (m *K8SCreds) CreateAdditionalFields() ([]byte, error) {
+	return []byte("{}"), nil
 }
 
-func (m *K8SCreds) AddAdditionalFields(consule *consul.Consulet, path string) error {
-	err := consule.AddKeyValue(path+"/exists", []byte("true"))
-	return err
+func (m *K8SCreds) UnmarshalAdditionalFields(fields []byte) error {
+	return nil
 }
 
-func (m *K8SCreds) BuildCredPath(credtype, acctName string) string {
-	return cred.BuildCredPath(credtype, acctName, cred.K8s)
-}
-
-// todo: should we maybe use type to use different kubeconfigs? idk. for now there can only be 1
-func (m *K8SCreds) GetType() string {
-	return "k8s"
-}
-
-func (m *K8SCreds) Spawn() cred.RemoteConfigCred {
-	return &K8SCreds{}
-}
 
 
 // wrapper interface around models.BuildRuntimeInfo

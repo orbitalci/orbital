@@ -132,6 +132,29 @@ func (f *JsonStringArray) Scan(src interface{}) error {
 	return nil
 }
 
+func NewMap() JsonStringMap {
+	return make(map[string]string)
+}
+
+type JsonStringMap map[string]string
+
+func (f JsonStringMap) Value() (driver.Value, error) {
+	j, err := json.Marshal(f)
+	return j, err
+}
+
+func (f JsonStringMap) Scan(src interface{}) error {
+	source, ok := src.([]byte)
+	if !ok {
+		return errors.New("unable to cast source to []byte")
+	}
+	if err := json.Unmarshal(source, f); err != nil {
+		return err
+	}
+	return nil
+}
+
+
 // mirrored from guide ocelot models :/ idk what to do about this
 type PollRequest struct {
 	Account  string                      `protobuf:"bytes,1,opt,name=account" json:"account,omitempty"`

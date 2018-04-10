@@ -1,6 +1,8 @@
 package storage
 
 import (
+	pb "bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"fmt"
 	"time"
@@ -55,6 +57,13 @@ type PollTable interface {
 	DeletePoll(account string, repo string) error
 }
 
+type CredTable interface {
+	InsertCred(rcc cred.NewRCC) error
+	RetrieveCreds(credType pb.CredType, hideSecret bool)
+	RetrieveCred(credType pb.CredType, subCredType pb.SubCredType, )
+}
+
+//GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
 type HealthyChkr interface {
 	Healthy() bool
 }

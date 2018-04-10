@@ -17,3 +17,10 @@ type RemoteConfigCred interface {
 	BuildCredPath(credType string, acctName string) string
 	Spawn() RemoteConfigCred
 }
+
+type NewRCC interface {
+	SetSecret(string)
+	UnmarshalAdditionalFields(fields []byte) error
+	CreateAdditionalFields() ([]byte, error)
+	GetClientSecret() string
+}
