@@ -62,7 +62,6 @@ type CredTable interface {
 	RetrieveAllCreds() ([]pb.OcyCredder, error)
 	RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, error)
 	RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error)
-	RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error)
 }
 
 //GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
