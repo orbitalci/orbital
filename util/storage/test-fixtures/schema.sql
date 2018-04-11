@@ -48,5 +48,6 @@ CREATE TABLE credentials (
   identifier character varying(100),
   cred_type smallint,
   cred_sub_type smallint,
-  additional_fields jsonb
+  additional_fields jsonb,
+  primary key (account, identifier, cred_sub_type)
 );
