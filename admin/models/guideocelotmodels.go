@@ -94,6 +94,14 @@ func (m *VCSCreds) SetSecret(sec string) {
 	m.ClientSecret = sec
 }
 
+// identifier for vcs creds will always be "<BITBUCKET|GITHUB|..>/<ACCTNAME>"
+func (m *VCSCreds) BuildAndSetIdentifier() string {
+	// can ignore error here, because VcsCreds will always have subtype in VCS
+	identifier, _ := m.SubType.CreateVCSIdentifier(m.AcctName)
+	return identifier
+}
+
+
 func NewK8sCreds() *K8SCreds {
 	return &K8SCreds{}
 }

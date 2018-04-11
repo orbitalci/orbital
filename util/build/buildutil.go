@@ -42,7 +42,7 @@ func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg stri
 //with that account
 func GetVcsCreds(repoFullName string, remoteConfig cred.CVRemoteConfig) ([]*models.VCSCreds, error) {
 	acctName, _ := GetAcctRepo(repoFullName)
-	bbCreds, err := remoteConfig.GetCredsBySubTypeAndAcct(models.SubCredType_BITBUCKET, acctName, false)
+	bbCreds, err := remoteConfig.GetCred(models.SubCredType_BITBUCKET, )
 	var vcsCreds []*models.VCSCreds
 	for _, credz := range bbCreds {
 		vcsCreds = append(vcsCreds, credz.(*models.VCSCreds))
@@ -155,22 +155,9 @@ func GetBBConfig(remoteConfig cred.CVRemoteConfig, repoFullName string, checkout
 			ocelog.IncludeErrField(err1).Error()
 			return nil, "", err1
 		}
-		// might not need this, probably can just work off of err, but this feels more clear for rn
-		var found bool
 		var err error
-		for ind, cfg := range cfgs {
-			ocelog.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config, round %d", ind)
-			bbHandler, token, err = handler.GetBitbucketClient(cfg)
-			if err != nil {
-				ocelog.IncludeErrField(err).Error()
-				continue
-			}
-			found = true
-			break
-		}
-		if !found {
-			return nil, "", err
-		}
+		bbHandler, token, err = GetValidBBHandlerFromCfgList(cfgs)
+
 
 	} else {
 		bbHandler = vcsHandler
