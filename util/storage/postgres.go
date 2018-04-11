@@ -685,6 +685,8 @@ func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
 //);
 //
 
+//InsertCred will insert an ocyCredder object into the credentials table after calling its ValidateForInsert method.
+// if the OcyCredder fails validation, it will return a *models.ValidationErr
 func (p *PostgresStorage) InsertCred(credder pb.OcyCredder) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
@@ -739,6 +741,12 @@ func (p *PostgresStorage) RetrieveAllCreds() ([]pb.OcyCredder, error) {
 		}
 		creds = append(creds, cred)
 	}
+	if rows.Err() == sql.ErrNoRows {
+		return nil, CredNotFound("all accounts", "all types")
+	}
+	if len(creds) == 0 {
+		return nil, CredNotFound("all accounts", "all types")
+	}
 	return creds, rows.Err()
 }
 
@@ -777,6 +785,12 @@ func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, 
 			return nil, err
 		}
 		creds = append(creds, cred)
+	}
+	if rows.Err() == sql.ErrNoRows {
+		return nil, CredNotFound("all accounts", credType.String())
+	}
+	if len(creds) == 0 {
+		return nil, CredNotFound("all accounts", credType.String())
 	}
 	return creds, rows.Err()
 }

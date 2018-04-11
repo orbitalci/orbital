@@ -71,9 +71,12 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	k8cred.K8SContents = string(kubeconf)
+	// right now, only support one kubeconfig per account
+	k8cred.Identifier  = "THERECANONLYBEONE"
 
 	if _, err = c.config.Client.SetK8SCreds(ctx, k8cred); err != nil {
-		c.UI.Error(fmt.Sprintf("Could not add Kubernetes kubeconfig to admin. \nError: %s", err.Error()))
+		c.UI.Error("Could not add Kubernetes kubeconfig to admin")
+		commandhelper.UIErrFromGrpc(err, c.UI, err.Error())
 		return 1
 	}
 	c.UI.Info("Successfully added a kubeconfig to the account " + c.account)
