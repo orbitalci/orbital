@@ -1,22 +1,23 @@
 package builder
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/vault"
-	pb "bitbucket.org/level11consulting/ocelot/protos"
-	adminModels "bitbucket.org/level11consulting/ocelot/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/integrations"
 	"bufio"
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"strings"
+
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/go-til/vault"
+	adminModels "bitbucket.org/level11consulting/ocelot/admin/models"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/integrations"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"io"
-	"io/ioutil"
-	"strings"
 )
 
 type Docker struct{
@@ -191,9 +192,12 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + vaultAddr)
 
 	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
+	sctType := adminModels.SubCredType(werk.VcsType)
+	identifier, _ := adminModels.CreateVCSIdentifier(sctType, acctName)
+	ocelog.Log().Debug("identifier is ", identifier)
 	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
-		cred.BuildCredPath(adminModels.SubCredType(werk.VcsType), acctName, adminModels.CredType_VCS)), logout)
+		cred.BuildCredPath(sctType, acctName, adminModels.CredType_VCS, identifier)), logout)
 	if len(result.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
 		result.Messages = append(setupMessages, result.Messages...)

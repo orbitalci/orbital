@@ -57,7 +57,7 @@ type PollTable interface {
 }
 
 type CredTable interface {
-	InsertCred(credder pb.OcyCredder) error
+	InsertCred(credder pb.OcyCredder, overWriteOk bool) error
 	// retrieve ordered by cred type
 	RetrieveAllCreds() ([]pb.OcyCredder, error)
 	// todo: take out all this pb.CredType stuff, can just call Parent() on subcredType. realized too late :"(
