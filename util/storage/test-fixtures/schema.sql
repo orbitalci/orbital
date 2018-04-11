@@ -43,7 +43,6 @@ create table polling_repos (
 
 
 CREATE TABLE credentials (
-  id SERIAL PRIMARY KEY,
   account character varying(100),
   identifier character varying(100),
   cred_type smallint,
