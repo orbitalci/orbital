@@ -37,7 +37,7 @@ type guideOcelotServer struct {
 
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	credWrapper := &models.CredWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_VCS, true)
+	creds, err := g.RemoteConfig.GetCredsByType(models.CredType_VCS, true)
 	if err != nil {
 		return credWrapper, err
 	}
@@ -73,7 +73,7 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_REPO, true)
+	creds, err := g.RemoteConfig.GetCredsByType(models.CredType_REPO, true)
 	if err != nil {
 		return credWrapper, err
 	}
@@ -88,13 +88,13 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.Repo
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed repo creds validation! error: %s", err.Error())
 	}
-	err = SetupRCCCredentials(g.Storage, g.RemoteConfig, creds)
+	err = SetupRCCCredentials(g.RemoteConfig, creds)
 	return &empty.Empty{}, err
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
 	// no validation necessary, its a file upload
-	err := SetupRCCCredentials(g.Storage, g.RemoteConfig, creds)
+	err := SetupRCCCredentials(g.RemoteConfig, creds)
 	return &empty.Empty{}, err
 }
 

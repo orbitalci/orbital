@@ -79,10 +79,10 @@ func (i *SubCredType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return err
 }
 
-func (i *SubCredType) CreateVCSIdentifier(acctName string) (string, error){
-	if !contains(*i, CredType_VCS.Subtypes()) {
+func CreateVCSIdentifier(sct SubCredType, acctName string) (string, error){
+	if !contains(sct, CredType_VCS.Subtypes()) {
 		return "", errors.New("must be of type CredType_VCS")
 	}
-	identifier := SubCredType_name[int32(*i)] + "/" + acctName
+	identifier := SubCredType_name[int32(sct)] + "/" + acctName
 	return identifier, nil
 }
