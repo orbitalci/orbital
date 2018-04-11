@@ -201,7 +201,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	}
 
 	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName), "completed setup stage \u2713")
-	result.Messages = append(setupMessages, result.Messages...)
+	result.Messages = setupMessages
 	return result, d.ContainerId
 }
 

@@ -69,7 +69,10 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 	}
 
 	err = SetupCredentials(g, credentials)
-	return &empty.Empty{}, err
+	if _, ok := err.(*models.ValidationErr); ok {
+		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "VCS Creds failed validation. Errors are: " + err.Error())
+	}
+	return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 }
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
@@ -91,13 +94,19 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.Repo
 		return nil, status.Errorf(codes.FailedPrecondition, "failed repo creds validation! error: %s", err.Error())
 	}
 	err = SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
-	return &empty.Empty{}, err
+	if _, ok := err.(*models.ValidationErr); ok {
+		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Repo Creds failed validation. Errors are: " + err.Error())
+	}
+	return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
 	// no validation necessary, its a file upload
 	err := SetupRCCCredentials(g.RemoteConfig,g.Storage, creds)
-	return &empty.Empty{}, err
+	if _, ok := err.(*models.ValidationErr); ok {
+		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "K8s Creds failed validation. Errors are: " + err.Error())
+	}
+	return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 }
 
 func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*models.K8SCredsWrapper, error) {

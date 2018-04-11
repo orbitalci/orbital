@@ -21,8 +21,20 @@ type OcyCredder interface {
 	GetIdentifier() string
 	GetType() CredType
 	GetSubType() SubCredType
+	ValidateForInsert() *ValidationErr
 }
 
+func Invalidate(reason string) *ValidationErr {
+	return &ValidationErr{msg: reason}
+}
+
+type ValidationErr struct {
+	msg string
+}
+
+func (v *ValidationErr) Error() string {
+	return v.msg
+}
 
 func NewRepoCreds() *RepoCreds {
 	return &RepoCreds{}
@@ -57,6 +69,20 @@ func (m *RepoCreds) UnmarshalAdditionalFields(fields []byte) error {
 	}
 	if m.Username, ok = unmarshaled["username"]; !ok {
 		return errors.New(fmt.Sprintf("username was not in field map, map is %v", unmarshaled))
+	}
+	return nil
+}
+
+func (m *RepoCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if m.RepoUrl == "" {
+		errr = append(errr, "repoUrl is required")
+	}
+	if m.Username == "" {
+		errr = append(errr, "username is required")
+	}
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
 	}
 	return nil
 }
@@ -101,6 +127,20 @@ func (m *VCSCreds) BuildIdentifier() string {
 	return identifier
 }
 
+func (m *VCSCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if m.ClientId == "" {
+		errr = append(errr, "oauth client id is required")
+	}
+	if m.TokenURL == "" {
+		errr = append(errr, "oauth token url is required")
+	}
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	return nil
+}
+
 
 func NewK8sCreds() *K8SCreds {
 	return &K8SCreds{}
@@ -128,6 +168,28 @@ func (m *K8SCreds) UnmarshalAdditionalFields(fields []byte) error {
 	return nil
 }
 
+
+func (m *K8SCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	return nil
+}
+
+
+func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
+	if credder.GetIdentifier() == "" {
+		errors = append(errors, "identifier is required, creds need a unique name to identify by")
+	}
+	if credder.GetAcctName() == "" {
+		errors = append(errors, "account name is required")
+	}
+	if credder.GetClientSecret() == "" {
+		errors = append(errors, "client secret is required")
+	}
+	return
+}
 
 
 // wrapper interface around models.BuildRuntimeInfo
