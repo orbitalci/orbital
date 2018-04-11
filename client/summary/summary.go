@@ -88,6 +88,8 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	commandhelper.Debuggit(c.UI, "getting last few summaries")
+	commandhelper.Debuggit(c.UI, c.OcyHelper.Repo + ": " + c.OcyHelper.Account + "  " + c.OcyHelper.AcctRepo)
+	commandhelper.Debuggit(c.UI, fmt.Sprintf("%v", &models.RepoAccount{Repo: c.OcyHelper.Repo, Account: c.OcyHelper.Account, Limit: int32(c.limit)}))
 	summaries, err := c.config.Client.LastFewSummaries(ctx, &models.RepoAccount{Repo: c.OcyHelper.Repo, Account: c.OcyHelper.Account, Limit: int32(c.limit)})
 	if err != nil {
 		// todo: add more descriptive error

@@ -149,7 +149,8 @@ func GetBBConfig(remoteConfig cred.CVRemoteConfig, repoFullName string, checkout
 
 	fileBytz, err := bbHandler.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
-		ocelog.IncludeErrField(err)
+		ocelog.IncludeErrField(err).Error()
+		return nil, token, err
 	}
 
 	conf, err := CheckForBuildFile(fileBytz, deserializer)

@@ -15,6 +15,7 @@ var (
 	httpsGithub = regexp.MustCompile(`https:\/\/github\.com\/([^\/.]*)\/([^\..]*)\.git`)
 	httpsBb = regexp.MustCompile(`https:\/\/\w+\@\w+\.org\/([^\/.]*)\/([^\..]*)\.git`)
 	httpsBbNoUser = regexp.MustCompile(`https:\/\/\w+\.org\/([^\/.]*)\/([^\..]*)\.git`)
+	//httpsBbNoUserNodotGit = regexp.MustCompile(`https:\/\/\w+\.org\/([^\/.]*)\/([^\..]*[^\s-])`)
 
 	regexes = []*regexp.Regexp{sshGit, httpsGithub, httpsBb, httpsBbNoUser}
 )
