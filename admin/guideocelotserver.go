@@ -44,7 +44,7 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 
 	for _, v := range creds {
 		vcsCred := v.(*models.VCSCreds)
-		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.Type)
+		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.Type, v.GetIdentifier())
 		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
 		if err != nil {
 			vcsCred.SshFileLoc = "\033[0;33mNo SSH Key\033[0m"
@@ -72,7 +72,10 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 	if _, ok := err.(*models.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "VCS Creds failed validation. Errors are: " + err.Error())
 	}
-	return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+	if err != nil {
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+	}
+	return &empty.Empty{}, nil
 }
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
@@ -97,7 +100,10 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.Repo
 	if _, ok := err.(*models.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Repo Creds failed validation. Errors are: " + err.Error())
 	}
-	return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+	if err != nil {
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+	}
+	return &empty.Empty{}, nil
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
@@ -106,7 +112,10 @@ func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCr
 	if _, ok := err.(*models.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "K8s Creds failed validation. Errors are: " + err.Error())
 	}
-	return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+	if err != nil {
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+	}
+	return &empty.Empty{}, nil
 }
 
 func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*models.K8SCredsWrapper, error) {
@@ -468,10 +477,14 @@ BUILD_FOUND:
 }
 
 func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {
-	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.SubType, sshKeyWrapper.AcctName, sshKeyWrapper.SubType.Parent())
-	err := g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
+	identifier, err := models.CreateVCSIdentifier(sshKeyWrapper.SubType, sshKeyWrapper.AcctName)
 	if err != nil {
-		return &empty.Empty{}, err
+		return &empty.Empty{}, status.Error(codes.FailedPrecondition, err.Error())
+	}
+	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.SubType, sshKeyWrapper.AcctName, sshKeyWrapper.SubType.Parent(), identifier)
+	err = g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
+	if err != nil {
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
 	return &empty.Empty{}, nil
 }

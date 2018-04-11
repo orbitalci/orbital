@@ -37,16 +37,17 @@ enum StageResultVal {
     PASS = 0;
     FAIL = 1;
 }
-// WARNING, THIS IS COPIED FROM guideocelot.proto
+
 enum SubCredType {
-    BITBUCKET = 0;
-    GITHUB = 1;
+    NIL_SCT = 0;
+    BITBUCKET = 1;
+    GITHUB = 2;
 
-    NEXUS = 2;
-    MAVEN = 3;
+    NEXUS = 3;
+    MAVEN = 4;
 
-    DOCKER = 4;
-    KUBECONF = 5;
+    DOCKER = 5;
+    KUBECONF = 6;
 }
 
 message WerkerTask {

@@ -188,6 +188,12 @@ func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
 	if credder.GetClientSecret() == "" {
 		errors = append(errors, "client secret is required")
 	}
+	if credder.GetType() == CredType_NIL_CT {
+		errors = append(errors, "type was not instantiated")
+	}
+	if credder.GetSubType() == SubCredType_NIL_SCT {
+		errors = append(errors, "subtype not instantiated")
+	}
 	return
 }
 
