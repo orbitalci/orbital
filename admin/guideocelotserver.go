@@ -37,15 +37,14 @@ type guideOcelotServer struct {
 
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	credWrapper := &models.CredWrapper{}
-	vcs := models.NewVCSCreds()
-	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, vcs)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_VCS, true)
 	if err != nil {
 		return credWrapper, err
 	}
 
 	for _, v := range creds {
 		vcsCred := v.(*models.VCSCreds)
-		sshKeyPath := cred.BuildCredPath(vcsCred.Type, vcsCred.AcctName, cred.Vcs)
+		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.Type)
 		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
 		if err != nil {
 			vcsCred.SshFileLoc = "\033[0;33mNo SSH Key\033[0m"
@@ -67,14 +66,14 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed vcs creds validation! error: %s", err.Error())
 	}
+
 	err = SetupCredentials(g, credentials)
 	return &empty.Empty{}, err
 }
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
-	repo := models.NewRepoCreds()
-	creds, err := g.RemoteConfig.GetCredAt(cred.RepoPath, true, repo)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_REPO, true)
 	if err != nil {
 		return credWrapper, err
 	}
@@ -89,20 +88,19 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.Repo
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed repo creds validation! error: %s", err.Error())
 	}
-	err = SetupRCCCredentials(g.RemoteConfig, creds)
+	err = SetupRCCCredentials(g.Storage, g.RemoteConfig, creds)
 	return &empty.Empty{}, err
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
 	// no validation necessary, its a file upload
-	err := SetupRCCCredentials(g.RemoteConfig, creds)
+	err := SetupRCCCredentials(g.Storage, g.RemoteConfig, creds)
 	return &empty.Empty{}, err
 }
 
 func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*models.K8SCredsWrapper, error) {
 	credWrapper := &models.K8SCredsWrapper{}
-	kube := models.NewK8sCreds()
-	creds, err := g.RemoteConfig.GetCredAt(cred.K8sPath, true, kube)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_K8S, true)
 	if err != nil {
 		return credWrapper, err
 	}
@@ -247,10 +245,21 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
-	cfg, err := build.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
+	cfgs, err := build.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return err
+	}
+	if len(cfgs) > 1 {
+		stream.Send(RespWrap(fmt.Sprintf("Found multiple VCS credentials belonging to %s, will iterate over them", buildReq.AcctRepo)))
+		for ind, cfg := range cfgs {
+
+		}
+	} else if len(cfgs) == 1 {
+		stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, md.CHECKMARK)))
+	} else {
+		stream.Send(RespWrap("No VCS Credentials found"))
+		return status.Error(codes.NotFound, fmt.Sprintf("Unable to retrieve the bitbucket client config for %s. No VCS credentials found.", buildReq.AcctRepo))
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, md.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))

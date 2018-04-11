@@ -227,35 +227,35 @@ func TeardownVaultAndConsul(testvault net.Listener, testconsul *testutil.TestSer
 	testconsul.Stop()
 	testvault.Close()
 }
-
-func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
-	creds := &RepoConfig{
-		Password: password,
-		Username: username,
-		RepoUrl: map[string]string{"url":repourl},
-		Type: "docker",
-		AcctName: acctName,
-		ProjectName: projectName,
-	}
-	//err := testRemoteConfig.AddCreds(BuildCredPath("github", "mariannefeng", Vcs), adminConfig)
-	if err := rc.AddCreds(BuildCredPath("docker", acctName, Repo), creds); err != nil {
-		t.Fatal("couldnt add creds, error: ", err.Error())
-	}
-}
-
-func AddMvnRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
-	creds := &RepoConfig{
-		Password: password,
-		Username: username,
-		RepoUrl: map[string]string{"registry":repourl},
-		Type: "maven",
-		AcctName: acctName,
-		ProjectName: projectName,
-	}
-	if err := rc.AddCreds(BuildCredPath("maven", acctName, Repo), creds); err != nil {
-		t.Fatal("couldnt' add maven creds, error: ", err.Error())
-	}
-}
+//
+//func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
+//	creds := &RepoConfig{
+//		Password: password,
+//		Username: username,
+//		RepoUrl: map[string]string{"url":repourl},
+//		Type: "docker",
+//		AcctName: acctName,
+//		ProjectName: projectName,
+//	}
+//	//err := testRemoteConfig.AddCreds(BuildCredPath("github", "mariannefeng", Vcs), adminConfig)
+//	if err := rc.AddCreds(BuildCredPath("docker", acctName, Repo), creds); err != nil {
+//		t.Fatal("couldnt add creds, error: ", err.Error())
+//	}
+//}
+//
+//func AddMvnRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
+//	creds := &RepoConfig{
+//		Password: password,
+//		Username: username,
+//		RepoUrl: map[string]string{"registry":repourl},
+//		Type: "maven",
+//		AcctName: acctName,
+//		ProjectName: projectName,
+//	}
+//	if err := rc.AddCreds(BuildCredPath("maven", acctName, Repo), creds); err != nil {
+//		t.Fatal("couldnt' add maven creds, error: ", err.Error())
+//	}
+//}
 
 //type HealthyMaintainer interface {
 //	Reconnect() error

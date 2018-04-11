@@ -11,6 +11,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+//OcyCredder is an interface for interacting with credentials in Ocelot
+type OcyCredder interface {
+	SetSecret(string)
+	UnmarshalAdditionalFields(fields []byte) error
+	CreateAdditionalFields() ([]byte, error)
+	GetClientSecret() string
+	GetAcctName() string
+	GetIdentifier() string
+	GetType() CredType
+	GetSubType() SubCredType
+}
+
 
 func NewRepoCreds() *RepoCreds {
 	return &RepoCreds{}

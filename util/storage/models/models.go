@@ -2,10 +2,13 @@ package models
 
 import (
 	"bytes"
-	"time"
-	"encoding/json"
 	"database/sql/driver"
+	"encoding/json"
 	"errors"
+	"time"
+
+
+	//pb "bitbucket.org/level11consulting/ocelot/admin/models"
 )
 
 var (
@@ -153,6 +156,7 @@ func (f JsonStringMap) Scan(src interface{}) error {
 	}
 	return nil
 }
+
 
 
 // mirrored from guide ocelot models :/ idk what to do about this

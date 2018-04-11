@@ -18,9 +18,3 @@ type RemoteConfigCred interface {
 	Spawn() RemoteConfigCred
 }
 
-type NewRCC interface {
-	SetSecret(string)
-	UnmarshalAdditionalFields(fields []byte) error
-	CreateAdditionalFields() ([]byte, error)
-	GetClientSecret() string
-}

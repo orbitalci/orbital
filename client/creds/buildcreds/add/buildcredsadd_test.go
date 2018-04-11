@@ -53,7 +53,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
-				Type:         "bitbucket",
+				Type: 		   models.CredType_VCS,
 				SshFileLoc:   "THIS IS A TEST",
 			},
 		},

@@ -59,7 +59,7 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
 		return 1
 	}
-	if err = dese.YAMLToProto(confFile, credWrap); err != nil {
+	if err = dese.YAMLToStruct(confFile, credWrap); err != nil {
 		c.UI.Error(fmt.Sprintf("Could not process file, please check documentation\nError: %s", err.Error()))
 		return 1
 	}

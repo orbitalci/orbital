@@ -1,13 +1,15 @@
 package cred
 
 import (
+	"fmt"
+	"strconv"
+
 	"bitbucket.org/level11consulting/go-til/consul"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
+	pb "bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"fmt"
 	"github.com/pkg/errors"
-	"strconv"
 )
 
 
@@ -76,9 +78,12 @@ type CVRemoteConfig interface {
 	SetConsul(consul *consul.Consulet)
 	GetVault() ocevault.Vaulty
 	SetVault(vault ocevault.Vaulty)
-	GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
-	GetPassword(path string) (string, error)
-	AddCreds(path string, anyCred RemoteConfigCred) (err error)
+	GetCredsByType(ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error)
+	GetAllCreds(hideSecret bool) ([]pb.OcyCredder, error)
+	GetCred(subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error)
+	GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error)
+	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType) (string, error)
+	AddCreds(anyCred pb.OcyCredder) (err error)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
 	CheckSSHKeyExists(path string) (error)
 	HealthyMaintainer
@@ -86,10 +91,15 @@ type CVRemoteConfig interface {
 	StorageCred
 }
 
+type NewCVRC interface {
+
+}
+
 
 type RemoteConfig struct {
 	Consul *consul.Consulet
 	Vault  ocevault.Vaulty
+	Store  storage.CredTable
 }
 
 func (rc *RemoteConfig) GetConsul() *consul.Consulet {
@@ -118,7 +128,7 @@ func (rc *RemoteConfig) Healthy() bool {
 		}
 	}
 	rc.Consul.GetKeyValue("here")
-	if !vaultConnected || !rc.Consul.Connected {
+	if !vaultConnected || !rc.Consul.Connected  {
 		ocelog.Log().Error("remoteConfig is not healthy")
 		return false
 	}
@@ -145,50 +155,6 @@ func BuildCredKey(credType string, acctName string) string {
 	return credType + "/" + acctName
 }
 
-// GetCred at will return a map w/ key <cred_type>/<acct_name> to credentials. depending on the OcyCredType,
-//   the appropriate credential struct will be instantiated and filled with data from consul and vault.
-//   currently supports map[string]*models.VCSCreds and map[string]*models.RepoCreds
-//   You must cast the resulting values to their appropriate objects after the map is generated if you need to access more than
-//   the methods on the cred.RemoteConfigCred interface
-//   Example:
-//      creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, cred.Vcs)
-//      vcsCreds := creds.(*models.VCSCreds)
-func (rc *RemoteConfig) GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error) {
-	creds := map[string]RemoteConfigCred{}
-	var err error
-	if rc.Consul.Connected {
-		configs, err := rc.Consul.GetKeyValues(path)
-		if err != nil {
-			return creds, err
-		}
-		for _, v := range configs {
-			_, acctName, credType, infoType := splitConsulCredPath(v.Key)
-			mapKey := BuildCredKey(credType, acctName)
-			foundConfig, ok := creds[mapKey]
-			if !ok {
-				foundConfig = rcc.Spawn()
-				foundConfig.SetAcctNameAndType(acctName, credType)
-				if hideSecret {
-					foundConfig.SetSecret("*********")
-				} else {
-					passcode, passErr := rc.GetPassword(foundConfig.BuildCredPath(credType, acctName))
-					if passErr != nil {
-						ocelog.IncludeErrField(passErr).Error()
-						foundConfig.SetSecret("ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT")
-						err = passErr
-					} else {
-						foundConfig.SetSecret(passcode)
-					}
-				}
-				creds[mapKey] = foundConfig
-			}
-			foundConfig.SetAdditionalFields(infoType, string(v.Value[:]))
-		}
-	} else {
-		return creds, errors.New("not connected to consul, unable to retrieve credentials")
-	}
-	return creds, err
-}
 
 // AddSSHKey adds repo ssh private key to vault at the usual vault path + /ssh
 func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
@@ -221,31 +187,93 @@ func (rc *RemoteConfig) CheckSSHKeyExists(path string) (error) {
 }
 
 //GetPassword will return to you the vault password at specified path
-func (rc *RemoteConfig) GetPassword(path string) (string, error) {
-	authData, err := rc.Vault.GetUserAuthData(path)
+func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType) (string, error) {
+	authData, err := rc.Vault.GetUserAuthData(BuildCredPath(scType, acctName, ocyCredType))
 	if err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%v", authData["clientsecret"]), nil
 }
 
-// AddRepoCreds adds repo integration creds to consul + vault
-func (rc *RemoteConfig) AddCreds(path string, anyCred RemoteConfigCred) (err error) {
-	if rc.Consul.Connected {
-		anyCred.AddAdditionalFields(rc.Consul, path)
-		if rc.Vault != nil {
-			secret := make(map[string]interface{})
-			secret["clientsecret"] = anyCred.GetClientSecret()
-			if _, err = rc.Vault.AddUserAuthData(path, secret); err != nil {
-				return
-			}
+// AddRepoCreds adds repo integration creds to storage + vault
+func (rc *RemoteConfig) AddCreds(anyCred pb.OcyCredder) (err error) {
+	if err := rc.Store.InsertCred(anyCred); err != nil {
+		return err
+	}
+	if rc.Vault != nil {
+		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetType())
+		secret := make(map[string]interface{})
+		secret["clientsecret"] = anyCred.GetClientSecret()
+		if _, err = rc.Vault.AddUserAuthData(path, secret); err != nil {
+			return
 		}
-	} else {
-		err = errors.New("not connected to consul, unable to add credentials")
 	}
 	return
 }
 
+
+func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName string, hideSecret bool) (secret string){
+	if !hideSecret {
+		passcode, passErr := rc.GetPassword(subCredType, accountName, subCredType.Parent())
+		if passErr != nil {
+			ocelog.IncludeErrField(passErr).Error()
+			secret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
+		} else {
+			secret = passcode
+		}
+	} else {
+		secret = "*********"
+	}
+	return secret
+}
+
+func (rc *RemoteConfig) GetCred(subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error) {
+	cred, err := rc.Store.RetrieveCred(subCredType, identifier, accountName)
+	cred.SetSecret(rc.maybeGetPassword(subCredType, accountName, hideSecret))
+	return cred, err
+}
+
+func (rc *RemoteConfig) GetAllCreds(hideSecret bool) ([]pb.OcyCredder, error) {
+	creds, err := rc.Store.RetrieveAllCreds()
+	if err != nil {
+		return creds, err
+	}
+	var allcreds []pb.OcyCredder
+	for _, cred := range creds {
+		sec := rc.maybeGetPassword(cred.GetSubType(), cred.GetAcctName(), hideSecret)
+		cred.SetSecret(sec)
+		allcreds = append(allcreds, cred)
+	}
+	return allcreds, nil
+}
+
+func (rc *RemoteConfig) GetCredsByType(ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error) {
+	creds, err := rc.Store.RetrieveCreds(ctype)
+	if err != nil {
+		return creds, err
+	}
+	var credsfortype []pb.OcyCredder
+	for _, cred := range creds {
+		sec := rc.maybeGetPassword(cred.GetSubType(), cred.GetAcctName(), hideSecret)
+		cred.SetSecret(sec)
+		credsfortype = append(credsfortype, cred)
+	}
+	return credsfortype, nil
+}
+
+func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error) {
+	creds, err := rc.Store.RetrieveCredBySubTypeAndAcct(stype, accountName)
+	if err != nil {
+		return nil, err
+	}
+	var credsForType []pb.OcyCredder
+	for _, cred := range creds {
+		sec := rc.maybeGetPassword(stype, accountName, hideSecret)
+		cred.SetSecret(sec)
+		credsForType = append(credsForType, cred)
+	}
+	return credsForType, nil
+}
 
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 	kv, err := rc.Consul.GetKeyValue(StorageType)

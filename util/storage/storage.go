@@ -2,7 +2,6 @@ package storage
 
 import (
 	pb "bitbucket.org/level11consulting/ocelot/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"fmt"
 	"time"
@@ -58,9 +57,12 @@ type PollTable interface {
 }
 
 type CredTable interface {
-	InsertCred(rcc cred.NewRCC) error
-	RetrieveCreds(credType pb.CredType, hideSecret bool)
-	RetrieveCred(credType pb.CredType, subCredType pb.SubCredType, )
+	InsertCred(credder pb.OcyCredder) error
+	// retrieve ordered by cred type
+	RetrieveAllCreds() ([]pb.OcyCredder, error)
+	RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, error)
+	RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error)
+	RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error)
 }
 
 //GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
@@ -74,6 +76,7 @@ type OcelotStorage interface {
 	BuildStage
 	Stringy
 	PollTable
+	CredTable
 	HealthyChkr
 	Close()
 }

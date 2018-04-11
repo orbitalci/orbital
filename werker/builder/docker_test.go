@@ -47,7 +47,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 		t.Error("pull from metaverse should fail if there are no creds to authenticate with. stdout: " , data)
 	}
 	// add in docker repo credentials,
-	cred.AddDockerRepoCreds(t, testRemoteConfig, "docker.metaverse.l11.com", password, "admin", acctName, projectName)
+	//cred.AddDockerRepoCreds(t, testRemoteConfig, "docker.metaverse.l11.com", password, "admin", acctName, projectName)
 
 	// create config in ~/.docker directory w/ auth creds
 	logout := make(chan[]byte, 10000)

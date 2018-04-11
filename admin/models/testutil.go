@@ -244,13 +244,9 @@ func CompareRepoCredWrappers(repoWrapA *RepoCredWrapper, repoWrapB *RepoCredWrap
 		if cred.Password != credB.Password {
 			return false
 		}
-		for name, url := range cred.RepoUrl {
-			if m, ok := credB.RepoUrl[name]; !ok {
-				return false
-			} else if m != url {
-				return false
-			}
-		}
+		//for name, url := range cred.RepoUrl {
+		//todo: fix this
+		//}
 	}
 	return true
 }

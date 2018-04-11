@@ -40,19 +40,14 @@ func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg stri
 
 //get vcs creds will build a path for you based on the full name of the repo and return the vcsCredentials corresponding
 //with that account
-func GetVcsCreds(repoFullName string, remoteConfig cred.CVRemoteConfig) (*models.VCSCreds, error) {
-	vcs := models.NewVCSCreds()
+func GetVcsCreds(repoFullName string, remoteConfig cred.CVRemoteConfig) ([]*models.VCSCreds, error) {
 	acctName, _ := GetAcctRepo(repoFullName)
-
-	bbCreds, err := remoteConfig.GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, vcs)
-	cf := bbCreds["bitbucket/"+acctName]
-	cfg, ok := cf.(*models.VCSCreds)
-	// todo: this error happens even if there are no creds there, need a nil check for better error, and also to save to database?? for visibility
-	if !ok {
-		err = errors.New(fmt.Sprintf("could not cast config as models.VCSCreds, config: %v", cf))
-		return nil, err
+	bbCreds, err := remoteConfig.GetCredsBySubTypeAndAcct(models.SubCredType_BITBUCKET, acctName, false)
+	var vcsCreds []*models.VCSCreds
+	for _, credz := range bbCreds {
+		vcsCreds = append(vcsCreds, credz.(*models.VCSCreds))
 	}
-	return cfg, nil
+	return vcsCreds, err
 }
 
 //QueueAndStore will create a werker task and put it on the queue, then update database
@@ -125,6 +120,28 @@ func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string
 	return id, nil
 }
 
+// GetValidBBHandlerFromCfgList will iterate over vcs creds until it finds the one that creates the 
+func GetValidBBHandlerFromCfgList(cfgs []*models.VCSCreds) (handler.VCSHandler, string, error) {
+	var found bool
+	var err error
+	var bbHandler handler.VCSHandler
+	var token string
+	for ind, cfg := range cfgs {
+		ocelog.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config, round %d", ind)
+		bbHandler, token, err = handler.GetBitbucketClient(cfg)
+		if err != nil {
+			ocelog.IncludeErrField(err).Error()
+			continue
+		}
+		found = true
+		break
+	}
+	if !found {
+		return nil, "", err
+	}
+	return bbHandler, token, nil
+}
+
 //GetBBConfig returns the protobuf ocelot.yaml, a valid bitbucket token belonging to that repo, and possible err.
 //If a VcsHandler is passed, this method will use the existing handler to retrieve the bb config. In that case,
 //***IT WILL NOT RETURN A VALID TOKEN FOR YOU - ONLY BUILD CONFIG***
@@ -133,17 +150,28 @@ func GetBBConfig(remoteConfig cred.CVRemoteConfig, repoFullName string, checkout
 	var token string
 
 	if vcsHandler == nil {
-		cfg, err := GetVcsCreds(repoFullName, remoteConfig)
-		if err != nil {
-			ocelog.IncludeErrField(err)
+		cfgs, err1 := GetVcsCreds(repoFullName, remoteConfig)
+		if err1 != nil {
+			ocelog.IncludeErrField(err1).Error()
+			return nil, "", err1
+		}
+		// might not need this, probably can just work off of err, but this feels more clear for rn
+		var found bool
+		var err error
+		for ind, cfg := range cfgs {
+			ocelog.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config, round %d", ind)
+			bbHandler, token, err = handler.GetBitbucketClient(cfg)
+			if err != nil {
+				ocelog.IncludeErrField(err).Error()
+				continue
+			}
+			found = true
+			break
+		}
+		if !found {
 			return nil, "", err
 		}
 
-		bbHandler, token, err = handler.GetBitbucketClient(cfg)
-		if err != nil {
-			ocelog.IncludeErrField(err)
-			return nil, "", err
-		}
 	} else {
 		bbHandler = vcsHandler
 	}

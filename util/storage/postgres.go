@@ -2,16 +2,19 @@ package storage
 
 
 import (
-	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	_ "github.com/lib/pq"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"strings"
-	"time"
 	"sync"
+	"time"
+
+
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	pb "bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	_ "github.com/lib/pq"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
@@ -652,6 +655,173 @@ func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
 }
 
 
+//type CredTable interface {
+//	InsertCred(credder pb.OcyCredder) error
+//	// retrieve ordered by cred type
+//	RetrieveAllCreds(hideSecret bool) ([]pb.OcyCredder, error)
+//	RetrieveCreds(credType pb.CredType, hideSecret bool) ([]pb.OcyCredder, error)
+//	RetrieveCred(credType pb.CredType, subCredType pb.SubCredType, accountName string) (pb.OcyCredder, error)
+//	HealthyChkr
+//}
+//CREATE TABLE credentials (
+//  id SERIAL PRIMARY KEY,
+//  account character varying(100),
+//  identifier character varying(100),
+//  cred_type smallint,e zone,
+//  cred_sub_type smallint,
+//  additional_fields jsonb
+//);
+//
+
+func (p *PostgresStorage) InsertCred(credder pb.OcyCredder) error {
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
+	moreFields, err := credder.CreateAdditionalFields()
+	if err != nil {
+		return errors.New("could not create additional_fields column, error: " + err.Error())
+	}
+	queryStr := `INSERT INTO credentials(account, identifier, cred_type, cred_sub_type, additional_fields) values ($1,$2,$3,$4,$5)`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return  err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(credder.GetAcctName(), credder.GetIdentifier(), credder.GetType(), credder.GetSubType(), moreFields)
+	return err
+}
+
+func (p *PostgresStorage) RetrieveAllCreds() ([]pb.OcyCredder, error) {
+	if err := p.Connect(); err != nil {
+		return nil, errors.New("could not connect to postgres: " + err.Error())
+	}
+	queryStr := `SELECT account, identifier, cred_type, cred_sub_type, additional_fields from credentials order by cred_type`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return  nil, err
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var creds []pb.OcyCredder
+	for rows.Next() {
+		var credType, subCredType int32
+		var addtlFields []byte
+		var account, identifier string
+		err := rows.Scan(&account, &identifier, &credType, &subCredType, &addtlFields)
+		if err != nil {
+			return nil, err
+		}
+		ocyCredType := pb.CredType(credType)
+		cred := ocyCredType.SpawnCredStruct(account, identifier, pb.SubCredType(subCredType))
+		if err := cred.UnmarshalAdditionalFields(addtlFields); err != nil {
+			return nil, err
+		}
+		creds = append(creds, cred)
+	}
+	return creds, rows.Err()
+}
+
+func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, error) {
+	if err := p.Connect(); err != nil {
+		return nil, errors.New("could not connect to postgres: " + err.Error())
+	}
+	queryStr := `SELECT account, identifier, cred_type, cred_sub_type, additional_fields FROM credentials WHERE cred_type=$1`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return  nil, err
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query(credType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var creds []pb.OcyCredder
+	for rows.Next() {
+		var credType, subCredType int32
+		var addtlFields []byte
+		var account, identifier string
+		err := rows.Scan(&account, &identifier, &credType, &subCredType, &addtlFields)
+		if err != nil {
+			return nil, err
+		}
+		ocyCredType := pb.CredType(credType)
+		cred := ocyCredType.SpawnCredStruct(account, identifier, pb.SubCredType(subCredType))
+		if cred == nil {
+			// shouldn't happen?
+			return nil, errors.New("unsupported cred type")
+		}
+		if err := cred.UnmarshalAdditionalFields(addtlFields); err != nil {
+			return nil, err
+		}
+		creds = append(creds, cred)
+	}
+	return creds, rows.Err()
+}
+
+func (p *PostgresStorage) RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error) {
+	if err := p.Connect(); err != nil {
+		return nil, errors.New("could not connect to postgres: " + err.Error())
+	}
+	queryStr := `SELECT additional_fields FROM credentials WHERE (sub_cred_type,identifier,account)=($1,$2,$3)`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return  nil, err
+	}
+	defer stmt.Close()
+	var addtlFields []byte
+	if err := stmt.QueryRow(subCredType, identifier, accountName).Scan(&addtlFields); err != nil {
+		return nil, err
+	}
+	credder := subCredType.Parent().SpawnCredStruct(accountName, identifier, subCredType)
+	if credder == nil {
+		// do we even need this check? wouldn't strict typing never allow this condition?
+		return nil, errors.New("credder is nil")
+	}
+	err = credder.UnmarshalAdditionalFields(addtlFields)
+	return credder, err
+}
+
+func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error) {
+	if err := p.Connect(); err != nil {
+		return nil, errors.New("could not connect to postgres: " + err.Error())
+	}
+	queryStr := `SELECT (additional_fields, identifier) FROM credentials WHERE (sub_cred_type,account)=($1,$2)`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return  nil, err
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query(scredType, acctName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var creds []pb.OcyCredder
+	for rows.Next() {
+		var addtlFields []byte
+		var identifier string
+		err = rows.Scan(&addtlFields, &identifier)
+		if err != nil {
+			return nil, err
+		}
+		credder := scredType.Parent().SpawnCredStruct(acctName, identifier, scredType)
+		if err = credder.UnmarshalAdditionalFields(addtlFields); err != nil {
+			return nil, err
+		}
+		creds = append(creds, credder)
+	}
+	return creds, nil
+}
 
 func (p *PostgresStorage) StorageType() string {
 	return fmt.Sprintf("Postgres Database at %s", p.location)
