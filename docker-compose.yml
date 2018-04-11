@@ -49,32 +49,32 @@ services:
       LOG_LEVEL: debug
       NSQD_IP: 172.17.0.1
       NSQLOOKUPD_IP: 172.17.0.1
-  werker:
-    image: ocelot-werker
-    command: /werker -log-level debug 
-    build:
-      context: .
-      dockerfile: werker/Dockerfile
-      cache_from:
-        - golang:1.9-alpine
-    ports:
-      - "9090:9090"
-      - "9099:9099"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    environment:
-      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-      VAULT_ADDR: http://172.18.0.1:8200
-      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
-      CONSUL_HOST: 172.18.0.1
-      NSQD_IP: 172.17.0.1
-      NSQLOOKUPD_IP: 172.17.0.1
-      REGISTER_IP: ec2-34-212-13-136.us-west-2.compute.amazonaws.com
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
+#  werker:
+#    image: ocelot-werker
+#    command: /werker -log-level debug
+#    build:
+#      context: .
+#      dockerfile: werker/Dockerfile
+#      cache_from:
+#        - golang:1.9-alpine
+#    ports:
+#      - "9090:9090"
+#      - "9099:9099"
+#    volumes:
+#      - "/var/run/docker.sock:/var/run/docker.sock"
+#    environment:
+#      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
+#      VAULT_ADDR: http://172.18.0.1:8200
+#      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
+#      CONSUL_HOST: 172.18.0.1
+#      NSQD_IP: 172.17.0.1
+#      NSQLOOKUPD_IP: 172.17.0.1
+#      REGISTER_IP: ec2-34-212-13-136.us-west-2.compute.amazonaws.com
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "200k"
+#        max-file: "10"
   poller:
     image: ocelot-poller
     build:

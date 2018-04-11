@@ -1,9 +1,14 @@
 package werker
 
 import (
+	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"bytes"
+	"errors"
+	"fmt"
 	"testing"
+
 	"bitbucket.org/level11consulting/go-til/test"
+	pb "bitbucket.org/level11consulting/ocelot/protos"
 )
 
 func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
@@ -32,6 +37,54 @@ func TestWorkerMsgHandler_WatchForResults(t *testing.T) {
 			}
 			if wd.hash != trans.Hash {
 				t.Error(test.StrFormatErrors("git hash", wd.hash, trans.Hash))
+			}
+		})
+	}
+}
+
+
+type dummyBuildStage struct {
+	details []*models.StageResult
+	fail    bool
+}
+func (dbs *dummyBuildStage) AddStageDetail(stageResult *models.StageResult) error {
+	if dbs.fail {
+		return errors.New("i am failing as promised")
+	}
+	dbs.details = append(dbs.details, stageResult)
+	return nil
+}
+
+func (dbs *dummyBuildStage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error){
+	var srs []models.StageResult
+	for _, i := range dbs.details {
+		srs = append(srs, *i)
+	}
+	return srs, nil
+}
+
+func Test_handleTriggers(t *testing.T) {
+	var triggerData = []struct {
+		branch string
+		shouldSkip bool
+		store      *dummyBuildStage
+		shouldError bool
+	}{
+		{"boogaloo", true, &dummyBuildStage{details:[]*models.StageResult{}}, false},
+		{"alks;djf", false, &dummyBuildStage{details:[]*models.StageResult{}, fail: true}, true},
+		{"vibranium", false, &dummyBuildStage{details:[]*models.StageResult{}}, false},
+	}
+	triggers := &pb.Triggers{Branches: []string{"apple", "banana", "quartz", "vibranium"}}
+	stage := &pb.Stage{Env: []string{}, Script: []string{"echo suuuup yooo"}, Name: "testing_triggers", Trigger: triggers}
+
+	for ind, wd := range triggerData {
+		t.Run(fmt.Sprintf("%d-trigger", ind), func(t *testing.T){
+			shouldSkip, err := handleTriggers(wd.branch, 12, wd.store, stage)
+			if err != nil && !wd.shouldError{
+				t.Fatal(err)
+			}
+			if wd.shouldSkip != shouldSkip {
+				t.Error(test.GenericStrFormatErrors("should skip", wd.shouldSkip, shouldSkip))
 			}
 		})
 	}

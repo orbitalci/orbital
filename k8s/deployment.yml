@@ -32,7 +32,7 @@ spec:
       #     secretName: metaverse-secret
       containers:
       - name: admin-ocelot
-        image: docker.metaverse.l11.com/admin-ocelot:summary
+        image: docker.metaverse.l11.com/ocelot-admin:2955507
         imagePullPolicy: Always
         volumeMounts:
           - name: privkey-volume
@@ -85,6 +85,8 @@ spec:
       labels:
         app: hookhandler-ocelot
     spec:
+      imagePullSecrets:
+      - name: nexusregistry
       volumes:
       - name: docker-sock-volume
         hostPath:
@@ -92,7 +94,7 @@ spec:
           type: File
       containers:
       - name:  hookhandler-ocelot
-        image: jessishank/ocelot-hookhandler:stmt_exec.1
+        image: docker.metaverse.l11.com/ocelot-hookhandler:2955507
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock
@@ -140,6 +142,8 @@ spec:
       labels:
         app: poller-ocelot
     spec:
+      imagePullSecrets:
+      - name: nexusregistry
       volumes:
       - name: docker-sock-volume
         hostPath:
@@ -147,7 +151,7 @@ spec:
           type: File
       containers:
       - name:  poller-ocelot
-        image: jessishank/ocelot-poller:stmt_exec.1
+        image: docker.metaverse.l11.com/ocelot-poller:2955507
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock

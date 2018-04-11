@@ -31,12 +31,13 @@ CREATE TABLE build_stage_details (
   FOREIGN KEY (build_id) REFERENCES build_summary (id) ON DELETE CASCADE
 );
 
-create table polling_repos (
+CREATE TABLE polling_repos (
   account character varying(100),
   repo character varying(100),
   cron_string character varying (50),
   last_cron_time timestamp without time zone,
   branches character varying,
+  last_hashes jsonb default '{}',
   primary key (account, repo)
 );
 

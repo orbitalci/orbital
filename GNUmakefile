@@ -17,6 +17,7 @@ GOLDFLAGS=-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).
 export GOLDFLAGS
 SSH_PRIVATE_KEY ?= $(HOME)/.ssh/id_rsa
 export SSH_PRIVATE_KEY
+GIT_HASH := $(shell git rev-parse --short HEAD)
 
 windows-client: ## install zipped windows ocelot client to pkg/windows_amd64
 	mkdir -p pkg/windows_amd64/
@@ -73,6 +74,9 @@ release: protos upload-clients upload-templates linux-werker docker-base docker-
 
 proto: ## build all protos
 	@scripts/build-protos.sh
+
+pushtags: ## tag built docker images with the short hash and push all to nexus
+	@scripts/tag_and_push.sh $(GIT_HASH)
 
 .PHONY: help
 

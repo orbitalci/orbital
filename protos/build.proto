@@ -18,6 +18,8 @@ message Stage {
     repeated string env = 1;
     repeated string script = 2;
     string name = 3;
+    // @inject_tag: yaml:"trigger"
+    Triggers trigger = 4;
 }
 
 message Result {
@@ -25,6 +27,10 @@ message Result {
     StageResultVal status = 2;
     string error = 3;
     repeated string messages = 4;
+}
+
+message Triggers {
+    repeated string branches = 1;
 }
 
 enum StageResultVal {
@@ -41,6 +47,7 @@ message WerkerTask {
     string vcsType = 5;
     string fullName = 6;
     int64 id = 7; // database id
+    string branch = 8;
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//
