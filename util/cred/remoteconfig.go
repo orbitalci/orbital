@@ -228,6 +228,9 @@ func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName
 
 func (rc *RemoteConfig) GetCred(subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error) {
 	cred, err := rc.Store.RetrieveCred(subCredType, identifier, accountName)
+	if err != nil {
+		return nil, err
+	}
 	cred.SetSecret(rc.maybeGetPassword(subCredType, accountName, hideSecret))
 	return cred, err
 }

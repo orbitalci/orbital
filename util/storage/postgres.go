@@ -779,6 +779,9 @@ func (p *PostgresStorage) RetrieveCred(subCredType pb.SubCredType, identifier, a
 	defer stmt.Close()
 	var addtlFields []byte
 	if err := stmt.QueryRow(subCredType, identifier, accountName).Scan(&addtlFields); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, CredNotFound(accountName, identifier)
+		}
 		return nil, err
 	}
 	credder := subCredType.Parent().SpawnCredStruct(accountName, identifier, subCredType)

@@ -38,8 +38,7 @@ func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg stri
 	sr.StageDuration = time.Now().Sub(sr.StartTime).Seconds()
 }
 
-//get vcs creds will build a path for you based on the full name of the repo and return the vcsCredentials corresponding
-//with that account
+// GetVcsCreds will retrieve a VCSCred for account name / bitbucket vcs type
 func GetVcsCreds(repoFullName string, remoteConfig cred.CVRemoteConfig) (*models.VCSCreds, error) {
 	acctName, _ := GetAcctRepo(repoFullName)
 	identifier, err := models.CreateVCSIdentifier(models.SubCredType_BITBUCKET, acctName)

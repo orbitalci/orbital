@@ -349,37 +349,35 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.RepoAccount) (*empty.Empty, error) {
 	var vcs *models.VCSCreds
+	bb := models.SubCredType_BITBUCKET
+	identifier, err := models.CreateVCSIdentifier(bb, repoAcct.Account)
+	if err != nil {
+		return &empty.Empty{}, status.Error(codes.Internal, "couldn't create identifier")
+	}
+	bbCreds, err := g.RemoteConfig.GetCred(bb, identifier, repoAcct.Account, true)
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return &empty.Empty{}, status.Error(codes.NotFound, "credentials not found")
+		}
+		return &empty.Empty{}, status.Error(codes.Internal, "could not get bitbucket creds")
+	}
 
-	bbCreds, err := g.RemoteConfig.GetCredAt(cred.BuildCredPath("bitbucket", repoAcct.Account, cred.Vcs), false, vcs)
+	vcs = bbCreds.(*models.VCSCreds)
+	bbClient := &net.OAuthClient{}
+	bbClient.Setup(vcs)
+
+	bbHandler := handler.GetBitbucketHandler(vcs, bbClient)
+	repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
+	if repoDetail.Type == "error" || err != nil {
+		return &empty.Empty{}, errors.New(fmt.Sprintf("could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo))
+	}
+
+	webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
+	err = bbHandler.CreateWebhook(webhookURL)
+
 	if err != nil {
 		return &empty.Empty{}, err
 	}
-
-	if bbCreds == nil || len(bbCreds) == 0 {
-		return &empty.Empty{}, errors.New(fmt.Sprintf("could not find credentials belonging to %s", repoAcct.Account))
-	}
-
-	//TODO: what do we even do if there's more than one?
-	for _, v := range bbCreds {
-		vcs = v.(*models.VCSCreds)
-		bbClient := &net.OAuthClient{}
-		bbClient.Setup(vcs)
-
-		bbHandler := handler.GetBitbucketHandler(vcs, bbClient)
-		repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
-		if repoDetail.Type == "error" || err != nil {
-			return &empty.Empty{}, errors.New(fmt.Sprintf("could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo))
-		}
-
-		webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
-		err = bbHandler.CreateWebhook(webhookURL)
-
-		if err != nil {
-			return &empty.Empty{}, err
-		}
-		return &empty.Empty{}, nil
-	}
-
 	return &empty.Empty{}, nil
 }
 
