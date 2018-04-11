@@ -457,7 +457,7 @@ BUILD_FOUND:
 }
 
 func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {
-	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.Type, sshKeyWrapper.AcctName, cred.Vcs)
+	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.SubType, sshKeyWrapper.AcctName, sshKeyWrapper.SubType.Parent())
 	err := g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
 	if err != nil {
 		return &empty.Empty{}, err

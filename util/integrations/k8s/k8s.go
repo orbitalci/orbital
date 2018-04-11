@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"errors"
-	"fmt"
 
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"

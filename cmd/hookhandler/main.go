@@ -10,7 +10,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/namsral/flag"
 	"os"
-	"strings"
 	"bitbucket.org/level11consulting/ocelot/util/build"
 )
 

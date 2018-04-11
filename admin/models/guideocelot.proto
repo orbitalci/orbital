@@ -63,7 +63,7 @@ message CredWrapper {
 message SSHKeyWrapper {
     string acctName = 1;
     bytes privateKey = 2;
-    string type = 3;
+    SubCredType subType = 10;
 }
 
 message VCSCreds {
