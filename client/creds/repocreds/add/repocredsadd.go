@@ -81,6 +81,7 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 
 // seems really unlikely that hashicorps tool will fail, but this way if it does its all in one
 // function.
+//TODO: fix this so that you can upload things via command line
 func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat string) {
 	creds = &models.RepoCreds{}
 	var err error

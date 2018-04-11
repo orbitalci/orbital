@@ -42,10 +42,10 @@ CREATE TABLE polling_repos (
 );
 
 CREATE TABLE credentials (
-  account character varying(100),
-  identifier character varying(100),
-  cred_type smallint,
-  cred_sub_type smallint,
+  account       CHARACTER VARYING(100),
+  identifier    CHARACTER VARYING(100),
+  cred_type     SMALLINT,
+  cred_sub_type SMALLINT,
   additional_fields jsonb,
-  primary key (account, identifier, cred_sub_type)
-);
+  PRIMARY KEY (account, identifier, cred_sub_type)
+)
