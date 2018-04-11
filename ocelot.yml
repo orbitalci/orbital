@@ -8,9 +8,10 @@ stages:
   - name: triggered
     trigger:
       branches:
-      - master
+      - creds_to_postgres
     script:
       - echo "this should only happen on master"
+      - cat ~/.docker/config.json
       - kubectl cluster-info
       - kubectl -n prod-eng get all
   - name: be_useful
