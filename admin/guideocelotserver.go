@@ -39,8 +39,10 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 	credWrapper := &models.CredWrapper{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_VCS, true)
 
-	if _, ok := err.(*storage.ErrNotFound); !ok {
-		return credWrapper, err
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); !ok {
+			return credWrapper, err
+		}
 	}
 
 	for _, v := range creds {
@@ -83,8 +85,10 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 	credWrapper := &models.RepoCredWrapper{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_REPO, true)
 
-	if _, ok := err.(*storage.ErrNotFound); !ok {
-		return credWrapper, err
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); !ok {
+			return credWrapper, err
+		}
 	}
 
 	for _, v := range creds {
