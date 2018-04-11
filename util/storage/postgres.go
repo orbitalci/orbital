@@ -782,7 +782,7 @@ func (p *PostgresStorage) RetrieveCred(subCredType pb.SubCredType, identifier, a
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	queryStr := `SELECT additional_fields FROM credentials WHERE (sub_cred_type,identifier,account)=($1,$2,$3)`
+	queryStr := `SELECT additional_fields FROM credentials WHERE (cred_sub_type,identifier,account)=($1,$2,$3)`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
@@ -809,7 +809,7 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	queryStr := `SELECT (additional_fields, identifier) FROM credentials WHERE (sub_cred_type,account)=($1,$2)`
+	queryStr := `SELECT (additional_fields, identifier) FROM credentials WHERE (cred_sub_type,account)=($1,$2)`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")

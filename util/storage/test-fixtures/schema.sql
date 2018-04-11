@@ -40,3 +40,13 @@ create table polling_repos (
   last_hashes jsonb default '{}',
   primary key (account, repo)
 );
+
+
+CREATE TABLE credentials (
+  id SERIAL PRIMARY KEY,
+  account character varying(100),
+  identifier character varying(100),
+  cred_type smallint,
+  cred_sub_type smallint,
+  additional_fields jsonb
+);
