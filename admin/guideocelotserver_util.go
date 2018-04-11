@@ -30,12 +30,12 @@ func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCS
 	}
 
 	config.BuildAndSetIdentifier()
-	err := gos.RemoteConfig.AddCreds(config)
+	err := gos.RemoteConfig.AddCreds(gos.Storage, config)
 	return err
 }
 
-func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, config adminModel.OcyCredder) error {
-	err := remoteConf.AddCreds(config)
+func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, store storage.CredTable, config adminModel.OcyCredder) error {
+	err := remoteConf.AddCreds(store, config)
 	return err
 }
 

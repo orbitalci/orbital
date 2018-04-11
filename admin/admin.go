@@ -39,7 +39,6 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 		return
 	}
 	defer store.Close()
-	configInstance.SetStorage(store)
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(), store)
 	//grpc server
 	con, err := net.Listen("tcp", ":"+port)
