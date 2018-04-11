@@ -81,7 +81,7 @@ type CVRemoteConfig interface {
 	SetVault(vault ocevault.Vaulty)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
 	CheckSSHKeyExists(path string) (error)
-	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType) (string, error)
+	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error)
 	InsecureCredStorage
 	HealthyMaintainer
 
@@ -93,7 +93,7 @@ type InsecureCredStorage interface {
 	GetAllCreds(store storage.CredTable, hideSecret bool) ([]pb.OcyCredder, error)
 	GetCred(store storage.CredTable, subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error)
 	GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error)
-	AddCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error)
+	AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error)
 }
 
 type NewCVRC interface {
@@ -193,8 +193,8 @@ func (rc *RemoteConfig) CheckSSHKeyExists(path string) (error) {
 }
 
 //GetPassword will return to you the vault password at specified path
-func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType) (string, error) {
-	authData, err := rc.Vault.GetUserAuthData(BuildCredPath(scType, acctName, ocyCredType))
+func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error) {
+	authData, err := rc.Vault.GetUserAuthData(BuildCredPath(scType, acctName, ocyCredType, identifier))
 	if err != nil {
 		return "", err
 	}
@@ -202,12 +202,12 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 }
 
 // AddRepoCreds adds repo integration creds to storage + vault
-func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
-	if err := store.InsertCred(anyCred); err != nil {
+func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error) {
+	if err := store.InsertCred(anyCred, overwriteOk); err != nil {
 		return err
 	}
 	if rc.Vault != nil {
-		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetType())
+		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetType(), anyCred.GetIdentifier())
 		secret := make(map[string]interface{})
 		secret["clientsecret"] = anyCred.GetClientSecret()
 		if _, err = rc.Vault.AddUserAuthData(path, secret); err != nil {
@@ -218,9 +218,9 @@ func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder)
 }
 
 
-func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName string, hideSecret bool) (secret string){
+func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName string, hideSecret bool, identifier string) (secret string){
 	if !hideSecret {
-		passcode, passErr := rc.GetPassword(subCredType, accountName, subCredType.Parent())
+		passcode, passErr := rc.GetPassword(subCredType, accountName, subCredType.Parent(), identifier)
 		if passErr != nil {
 			ocelog.IncludeErrField(passErr).Error()
 			secret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
@@ -238,7 +238,7 @@ func (rc *RemoteConfig) GetCred(store storage.CredTable, subCredType pb.SubCredT
 	if err != nil {
 		return nil, err
 	}
-	cred.SetSecret(rc.maybeGetPassword(subCredType, accountName, hideSecret))
+	cred.SetSecret(rc.maybeGetPassword(subCredType, accountName, hideSecret, identifier))
 	return cred, err
 }
 
@@ -249,7 +249,7 @@ func (rc *RemoteConfig) GetAllCreds(store storage.CredTable, hideSecret bool) ([
 	}
 	var allcreds []pb.OcyCredder
 	for _, cred := range creds {
-		sec := rc.maybeGetPassword(cred.GetSubType(), cred.GetAcctName(), hideSecret)
+		sec := rc.maybeGetPassword(cred.GetSubType(), cred.GetAcctName(), hideSecret, cred.GetIdentifier())
 		cred.SetSecret(sec)
 		allcreds = append(allcreds, cred)
 	}
@@ -263,7 +263,7 @@ func (rc *RemoteConfig) GetCredsByType(store storage.CredTable, ctype pb.CredTyp
 	}
 	var credsfortype []pb.OcyCredder
 	for _, cred := range creds {
-		sec := rc.maybeGetPassword(cred.GetSubType(), cred.GetAcctName(), hideSecret)
+		sec := rc.maybeGetPassword(cred.GetSubType(), cred.GetAcctName(), hideSecret, cred.GetIdentifier())
 		cred.SetSecret(sec)
 		credsfortype = append(credsfortype, cred)
 	}
@@ -280,7 +280,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	}
 	var credsForType []pb.OcyCredder
 	for _, cred := range creds {
-		sec := rc.maybeGetPassword(stype, accountName, hideSecret)
+		sec := rc.maybeGetPassword(stype, accountName, hideSecret, cred.GetIdentifier())
 		cred.SetSecret(sec)
 		credsForType = append(credsForType, cred)
 	}
