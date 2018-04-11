@@ -142,7 +142,7 @@ func GetBBConfig(remoteConfig cred.CVRemoteConfig, repoFullName string, checkout
 			return nil, "", err1
 		}
 		var err error
-		ocelog.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config, round %d", ind)
+		ocelog.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config")
 		bbHandler, token, err = handler.GetBitbucketClient(cfg)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error()
