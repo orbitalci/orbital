@@ -1,4 +1,4 @@
-package buildcreds
+package vcscreds
 
 import (
 	"github.com/hashicorp/consul/command/flags"

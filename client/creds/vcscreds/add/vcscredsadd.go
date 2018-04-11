@@ -52,6 +52,7 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.fileloc, "credfile-loc", "","Location of yaml file containing creds to upload")
 }
 
+//TODO: fix - this doesn't work
 func (c *cmd) runCredFileUpload(ctx context.Context) int {
 	credWrap := &models.CredWrapper{}
 	dese := deserialize.New()
@@ -95,6 +96,7 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 
 // seems really unlikely that hashicorps tool will fail, but this way if it does its all in one
 // function.
+//TODO: fix - this doesn't work
 func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.VCSCreds, errorConcat string) {
 	creds = &models.VCSCreds{}
 	var err error

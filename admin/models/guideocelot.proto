@@ -52,7 +52,9 @@ message BuildReq {
 }
 
 message AllCredsWrapper {
+    // @inject_tag: yaml:"repoCreds"
     RepoCredWrapper repoCreds = 1;
+    // @inject_tag: yaml:"vcsCreds"
     CredWrapper vcsCreds = 3;
 }
 
@@ -78,6 +80,7 @@ message VCSCreds {
     string acctName = 4;
     // @inject_tag: yaml:"sshFileLoc"
     string sshFileLoc = 6;
+    // @inject_tag: yaml:"type"
     CredType type = 9;
     // @inject_tag: yaml:"subType"
     SubCredType subType = 10;

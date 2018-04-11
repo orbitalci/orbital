@@ -151,8 +151,10 @@ func (m *BuildReq) GetBranch() string {
 }
 
 type AllCredsWrapper struct {
-	RepoCreds *RepoCredWrapper `protobuf:"bytes,1,opt,name=repoCreds" json:"repoCreds,omitempty"`
-	VcsCreds  *CredWrapper     `protobuf:"bytes,3,opt,name=vcsCreds" json:"vcsCreds,omitempty"`
+	// @inject_tag: yaml:"repoCreds"
+	RepoCreds *RepoCredWrapper `protobuf:"bytes,1,opt,name=repoCreds" json:"repoCreds,omitempty" yaml:"repoCreds"`
+	// @inject_tag: yaml:"vcsCreds"
+	VcsCreds *CredWrapper `protobuf:"bytes,3,opt,name=vcsCreds" json:"vcsCreds,omitempty" yaml:"vcsCreds"`
 }
 
 func (m *AllCredsWrapper) Reset()                    { *m = AllCredsWrapper{} }
@@ -233,8 +235,9 @@ type VCSCreds struct {
 	// @inject_tag: yaml:"acctName"
 	AcctName string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty" yaml:"acctName"`
 	// @inject_tag: yaml:"sshFileLoc"
-	SshFileLoc string   `protobuf:"bytes,6,opt,name=sshFileLoc" json:"sshFileLoc,omitempty" yaml:"sshFileLoc"`
-	Type       CredType `protobuf:"varint,9,opt,name=type,enum=models.CredType" json:"type,omitempty"`
+	SshFileLoc string `protobuf:"bytes,6,opt,name=sshFileLoc" json:"sshFileLoc,omitempty" yaml:"sshFileLoc"`
+	// @inject_tag: yaml:"type"
+	Type CredType `protobuf:"varint,9,opt,name=type,enum=models.CredType" json:"type,omitempty" yaml:"type"`
 	// @inject_tag: yaml:"subType"
 	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 }

@@ -53,7 +53,7 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
 		return 1
 	}
-	if err = dese.YAMLToProto(confFile, credWrap); err != nil {
+	if err = dese.YAMLToStruct(confFile, credWrap); err != nil {
 		c.UI.Error(fmt.Sprintf("Could not process file, please check documentation\nError: %s", err.Error()))
 		return 1
 	}
@@ -127,6 +127,7 @@ func (c *cmd) Help() string {
 	return help
 }
 
+//TODO: creds repo takes in different file than creds command??? it makes no sense
 const synopsis = "Add credentials via yaml file"
 const help = `
 Usage: ocelot creds add --credfile-loc ~/credfile-yaml.yaml

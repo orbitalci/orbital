@@ -3,7 +3,6 @@ package cred
 import (
 	"fmt"
 	"strconv"
-
 	"bitbucket.org/level11consulting/go-til/consul"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
@@ -165,8 +164,7 @@ func BuildCredKey(credType string, acctName string) string {
 // AddSSHKey adds repo ssh private key to vault at the usual vault path + /ssh
 func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
 	if rc.Vault != nil {
-		secret := make(map[string]interface{})
-		secret["sshKey"] = string(sshKeyFile)
+		secret := buildSecretPayload(string(sshKeyFile))
 		if _, err = rc.Vault.AddUserAuthData(path + "/ssh", secret); err != nil {
 			return
 		}
@@ -198,7 +196,12 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%v", authData["clientsecret"]), nil
+	secretData := authData["data"]
+	password, ok := secretData.(map[string]string)
+	if !ok {
+		return "", errors.New("Could not retrieve password from vault") //how is it that we can't cast to a map of string/string??
+	}
+	return fmt.Sprintf("%v", password["clientsecret"]), nil
 }
 
 // AddRepoCreds adds repo integration creds to storage + vault
@@ -206,10 +209,7 @@ func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder,
 	if rc.Vault != nil {
 		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetType(), anyCred.GetIdentifier())
 
-		dataWrapper := make(map[string]interface{})
-		secret := make(map[string]string)
-		secret["clientsecret"] = anyCred.GetClientSecret()
-		dataWrapper["data"] = secret
+		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
 			return
 		}
@@ -219,6 +219,16 @@ func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder,
 	}
 	return
 }
+
+//this builds the secret payload as accepted by vault docs here: https://www.vaultproject.io/api/secret/kv/kv-v2.html
+func buildSecretPayload(secret string) map[string]interface{} {
+	dataWrapper := make(map[string]interface{})
+	topSecret := make(map[string]string)
+	topSecret["clientsecret"] = secret
+	dataWrapper["data"] = topSecret
+	return dataWrapper
+}
+
 
 
 func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName string, hideSecret bool, identifier string) (secret string){

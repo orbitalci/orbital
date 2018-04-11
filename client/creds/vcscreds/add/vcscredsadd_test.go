@@ -54,6 +54,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
 				Type: 		   models.CredType_VCS,
+				SubType:       models.SubCredType_BITBUCKET,
 				SshFileLoc:   "THIS IS A TEST",
 			},
 		},

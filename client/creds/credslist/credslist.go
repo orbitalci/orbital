@@ -3,7 +3,7 @@ package credslist
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/list"
+	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds/list"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
 	"context"
 	"flag"

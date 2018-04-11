@@ -35,7 +35,8 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
-				Type:         "bitbucket",
+				Type:         models.CredType_VCS,
+				SubType: 	  models.SubCredType_BITBUCKET,
 				SshFileLoc:   "THIS IS A TEST",
 			},
 		},
@@ -45,9 +46,10 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:      map[string]string{"snapshot":"https://ocelot.perf/nexus-yo"},
+				RepoUrl:      "https://ocelot.perf/nexus-yo",
 				AcctName:     "jessishank",
-				Type:         "nexus",
+				Type: 	   	  models.CredType_REPO,
+				SubType:      models.SubCredType_NEXUS,
 			},
 		},
 	}
