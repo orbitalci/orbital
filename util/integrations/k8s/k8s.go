@@ -6,13 +6,14 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/integrations"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 )
 
 // GetKubeConfig will return a base64 encoded string of the kubeconfig
 // kubeconfig is only supported for ONE KUBECONFIG PER ACCOUNT for now.
-func GetKubeConfig(rc cred.CVRemoteConfig, accountName string) (string, error) {
+func GetKubeConfig(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 
-	credz, err := rc.GetCredsBySubTypeAndAcct(models.SubCredType_KUBECONF, accountName, false)
+	credz, err := rc.GetCredsBySubTypeAndAcct(store, models.SubCredType_KUBECONF, accountName, false)
 	if err != nil {
 		return "", err
 	}

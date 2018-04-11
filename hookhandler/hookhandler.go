@@ -48,7 +48,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	branch := repopush.Push.Changes[0].New.Name
 	//acctName := repopush.Repository.Owner.Username
 
-	buildConf, bbToken, err := build.GetBBConfig(ctx.GetRemoteConfig(), fullName, hash, ctx.GetDeserializer(), nil)
+	buildConf, bbToken, err := build.GetBBConfig(ctx.GetRemoteConfig(),ctx.GetStorage(), fullName, hash, ctx.GetDeserializer(), nil)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -80,7 +80,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	//acctName := pr.Pullrequest.Source.Repository.Owner.Username
 	branch := pr.Pullrequest.Source.Branch.Name
 
-	buildConf, bbToken, err := build.GetBBConfig(ctx.GetRemoteConfig(), fullName, hash, ctx.GetDeserializer(), nil)
+	buildConf, bbToken, err := build.GetBBConfig(ctx.GetRemoteConfig(), ctx.GetStorage(), fullName, hash, ctx.GetDeserializer(), nil)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {

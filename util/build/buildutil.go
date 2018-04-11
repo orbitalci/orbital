@@ -39,13 +39,13 @@ func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg stri
 }
 
 // GetVcsCreds will retrieve a VCSCred for account name / bitbucket vcs type
-func GetVcsCreds(repoFullName string, remoteConfig cred.CVRemoteConfig) (*models.VCSCreds, error) {
+func GetVcsCreds(store storage.CredTable, repoFullName string, remoteConfig cred.CVRemoteConfig) (*models.VCSCreds, error) {
 	acctName, _ := GetAcctRepo(repoFullName)
 	identifier, err := models.CreateVCSIdentifier(models.SubCredType_BITBUCKET, acctName)
 	if err != nil {
 		return nil, err
 	}
-	bbCreds, err := remoteConfig.GetCred(models.SubCredType_BITBUCKET, identifier, acctName, false)
+	bbCreds, err := remoteConfig.GetCred(store, models.SubCredType_BITBUCKET, identifier, acctName, false)
 	if err != nil {
 		return nil, err
 	}
@@ -129,12 +129,12 @@ func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string
 //GetBBConfig returns the protobuf ocelot.yaml, a valid bitbucket token belonging to that repo, and possible err.
 //If a VcsHandler is passed, this method will use the existing handler to retrieve the bb config. In that case,
 //***IT WILL NOT RETURN A VALID TOKEN FOR YOU - ONLY BUILD CONFIG***
-func GetBBConfig(remoteConfig cred.CVRemoteConfig, repoFullName string, checkoutCommit string, deserializer *deserialize.Deserializer, vcsHandler handler.VCSHandler) (*pb.BuildConfig, string, error) {
+func GetBBConfig(remoteConfig cred.CVRemoteConfig, store storage.CredTable, repoFullName string, checkoutCommit string, deserializer *deserialize.Deserializer, vcsHandler handler.VCSHandler) (*pb.BuildConfig, string, error) {
 	var bbHandler handler.VCSHandler
 	var token string
 
 	if vcsHandler == nil {
-		cfg, err1 := GetVcsCreds(repoFullName, remoteConfig)
+		cfg, err1 := GetVcsCreds(store, repoFullName, remoteConfig)
 		if err1 != nil {
 			ocelog.IncludeErrField(err1).Error()
 			return nil, "", err1
@@ -217,7 +217,7 @@ func tellWerker(buildConf *pb.BuildConfig,
 		Branch:       branch,
 		BuildConf:    buildConf,
 		VcsToken:     bbToken,
-		VcsType:      "bitbucket",
+		VcsType:      pb.SubCredType_BITBUCKET,
 		FullName:     fullName,
 		Id:           dbid,
 	}

@@ -38,17 +38,17 @@ func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCre
 
 func (x SubCredType) Parent() CredType {
 	switch {
-	case contains(x, k8sSubTypes):
+	case Contains(x, k8sSubTypes):
 		return CredType_K8S
-	case contains(x, vcsSubTypes):
+	case Contains(x, vcsSubTypes):
 		return CredType_VCS
-	case contains(x, repoSubTypes):
+	case Contains(x, repoSubTypes):
 		return CredType_REPO
 	}
 	return -1
 }
 
-func contains(credType SubCredType, types []SubCredType) bool {
+func Contains(credType SubCredType, types []SubCredType) bool {
 	for _, typ := range types {
 		if credType == typ {
 			return true
@@ -80,7 +80,7 @@ func (i *SubCredType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func CreateVCSIdentifier(sct SubCredType, acctName string) (string, error){
-	if !contains(sct, CredType_VCS.Subtypes()) {
+	if !Contains(sct, CredType_VCS.Subtypes()) {
 		return "", errors.New("must be of type CredType_VCS")
 	}
 	identifier := SubCredType_name[int32(sct)] + "/" + acctName

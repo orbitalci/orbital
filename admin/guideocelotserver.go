@@ -37,7 +37,7 @@ type guideOcelotServer struct {
 
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	credWrapper := &models.CredWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(models.CredType_VCS, true)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_VCS, true)
 	if err != nil {
 		return credWrapper, err
 	}
@@ -73,7 +73,7 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(models.CredType_REPO, true)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_REPO, true)
 	if err != nil {
 		return credWrapper, err
 	}
@@ -245,7 +245,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
-	cfg, err := build.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
+	cfg, err := build.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return err
@@ -302,7 +302,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s...", buildReq.AcctRepo)))
-	buildConf, _, err := build.GetBBConfig(g.RemoteConfig, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
+	buildConf, _, err := build.GetBBConfig(g.RemoteConfig, g.Storage, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get bb config")
 		return err
@@ -354,7 +354,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.Repo
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.Internal, "couldn't create identifier")
 	}
-	bbCreds, err := g.RemoteConfig.GetCred(bb, identifier, repoAcct.Account, true)
+	bbCreds, err := g.RemoteConfig.GetCred(g.Storage, bb, identifier, repoAcct.Account, true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return &empty.Empty{}, status.Error(codes.NotFound, "credentials not found")

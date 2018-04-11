@@ -75,7 +75,7 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 				//after creds are successfully uploaded via file, upload ssh key file accordingly
 				if len(configVal.SshFileLoc) > 0 {
 					c.UI.Info(fmt.Sprintf("\tdetected ssh file location: %s", configVal.SshFileLoc))
-					commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, configVal.AcctName, configVal.Type, configVal.SshFileLoc)
+					commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, configVal.AcctName, configVal.SubType, configVal.SshFileLoc)
 				}
 			}
 		}

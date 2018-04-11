@@ -78,17 +78,21 @@ type CVRemoteConfig interface {
 	SetConsul(consul *consul.Consulet)
 	GetVault() ocevault.Vaulty
 	SetVault(vault ocevault.Vaulty)
-	GetCredsByType(ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error)
-	GetAllCreds(hideSecret bool) ([]pb.OcyCredder, error)
-	GetCred(subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error)
-	GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error)
-	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType) (string, error)
-	AddCreds(anyCred pb.OcyCredder) (err error)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
 	CheckSSHKeyExists(path string) (error)
+	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType) (string, error)
+	InsecureCredStorage
 	HealthyMaintainer
 
 	StorageCred
+}
+
+type InsecureCredStorage interface {
+	GetCredsByType(store storage.CredTable, ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error)
+	GetAllCreds(store storage.CredTable, hideSecret bool) ([]pb.OcyCredder, error)
+	GetCred(store storage.CredTable, subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error)
+	GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error)
+	AddCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error)
 }
 
 type NewCVRC interface {
@@ -99,8 +103,9 @@ type NewCVRC interface {
 type RemoteConfig struct {
 	Consul *consul.Consulet
 	Vault  ocevault.Vaulty
-	Store  storage.CredTable
 }
+
+
 
 func (rc *RemoteConfig) GetConsul() *consul.Consulet {
 	return rc.Consul
@@ -196,8 +201,8 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 }
 
 // AddRepoCreds adds repo integration creds to storage + vault
-func (rc *RemoteConfig) AddCreds(anyCred pb.OcyCredder) (err error) {
-	if err := rc.Store.InsertCred(anyCred); err != nil {
+func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
+	if err := store.InsertCred(anyCred); err != nil {
 		return err
 	}
 	if rc.Vault != nil {
@@ -227,8 +232,8 @@ func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName
 	return secret
 }
 
-func (rc *RemoteConfig) GetCred(subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error) {
-	cred, err := rc.Store.RetrieveCred(subCredType, identifier, accountName)
+func (rc *RemoteConfig) GetCred(store storage.CredTable, subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error) {
+	cred, err := store.RetrieveCred(subCredType, identifier, accountName)
 	if err != nil {
 		return nil, err
 	}
@@ -236,8 +241,8 @@ func (rc *RemoteConfig) GetCred(subCredType pb.SubCredType, identifier, accountN
 	return cred, err
 }
 
-func (rc *RemoteConfig) GetAllCreds(hideSecret bool) ([]pb.OcyCredder, error) {
-	creds, err := rc.Store.RetrieveAllCreds()
+func (rc *RemoteConfig) GetAllCreds(store storage.CredTable, hideSecret bool) ([]pb.OcyCredder, error) {
+	creds, err := store.RetrieveAllCreds()
 	if err != nil {
 		return creds, err
 	}
@@ -250,8 +255,8 @@ func (rc *RemoteConfig) GetAllCreds(hideSecret bool) ([]pb.OcyCredder, error) {
 	return allcreds, nil
 }
 
-func (rc *RemoteConfig) GetCredsByType(ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error) {
-	creds, err := rc.Store.RetrieveCreds(ctype)
+func (rc *RemoteConfig) GetCredsByType(store storage.CredTable, ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error) {
+	creds, err := store.RetrieveCreds(ctype)
 	if err != nil {
 		return creds, err
 	}
@@ -264,8 +269,8 @@ func (rc *RemoteConfig) GetCredsByType(ctype pb.CredType, hideSecret bool) ([]pb
 	return credsfortype, nil
 }
 
-func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error) {
-	creds, err := rc.Store.RetrieveCredBySubTypeAndAcct(stype, accountName)
+func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error) {
+	creds, err := store.RetrieveCredBySubTypeAndAcct(stype, accountName)
 	if err != nil {
 		return nil, err
 	}

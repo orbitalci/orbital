@@ -37,14 +37,24 @@ enum StageResultVal {
     PASS = 0;
     FAIL = 1;
 }
+// WARNING, THIS IS COPIED FROM guideocelot.proto
+enum SubCredType {
+    BITBUCKET = 0;
+    GITHUB = 1;
 
+    NEXUS = 2;
+    MAVEN = 3;
+
+    DOCKER = 4;
+    KUBECONF = 5;
+}
 
 message WerkerTask {
     string vaultToken = 1;
     string checkoutHash = 2;
     BuildConfig buildConf = 3;
     string vcsToken = 4;
-    string vcsType = 5;
+    SubCredType vcsType = 9;
     string fullName = 6;
     int64 id = 7; // database id
     string branch = 8;

@@ -84,9 +84,9 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat st
 	if creds.Username, err = UI.Ask("Username: "); err != nil {
 		errorConcat += "\n" + "Username Err: " +  err.Error()
 	}
-	if creds.Type, err = UI.Ask("Type (nexus|maven|docker): "); err != nil {
-		errorConcat += "\n" + "Type Err: " +  err.Error()
-	}
+	//if creds.Type, err = UI.Ask("Type (nexus|maven|docker): "); err != nil {
+	//	errorConcat += "\n" + "Type Err: " +  err.Error()
+	//}
 	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
 		errorConcat += "\n" + "Account Name Err: " +  err.Error()
 	}

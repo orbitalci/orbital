@@ -4,6 +4,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/integrations"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,9 +23,9 @@ type dockerConfigJson struct {
 // GetDockerConfig will find docker creds associated with accountName in the CVRemoteConfig, and will
 // generate a config.json authentication file for docker. The contents will be returned base64 encoded for
 // easy passing as a command line argument.
-func GetDockerConfig(rc cred.CVRemoteConfig, accountName string) (string, error) {
+func GetDockerConfig(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 	//GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool)
-	credz, err := rc.GetCredsBySubTypeAndAcct(models.SubCredType_DOCKER, accountName, false)
+	credz, err := rc.GetCredsBySubTypeAndAcct(store, models.SubCredType_DOCKER, accountName, false)
 	if err != nil {
 		return "", err
 	}

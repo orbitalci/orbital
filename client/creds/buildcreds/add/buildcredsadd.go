@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/cli"
 	"io/ioutil"
+	"strings"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -79,7 +80,7 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 			//after creds are successfully uploaded via file, upload ssh key file
 			if len(configVal.SshFileLoc) > 0 {
 				c.UI.Info(fmt.Sprintf("\tdetected ssh file location: %s", configVal.SshFileLoc))
-				commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, configVal.AcctName, configVal.Type, configVal.SshFileLoc)
+				commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, configVal.AcctName, configVal.SubType, configVal.SshFileLoc)
 			}
 		}
 	}
@@ -97,9 +98,9 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.VCSCreds, errorConcat str
 	if creds.ClientId, err = UI.Ask("Client ID: "); err != nil {
 		errorConcat += "\n" + "Client ID Err: " +  err.Error()
 	}
-	if creds.Type, err = UI.Ask("Type: "); err != nil {
-		errorConcat += "\n" + "Type Err: " +  err.Error()
-	}
+	//if creds.Type, err = UI.Ask("Type: "); err != nil {
+	//	errorConcat += "\n" + "Type Err: " +  err.Error()
+	//}
 	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
 		errorConcat += "\n" + "Account Name Err: " +  err.Error()
 	}
@@ -142,7 +143,11 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	if c.acctName != "" && c.sshKeyFile != "" && c.buildType != "" {
-		return commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, c.acctName, c.buildType, c.sshKeyFile)
+		subType, ok:= models.SubCredType_value[strings.ToUpper(c.buildType)]
+		if !ok {
+			c.UI.Error("-type must be vcs type, ie bitbucket")
+		}
+		return commandhelper.UploadSSHKeyFile(ctx, c.UI, c.config.Client, c.acctName, models.SubCredType(subType), c.sshKeyFile)
 	} else {
 		c.UI.Error("-acctname, -sshfile-loc and -type must be passed together, -acctname should correspond with the account you'd like the ssh key file to be associated with, and -type should correspond with your acctname")
 		return 1

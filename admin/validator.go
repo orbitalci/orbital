@@ -26,8 +26,8 @@ func (adminValidator AdminValidator) ValidateConfig(adminCreds *models.VCSCreds)
 	if len(adminCreds.TokenURL) == 0 {
 		return errors.New("tokenURL is required")
 	}
-	switch adminCreds.Type {
-	case "bitbucket":
+	switch adminCreds.SubType {
+	case models.SubCredType_BITBUCKET:
 		return nil
 	default:
 		return errors.New("creds must be one of the following type: bitbucket")
@@ -56,8 +56,8 @@ func (RepoValidator) ValidateConfig(repoCreds *models.RepoCreds) error {
 	if len(repoCreds.Username) == 0 {
 		return errors.New("field username is required")
 	}
-	switch repoCreds.Type {
-	case "nexus", "maven", "docker":
+	switch {
+	case models.Contains(repoCreds.SubType, models.CredType_REPO.Subtypes()):
 		return nil
 	default:
 		return errors.New("repo creds must be one of the following type: nexus | maven | docker")

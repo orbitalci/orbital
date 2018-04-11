@@ -161,7 +161,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 
 	// do integration setup stage
 	start := time.Now()
-	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, builder, w.WerkConf.RemoteConfig, w.infochan)
+	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, w.Store, builder, w.WerkConf.RemoteConfig, w.infochan)
 	dura := time.Now().Sub(start)
 	if err := storeStageToDb(w.Store, werk.Id, integrationResult, start, dura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
@@ -284,7 +284,7 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 }
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
-func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
+func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTask, store storage.CredTable, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
 	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
 	id = bldr.GetContainerId()
@@ -293,20 +293,20 @@ func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTa
 	result.Messages = setupMessages
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
-		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, accountName, stage, result.Messages, logout)
+		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, accountName, stage, result.Messages, store, logout)
 		if result.Status == pb.StageResultVal_FAIL {
 			return
 		}
 	}
-	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, accountName, stage, result.Messages, logout)
+	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, accountName, stage, result.Messages, store, logout)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
-	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download", rc, accountName, stage, result.Messages, logout)
+	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download", rc, accountName, stage, result.Messages, store, logout)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
-	result = bldr.IntegrationSetup(ctx, k8s.GetKubeConfig, bldr.InstallKubeconfig, "kubeconfig render", rc, accountName, stage, result.Messages, logout)
+	result = bldr.IntegrationSetup(ctx, k8s.GetKubeConfig, bldr.InstallKubeconfig, "kubeconfig render", rc, accountName, stage, result.Messages, store, logout)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
@@ -314,7 +314,7 @@ func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTa
 	return
 }
 
-func (w *WorkerMsgHandler) returnWerkerPort(rc cred.CVRemoteConfig, accountName string) (string, error) {
+func (w *WorkerMsgHandler) returnWerkerPort(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 	ocelog.Log().Debug("returning werker port")
 	return  w.WerkConf.ServicePort, nil
 }

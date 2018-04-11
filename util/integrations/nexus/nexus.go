@@ -43,8 +43,8 @@ var settingsXml = `<?xml version="1.0" encoding="UTF-8"?>
 
 // GetSettingsXml will render and return a maven settings.xml with credentials correlating to the accountName provided
 // todo: include project name for further filtering
-func GetSettingsXml(rc cred.CVRemoteConfig, accountName string) (string, error) {
-	credz, err := rc.GetCredsBySubTypeAndAcct(models.SubCredType_NEXUS, accountName, false)
+func GetSettingsXml(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
+	credz, err := rc.GetCredsBySubTypeAndAcct(store, models.SubCredType_NEXUS, accountName, false)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return "", errors.New("no credentials were found")
