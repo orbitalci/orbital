@@ -81,6 +81,7 @@ type CVRemoteConfig interface {
 	GetCredsByType(ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error)
 	GetAllCreds(hideSecret bool) ([]pb.OcyCredder, error)
 	GetCred(subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error)
+	GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error)
 	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType) (string, error)
 	AddCreds(anyCred pb.OcyCredder) (err error)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
@@ -263,6 +264,19 @@ func (rc *RemoteConfig) GetCredsByType(ctype pb.CredType, hideSecret bool) ([]pb
 	return credsfortype, nil
 }
 
+func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error) {
+	creds, err := rc.Store.RetrieveCredBySubTypeAndAcct(stype, accountName)
+	if err != nil {
+		return nil, err
+	}
+	var credsForType []pb.OcyCredder
+	for _, cred := range creds {
+		sec := rc.maybeGetPassword(stype, accountName, hideSecret)
+		cred.SetSecret(sec)
+		credsForType = append(credsForType, cred)
+	}
+	return credsForType, nil
+}
 
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 	kv, err := rc.Consul.GetKeyValue(StorageType)

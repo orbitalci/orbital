@@ -245,10 +245,21 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
-	cfg, err := build.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
+	cfgs, err := build.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return err
+	}
+	if len(cfgs) > 1 {
+		stream.Send(RespWrap(fmt.Sprintf("Found multiple VCS credentials belonging to %s, will iterate over them", buildReq.AcctRepo)))
+		for ind, cfg := range cfgs {
+
+		}
+	} else if len(cfgs) == 1 {
+		stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, md.CHECKMARK)))
+	} else {
+		stream.Send(RespWrap("No VCS Credentials found"))
+		return status.Error(codes.NotFound, fmt.Sprintf("Unable to retrieve the bitbucket client config for %s. No VCS credentials found.", buildReq.AcctRepo))
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, md.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
