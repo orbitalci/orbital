@@ -12,8 +12,7 @@ stages:
     script:
       - echo "this should only happen on master"
       - cat ~/.docker/config.json
-      - kubectl cluster-info
-      - kubectl -n prod-eng get all
+      - if [ -f ~/.kube/config ]; then kubectl cluster-info; else echo "no kubeconfig"; fi
   - name: be_useful
     script:
       - echo "building $BUILD_ID with has $GIT_HASH"

@@ -1,7 +1,13 @@
 repo:
-- username: level11consulting
-  password: SUPER-SECRET-BOYYY
-  identifier: dockerNexus
+- username: admin
+  password: admin123
+  identifier: docker-nexus
   repoUrl: docker.metaverse.l11.com
-  acctName: jessishank
+  acctName: level11consulting
+  subType: docker
+- username: jessishank
+  password: first-envoy
+  identifier: docker-jessi
+  repoUrl: https://index.docker.io/v1/
+  acctName: level11consulting
   subType: docker
