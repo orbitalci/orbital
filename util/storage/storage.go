@@ -60,6 +60,7 @@ type CredTable interface {
 	InsertCred(credder pb.OcyCredder) error
 	// retrieve ordered by cred type
 	RetrieveAllCreds() ([]pb.OcyCredder, error)
+	// todo: take out all this pb.CredType stuff, can just call Parent() on subcredType. realized too late :"(
 	RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, error)
 	RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error)
 	RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error)
