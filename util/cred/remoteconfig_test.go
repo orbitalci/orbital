@@ -44,12 +44,12 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		Type:         pb.CredType_VCS,
 		SubType:      pb.SubCredType_GITHUB,
 	}
-	err := testRemoteConfig.AddCreds(pg, adminConfig)
+	err := testRemoteConfig.AddCreds(pg, adminConfig, true)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("first adding creds to consul", nil, err))
 	}
 
-	testPassword, err := testRemoteConfig.GetPassword(pb.SubCredType_GITHUB, adminConfig.AcctName, pb.CredType_VCS)
+	testPassword, err := testRemoteConfig.GetPassword(pb.SubCredType_GITHUB, adminConfig.AcctName, pb.CredType_VCS, "123")
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("retrieving password", nil, err))
 	}
@@ -113,7 +113,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		SubType:	   pb.SubCredType_BITBUCKET,
 	}
 
-	err = testRemoteConfig.AddCreds(pg, secondConfig)
+	err = testRemoteConfig.AddCreds(pg, secondConfig, true)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("adding second set of creds to consul", nil, err))
 	}
@@ -164,7 +164,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		SubType: pb.SubCredType_NEXUS,
 	}
 
-	err = testRemoteConfig.AddCreds(pg, repoCreds)
+	err = testRemoteConfig.AddCreds(pg, repoCreds, true)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("adding repo creds", nil, err))
 	}
@@ -220,13 +220,13 @@ func TestRemoteConfig_GetStorageType(t *testing.T) {
 
 
 func Test_BuildCredPath(t *testing.T) {
-	expected := "creds/vcs/banana/bitbucket"
-	live := BuildCredPath(pb.SubCredType_BITBUCKET, "banana", pb.CredType_VCS)
+	expected := "creds/vcs/banana/bitbucket/derp"
+	live := BuildCredPath(pb.SubCredType_BITBUCKET, "banana", pb.CredType_VCS, "derp")
 	if live != expected {
 		t.Error(test.StrFormatErrors("vcs cred path", expected, live))
 	}
-	expectedRepo := "creds/repo/jessjess/nexus"
-	liveRepo := BuildCredPath(pb.SubCredType_NEXUS, "jessjess", pb.CredType_REPO)
+	expectedRepo := "creds/repo/jessjess/nexus/id123"
+	liveRepo := BuildCredPath(pb.SubCredType_NEXUS, "jessjess", pb.CredType_REPO, "id123")
 	if liveRepo != expectedRepo {
 		t.Error(test.StrFormatErrors("repo cred path", expectedRepo, liveRepo))
 	}

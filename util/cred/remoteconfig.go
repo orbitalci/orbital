@@ -197,11 +197,12 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 		return "", err
 	}
 	secretData := authData["data"]
-	password, ok := secretData.(map[string]string)
+	password, ok := secretData.(map[string]interface{})
 	if !ok {
 		return "", errors.New("Could not retrieve password from vault") //how is it that we can't cast to a map of string/string??
 	}
-	return fmt.Sprintf("%v", password["clientsecret"]), nil
+	passwordStr := password["clientsecret"].(string)
+	return passwordStr, nil
 }
 
 // AddRepoCreds adds repo integration creds to storage + vault

@@ -48,4 +48,4 @@ CREATE TABLE credentials (
   cred_sub_type SMALLINT,
   additional_fields jsonb,
   PRIMARY KEY (account, identifier, cred_sub_type)
-)
+);
