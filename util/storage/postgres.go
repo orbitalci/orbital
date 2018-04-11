@@ -710,6 +710,52 @@ func (p *PostgresStorage) InsertCred(credder pb.OcyCredder, overwriteOk bool) er
 	return err
 }
 
+func (p *PostgresStorage) UpdateCred(credder pb.OcyCredder) error {
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
+	if invalid := credder.ValidateForInsert(); invalid != nil {
+		return invalid
+	}
+	moreFields, err := credder.CreateAdditionalFields()
+	if err != nil {
+		return errors.New("could not create additional_fields column, error: " + err.Error())
+	}
+	queryStr := `UPDATE credentials SET additional_fields=$1 WHERE (account,identifier,cred_sub_type)=($2,$3,$4)`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return  err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(moreFields, credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType())
+	return err
+}
+
+
+func (p *PostgresStorage) CredExists(credder pb.OcyCredder) (bool, error) {
+	if err := p.Connect(); err != nil {
+		return false, errors.New("could not connect to postgres: " + err.Error())
+	}
+	var count int64
+	queryStr := `select count(*) from credentials where (account,identifier,cred_sub_type) = ($1,$2,$3);`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return false, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType()).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	if count == 0 {
+		return false, nil
+	} else {
+		return true, nil
+	}
+}
+
 func (p *PostgresStorage) RetrieveAllCreds() ([]pb.OcyCredder, error) {
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
