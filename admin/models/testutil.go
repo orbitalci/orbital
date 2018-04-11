@@ -30,6 +30,7 @@ func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty
 
 func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	in.SshFileLoc = "THIS IS A TEST"
+	in.Type = CredType_VCS
 	f.creds.Vcs = append(f.creds.Vcs, in)
 	return &empty.Empty{}, nil
 }
@@ -54,6 +55,7 @@ func (f *fakeGuideOcelotClient) GetRepoCreds(ctx context.Context, in *empty.Empt
 
 func (f *fakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	f.repoCreds.Repo = append(f.repoCreds.Repo, in)
+	in.Type = CredType_REPO
 	return &empty.Empty{}, nil
 }
 
