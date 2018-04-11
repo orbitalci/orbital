@@ -47,7 +47,6 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 		},
 	}
 	var args []string
-	//cmd.runCredFileUpload(ctx)
 	if exit := cmd.Run(args); exit != 0 {
 		t.Fatal("should return exit 0")
 	}

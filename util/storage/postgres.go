@@ -788,10 +788,10 @@ func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, 
 		creds = append(creds, cred)
 	}
 	if rows.Err() == sql.ErrNoRows {
-		return nil, CredNotFound("all accounts", credType.String())
+		return creds, CredNotFound("all accounts", credType.String())
 	}
 	if len(creds) == 0 {
-		return nil, CredNotFound("all accounts", credType.String())
+		return creds, CredNotFound("all accounts", credType.String())
 	}
 	return creds, rows.Err()
 }

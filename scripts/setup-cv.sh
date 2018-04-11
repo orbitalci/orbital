@@ -8,4 +8,5 @@ consul kv put config/ocelot/postgres/location localhost
 consul kv put config/ocelot/postgres/port 5432
 consul kv put config/ocelot/postgres/username postgres
 
-vault write secret/config/ocelot/postgres clientsecret=mysecretpassword
+#vault write secret/config/ocelot/postgres clientsecret=mysecretpassword
+vault kv put secret/config/ocelot/postgres clientsecret=mysecretpassword
