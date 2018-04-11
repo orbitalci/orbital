@@ -46,9 +46,6 @@ var settingsXml = `<?xml version="1.0" encoding="UTF-8"?>
 func GetSettingsXml(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 	credz, err := rc.GetCredsBySubTypeAndAcct(store, models.SubCredType_NEXUS, accountName, false)
 	if err != nil {
-		if _, ok := err.(*storage.ErrNotFound); ok {
-			return "", errors.New("no credentials were found")
-		}
 		return "", err
 	}
 	var repoCreds []*models.RepoCreds

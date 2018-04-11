@@ -8,6 +8,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
 	pb "bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/util/integrations"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/pkg/errors"
 )
@@ -272,6 +273,9 @@ func (rc *RemoteConfig) GetCredsByType(store storage.CredTable, ctype pb.CredTyp
 func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error) {
 	creds, err := store.RetrieveCredBySubTypeAndAcct(stype, accountName)
 	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return nil, integrations.NCErr(fmt.Sprintf("credentials not found for account %s and integration %s", accountName, "kubeconf"))
+		}
 		return nil, err
 	}
 	var credsForType []pb.OcyCredder
