@@ -95,7 +95,7 @@ func (m *VCSCreds) SetSecret(sec string) {
 }
 
 // identifier for vcs creds will always be "<BITBUCKET|GITHUB|..>/<ACCTNAME>"
-func (m *VCSCreds) BuildAndSetIdentifier() string {
+func (m *VCSCreds) BuildIdentifier() string {
 	// can ignore error here, because VcsCreds will always have subtype in VCS
 	identifier, _ := CreateVCSIdentifier(m.SubType, m.AcctName)
 	return identifier

@@ -29,7 +29,7 @@ func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCS
 		return errors.New("currently only bitbucket is supported")
 	}
 
-	config.BuildAndSetIdentifier()
+	config.Identifier = config.BuildIdentifier()
 	err := gos.RemoteConfig.AddCreds(gos.Storage, config)
 	return err
 }
