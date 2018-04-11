@@ -52,7 +52,6 @@ func Test_executeTempl(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(template)
 	if expected != template {
 		t.Error("should be the same?")
 	}

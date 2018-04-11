@@ -10,20 +10,18 @@ import (
 )
 
 // GetKubeConfig will return a base64 encoded string of the kubeconfig
+// kubeconfig is only supported for ONE KUBECONFIG PER ACCOUNT for now.
 func GetKubeConfig(rc cred.CVRemoteConfig, accountName string) (string, error) {
-	k8s := models.NewK8sCreds()
-	credz, err := rc.GetCredAt(fmt.Sprintf(cred.Kubernetes, accountName), false, k8s)
+
+	credz, err := rc.GetCredsBySubTypeAndAcct(models.SubCredType_KUBECONF, accountName, false)
 	if err != nil {
 		return "", err
 	}
-	k8sCreds, ok := credz[cred.BuildCredKey("k8s", accountName)]
-	if !ok {
-		return "", integrations.NCErr("no creds found")
-	}
-	k8sCred, ok := k8sCreds.(*models.K8SCreds)
+	
+	kubeCred, ok := credz[0].(*models.K8SCreds)
 	if !ok {
 		return "", errors.New("could not cast to k8s cred")
 	}
-	configEncoded := integrations.StrToBase64(k8sCred.K8SContents)
+	configEncoded := integrations.StrToBase64(kubeCred.K8SContents)
 	return configEncoded, nil
 }
