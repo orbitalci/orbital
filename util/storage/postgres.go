@@ -820,6 +820,7 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 	var creds []pb.OcyCredder
 	for rows.Next() {
@@ -827,6 +828,9 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 		var identifier string
 		err = rows.Scan(&addtlFields, &identifier)
 		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, CredNotFound(acctName, scredType.String())
+			}
 			return nil, err
 		}
 		credder := scredType.Parent().SpawnCredStruct(acctName, identifier, scredType)
@@ -835,7 +839,10 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 		}
 		creds = append(creds, credder)
 	}
-	return creds, nil
+	if rows.Err() == sql.ErrNoRows {
+		return nil, CredNotFound(acctName, scredType.String())
+	}
+	return creds, rows.Err()
 }
 
 func (p *PostgresStorage) StorageType() string {
