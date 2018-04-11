@@ -217,14 +217,20 @@ func (m *SSHKeyWrapper) GetSubType() SubCredType {
 }
 
 type VCSCreds struct {
-	ClientId     string      `protobuf:"bytes,1,opt,name=clientId" json:"clientId,omitempty"`
-	ClientSecret string      `protobuf:"bytes,2,opt,name=clientSecret" json:"clientSecret,omitempty"`
-	Identifier   string      `protobuf:"bytes,8,opt,name=identifier" json:"identifier,omitempty"`
-	TokenURL     string      `protobuf:"bytes,3,opt,name=tokenURL" json:"tokenURL,omitempty"`
-	AcctName     string      `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty"`
-	SshFileLoc   string      `protobuf:"bytes,6,opt,name=sshFileLoc" json:"sshFileLoc,omitempty"`
-	Type         CredType    `protobuf:"varint,9,opt,name=type,enum=models.CredType" json:"type,omitempty"`
-	SubType      SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty"`
+	// @inject_tag: yaml:"clientId"
+	ClientId string `protobuf:"bytes,1,opt,name=clientId" json:"clientId,omitempty" yaml:"clientId"`
+	// @inject_tag: yaml:"clientSecret"
+	ClientSecret string `protobuf:"bytes,2,opt,name=clientSecret" json:"clientSecret,omitempty" yaml:"clientSecret"`
+	Identifier   string `protobuf:"bytes,8,opt,name=identifier" json:"identifier,omitempty"`
+	// @inject_tag: yaml:"tokenURL"
+	TokenURL string `protobuf:"bytes,3,opt,name=tokenURL" json:"tokenURL,omitempty" yaml:"tokenURL"`
+	// @inject_tag: yaml:"acctName"
+	AcctName string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty" yaml:"acctName"`
+	// @inject_tag: yaml:"sshFileLoc"
+	SshFileLoc string   `protobuf:"bytes,6,opt,name=sshFileLoc" json:"sshFileLoc,omitempty" yaml:"sshFileLoc"`
+	Type       CredType `protobuf:"varint,9,opt,name=type,enum=models.CredType" json:"type,omitempty"`
+	// @inject_tag: yaml:"subType"
+	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 }
 
 func (m *VCSCreds) Reset()                    { *m = VCSCreds{} }
@@ -305,13 +311,17 @@ func (m *RepoCredWrapper) GetRepo() []*RepoCreds {
 }
 
 type RepoCreds struct {
-	Username   string      `protobuf:"bytes,1,opt,name=username" json:"username,omitempty"`
-	Password   string      `protobuf:"bytes,2,opt,name=password" json:"password,omitempty"`
-	RepoUrl    string      `protobuf:"bytes,6,opt,name=repoUrl" json:"repoUrl,omitempty"`
-	Identifier string      `protobuf:"bytes,8,opt,name=identifier" json:"identifier,omitempty"`
-	AcctName   string      `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty"`
-	Type       CredType    `protobuf:"varint,9,opt,name=type,enum=models.CredType" json:"type,omitempty"`
-	SubType    SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty"`
+	Username string `protobuf:"bytes,1,opt,name=username" json:"username,omitempty"`
+	Password string `protobuf:"bytes,2,opt,name=password" json:"password,omitempty"`
+	// @inject_tag: yaml:"repoUrl"
+	RepoUrl    string `protobuf:"bytes,6,opt,name=repoUrl" json:"repoUrl,omitempty" yaml:"repoUrl"`
+	Identifier string `protobuf:"bytes,8,opt,name=identifier" json:"identifier,omitempty"`
+	// @inject_tag: yaml:"acctName"
+	AcctName string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty" yaml:"acctName"`
+	// @inject_tag: yaml:"type"
+	Type CredType `protobuf:"varint,9,opt,name=type,enum=models.CredType" json:"type,omitempty" yaml:"type"`
+	// @inject_tag: yaml:"subType"
+	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 }
 
 func (m *RepoCreds) Reset()                    { *m = RepoCreds{} }
@@ -369,11 +379,12 @@ func (m *RepoCreds) GetSubType() SubCredType {
 }
 
 type K8SCreds struct {
-	AcctName    string      `protobuf:"bytes,1,opt,name=acctName" json:"acctName,omitempty"`
-	K8SContents string      `protobuf:"bytes,2,opt,name=k8sContents" json:"k8sContents,omitempty"`
-	Identifier  string      `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
-	Type        CredType    `protobuf:"varint,4,opt,name=type,enum=models.CredType" json:"type,omitempty"`
-	SubType     SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty"`
+	AcctName    string   `protobuf:"bytes,1,opt,name=acctName" json:"acctName,omitempty"`
+	K8SContents string   `protobuf:"bytes,2,opt,name=k8sContents" json:"k8sContents,omitempty"`
+	Identifier  string   `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
+	Type        CredType `protobuf:"varint,4,opt,name=type,enum=models.CredType" json:"type,omitempty"`
+	// @inject_tag: yaml:"subType"
+	SubType SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 }
 
 func (m *K8SCreds) Reset()                    { *m = K8SCreds{} }

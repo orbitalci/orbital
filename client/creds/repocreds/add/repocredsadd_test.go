@@ -38,13 +38,16 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:      map[string]string{"snapshot":"https://ocelot.perf/nexus-yo"},
+				RepoUrl:      "https://ocelot.perf/nexus-yo",
+				Identifier:   "snapshot",
 				AcctName:     "jessishank",
-				Type:         "nexus",
+				Type:         models.CredType_REPO,
+				SubType:      models.SubCredType_NEXUS,
 			},
 		},
 	}
 	var args []string
+	//cmd.runCredFileUpload(ctx)
 	if exit := cmd.Run(args); exit != 0 {
 		t.Fatal("should return exit 0")
 	}
@@ -73,9 +76,11 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:      map[string]string{"snapshot":"https://ocelot.perf/nexus-yo"},
+				RepoUrl:     "https://ocelot.perf/nexus-yo",
+				Identifier:  "snapshots",
 				AcctName:     "jessishank",
-				Type:         "nexus",
+				Type:         models.CredType_REPO,
+				SubType:      models.SubCredType_NEXUS,
 			},
 		},
 	}

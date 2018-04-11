@@ -48,7 +48,7 @@ func (m *RepoCreds) CreateAdditionalFields() ([]byte, error) {
 
 func (m *RepoCreds) UnmarshalAdditionalFields(fields []byte) error {
 	unmarshaled := make(map[string]string)
-	if err := json.Unmarshal(fields, unmarshaled); err != nil {
+	if err := json.Unmarshal(fields, &unmarshaled); err != nil {
 		return err
 	}
 	var ok bool
@@ -70,14 +70,14 @@ func NewVCSCreds() *VCSCreds {
 func (m *VCSCreds) CreateAdditionalFields() ([]byte, error) {
 	fields := make(map[string]string)
 	fields["tokenUrl"] = m.TokenURL
-	fields["cliendId"] = m.ClientId
+	fields["clientId"] = m.ClientId
 	bytes, err := json.Marshal(fields)
 	return bytes, err
 }
 
 func (m *VCSCreds) UnmarshalAdditionalFields(fields []byte) error {
 	unmarshaled := make(map[string]string)
-	if err := json.Unmarshal(fields, unmarshaled); err != nil {
+	if err := json.Unmarshal(fields, &unmarshaled); err != nil {
 		return err
 	}
 	var ok bool

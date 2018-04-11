@@ -55,7 +55,7 @@ func (c *cmd) Run(args []string) int {
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	k8cred := &models.K8SCreds{}
+	k8cred := &models.K8SCreds{Type:models.CredType_K8S, SubType:models.SubCredType_KUBECONF}
 	if c.account == "ERROR" {
 		c.UI.Error("-acct was not provided")
 		return 1

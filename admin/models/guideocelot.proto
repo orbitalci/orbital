@@ -67,13 +67,19 @@ message SSHKeyWrapper {
 }
 
 message VCSCreds {
+    // @inject_tag: yaml:"clientId"
     string clientId = 1;
+    // @inject_tag: yaml:"clientSecret"
     string clientSecret = 2;
     string identifier = 8;
+    // @inject_tag: yaml:"tokenURL"
     string tokenURL = 3;
+    // @inject_tag: yaml:"acctName"
     string acctName = 4;
+    // @inject_tag: yaml:"sshFileLoc"
     string sshFileLoc = 6;
     CredType type = 9;
+    // @inject_tag: yaml:"subType"
     SubCredType subType = 10;
 }
 
@@ -102,10 +108,14 @@ enum SubCredType {
 message RepoCreds {
     string username = 1;
     string password = 2;
+    // @inject_tag: yaml:"repoUrl"
     string repoUrl= 6;
     string identifier = 8;
+    // @inject_tag: yaml:"acctName"
     string acctName = 4;
+    // @inject_tag: yaml:"type"
     CredType type = 9;
+    // @inject_tag: yaml:"subType"
     SubCredType subType = 10;
 
 }
@@ -115,6 +125,7 @@ message K8sCreds {
     string k8sContents = 2;
     string identifier = 3;
     CredType type = 4;
+    // @inject_tag: yaml:"subType"
     SubCredType subType = 5;
 
 }

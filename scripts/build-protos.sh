@@ -17,6 +17,8 @@ cd ..
 # ===============
 cd admin
 ./build-protos.sh
+# inject our custom tags into build protobuf
+protoc-go-inject-tag -input=models/guideocelot.pb.go
 cd ..
 # ===============
 

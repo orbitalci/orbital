@@ -1,6 +1,9 @@
 package models
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 var (
 	vcsSubTypes = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}
@@ -57,7 +60,36 @@ func Contains(credType SubCredType, types []SubCredType) bool {
 	return false
 }
 
+func (i *SubCredType) MarshalJSON() ([]byte, error) {
+	return []byte(strings.ToLower(i.String())), nil
+}
 
+func (i *SubCredType) UnmarshalJSON(b []byte) error {
+	name := string(b)
+	typ, ok := SubCredType_value[name]
+	if !ok {
+		return errors.New("not in subcredtype map")
+	}
+	*i = SubCredType(typ)
+	return nil
+}
+
+//
+//func (this Stuff) UnmarshalJSON(b []byte) error {
+//	var stuff map[string]string
+//	err := json.Unmarshal(b, &stuff)
+//	if err != nil {
+//		return err
+//	}
+//	for key, value := range stuff {
+//		numericKey, err := strconv.Atoi(key)
+//		if err != nil {
+//			return err
+//		}
+//		this[numericKey] = value
+//	}
+//	return nil
+//}
 // MarshalYAML implements a YAML Marshaler for SubCredType
 func (i SubCredType) MarshalYAML() (interface{}, error) {
 	return i.String(), nil
@@ -71,7 +103,7 @@ func (i *SubCredType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	var err error
-	sct, ok := SubCredType_value[s]
+	sct, ok := SubCredType_value[strings.ToUpper(s)]
 	if !ok {
 		return errors.New("not found in SubCredType_value map")
 	}

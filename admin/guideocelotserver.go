@@ -62,6 +62,7 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 }
 
 func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
+	credentials.Type = models.CredType_VCS
 	err := g.AdminValidator.ValidateConfig(credentials)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed vcs creds validation! error: %s", err.Error())
@@ -84,6 +85,7 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 }
 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
+	creds.Type = models.CredType_REPO
 	err := g.RepoValidator.ValidateConfig(creds)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed repo creds validation! error: %s", err.Error())
