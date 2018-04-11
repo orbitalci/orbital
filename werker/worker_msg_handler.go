@@ -298,6 +298,7 @@ func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTa
 			return
 		}
 	}
+
 	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, accountName, stage, result.Messages, store, logout)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
