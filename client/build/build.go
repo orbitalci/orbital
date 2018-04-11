@@ -69,7 +69,6 @@ func (c *cmd) Run(args []string) int {
 		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
 	}
-
 	if err := c.DetectHash(c.UI); err != nil {
 		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
@@ -106,7 +105,7 @@ func (c *cmd) Run(args []string) int {
 
 	err = c.HandleStreaming(c.UI, stream)
 	if err != nil {
-		c.UI.Error(err.Error())
+		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
 	}
 
