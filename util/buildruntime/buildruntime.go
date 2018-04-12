@@ -96,6 +96,7 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*mo
 				rt[fullHash].GrpcPort = string(pair.Value)
 			case "werker_ws_port":
 				// don't use this right now
+				rt[fullHash].WsPort = string(pair.Value)
 			}
 		}
 	}
