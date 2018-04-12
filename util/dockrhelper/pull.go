@@ -10,6 +10,10 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 )
+
+// for testing
+var pulledByApi bool
+
 func RobustImagePull(imageName string) error {
 	// try pulling the image through the api
 	ctx := context.Background()
@@ -19,8 +23,10 @@ func RobustImagePull(imageName string) error {
 	}
 	_, err = clie.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err == nil {
+		pulledByApi = true
 		return nil
 	}
+	pulledByApi = false
 	// if couldn't pull image through ui, try just calling docker
 	cmd := exec.Command("/bin/sh", "-c", "command -v docker")
 	if err := cmd.Run(); err != nil {
