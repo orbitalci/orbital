@@ -14,6 +14,11 @@ import (
 // for testing
 var pulledByApi bool
 
+// RobustImagePull will attempt to use the docker api to pull an image
+//	if it is not found via the api, it will attempt to use the docker client to pull the image, as that way will
+//  pull in authentication from linux/mac/whatever keychain. The API proved useless in this case, as all that is
+//  in the client code and it pulled in way too much garbage code from docker go api
+//  anyone can feel free to prove me wrong, but github.com/moby/moby has me at my wits'o end
 func RobustImagePull(imageName string) error {
 	// try pulling the image through the api
 	ctx := context.Background()
