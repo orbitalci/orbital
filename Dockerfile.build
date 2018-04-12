@@ -11,7 +11,7 @@ RUN apk --update --no-cache add git protobuf-dev ca-certificates openssh python 
 
 WORKDIR /go/src/bitbucket.org/level11consulting/ocelot/
 COPY . .
-RUN ./build-protos.sh
+RUN scripts/build-protos.sh
 
 RUN mkdir /root/.ssh
 
