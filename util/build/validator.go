@@ -1,11 +1,10 @@
 package build
 
 import (
-	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"errors"
-	"context"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/api/types"
+
+	pb "bitbucket.org/level11consulting/ocelot/protos"
+	"bitbucket.org/level11consulting/ocelot/util/dockrhelper"
 	"github.com/mitchellh/cli"
 )
 
@@ -52,20 +51,14 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 	if UI != nil {
 		UI.Info("Connecting to docker to check for image validity..." )
 	}
-	// validate can pull image
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		return errors.New("could not connect to docker to check for image validity, **WARNING THIS MEANS YOUR BUILD MIGHT FAIL IN THE SETUP STAGE**")
-	}
-
-	_, err = cli.ImagePull(ctx, config.Image, types.ImagePullOptions{})
-	if err != nil {
-		return errors.New("an error has occurred while trying to pull for image: " + config.Image + ". Full error: " + err.Error())
-	}
-
+	err := dockrhelper.RobustImagePull(config.Image)
 	if UI != nil {
-		UI.Info(config.Image + " exists \u2713")
+		if err != nil {
+			UI.Error(err.Error())
+			return err
+		} else  {
+			UI.Info(config.Image + " exists \u2713")
+		}
 	}
-	return nil
+	return err
 }
