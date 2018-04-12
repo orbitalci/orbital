@@ -28,7 +28,7 @@ import (
 
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
-func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string) {
+func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) {
 	//initializes our "context" - guideOcelotServer
 	//store := cred.GetOcelotStorage()
 	store, err := configInstance.GetOcelotStorage()
@@ -52,7 +52,9 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 		log.IncludeErrField(err).Fatal("could not register endpoints")
 	}
 	mux.Handle("/", gw)
-	go http.ListenAndServe(":8080", allowCORS(mux))
+	// uncomment if you want swagger to work
+	//go http.ListenAndServe(":" + httpPort, allowCORS(mux))
+	go http.ListenAndServe(":" + httpPort, mux)
 
 	//grpc server
 	con, err := net.Listen("tcp", ":"+port)
@@ -108,22 +110,6 @@ func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, p)
 }
 
-// see full example at: https://github.com/philips/grpc-gateway-example
-
-// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
-// connections or otherHandler otherwise. Copied from cockroachdb.
-func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// This is a partial recreation of gRPC's internal checks https://github.com/grpc/grpc-go/pull/514/files#diff-95e9a25b738459a2d3030e1e6fa2a718R61
-		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			log.Log().Debug("serving grpc guuuuurl")
-			grpcServer.ServeHTTP(w, r)
-		} else {
-			log.Log().Debug("serving HTTTTTTTTTTPPPPPP")
-			otherHandler.ServeHTTP(w, r)
-		}
-	})
-}
 
 //TODO: how to propagate error codes up????
 //TODO: cast this back to MY error type and set status

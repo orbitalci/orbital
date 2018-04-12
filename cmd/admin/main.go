@@ -13,13 +13,15 @@ import (
 func main() {
 	//load properties
 	var port string
+	var gatewayPort string
 	var consulHost string
 	var consulPort int
 	var logLevel string
 	var insecure bool
 
 	adminFlags := flag.NewFlagSet("admin", flag.ExitOnError)
-	adminFlags.StringVar(&port, "port", "10000", "admin server port")
+	adminFlags.StringVar(&port, "port", "10000", "admin grpc server port")
+	adminFlags.StringVar(&gatewayPort, "http-port", "11000", "admin http server port")
 	adminFlags.StringVar(&consulHost, "consul-host", "localhost", "consul host")
 	adminFlags.IntVar(&consulPort, "consul-port", 8500, "consul port")
 	adminFlags.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
@@ -42,6 +44,6 @@ func main() {
 	} else {
 		security = secure_grpc.NewLeSecure()
 	}
-	admin.Start(configInstance, security, serverRunsAt, port)
+	admin.Start(configInstance, security, serverRunsAt, port, gatewayPort)
 
 }
