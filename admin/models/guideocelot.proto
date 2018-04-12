@@ -20,16 +20,21 @@ service GuideOcelot {
 			body: "*"
 		};
     }
-
+    rpc UpdateVCSCreds (VCSCreds) returns (google.protobuf.Empty) {}
+    rpc VCSCredExists (VCSCreds) returns (Exists) {}
     rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
     rpc SetVCSPrivateKey (SSHKeyWrapper) returns (google.protobuf.Empty) {}
 
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {}
     rpc SetRepoCreds (RepoCreds) returns (google.protobuf.Empty) {}
+    rpc UpdateRepoCreds (RepoCreds) returns (google.protobuf.Empty) {}
+    rpc RepoCredExists (RepoCreds) returns (Exists) {}
 
     rpc SetK8sCreds (K8sCreds) returns (google.protobuf.Empty) {}
     rpc GetK8sCreds (google.protobuf.Empty) returns (K8sCredsWrapper) {}
+    rpc UpdateK8sCreds (K8sCreds) returns (google.protobuf.Empty) {}
+    rpc K8SCredExists (K8sCreds) returns (Exists) {}
 
     rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
 
@@ -216,4 +221,8 @@ message PollRequest {
 
 message Polls {
     repeated PollRequest polls = 1;
+}
+
+message Exists {
+    bool exists = 1;
 }

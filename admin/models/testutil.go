@@ -3,6 +3,7 @@ package models
 import (
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"context"
+	"github.com/go-errors/errors"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"io"
@@ -35,10 +36,27 @@ func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, o
 	return &empty.Empty{}, nil
 }
 
+func (f *fakeGuideOcelotClient) UpdateVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (f *fakeGuideOcelotClient) VCSCredExists(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*Exists, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (f *fakeGuideOcelotClient) SetK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	f.k8sCreds.K8SCreds = append(f.k8sCreds.K8SCreds, in)
 	return &empty.Empty{}, nil
 }
+
+func (f *fakeGuideOcelotClient) UpdateK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return &empty.Empty{}, errors.New("not implemented")
+}
+
+func (f *fakeGuideOcelotClient) K8SCredExists (ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*Exists, error) {
+	return nil, errors.New("not implemented")
+}
+
 
 func (f *fakeGuideOcelotClient) GetK8SCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*K8SCredsWrapper, error) {
 	return f.k8sCreds, nil
@@ -57,6 +75,14 @@ func (f *fakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds,
 	f.repoCreds.Repo = append(f.repoCreds.Repo, in)
 	in.Type = CredType_REPO
 	return &empty.Empty{}, nil
+}
+
+func (f *fakeGuideOcelotClient) UpdateRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return &empty.Empty{}, errors.New("not implemented")
+}
+
+func (f *fakeGuideOcelotClient) RepoCredExists(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*Exists, error) {
+	return nil, errors.New("not implemented")
 }
 
 func (f *fakeGuideOcelotClient) CheckConn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {

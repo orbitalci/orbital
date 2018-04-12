@@ -52,7 +52,7 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.fileloc, "credfile-loc", "","Location of yaml file containing creds to upload")
 }
 
-//TODO: fix - this doesn't work
+//TODO: fix - this doesn't work - yes it does?
 func (c *cmd) runCredFileUpload(ctx context.Context) int {
 	credWrap := &models.CredWrapper{}
 	dese := deserialize.New()
@@ -68,16 +68,18 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 	for _, cred := range credWrap.Vcs {
 		cred.Type = models.CredType_VCS
 	}
-	var errOccured bool
 	if len(credWrap.Vcs) == 0 {
 		c.UI.Error("Did not read any credentials! Is your yaml formatted correctly?")
 		return 1
 	}
 	for _, configVal := range credWrap.Vcs {
-		_, err = c.config.Client.SetVCSCreds(ctx, configVal)
+		err = uploadCredential(ctx, c.config.Client, c.UI, configVal)
 		if err != nil {
+			if _, ok := err.(*commandhelper.DontOverwrite); ok {
+				return 0
+			}
 			c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", configVal.AcctName, err.Error()))
-			errOccured = true
+			return 1
 		} else {
 			c.UI.Info(fmt.Sprintf("Added credentials for account: %s", configVal.AcctName))
 
@@ -88,10 +90,37 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 			}
 		}
 	}
-	if errOccured {
-		return 1
-	}
 	return 0
+}
+
+
+// uploadCredential will check if credential already exists. if it does, it will ask if the user wishes to overwrite. if the user responds YES, the credential will be updated.
+// if it does not exist, will be inserted as normal.
+func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI cli.Ui, cred *models.VCSCreds) error {
+	exists, err := client.VCSCredExists(ctx, cred)
+	if err != nil {
+		return err
+	}
+
+	if exists.Exists {
+		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s and Vcs Type %s already exists. Do you want to overwrite? " +
+			"Only a YES will continue with update, otherwise the client will exit. ", cred.AcctName, strings.ToLower(cred.SubType.String())))
+		if err != nil {
+			return err
+		}
+		if update != "YES" {
+			UI.Info("Did not recieve a YES at the prompt, will not overwrite. Exiting.")
+			return &commandhelper.DontOverwrite{}
+		}
+		_, err = client.UpdateVCSCreds(ctx, cred)
+		if err != nil {
+			return err
+		}
+		UI.Error("Succesfully update VCS Credential.")
+		return nil
+	}
+	_, err = client.SetVCSCreds(ctx, cred)
+	return err
 }
 
 // seems really unlikely that hashicorps tool will fail, but this way if it does its all in one
@@ -103,9 +132,15 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.VCSCreds, errorConcat str
 	if creds.ClientId, err = UI.Ask("Client ID: "); err != nil {
 		errorConcat += "\n" + "Client ID Err: " +  err.Error()
 	}
-	//if creds.Type, err = UI.Ask("Type: "); err != nil {
-	//	errorConcat += "\n" + "Type Err: " +  err.Error()
-	//}
+	var unCastedSt string
+	if unCastedSt, err = UI.Ask("Type: "); err != nil {
+		errorConcat += "\n" + "Type Err: " +  err.Error()
+	}
+	if int32SubType, ok := models.SubCredType_value[strings.ToUpper(unCastedSt)]; !ok {
+		errorConcat += "\n Type must be bitbucket|github"
+	} else {
+		creds.SubType = models.SubCredType(int32SubType)
+	}
 	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
 		errorConcat += "\n" + "Account Name Err: " +  err.Error()
 	}
@@ -124,7 +159,10 @@ func (c *cmd) runStdinUpload(ctx context.Context) int {
 		c.UI.Error(fmt.Sprint("Error recieving input: ", errConcat))
 		return 1
 	}
-	if _, err := c.config.Client.SetVCSCreds(ctx, creds); err != nil {
+	if  err := uploadCredential(ctx, c.config.Client, c.UI, creds); err != nil {
+		if _, ok := err.(*commandhelper.DontOverwrite); ok {
+			return 0
+		}
 		c.UI.Error(fmt.Sprintf("Could not add credentials for account: %s \nError: %s", creds.AcctName, err.Error()))
 		return 1
 	}

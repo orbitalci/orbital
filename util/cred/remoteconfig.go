@@ -93,6 +93,7 @@ type InsecureCredStorage interface {
 	GetCred(store storage.CredTable, subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error)
 	GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error)
 	AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error)
+	UpdateCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error)
 }
 
 type NewCVRC interface {
@@ -214,12 +215,30 @@ func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder,
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
 			return
 		}
+	} else {
+		return errors.New("remote config not properly initialized, cannot add creds")
 	}
 	if err := store.InsertCred(anyCred, overwriteOk); err != nil {
 		return err
 	}
 	return
 }
+
+func (rc *RemoteConfig) UpdateCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
+	if rc.Vault != nil {
+		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetType(), anyCred.GetIdentifier())
+
+		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
+		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
+			return
+		}
+	} else {
+		return errors.New("remote config not properly initialized, cannot add creds")
+	}
+	err = store.UpdateCred(anyCred)
+	return
+}
+
 
 //this builds the secret payload as accepted by vault docs here: https://www.vaultproject.io/api/secret/kv/kv-v2.html
 func buildSecretPayload(secret string) map[string]interface{} {

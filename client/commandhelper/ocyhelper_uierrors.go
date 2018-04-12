@@ -25,3 +25,10 @@ Please see the documentation about how to add a repository in Ocelot.`
 		oh.WriteUi(ui.Error, fmt.Sprintf(unknownErr, oh.Account, oh.Repo, err.Message()))
 	}
 }
+
+type DontOverwrite struct {
+}
+
+func (d *DontOverwrite) Error() string {
+	return "chose not to overwrite"
+}

@@ -81,6 +81,16 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 	return &empty.Empty{}, nil
 }
 
+func (g *guideOcelotServer) UpdateVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
+	credentials.Identifier = credentials.BuildIdentifier()
+	return g.updateAnyCred(ctx, credentials)
+}
+
+func (g *guideOcelotServer) VCSCredExists(ctx context.Context, credentials *models.VCSCreds) (*models.Exists, error) {
+	credentials.Identifier = credentials.BuildIdentifier()
+	return g.checkAnyCredExists(ctx, credentials)
+}
+
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_REPO, true)
@@ -113,6 +123,14 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.Repo
 	return &empty.Empty{}, nil
 }
 
+func (g *guideOcelotServer) UpdateRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
+	return g.updateAnyCred(ctx, creds)
+}
+
+func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *models.RepoCreds) (*models.Exists, error) {
+	return g.checkAnyCredExists(ctx, creds)
+}
+
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
 	// no validation necessary, its a file upload
 	err := SetupRCCCredentials(g.RemoteConfig,g.Storage, creds)
@@ -135,6 +153,33 @@ func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty)
 		credWrapper.K8SCreds = append(credWrapper.K8SCreds, v.(*models.K8SCreds))
 	}
 	return credWrapper, nil
+}
+
+func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
+	return g.updateAnyCred(ctx, creds)
+}
+
+func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *models.K8SCreds) (*models.Exists, error) {
+	return g.checkAnyCredExists(ctx, creds)
+}
+
+
+func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds models.OcyCredder) (*empty.Empty, error) {
+	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
+		if _, ok := err.(*models.ValidationErr); ok {
+			return &empty.Empty{}, status.Errorf(codes.FailedPrecondition, "%s cred failed validation. Errors are: %s", creds.GetType(), err.Error())
+		}
+		return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())
+	}
+	return &empty.Empty{}, nil
+}
+
+func (g *guideOcelotServer) checkAnyCredExists(ctx context.Context, creds models.OcyCredder) (*models.Exists, error) {
+	exists, err := g.Storage.CredExists(creds)
+	if err != nil {
+		return nil, status.Errorf(codes.Unavailable, "Unable to reach cred table to check if cred %s/%s/%s exists. Error: %s", creds.GetAcctName(), creds.GetSubType().String(), creds.GetIdentifier(), err.Error())
+	}
+	return &models.Exists{Exists:exists}, nil
 }
 
 func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (*models.AllCredsWrapper, error) {
