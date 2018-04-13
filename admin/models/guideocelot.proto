@@ -102,7 +102,7 @@ service GuideOcelot {
 			get: "/v1/summary"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description = "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.";
+            description: "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.";
         };
     }
     rpc GetStatus (StatusQuery) returns (Status) {

@@ -135,6 +135,7 @@
     },
     "/v1/creds/repo": {
       "get": {
+        "description": "Get all known repo integration credentials.",
         "operationId": "GetRepoCreds",
         "responses": {
           "200": {
@@ -149,6 +150,7 @@
         ]
       },
       "post": {
+        "description": "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker.",
         "operationId": "SetRepoCreds",
         "responses": {
           "200": {
@@ -217,6 +219,7 @@
     },
     "/v1/creds/vcs/ssh": {
       "post": {
+        "description": "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository.",
         "operationId": "SetVCSPrivateKey",
         "responses": {
           "200": {
@@ -243,6 +246,7 @@
     },
     "/v1/poll": {
       "get": {
+        "description": "list all repositories that are being polled for changes",
         "operationId": "ListPolledRepos",
         "responses": {
           "200": {
@@ -257,6 +261,7 @@
         ]
       },
       "delete": {
+        "description": "delete polling for a repo. account and repo are required.",
         "operationId": "DeletePollRepo",
         "responses": {
           "200": {
@@ -298,7 +303,7 @@
     },
     "/v1/status": {
       "get": {
-        "description": "GetStatus will return the status of a specific build. Hierarchy for key to lookup with: if hash supplied, will only search by hash. If acctName and repoName are supplied and not hash, it will be used as a key for looking up status. If only partialRepo is given in the request, ocelot will attempt to find a match and return the latest build stage details for that.",
+        "description": "GetStatus will return the status of a specific build. Hierarchy for key to lookup with: if hash supplied, will only search by hash. If acctName and repoName are supplied and not hash, \nit will be used as a key for looking up status. If only partialRepo is given in the request, ocelot will attempt to find a match and return the latest build stage details for that.",
         "operationId": "GetStatus",
         "responses": {
           "200": {
@@ -345,6 +350,7 @@
     },
     "/v1/summary": {
       "get": {
+        "description": "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.",
         "operationId": "LastFewSummaries",
         "responses": {
           "200": {
@@ -382,7 +388,7 @@
     },
     "/v1/watch": {
       "post": {
-        "description": "watch will set up a webhook for the given repo/account. repo/account fields required, limit is not.",
+        "description": "watch will set up a webhook for the given repo/account. all fields required.",
         "operationId": "WatchRepo",
         "responses": {
           "200": {
@@ -409,6 +415,7 @@
     },
     "/v1/werker/loc": {
       "get": {
+        "description": "get network location of werker that is currrently ",
         "operationId": "FindWerker",
         "responses": {
           "200": {
