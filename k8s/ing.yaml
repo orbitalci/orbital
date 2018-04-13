@@ -19,7 +19,7 @@ spec:
       - path: /
         backend:
           serviceName: ocelot-admin-svc
-          servicePort: 10000
+          servicePort: http
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress

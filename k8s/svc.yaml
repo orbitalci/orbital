@@ -28,6 +28,10 @@ spec:
     - port: 10000
       targetPort: 10000
       protocol: TCP
+      name: grpc
+    - port: 11000
+      targetPort: 11000
+      protocol: TCP
       name: http
   selector:
     app: admin-ocelot

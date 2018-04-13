@@ -13,6 +13,27 @@ spec:
     - port: {{ .Values.admin.service.port }}
       nodePort: {{.Values.admin.service.nodePort}}
       protocol: TCP
+      name: grpc
+  selector:
+    app: admin-{{ template "ocelot.name" . }}
+    release: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ocelot-admin-svc
+  namespace: prod-eng
+  # annotations:
+  #   prometheus.io/scrape: "true"
+spec:
+  ports:
+    - port: 10000
+      targetPort: 10000
+      protocol: TCP
+      name: grpc
+    - port: 11000
+      targetPort: 11000
+      protocol: TCP
       name: http
   selector:
     app: admin-{{ template "ocelot.name" . }}

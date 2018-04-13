@@ -32,7 +32,7 @@ spec:
       #     secretName: metaverse-secret
       containers:
       - name: admin-ocelot
-        image: docker.metaverse.l11.com/ocelot-admin:2955507
+        image: docker.metaverse.l11.com/ocelot-admin:gateway
         imagePullPolicy: Always
         volumeMounts:
           - name: privkey-volume
@@ -41,6 +41,9 @@ spec:
             name: docker-sock-volume
         ports:
         - containerPort: 10000
+          name: grpc
+        - containerPort: 11000
+          name: http
         env:
           - name: CONSUL_HOST
             valueFrom:
@@ -94,7 +97,7 @@ spec:
           type: File
       containers:
       - name:  hookhandler-ocelot
-        image: docker.metaverse.l11.com/ocelot-hookhandler:2955507
+        image: docker.metaverse.l11.com/ocelot-hookhandler:jsnfx
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock
@@ -151,7 +154,7 @@ spec:
           type: File
       containers:
       - name:  poller-ocelot
-        image: docker.metaverse.l11.com/ocelot-poller:2955507
+        image: docker.metaverse.l11.com/ocelot-poller:jsnfx
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /var/run/docker.sock
