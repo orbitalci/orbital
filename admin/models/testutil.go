@@ -3,9 +3,9 @@ package models
 import (
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"context"
-	"github.com/go-errors/errors"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"fmt"
 	"io"
 )
 //type GuideOcelotClient interface {
@@ -31,17 +31,27 @@ func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty
 
 func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	in.SshFileLoc = "THIS IS A TEST"
-	in.Type = CredType_VCS
 	f.creds.Vcs = append(f.creds.Vcs, in)
 	return &empty.Empty{}, nil
 }
 
 func (f *fakeGuideOcelotClient) UpdateVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
-	return nil, errors.New("not implemented")
+	for _, cred := range f.creds.Vcs {
+		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
+			fmt.Println("setting cred")
+			cred = in
+		}
+	}
+	return nil, nil
 }
 
 func (f *fakeGuideOcelotClient) VCSCredExists(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*Exists, error) {
-	return nil, errors.New("not implemented")
+	for _, cred := range f.creds.Vcs {
+		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
+			return &Exists{Exists:true}, nil
+		}
+	}
+	return &Exists{Exists:false}, nil
 }
 
 func (f *fakeGuideOcelotClient) SetK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
@@ -50,11 +60,22 @@ func (f *fakeGuideOcelotClient) SetK8SCreds(ctx context.Context, in *K8SCreds, o
 }
 
 func (f *fakeGuideOcelotClient) UpdateK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
-	return &empty.Empty{}, errors.New("not implemented")
+	for _, cred := range f.k8sCreds.K8SCreds {
+		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
+			fmt.Println("setting cred")
+			cred = in
+		}
+	}
+	return nil, nil
 }
 
 func (f *fakeGuideOcelotClient) K8SCredExists (ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*Exists, error) {
-	return nil, errors.New("not implemented")
+	for _, cred := range f.k8sCreds.K8SCreds {
+		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
+			return &Exists{Exists:true}, nil
+		}
+	}
+	return &Exists{Exists:false}, nil
 }
 
 
@@ -73,16 +94,27 @@ func (f *fakeGuideOcelotClient) GetRepoCreds(ctx context.Context, in *empty.Empt
 
 func (f *fakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	f.repoCreds.Repo = append(f.repoCreds.Repo, in)
-	in.Type = CredType_REPO
+	in.SubType = SubCredType_NEXUS
 	return &empty.Empty{}, nil
 }
 
 func (f *fakeGuideOcelotClient) UpdateRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
-	return &empty.Empty{}, errors.New("not implemented")
+	for _, cred := range f.repoCreds.Repo {
+		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
+			fmt.Println("setting cred")
+			cred = in
+		}
+	}
+	return nil, nil
 }
 
 func (f *fakeGuideOcelotClient) RepoCredExists(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*Exists, error) {
-	return nil, errors.New("not implemented")
+	for _, cred := range f.repoCreds.Repo {
+		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
+			return &Exists{Exists:true}, nil
+		}
+	}
+	return &Exists{Exists:false}, nil
 }
 
 func (f *fakeGuideOcelotClient) CheckConn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
@@ -235,7 +267,7 @@ func (t *testBuildRuntime) CreateBuildClient() (protobuf.BuildClient, error) {
 func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 	for ind, cred := range credWrapA.Vcs {
 		credB := credWrapB.Vcs[ind]
-		if cred.Type != credB.Type {
+		if cred.SubType != credB.SubType {
 			return false
 		}
 		if cred.AcctName != credB.AcctName {
@@ -260,7 +292,7 @@ func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 func CompareRepoCredWrappers(repoWrapA *RepoCredWrapper, repoWrapB *RepoCredWrapper) bool {
 	for ind, cred := range repoWrapA.Repo {
 		credB := repoWrapB.Repo[ind]
-		if cred.Type != credB.Type {
+		if cred.SubType != credB.SubType {
 			return false
 		}
 		if cred.Username != credB.Username {

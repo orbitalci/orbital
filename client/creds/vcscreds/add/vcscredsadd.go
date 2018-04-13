@@ -65,9 +65,6 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		c.UI.Error(fmt.Sprintf("Could not process file, please check documentation\nError: %s", err.Error()))
 		return 1
 	}
-	for _, cred := range credWrap.Vcs {
-		cred.Type = models.CredType_VCS
-	}
 	if len(credWrap.Vcs) == 0 {
 		c.UI.Error("Did not read any credentials! Is your yaml formatted correctly?")
 		return 1

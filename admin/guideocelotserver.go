@@ -47,7 +47,7 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 
 	for _, v := range creds {
 		vcsCred := v.(*models.VCSCreds)
-		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.Type, v.GetIdentifier())
+		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.SubType.Parent(), v.GetIdentifier())
 		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
 		if err != nil {
 			vcsCred.SshFileLoc = "\033[0;33mNo SSH Key\033[0m"
@@ -65,7 +65,9 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 }
 
 func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
-	credentials.Type = models.CredType_VCS
+	if credentials.SubType.Parent() != models.CredType_VCS {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of vcs type: " + strings.Join(models.CredType_VCS.SubtypesString(), " | "))
+	}
 	err := g.AdminValidator.ValidateConfig(credentials)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed vcs creds validation! error: %s", err.Error())
@@ -108,7 +110,9 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 }
 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
-	creds.Type = models.CredType_REPO
+	if creds.SubType.Parent() != models.CredType_REPO {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of repo type: " + strings.Join(models.CredType_REPO.SubtypesString(), " | "))
+	}
 	err := g.RepoValidator.ValidateConfig(creds)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "failed repo creds validation! error: %s", err.Error())
@@ -132,6 +136,9 @@ func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *models.Re
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
+	if creds.SubType.Parent() != models.CredType_K8S {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of k8s type: " + strings.Join(models.CredType_K8S.SubtypesString(), " | "))
+	}
 	// no validation necessary, its a file upload
 	err := SetupRCCCredentials(g.RemoteConfig,g.Storage, creds)
 	if _, ok := err.(*models.ValidationErr); ok {
@@ -167,7 +174,7 @@ func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *models.K8S
 func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds models.OcyCredder) (*empty.Empty, error) {
 	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
 		if _, ok := err.(*models.ValidationErr); ok {
-			return &empty.Empty{}, status.Errorf(codes.FailedPrecondition, "%s cred failed validation. Errors are: %s", creds.GetType(), err.Error())
+			return &empty.Empty{}, status.Errorf(codes.FailedPrecondition, "%s cred failed validation. Errors are: %s", creds.GetSubType().Parent(), err.Error())
 		}
 		return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())
 	}

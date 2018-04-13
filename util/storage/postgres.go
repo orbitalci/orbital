@@ -706,7 +706,7 @@ func (p *PostgresStorage) InsertCred(credder pb.OcyCredder, overwriteOk bool) er
 		return  err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(credder.GetAcctName(), credder.GetIdentifier(), credder.GetType(), credder.GetSubType(), moreFields)
+	_, err = stmt.Exec(credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType().Parent(), credder.GetSubType(), moreFields)
 	return err
 }
 

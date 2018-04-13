@@ -25,15 +25,34 @@ func (x CredType) Subtypes() []SubCredType {
 	return nil
 }
 
+func (x CredType) SubtypesString() []string {
+	var subtypes []string
+	switch x {
+	case CredType_VCS:
+		for _, st := range vcsSubTypes {
+			subtypes = append(subtypes, st.String())
+		}
+	case CredType_REPO:
+		for _, st := range repoSubTypes {
+			subtypes = append(subtypes, st.String())
+		}
+	case CredType_K8S:
+		for _, st := range repoSubTypes {
+			subtypes = append(subtypes, st.String())
+		}
+	}
+	return subtypes
+}
+
 //SpawnCredStruct will instantiate an Cred object with account, identifier, subcredtype, and credtype
 func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCredType) OcyCredder {
 	switch x {
 	case CredType_VCS:
-		return &VCSCreds{AcctName: account, Identifier: identifier, Type: CredType_VCS, SubType: SubCredType(subCredType)}
+		return &VCSCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	case CredType_REPO:
-		return &RepoCreds{AcctName: account, Identifier: identifier, Type: CredType_REPO, SubType: SubCredType(subCredType)}
+		return &RepoCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	case CredType_K8S:
-		return &K8SCreds{AcctName: account, Identifier: identifier, Type: CredType_K8S, SubType: SubCredType(subCredType)}
+		return &K8SCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	default:
 		return nil
 	}

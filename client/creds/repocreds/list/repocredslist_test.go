@@ -26,22 +26,25 @@ func TestCmd_Run(t *testing.T) {
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:      map[string]string{"snapshot": "https://ocelot.perf/nexus-yo",},
+				RepoUrl:      "https://ocelot.perf/nexus-yo",
+				Identifier:    "snapshot",
 				AcctName:     "jessishank",
-				Type:         "nexus",
+				SubType:      models.SubCredType_NEXUS,
 			},
 			{
 				Username:     "thisBeM1yUserName",
 				Password:     "SHH-BE-Q2UIET-ITS-A-SECRET",
-				RepoUrl:       map[string]string{"snapshot":"https://o3celot.perf/nexus-yo"},
+				RepoUrl:       "https://o3celot.perf/nexus-yo",
+				Identifier:    "snapshot",
 				AcctName:     "jessishank45",
-				Type:         "nexus",
+				SubType:      models.SubCredType_NEXUS,
 			},{
 				Username:     "thisB2eMyUserName",
 				Password:     "SHH-BEd-QUIET-asdITS-A-SECRET",
-				RepoUrl:       map[string]string{"snapshot":"https:/h/ocelot.perf/nexus-yo"},
+				RepoUrl:       "https:/h/ocelot.perf/nexus-yo",
+				Identifier:    "snapshot",
 				AcctName:     "jessishasnk",
-				Type:         "nexus",
+				SubType:      models.SubCredType_NEXUS,
 			},
 		},
 	}
@@ -63,24 +66,24 @@ func TestCmd_Run(t *testing.T) {
 
 Username: thisBeMyUserName
 Password: SHH-BE-QUIET-ITS-A-SECRET
-RepoUrls: 
-   snapshot: https://ocelot.perf/nexus-yo 
+RepoUrl: https://ocelot.perf/nexus-yo
 AcctName: jessishank
-Type: nexus
+SubType: nexus
+Identifier: snapshot
 
 Username: thisBeM1yUserName
 Password: SHH-BE-Q2UIET-ITS-A-SECRET
-RepoUrls: 
-   snapshot: https://o3celot.perf/nexus-yo 
+RepoUrl: https://o3celot.perf/nexus-yo
 AcctName: jessishank45
-Type: nexus
+SubType: nexus
+Identifier: snapshot
 
 Username: thisB2eMyUserName
 Password: SHH-BEd-QUIET-asdITS-A-SECRET
-RepoUrls: 
-   snapshot: https:/h/ocelot.perf/nexus-yo 
+RepoUrl: https:/h/ocelot.perf/nexus-yo
 AcctName: jessishasnk
-Type: nexus
+SubType: nexus
+Identifier: snapshot
 
 `
 	text := ui.OutputWriter.String()

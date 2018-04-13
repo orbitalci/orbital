@@ -209,7 +209,7 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 // AddRepoCreds adds repo integration creds to storage + vault
 func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error) {
 	if rc.Vault != nil {
-		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetType(), anyCred.GetIdentifier())
+		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
 
 		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
@@ -226,7 +226,7 @@ func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder,
 
 func (rc *RemoteConfig) UpdateCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
 	if rc.Vault != nil {
-		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetType(), anyCred.GetIdentifier())
+		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
 
 		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {

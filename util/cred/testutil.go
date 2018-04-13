@@ -3,8 +3,10 @@ package cred
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/vault"
+	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util"
 	"errors"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/hashicorp/consul/testutil"
 	"github.com/hashicorp/vault/http"
 	hashiVault "github.com/hashicorp/vault/vault"
@@ -83,21 +85,20 @@ func TeardownVaultAndConsul(testvault net.Listener, testconsul *testutil.TestSer
 	testconsul.Stop()
 	testvault.Close()
 }
-//
-//func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
-//	creds := &RepoConfig{
-//		Password: password,
-//		Username: username,
-//		RepoUrl: map[string]string{"url":repourl},
-//		Type: "docker",
-//		AcctName: acctName,
-//		ProjectName: projectName,
-//	}
-//	//err := testRemoteConfig.AddCreds(BuildCredPath("github", "mariannefeng", Vcs), adminConfig)
-//	if err := rc.AddCreds(BuildCredPath("docker", acctName, Repo), creds); err != nil {
-//		t.Fatal("couldnt add creds, error: ", err.Error())
-//	}
-//}
+
+func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, store storage.CredTable, repourl, password, username, acctName, projectName string) {
+	creds := &models.RepoCreds{
+		Password: password,
+		Username: username,
+		RepoUrl: repourl,
+		SubType: models.SubCredType_DOCKER,
+		AcctName: acctName,
+		Identifier: projectName,
+	}
+	if err := rc.AddCreds(store, creds, true); err != nil {
+		t.Fatal("couldnt add creds, error: ", err.Error())
+	}
+}
 //
 //func AddMvnRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
 //	creds := &RepoConfig{

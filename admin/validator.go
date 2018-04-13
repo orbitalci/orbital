@@ -27,6 +27,8 @@ func (adminValidator AdminValidator) ValidateConfig(adminCreds *models.VCSCreds)
 		return errors.New("tokenURL is required")
 	}
 	switch adminCreds.SubType {
+	case models.SubCredType_NIL_SCT:
+		return errors.New("SUB CRED TYPE WAS NOT INSTANTIATED PROPERLY")
 	case models.SubCredType_BITBUCKET:
 		return nil
 	default:

@@ -41,7 +41,6 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		AcctName:     "mariannefeng",
 		TokenURL:     "a-real-url",
 		Identifier:   "123",
-		Type:         pb.CredType_VCS,
 		SubType:      pb.SubCredType_GITHUB,
 	}
 	err := testRemoteConfig.AddCreds(pg, adminConfig, true)
@@ -79,11 +78,8 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("fake cred client id", "beeswax", marianne.ClientId))
 	}
 
-	if marianne.Type != pb.CredType_VCS {
-		t.Error(test.GenericStrFormatErrors("fake cred acct type", "github", marianne.Type))
-	}
 	if marianne.SubType != pb.SubCredType_GITHUB {
-		t.Error(test.GenericStrFormatErrors("fake cred acct type", "github", marianne.Type))
+		t.Error(test.GenericStrFormatErrors("fake cred acct type", "github", marianne.SubType))
 	}
 
 	if marianne.ClientSecret != "*********" {
@@ -109,7 +105,6 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		AcctName:     "ariannefeng",
 		TokenURL:     "another-real-url",
 		Identifier:   "345",
-		Type:         pb.CredType_VCS,
 		SubType:	   pb.SubCredType_BITBUCKET,
 	}
 
@@ -143,11 +138,8 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("2nd fake cred client id", "beeswaxxxxx", newCreds.ClientId))
 	}
 
-	if newCreds.Type != pb.CredType_VCS {
-		t.Error(test.GenericStrFormatErrors("2nd fake cred acct type", "vcs", newCreds.Type))
-	}
 	if newCreds.SubType != pb.SubCredType_BITBUCKET {
-		t.Error(test.GenericStrFormatErrors("2nd fake cred acct sub type", "bitbucket", newCreds.Type))
+		t.Error(test.GenericStrFormatErrors("2nd fake cred acct sub type", "bitbucket", newCreds.SubType))
 	}
 
 	if newCreds.ClientSecret != "secret" {
@@ -160,7 +152,6 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		RepoUrl: "http://take-ur-vitamins.org/uploadGummy",
 		Identifier: "890",
 		AcctName: "jessdanshnak",
-		Type: pb.CredType_REPO,
 		SubType: pb.SubCredType_NEXUS,
 	}
 
@@ -178,9 +169,6 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	}
 	if shnak.GetPassword() != repoCreds.GetPassword() {
 		t.Error(test.StrFormatErrors("repo password", repoCreds.Password, shnak.Password))
-	}
-	if shnak.GetType() != repoCreds.GetType() {
-		t.Error(test.GenericStrFormatErrors("repo acct type", repoCreds.GetType(), shnak.GetType()))
 	}
 	if shnak.GetRepoUrl() != repoCreds.GetRepoUrl() {
 		t.Error(test.StrFormatErrors("repo url", repoCreds.GetRepoUrl(), shnak.GetRepoUrl()))

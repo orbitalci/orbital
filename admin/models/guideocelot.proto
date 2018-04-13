@@ -85,8 +85,6 @@ message VCSCreds {
     string acctName = 4;
     // @inject_tag: yaml:"sshFileLoc"
     string sshFileLoc = 6;
-    // @inject_tag: yaml:"type"
-    CredType type = 9;
     // @inject_tag: yaml:"subType"
     SubCredType subType = 10;
 }
@@ -123,8 +121,6 @@ message RepoCreds {
     string identifier = 8;
     // @inject_tag: yaml:"acctName"
     string acctName = 4;
-    // @inject_tag: yaml:"type"
-    CredType type = 9;
     // @inject_tag: yaml:"subType"
     SubCredType subType = 10;
 
@@ -134,7 +130,6 @@ message K8sCreds {
     string acctName = 1;
     string k8sContents = 2;
     string identifier = 3;
-    CredType type = 4;
     // @inject_tag: yaml:"subType"
     SubCredType subType = 5;
 

@@ -1,7 +1,7 @@
 vcs:
-- clientId: VEhMhdw6uprevzh8Du
-  clientSecret: JtxmvZy3QR2dJQwbnwmVktCJa4jaVsJS
-  tokenURL: https://bitbucket.org/site/oauth2/access_token
-  acctName: level11consulting
+- clientId: fancy-frickin-identification
+  clientSecret: SHH-BE-QUIET-ITS-A-SECRET
+  tokenURL: https://ocelot.perf/site/oauth2/access_token
+  acctName: lamb-shank
   subType: bitbucket
-  sshFileLoc: /Users/jesseshank/.ssh/id_rsa
+  sshFileLoc: THIS IS A TEST

@@ -6,6 +6,7 @@ import (
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/integrations/dockr"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 
@@ -22,6 +23,9 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping due to -short flag being set")
 	}
+	cleanup, pw, port := storage.CreateTestPgDatabase(t)
+	defer cleanup(t)
+	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	password, ok := os.LookupEnv("NEXUS_ADMIN_PW")
 	if !ok {
 		t.Skip("skipping because $NEXUS_ADMIN_PW not set")
@@ -48,11 +52,11 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 		t.Error("pull from metaverse should fail if there are no creds to authenticate with. stdout: " , data)
 	}
 	// add in docker repo credentials,
-	//cred.AddDockerRepoCreds(t, testRemoteConfig, "docker.metaverse.l11.com", password, "admin", acctName, projectName)
+	cred.AddDockerRepoCreds(t, testRemoteConfig, pg, "docker.metaverse.l11.com", password, "admin", acctName, projectName)
 
 	// create config in ~/.docker directory w/ auth creds
 	logout := make(chan[]byte, 10000)
-	res := docker.IntegrationSetup(ctx, dockr.GetDockerConfig, docker.WriteDockerJson, "docker login", testRemoteConfig, acctName, su, []string{}, logout)
+	res := docker.IntegrationSetup(ctx, dockr.GetDockerConfig, docker.WriteDockerJson, "docker login", testRemoteConfig, acctName, su, []string{}, pg, logout)
 	if res.Status == pb.StageResultVal_FAIL {
 		data := <- logout
 		t.Error("stage failed! logout data: ", string(data))
@@ -73,7 +77,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	n := net.InitNegroni("werker", muxi)
 	go n.Run(":8888")
 
-	result = docker.IntegrationSetup(ctx, func(config cred.CVRemoteConfig, acctName string)(string, error) {return "8888", nil}, docker.DownloadKubectl, "kubectl download", testRemoteConfig, acctName, su, []string{}, logout)
+	result = docker.IntegrationSetup(ctx, func(config cred.CVRemoteConfig, store storage.CredTable, acctName string)(string, error) {return "8888", nil}, docker.DownloadKubectl, "kubectl download", testRemoteConfig, acctName, su, []string{}, pg, logout)
 	outBytes := <-logout
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Error("couldn't download kubectl! oh nuuuuuu! ", string(outBytes))
@@ -86,7 +90,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 		t.Error("kubectl not found! fail! ", string(outb))
 	}
 
-	result = docker.IntegrationSetup(ctx, func(config cred.CVRemoteConfig, acctName string)(string, error) {return "dGhpc2lzbXlrdWJlY29uZm9oaGhoYmJiYWFhYWJiYmJ5eXl5Cg==", nil}, docker.InstallKubeconfig, "kubeconfig install", testRemoteConfig, acctName, su, []string{}, logout)
+	result = docker.IntegrationSetup(ctx, func(config cred.CVRemoteConfig, store storage.CredTable,  acctName string)(string, error) {return "dGhpc2lzbXlrdWJlY29uZm9oaGhoYmJiYWFhYWJiYmJ5eXl5Cg==", nil}, docker.InstallKubeconfig, "kubeconfig install", testRemoteConfig, acctName, su, []string{}, pg, logout)
 	outBytes = <-logout
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Error("couldn't add kubeconfig! oh no! ", string(outBytes))

@@ -4,8 +4,19 @@ import (
 	"bitbucket.org/level11consulting/go-til/test"
 	am "bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+
 	"testing"
 )
+
+type dummyCredTable struct {
+	storage.CredTable
+}
+
+func (d *dummyCredTable) InsertCred(credder am.OcyCredder, overWriteOk bool) error {
+	return nil
+}
+
 
 func TestSetupRCCCredentials(t *testing.T) {
 	// test all implementations of cred.RemoteConfigCred
@@ -13,21 +24,30 @@ func TestSetupRCCCredentials(t *testing.T) {
 	defer cred.TeardownVaultAndConsul(vaultListener, consulServer)
 	kubeconf := &am.K8SCreds{
 		AcctName: "test",
+		SubType:  am.SubCredType_KUBECONF,
 		K8SContents: "laksjdflkjasdlkfjaeifnasd,mcnxo8r23$%(*asdf,zxddfh9\n\n\n\n\n\t\t\tdaslkdr73d8n!@#@!",
 	}
-	err := SetupRCCCredentials(testRemoteConfig, kubeconf)
+	err := SetupRCCCredentials(testRemoteConfig, &dummyCredTable{}, kubeconf)
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := testRemoteConfig.GetVault().GetVaultData("secret/creds/k8s/test/k8s")
+	data, err := testRemoteConfig.GetVault().GetVaultData("secret/creds/k8s/test/kubeconf")
 	if err != nil {
 		t.Fatal(err)
 	}
-	v, ok := data["clientsecret"]
+	v, ok := data["data"]
 	if !ok {
 		t.Fatal("unable to get clientsecret")
 	}
-	secret, ok := v.(string)
+	q, ok := v.(map[string]interface{})
+	if !ok {
+		t.Fatal("wasnt a map??")
+	}
+	sec, ok := q["clientsecret"]
+	if !ok {
+		t.Fatal("wasn't a map??")
+	}
+	secret, ok := sec.(string)
 	if !ok {
 		t.Fatal("unable to cast to string")
 	}
@@ -39,9 +59,9 @@ func TestSetupRCCCredentials(t *testing.T) {
 		ClientSecret: "secsecsecret",
 		TokenURL: "herebeaurl",
 		AcctName: "herebeanaccount",
-		Type: "bitbucket",
+		SubType: am.SubCredType_BITBUCKET,
 	}
-	err = SetupRCCCredentials(testRemoteConfig, vcsCreds)
+	err = SetupRCCCredentials(testRemoteConfig, &dummyCredTable{}, vcsCreds)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,12 +69,24 @@ func TestSetupRCCCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v, ok = data["clientsecret"]
+	v, ok = data["data"]
 	if !ok {
 		t.Fatal("unable to get clientsecret")
 	}
-	if v != vcsCreds.ClientSecret {
-		t.Error(test.StrFormatErrors("secret", vcsCreds.ClientSecret, v.(string)))
+	q, ok = v.(map[string]interface{})
+	if !ok {
+		t.Fatal("wasnt a map??")
+	}
+	sec, ok = q["clientsecret"]
+	if !ok {
+		t.Fatal("wasn't a map??")
+	}
+	secret, ok = sec.(string)
+	if !ok {
+		t.Fatal("unable to cast to string")
+	}
+	if secret != vcsCreds.ClientSecret {
+		t.Error(test.StrFormatErrors("secret", vcsCreds.ClientSecret, secret))
 	}
 
 }
