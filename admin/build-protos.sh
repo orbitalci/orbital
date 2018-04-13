@@ -6,6 +6,7 @@ echo "[DEBUG] first"
 protoc -I models/ -I. \
     -I$GOPATH/src \
     -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+    -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
     --go_out=plugins=grpc:models \
     models/guideocelot.proto
 
@@ -14,7 +15,9 @@ echo "[DEBUG] second"
 protoc -I models/ -I. \
   -I$GOPATH/src \
   -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
   --grpc-gateway_out=logtostderr=true:models \
+  --swagger_out=logtostderr=true:models \
   models/guideocelot.proto
 
 # inject our custom tags into build protobuf

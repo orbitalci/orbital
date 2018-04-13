@@ -5,14 +5,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
-
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/vault"
 	adminModels "bitbucket.org/level11consulting/ocelot/admin/models"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"bitbucket.org/level11consulting/ocelot/util/dockrhelper"
 	"bitbucket.org/level11consulting/ocelot/util/integrations"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/docker/docker/api/types"
@@ -52,18 +51,11 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 			Error: err.Error(),
 		}, ""
 	}
-
 	imageName := werk.BuildConf.Image
-
-	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	reader, out := io.Pipe()
+	err = dockrhelper.RobustImagePull(imageName)
+	out.Close()
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't pull image; returning failed")
-		failedOutput := bufio.NewReader(out)
-		outTxt, err2 := ioutil.ReadAll(failedOutput)
-		if err2 != nil {
-			ocelog.IncludeErrField(err2).Error("unable to read output of failed image pull")
-		}
-		setupMessages = append(setupMessages, fmt.Sprintf("could not pull image!"), string(outTxt))
 		return &pb.Result{
 			Stage:  su.GetStage(),
 			Status: pb.StageResultVal_FAIL,
@@ -73,9 +65,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	}
 	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s \u2713", imageName))
 
-	defer out.Close()
-
-	bufReader := bufio.NewReader(out)
+	bufReader := bufio.NewReader(reader)
 	d.writeToInfo(su.GetStageLabel(), bufReader, logout)
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")

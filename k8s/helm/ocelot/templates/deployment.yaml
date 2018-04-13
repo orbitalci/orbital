@@ -42,9 +42,11 @@ spec:
             - mountPath: /var/run/docker.sock
               name: docker-sock-volume
           ports:
-            - name: http
+            - name: grpc
               containerPort: 10000
               protocol: TCP
+            - name: http
+              containerPort: 11000
           env:
             - name: CONSUL_HOST
               valueFrom:

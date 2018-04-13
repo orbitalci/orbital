@@ -4,7 +4,8 @@
 - one repo, multiple pipelines? how to handle that 
     - for example, the docker builder pattern. when deps are updated, the docker base image shoudl be as well. that's all in one repo, but its widely different behavior than build/testing source code.
 
-
+## bugs 
+- admin in kubernetes for some reason always passes validation, even though admin in a docker container locally fails like it should. biig question mark here. 
 
 ## in progress
 
@@ -113,5 +114,6 @@
             - [1](https://blog.golang.org/defer-panic-and-recover), [2](https://golangbot.com/panic-and-recover/)
             - cleanup docker containers
             - add item back to queue for build 
+- allow base images to be from private registries            
 
  

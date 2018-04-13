@@ -24,8 +24,11 @@ import (
 // when it receives a build command via command line
 
 // helper
-func GetAcctRepo(fullName string) (acct string, repo string) {
+func GetAcctRepo(fullName string) (acct string, repo string, err error) {
 	list := strings.Split(fullName, "/")
+	if len(list) != 2 {
+		return "","", BadFormat("acctRepo needs to be in format acct/repo")
+	}
 	acct = list[0]
 	repo = list[1]
 	return
@@ -40,7 +43,10 @@ func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg stri
 
 // GetVcsCreds will retrieve a VCSCred for account name / bitbucket vcs type
 func GetVcsCreds(store storage.CredTable, repoFullName string, remoteConfig cred.CVRemoteConfig) (*models.VCSCreds, error) {
-	acctName, _ := GetAcctRepo(repoFullName)
+	acctName, _, err := GetAcctRepo(repoFullName)
+	if err != nil {
+		return nil, err
+	}
 	identifier, err := models.CreateVCSIdentifier(models.SubCredType_BITBUCKET, acctName)
 	if err != nil {
 		return nil, err
@@ -65,7 +71,10 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	store storage.OcelotStorage) error {
 
 	ocelog.Log().Debug("Storing initial results in db")
-	account, repo := GetAcctRepo(accountRepo)
+	account, repo, err := GetAcctRepo(accountRepo)
+	if err != nil {
+		return err
+	}
 	vaulty := remoteConfig.GetVault()
 	consul := remoteConfig.GetConsul()
 	alreadyBuilding, err := buildruntime.CheckBuildInConsul(consul, hash)
@@ -152,7 +161,8 @@ func GetBBConfig(remoteConfig cred.CVRemoteConfig, store storage.CredTable, repo
 
 	fileBytz, err := bbHandler.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
-		ocelog.IncludeErrField(err)
+		ocelog.IncludeErrField(err).Error()
+		return nil, token, err
 	}
 
 	conf, err := CheckForBuildFile(fileBytz, deserializer)
@@ -253,4 +263,16 @@ func getHookhandlerStageResult(id int64) *smods.StageResult {
 		StartTime:     start,
 		StageDuration: -99.99,
 	}
+}
+
+func BadFormat(msg string) *FormatError {
+	return &FormatError{err:msg}
+}
+
+type FormatError struct {
+	err string
+}
+
+func (f *FormatError) Error() string {
+	return f.err
 }

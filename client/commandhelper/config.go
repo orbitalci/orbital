@@ -30,7 +30,7 @@ func NewClientConfig() *ClientConfig {
 		adminHost = v
 	}
 	if v := os.Getenv("CERT_DNS"); v == "" {
-		ocyDns = "ocelot.hq.l11.com"
+		ocyDns = "ocyadmin.l11.com"
 	} else {
 		ocyDns = v
 	}

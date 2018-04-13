@@ -44,6 +44,7 @@ linux-client: versionexists ## install zipped linux ocelot client to pkg/linux_a
 
 all-clients: windows-client mac-client linux-client ## install all clients
 
+
 upload-clients: versionexists all-clients ## install all clients and upload to s3
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/mac-ocelot-$(VERSION).zip
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot_$(VERSION).zip s3://ocelotty/windows-ocelot-$(VERSION).zip
@@ -74,7 +75,7 @@ docker-base: sshexists ## build ocelot-builder base image
 docker-build: ## build all images
 	@docker-compose build
 
-release: protos upload-clients upload-templates linux-werker docker-base docker-build ## build protos, install & upload clients, upload werker templates, install & upload linux werker, build docker base, build all images
+release: proto upload-clients upload-templates linux-werker docker-base docker-build ## build protos, install & upload clients, upload werker templates, install & upload linux werker, build docker base, build all images
 
 proto: ## build all protos
 	@scripts/build-protos.sh
