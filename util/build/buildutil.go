@@ -24,8 +24,11 @@ import (
 // when it receives a build command via command line
 
 // helper
-func GetAcctRepo(fullName string) (acct string, repo string) {
+func GetAcctRepo(fullName string) (acct string, repo string, err error) {
 	list := strings.Split(fullName, "/")
+	if len(list) != 2 {
+		return "","", BadFormat("acctRepo needs to be in format acct/repo")
+	}
 	acct = list[0]
 	repo = list[1]
 	return
@@ -42,7 +45,10 @@ func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg stri
 //with that account
 func GetVcsCreds(repoFullName string, remoteConfig cred.CVRemoteConfig) (*models.VCSCreds, error) {
 	vcs := models.NewVCSCreds()
-	acctName, _ := GetAcctRepo(repoFullName)
+	acctName, _, err := GetAcctRepo(repoFullName)
+	if err != nil {
+		return nil, err
+	}
 
 	bbCreds, err := remoteConfig.GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, vcs)
 	cf := bbCreds["bitbucket/"+acctName]
@@ -64,7 +70,10 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	store storage.OcelotStorage) error {
 
 	ocelog.Log().Debug("Storing initial results in db")
-	account, repo := GetAcctRepo(accountRepo)
+	account, repo, err := GetAcctRepo(accountRepo)
+	if err != nil {
+		return err
+	}
 	vaulty := remoteConfig.GetVault()
 	consul := remoteConfig.GetConsul()
 	alreadyBuilding, err := buildruntime.CheckBuildInConsul(consul, hash)
@@ -251,4 +260,16 @@ func getHookhandlerStageResult(id int64) *smods.StageResult {
 		StartTime:     start,
 		StageDuration: -99.99,
 	}
+}
+
+func BadFormat(msg string) *FormatError {
+	return &FormatError{err:msg}
+}
+
+type FormatError struct {
+	err string
+}
+
+func (f *FormatError) Error() string {
+	return f.err
 }
