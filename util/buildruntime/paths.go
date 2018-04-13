@@ -3,8 +3,27 @@ package buildruntime
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"sync"
 )
+
+var once sync.Once
+var prefix string
+
+func getPrefix() string {
+	once.Do(func(){
+		prefix = os.Getenv("PATH_PREFIX")
+		if prefix == "" {
+			prefix = ""
+		}
+		prefix = prefix + "/"
+	})
+	return prefix
+}
+
+
+
 const (
 	buildBase		= "ci/builds/"
 	buildIdOnly     = buildBase + "%s" // werkerId
@@ -29,47 +48,47 @@ const (
 )
 
 func MakeBuildPath(werkerId string, gitHash string) string {
-	return fmt.Sprintf(buildPath, werkerId, gitHash)
+	return getPrefix() + fmt.Sprintf(buildPath, werkerId, gitHash)
 }
 
 func MakeBuildWerkerIdPath(werkerId string) string {
-	return fmt.Sprintf(buildIdOnly, werkerId)
+	return getPrefix() + fmt.Sprintf(buildIdOnly, werkerId)
 }
 
 func MakeBuildSummaryIdPath(werkerId string, gitHash string) string {
-	return fmt.Sprintf(buildSummaryId, werkerId, gitHash)
+	return getPrefix() + fmt.Sprintf(buildSummaryId, werkerId, gitHash)
 }
 
 func MakeBuildStagePath(werkerId string, gitHash string) string {
-	return fmt.Sprintf(bldCurrentStage, werkerId, gitHash)
+	return getPrefix() + fmt.Sprintf(bldCurrentStage, werkerId, gitHash)
 }
 
 func MakeBuildStartpath(werkerId string, gitHash string) string {
-	return fmt.Sprintf(bldStartTime, werkerId, gitHash)
+	return getPrefix() + fmt.Sprintf(bldStartTime, werkerId, gitHash)
 }
 
 func MakeDockerUuidPath(werkerId string, gitHash string) string {
-	return fmt.Sprintf(buildDockerUuid, werkerId, gitHash)
+	return getPrefix() + fmt.Sprintf(buildDockerUuid, werkerId, gitHash)
 }
 
 func MakeBuildMapPath(gitHash string) string {
-	return fmt.Sprintf(werkerBuildMap, gitHash)
+	return getPrefix() + fmt.Sprintf(werkerBuildMap, gitHash)
 }
 
 func MakeWerkerLocPath(werkerId string) string {
-	return fmt.Sprintf(werkerLocation, werkerId)
+	return getPrefix() + fmt.Sprintf(werkerLocation, werkerId)
 }
 
 func MakeWerkerIpPath(werkerId string) string {
-	return fmt.Sprintf(werkerIp, werkerId)
+	return getPrefix() + fmt.Sprintf(werkerIp, werkerId)
 }
 
 func MakeWerkerGrpcPath(werkerId string) string {
-	return fmt.Sprintf(werkerGrpc, werkerId)
+	return getPrefix() + fmt.Sprintf(werkerGrpc, werkerId)
 }
 
 func MakeWerkerWsPath(werkerId string) string {
-	return fmt.Sprintf(werkerWs, werkerId)
+	return getPrefix() + fmt.Sprintf(werkerWs, werkerId)
 }
 
 
@@ -78,10 +97,14 @@ func MakeWerkerWsPath(werkerId string) string {
 // must be fully qualified key path, not prefix
 // ie: ci/builds/<werkerId>/<hash>/docker_uuid
 func parseGenericBuildPath(buildPath string) (werkerId string, hash string, key string) {
+	var shift int
+	if getPrefix() != "" {
+		shift = 1
+	}
 	split := strings.Split(buildPath, "/")
-	werkerId = split[2]
-	hash = split[3]
-	key = split[4]
+	werkerId = split[2+shift]
+	hash = split[3+shift]
+	key = split[4+shift]
 	return
 }
 
@@ -98,7 +121,11 @@ func parseBuildMapPath(path string) (hash string) {
 // ie: ci/werker_location/<werkerId>/werker_ip
 // must be fully qualified key path, not prefix
 func parseWerkerLocPath(path string) (werkerId string) {
+	var shift int
+	if getPrefix() != "" {
+		shift = 1
+	}
 	split := strings.Split(path, "/")
-	werkerId = split[2]
+	werkerId = split[2+shift]
 	return
 }
