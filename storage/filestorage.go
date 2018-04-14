@@ -22,7 +22,7 @@ package storage
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	"bitbucket.org/level11consulting/ocelot/models"
 	"encoding/json"
 	"github.com/mitchellh/go-homedir"
 	"io/ioutil"

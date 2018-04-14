@@ -1,7 +1,7 @@
 package basher
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/protos"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 )
 
 type OcyBash interface {
@@ -9,7 +9,7 @@ type OcyBash interface {
 	GetGithubDownloadURL() string
 	SetBbDownloadURL(downloadURL string)
 	SetGithubDownloadURL(downloadURL string)
-	DownloadCodebase(werk *protos.WerkerTask) []string
+	DownloadCodebase(werk *pb.WerkerTask) []string
 	DownloadSSHKey(vaultKey, vaultPath string) []string
 	WriteMavenSettingsXml(settingsXML string) []string
 	WriteDockerJson(encodedDocker string) []string

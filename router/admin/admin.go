@@ -8,9 +8,9 @@ import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	"bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/newocy/common/secure_grpc"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/common/secure_grpc"
 	"github.com/golang/glog"
 
 	//"bitbucket.org/level11consulting/ocelot/util/handler"
@@ -37,7 +37,7 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 		return
 	}
 	defer store.Close()
-	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), GetValidator(), GetRepoValidator(), store)
+	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), cred.GetValidator(), cred.GetRepoValidator(), store)
 	//gateway
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)

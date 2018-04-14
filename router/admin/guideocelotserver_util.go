@@ -2,11 +2,13 @@ package admin
 
 import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	adminModel "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/handler"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
-	storeModel "bitbucket.org/level11consulting/ocelot/util/storage/models"
+
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+
+	bb "bitbucket.org/level11consulting/ocelot/common/remote/bitbucket"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,15 +17,15 @@ import (
 )
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
-func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCSCreds) error {
+func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
 	gos := gosss.(*guideOcelotServer)
 	//hehe right now we only have bitbucket
 	switch config.SubType {
-	case adminModel.SubCredType_BITBUCKET:
+	case pb.SubCredType_BITBUCKET:
 		bitbucketClient := &ocenet.OAuthClient{}
 		bitbucketClient.Setup(config)
 
-		bbHandler := handler.GetBitbucketHandler(config, bitbucketClient)
+		bbHandler := bb.GetBitbucketHandler(config, bitbucketClient)
 		go bbHandler.Walk() //spawning walk in a different thread because we don't want client to wait if there's a lot of repos/files to check
 	default:
 		return errors.New("currently only bitbucket is supported")
@@ -35,18 +37,18 @@ func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCS
 	return err
 }
 
-func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, store storage.CredTable, config adminModel.OcyCredder) error {
+func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, store storage.CredTable, config pb.OcyCredder) error {
 	//right now, we will always overwrite
 	err := remoteConf.AddCreds(store, config, true)
 	return err
 }
 
 //ParseStagesByBuildId will combine the buildsummary + stages to a single object called "Status"
-func ParseStagesByBuildId(buildSum storeModel.BuildSummary, stageResults []storeModel.StageResult) *adminModel.Status {
-	var parsedStages []*adminModel.Stage
+func ParseStagesByBuildId(buildSum models.BuildSummary, stageResults []models.StageResult) *pb.Status {
+	var parsedStages []*pb.StageStatus
 	for _, result := range stageResults {
-		stageDupe := &adminModel.Stage{
-			Stage: result.Stage,
+		stageDupe := &pb.StageStatus{
+			StageStatus: result.Stage,
 			Error: result.Error,
 			Status: int32(result.Status),
 			Messages: result.Messages,
@@ -56,8 +58,8 @@ func ParseStagesByBuildId(buildSum storeModel.BuildSummary, stageResults []store
 		parsedStages = append(parsedStages, stageDupe)
 	}
 
-	hashStatus := &adminModel.Status{
-		BuildSum: &adminModel.BuildSummary{
+	hashStatus := &pb.Status{
+		BuildSum: &pb.BuildSummary{
 			Hash: buildSum.Hash,
 			Failed: buildSum.Failed,
 			BuildTime: &timestamp.Timestamp{Seconds: buildSum.BuildTime.UTC().Unix()},

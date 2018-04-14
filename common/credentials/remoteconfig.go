@@ -328,7 +328,7 @@ func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 		return 0, errors.New("unable to get storage type from consul, err: " + err.Error())
 	}
 	if kv == nil {
-		ocelog.Log().Warning(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; using file system as the default.", StorageType))
+		ocelog.Log().Warning(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; using file system as the default.", common.StorageType))
 		return storage.FileSystem, nil
 	}
 	storageType := string(kv.Value)
@@ -355,35 +355,35 @@ func (rc *RemoteConfig) GetStorageCreds(typ storage.Dest) (*StorageCreds, error)
 }
 
 func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
-	pairs, err := rc.Consul.GetKeyValues(PostgresCredLoc)
+	pairs, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
 	if err != nil {
 		return nil, errors.New("unable to get postgres creds from consul, err: " + err.Error())
 	}
 	storeConfig := &StorageCreds{}
 	for _, pair := range pairs {
 		switch pair.Key {
-		case PostgresDatabaseName:
+		case common.PostgresDatabaseName:
 			storeConfig.DbName = string(pair.Value)
-		case PostgresLocation:
+		case common.PostgresLocation:
 			storeConfig.Location = string(pair.Value)
-		case PostgresUsername:
+		case common.PostgresUsername:
 			storeConfig.User = string(pair.Value)
-		case PostgresPort:
+		case common.PostgresPort:
 			// todo: check for err
 			storeConfig.Port, _ = strconv.Atoi(string(pair.Value))
 		}
 	}
-	secrets, err := rc.Vault.GetVaultData(PostgresPasswordLoc)
+	secrets, err := rc.Vault.GetVaultData(common.PostgresPasswordLoc)
 	if err != nil {
 		return storeConfig, errors.New("unable to get postgres password from vault, err: " + err.Error())
 	}
 	// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
-	storeConfig.Password = fmt.Sprintf("%v", secrets[PostgresPasswordKey])
+	storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
 	return storeConfig, nil
 }
 
 func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
-	pair, err := rc.Consul.GetKeyValue(FilesystemDir)
+	pair, err := rc.Consul.GetKeyValue(common.FilesystemDir)
 	if err != nil {
 		return nil, errors.New("unable to get save directory from consul, err: " + err.Error())
 	}

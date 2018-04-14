@@ -18,7 +18,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build_signaler/poll"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/common/remote"
 	"github.com/namsral/flag"
 )
 
@@ -65,8 +64,6 @@ func configure() *changeSetConfig {
 
 func main() {
 	conf := configure()
-	var bbHandler remote.VCSHandler
-	var token string
 	store, err := conf.RemoteConf.GetOcelotStorage()
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")

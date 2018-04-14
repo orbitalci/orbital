@@ -42,16 +42,17 @@ func strToStorageImplement(str string) storage.BuildOut {
 // WerkerConf is all the configuration for the Werker to do its job properly. this is where the
 // storage type is set (ie filesystem, etc..) and the processor is set (ie Docker, kubernetes, etc..)
 type WerkerConf struct {
-	ServicePort string
-	GrpcPort    string
+	//ServicePort string
+	//GrpcPort    string
+	//WerkerType  models.WerkType
+	//WerkerUuid		uuid.UUID
+	*models.WerkerFacts
 	WerkerName  string
-	WerkerType  models.WerkType
 	//werkerProcessor builder.Processor
 	LogLevel        string
 	RegisterIP      string
 	LoopBackIp      string
 	RemoteConfig    cred.CVRemoteConfig
-	WerkerUuid		uuid.UUID
 }
 
 

@@ -1,18 +1,20 @@
 package valet
 
 import (
-	"bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/util"
-	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"bitbucket.org/level11consulting/ocelot/old/werker/config"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/hashicorp/consul/testutil"
 	"testing"
 	"time"
+
+	"bitbucket.org/level11consulting/go-til/consul"
+	"bitbucket.org/level11consulting/go-til/test"
+
+	"bitbucket.org/level11consulting/ocelot/build"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	util "bitbucket.org/level11consulting/ocelot/common/testutil"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/google/uuid"
+	"github.com/hashicorp/consul/testutil"
 )
 
 type recoveryCVRemoteConfig struct {
@@ -29,17 +31,17 @@ func (r *recoveryCVRemoteConfig) GetOcelotStorage() (storage.OcelotStorage, erro
 	return r.storage, nil
 }
 
-func addHashRuntimeData(t *testing.T, serv *testutil.TestServer, werkerId string, hash string, id int64) *buildruntime.HashRuntime {
-	hrt := &buildruntime.HashRuntime{
+func addHashRuntimeData(t *testing.T, serv *testutil.TestServer, werkerId string, hash string, id int64) *build.HashRuntime {
+	hrt := &build.HashRuntime{
 		DockerUuid: "here-is-my-uuid",
 		BuildId: id,
 		CurrentStage: "test",
 		StageStart: time.Now(),
 	}
-	serv.SetKVString(t, buildruntime.MakeBuildStartpath(werkerId, hash), fmt.Sprintf("%d", hrt.StageStart.Unix()))
-	serv.SetKVString(t, buildruntime.MakeDockerUuidPath(werkerId, hash), hrt.DockerUuid)
-	serv.SetKVString(t, buildruntime.MakeBuildStagePath(werkerId, hash), hrt.CurrentStage)
-	serv.SetKVString(t, buildruntime.MakeBuildSummaryIdPath(werkerId, hash), fmt.Sprintf("%d", hrt.BuildId))
+	serv.SetKVString(t, build.MakeBuildStartpath(werkerId, hash), fmt.Sprintf("%d", hrt.StageStart.Unix()))
+	serv.SetKVString(t, build.MakeDockerUuidPath(werkerId, hash), hrt.DockerUuid)
+	serv.SetKVString(t, build.MakeBuildStagePath(werkerId, hash), hrt.CurrentStage)
+	serv.SetKVString(t, build.MakeBuildSummaryIdPath(werkerId, hash), fmt.Sprintf("%d", hrt.BuildId))
 	return hrt
 }
 
@@ -58,13 +60,13 @@ func TestRecovery(t *testing.T) {
 	defer serv.Stop()
 	remoteConf := &recoveryCVRemoteConfig{consul: consu, storage: store}
 	uid := uuid.New()
-	rcvr := NewValet(remoteConf, uid, config.Docker, store)
-	buildruntime.RegisterStartedBuild(consu, uid.String(), hash)
+	rcvr := NewValet(remoteConf, uid, models.Docker, store)
+	RegisterStartedBuild(consu, uid.String(), hash)
 	err = rcvr.Reset("START", hash)
 	if err != nil {
 		t.Fatal(err)
 	}
-	stage := serv.GetKVString(t, buildruntime.MakeBuildStagePath(uid.String(), hash))
+	stage := serv.GetKVString(t, build.MakeBuildStagePath(uid.String(), hash))
 	if stage != "START" {
 		t.Error(test.StrFormatErrors("stage", "START", stage))
 	}
@@ -94,13 +96,13 @@ func TestRecovery(t *testing.T) {
 	if summary.BuildDuration < 0 {
 		t.Error("the build summary build duration should have been updated to be greater than zero when StoreInterrupt is called.")
 	}
-	serv.SetKVString(t, buildruntime.MakeDockerUuidPath(uid.String(), hash), hrt.DockerUuid)
-	serv.SetKVString(t, buildruntime.MakeWerkerIpPath(uid.String()), "localheist")
+	serv.SetKVString(t, build.MakeDockerUuidPath(uid.String(), hash), hrt.DockerUuid)
+	serv.SetKVString(t, build.MakeWerkerIpPath(uid.String()), "localheist")
 	rcvr.Cleanup()
 	// check all paths have been removed
 	//
 	// ci/builds/<werkerId>/<hash>
-	pairs, err := consu.GetKeyValues(buildruntime.MakeBuildPath(uid.String(), hash))
+	pairs, err := consu.GetKeyValues(build.MakeBuildPath(uid.String(), hash))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +110,7 @@ func TestRecovery(t *testing.T) {
 		t.Error("everything under the build path prefix should be deleted after cleanup.")
 	}
 	// ci/werker_location/<werkerId>
-	pairs, err = consu.GetKeyValues(buildruntime.MakeWerkerLocPath(uid.String()))
+	pairs, err = consu.GetKeyValues(build.MakeWerkerLocPath(uid.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +118,7 @@ func TestRecovery(t *testing.T) {
 		t.Error("everything under the werker loc path prefix should be deleted after cleanup.")
 	}
 	// ci/werker_build_map/<hash>
-	pairs, err = consu.GetKeyValues(buildruntime.MakeBuildMapPath(hash))
+	pairs, err = consu.GetKeyValues(build.MakeBuildMapPath(hash))
 	if err != nil {
 		t.Fatal(err)
 	}

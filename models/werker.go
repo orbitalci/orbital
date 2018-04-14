@@ -33,6 +33,8 @@ type BuildContext struct {
 // Think of it like gather facts w/ ansible.
 type WerkerFacts struct {
 	Uuid 	    	uuid.UUID
+	WerkerType           WerkType
 	LoopbackIp  	string
 	ServicePort    string
+	GrpcPort       string
 }

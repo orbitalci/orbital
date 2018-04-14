@@ -2,8 +2,8 @@ package storage
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/util"
-	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	util "bitbucket.org/level11consulting/ocelot/common/testutil"
+	"bitbucket.org/level11consulting/ocelot/models"
 
 	"bytes"
 	"testing"

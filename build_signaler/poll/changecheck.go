@@ -87,7 +87,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if lastHash != lastCommit.Hash {
 		ocelog.Log().Infof("found a new hash %s, telling werker", lastCommit.Hash)
 		newLastHash = lastCommit.Hash
-		if err = wt.tellWerker(lastCommit, w, branch, w.Store, w.bbHandler, w.Token); err != nil {
+		if err = wt.tellWerker(lastCommit, w, branch, w.Store, w.bbHandler, w.token); err != nil {
 			return
 		}
 	} else {

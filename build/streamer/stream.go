@@ -1,7 +1,7 @@
 package streamer
 
 import (
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"bufio"
 	"bytes"
 	"errors"

@@ -12,8 +12,8 @@ import (
 
 
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/models"
 	_ "github.com/lib/pq"
 )
 

@@ -2,7 +2,6 @@ package testutil
 
 import (
 	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 func CompareCredWrappers(credWrapA *pb.CredWrapper, credWrapB *pb.CredWrapper) bool {

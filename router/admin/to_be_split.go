@@ -5,13 +5,14 @@ import (
 	"bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/build"
-	rt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/handler"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
-	md "bitbucket.org/level11consulting/ocelot/util/storage/models"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/build"
+	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
+	"bitbucket.org/level11consulting/ocelot/common"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	bbh "bitbucket.org/level11consulting/ocelot/common/remote/bitbucket"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"bufio"
 	"bytes"
 	"context"
@@ -28,16 +29,16 @@ import (
 type guideOcelotServer struct {
 	RemoteConfig   cred.CVRemoteConfig
 	Deserializer   *deserialize.Deserializer
-	AdminValidator *AdminValidator
-	RepoValidator  *RepoValidator
+	AdminValidator *cred.AdminValidator
+	RepoValidator  *cred.RepoValidator
 	OcyValidator   *build.OcelotValidator
 	Storage        storage.OcelotStorage
 	Producer       *nsqpb.PbProduce
 }
 
-func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
-	credWrapper := &models.CredWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_VCS, true)
+func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*pb.CredWrapper, error) {
+	credWrapper := &pb.CredWrapper{}
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_VCS, true)
 
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
@@ -47,7 +48,7 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 	}
 
 	for _, v := range creds {
-		vcsCred := v.(*models.VCSCreds)
+		vcsCred := v.(*pb.VCSCreds)
 		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.SubType.Parent(), v.GetIdentifier())
 		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
 		if err != nil {
@@ -68,13 +69,13 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
-	if credentials.SubType.Parent() != models.CredType_VCS {
-		return nil, status.Error(codes.InvalidArgument, "Subtype must be of vcs type: " + strings.Join(models.CredType_VCS.SubtypesString(), " | "))
+func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
+	if credentials.SubType.Parent() != pb.CredType_VCS {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of vcs type: " + strings.Join(pb.CredType_VCS.SubtypesString(), " | "))
 	}
 
 	err := g.AdminValidator.ValidateConfig(credentials)
-	if _, ok := err.(*models.ValidationErr); ok {
+	if _, ok := err.(*pb.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.InvalidArgument, "VCS Creds failed validation. Errors are: " + err.Error())
 	}
 
@@ -86,19 +87,19 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) UpdateVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
+func (g *guideOcelotServer) UpdateVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
 	credentials.Identifier = credentials.BuildIdentifier()
 	return g.updateAnyCred(ctx, credentials)
 }
 
-func (g *guideOcelotServer) VCSCredExists(ctx context.Context, credentials *models.VCSCreds) (*models.Exists, error) {
+func (g *guideOcelotServer) VCSCredExists(ctx context.Context, credentials *pb.VCSCreds) (*pb.Exists, error) {
 	credentials.Identifier = credentials.BuildIdentifier()
 	return g.checkAnyCredExists(ctx, credentials)
 }
 
-func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
-	credWrapper := &models.RepoCredWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_REPO, true)
+func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*pb.RepoCredWrapper, error) {
+	credWrapper := &pb.RepoCredWrapper{}
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_REPO, true)
 
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
@@ -107,7 +108,7 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 	}
 
 	for _, v := range creds {
-		credWrapper.Repo = append(credWrapper.Repo, v.(*models.RepoCreds))
+		credWrapper.Repo = append(credWrapper.Repo, v.(*pb.RepoCreds))
 	}
 	if len(credWrapper.Repo) == 0 {
 		return nil, status.Error(codes.NotFound, "no repo creds found")
@@ -115,16 +116,16 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 	return credWrapper, nil
 }
 
-func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
-	if creds.SubType.Parent() != models.CredType_REPO {
-		return nil, status.Error(codes.InvalidArgument, "Subtype must be of repo type: " + strings.Join(models.CredType_REPO.SubtypesString(), " | "))
+func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
+	if creds.SubType.Parent() != pb.CredType_REPO {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of repo type: " + strings.Join(pb.CredType_REPO.SubtypesString(), " | "))
 	}
 	err := g.RepoValidator.ValidateConfig(creds)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed repo creds validation! error: %s", err.Error())
 	}
 	err = SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
-	if _, ok := err.(*models.ValidationErr); ok {
+	if _, ok := err.(*pb.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Repo Creds failed validation. Errors are: " + err.Error())
 	}
 	if err != nil {
@@ -133,17 +134,17 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.Repo
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) UpdateRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
+func (g *guideOcelotServer) UpdateRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
 	return g.updateAnyCred(ctx, creds)
 }
 
-func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *models.RepoCreds) (*models.Exists, error) {
+func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *pb.RepoCreds) (*pb.Exists, error) {
 	return g.checkAnyCredExists(ctx, creds)
 }
 
-func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
-	if creds.SubType.Parent() != models.CredType_K8S {
-		return nil, status.Error(codes.InvalidArgument, "Subtype must be of k8s type: " + strings.Join(models.CredType_K8S.SubtypesString(), " | "))
+func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
+	if creds.SubType.Parent() != pb.CredType_K8S {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of k8s type: " + strings.Join(pb.CredType_K8S.SubtypesString(), " | "))
 	}
 	// no validation necessary, its a file upload
 
@@ -155,14 +156,14 @@ func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCr
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*models.K8SCredsWrapper, error) {
-	credWrapper := &models.K8SCredsWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_K8S, true)
+func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*pb.K8SCredsWrapper, error) {
+	credWrapper := &pb.K8SCredsWrapper{}
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_K8S, true)
 	if err != nil {
 		return credWrapper, status.Errorf(codes.Internal, "unable to get k8s creds! error: %s", err.Error())
 	}
 	for _, v := range creds {
-		credWrapper.K8SCreds = append(credWrapper.K8SCreds, v.(*models.K8SCreds))
+		credWrapper.K8SCreds = append(credWrapper.K8SCreds, v.(*pb.K8SCreds))
 	}
 	if len(credWrapper.K8SCreds) == 0 {
 		return credWrapper, status.Error(codes.NotFound, "no kubernetes integration creds found")
@@ -170,18 +171,18 @@ func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty)
 	return credWrapper, nil
 }
 
-func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
+func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
 	return g.updateAnyCred(ctx, creds)
 }
 
-func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *models.K8SCreds) (*models.Exists, error) {
+func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *pb.K8SCreds) (*pb.Exists, error) {
 	return g.checkAnyCredExists(ctx, creds)
 }
 
 
-func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds models.OcyCredder) (*empty.Empty, error) {
+func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds pb.OcyCredder) (*empty.Empty, error) {
 	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
-		if _, ok := err.(*models.ValidationErr); ok {
+		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Errorf(codes.FailedPrecondition, "%s cred failed validation. Errors are: %s", creds.GetSubType().Parent(), err.Error())
 		}
 		return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())
@@ -189,16 +190,16 @@ func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds models.OcyC
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) checkAnyCredExists(ctx context.Context, creds models.OcyCredder) (*models.Exists, error) {
+func (g *guideOcelotServer) checkAnyCredExists(ctx context.Context, creds pb.OcyCredder) (*pb.Exists, error) {
 	exists, err := g.Storage.CredExists(creds)
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "Unable to reach cred table to check if cred %s/%s/%s exists. Error: %s", creds.GetAcctName(), creds.GetSubType().String(), creds.GetIdentifier(), err.Error())
 	}
-	return &models.Exists{Exists:exists}, nil
+	return &pb.Exists{Exists:exists}, nil
 }
 
-func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (*models.AllCredsWrapper, error) {
-	allCreds := &models.AllCredsWrapper{}
+func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (*pb.AllCredsWrapper, error) {
+	allCreds := &pb.AllCredsWrapper{}
 	repoCreds, err := g.GetRepoCreds(ctx, msg)
 	if err != nil {
 		return allCreds, status.Errorf(codes.Internal, "unable to get repo creds! error: %s", err.Error())
@@ -212,12 +213,12 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 	return allCreds, nil
 }
 
-func (g *guideOcelotServer) FindWerker(ctx context.Context, br *models.BuildReq) (*models.BuildRuntimeInfo, error) {
+func (g *guideOcelotServer) FindWerker(ctx context.Context, br *pb.BuildReq) (*pb.BuildRuntimeInfo, error) {
 	if len(br.Hash) > 0 {
 		//find matching hashes in consul by git hash
-		buildRtInfo, err := rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), br.Hash)
+		buildRtInfo, err := build.GetBuildRuntime(g.RemoteConfig.GetConsul(), br.Hash)
 		if err != nil {
-			if _, ok := err.(*rt.ErrBuildDone); !ok {
+			if _, ok := err.(*build.ErrBuildDone); !ok {
 				return nil, status.Errorf(codes.Internal, "could not get build runtime, err: %s", err.Error())
 			}
 			return nil, status.Error(codes.InvalidArgument, "werker not found for request as it has already finished ")
@@ -236,15 +237,15 @@ func (g *guideOcelotServer) FindWerker(ctx context.Context, br *models.BuildReq)
 	return nil, nil
 }
 
-func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQuery) (*models.Builds, error) {
-	buildRtInfo := make(map[string]*models.BuildRuntimeInfo)
+func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Builds, error) {
+	buildRtInfo := make(map[string]*pb.BuildRuntimeInfo)
 	var err error
 
 	if len(bq.Hash) > 0 {
 		//find matching hashes in consul by git hash
-		buildRtInfo, err = rt.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
+		buildRtInfo, err = build.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 		if err != nil {
-			if _, ok := err.(*rt.ErrBuildDone); !ok {
+			if _, ok := err.(*build.ErrBuildDone); !ok {
 				log.IncludeErrField(err)
 				return nil, status.Error(codes.Internal, "could not get build runtime, err: " + err.Error())
 			} else {
@@ -257,14 +258,14 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 		dbResults, err := g.Storage.RetrieveHashStartsWith(bq.Hash)
 
 		if err != nil {
-			return &models.Builds{
+			return &pb.Builds{
 				Builds: buildRtInfo,
 			}, handleStorageError(err)
 		}
 
 		for _, build := range dbResults {
 			if _, ok := buildRtInfo[build.Hash]; !ok {
-				buildRtInfo[build.Hash] = &models.BuildRuntimeInfo{
+				buildRtInfo[build.Hash] = &pb.BuildRuntimeInfo{
 					Hash: build.Hash,
 					// if a result was found in the database but not in GetBuildRuntime, the build is done
 					Done: true,
@@ -279,12 +280,12 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 	if bq.BuildId > 0 {
 		buildSum, err := g.Storage.RetrieveSumByBuildId(bq.BuildId)
 		if err != nil {
-			return &models.Builds{
+			return &pb.Builds{
 				Builds: buildRtInfo,
 			}, handleStorageError(err)
 		}
 
-		buildRtInfo[buildSum.Hash] = &models.BuildRuntimeInfo{
+		buildRtInfo[buildSum.Hash] = &pb.BuildRuntimeInfo{
 			Hash:     buildSum.Hash,
 			Done:     true,
 			AcctName: buildSum.Account,
@@ -292,19 +293,19 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *models.BuildQu
 		}
 	}
 
-	builds := &models.Builds{
+	builds := &pb.Builds{
 		Builds: buildRtInfo,
 	}
 	return builds, err
 }
 
-func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelot_LogsServer) error {
-	if !rt.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
+func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
+	if !build.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
 		errmsg :=  "build is not finished, use BuildRuntime method and stream from the werker registered"
-		stream.Send(&models.LineResponse{OutputLine: errmsg})
+		stream.Send(&pb.LineResponse{OutputLine: errmsg})
 		return status.Error(codes.NotFound,  errmsg)
 	} else {
-		var out md.BuildOutput
+		var out models.BuildOutput
 		var err error
 		if bq.BuildId != 0 {
 			out, err = g.Storage.RetrieveOut(bq.BuildId)
@@ -318,7 +319,7 @@ func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelo
 		buf := make([]byte, 0, 64*1024)
 		scanner.Buffer(buf, 1024*1024)
 		for scanner.Scan() {
-			resp := &models.LineResponse{OutputLine: scanner.Text()}
+			resp := &pb.LineResponse{OutputLine: scanner.Text()}
 			stream.Send(resp)
 		}
 		if err := scanner.Err(); err != nil {
@@ -329,29 +330,29 @@ func (g *guideOcelotServer) Logs(bq *models.BuildQuery, stream models.GuideOcelo
 	return nil
 }
 
-func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream models.GuideOcelot_BuildRepoAndHashServer) error {
+func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot_BuildRepoAndHashServer) error {
 	log.Log().Info(buildReq)
 	if buildReq == nil || len(buildReq.AcctRepo) == 0 || len(buildReq.Hash) == 0 {
 		return status.Error(codes.InvalidArgument, "please pass a valid account/repo_name and hash")
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
-	cfg, err := build.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig)
+	cfg, err := cred.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		if _, ok := err.(*build.FormatError); ok {
+		if _, ok := err.(*common.FormatError); ok {
 			return status.Error(codes.InvalidArgument, "Format error: " + err.Error())
 		}
 		return status.Error(codes.Internal, "Could not retrieve vcs creds: " + err.Error())
 	}
-	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, md.CHECKMARK)))
+	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
-	bbHandler, token, err := handler.GetBitbucketClient(cfg)
+	bbHandler, token, err := bbh.GetBitbucketClient(cfg)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve the bitbucket client config for %s. \n Error: %s", buildReq.AcctRepo, err.Error()))
 	}
-	stream.Send(RespWrap(fmt.Sprintf("Successfully used VCS Credentials to obtain a token %s", md.CHECKMARK)))
+	stream.Send(RespWrap(fmt.Sprintf("Successfully used VCS Credentials to obtain a token %s", models.CHECKMARK)))
 
 	var branch string
 	var fullHash string
@@ -376,7 +377,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 		fullHash = buildReq.Hash
 		branch = buildReq.Branch
 	} else {
-		acct, repo, err := build.GetAcctRepo(buildReq.AcctRepo)
+		acct, repo, err := common.GetAcctRepo(buildReq.AcctRepo)
 		if err != nil {
 			return status.Error(codes.InvalidArgument, "Bad format of acctRepo, must be account/repo")
 		}
@@ -395,11 +396,11 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 		}
 
 		fullHash = buildSum.Hash
-		stream.Send(RespWrap(fmt.Sprintf("Found a previous build starting with hash %s, now building branch %s %s", buildReq.Hash, branch, md.CHECKMARK)))
+		stream.Send(RespWrap(fmt.Sprintf("Found a previous build starting with hash %s, now building branch %s %s", buildReq.Hash, branch, models.CHECKMARK)))
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s...", buildReq.AcctRepo)))
-	buildConf, _, err := build.GetBBConfig(g.RemoteConfig, g.Storage, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
+	buildConf, _, err := signal.GetBBConfig(g.RemoteConfig, g.Storage, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get bb config")
 		if err.Error() == "could not find raw data at url" {
@@ -409,20 +410,20 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 		}
 		return err
 	}
-	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, md.CHECKMARK)))
+	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap(fmt.Sprintf("Storing build data for %s...", buildReq.AcctRepo)))
-	if err = build.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
+	if err = signal.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
 		log.IncludeErrField(err).Error("couldn't add to build queue or store in db")
 		return status.Error(codes.InvalidArgument, "Couldn't add to build queue or store in DB, err: " + err.Error())
 	}
-	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", fullHash, buildReq.AcctRepo, md.CHECKMARK)))
+	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", fullHash, buildReq.AcctRepo, models.CHECKMARK)))
 	return nil
 }
 
 
-func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *models.RepoAccount) (*models.Summaries, error) {
+func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *pb.RepoAccount) (*pb.Summaries, error) {
 	log.Log().Debug("getting last few summaries")
-	var summaries = &models.Summaries{}
+	var summaries = &pb.Summaries{}
 	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
 		return nil, handleStorageError(err)
@@ -432,7 +433,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 		return nil, status.Error(codes.NotFound, "no entries found")
 	}
 	for _, model := range modelz {
-		summary := &models.BuildSummary{
+		summary := &pb.BuildSummary{
 			Hash:          model.Hash,
 			Failed:        model.Failed,
 			BuildTime:     &timestamp.Timestamp{Seconds: model.BuildTime.UTC().Unix()},
@@ -449,10 +450,10 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 }
 
-func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.RepoAccount) (*empty.Empty, error) {
-	var vcs *models.VCSCreds
-	bb := models.SubCredType_BITBUCKET
-	identifier, err := models.CreateVCSIdentifier(bb, repoAcct.Account)
+func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
+	var vcs *pb.VCSCreds
+	bb := pb.SubCredType_BITBUCKET
+	identifier, err := pb.CreateVCSIdentifier(bb, repoAcct.Account)
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.Internal, "couldn't create identifier")
 	}
@@ -463,12 +464,12 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.Repo
 		}
 		return &empty.Empty{}, status.Error(codes.Internal, "could not get bitbucket creds")
 	}
-	vcs = bbCreds.(*models.VCSCreds)
+	vcs = bbCreds.(*pb.VCSCreds)
 	bbClient := &net.OAuthClient{}
 	bbClient.Setup(vcs)
 
 
-	bbHandler := handler.GetBitbucketHandler(vcs, bbClient)
+	bbHandler := bbh.GetBitbucketHandler(vcs, bbClient)
 	repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
 	if repoDetail.Type == "error" || err != nil {
 		return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
@@ -484,8 +485,8 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.Repo
 }
 
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
-func (g *guideOcelotServer) GetStatus(ctx context.Context, query *models.StatusQuery) (result *models.Status, err error) {
-	var buildSum md.BuildSummary
+func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery) (result *pb.Status, err error) {
+	var buildSum models.BuildSummary
 	if len(query.Hash) > 0 {
 		partialHash := query.Hash
 		buildSum, err = g.Storage.RetrieveLatestSum(partialHash)
@@ -550,7 +551,7 @@ BUILD_FOUND:
 		return nil, handleStorageError(err)
 	}
 	result = ParseStagesByBuildId(buildSum, stageResults)
-	inConsul, err := rt.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
+	inConsul, err := build.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
 	if err != nil {
 		return nil, status.Error(codes.Unavailable, "An error occurred checking build status in consul. Cannot retrieve status at this time.\n\n" + err.Error())
 	}
@@ -558,8 +559,8 @@ BUILD_FOUND:
 	return
 }
 
-func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {
-	identifier, err := models.CreateVCSIdentifier(sshKeyWrapper.SubType, sshKeyWrapper.AcctName)
+func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *pb.SSHKeyWrapper) (*empty.Empty, error) {
+	identifier, err := pb.CreateVCSIdentifier(sshKeyWrapper.SubType, sshKeyWrapper.AcctName)
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.FailedPrecondition, err.Error())
 	}
@@ -571,7 +572,7 @@ func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper 
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *models.PollRequest) (*empty.Empty, error) {
+func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
 	log.Log().Info("recieved poll request for ", poll.Account, poll.Repo, poll.Cron)
 	empti := &empty.Empty{}
 	if poll.Repo == "" || poll.Account == "" || poll.Branches == "" || poll.Cron == "" {
@@ -605,7 +606,7 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *models.PollReque
 	return empti, nil
 }
 
-func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *models.PollRequest) (*empty.Empty, error) {
+func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
 	log.Log().Info("received delete poll request for ", poll.Account, " ", poll.Repo)
 	empti := &empty.Empty{}
 	if err := g.Storage.DeletePoll(poll.Account, poll.Repo); err != nil {
@@ -621,7 +622,7 @@ func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *models.Pol
 }
 
 // todo: add acct/repo action later
-func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*models.Polls, error) {
+func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*pb.Polls, error) {
 	polls, err := g.Storage.GetAllPolls()
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
@@ -629,9 +630,9 @@ func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*mod
 		}
 		return nil, status.Error(codes.Unavailable, err.Error())
 	}
-	pollz := &models.Polls{}
+	pollz := &pb.Polls{}
 	for _, pll := range polls {
-		pbpoll := &models.PollRequest{
+		pbpoll := &pb.PollRequest{
 			Account: pll.Account,
 			Repo: pll.Repo,
 			Cron: pll.Cron,
@@ -643,7 +644,7 @@ func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*mod
 	return pollz, nil
 }
 
-func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserializer, adminV *AdminValidator, repoV *RepoValidator, storage storage.OcelotStorage) models.GuideOcelotServer {
+func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserializer, adminV *cred.AdminValidator, repoV *cred.RepoValidator, storage storage.OcelotStorage) pb.GuideOcelotServer {
 	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
 	// purdier to me anyway
 	guideOcelotServer := &guideOcelotServer{

@@ -47,14 +47,14 @@ func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 	downloadCode := []string {"/bin/sh", "-c"}
 	var downloadCmd string
 	switch werk.VcsType {
-	case protos.SubCredType_BITBUCKET:
+	case pb.SubCredType_BITBUCKET:
 		//if download url is not the default, then we assume whoever set it knows exactly what they're doing and no replacements
 		if b.GetBbDownloadURL() != DefaultBitbucketURL {
 			downloadCmd = fmt.Sprintf("/.ocelot/bb_download.sh %s %s %s", werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
 		} else {
 			downloadCmd = fmt.Sprintf("/.ocelot/bb_download.sh %s %s %s", werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash)
 		}
-	case protos.SubCredType_GITHUB:
+	case pb.SubCredType_GITHUB:
 		ocelog.Log().Error("not implemented")
 	default:
 		ocelog.Log().Error("werker VCS type not recognized")

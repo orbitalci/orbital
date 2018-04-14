@@ -2,22 +2,25 @@ package launcher
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/build"
+
 	"bitbucket.org/level11consulting/ocelot/build/integrations/dockr"
 	"bitbucket.org/level11consulting/ocelot/build/integrations/k8s"
 	"bitbucket.org/level11consulting/ocelot/build/integrations/nexus"
+	"bitbucket.org/level11consulting/ocelot/build/valet"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
-	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
-func (w *Launcher) WatchForResults(hash string, dbId int64) {
+func (w *launcher) WatchForResults(hash string, dbId int64) {
 	ocelog.Log().Debugf("adding hash ( %s ) & infochan to transport channel", hash)
 	transport := &models.Transport{Hash: hash, InfoChan: w.infochan, DbId: dbId}
 	w.StreamChan <- transport
@@ -25,7 +28,7 @@ func (w *Launcher) WatchForResults(hash string, dbId int64) {
 
 
 // MakeItSo will call appropriate builder functions
-func (w *Launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
+func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
@@ -163,10 +166,10 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 	return
 }
 
-func (w *Launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
+func (w *launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
 	dockerUuid := <- dockerChan
 
-	if err := buildruntime.RegisterBuild(w.WerkConf.RemoteConfig.GetConsul(), w.WerkConf.WerkerUuid.String(), checkoutHash, dockerUuid); err != nil {
+	if err := valet.RegisterBuild(w.RemoteConf.GetConsul(), w.Uuid.String(), checkoutHash, dockerUuid); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")
 		return err
 	}
@@ -205,12 +208,12 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 }
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
-func (w *Launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, store storage.CredTable, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
+func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, store storage.CredTable, bldr build.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
 	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
 	id = bldr.GetContainerId()
 	var setupMessages []string
-	stage := b.InitStageUtil("INTEGRATION_UTIL")
+	stage := build.InitStageUtil("INTEGRATION_UTIL")
 	result.Messages = setupMessages
 	//only if the build tool is maven do we worry about settings.xml
 	if werk.BuildConf.BuildTool == "maven" {
@@ -236,9 +239,9 @@ func (w *Launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, stor
 	return
 }
 
-func (w *Launcher) returnWerkerPort(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
+func (w *launcher) returnWerkerPort(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 	ocelog.Log().Debug("returning werker port")
-	return  w.WerkConf.ServicePort, nil
+	return  w.ServicePort, nil
 }
 
 func branchOk(branch string, buildBranches []string) bool {

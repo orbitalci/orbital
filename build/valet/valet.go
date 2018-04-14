@@ -1,21 +1,21 @@
 package valet
 
 import (
-	"bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/go-til/log"
-	brt "bitbucket.org/level11consulting/ocelot/util/buildruntime"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"os"
 	"runtime/debug"
 	"sync"
 	"time"
-	c "bitbucket.org/level11consulting/ocelot/newocy/build/cleaner"
-	conf "bitbucket.org/level11consulting/ocelot/old/werker/config"
+
+	"bitbucket.org/level11consulting/go-til/consul"
+	"bitbucket.org/level11consulting/go-til/log"
+	brt "bitbucket.org/level11consulting/ocelot/build"
+	c "bitbucket.org/level11consulting/ocelot/build/cleaner"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/google/uuid"
 )
 //go:generate stringer -type=Interrupt
 type Interrupt int
@@ -34,7 +34,7 @@ type Valet struct {
 	c.Cleaner
 }
 
-func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType conf.WerkType, store storage.OcelotStorage) *Valet {
+func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage) *Valet {
 	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store:store}
 	valet.Cleaner = c.GetNewCleaner(werkerType)
 
@@ -45,11 +45,11 @@ func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType conf.WerkType, s
 // Reset will set the build stage for the runtime of the hash, and it will add a start time.
 func (v *Valet) Reset(newStage string, hash string) error {
 	consulet := v.RemoteConfig.GetConsul()
-	err := brt.RegisterBuildStage(consulet, v.WerkerUuid.String(), hash, newStage)
+	err := RegisterBuildStage(consulet, v.WerkerUuid.String(), hash, newStage)
 	if err != nil {
 		return err
 	}
-	err = brt.RegisterStageStartTime(consulet, v.WerkerUuid.String(), hash, time.Now())
+	err = RegisterStageStartTime(consulet, v.WerkerUuid.String(), hash, time.Now())
 	return err
 }
 
@@ -101,12 +101,12 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 // StartBuild will register the uuid, hash, and database id into consul, as well as update the werker_id:hash kv in consul.
 func (v *Valet) StartBuild(consulet *consul.Consulet, hash string, id int64) error {
 	var err error
-	if err = brt.RegisterBuildSummaryId(consulet, v.WerkerUuid.String(), hash, id); err != nil {
+	if err = RegisterBuildSummaryId(consulet, v.WerkerUuid.String(), hash, id); err != nil {
 		log.IncludeErrField(err).Error("could not register build summary id into consul! huge deal!")
 		return err
 	}
 
-	if err = brt.RegisterStartedBuild(consulet, v.WerkerUuid.String(), hash); err != nil {
+	if err = RegisterStartedBuild(consulet, v.WerkerUuid.String(), hash); err != nil {
 		log.IncludeErrField(err).Error("couldn't register build")
 		return err
 	}
@@ -134,14 +134,14 @@ func (v *Valet) Cleanup() {
 	}
 	log.Log().Info("deleting hashes associated with this werker out of consul.")
 	for _, hash := range hashes {
-		if err := brt.Delete(consulet, hash); err != nil {
+		if err := Delete(consulet, hash); err != nil {
 			log.IncludeErrField(err).WithField("gitHash", hash).Error("could not delete out of consul for build")
 		} else {
 			log.Log().WithField("gitHash", hash).Info("successfully delete git hashes out of build runtime consul")
 		}
 	}
 	log.Log().Info("unregister-ing myself with consul as a werker")
-	if err := brt.UnRegister(consulet, v.WerkerUuid.String()); err != nil {
+	if err := UnRegister(consulet, v.WerkerUuid.String()); err != nil {
 		log.IncludeErrField(err).WithField("werkerId", v.WerkerUuid.String()).Error("unable to remove werker location register out of consul.")
 	} else {
 		log.Log().WithField("werkerId", v.WerkerUuid.String()).Info("successfully unregistered")
@@ -211,18 +211,18 @@ func (v *Valet) SignalRecvDed() {
 // 		ci/builds/<werkerId>/<hash>/*
 func Delete(consulete *consul.Consulet, gitHash string) (err error) {
 	//paths := &Identifiers{GitHash: gitHash}
-	pairPath := MakeBuildMapPath(gitHash)
+	pairPath := brt.MakeBuildMapPath(gitHash)
 	kv, err := consulete.GetKeyValue(pairPath)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't get kv error!")
+		log.IncludeErrField(err).Error("couldn't get kv error!")
 		return
 	}
 	if kv == nil {
-		ocelog.Log().Error("THIS PAIR SHOULD NOT BE NIL! path: " + pairPath)
+		log.Log().Error("THIS PAIR SHOULD NOT BE NIL! path: " + pairPath)
 		return
 	}
-	ocelog.Log().WithField("gitHash", gitHash).Info("WERKERID IS: ", string(kv.Value))
-	if err = consulete.RemoveValues(MakeBuildPath(string(kv.Value), gitHash)); err != nil {
+	log.Log().WithField("gitHash", gitHash).Info("WERKERID IS: ", string(kv.Value))
+	if err = consulete.RemoveValues(brt.MakeBuildPath(string(kv.Value), gitHash)); err != nil {
 		return
 	}
 	err = consulete.RemoveValue(pairPath)

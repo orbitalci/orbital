@@ -5,20 +5,21 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/basher"
-	"bitbucket.org/level11consulting/ocelot/build/builder"
+	bldr "bitbucket.org/level11consulting/ocelot/build/builder"
+	"bitbucket.org/level11consulting/ocelot/build/launcher"
 	"bitbucket.org/level11consulting/ocelot/build/valet"
+	"bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/tools/go/gcimporter15/testdata"
 
 	//"runtime/debug"
-	"context"
 	"fmt"
 )
 
 type WorkerMsgHandler struct {
+	*models.WerkerFacts
 	Topic           string
 	Type        models.WerkType
 	infochan        chan []byte
@@ -27,18 +28,20 @@ type WorkerMsgHandler struct {
 	Basher          *basher.Basher
 	Store           storage.OcelotStorage
 	BuildValet   *valet.Valet
+	RemoteConfig  credentials.CVRemoteConfig
 
 }
 
-func NewWorkerMsgHandler(topic string, wType models.WerkType, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
+func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, rc credentials.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
 	return &WorkerMsgHandler{
-		Topic: 		topic,
-		Type: 	wType,
-		Basher: 	b,
-		Store: 		st,
-		BuildValet: bv,
+		Topic: 		   topic,
+		Basher: 	   b,
+		Store: 		   st,
+		BuildValet:	   bv,
 		StreamChan:   tunnel,
 		BuildCtxChan: buildChan,
+		RemoteConfig: rc,
+		WerkerFacts:  facts,
 	}
 }
 
@@ -68,11 +71,12 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	var builder build.Builder
 	switch w.Type {
 	case models.Docker:
-		builder = builder.NewDockerBuilder(w.Basher)
+		builder = bldr.NewDockerBuilder(w.Basher)
 	default:
-		builder = builder.NewDockerBuilder(w.Basher)
+		builder = bldr.NewDockerBuilder(w.Basher)
 	}
-	w.MakeItSo(werkerTask, builder, finish, done)
+	launch := launcher.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildValet)
+	launch.MakeItSo(werkerTask, builder, finish, done)
 	return nil
 }
 

@@ -6,6 +6,7 @@ import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/build"
+	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
@@ -49,7 +50,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	branch := repopush.Push.Changes[0].New.Name
 	//acctName := repopush.Repository.Owner.Username
 
-	buildConf, bbToken, err := build.GetBBConfig(ctx.GetRemoteConfig(),ctx.GetStorage(), fullName, hash, ctx.GetDeserializer(), nil)
+	buildConf, bbToken, err := signal.GetBBConfig(ctx.GetRemoteConfig(),ctx.GetStorage(), fullName, hash, ctx.GetDeserializer(), nil)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -60,7 +61,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = build.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), ctx.GetStorage()); err != nil {
+	if err = signal.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), ctx.GetStorage()); err != nil {
 		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
 		return
 	}
@@ -81,7 +82,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	//acctName := pr.Pullrequest.Source.Repository.Owner.Username
 	branch := pr.Pullrequest.Source.Branch.Name
 
-	buildConf, bbToken, err := build.GetBBConfig(ctx.GetRemoteConfig(), ctx.GetStorage(), fullName, hash, ctx.GetDeserializer(), nil)
+	buildConf, bbToken, err := signal.GetBBConfig(ctx.GetRemoteConfig(), ctx.GetStorage(), fullName, hash, ctx.GetDeserializer(), nil)
 	if err != nil {
 		// if the build file just isn't there don't worry about it.
 		if err != ocenet.FileNotFound {
@@ -93,7 +94,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	if err = build.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), ctx.GetStorage()); err != nil {
+	if err = signal.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), ctx.GetStorage()); err != nil {
 		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
 		return
 	}

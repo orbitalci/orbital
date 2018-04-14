@@ -50,12 +50,12 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 		} else {
 			mode := os.Getenv("ENV")
 			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
-			basher := &basher.Basher{LoopbackIp:conf.LoopBackIp}
+			bshr := &basher.Basher{LoopbackIp:conf.LoopBackIp}
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
-				basher.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
+				bshr.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
 			}
 
-			handler := listener.NewWorkerMsgHandler(topic, conf.WerkerType, basher, store, bv, streamingChan, buildChan)
+			handler := listener.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan)
 			p.Handler = handler
 			p.ConsumeMessages(topic, "werker")
 			ocelog.Log().Info("Consuming messages for topic ", topic)
@@ -87,9 +87,9 @@ func main() {
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to register werker with consul, this is vital. BAILING!")
 	}
-	conf.WerkerUuid = uuid
+	conf.Uuid = uuid
 	// kick off ctl-c signal handling
-	buildValet := valet.NewValet(conf.RemoteConfig, conf.WerkerUuid, conf.WerkerType, store)
+	buildValet := valet.NewValet(conf.RemoteConfig, conf.Uuid, conf.WerkerType, store)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -112,7 +112,7 @@ func main() {
 		protoConsumers = append(protoConsumers, protoConsume)
 	}
 	go nsqwatch.WatchAndPause(60, protoConsumers, conf.RemoteConfig, store) // todo: put interval in conf
-	go werker.ServeMe(streamingTunnel, buildCtxTunnel, conf, store)
+	go werker.ServeMe(streamingTunnel, buildCtxTunnel, conf.WerkerFacts, store)
 	for _, consumer := range protoConsumers {
 		<-consumer.StopChan
 	}
