@@ -82,7 +82,7 @@ func (StageResultVal) EnumDescriptor() ([]byte, []int) { return fileDescriptor0,
 type BuildConfig struct {
 	Image string `protobuf:"bytes,1,opt,name=image" json:"image,omitempty"`
 	// @inject_tag: yaml:"buildTool"
-	BuildTool string   `protobuf:"bytes,2,opt,name=buildTool" json:"buildTool,omitempty"`
+	BuildTool string   `protobuf:"bytes,2,opt,name=buildTool" json:"buildTool,omitempty" yaml:"buildTool"`
 	Packages  []string `protobuf:"bytes,3,rep,name=packages" json:"packages,omitempty"`
 	Branches  []string `protobuf:"bytes,4,rep,name=branches" json:"branches,omitempty"`
 	Env       []string `protobuf:"bytes,5,rep,name=env" json:"env,omitempty"`
@@ -141,7 +141,7 @@ type Stage struct {
 	Script []string `protobuf:"bytes,2,rep,name=script" json:"script,omitempty"`
 	Name   string   `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
 	// @inject_tag: yaml:"trigger"
-	Trigger *Triggers `protobuf:"bytes,4,opt,name=trigger" json:"trigger,omitempty"`
+	Trigger *Triggers `protobuf:"bytes,4,opt,name=trigger" json:"trigger,omitempty" yaml:"trigger"`
 }
 
 func (m *Stage) Reset()                    { *m = Stage{} }
