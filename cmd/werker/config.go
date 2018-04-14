@@ -4,7 +4,6 @@ import (
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/storage"
-	"github.com/google/uuid"
 	"github.com/namsral/flag"
 
 	"errors"
@@ -59,7 +58,7 @@ type WerkerConf struct {
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
 // alright because it only happens on startup of the application
 func GetConf() (*WerkerConf, error) {
-	werker := &WerkerConf{}
+	werker := &WerkerConf{WerkerFacts:&models.WerkerFacts{}}
 	werkerName, _ := os.Hostname()
 	var werkerTypeStr string
 	var storageTypeStr string

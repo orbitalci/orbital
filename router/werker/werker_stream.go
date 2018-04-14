@@ -17,7 +17,13 @@ import (
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
+)
+
+
+var (
+	upgrader = websocket.Upgrader{}
 )
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +48,7 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	//defer ws.Close()
 	pumpDone := make(chan int)
 
-	go streamer.PumpBundle(ws, a, hash, pumpDone)
+	go a.streamPack.PumpBundle(ws, hash, pumpDone)
 	ocelog.Log().Debug("sending infoChan over web socket, waiting for the channel to be closed.")
 	<-pumpDone
 }
@@ -52,15 +58,17 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 func ServeMe(transportChan chan *models.Transport, buildCtxChan chan *models.BuildContext, conf *models.WerkerFacts, store storage.OcelotStorage) {
 	// todo: defer a recovery here
 	werkStream := getWerkerContext(conf, store)
+	streamPack := streamer.GetStreamPack(werkStream.BuildContexts, werkStream.store, werkStream.consul)
+	werkStream.streamPack = streamPack
 	ocelog.Log().Debug("saving build info channels to in memory map")
-	go streamer.ListenTransport(transportChan, werkStream)
-	go streamer.ListenBuilds(buildCtxChan, werkStream, sync.Mutex{})
+	go streamPack.ListenTransport(transportChan)
+	go streamPack.ListenBuilds(buildCtxChan, sync.Mutex{})
 
 	ocelog.Log().Info("serving websocket on port: ", conf.ServicePort)
 	muxi := mux.NewRouter()
 	muxi.Handle("/ws/builds/{hash}", &ocenet.AppContextHandler{werkStream, stream}).Methods("GET")
 	muxi.HandleFunc("/builds/{hash}", serveHome).Methods("GET")
-	muxi.HandleFunc("/DUMP", werkStream.dumpData).Methods("GET")
+	//muxi.HandleFunc("/DUMP", werkStream.dumpData).Methods("GET")
 
 	//if we're in dev mode, serve everything out of test-fixtures at /dev
 	mode := os.Getenv("ENV")
@@ -96,5 +104,4 @@ func ServeMe(transportChan chan *models.Transport, buildCtxChan chan *models.Bui
 	go func() {
 		ocelog.Log().Info(http.ListenAndServe(":6060", nil))
 	}()
-
 }

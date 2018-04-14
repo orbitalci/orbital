@@ -1,22 +1,17 @@
 package streamer
 
 import (
-	_ "net/http/pprof"
-
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-
-	rt "bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/models"
-
 	"bytes"
-	"github.com/gorilla/websocket"
+	_ "net/http/pprof"
 	"sync"
 	"time"
-)
-// TODO: half of this belongs in router
 
-var (
-	upgrader = websocket.Upgrader{}
+	"bitbucket.org/level11consulting/go-til/consul"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	rt "bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/build/valet"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/storage"
 )
 
 
@@ -24,6 +19,13 @@ type buildDatum struct {
 	sync.Mutex
 	buildData [][]byte
 	done      bool
+}
+
+
+func (b *buildDatum) Append(line []byte) {
+	b.Lock()
+	defer b.Unlock()
+	b.buildData = append(b.buildData, line)
 }
 
 func (b *buildDatum) GetData() [][]byte {
@@ -42,29 +44,44 @@ func (b *buildDatum) CheckDone() bool {
 	return b.done
 }
 
+func GetStreamPack(buildContexts map[string]*models.BuildContext, store storage.OcelotStorage, consulet *consul.Consulet) *StreamPack {
+	return &StreamPack{
+		BuildContexts: buildContexts,
+		Consul: consulet,
+		Store:  store,
+		BuildInfo: make(map[string]*buildDatum),
+	}
+}
+
+type StreamPack struct {
+	Consul    *consul.Consulet
+	Store     storage.OcelotStorage
+	BuildInfo map[string]*buildDatum
+	BuildContexts map[string]*models.BuildContext
+}
 
 // pumpBundle writes build data to web socket
-func PumpBundle(stream Streamable, appCtx *WerkerContext, hash string, done chan int) {
+func (sp *StreamPack) PumpBundle(stream Streamable, hash string, done chan int) {
 	defer func() {
 		if r := recover(); r != nil {
 			ocelog.Log().WithField("recover", r).Error("recovered from a panic in pumpBundle!!")
 		}
 	}()
 	// determine whether to get from out or off infoReader
-	if rt.CheckIfBuildDone(appCtx.consul, appCtx.sum, hash) {
+	if rt.CheckIfBuildDone(sp.Consul, sp.Store, hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
-		latestSummary, err := appCtx.sum.RetrieveLatestSum(hash)
+		latestSummary, err := sp.Store.RetrieveLatestSum(hash)
 		if err != nil {
 			ocelog.IncludeErrField(err).Error("could not get latest build from storage")
 		} else {
-			err = streamer.StreamFromStorage(appCtx.out, stream, latestSummary.BuildId)
+			err = StreamFromStorage(sp.Store, stream, latestSummary.BuildId)
 			if err != nil {
 				ocelog.IncludeErrField(err).Error("error retrieving from storage")
 			}
 		}
 	} else {
 		ocelog.Log().Debug("pumping info array data to web socket")
-		buildInfo, ok := appCtx.buildInfo[hash]
+		buildInfo, ok := sp.BuildInfo[hash]
 		ocelog.Log().Debug("length of array to stream is %d", len(buildInfo.GetData()))
 		if ok {
 			err := StreamFromArray(buildInfo, stream, ocelog.Log())
@@ -81,15 +98,15 @@ func PumpBundle(stream Streamable, appCtx *WerkerContext, hash string, done chan
 }
 
 // processTransport deals with adding info to consul, and calling writeInfoChanToInMemMap
-func processTransport(transport *models.Transport, appCtx *WerkerContext) {
-	writeInfoChanToInMemMap(transport, appCtx)
+func (sp *StreamPack) processTransport(transport *models.Transport) {
+	sp.writeInfoChanToInMemMap(transport)
 	// get rid of hash from cache, set build done in consul
 	//if err := rt.SetBuildDone(appCtx.consul, transport.Hash); err != nil {
 	//	ocelog.IncludeErrField(err).Error("could not set build done")
 	//}
 	ocelog.Log().Debugf("removing hash %s from readerCache, channelDict, and consul", transport.Hash)
-	delete(appCtx.buildInfo, transport.Hash)
-	if err := rt.Delete(appCtx.consul, transport.Hash); err != nil {
+	delete(sp.BuildInfo, transport.Hash)
+	if err := valet.Delete(sp.Consul, transport.Hash); err != nil {
 		ocelog.IncludeErrField(err).Error("could not recursively delete values from consul")
 	}
 
@@ -101,16 +118,13 @@ func processTransport(transport *models.Transport, appCtx *WerkerContext) {
 //  there is a way to see when the array will not be written to anymore
 //  when the info channel is closed and the loop finishes, all the data is written to the out defined in the
 //  appCtx, the done flag is written to consul, and the array is removed from the map
-func writeInfoChanToInMemMap(transport *models.Transport, appCtx *WerkerContext) {
+func (sp *StreamPack) writeInfoChanToInMemMap(transport *models.Transport) {
 	var dataSlice [][]byte
 	build := &buildDatum{buildData: dataSlice, done: false}
-	appCtx.buildInfo[transport.Hash] = build
+	sp.BuildInfo[transport.Hash] = build
 	ocelog.Log().Debugf("writing infochan data for %s", transport.Hash)
 	for i := range transport.InfoChan {
-		build.Lock()
-		build.buildData = append(build.buildData, i)
-		build.Unlock()
-		// i think wihtout this it eats all the cpu..
+		build.Append(i)
 		time.Sleep(time.Millisecond)
 	}
 	ocelog.Log().Debug("done with build ", transport.Hash)
@@ -119,7 +133,7 @@ func writeInfoChanToInMemMap(transport *models.Transport, appCtx *WerkerContext)
 		Output:  bytes.Join(build.buildData, []byte("\n")),
 	}
 	//ocelog.Log().Debug(string(len(out.Output)))
-	err := appCtx.out.AddOut(out)
+	err := sp.Store.AddOut(out)
 	// even if it didn't store properly, we need to set the build in the map as "done" so
 	// that the streams that connect when the build is still happening know to close the connection
 	build.done = true
@@ -128,30 +142,30 @@ func writeInfoChanToInMemMap(transport *models.Transport, appCtx *WerkerContext)
 	}
 }
 
-func ListenTransport(transpo chan *models.Transport, appCtx *WerkerContext) {
+func (sp *StreamPack) ListenTransport(transpo chan *models.Transport) {
 	for i := range transpo {
 		ocelog.Log().Debugf("adding info channel for hash %s to map for streaming access.", i.Hash)
-		go processTransport(i, appCtx)
+		go sp.processTransport(i)
 	}
 }
 
-func ListenBuilds(buildsChan chan *models.BuildContext, appCtx *WerkerContext, mapLock sync.Mutex) {
+func (sp *StreamPack) ListenBuilds(buildsChan chan *models.BuildContext, mapLock sync.Mutex) {
 	for newBuild := range buildsChan {
 		mapLock.Lock()
 		ocelog.Log().Debugf("got new build context for %s", newBuild.Hash)
-		appCtx.BuildContexts[newBuild.Hash] = newBuild
+		sp.BuildContexts[newBuild.Hash] = newBuild
 		mapLock.Unlock()
-		go contextCleanup(newBuild, appCtx, mapLock)
+		go sp.contextCleanup(newBuild, mapLock)
 	}
 }
 
-func contextCleanup(buildCtx *models.BuildContext, appCtx *WerkerContext, mapLock sync.Mutex) {
+func (sp *StreamPack) contextCleanup(buildCtx *models.BuildContext, mapLock sync.Mutex) {
 	select {
 	case <-buildCtx.Context.Done():
 		mapLock.Lock()
 		ocelog.Log().Debugf("build for hash %s is complete", buildCtx.Hash)
-		if _, ok := appCtx.BuildContexts[buildCtx.Hash]; ok {
-			delete(appCtx.BuildContexts, buildCtx.Hash)
+		if _, ok := sp.BuildContexts[buildCtx.Hash]; ok {
+			delete(sp.BuildContexts, buildCtx.Hash)
 		}
 		mapLock.Lock()
 		return

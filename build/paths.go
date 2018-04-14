@@ -14,10 +14,12 @@ var prefix string
 func getPrefix() string {
 	once.Do(func(){
 		prefix = os.Getenv("PATH_PREFIX")
+		fmt.Println("PREFIX IS:", prefix)
 		if prefix == "" {
 			prefix = ""
+		} else {
+			prefix = prefix + "/"
 		}
-		prefix = prefix + "/"
 	})
 	return prefix
 }

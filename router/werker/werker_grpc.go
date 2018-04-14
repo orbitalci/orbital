@@ -1,15 +1,17 @@
 package werker
 
 import (
-	"bitbucket.org/level11consulting/ocelot/build/streamer"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"fmt"
-	"github.com/pkg/errors"
 	"context"
+	"fmt"
+
 	"bitbucket.org/level11consulting/go-til/log"
 	rt "bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/cleaner"
+	"bitbucket.org/level11consulting/ocelot/build/streamer"
+	"bitbucket.org/level11consulting/ocelot/build/valet"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+
+	"github.com/pkg/errors"
 )
 
 //embeds the werkerappcontext so we can stream + access active builds
@@ -21,11 +23,11 @@ type WerkerServer struct {
 //streams logs for an active build
 func (w *WerkerServer) BuildInfo(request *pb.Request, stream pb.Build_BuildInfoServer) error {
 	stream.Send(wrap(request.Hash))
-	stream.Send(wrap(w.Conf.WerkerName))
-	stream.Send(wrap(w.Conf.RegisterIP))
+	//stream.Send(wrap(w.Conf.WerkerName))
+	//stream.Send(wrap(w.Conf.RegisterIP))
 	pumpDone := make(chan int)
-	streamable := &streamer.BuildStreamableServer{Server: stream}
-	go streamer.PumpBundle(streamable, w.WerkerContext, request.Hash, pumpDone)
+	streamable := &streamer.BuildStreamableServer{Build_BuildInfoServer: stream}
+	go w.streamPack.PumpBundle(streamable, request.Hash, pumpDone)
 	<-pumpDone
 	return nil
 }
@@ -40,7 +42,7 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 		// remove container
 		stream.Send(wrap("Performing build cleanup..."))
 
-		hashes, err := rt.GetHashRuntimesByWerker(w.consul, w.Conf.WerkerUuid.String())
+		hashes, err := rt.GetHashRuntimesByWerker(w.consul, w.Uuid.String())
 		if err != nil {
 			log.IncludeErrField(err).Error("unable to retrieve active builds from consul")
 			return err
@@ -65,7 +67,7 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 func NewWerkerServer(werkerCtx *WerkerContext) pb.BuildServer {
 	werkerServer := &WerkerServer{
 		WerkerContext: werkerCtx,
-		Cleaner: cleaner.GetNewCleaner(werkerCtx.Conf.WerkerType),
+		Cleaner: cleaner.GetNewCleaner(werkerCtx.WerkerType),
 	}
 	return werkerServer
 }
