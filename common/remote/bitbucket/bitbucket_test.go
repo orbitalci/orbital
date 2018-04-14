@@ -2,7 +2,7 @@ package bitbucket
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"os"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
-	config := &models.VCSCreds{}
+	config := &pb.VCSCreds{}
 	bb := GetBitbucketHandler(config, MockHttpClient{
 		Unmarshaler: &jsonpb.Unmarshaler{
 			AllowUnknownFields: true,
@@ -24,7 +24,7 @@ func TestBitbucket_FindWebhooksExists(t *testing.T) {
 }
 
 func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
-	config := &models.VCSCreds{}
+	config := &pb.VCSCreds{}
 	bb := GetBitbucketHandler(config, MockHttpClient{
 		Unmarshaler: &jsonpb.Unmarshaler{
 			AllowUnknownFields: true,

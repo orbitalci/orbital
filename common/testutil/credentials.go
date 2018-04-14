@@ -1,7 +1,11 @@
 package testutil
 
+import (
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"golang.org/x/tools/go/gcimporter15/testdata"
+)
 
-func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
+func CompareCredWrappers(credWrapA *pb.CredWrapper, credWrapB *pb.CredWrapper) bool {
 	for ind, cred := range credWrapA.Vcs {
 		credB := credWrapB.Vcs[ind]
 		if cred.SubType != credB.SubType {
@@ -26,7 +30,7 @@ func CompareCredWrappers(credWrapA *CredWrapper, credWrapB *CredWrapper) bool {
 	return true
 }
 
-func CompareRepoCredWrappers(repoWrapA *RepoCredWrapper, repoWrapB *RepoCredWrapper) bool {
+func CompareRepoCredWrappers(repoWrapA *pb.RepoCredWrapper, repoWrapB *pb.RepoCredWrapper) bool {
 	for ind, cred := range repoWrapA.Repo {
 		credB := repoWrapB.Repo[ind]
 		if cred.SubType != credB.SubType {
@@ -48,7 +52,7 @@ func CompareRepoCredWrappers(repoWrapA *RepoCredWrapper, repoWrapB *RepoCredWrap
 	return true
 }
 
-func CompareAllCredWrappers(allWrapA *AllCredsWrapper, allWrapB *AllCredsWrapper) bool {
+func CompareAllCredWrappers(allWrapA *pb.AllCredsWrapper, allWrapB *pb.AllCredsWrapper) bool {
 	if repoMatches := CompareRepoCredWrappers(allWrapA.RepoCreds, allWrapB.RepoCreds); !repoMatches {
 		return false
 	}

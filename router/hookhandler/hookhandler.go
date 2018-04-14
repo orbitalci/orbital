@@ -1,22 +1,15 @@
 package hookhandler
-
-import (
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-)
-
-package hookhandler
 //todo: break out signaling logic and put in signaler
 import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	pb "bitbucket.org/level11consulting/ocelot/protos"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/build"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/build"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
+
 	"net/http"
 )
 
@@ -45,7 +38,7 @@ type HookHandlerContext struct {
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
-	repopush := &pb.RepoPush{}
+	repopush := &pbb.RepoPush{}
 
 	if err := ctx.GetDeserializer().JSONToProto(r.Body, repopush); err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not parse request body into proto.Message", err)
@@ -77,7 +70,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 //TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
-	pr := &pb.PullRequest{}
+	pr := &pbb.PullRequest{}
 	if err := ctx.GetDeserializer().JSONToProto(r.Body, pr); err != nil {
 		ocelog.IncludeErrField(err).Error("could not parse request body into pb.PullRequest")
 		return

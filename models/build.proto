@@ -1,7 +1,8 @@
 syntax = "proto3";
-package protos;
+option go_package = "pb";
+package models;
 
-import "webhook.proto";
+import "guideocelot.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
@@ -38,18 +39,6 @@ enum StageResultVal {
     FAIL = 1;
 }
 
-enum SubCredType {
-    NIL_SCT = 0;
-    BITBUCKET = 1;
-    GITHUB = 2;
-
-    NEXUS = 3;
-    MAVEN = 4;
-
-    DOCKER = 5;
-    KUBECONF = 6;
-}
-
 message WerkerTask {
     string vaultToken = 1;
     string checkoutHash = 2;
@@ -62,17 +51,17 @@ message WerkerTask {
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//
-
-message PushBuildBundle {
-    BuildConfig config = 1;
-    RepoPush pushData = 2;
-    string vaultToken = 3;
-    string checkoutHash = 4;
-}
-
-message PRBuildBundle {
-    BuildConfig config = 1;
-    PullRequest prData = 2;
-    string vaultToken = 3;
-    string checkoutHash = 4;
-}
+//
+//message PushBuildBundle {
+//    BuildConfig config = 1;
+//    RepoPush pushData = 2;
+//    string vaultToken = 3;
+//    string checkoutHash = 4;
+//}
+//
+//message PRBuildBundle {
+//    BuildConfig config = 1;
+//    PullRequest prData = 2;
+//    string vaultToken = 3;
+//    string checkoutHash = 4;
+//}

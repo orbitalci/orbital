@@ -23,15 +23,15 @@ package main
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
-	"bitbucket.org/level11consulting/ocelot/newocy/common/nsqwatch"
 
-	//"bitbucket.org/level11consulting/ocelot/util/nsqwatch"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"bitbucket.org/level11consulting/ocelot/old/werker"
-	"bitbucket.org/level11consulting/ocelot/old/werker/builder"
-	"bitbucket.org/level11consulting/ocelot/old/werker/config"
-	"bitbucket.org/level11consulting/ocelot/newocy/build/valet"
+	"bitbucket.org/level11consulting/ocelot/build/basher"
+	"bitbucket.org/level11consulting/ocelot/build/listener"
+	"bitbucket.org/level11consulting/ocelot/build/valet"
+	"bitbucket.org/level11consulting/ocelot/common/nsqwatch"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/router/werker"
+	"bitbucket.org/level11consulting/ocelot/storage"
+
 	"fmt"
 	"os"
 	"os/signal"
@@ -42,7 +42,7 @@ import (
 
 //listen will listen for messages for a specified topic. If a message is received, a
 //message worker handler is created to process the message
-func listen(p *nsqpb.ProtoConsume, topic string, conf *config.WerkerConf, streamingChan chan *werker.Transport, buildChan chan *werker.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
+func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan chan *models.Transport, buildChan chan *models.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			ocelog.Log().Debug("i am about to sleep for 10s because i couldn't find the topic at ", p.Config.LookupDAddress())
@@ -50,12 +50,12 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *config.WerkerConf, stream
 		} else {
 			mode := os.Getenv("ENV")
 			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
-			basher := &builder.Basher{LoopbackIp:conf.LoopBackIp}
+			basher := &basher.Basher{LoopbackIp:conf.LoopBackIp}
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
 				basher.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
 			}
 
-			handler := werker.NewWorkerMsgHandler(topic, conf, basher, store, bv, streamingChan, buildChan)
+			handler := listener.NewWorkerMsgHandler(topic, conf.WerkerType, basher, store, bv, streamingChan, buildChan)
 			p.Handler = handler
 			p.ConsumeMessages(topic, "werker")
 			ocelog.Log().Info("Consuming messages for topic ", topic)
@@ -66,14 +66,14 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *config.WerkerConf, stream
 
 
 func main() {
-	conf, err := config.GetConf()
+	conf, err := GetConf()
 	if err != nil {
 		fmt.Errorf("cannot get configuration, exiting.... error: %s", err)
 		return
 	}
 	ocelog.InitializeLog(conf.LogLevel)
-	streamingTunnel := make(chan *werker.Transport)
-	buildCtxTunnel := make(chan *werker.BuildContext)
+	streamingTunnel := make(chan *models.Transport)
+	buildCtxTunnel := make(chan *models.BuildContext)
 
 	ocelog.Log().Debug("starting up worker on off channels w/ ", conf.WerkerName)
 
@@ -83,7 +83,7 @@ func main() {
 		ocelog.IncludeErrField(err).Fatal("COULD NOT GET OCELOT STORAGE! BAILING!")
 	}
 	consulet := conf.RemoteConfig.GetConsul()
-	uuid, err := buildruntime.Register(consulet, conf.RegisterIP, conf.GrpcPort, conf.ServicePort)
+	uuid, err := valet.Register(consulet, conf.RegisterIP, conf.GrpcPort, conf.ServicePort)
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to register werker with consul, this is vital. BAILING!")
 	}

@@ -1,9 +1,9 @@
 package output
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
+	bldr "bitbucket.org/level11consulting/ocelot/common/build"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	pb "bitbucket.org/level11consulting/ocelot/old/werker/protobuf"
 	"context"
 	"flag"
 	"fmt"
@@ -136,15 +136,15 @@ func (c *cmd) fromStorage(ctx context.Context, hash string) int {
 	}
 }
 
-func (c *cmd) fromWerker(ctx context.Context, build models.BuildRuntime) int {
-	client, err := build.CreateBuildClient()
+func (c *cmd) fromWerker(ctx context.Context, build *models.BuildRuntimeInfo) int {
+	client, err := bldr.CreateBuildClient(build)
 	commandhelper.Debuggit(c.UI, fmt.Sprintf("dialing werker at %s:%s", build.GetIp(), build.GetGrpcPort()))
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.GetIp(), build.GetGrpcPort(), err.Error()))
 		return 1
 	}
 
-	stream, err := client.BuildInfo(ctx, &pb.Request{Hash: build.GetHash()})
+	stream, err := client.BuildInfo(ctx, &models.Request{Hash: build.GetHash()})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1

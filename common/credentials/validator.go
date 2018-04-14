@@ -1,7 +1,8 @@
 package credentials
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+
 	"errors"
 )
 
@@ -13,7 +14,7 @@ func GetValidator() *AdminValidator {
 }
 
 //validates config and returns json formatted error
-func (adminValidator AdminValidator) ValidateConfig(adminCreds *models.VCSCreds) error {
+func (adminValidator AdminValidator) ValidateConfig(adminCreds *pb.VCSCreds) error {
 	if len(adminCreds.AcctName) == 0 {
 		return errors.New("acctName is required")
 	}
@@ -27,9 +28,9 @@ func (adminValidator AdminValidator) ValidateConfig(adminCreds *models.VCSCreds)
 		return errors.New("tokenURL is required")
 	}
 	switch adminCreds.SubType {
-	case models.SubCredType_NIL_SCT:
+	case pb.SubCredType_NIL_SCT:
 		return errors.New("SUB CRED TYPE WAS NOT INSTANTIATED PROPERLY")
-	case models.SubCredType_BITBUCKET:
+	case pb.SubCredType_BITBUCKET:
 		return nil
 	default:
 		return errors.New("creds must be one of the following type: bitbucket")
@@ -45,7 +46,7 @@ func GetRepoValidator() *RepoValidator {
 }
 
 // RepoValidator.ValidateConfig validates config and returns an error if it does not meet spec
-func (RepoValidator) ValidateConfig(repoCreds *models.RepoCreds) error {
+func (RepoValidator) ValidateConfig(repoCreds *pb.RepoCreds) error {
 	if len(repoCreds.Password) == 0 {
 		return errors.New("password is required")
 	}
@@ -59,7 +60,7 @@ func (RepoValidator) ValidateConfig(repoCreds *models.RepoCreds) error {
 		return errors.New("field username is required")
 	}
 	switch {
-	case models.Contains(repoCreds.SubType, models.CredType_REPO.Subtypes()):
+	case pb.Contains(repoCreds.SubType, pb.CredType_REPO.Subtypes()):
 		return nil
 	default:
 		return errors.New("repo creds must be one of the following type: nexus | maven | docker")

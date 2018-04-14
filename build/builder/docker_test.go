@@ -3,10 +3,11 @@ package builder
 import (
 	"bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/test"
-	pb "bitbucket.org/level11consulting/ocelot/old/protos"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations/dockr"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/dockr"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 
@@ -38,7 +39,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	defer cleanupFunc(t)
 
 	pull := []string{"/bin/sh", "-c", "docker pull docker.metaverse.l11.com/busybox:test_do_not_delete"}
-	su := InitStageUtil("testing")
+	su := build.InitStageUtil("testing")
 
 	time.Sleep(time.Second)
 	testRemoteConfig, vaultListener, consulServer := cred.TestSetupVaultAndConsul(t)
@@ -118,7 +119,7 @@ func TestDockerBasher_InstallPackageDeps(t *testing.T) {
 	ctx := context.Background()
 	alpine, cleanupFunc := CreateLivingDockerContainer(t, ctx, "alpine:latest")
 	defer cleanupFunc(t)
-	su := InitStageUtil("alpineTest")
+	su := build.InitStageUtil("alpineTest")
 	logout := make(chan[]byte, 10000)
 	result := alpine.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, alpine.InstallPackageDeps(), logout)
 	if result.Status == pb.StageResultVal_FAIL {

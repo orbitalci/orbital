@@ -3,7 +3,7 @@ package nexus
 import (
 	"testing"
 
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 )
 
 var expected = `<?xml version="1.0" encoding="UTF-8"?>
@@ -43,11 +43,11 @@ var expected = `<?xml version="1.0" encoding="UTF-8"?>
 </settings>`
 
 func Test_executeTempl(t *testing.T) {
-	creds := []*models.RepoCreds{
+	creds := []*pb.RepoCreds{
 		{Username: "testuser1", Password:"testpw", RepoUrl: "testRepo.com", Identifier: "myFirstRepo"},
 		{Username: "testuser2", Password:"testpw2", RepoUrl: "11testRepo.com", Identifier: "mySecondRepo"},
 	}
-	wrap := &models.RepoCredWrapper{Repo:creds}
+	wrap := &pb.RepoCredWrapper{Repo:creds}
 	template, err := executeTempl(wrap)
 	if err != nil {
 		t.Error(err)

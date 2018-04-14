@@ -1,9 +1,9 @@
 package nexus
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 
 	"bytes"
 	"errors"
@@ -44,23 +44,23 @@ var settingsXml = `<?xml version="1.0" encoding="UTF-8"?>
 // GetSettingsXml will render and return a maven settings.xml with credentials correlating to the accountName provided
 // todo: include project name for further filtering
 func GetSettingsXml(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
-	credz, err := rc.GetCredsBySubTypeAndAcct(store, models.SubCredType_NEXUS, accountName, false)
+	credz, err := rc.GetCredsBySubTypeAndAcct(store, pb.SubCredType_NEXUS, accountName, false)
 	if err != nil {
 		return "", err
 	}
-	var repoCreds []*models.RepoCreds
+	var repoCreds []*pb.RepoCreds
 	for _, credi := range credz {
-		credx, ok := credi.(*models.RepoCreds)
+		credx, ok := credi.(*pb.RepoCreds)
 		if !ok {
 			return "", errors.New("could not cast as repo creds")
 		}
 		repoCreds = append(repoCreds, credx)
 	}
-	wrap := &models.RepoCredWrapper{Repo:repoCreds}
+	wrap := &pb.RepoCredWrapper{Repo:repoCreds}
 	return executeTempl(wrap)
 }
 
-func executeTempl(wrap *models.RepoCredWrapper) (string, error) {
+func executeTempl(wrap *pb.RepoCredWrapper) (string, error) {
 	templ, err := template.New("settingsxml").Parse(settingsXml)
 	if err != nil {
 		return "", err

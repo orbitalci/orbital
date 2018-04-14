@@ -2,17 +2,17 @@ package credentials
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"testing"
 )
 
 func TestAdminValidator_ValidateConfig(t *testing.T) {
 	v := GetValidator()
-	noClientSecret := &models.VCSCreds{
+	noClientSecret := &pb.VCSCreds{
 		AcctName: "blah",
 		ClientId: "blah2",
 		TokenURL: "slkdjf",
-		SubType:   models.SubCredType_BITBUCKET,
+		SubType:   pb.SubCredType_BITBUCKET,
 	}
 
 	err := v.ValidateConfig(noClientSecret)
@@ -20,12 +20,12 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("client secret", "clientSecret is required", err.Error()))
 	}
 
-	invalidCred := &models.VCSCreds{
+	invalidCred := &pb.VCSCreds{
 		AcctName:     "blah",
 		ClientId:     "blah2",
 		TokenURL:     "slkdjf",
 		ClientSecret: "jsdlkfsdfjskdf",
-		SubType:       models.SubCredType_NIL_SCT,
+		SubType:       pb.SubCredType_NIL_SCT,
 	}
 
 	wrongType := v.ValidateConfig(invalidCred)
@@ -33,12 +33,12 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("credential type", "creds must be one of the following type: bitbucket", wrongType.Error()))
 	}
 
-	invalidCred = &models.VCSCreds{
+	invalidCred = &pb.VCSCreds{
 		AcctName:     "blah",
 		ClientId:     "blah2",
 		TokenURL:     "slkdjf",
 		ClientSecret: "jsdlkfsdfjskdf",
-		SubType:       models.SubCredType_GITHUB,
+		SubType:       pb.SubCredType_GITHUB,
 	}
 
 	wrongType = v.ValidateConfig(invalidCred)

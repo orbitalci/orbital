@@ -1,15 +1,16 @@
 package commandhelper
 
 import (
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
 	"google.golang.org/grpc/status"
-	"fmt"
-	"math"
-	"strings"
-	"os"
-	"io/ioutil"
+
 	"context"
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	"fmt"
+	"io/ioutil"
+	"math"
+	"os"
+	"strings"
 )
 
 

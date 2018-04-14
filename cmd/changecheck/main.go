@@ -9,18 +9,16 @@ package main
 // 	 - update last_cron_time in db
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"bitbucket.org/level11consulting/go-til/deserialize"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	pb "bitbucket.org/level11consulting/ocelot/old/protos"
-	"bitbucket.org/level11consulting/ocelot/util/build"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/handler"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/build_signaler/poll"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/common/remote"
 	"github.com/namsral/flag"
 )
 
@@ -67,22 +65,26 @@ func configure() *changeSetConfig {
 
 func main() {
 	conf := configure()
-	var bbHandler handler.VCSHandler
+	var bbHandler remote.VCSHandler
 	var token string
 	store, err := conf.RemoteConf.GetOcelotStorage()
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")
 	}
 	defer store.Close()
-	cfg, err := build.GetVcsCreds(store, conf.AcctRepo, conf.RemoteConf)
-	if err != nil {
-		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("why")
+	checker := &poll.ChangeChecker{
+		RC: conf.RemoteConf, 
+		Deserializer: conf.Deserializer, 
+		Producer: conf.Producer, 
+		AcctRepo: conf.AcctRepo, 
+		OcyValidator: conf.OcyValidator,
+		Store: store,
 	}
-	bbHandler, token, err = handler.GetBitbucketClient(cfg)
-	fmt.Println(token)
-	if err != nil {
-		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("why")
+	
+	if err := checker.SetAuth(); err != nil {
+		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("could not get auth")
 	}
+	
 	_, lastHashes, err := store.GetLastData(conf.AcctRepo)
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Error("couldn't get last cron time, setting last cron to 5 minutes ago")
@@ -103,7 +105,10 @@ func main() {
 			ocelog.Log().Infof("no last hash found for branch %s in lash Hash map, so this branch will build no matter what", branch)
 			lastHash = ""
 		}
-		newLastHash, err := searchBranchCommits(bbHandler, branch, conf, lastHash, store, token, &aWerkerTeller{})
+		newLastHash, err := checker.InspectCommits(branch, lastHash)
+		if err != nil {
+			ocelog.IncludeErrField(err).Fatal("error searching branch commits, err: " + err.Error())
+		}
 		ocelog.Log().WithField("old last hash", lastHash).WithField("new last hash", newLastHash).Info("git hash data for poll")
 		lastHashes[branch] = newLastHash
 		if err != nil {

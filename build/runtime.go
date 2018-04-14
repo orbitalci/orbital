@@ -1,7 +1,15 @@
 package build
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+	"time"
 
+	"bitbucket.org/level11consulting/go-til/consul"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
+)
 type HashRuntime struct {
 	DockerUuid   string
 	BuildId 	 int64
@@ -12,13 +20,13 @@ type HashRuntime struct {
 
 //GetBuildRuntime will return BuildRuntimeInfo about matching partial git hashes.
 //It does this by first asking consul for state of builds, and then db storage
-func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*models.BuildRuntimeInfo, error) {
+func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*pb.BuildRuntimeInfo, error) {
 	mapPath := MakeBuildMapPath(gitHash)
 	pairs, err := consulete.GetKeyValues(mapPath)
 	if err != nil {
 		return nil, err
 	}
-	rt := make(map[string]*models.BuildRuntimeInfo)
+	rt := make(map[string]*pb.BuildRuntimeInfo)
 	if len(pairs) == 0 {
 		return rt, &ErrBuildDone{"no build found in consul"}
 	}
@@ -34,7 +42,7 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*mo
 			key := pair.Key[strings.LastIndex(pair.Key, "/") + 1:]
 			_, ok := rt[fullHash]
 			if !ok {
-				rt[fullHash] = &models.BuildRuntimeInfo{
+				rt[fullHash] = &pb.BuildRuntimeInfo{
 					Hash: fullHash,
 				}
 			}

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	pb "bitbucket.org/level11consulting/ocelot/old/protos"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 )
 
 func TestOcelotValidator_ValidateConfig(t *testing.T) {

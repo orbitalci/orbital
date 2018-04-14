@@ -2,8 +2,8 @@ package nsqwatch
 
 import (
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/hashicorp/consul/testutil"
 	"net"
 	"time"

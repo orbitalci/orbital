@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
+	"bitbucket.org/level11consulting/ocelot/common"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 )
 
 
@@ -18,6 +19,6 @@ func BuildCredPath(scType pb.SubCredType, AcctName string, ocyCredType pb.CredTy
 	//this will not happen in real life because all the setcred methods for guideOcelotServer check for this specific issue
 	default: panic("only repo|vcs|k8s")
 	}
-	path := fmt.Sprintf(pattern, ConfigPath, AcctName, strings.ToLower(scType.String()), identifier)
+	path := fmt.Sprintf(pattern, common.ConfigPath, AcctName, strings.ToLower(scType.String()), identifier)
 	return path
 }

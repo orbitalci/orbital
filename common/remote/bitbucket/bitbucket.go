@@ -3,8 +3,10 @@ package bitbucket
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	pb "bitbucket.org/level11consulting/ocelot/old/protos"
+	"bitbucket.org/level11consulting/ocelot/common"
+	"bitbucket.org/level11consulting/ocelot/common/remote"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
@@ -15,7 +17,7 @@ const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
-func GetBitbucketClient(cfg *models.VCSCreds) (VCSHandler, string, error) {
+func GetBitbucketClient(cfg *pb.VCSCreds) (remote.VCSHandler, string, error) {
 	bbClient := &ocenet.OAuthClient{}
 	token, err := bbClient.Setup(cfg)
 	if err != nil {
@@ -27,7 +29,7 @@ func GetBitbucketClient(cfg *models.VCSCreds) (VCSHandler, string, error) {
 
 //TODO: callback url is set as env. variable on admin, or passed in via command line
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
-func GetBitbucketHandler(adminConfig *models.VCSCreds, client ocenet.HttpClient) VCSHandler {
+func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) remote.VCSHandler {
 	bb := &Bitbucket{
 		Client: client,
 		Marshaler: jsonpb.Marshaler{},
@@ -45,7 +47,7 @@ type Bitbucket struct {
 	Client      ocenet.HttpClient
 	Marshaler   jsonpb.Marshaler
 
-	credConfig    *models.VCSCreds
+	credConfig    *pb.VCSCreds
 	isInitialized bool
 }
 
@@ -73,15 +75,15 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 	return
 }
 ///2.0/repositories/{username}/{repo_slug}/commits
-func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) (*pb.Commits, error) {
-	commits := &pb.Commits{}
+func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error) {
+	commits := &pbb.Commits{}
 	err := bb.Client.GetUrl(fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/" + branch, commits)
 	return commits, err
 }
 
 
-func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error){
-	repoVal := &pb.PaginatedRepository_RepositoryValues{}
+func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_RepositoryValues, error){
+	repoVal := &pbb.PaginatedRepository_RepositoryValues{}
 	err := bb.Client.GetUrl(fmt.Sprintf(DefaultRepoBaseURL, acctRepo), repoVal)
 	if err != nil {
 		return *repoVal, err
@@ -93,11 +95,11 @@ func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pb.PaginatedRepository_Repo
 func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
 	if !bb.FindWebhooks(webhookURL) {
 		//create webhook if one does not already exist
-		newWebhook := &pb.CreateWebhook{
+		newWebhook := &pbb.CreateWebhook{
 			Description: "marianne did this",
 			Active:      true,
 			Url:         bb.GetCallbackURL(),
-			Events:      models.BitbucketEvents,
+			Events:      common.BitbucketEvents,
 		}
 		webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
 		if err != nil {
@@ -142,7 +144,7 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 	if repoUrl == "" {
 		return nil
 	}
-	repositories := &pb.PaginatedRepository{}
+	repositories := &pbb.PaginatedRepository{}
 	//todo: error pages from bitbucket??? these need to bubble up to client
 	err := bb.Client.GetUrl(repoUrl, repositories)
 	if err != nil {
@@ -165,13 +167,13 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) er
 	if sourceFileUrl == "" {
 		return nil
 	}
-	repositories := &pb.PaginatedRootDirs{}
+	repositories := &pbb.PaginatedRootDirs{}
 	err := bb.Client.GetUrl(sourceFileUrl, repositories)
 	if err != nil {
 		return err
 	}
 	for _, v := range repositories.GetValues() {
-		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == models.BuildFileName {
+		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == common.BuildFileName {
 			ocelog.Log().Debug("holy crap we actually an ocelot.yml file")
 			err = bb.CreateWebhook(webhookUrl)
 			if err != nil {
@@ -188,7 +190,7 @@ func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {
 	if getWebhookURL == "" {
 		return false
 	}
-	webhooks := &pb.GetWebhooks{}
+	webhooks := &pbb.GetWebhooks{}
 	bb.Client.GetUrl(getWebhookURL, webhooks)
 
 	for _, wh := range webhooks.GetValues() {

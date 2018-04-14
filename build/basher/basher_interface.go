@@ -1,4 +1,4 @@
-package builder
+package basher
 
 import (
 	"bitbucket.org/level11consulting/ocelot/old/protos"

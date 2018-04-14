@@ -4,9 +4,9 @@ import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/go-til/vault"
-	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	util "bitbucket.org/level11consulting/ocelot/common/testutil"
+	pb "bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 
 	"testing"
 	"time"

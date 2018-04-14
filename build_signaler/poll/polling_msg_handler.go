@@ -1,15 +1,16 @@
 package poll
 
 import (
-	"bitbucket.org/level11consulting/go-til/log"
-	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"errors"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/golang/protobuf/proto"
 )
 
 var cronDir = "/etc/cron.d"

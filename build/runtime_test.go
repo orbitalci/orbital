@@ -2,12 +2,13 @@ package build
 
 
 import (
-"bitbucket.org/level11consulting/go-til/test"
-"bitbucket.org/level11consulting/ocelot/util"
-"bitbucket.org/level11consulting/ocelot/util/storage"
-"fmt"
-"os"
-"testing"
+	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/build/valet"
+	util "bitbucket.org/level11consulting/ocelot/common/testutil"
+	"bitbucket.org/level11consulting/ocelot/storage"
+	"fmt"
+	"os"
+	"testing"
 )
 
 //// func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
@@ -38,7 +39,7 @@ func testAddFullBuildSummary(hash string, store storage.BuildSum, t *testing.T) 
 		t.Fatal(err)
 	}
 }
-
+// todo: this belongs in valet
 // func Register(consulete *consul.Consulet, gitHash string, ip string, grpcPort string, wsPort string) (err error) {
 func Test_Register(t *testing.T) {
 	//hash := "1231231231"
@@ -47,7 +48,7 @@ func Test_Register(t *testing.T) {
 	wsPort := "4030"
 	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
-	uuid, err := Register(consu, ip, grpcPort, wsPort)
+	uuid, err := valet.Register(consu, ip, grpcPort, wsPort)
 	if err != nil {
 		t.Fatal("could not register with consul, err: ", err)
 	}
@@ -74,6 +75,7 @@ func Test_Register(t *testing.T) {
 
 }
 
+// todo: this actually belongs in valet
 func Test_RegisterBuild(t *testing.T) {
 	hash := "1231231231"
 	ip := "10.1.1.0"
@@ -82,18 +84,18 @@ func Test_RegisterBuild(t *testing.T) {
 	dockerUuid := "1111-2222-3333-asdf"
 	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
-	uuid, err := Register(consu, ip, grpcPort, wsPort)
+	uuid, err := valet.Register(consu, ip, grpcPort, wsPort)
 	if err != nil {
 		t.Fatal("could not register with consul, err: ", err)
 	}
-	if err = RegisterStartedBuild(consu, uuid.String(), hash); err != nil {
+	if err = valet.RegisterStartedBuild(consu, uuid.String(), hash); err != nil {
 		t.Fatal("unable to register start of build, err: ", err.Error())
 	}
 	mapPath := MakeBuildMapPath(hash)
 	if werkerId := serv.GetKVString(t, mapPath); werkerId != uuid.String() {
 		t.Error("werker uuid", uuid.String(), werkerId)
 	}
-	if err = RegisterBuild(consu, uuid.String(), hash, dockerUuid); err != nil {
+	if err = valet.RegisterBuild(consu, uuid.String(), hash, dockerUuid); err != nil {
 		t.Fatal("unable to register the build")
 	}
 	dockerUuidByte := serv.GetKV(t, MakeDockerUuidPath(uuid.String(), hash))
@@ -141,6 +143,7 @@ func Test_GetBuildRuntime(t *testing.T) {
 
 }
 
+// todo: this also belongs in valet
 func Test_Delete(t *testing.T) {
 	werkerId := "werkerId"
 	hash := "1231231231"

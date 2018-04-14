@@ -6,7 +6,7 @@ import (
 	"github.com/docker/docker/client"
 	"bitbucket.org/level11consulting/go-til/log"
 	"github.com/docker/docker/api/types"
-	config "bitbucket.org/level11consulting/ocelot/old/werker/config"
+	"bitbucket.org/level11consulting/ocelot/models"
 )
 
 //this interface handles build cleanup
@@ -17,11 +17,11 @@ type Cleaner interface {
 }
 
 //returns a new cleaner interface
-func GetNewCleaner(werkerType config.WerkType) Cleaner {
+func GetNewCleaner(werkerType models.WerkType) Cleaner {
 	switch werkerType {
-	case config.Docker:
+	case models.Docker:
 		return &DockerCleaner{}
-	case config.Kubernetes:
+	case models.Kubernetes:
 		return &K8Cleaner{}
 	default:
 		return &DockerCleaner{}

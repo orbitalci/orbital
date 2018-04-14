@@ -1,6 +1,6 @@
 package commandhelper
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	//"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
 	"flag"
 	"google.golang.org/grpc"

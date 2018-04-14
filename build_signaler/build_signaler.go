@@ -1,33 +1,43 @@
 package build_signaler
 
 import (
-	"strings"
-
+	"errors"
+	"fmt"
+	"time"
+	
 	"bitbucket.org/level11consulting/go-til/deserialize"
+	"bitbucket.org/level11consulting/go-til/log"
+	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/handler"
+	ocevault "bitbucket.org/level11consulting/go-til/vault"
+	"bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/common"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/common/remote"
+	"bitbucket.org/level11consulting/ocelot/common/remote/bitbucket"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 )
 
 //QueueAndStore will create a werker task and put it on the queue, then update database
 func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	remoteConfig cred.CVRemoteConfig,
 	buildConf *pb.BuildConfig,
-	validator *OcelotValidator,
+	validator *build.OcelotValidator,
 	producer *nsqpb.PbProduce,
 	store storage.OcelotStorage) error {
 
-	ocelog.Log().Debug("Storing initial results in db")
-	account, repo, err := GetAcctRepo(accountRepo)
+	log.Log().Debug("Storing initial results in db")
+	account, repo, err := common.GetAcctRepo(accountRepo)
 	if err != nil {
 		return err
 	}
 	vaulty := remoteConfig.GetVault()
 	consul := remoteConfig.GetConsul()
-	alreadyBuilding, err := buildruntime.CheckBuildInConsul(consul, hash)
+	alreadyBuilding, err := build.CheckBuildInConsul(consul, hash)
 	if alreadyBuilding {
-		ocelog.Log().Info("kindly refusing to add to queue because this hash is already building")
+		log.Log().Info("kindly refusing to add to queue because this hash is already building")
 		return errors.New("this hash is already building in ocelot, therefore not adding to queue")
 	}
 
@@ -42,7 +52,7 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 		// we do want to add a runtime here
 		err = store.StoreFailedValidation(id)
 		if err != nil {
-			ocelog.IncludeErrField(err).Error("unable to update summary!")
+			log.IncludeErrField(err).Error("unable to update summary!")
 		}
 		// we dont' want to return here, cuz then it doesn't store
 		// unless its supposed to be saving somewhere else?
@@ -51,15 +61,15 @@ func QueueAndStore(hash, branch, accountRepo, bbToken string,
 		storeQueued(store, id)
 	}
 	if err := storeStageToDb(store, sr); err != nil {
-		ocelog.IncludeErrField(err).Error("unable to add hookhandler stage details")
+		log.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err
 	}
 	return nil
 }
 
-func storeStageToDb(store storage.BuildStage, stageResult *smods.StageResult) error {
+func storeStageToDb(store storage.BuildStage, stageResult *models.StageResult) error {
 	if err := store.AddStageDetail(stageResult); err != nil {
-		ocelog.IncludeErrField(err).Error("unable to store hookhandler stage details to db")
+		log.IncludeErrField(err).Error("unable to store hookhandler stage details to db")
 		return err
 	}
 	return nil
@@ -67,7 +77,7 @@ func storeStageToDb(store storage.BuildStage, stageResult *smods.StageResult) er
 func storeQueued(store storage.BuildSum, id int64) error {
 	err := store.SetQueueTime(id)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to update queue time in build summary table")
+		log.IncludeErrField(err).Error("unable to update queue time in build summary table")
 	}
 	return err
 }
@@ -76,7 +86,7 @@ func storeQueued(store storage.BuildSum, id int64) error {
 func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string) (int64, error) {
 	id, err := store.AddSumStart(hash, account, repo, branch)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to store summary details to db")
+		log.IncludeErrField(err).Error("unable to store summary details to db")
 		return 0, err
 	}
 	return id, nil
@@ -86,21 +96,21 @@ func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string
 //GetBBConfig returns the protobuf ocelot.yaml, a valid bitbucket token belonging to that repo, and possible err.
 //If a VcsHandler is passed, this method will use the existing handler to retrieve the bb config. In that case,
 //***IT WILL NOT RETURN A VALID TOKEN FOR YOU - ONLY BUILD CONFIG***
-func GetBBConfig(remoteConfig cred.CVRemoteConfig, store storage.CredTable, repoFullName string, checkoutCommit string, deserializer *deserialize.Deserializer, vcsHandler handler.VCSHandler) (*pb.BuildConfig, string, error) {
-	var bbHandler handler.VCSHandler
+func GetBBConfig(remoteConfig cred.CVRemoteConfig, store storage.CredTable, repoFullName string, checkoutCommit string, deserializer *deserialize.Deserializer, vcsHandler remote.VCSHandler) (*pb.BuildConfig, string, error) {
+	var bbHandler remote.VCSHandler
 	var token string
 
 	if vcsHandler == nil {
-		cfg, err1 := GetVcsCreds(store, repoFullName, remoteConfig)
+		cfg, err1 := cred.GetVcsCreds(store, repoFullName, remoteConfig)
 		if err1 != nil {
-			ocelog.IncludeErrField(err1).Error()
+			log.IncludeErrField(err1).Error()
 			return nil, "", err1
 		}
 		var err error
-		ocelog.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config")
-		bbHandler, token, err = handler.GetBitbucketClient(cfg)
+		log.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config")
+		bbHandler, token, err = bitbucket.GetBitbucketClient(cfg)
 		if err != nil {
-			ocelog.IncludeErrField(err).Error()
+			log.IncludeErrField(err).Error()
 			return nil, "", err
 		}
 	} else {
@@ -109,7 +119,7 @@ func GetBBConfig(remoteConfig cred.CVRemoteConfig, store storage.CredTable, repo
 
 	fileBytz, err := bbHandler.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error()
+		log.IncludeErrField(err).Error()
 		return nil, token, err
 	}
 
@@ -123,10 +133,10 @@ func CheckForBuildFile(buildFile []byte, deserializer *deserialize.Deserializer)
 	fmt.Println(string(buildFile))
 	if err := deserializer.YAMLToStruct(buildFile, conf); err != nil {
 		if err != ocenet.FileNotFound {
-			ocelog.IncludeErrField(err).Error("unable to get build conf")
+			log.IncludeErrField(err).Error("unable to get build conf")
 			return conf, err
 		}
-		ocelog.Log().Debugf("no ocelot yml found")
+		log.Log().Debugf("no ocelot yml found")
 		return conf, err
 	}
 	return conf, nil
@@ -136,16 +146,16 @@ func CheckForBuildFile(buildFile []byte, deserializer *deserialize.Deserializer)
 //it passes
 func ValidateAndQueue(buildConf *pb.BuildConfig,
 	branch string,
-	validator *OcelotValidator,
+	validator *build.OcelotValidator,
 	vaulty ocevault.Vaulty,
 	producer *nsqpb.PbProduce,
-	sr *smods.StageResult,
+	sr *models.StageResult,
 	buildId int64,
 	hash, fullAcctRepo, bbToken string) error {
 	if err := validateBuild(buildConf, branch, validator); err == nil {
 		tellWerker(buildConf, vaulty, producer, hash, fullAcctRepo, bbToken, buildId, branch)
-		ocelog.Log().Debug("told werker!")
-		PopulateStageResult(sr, 0, "Passed initial validation " + smods.CHECKMARK, "")
+		log.Log().Debug("told werker!")
+		PopulateStageResult(sr, 0, "Passed initial validation " + models.CHECKMARK, "")
 	} else {
 		PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
 		return err
@@ -165,7 +175,7 @@ func tellWerker(buildConf *pb.BuildConfig,
 	// get one-time token use for access to vault
 	token, err := vaulty.CreateThrowawayToken()
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to create one-time vault token")
+		log.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
 
@@ -185,11 +195,11 @@ func tellWerker(buildConf *pb.BuildConfig,
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
 // - check if commit branch matches with ocelot.yaml branch and validate
-func validateBuild(buildConf *pb.BuildConfig, branch string, validator *OcelotValidator) error {
+func validateBuild(buildConf *pb.BuildConfig, branch string, validator *build.OcelotValidator) error {
 	err := validator.ValidateConfig(buildConf, nil)
 
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("failed validation")
+		log.IncludeErrField(err).Error("failed validation")
 		return err
 	}
 
@@ -198,13 +208,13 @@ func validateBuild(buildConf *pb.BuildConfig, branch string, validator *OcelotVa
 			return nil
 		}
 	}
-	ocelog.Log().Errorf("build does not match any branches listed: %v", buildConf.Branches)
+	log.Log().Errorf("build does not match any branches listed: %v", buildConf.Branches)
 	return errors.New(fmt.Sprintf("build does not match any branches listed: %v", buildConf.Branches))
 }
 
 
 
-func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg string) {
+func PopulateStageResult(sr *models.StageResult, status int, lastMsg, errMsg string) {
 	sr.Messages = append(sr.Messages, lastMsg)
 	sr.Status = status
 	sr.Error = errMsg
@@ -212,12 +222,12 @@ func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg stri
 }
 
 // all this moved to build_signaler.go
-func getSignalerStageResult(id int64) *smods.StageResult {
+func getSignalerStageResult(id int64) *models.StageResult {
 	start := time.Now()
-	return &smods.StageResult{
+	return &models.StageResult{
 		Messages: 	   []string{},
 		BuildId:       id,
-		Stage:         smods.HOOKHANDLER_VALIDATION,
+		Stage:         models.HOOKHANDLER_VALIDATION,
 		StartTime:     start,
 		StageDuration: -99.99,
 	}

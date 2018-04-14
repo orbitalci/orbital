@@ -3,12 +3,14 @@ package credentials
 import (
 	"fmt"
 	"strconv"
+
 	"bitbucket.org/level11consulting/go-til/consul"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocevault "bitbucket.org/level11consulting/go-til/vault"
-	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/common"
+	"bitbucket.org/level11consulting/ocelot/build/integrations"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/pkg/errors"
 )
 
@@ -321,7 +323,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 }
 
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
-	kv, err := rc.Consul.GetKeyValue(StorageType)
+	kv, err := rc.Consul.GetKeyValue(common.StorageType)
 	if err != nil {
 		return 0, errors.New("unable to get storage type from consul, err: " + err.Error())
 	}

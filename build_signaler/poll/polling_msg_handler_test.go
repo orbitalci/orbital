@@ -2,7 +2,7 @@ package poll
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
-	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
+	pb "bitbucket.org/level11consulting/ocelot/models/pb"
 	"bytes"
 	"io/ioutil"
 	"os"

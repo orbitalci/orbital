@@ -1,8 +1,8 @@
-package builder
+package basher
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/old/protos"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"fmt"
 	"strings"
 )
@@ -43,7 +43,7 @@ func (b *Basher) InstallPackageDeps() []string {
 }
 
 //DownloadCodebase builds bash commands to be executed for downloading the codebase
-func (b *Basher) DownloadCodebase(werk *protos.WerkerTask) []string {
+func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 	downloadCode := []string {"/bin/sh", "-c"}
 	var downloadCmd string
 	switch werk.VcsType {

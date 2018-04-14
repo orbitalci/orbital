@@ -1,24 +1,31 @@
 package launcher
 
 import (
+	"context"
 	"strings"
+	"time"
 
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations/dockr"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations/k8s"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations/nexus"
+	ocelog "bitbucket.org/level11consulting/go-til/log"
+	"bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/dockr"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/k8s"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/nexus"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
-func (w *WorkerMsgHandler) WatchForResults(hash string, dbId int64) {
+func (w *Launcher) WatchForResults(hash string, dbId int64) {
 	ocelog.Log().Debugf("adding hash ( %s ) & infochan to transport channel", hash)
-	transport := &Transport{Hash: hash, InfoChan: w.infochan, DbId: dbId}
+	transport := &models.Transport{Hash: hash, InfoChan: w.infochan, DbId: dbId}
 	w.StreamChan <- transport
 }
 
 
 // MakeItSo will call appropriate builder functions
-func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, finish, done chan int) {
+func (w *Launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
@@ -32,7 +39,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	ctx, cancel := context.WithCancel(context.Background())
 
 	//send build context off, build kills are performed by calling cancel on the cacellable context
-	w.BuildCtxChan <- &BuildContext{
+	w.BuildCtxChan <- &models.BuildContext{
 		Hash: werk.CheckoutHash,
 		Context: ctx,
 		CancelFunc: cancel,
@@ -47,7 +54,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	w.WatchForResults(werk.CheckoutHash, werk.Id)
 
 	//update consul with active build data
-	consul := w.WerkConf.RemoteConfig.GetConsul()
+	consul := w.RemoteConf.GetConsul()
 	// if we can't register with consul, bail, just exit out. the maintainer will soon be pausing message flow anyway
 	if err := w.BuildValet.StartBuild(consul, werk.CheckoutHash, werk.Id); err != nil {
 		return
@@ -59,7 +66,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 	dockerIdChan := make (chan string)
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
 	// do setup stage
-	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.WerkConf.RemoteConfig, w.WerkConf.ServicePort)
+	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.RemoteConf, w.ServicePort)
 	// this is the last defer, so it'll be the first thing to be run after the command is finished
 	defer w.BuildValet.Cleaner.Cleanup(ctx, dockerUUid, w.infochan)
 	setupDura := time.Now().Sub(setupStart)
@@ -75,7 +82,7 @@ func (w *WorkerMsgHandler) MakeItSo(werk *pb.WerkerTask, builder b.Builder, fini
 
 	// do integration setup stage
 	start := time.Now()
-	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, w.Store, builder, w.WerkConf.RemoteConfig, w.infochan)
+	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, w.Store, builder, w.RemoteConf, w.infochan)
 	dura := time.Now().Sub(start)
 	if err := storeStageToDb(w.Store, werk.Id, integrationResult, start, dura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
@@ -156,7 +163,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 	return
 }
 
-func (w *WorkerMsgHandler) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
+func (w *Launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
 	dockerUuid := <- dockerChan
 
 	if err := buildruntime.RegisterBuild(w.WerkConf.RemoteConfig.GetConsul(), w.WerkConf.WerkerUuid.String(), checkoutHash, dockerUuid); err != nil {
@@ -198,7 +205,7 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 }
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
-func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTask, store storage.CredTable, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
+func (w *Launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, store storage.CredTable, bldr b.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
 	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
 	id = bldr.GetContainerId()
@@ -229,7 +236,7 @@ func (w *WorkerMsgHandler) doIntegrations(ctx context.Context, werk *pb.WerkerTa
 	return
 }
 
-func (w *WorkerMsgHandler) returnWerkerPort(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
+func (w *Launcher) returnWerkerPort(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 	ocelog.Log().Debug("returning werker port")
 	return  w.WerkConf.ServicePort, nil
 }

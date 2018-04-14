@@ -3,13 +3,15 @@ package credentials
 import (
 	"bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/vault"
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util"
-	"errors"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/common"
+	tu "bitbucket.org/level11consulting/ocelot/common/testutil"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/hashicorp/consul/testutil"
 	"github.com/hashicorp/vault/http"
 	hashiVault "github.com/hashicorp/vault/vault"
+
+	"errors"
 	"net"
 	"os"
 	"strconv"
@@ -19,28 +21,28 @@ import (
 
 
 func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName string, location string, port string, username string, pw string) (err error){
-	err = consulet.AddKeyValue(StorageType, []byte("postgres"))
+	err = consulet.AddKeyValue(common.StorageType, []byte("postgres"))
 	if err != nil {
 		return
 	}
-	err = consulet.AddKeyValue(PostgresDatabaseName, []byte(dbName))
+	err = consulet.AddKeyValue(common.PostgresDatabaseName, []byte(dbName))
 	if err != nil {
 		return
 	}
-	err = consulet.AddKeyValue(PostgresLocation, []byte(location))
+	err = consulet.AddKeyValue(common.PostgresLocation, []byte(location))
 	if err != nil {
 		return
 	}
-	err = consulet.AddKeyValue(PostgresPort, []byte(port))
+	err = consulet.AddKeyValue(common.PostgresPort, []byte(port))
 	if err != nil {
 		return
 	}
-	err = consulet.AddKeyValue(PostgresUsername, []byte(username))
+	err = consulet.AddKeyValue(common.PostgresUsername, []byte(username))
 	if err != nil {
 		return
 	}
-	var a = map[string]interface{} {PostgresPasswordKey: pw}
-	_, err = vaulty.AddVaultData(PostgresPasswordLoc, a)
+	var a = map[string]interface{} {common.PostgresPasswordKey: pw}
+	_, err = vaulty.AddVaultData(common.PostgresPasswordLoc, a)
 	return err
 }
 
@@ -49,7 +51,7 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 
 func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testutil.TestServer) {
 	//set up unsealed vault for testing
-	util.BuildServerHack(t)
+	tu.BuildServerHack(t)
 	ln, token := TestSetupVault(t)
 
 	//setup consul for testing
@@ -87,11 +89,11 @@ func TeardownVaultAndConsul(testvault net.Listener, testconsul *testutil.TestSer
 }
 
 func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, store storage.CredTable, repourl, password, username, acctName, projectName string) {
-	creds := &models.RepoCreds{
+	creds := &pb.RepoCreds{
 		Password: password,
 		Username: username,
 		RepoUrl: repourl,
-		SubType: models.SubCredType_DOCKER,
+		SubType: pb.SubCredType_DOCKER,
 		AcctName: acctName,
 		Identifier: projectName,
 	}

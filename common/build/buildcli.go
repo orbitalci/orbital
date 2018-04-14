@@ -1,8 +1,12 @@
 package build
 
+import (
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"google.golang.org/grpc"
+)
 
 // CreateBuildClient dials the grpc server at the werker endpoints
-func (m *BuildRuntimeInfo) CreateBuildClient(m *BuildRuntimeInfo) (protobuf.BuildClient, error) {
+func CreateBuildClient(m *pb.BuildRuntimeInfo) (pb.BuildClient, error) {
 	//TODO: this is insecure
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
@@ -11,6 +15,6 @@ func (m *BuildRuntimeInfo) CreateBuildClient(m *BuildRuntimeInfo) (protobuf.Buil
 	if err != nil {
 		return nil, err
 	}
-	return protobuf.NewBuildClient(conn), nil
+	return pb.NewBuildClient(conn), nil
 }
 

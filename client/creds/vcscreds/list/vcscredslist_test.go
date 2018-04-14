@@ -1,13 +1,14 @@
 package buildcredslist
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
-	"github.com/mitchellh/cli"
 	"strings"
 	"testing"
+
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/mitchellh/cli"
 )
 
 func testNew() (*cmd, *cli.MockUi) {

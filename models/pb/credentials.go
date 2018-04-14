@@ -5,10 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-
-	"bitbucket.org/level11consulting/ocelot/old/werker/protobuf"
-	"google.golang.org/grpc"
 )
 
 //OcyCredder is an interface for interacting with credentials in Ocelot
@@ -200,7 +196,7 @@ type BuildRuntime interface {
 	GetIp() string
 	GetGrpcPort() string
 	GetHash() string
-	CreateBuildClient() (protobuf.BuildClient, error)
+	CreateBuildClient() (BuildClient, error)
 }
 
 

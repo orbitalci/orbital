@@ -1,10 +1,10 @@
 package dockr
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrationsns"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/build/integrations"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 
 	"encoding/json"
 	"errors"
@@ -25,7 +25,7 @@ type dockerConfigJson struct {
 // easy passing as a command line argument.
 func GetDockerConfig(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 	//GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool)
-	credz, err := rc.GetCredsBySubTypeAndAcct(store, models.SubCredType_DOCKER, accountName, false)
+	credz, err := rc.GetCredsBySubTypeAndAcct(store, pb.SubCredType_DOCKER, accountName, false)
 	if err != nil {
 		return "", err
 	}
@@ -38,10 +38,10 @@ func GetDockerConfig(rc cred.CVRemoteConfig, store storage.CredTable, accountNam
 }
 
 
-func RCtoDockerConfig(creds []models.OcyCredder) ([]byte, error) {
+func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
 	authz := make(map[string]auth)
 	for _, credi := range creds {
-		credx, ok := credi.(*models.RepoCreds)
+		credx, ok := credi.(*pb.RepoCreds)
 		if !ok {
 			return nil, errors.New("unable to cast as repo creds")
 		}

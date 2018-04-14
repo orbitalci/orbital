@@ -3,10 +3,10 @@ package main
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/poller"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/build_signaler/poll"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"fmt"
 	"github.com/namsral/flag"
 	"os"
@@ -43,7 +43,7 @@ func loadFromDb(store storage.OcelotStorage) error {
 			Cron: oldPoll.Cron,
 			Branches: oldPoll.Branches,
 		}
-		if err = poller.WriteCronFile(msg); err != nil {
+		if err = poll.WriteCronFile(msg); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't write old cron files")
 		}
 
@@ -83,7 +83,7 @@ func consume(p *nsqpb.ProtoConsume, topic string, store storage.PollTable) {
 			time.Sleep(10 * time.Second)
 		} else {
 			ocelog.Log().Info("about to consume messages for topic ", topic)
-			handler := &poller.MsgHandler{Topic: topic, Store: store}
+			handler := &poll.MsgHandler{Topic: topic, Store: store}
 			p.Handler = handler
 			p.ConsumeMessages(topic, "poller")
 			ocelog.Log().Info("consuming messages for topic ", topic)

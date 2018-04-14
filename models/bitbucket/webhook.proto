@@ -1,9 +1,9 @@
 syntax = "proto3";
 package protos;
 
-import "newocy/models/bitbucket/commonevententities.proto";
+import "commonevententities.proto";
 import "google/protobuf/timestamp.proto";
-import "newocy/models/bitbucket/common.proto";
+import "common.proto";
 
 /* Modeling event payloads
 Source:

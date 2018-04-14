@@ -1,11 +1,8 @@
 package remote
 
 import (
-	"errors"
-
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	pb "bitbucket.org/level11consulting/ocelot/old/protos"
+	// ugh stuck 4 now
+	pb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
 )
 
 type VCSHandler interface {

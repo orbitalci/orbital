@@ -3,8 +3,8 @@ package build
 import (
 	"errors"
 
-	pb "bitbucket.org/level11consulting/ocelot/old/protos"
-	"bitbucket.org/level11consulting/ocelot/newocy/common/helpers/dockrhelper"
+	"bitbucket.org/level11consulting/ocelot/common/helpers/dockrhelper"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
 )
 

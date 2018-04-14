@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-option go_package = "protobuf";
-package protobuf;
+option go_package = "pb";
+package models;
 
 service Build {
     // The stream keyword is specified before both the request type and response

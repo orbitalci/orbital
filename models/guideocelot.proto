@@ -1,5 +1,5 @@
 syntax = "proto3";
-
+option go_package = "pb";
 package models;
 
 import "google/protobuf/empty.proto";
@@ -326,12 +326,12 @@ message RepoAccount {
 
 message Status {
     BuildSummary buildSum = 1;
-    repeated Stage stages = 2;
+    repeated StageStatus stages = 2;
     bool isInConsul       = 3;
 }
 
-message Stage {
-    string stage = 1;
+message StageStatus {
+    string StageStatus = 1;
     string error = 2;
     int32 status = 3;
     repeated string messages = 4;

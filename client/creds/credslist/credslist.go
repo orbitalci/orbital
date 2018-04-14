@@ -1,13 +1,14 @@
 package credslist
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds/list"
-	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
 	"context"
 	"flag"
 	"fmt"
+	
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
+	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds/list"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 )

@@ -6,14 +6,18 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/vault"
-	adminModels "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	pb "bitbucket.org/level11consulting/ocelot/old/protos"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/newocy/common/helpers/dockrhelper"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+
+	"bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/build/basher"
+	"bitbucket.org/level11consulting/ocelot/build/integrations"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/common/helpers/dockrhelper"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -23,10 +27,10 @@ type Docker struct{
 	Log	io.ReadCloser
 	ContainerId	string
 	DockerClient *client.Client
-	*Basher
+	*basher.Basher
 }
 
-func NewDockerBuilder(b *Basher) Builder {
+func NewDockerBuilder(b *basher.Basher) build.Builder {
 	return &Docker{nil, "", nil, b}
 }
 
@@ -37,7 +41,7 @@ func (d *Docker) GetContainerId() string {
 func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	var setupMessages []string
 
-	su := InitStageUtil("setup")
+	su := build.InitStageUtil("setup")
 
 	logout <- []byte(su.GetStageLabel() + "Setting up...")
 	cli, err := client.NewEnvClient()
@@ -182,12 +186,12 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + vaultAddr)
 
 	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
-	sctType := adminModels.SubCredType(werk.VcsType)
-	identifier, _ := adminModels.CreateVCSIdentifier(sctType, acctName)
+	sctType := pb.SubCredType(werk.VcsType)
+	identifier, _ := pb.CreateVCSIdentifier(sctType, acctName)
 	ocelog.Log().Debug("identifier is ", identifier)
 	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
-		cred.BuildCredPath(sctType, acctName, adminModels.CredType_VCS, identifier)), logout)
+		cred.BuildCredPath(sctType, acctName, pb.CredType_VCS, identifier)), logout)
 	if len(result.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
 		result.Messages = append(setupMessages, result.Messages...)
@@ -211,9 +215,6 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 	return registerdAddr
 }
 
-type RepoSetupFunc func(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error)
-type RepoExecFunc func(string) []string
-
 // IntegrationSetup will use the functions you input to set up integrations on the machine docker container.
 //	setupFunc (RepoSetupFunc) is used to render a string that will be passed to execFunc (RepoExecFunc), which will generate the command list to run on the container.
 //  example RepoSetupFunc:
@@ -235,7 +236,7 @@ type RepoExecFunc func(string) []string
 // 		accountName is for passing to setupFunc to retrieve creds (if needed)
 // 		stageUtil is the stage object for logging/writing to logout
 //		the messages are the slice of messages that will be saved to build_stage_details, and appended to over the course of a stage
-func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, accountName string, su *StageUtil, msgs []string, store storage.CredTable, logout chan []byte) (result *pb.Result) {
+func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc build.RepoSetupFunc, execFunc build.RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, accountName string, su *build.StageUtil, msgs []string, store storage.CredTable, logout chan []byte) (result *pb.Result) {
 	if renderedString, err := setupFunc(rc, store, accountName); err != nil {
 		_, ok := err.(*integrations.NoCreds)
 		if !ok {
@@ -259,7 +260,7 @@ func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, 
 		ocelog.Log().Debug("writing integration for ", integrationName)
 		//msg := execFunc(renderedString)
 		//ocelog.Log().Debug("messages are: ", strings.Join(msg, " "))
-		subStage := InitStageUtil(su.GetStage() + " | " + integrationName)
+		subStage := build.InitStageUtil(su.GetStage() + " | " + integrationName)
 		result := d.Exec(ctx, subStage.GetStage(), subStage.GetStageLabel(), []string{}, execFunc(renderedString), logout)
 		if result.Messages == nil {
 			result.Messages = msgs
@@ -281,7 +282,7 @@ func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byt
 		}
 	}
 
-	su := InitStageUtil(stage.Name)
+	su := build.InitStageUtil(stage.Name)
 	return d.Exec(ctx, su.GetStage(), su.GetStageLabel(), stage.Env, d.CDAndRunCmds(stage.Script, commitHash), logout)
 }
 

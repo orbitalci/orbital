@@ -1,9 +1,10 @@
 package testutil
 
 import (
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"io"
-	"golang.org/x/net/context"
 )
 
 //type BuildClient interface {
@@ -26,11 +27,11 @@ func (c *fakeBuildClient) CloseSend() error {
 	return nil
 }
 
-func (c *fakeBuildClient) Recv() (*Response, error) {
+func (c *fakeBuildClient) Recv() (*pb.Response, error) {
 	if c.index + 1 > len(c.outputLines) {
 		return nil, io.EOF
 	}
-	resp := &Response{OutputLine: c.outputLines[c.index]}
+	resp := &pb.Response{OutputLine: c.outputLines[c.index]}
 	c.index++
 	return resp, nil
 }
@@ -47,7 +48,7 @@ func (c *fakeBuildClient) RecvMsg(m interface{}) error {
 	if c.index + 1 > len(c.outputLines) {
 		return io.EOF
 	}
-	original, ok := m.(Response)
+	original, ok := m.(pb.Response)
 	if ok {
 		original.OutputLine = c.outputLines[c.index]
 	}

@@ -1,19 +1,14 @@
 package main
 
 import (
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"errors"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/google/uuid"
 	"github.com/namsral/flag"
+
+	"errors"
 	"os"
-)
-
-type WerkType int
-
-const (
-	Kubernetes WerkType = iota
-	Docker
 )
 
 const (
@@ -23,12 +18,12 @@ const (
 	defaultStorage     = "filesystem"
 )
 
-func strToWerkType(str string) WerkType {
+func strToWerkType(str string) models.WerkType {
 	switch str {
 	case "k8s", "kubernetes":
-		return Kubernetes
+		return models.Kubernetes
 	case "docker":
-		return Docker
+		return models.Docker
 	default:
 		return -1
 	}
@@ -50,7 +45,7 @@ type WerkerConf struct {
 	ServicePort string
 	GrpcPort    string
 	WerkerName  string
-	WerkerType  WerkType
+	WerkerType  models.WerkType
 	//werkerProcessor builder.Processor
 	LogLevel        string
 	RegisterIP      string

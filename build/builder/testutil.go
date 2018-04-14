@@ -4,17 +4,19 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
 	"runtime"
 	"strings"
 	"testing"
-	cleaner2 "bitbucket.org/level11consulting/ocelot/newocy/build/cleaner"
+
+	"bitbucket.org/level11consulting/ocelot/build/basher"
+	cleaner2 "bitbucket.org/level11consulting/ocelot/build/cleaner"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/gorilla/mux"
 )
 
 func tarTemplates(t *testing.T) func(t *testing.T) {
@@ -76,7 +78,7 @@ func CreateLivingDockerContainer(t *testing.T, ctx context.Context, imageName st
 	default:
 		t.Skip("this test only supports running on darwin or linux")
 	}
-	b := &Basher{
+	b := &basher.Basher{
 		LoopbackIp: loopback,
 	}
 	builder := NewDockerBuilder(b)

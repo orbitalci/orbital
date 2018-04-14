@@ -1,8 +1,8 @@
 package storage
 
 import (
-	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"fmt"
 	"time"
 )

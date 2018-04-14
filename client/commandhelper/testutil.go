@@ -1,11 +1,11 @@
 package commandhelper
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	"bitbucket.org/level11consulting/ocelot/common/testutil"
 )
 
 func NewTestClientConfig(logLines []string) *ClientConfig {
 	return &ClientConfig{
-		Client: models.NewFakeGuideOcelotClient(logLines),
+		Client: testutil.NewFakeGuideOcelotClient(logLines),
 	}
 }

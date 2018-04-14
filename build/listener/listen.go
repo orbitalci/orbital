@@ -3,57 +3,37 @@ package listener
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	pb "bitbucket.org/level11consulting/ocelot/old/protos"
-	"bitbucket.org/level11consulting/ocelot/util/buildruntime"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations/dockr"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations/k8s"
-	"bitbucket.org/level11consulting/ocelot/newocy/integrations/nexus"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
-	"bitbucket.org/level11consulting/ocelot/util/storage/models"
-	b "bitbucket.org/level11consulting/ocelot/old/werker/builder"
-	"bitbucket.org/level11consulting/ocelot/newocy/build/valet"
-	"fmt"
+	"bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/build/basher"
+	"bitbucket.org/level11consulting/ocelot/build/builder"
+	"bitbucket.org/level11consulting/ocelot/build/valet"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/golang/protobuf/proto"
-	"strings"
+	"golang.org/x/tools/go/gcimporter15/testdata"
 
 	//"runtime/debug"
 	"context"
-	"time"
-	"bitbucket.org/level11consulting/ocelot/old/werker/config"
+	"fmt"
 )
-
-// Transport struct is for the Transport channel that will interact with the streaming side of the service
-// to stream results back to the admin. It sends just enough to be unique, the hash that triggered the build
-// and the InfoChan which the builder will write to.
-type Transport struct {
-	Hash     string
-	InfoChan chan []byte
-	DbId     int64
-}
-
-type BuildContext struct {
-	Hash string
-	Context context.Context
-	CancelFunc func()
-}
 
 type WorkerMsgHandler struct {
 	Topic           string
-	WerkConf        *config.WerkerConf
+	Type        models.WerkType
 	infochan        chan []byte
-	StreamChan   chan *Transport
-	BuildCtxChan chan *BuildContext
-	Basher          *b.Basher
+	StreamChan   chan *models.Transport
+	BuildCtxChan chan *models.BuildContext
+	Basher          *basher.Basher
 	Store           storage.OcelotStorage
 	BuildValet   *valet.Valet
 
 }
 
-func NewWorkerMsgHandler(topic string, wc *config.WerkerConf, b *b.Basher, st storage.OcelotStorage, bv *valet.Valet, tunnel chan *Transport, buildChan chan *BuildContext) *WorkerMsgHandler {
+func NewWorkerMsgHandler(topic string, wType models.WerkType, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
 	return &WorkerMsgHandler{
 		Topic: 		topic,
-		WerkConf: 	wc,
+		Type: 	wType,
 		Basher: 	b,
 		Store: 		st,
 		BuildValet: bv,
@@ -85,12 +65,12 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
 	//
-	var builder b.Builder
-	switch w.WerkConf.WerkerType {
-	case config.Docker:
-		builder = b.NewDockerBuilder(w.Basher)
+	var builder build.Builder
+	switch w.Type {
+	case models.Docker:
+		builder = builder.NewDockerBuilder(w.Basher)
 	default:
-		builder = b.NewDockerBuilder(w.Basher)
+		builder = builder.NewDockerBuilder(w.Basher)
 	}
 	w.MakeItSo(werkerTask, builder, finish, done)
 	return nil

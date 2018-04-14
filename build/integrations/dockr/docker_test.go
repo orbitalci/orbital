@@ -1,24 +1,21 @@
 package dockr
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+
 	"bytes"
-	//"encoding/base64"
-	//"fmt"
 	"testing"
 )
 
 func Test_RCtoDockerConfig(t *testing.T) {
-	repo := &models.RepoCreds{
+	repo := &pb.RepoCreds{
 		Username: "mysuserisgr8",
 		Password: "apluspassword",
-		RepoUrl: map[string]string{
-			"derpy": "derp.docker.io",
-			"herpy": "herp.docker.io",
-		},
+		RepoUrl: "derp.docker.io",
+		Identifier: "derp",
 	}
 	expected := []byte(`{"auths":{"derp.docker.io":{"auth":"bXlzdXNlcmlzZ3I4OmFwbHVzcGFzc3dvcmQ="},"herp.docker.io":{"auth":"bXlzdXNlcmlzZ3I4OmFwbHVzcGFzc3dvcmQ="}},"HttpHeaders":{"User-Agent":"Docker-Client/17.12.0-ce (linux)"}}`)
-	jsonbit, err := RCtoDockerConfig(repo)
+	jsonbit, err := RCtoDockerConfig([]pb.OcyCredder{repo})
 	if err != nil {
 		t.Fatal(err)
 	}

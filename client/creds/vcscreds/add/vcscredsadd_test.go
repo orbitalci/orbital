@@ -1,16 +1,18 @@
 package buildcredsadd
 
 import (
-	"bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bytes"
 	"context"
 	"flag"
+	"strings"
+	"testing"
+
+	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"bitbucket.org/level11consulting/ocelot/common/testutil"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
-	"testing"
-	"strings"
-	"bitbucket.org/level11consulting/go-til/test"
 )
 
 // testNew will return the bare minimum. flags and fileloc of yaml will have to be set after instantiation
@@ -76,7 +78,7 @@ Error: open THIS IS A TEST: no such file or directory`
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
-	if !models.CompareCredWrappers(expectedCreds, actualCreds) {
+	if !testutil.CompareCredWrappers(expectedCreds, actualCreds) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", actualCreds)
 	}
 
@@ -113,7 +115,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
-	if !models.CompareCredWrappers(expectedCreds, sentCreds) {
+	if !testutil.CompareCredWrappers(expectedCreds, sentCreds) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", sentCreds)
 	}
 }
