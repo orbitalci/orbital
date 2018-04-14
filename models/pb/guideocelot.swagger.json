@@ -1,0 +1,841 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Guide Ocelot Server",
+    "version": "1.0",
+    "contact": {
+      "name": "jessi shank",
+      "email": "jessishank@level11.com"
+    }
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/build": {
+      "post": {
+        "description": "build will attempt to trigger a build. If the git hash has already been built before, it can be triggered with just acctRepo and hash fields. If it has not been built before, the branch flag is required as well.",
+        "operationId": "BuildRepoAndHash",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/modelsLineResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsBuildReq"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/buildruntime": {
+      "get": {
+        "operationId": "BuildRuntime",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsBuilds"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "buildId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds": {
+      "get": {
+        "operationId": "GetAllCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsAllCredsWrapper"
+            }
+          }
+        },
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/k8s": {
+      "get": {
+        "operationId": "GetK8SCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsK8SCredsWrapper"
+            }
+          }
+        },
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "post": {
+        "operationId": "SetK8SCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsK8SCreds"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/repo": {
+      "get": {
+        "description": "Get all known repo integration credentials.",
+        "operationId": "GetRepoCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsRepoCredWrapper"
+            }
+          }
+        },
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "post": {
+        "description": "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker.",
+        "operationId": "SetRepoCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsRepoCreds"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/vcs": {
+      "get": {
+        "description": "Returns all VCS creds that ocelot has and can use for checking out code to build.",
+        "operationId": "GetVCSCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsCredWrapper"
+            }
+          }
+        },
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "post": {
+        "description": "Add a new VCS credential configuration to ocelot for code checkout.",
+        "operationId": "SetVCSCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsVCSCreds"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/vcs/ssh": {
+      "post": {
+        "description": "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository.",
+        "operationId": "SetVCSPrivateKey",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsSSHKeyWrapper"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/poll": {
+      "get": {
+        "description": "list all repositories that are being polled for changes",
+        "operationId": "ListPolledRepos",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsPolls"
+            }
+          }
+        },
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "delete": {
+        "description": "delete polling for a repo. account and repo are required.",
+        "operationId": "DeletePollRepo",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "post": {
+        "description": "poll will set up a polling request. account, repo, cron, and branches are all required fields.",
+        "operationId": "PollRepo",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsPollRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/status": {
+      "get": {
+        "description": "GetStatus will return the status of a specific build. Hierarchy for key to lookup with: if hash supplied, will only search by hash. If acctName and repoName are supplied and not hash, \nit will be used as a key for looking up status. If only partialRepo is given in the request, ocelot will attempt to find a match and return the latest build stage details for that.",
+        "operationId": "GetStatus",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "description": "hash is the git hash to get status of.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "acctName",
+            "description": "acctName is the corresponding account that the hash is attached to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "repoName",
+            "description": "repoName is the corresponding repo name that the hash is attached to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "partialRepo",
+            "description": "partialRepo is just the first n letters of repo.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/summary": {
+      "get": {
+        "description": "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.",
+        "operationId": "LastFewSummaries",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsSummaries"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "repo",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "account",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/watch": {
+      "post": {
+        "description": "watch will set up a webhook for the given repo/account. all fields required.",
+        "operationId": "WatchRepo",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsRepoAccount"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/werker/loc": {
+      "get": {
+        "description": "get network location of werker that is currrently ",
+        "operationId": "FindWerker",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsBuildRuntimeInfo"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctRepo",
+            "description": "acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "hash",
+            "description": "hash is the git hash to trigger.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "branch",
+            "description": "branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "modelsAllCredsWrapper": {
+      "type": "object",
+      "properties": {
+        "repoCreds": {
+          "$ref": "#/definitions/modelsRepoCredWrapper",
+          "title": "All repository credentials for integrations\n@inject_tag: yaml:\"repoCreds\""
+        },
+        "vcsCreds": {
+          "$ref": "#/definitions/modelsCredWrapper",
+          "title": "All VCS credentials for building\n@inject_tag: yaml:\"vcsCreds\""
+        }
+      }
+    },
+    "modelsBuildReq": {
+      "type": "object",
+      "properties": {
+        "acctRepo": {
+          "type": "string",
+          "title": "acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo"
+        },
+        "hash": {
+          "type": "string",
+          "description": "hash is the git hash to trigger."
+        },
+        "branch": {
+          "type": "string",
+          "description": "branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required."
+        }
+      }
+    },
+    "modelsBuildRuntimeInfo": {
+      "type": "object",
+      "properties": {
+        "done": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "grpcPort": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "acctName": {
+          "type": "string"
+        },
+        "repoName": {
+          "type": "string"
+        },
+        "wsPort": {
+          "type": "string"
+        }
+      }
+    },
+    "modelsBuildSummary": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "failed": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "buildTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "account": {
+          "type": "string"
+        },
+        "buildDuration": {
+          "type": "number",
+          "format": "double"
+        },
+        "repo": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "buildId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "queueTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "modelsBuilds": {
+      "type": "object",
+      "properties": {
+        "builds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/modelsBuildRuntimeInfo"
+          }
+        }
+      }
+    },
+    "modelsCredWrapper": {
+      "type": "object",
+      "properties": {
+        "vcs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsVCSCreds"
+          }
+        }
+      },
+      "title": "just a container for a list of VCSCreds"
+    },
+    "modelsExists": {
+      "type": "object",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "modelsK8SCreds": {
+      "type": "object",
+      "properties": {
+        "acctName": {
+          "type": "string"
+        },
+        "k8sContents": {
+          "type": "string"
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "subType": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "@inject_tag: yaml:\"subType\""
+        }
+      }
+    },
+    "modelsK8SCredsWrapper": {
+      "type": "object",
+      "properties": {
+        "K8SCreds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsK8SCreds"
+          }
+        }
+      }
+    },
+    "modelsLineResponse": {
+      "type": "object",
+      "properties": {
+        "outputLine": {
+          "type": "string"
+        }
+      }
+    },
+    "modelsPollRequest": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string"
+        },
+        "cron": {
+          "type": "string"
+        },
+        "branches": {
+          "type": "string"
+        },
+        "lastCronTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastHashes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "modelsPolls": {
+      "type": "object",
+      "properties": {
+        "polls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsPollRequest"
+          }
+        }
+      }
+    },
+    "modelsRepoAccount": {
+      "type": "object",
+      "properties": {
+        "repo": {
+          "type": "string"
+        },
+        "account": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "modelsRepoCredWrapper": {
+      "type": "object",
+      "properties": {
+        "repo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsRepoCreds"
+          }
+        }
+      },
+      "title": "container for list of repo creds"
+    },
+    "modelsRepoCreds": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "username of repository"
+        },
+        "password": {
+          "type": "string",
+          "title": "password of repository"
+        },
+        "repoUrl": {
+          "type": "string",
+          "title": "@inject_tag: yaml:\"repoUrl\""
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "acctName": {
+          "type": "string",
+          "title": "@inject_tag: yaml:\"acctName\"\naccount name (same as from vcs)"
+        },
+        "subType": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "@inject_tag: yaml:\"subType\""
+        }
+      }
+    },
+    "modelsSSHKeyWrapper": {
+      "type": "object",
+      "properties": {
+        "acctName": {
+          "type": "string",
+          "title": "account name to associate ssh key with"
+        },
+        "privateKey": {
+          "type": "string",
+          "format": "byte",
+          "title": "the contents of the private key"
+        },
+        "subType": {
+          "$ref": "#/definitions/modelsSubCredType"
+        }
+      }
+    },
+    "modelsStageStatus": {
+      "type": "object",
+      "properties": {
+        "StageStatus": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stageDuration": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "modelsStatus": {
+      "type": "object",
+      "properties": {
+        "buildSum": {
+          "$ref": "#/definitions/modelsBuildSummary"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsStageStatus"
+          }
+        },
+        "isInConsul": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "modelsSubCredType": {
+      "type": "string",
+      "enum": [
+        "NIL_SCT",
+        "BITBUCKET",
+        "GITHUB",
+        "NEXUS",
+        "MAVEN",
+        "DOCKER",
+        "KUBECONF"
+      ],
+      "default": "NIL_SCT"
+    },
+    "modelsSummaries": {
+      "type": "object",
+      "properties": {
+        "sums": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsBuildSummary"
+          }
+        }
+      }
+    },
+    "modelsVCSCreds": {
+      "type": "object",
+      "properties": {
+        "clientId": {
+          "type": "string",
+          "title": "clientId is generated by creating an oAuth consumer in bitbucket. it is required to generate tokens.\n@inject_tag: yaml:\"clientId\""
+        },
+        "clientSecret": {
+          "type": "string",
+          "title": "clientSecret is generated by creating an oAuth consumer in bitbucket. it is required to generate tokens.\n@inject_tag: yaml:\"clientSecret\""
+        },
+        "identifier": {
+          "type": "string",
+          "title": "identifier is the name the user calls teh credential set"
+        },
+        "tokenURL": {
+          "type": "string",
+          "title": "tokenUrl is the url at which to retrieve the token\n@inject_tag: yaml:\"tokenURL\""
+        },
+        "acctName": {
+          "type": "string",
+          "title": "@inject_tag: yaml:\"acctName\"\nacctName is the account to associate the VCSCred with. Must be the account name of the owner of the repository they wish to track (ie level11consulting)"
+        },
+        "sshFileLoc": {
+          "type": "string",
+          "title": "just a string that says whether or not there is an ssh key on file\n@inject_tag: yaml:\"sshFileLoc\""
+        },
+        "subType": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "@inject_tag: yaml:\"subType\""
+        }
+      }
+    },
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    }
+  }
+}
