@@ -9,7 +9,7 @@ import (
 	"os"
 	"io/ioutil"
 	"context"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/old/admin/models"
 )
 
 

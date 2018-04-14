@@ -11,7 +11,7 @@ Ocelot integrates with Bitbucket using OAuth2. Therefore, to use it you must gen
 - Click the `OAuth` tab in `Access Management`  
 - Click the `Add consumer` button   
 - Add a consumer with these permissions:  
-   ![permissions](./permissions_bb.png)  
+   ![permissions](permissions_bb.png)  
 - For callback url enter `https://hookhandler.metaverse.l11.com` and save  
 - Take note of the client key and secret, you will need to upload those values to ocelot   
 

@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"fmt"
 	"bitbucket.org/level11consulting/go-til/deserialize"
-	pb "bitbucket.org/level11consulting/ocelot/protos"
+	pb "bitbucket.org/level11consulting/ocelot/old/protos"
 	"strings"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/old/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/build"
 )
 

@@ -7,7 +7,7 @@ import (
 	"os"
 	"syscall"
 	"os/signal"
-	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
+	"bitbucket.org/level11consulting/ocelot/old/werker/protobuf"
 	"io"
 	"github.com/mitchellh/cli"
 	"google.golang.org/grpc"

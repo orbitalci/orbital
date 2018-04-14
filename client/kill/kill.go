@@ -1,9 +1,9 @@
 package kill
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/old/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	pb "bitbucket.org/level11consulting/ocelot/werker/protobuf"
+	pb "bitbucket.org/level11consulting/ocelot/old/werker/protobuf"
 	"context"
 	"flag"
 	"fmt"

@@ -2,9 +2,9 @@ package main
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/admin"
+	"bitbucket.org/level11consulting/ocelot/old/admin"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
+	"bitbucket.org/level11consulting/ocelot/newocy/common/secure_grpc"
 	"fmt"
 	"github.com/namsral/flag"
 	"os"

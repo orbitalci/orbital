@@ -1,8 +1,8 @@
 package commandhelper
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/old/admin"
+	"bitbucket.org/level11consulting/ocelot/old/admin/models"
 	"fmt"
 	"os"
 )

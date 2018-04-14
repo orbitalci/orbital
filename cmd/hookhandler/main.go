@@ -5,7 +5,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	hh "bitbucket.org/level11consulting/ocelot/hookhandler"
+	hh "bitbucket.org/level11consulting/ocelot/old/hookhandler"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"github.com/gorilla/mux"
 	"github.com/namsral/flag"

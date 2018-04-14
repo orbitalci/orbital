@@ -2,7 +2,7 @@ package polllist
 
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/old/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bytes"
 	"context"

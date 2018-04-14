@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"bitbucket.org/level11consulting/go-til/test"
-	pb "bitbucket.org/level11consulting/ocelot/protos"
+	pb "bitbucket.org/level11consulting/ocelot/old/protos"
 	"bitbucket.org/level11consulting/ocelot/util/handler"
 	"bitbucket.org/level11consulting/ocelot/util/storage"
 )

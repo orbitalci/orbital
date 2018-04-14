@@ -3,7 +3,7 @@ package main
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	pb "bitbucket.org/level11consulting/ocelot/admin/models"
+	pb "bitbucket.org/level11consulting/ocelot/old/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/poller"
 	"bitbucket.org/level11consulting/ocelot/util/storage"

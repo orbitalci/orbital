@@ -3,7 +3,7 @@ package credsadd
 
 import (
 	"bitbucket.org/level11consulting/go-til/deserialize"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/old/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"

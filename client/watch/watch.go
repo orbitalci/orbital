@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/cli"
 	"flag"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+	"bitbucket.org/level11consulting/ocelot/old/admin/models"
 	"context"
 )
 

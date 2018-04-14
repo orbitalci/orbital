@@ -3,16 +3,16 @@
 
 # ===============
 cd protos 
-./build-protos.sh
+build-protos.sh
 cd ..
 # ===============
 cd werker
-./build-protos.sh
+build-protos.sh
 cd ..
 # ===============
 # ===============
 cd admin
-./build-protos.sh
+build-protos.sh
 cd ..
 # ===============
 
