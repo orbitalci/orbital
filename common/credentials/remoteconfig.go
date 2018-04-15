@@ -200,7 +200,6 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 		return "", err
 	}
 	secretData := authData["data"]
-	fmt.Println(secretData)
 	password, ok := secretData.(map[string]interface{})
 	if !ok {
 		return "", errors.New("Could not retrieve password from vault") //how is it that we can't cast to a map of string/string??
