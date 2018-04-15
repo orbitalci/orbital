@@ -2,31 +2,17 @@ package common
 
 import (
 	"fmt"
-	"os"
 	"strings"
-	"sync"
 )
-var once sync.Once
-var prefix string
+
 const BuildFileName = "ocelot.yml"
 
 var BitbucketEvents = []string{"repo:push", "pullrequest:approved", "pullrequest:updated"}
 
-func getPrefix() string {
-	once.Do(func(){
-		prefix = os.Getenv("PATH_PREFIX")
-		if prefix == "" {
-			prefix = ""
-		} else {
-			prefix = prefix + "/"
-		}
-	})
-	return prefix
-}
 
 
 var (
-	OcyConfigBase = getPrefix() +  "config/ocelot"
+	OcyConfigBase = GetPrefix() +  "config/ocelot"
 	StorageType =  OcyConfigBase + "/storagetype"
 
 	PostgresCredLoc = OcyConfigBase + "/postgres"
@@ -67,47 +53,47 @@ const (
 )
 
 func MakeBuildPath(werkerId string, gitHash string) string {
-	return getPrefix() + fmt.Sprintf(buildPath, werkerId, gitHash)
+	return GetPrefix() + fmt.Sprintf(buildPath, werkerId, gitHash)
 }
 
 func MakeBuildWerkerIdPath(werkerId string) string {
-	return getPrefix() + fmt.Sprintf(buildIdOnly, werkerId)
+	return GetPrefix() + fmt.Sprintf(buildIdOnly, werkerId)
 }
 
 func MakeBuildSummaryIdPath(werkerId string, gitHash string) string {
-	return getPrefix() + fmt.Sprintf(buildSummaryId, werkerId, gitHash)
+	return GetPrefix() + fmt.Sprintf(buildSummaryId, werkerId, gitHash)
 }
 
 func MakeBuildStagePath(werkerId string, gitHash string) string {
-	return getPrefix() + fmt.Sprintf(bldCurrentStage, werkerId, gitHash)
+	return GetPrefix() + fmt.Sprintf(bldCurrentStage, werkerId, gitHash)
 }
 
 func MakeBuildStartpath(werkerId string, gitHash string) string {
-	return getPrefix() + fmt.Sprintf(bldStartTime, werkerId, gitHash)
+	return GetPrefix() + fmt.Sprintf(bldStartTime, werkerId, gitHash)
 }
 
 func MakeDockerUuidPath(werkerId string, gitHash string) string {
-	return getPrefix() + fmt.Sprintf(buildDockerUuid, werkerId, gitHash)
+	return GetPrefix() + fmt.Sprintf(buildDockerUuid, werkerId, gitHash)
 }
 
 func MakeBuildMapPath(gitHash string) string {
-	return getPrefix() + fmt.Sprintf(werkerBuildMap, gitHash)
+	return GetPrefix() + fmt.Sprintf(werkerBuildMap, gitHash)
 }
 
 func MakeWerkerLocPath(werkerId string) string {
-	return getPrefix() + fmt.Sprintf(werkerLocation, werkerId)
+	return GetPrefix() + fmt.Sprintf(werkerLocation, werkerId)
 }
 
 func MakeWerkerIpPath(werkerId string) string {
-	return getPrefix() + fmt.Sprintf(werkerIp, werkerId)
+	return GetPrefix() + fmt.Sprintf(werkerIp, werkerId)
 }
 
 func MakeWerkerGrpcPath(werkerId string) string {
-	return getPrefix() + fmt.Sprintf(werkerGrpc, werkerId)
+	return GetPrefix() + fmt.Sprintf(werkerGrpc, werkerId)
 }
 
 func MakeWerkerWsPath(werkerId string) string {
-	return getPrefix() + fmt.Sprintf(werkerWs, werkerId)
+	return GetPrefix() + fmt.Sprintf(werkerWs, werkerId)
 }
 
 
@@ -117,7 +103,7 @@ func MakeWerkerWsPath(werkerId string) string {
 // ie: ci/builds/<werkerId>/<hash>/docker_uuid
 func parseGenericBuildPath(buildPath string) (werkerId string, hash string, key string) {
 	var shift int
-	if getPrefix() != "" {
+	if GetPrefix() != "" {
 		shift = 1
 	}
 	split := strings.Split(buildPath, "/")
@@ -141,7 +127,7 @@ func parseBuildMapPath(path string) (hash string) {
 // must be fully qualified key path, not prefix
 func parseWerkerLocPath(path string) (werkerId string) {
 	var shift int
-	if getPrefix() != "" {
+	if GetPrefix() != "" {
 		shift = 1
 	}
 	split := strings.Split(path, "/")

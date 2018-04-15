@@ -1,6 +1,14 @@
 package common
 
-import "strings"
+import (
+	"os"
+	"strings"
+	"sync"
+)
+
+
+var once sync.Once
+var prefix string
 
 // helper
 func GetAcctRepo(fullName string) (acct string, repo string, err error) {
@@ -24,4 +32,17 @@ type FormatError struct {
 
 func (f *FormatError) Error() string {
 	return f.err
+}
+
+
+func GetPrefix() string {
+	once.Do(func(){
+		prefix = os.Getenv("PATH_PREFIX")
+		if prefix == "" {
+			prefix = ""
+		} else {
+			prefix = prefix + "/"
+		}
+	})
+	return prefix
 }
