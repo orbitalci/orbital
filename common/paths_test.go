@@ -1,4 +1,4 @@
-package build
+package common
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
@@ -84,7 +84,7 @@ func Test_parseGenericBuildPath(t *testing.T) {
 	expectWerkerId := "1234-8974-3818-asdf"
 	expectGitHash := "123nd9xz"
 	herepathbe := "ci/builds/1234-8974-3818-asdf/123nd9xz/docker_uuid"
-	werkerId, gitHash, _ := parseGenericBuildPath(herepathbe)
+	werkerId, gitHash, _ := ParseGenericBuildPath(herepathbe)
 	if werkerId != expectWerkerId {
 		test.StrFormatErrors("werker id ", expectWerkerId, werkerId)
 	}
@@ -92,7 +92,7 @@ func Test_parseGenericBuildPath(t *testing.T) {
 		test.StrFormatErrors("git hash", expectGitHash, gitHash)
 	}
 	herepathbe2 := "ci/builds/1234-8974-3818-asdf/123nd9xz/docker_uuid/"
-	werkerId, gitHash, _ = parseGenericBuildPath(herepathbe2)
+	werkerId, gitHash, _ = ParseGenericBuildPath(herepathbe2)
 	if werkerId != expectWerkerId {
 		test.StrFormatErrors("werker id ", expectWerkerId, werkerId)
 	}
@@ -100,7 +100,7 @@ func Test_parseGenericBuildPath(t *testing.T) {
 		test.StrFormatErrors("git hash", expectGitHash, gitHash)
 	}
 	herepathbe3 := "ci/builds/1234-8974-3818-asdf/123nd9xz/SPECIAL_KEY"
-	werkerId, gitHash, _ = parseGenericBuildPath(herepathbe3)
+	werkerId, gitHash, _ = ParseGenericBuildPath(herepathbe3)
 	if werkerId != expectWerkerId {
 		test.StrFormatErrors("werker id ", expectWerkerId, werkerId)
 	}
@@ -112,22 +112,22 @@ func Test_parseGenericBuildPath(t *testing.T) {
 func Test_parseWerkerLocPath(t *testing.T) {
 	expWerkerId := "<werkerId>"
 	path := "ci/werker_location/<werkerId>/werker_ip"
-	werkerId := parseWerkerLocPath(path)
+	werkerId := ParseWerkerLocPath(path)
 	if expWerkerId != werkerId {
 		test.StrFormatErrors("werker id", expWerkerId, werkerId)
 	}
 	path2 := path + "/"
-	werkerId = parseWerkerLocPath(path2)
+	werkerId = ParseWerkerLocPath(path2)
 	if expWerkerId != werkerId {
 		test.StrFormatErrors("werker id", expWerkerId, werkerId)
 	}
 	path3 := "ci/werker_location/<werkerId>"
-	werkerId = parseWerkerLocPath(path3)
+	werkerId = ParseWerkerLocPath(path3)
 	if expWerkerId != werkerId {
 		test.StrFormatErrors("werker id", expWerkerId, werkerId)
 	}
 	path4 := "ci/werker_location/<werkerId>/"
-	werkerId = parseWerkerLocPath(path4)
+	werkerId = ParseWerkerLocPath(path4)
 	if expWerkerId != werkerId {
 		test.StrFormatErrors("werker id", expWerkerId, werkerId)
 	}
@@ -136,7 +136,7 @@ func Test_parseWerkerLocPath(t *testing.T) {
 func Test_parseBuildMapPath(t *testing.T) {
 	path := "ci/werker_build_map/<hash>"
 	expHash := "<hash>"
-	hash := parseBuildMapPath(path)
+	hash := ParseBuildMapPath(path)
 	if expHash != hash {
 		test.StrFormatErrors("hash", expHash, hash)
 	}

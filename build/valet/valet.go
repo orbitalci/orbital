@@ -12,9 +12,11 @@ import (
 	"bitbucket.org/level11consulting/go-til/log"
 	brt "bitbucket.org/level11consulting/ocelot/build"
 	c "bitbucket.org/level11consulting/ocelot/build/cleaner"
+	"bitbucket.org/level11consulting/ocelot/common"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/storage"
+
 	"github.com/google/uuid"
 )
 //go:generate stringer -type=Interrupt
@@ -211,7 +213,7 @@ func (v *Valet) SignalRecvDed() {
 // 		ci/builds/<werkerId>/<hash>/*
 func Delete(consulete *consul.Consulet, gitHash string) (err error) {
 	//paths := &Identifiers{GitHash: gitHash}
-	pairPath := brt.MakeBuildMapPath(gitHash)
+	pairPath := common.MakeBuildMapPath(gitHash)
 	kv, err := consulete.GetKeyValue(pairPath)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get kv error!")
@@ -222,7 +224,7 @@ func Delete(consulete *consul.Consulet, gitHash string) (err error) {
 		return
 	}
 	log.Log().WithField("gitHash", gitHash).Info("WERKERID IS: ", string(kv.Value))
-	if err = consulete.RemoveValues(brt.MakeBuildPath(string(kv.Value), gitHash)); err != nil {
+	if err = consulete.RemoveValues(common.MakeBuildPath(string(kv.Value), gitHash)); err != nil {
 		return
 	}
 	err = consulete.RemoveValue(pairPath)
