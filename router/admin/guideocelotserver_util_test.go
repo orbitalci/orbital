@@ -2,9 +2,10 @@ package admin
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
-	am "bitbucket.org/level11consulting/ocelot/old/admin/models"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	am "bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/storage"
 
 	"testing"
 )

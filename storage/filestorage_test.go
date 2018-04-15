@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"bitbucket.org/level11consulting/ocelot/util/storage/models"
+	"bitbucket.org/level11consulting/ocelot/models"
 	"os"
 	"testing"
 	"time"

@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/test"
 
 	"bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/common"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	util "bitbucket.org/level11consulting/ocelot/common/testutil"
 	"bitbucket.org/level11consulting/ocelot/models"
@@ -38,10 +39,10 @@ func addHashRuntimeData(t *testing.T, serv *testutil.TestServer, werkerId string
 		CurrentStage: "test",
 		StageStart: time.Now(),
 	}
-	serv.SetKVString(t, build.MakeBuildStartpath(werkerId, hash), fmt.Sprintf("%d", hrt.StageStart.Unix()))
-	serv.SetKVString(t, build.MakeDockerUuidPath(werkerId, hash), hrt.DockerUuid)
-	serv.SetKVString(t, build.MakeBuildStagePath(werkerId, hash), hrt.CurrentStage)
-	serv.SetKVString(t, build.MakeBuildSummaryIdPath(werkerId, hash), fmt.Sprintf("%d", hrt.BuildId))
+	serv.SetKVString(t, common.MakeBuildStartpath(werkerId, hash), fmt.Sprintf("%d", hrt.StageStart.Unix()))
+	serv.SetKVString(t, common.MakeDockerUuidPath(werkerId, hash), hrt.DockerUuid)
+	serv.SetKVString(t, common.MakeBuildStagePath(werkerId, hash), hrt.CurrentStage)
+	serv.SetKVString(t, common.MakeBuildSummaryIdPath(werkerId, hash), fmt.Sprintf("%d", hrt.BuildId))
 	return hrt
 }
 
@@ -66,7 +67,7 @@ func TestRecovery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	stage := serv.GetKVString(t, build.MakeBuildStagePath(uid.String(), hash))
+	stage := serv.GetKVString(t, common.MakeBuildStagePath(uid.String(), hash))
 	if stage != "START" {
 		t.Error(test.StrFormatErrors("stage", "START", stage))
 	}
@@ -96,13 +97,13 @@ func TestRecovery(t *testing.T) {
 	if summary.BuildDuration < 0 {
 		t.Error("the build summary build duration should have been updated to be greater than zero when StoreInterrupt is called.")
 	}
-	serv.SetKVString(t, build.MakeDockerUuidPath(uid.String(), hash), hrt.DockerUuid)
-	serv.SetKVString(t, build.MakeWerkerIpPath(uid.String()), "localheist")
+	serv.SetKVString(t, common.MakeDockerUuidPath(uid.String(), hash), hrt.DockerUuid)
+	serv.SetKVString(t, common.MakeWerkerIpPath(uid.String()), "localheist")
 	rcvr.Cleanup()
 	// check all paths have been removed
 	//
 	// ci/builds/<werkerId>/<hash>
-	pairs, err := consu.GetKeyValues(build.MakeBuildPath(uid.String(), hash))
+	pairs, err := consu.GetKeyValues(common.MakeBuildPath(uid.String(), hash))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +111,7 @@ func TestRecovery(t *testing.T) {
 		t.Error("everything under the build path prefix should be deleted after cleanup.")
 	}
 	// ci/werker_location/<werkerId>
-	pairs, err = consu.GetKeyValues(build.MakeWerkerLocPath(uid.String()))
+	pairs, err = consu.GetKeyValues(common.MakeWerkerLocPath(uid.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,11 +119,39 @@ func TestRecovery(t *testing.T) {
 		t.Error("everything under the werker loc path prefix should be deleted after cleanup.")
 	}
 	// ci/werker_build_map/<hash>
-	pairs, err = consu.GetKeyValues(build.MakeBuildMapPath(hash))
+	pairs, err = consu.GetKeyValues(common.MakeBuildMapPath(hash))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(pairs) != 0 {
 		t.Error("everything under the build map should be deleted after cleanup")
 	}
+}
+
+func Test_Delete(t *testing.T) {
+	werkerId := "werkerId"
+	hash := "1231231231"
+	dockerUuid := "12312324/81dfasd"
+	consu, serv := util.InitServerAndConsulet(t)
+	defer serv.Stop()
+	serv.SetKV(t, fmt.Sprintf(common.BuildDockerUuid, werkerId, hash), []byte(dockerUuid))
+	serv.SetKV(t, fmt.Sprintf(common.WerkerBuildMap, hash), []byte(werkerId))
+	if err := Delete(consu, hash); err != nil {
+		t.Fatal("could not delete!", err)
+	}
+	liveUuid, err := consu.GetKeyValue(fmt.Sprintf(common.BuildDockerUuid, werkerId, hash))
+	if err != nil {
+		t.Fatal("unable to connect to consu ", err.Error())
+	}
+	if liveUuid != nil {
+		t.Error("liveUuid path should not exist after delete")
+	}
+	werkerIdd, err := consu.GetKeyValue(fmt.Sprintf(common.WerkerBuildMap, hash))
+	if err != nil {
+		t.Fatal("unable to connect to conu ", err.Error())
+	}
+	if werkerIdd != nil {
+		t.Error("werkerId path should not exist after delete")
+	}
+
 }

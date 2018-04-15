@@ -2,6 +2,7 @@ package credsadd
 
 import (
 	models "bitbucket.org/level11consulting/ocelot/models/pb"
+	"bitbucket.org/level11consulting/ocelot/common/testutil"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
@@ -63,7 +64,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
-	if !models.CompareAllCredWrappers(expectedCreds, actualCreds) {
+	if !testutil.CompareAllCredWrappers(expectedCreds, actualCreds) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", actualCreds)
 	}
 

@@ -2,17 +2,17 @@ package basher
 
 import (
 	"testing"
-	"bitbucket.org/level11consulting/ocelot/old/protos"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/go-til/test"
 )
 
 func TestBasher_DownloadCodebaseDefault(t *testing.T) {
 	b := &Basher{}
-	wt := &protos.WerkerTask{
+	wt := &pb.WerkerTask{
 		VcsToken: "something",
 		FullName: "marianne",
 		CheckoutHash: "123",
-		VcsType: protos.SubCredType_BITBUCKET,
+		VcsType: pb.SubCredType_BITBUCKET,
 	}
 	defaultResult := b.DownloadCodebase(wt)
 	if len(defaultResult) != 3 {
@@ -32,11 +32,11 @@ func TestBasher_DownloadCodebaseDefault(t *testing.T) {
 func TestBasher_DownloadCodebaseNotDefault(t *testing.T) {
 	b := &Basher{}
 	b.SetBbDownloadURL("https://localhost:9090/marianne/is/number/one")
-	wt := &protos.WerkerTask{
+	wt := &pb.WerkerTask{
 		VcsToken: "",
 		FullName: "marianne",
 		CheckoutHash: "123",
-		VcsType: protos.SubCredType_BITBUCKET,
+		VcsType: pb.SubCredType_BITBUCKET,
 	}
 	defaultResult := b.DownloadCodebase(wt)
 	if len(defaultResult) != 3 {

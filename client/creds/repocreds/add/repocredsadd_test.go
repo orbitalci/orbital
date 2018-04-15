@@ -7,6 +7,7 @@ import (
 	"context"
 	"flag"
 	"github.com/golang/protobuf/ptypes/empty"
+	"bitbucket.org/level11consulting/ocelot/common/testutil"
 	"github.com/mitchellh/cli"
 	"testing"
 )
@@ -53,7 +54,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
-	if !models.CompareRepoCredWrappers(expectedCreds, actualCreds) {
+	if !testutil.CompareRepoCredWrappers(expectedCreds, actualCreds) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", actualCreds)
 	}
 
@@ -91,7 +92,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	if err != nil {
 		t.Fatal("could not get actual creds from fake guide ocelot client")
 	}
-	if !models.CompareRepoCredWrappers(expectedCreds, sentCreds) {
+	if !testutil.CompareRepoCredWrappers(expectedCreds, sentCreds) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", sentCreds)
 	}
 }

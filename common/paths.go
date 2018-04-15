@@ -13,7 +13,7 @@ const (
 	buildIdOnly     = buildBase + "%s" // werkerId
 	buildPath       = buildBase + "%s/%s" // werkerId, hash
 	DockerUuidKey   = "docker_uuid"
-	buildDockerUuid = buildPath + "/" + DockerUuidKey
+	BuildDockerUuid = buildPath + "/" + DockerUuidKey
 	SummaryId       = "build_id"
 	buildSummaryId  = buildPath + "/" + SummaryId
 	CurrentStage    = "current_stage"
@@ -22,14 +22,15 @@ const (
 	bldStartTime    = buildPath + "/" + StartTime
 
 	werkerBuildBase = "ci/werker_build_map/"
-	werkerBuildMap  = werkerBuildBase + "%s" // %s is hash
+	WerkerBuildMap  = werkerBuildBase + "%s" // %s is hash
 
-	werkerLocBase   = "ci/werker_location/"
-	werkerLocation  = werkerLocBase + "%s" // %s is werker id
-	werkerIp        = werkerLocation + "/werker_ip"
-	werkerGrpc      = werkerLocation + "/werker_grpc_port"
-	werkerWs	    = werkerLocation + "/werker_ws_port"
+	werkerLocBase  = "ci/werker_location/"
+	werkerLocation = werkerLocBase + "%s" // %s is werker id
+	WerkerIp       = werkerLocation + "/werker_ip"
+	WerkerGrpc     = werkerLocation + "/werker_grpc_port"
+	WerkerWs       = werkerLocation + "/werker_ws_port"
 )
+
 
 func MakeBuildPath(werkerId string, gitHash string) string {
 	return GetPrefix() + fmt.Sprintf(buildPath, werkerId, gitHash)
@@ -52,11 +53,11 @@ func MakeBuildStartpath(werkerId string, gitHash string) string {
 }
 
 func MakeDockerUuidPath(werkerId string, gitHash string) string {
-	return GetPrefix() + fmt.Sprintf(buildDockerUuid, werkerId, gitHash)
+	return GetPrefix() + fmt.Sprintf(BuildDockerUuid, werkerId, gitHash)
 }
 
 func MakeBuildMapPath(gitHash string) string {
-	return GetPrefix() + fmt.Sprintf(werkerBuildMap, gitHash)
+	return GetPrefix() + fmt.Sprintf(WerkerBuildMap, gitHash)
 }
 
 func MakeWerkerLocPath(werkerId string) string {
@@ -64,15 +65,15 @@ func MakeWerkerLocPath(werkerId string) string {
 }
 
 func MakeWerkerIpPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(werkerIp, werkerId)
+	return GetPrefix() + fmt.Sprintf(WerkerIp, werkerId)
 }
 
 func MakeWerkerGrpcPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(werkerGrpc, werkerId)
+	return GetPrefix() + fmt.Sprintf(WerkerGrpc, werkerId)
 }
 
 func MakeWerkerWsPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(werkerWs, werkerId)
+	return GetPrefix() + fmt.Sprintf(WerkerWs, werkerId)
 }
 
 
@@ -93,7 +94,7 @@ func ParseGenericBuildPath(buildPath string) (werkerId string, hash string, key 
 }
 
 
-// ParseBuildMapPath will return the git hash of the werkerBuildMap key
+// ParseBuildMapPath will return the git hash of the WerkerBuildMap key
 // 	ie: ci/werker_build_map/<hash>
 func ParseBuildMapPath(path string) (hash string) {
 	split := strings.Split(path, "/")

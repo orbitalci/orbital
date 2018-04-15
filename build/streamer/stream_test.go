@@ -5,7 +5,7 @@ import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/old/werker/protobuf"
+	protobuf "bitbucket.org/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc"
 	"testing"
 	"time"
