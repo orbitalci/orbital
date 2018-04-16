@@ -24,13 +24,13 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping due to -short flag being set")
 	}
-	cleanup, pw, port := storage.CreateTestPgDatabase(t)
-	defer cleanup(t)
-	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	password, ok := os.LookupEnv("NEXUS_ADMIN_PW")
 	if !ok {
 		t.Skip("skipping because $NEXUS_ADMIN_PW not set")
 	}
+	cleanup, pw, port := storage.CreateTestPgDatabase(t)
+	defer cleanup(t)
+	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 
 	acctName := "test"
 	projectName := "project"

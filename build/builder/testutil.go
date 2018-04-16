@@ -23,8 +23,8 @@ func tarTemplates(t *testing.T) func(t *testing.T) {
 	//tar -cvf werker_files.tar *
 	here, _ := ioutil.ReadDir(".")
 	fmt.Println(here)
-	cmd := exec.Command("/bin/sh", "-c", "tar -cvf ../werker_files.tar *")
-	cmd.Dir = "./template/"
+	cmd := exec.Command("/bin/sh", "-c", "tar -cvf ../builder/werker_files.tar *")
+	cmd.Dir = "../template/"
 	var out, err bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &err

@@ -47,7 +47,7 @@ func TestCmd_RunPathFileNoProcess(t *testing.T) {
 	filepth := os.ExpandEnv("$HOME/go/src/bitbucket.org/level11consulting/ocelot/client/validate/test-fixtures/wrong-ocelot.yml")
 	expectedError := fmt.Sprintf(`Could not process file, please check make sure the file at %s exists
 Error: yaml: unmarshal errors:
-  line 1: cannot unmarshal !!str ` + "`wrong`" + ` into protos.BuildConfig
+  line 1: cannot unmarshal !!str ` + "`wrong`" + ` into pb.BuildConfig
 `, filepth)
 	if exit := cmdd.Run(args); exit != 1 {
 		t.Error("should exit with error code 1", exit)

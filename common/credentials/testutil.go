@@ -58,7 +58,7 @@ func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testu
 	testServer, host, port := TestSetupConsul(t)
 	remoteConfig, err := GetInstance(host, port, token)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	return remoteConfig, ln, testServer
 }
@@ -68,7 +68,7 @@ func TestSetupConsul(t *testing.T) (*testutil.TestServer, string, int) {
 	//setup consul for testing
 	testServer, err := testutil.NewTestServer()
 	if err != nil {
-		t.Fatal("Couldn't create consul test server, error: ", err)
+		t.Error("Couldn't create consul test server, error: ", err)
 	}
 	ayy := strings.Split(testServer.HTTPAddr, ":")
 	port, _ := strconv.ParseInt(ayy[1], 10, 32)
@@ -98,7 +98,7 @@ func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, store storage.CredTable
 		Identifier: projectName,
 	}
 	if err := rc.AddCreds(store, creds, true); err != nil {
-		t.Fatal("couldnt add creds, error: ", err.Error())
+		t.Error("couldnt add creds, error: ", err.Error())
 	}
 }
 //

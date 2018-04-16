@@ -18,7 +18,7 @@ func InitServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestSer
 	BuildServerHack(t)
 	testServer, err := testutil.NewTestServerConfig(modifyServerConfig)
 	if err != nil {
-		t.Fatal("Couldn't create consul test server, error: ", err)
+		t.Error("Couldn't create consul test server, error: ", err)
 	}
 	ayy := strings.Split(testServer.HTTPAddr, ":")
 	port, _ := strconv.ParseInt(ayy[1], 10, 32)

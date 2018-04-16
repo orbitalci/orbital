@@ -30,6 +30,12 @@ func (t *testStreamArray) AddToData(data [][]byte) {
 	}
 }
 
+func (t *testStreamArray) Append(line []byte) {
+	t.Lock()
+	defer t.Unlock()
+	t.data = append(t.data, line)
+}
+
 func NewTestStreamArray() *testStreamArray {
 	var data [][]byte
 	var done bool

@@ -50,6 +50,7 @@ func (t *testBuildInfoGrpcServer) SendIt(data []byte) error {
 	return err
 }
 
+
 func (t *testBuildInfoGrpcServer) SendError(errorDes []byte) {}
 
 func (t *testBuildInfoGrpcServer) Finish(chan int) {}

@@ -3,14 +3,15 @@ package streamer
 import (
 	consulet "bitbucket.org/level11consulting/go-til/consul"
 	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/util/storage"
+	"bitbucket.org/level11consulting/ocelot/models"
+	"bitbucket.org/level11consulting/ocelot/storage"
 	"bufio"
 	"bytes"
 	"testing"
 	"time"
 )
 
-var testData = [][]byte{
+var tests = [][]byte{
 	[]byte("ay ay ay"),
 	[]byte("ze ze ze ze ze 27"),
 	[]byte("1234a;slkdjf ze 27"),
@@ -30,36 +31,33 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	if err != nil {
 		t.Fatal("could not create setup data, err: ", err.Error())
 	}
-	trans := &Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: id}
+	trans := &models.Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: id}
 	werkerConsulet, _ := consulet.Default()
-	ctx := &WerkerContext{
-		buildInfo: make(map[string]*buildDatum),
-		out: 	    store,
-		consul:    werkerConsulet,
-	}
+	sp := &StreamPack{Consul: werkerConsulet, Store: store, BuildInfo: make(map[string]*buildDatum), BuildContexts: make(map[string]*models.BuildContext),}
+
 	middleIndex := 6
-	go writeInfoChanToInMemMap(trans, ctx)
-	for _, data := range testData[:middleIndex] {
+	go sp.writeInfoChanToInMemMap(trans)
+	for _, data := range tests[:middleIndex] {
 		trans.InfoChan <- data
 	}
 	time.Sleep(100)
-	if !test.CompareByteArrays(testData[:middleIndex], ctx.buildInfo[trans.Hash].buildData) {
-		t.Errorf("middle slice not the same. expected: %v, actual: %v", testData[:middleIndex], ctx.buildInfo[trans.Hash].buildData)
+	if !test.CompareByteArrays(tests[:middleIndex], sp.BuildInfo[trans.Hash].buildData) {
+		t.Errorf("middle slice not the same. expected: %v, actual: %v", tests[:middleIndex], sp.BuildInfo[trans.Hash].buildData)
 	}
-	for _, data := range testData[middleIndex:] {
+	for _, data := range tests[middleIndex:] {
 		trans.InfoChan <- data
 	}
 	time.Sleep(100)
-	if !test.CompareByteArrays(testData, ctx.buildInfo[trans.Hash].buildData) {
-		t.Errorf("full slice not the same. expected: %v, actual: %v", testData, ctx.buildInfo[trans.Hash].buildData)
+	if !test.CompareByteArrays(tests, sp.BuildInfo[trans.Hash].buildData) {
+		t.Errorf("full slice not the same. expected: %v, actual: %v", tests, sp.BuildInfo[trans.Hash].buildData)
 	}
 	close(trans.InfoChan)
 
 	// wait for out to be done, then check it
-	for !ctx.buildInfo[trans.Hash].done {
+	for !sp.BuildInfo[trans.Hash].done {
 		time.Sleep(100)
 	}
-	out, err := ctx.out.RetrieveLastOutByHash(trans.Hash)
+	out, err := sp.Store.RetrieveLastOutByHash(trans.Hash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,11 +68,11 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	for sc.Scan() {
 		actualData = append(actualData, sc.Bytes())
 	}
-	if !test.CompareByteArrays(testData, actualData) {
-		t.Errorf("bytes from storage not same as testdata. expected: %v, actual: %v", testData, actualData)
+	if !test.CompareByteArrays(tests, actualData) {
+		t.Errorf("bytes from storage not same as testdata. expected: %v, actual: %v", tests, actualData)
 	}
 	// remove stored test data
-	fbs := ctx.out.(*storage.FileBuildStorage)
+	fbs := sp.Store.(*storage.FileBuildStorage)
 	defer fbs.Clean()
 	// todo: check the consul stuff
 }

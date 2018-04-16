@@ -2,7 +2,8 @@ package main
 
 import (
 	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/util"
+	util "bitbucket.org/level11consulting/ocelot/common/testutil"
+	"bitbucket.org/level11consulting/ocelot/models"
 	"os"
 	"testing"
 )
@@ -11,11 +12,14 @@ import (
 // i'm really testing namsrals flag code, i dont trust it.
 func TestGetConf_fromEnv(t *testing.T) {
 	util.BuildServerHack(t)
-	testConf := &WerkerConf{
+	factz := &models.WerkerFacts{
 		ServicePort: "9899",
-		GrpcPort:    defaultGrpcPort,
+		GrpcPort:  defaultGrpcPort,
+		WerkerType: models.Kubernetes,
+	}
+	testConf := &WerkerConf{
+		WerkerFacts: factz,
 		WerkerName:  "oh_YEEEAH",
-		WerkerType:  Kubernetes,
 		LogLevel:    "error",
 		RegisterIP:  "55.259.12.197",
 	}
@@ -48,7 +52,7 @@ func TestGetConf_fromEnv(t *testing.T) {
 		t.Error(test.StrFormatErrors("register ip", testConf.RegisterIP, conf.RegisterIP))
 	}
 
-	if conf.WerkerType != Kubernetes {
+	if conf.WerkerType != models.Kubernetes {
 		t.Error("whuy doooo")
 	}
 }
