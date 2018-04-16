@@ -92,7 +92,7 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat st
 	var ok bool
 	int32type, ok := models.SubCredType_value[strings.ToUpper(dummySubType)]
 	if !ok {
-		errorConcat += "\n Subtype must be nexus, docker, or k8s, got: " + dummySubType
+		errorConcat += "\n Subtype must be nexus or docker got: " + dummySubType
 	}
 	creds.SubType = models.SubCredType(int32type)
 	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
@@ -106,6 +106,9 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat st
 	//}
 	if creds.Password, err = UI.AskSecret("Password for Repo Integration: "); err != nil {
 		errorConcat += "\n" + "Password Err: " + err.Error()
+	}
+	if creds.Identifier, err = UI.Ask("Identifier: "); err != nil {
+		errorConcat += "\n" + "Identifier Err: " + err.Error()
 	}
 	return creds, errorConcat
 }
