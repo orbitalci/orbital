@@ -1,4 +1,4 @@
-image: jessishank/ocelot-build:kill.6
+image: docker.metaverse.l11.com/ocelot/base:latest
 buildTool: go
 branches:
   - ALL
