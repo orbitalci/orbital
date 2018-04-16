@@ -37,15 +37,18 @@ type guideOcelotServer struct {
 
 func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*models.CredWrapper, error) {
 	credWrapper := &models.CredWrapper{}
-	vcs := models.NewVCSCreds()
-	creds, err := g.RemoteConfig.GetCredAt(cred.VCSPath, true, vcs)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_VCS, true)
+
 	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); !ok {
+			return credWrapper, err
+		}
 		return credWrapper, status.Error(codes.Internal, "unable to get credentials, err: " + err.Error())
 	}
 
 	for _, v := range creds {
 		vcsCred := v.(*models.VCSCreds)
-		sshKeyPath := cred.BuildCredPath(vcsCred.Type, vcsCred.AcctName, cred.Vcs)
+		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.SubType.Parent(), v.GetIdentifier())
 		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
 		if err != nil {
 			vcsCred.SshFileLoc = "\033[0;33mNo SSH Key\033[0m"
@@ -66,25 +69,43 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 }
 
 func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
-	empti := &empty.Empty{}
-	err := g.AdminValidator.ValidateConfig(credentials)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "failed vcs creds validation! error: %s", err.Error())
+	if credentials.SubType.Parent() != models.CredType_VCS {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of vcs type: " + strings.Join(models.CredType_VCS.SubtypesString(), " | "))
 	}
+
+	err := g.AdminValidator.ValidateConfig(credentials)
+	if _, ok := err.(*models.ValidationErr); ok {
+		return &empty.Empty{}, status.Error(codes.InvalidArgument, "VCS Creds failed validation. Errors are: " + err.Error())
+	}
+
 	err = SetupCredentials(g, credentials)
 	if err != nil {
-		return empti, status.Error(codes.Internal, "could not add and set up credentials")
+		// todo: make this a better error
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
 	return &empty.Empty{}, nil
 }
 
+func (g *guideOcelotServer) UpdateVCSCreds(ctx context.Context, credentials *models.VCSCreds) (*empty.Empty, error) {
+	credentials.Identifier = credentials.BuildIdentifier()
+	return g.updateAnyCred(ctx, credentials)
+}
+
+func (g *guideOcelotServer) VCSCredExists(ctx context.Context, credentials *models.VCSCreds) (*models.Exists, error) {
+	credentials.Identifier = credentials.BuildIdentifier()
+	return g.checkAnyCredExists(ctx, credentials)
+}
+
 func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*models.RepoCredWrapper, error) {
 	credWrapper := &models.RepoCredWrapper{}
-	repo := models.NewRepoCreds()
-	creds, err := g.RemoteConfig.GetCredAt(cred.RepoPath, true, repo)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_REPO, true)
+
 	if err != nil {
-		return credWrapper, status.Errorf(codes.Internal, "could not get credentials, error: %s", err.Error())
+		if _, ok := err.(*storage.ErrNotFound); !ok {
+			return credWrapper, err
+		}
 	}
+
 	for _, v := range creds {
 		credWrapper.Repo = append(credWrapper.Repo, v.(*models.RepoCreds))
 	}
@@ -95,30 +116,48 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 }
 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
+	if creds.SubType.Parent() != models.CredType_REPO {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of repo type: " + strings.Join(models.CredType_REPO.SubtypesString(), " | "))
+	}
 	err := g.RepoValidator.ValidateConfig(creds)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed repo creds validation! error: %s", err.Error())
 	}
-	err = SetupRCCCredentials(g.RemoteConfig, creds)
+	err = SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	if _, ok := err.(*models.ValidationErr); ok {
+		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Repo Creds failed validation. Errors are: " + err.Error())
+	}
 	if err != nil {
-		return &empty.Empty{}, status.Errorf(codes.Internal, "unable to set up repo credentials, err: %s", err.Error())
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
 	return &empty.Empty{}, nil
 }
 
+func (g *guideOcelotServer) UpdateRepoCreds(ctx context.Context, creds *models.RepoCreds) (*empty.Empty, error) {
+	return g.updateAnyCred(ctx, creds)
+}
+
+func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *models.RepoCreds) (*models.Exists, error) {
+	return g.checkAnyCredExists(ctx, creds)
+}
+
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
+	if creds.SubType.Parent() != models.CredType_K8S {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of k8s type: " + strings.Join(models.CredType_K8S.SubtypesString(), " | "))
+	}
 	// no validation necessary, its a file upload
-	err := SetupRCCCredentials(g.RemoteConfig, creds)
+
+	err := SetupRCCCredentials(g.RemoteConfig,g.Storage, creds)
 	if err != nil {
-		return &empty.Empty{}, status.Errorf(codes.Internal, "unable to set up k8s credentials, err: %s", err.Error())
+		// todo: make this better error
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
 	return &empty.Empty{}, nil
 }
 
 func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*models.K8SCredsWrapper, error) {
 	credWrapper := &models.K8SCredsWrapper{}
-	kube := models.NewK8sCreds()
-	creds, err := g.RemoteConfig.GetCredAt(cred.K8sPath, true, kube)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, models.CredType_K8S, true)
 	if err != nil {
 		return credWrapper, status.Errorf(codes.Internal, "unable to get k8s creds! error: %s", err.Error())
 	}
@@ -129,6 +168,33 @@ func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty)
 		return credWrapper, status.Error(codes.NotFound, "no kubernetes integration creds found")
 	}
 	return credWrapper, nil
+}
+
+func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *models.K8SCreds) (*empty.Empty, error) {
+	return g.updateAnyCred(ctx, creds)
+}
+
+func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *models.K8SCreds) (*models.Exists, error) {
+	return g.checkAnyCredExists(ctx, creds)
+}
+
+
+func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds models.OcyCredder) (*empty.Empty, error) {
+	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
+		if _, ok := err.(*models.ValidationErr); ok {
+			return &empty.Empty{}, status.Errorf(codes.FailedPrecondition, "%s cred failed validation. Errors are: %s", creds.GetSubType().Parent(), err.Error())
+		}
+		return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())
+	}
+	return &empty.Empty{}, nil
+}
+
+func (g *guideOcelotServer) checkAnyCredExists(ctx context.Context, creds models.OcyCredder) (*models.Exists, error) {
+	exists, err := g.Storage.CredExists(creds)
+	if err != nil {
+		return nil, status.Errorf(codes.Unavailable, "Unable to reach cred table to check if cred %s/%s/%s exists. Error: %s", creds.GetAcctName(), creds.GetSubType().String(), creds.GetIdentifier(), err.Error())
+	}
+	return &models.Exists{Exists:exists}, nil
 }
 
 func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (*models.AllCredsWrapper, error) {
@@ -270,7 +336,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
-	cfg, err := build.GetVcsCreds(buildReq.AcctRepo, g.RemoteConfig)
+	cfg, err := build.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		if _, ok := err.(*build.FormatError); ok {
@@ -333,7 +399,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *models.BuildReq, stream m
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s...", buildReq.AcctRepo)))
-	buildConf, _, err := build.GetBBConfig(g.RemoteConfig, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
+	buildConf, _, err := build.GetBBConfig(g.RemoteConfig, g.Storage, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get bb config")
 		if err.Error() == "could not find raw data at url" {
@@ -385,38 +451,35 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *model
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *models.RepoAccount) (*empty.Empty, error) {
 	var vcs *models.VCSCreds
-
-	bbCreds, err := g.RemoteConfig.GetCredAt(cred.BuildCredPath("bitbucket", repoAcct.Account, cred.Vcs), false, vcs)
+	bb := models.SubCredType_BITBUCKET
+	identifier, err := models.CreateVCSIdentifier(bb, repoAcct.Account)
 	if err != nil {
-		// todo this will have to change when we merge in the new credentials way
-		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+		return &empty.Empty{}, status.Error(codes.Internal, "couldn't create identifier")
 	}
-
-	if bbCreds == nil || len(bbCreds) == 0 {
-		return &empty.Empty{}, status.Error(codes.NotFound, fmt.Sprintf("could not find credentials belonging to %s", repoAcct.Account))
-	}
-
-	//TODO: what do we even do if there's more than one?
-	for _, v := range bbCreds {
-		vcs = v.(*models.VCSCreds)
-		bbClient := &net.OAuthClient{}
-		bbClient.Setup(vcs)
-
-		bbHandler := handler.GetBitbucketHandler(vcs, bbClient)
-		repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
-		if repoDetail.Type == "error" || err != nil {
-			return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
+	bbCreds, err := g.RemoteConfig.GetCred(g.Storage, bb, identifier, repoAcct.Account, true)
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return &empty.Empty{}, status.Error(codes.NotFound, "credentials not found")
 		}
+		return &empty.Empty{}, status.Error(codes.Internal, "could not get bitbucket creds")
+	}
+	vcs = bbCreds.(*models.VCSCreds)
+	bbClient := &net.OAuthClient{}
+	bbClient.Setup(vcs)
 
-		webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
-		err = bbHandler.CreateWebhook(webhookURL)
 
-		if err != nil {
-			return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())
-		}
-		return &empty.Empty{}, nil
+	bbHandler := handler.GetBitbucketHandler(vcs, bbClient)
+	repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
+	if repoDetail.Type == "error" || err != nil {
+		return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
 	}
 
+	webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
+	err = bbHandler.CreateWebhook(webhookURL)
+
+	if err != nil {
+		return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())
+	}
 	return &empty.Empty{}, nil
 }
 
@@ -496,10 +559,14 @@ BUILD_FOUND:
 }
 
 func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *models.SSHKeyWrapper) (*empty.Empty, error) {
-	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.Type, sshKeyWrapper.AcctName, cred.Vcs)
-	err := g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
+	identifier, err := models.CreateVCSIdentifier(sshKeyWrapper.SubType, sshKeyWrapper.AcctName)
 	if err != nil {
-		return &empty.Empty{}, err
+		return &empty.Empty{}, status.Error(codes.FailedPrecondition, err.Error())
+	}
+	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.SubType, sshKeyWrapper.AcctName, sshKeyWrapper.SubType.Parent(), identifier)
+	err = g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
+	if err != nil {
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
 	return &empty.Empty{}, nil
 }

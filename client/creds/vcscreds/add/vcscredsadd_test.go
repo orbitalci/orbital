@@ -53,13 +53,16 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
-				Type:         "bitbucket",
+				SubType:       models.SubCredType_BITBUCKET,
 				SshFileLoc:   "THIS IS A TEST",
 			},
 		},
 	}
 	var args []string
+	//c.runCredFileUpload(ctx)
 	if exit := c.Run(args); exit != 0 {
+		t.Log(ui.OutputWriter.String())
+		t.Log(ui.ErrorWriter.String())
 		t.Fatal("should return exit 0 because even though SSH Key path doesn't exist, it doesn't mean failure")
 	}
 	uploadErrMsg := strings.TrimSpace(ui.ErrorWriter.String())
@@ -95,7 +98,7 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
-				Type:         "bitbucket",
+				SubType:      models.SubCredType_BITBUCKET,
 				SshFileLoc:   "THIS IS A TEST",
 			},
 		},

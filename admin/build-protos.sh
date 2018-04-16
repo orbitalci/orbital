@@ -20,6 +20,9 @@ protoc -I models/ -I. \
   --swagger_out=logtostderr=true:models \
   models/guideocelot.proto
 
+# inject our custom tags into build protobuf
+protoc-go-inject-tag -input=models/guideocelot.pb.go
+
 echo "[DEBUG] third"
 # then we have to run go get in the stub directory cause grpc gateway ¯\_(ツ)_/¯ does this even work
 cd models

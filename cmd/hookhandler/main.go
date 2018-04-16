@@ -10,7 +10,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/namsral/flag"
 	"os"
-	"strings"
 	"bitbucket.org/level11consulting/ocelot/util/build"
 )
 
@@ -44,16 +43,16 @@ func main() {
 
 	var hookHandlerContext hh.HookHandler
 
-	mode := os.Getenv("ENV")
-	if strings.EqualFold(mode, "dev") {
-		hookHandlerContext = &hh.MockHookHandlerContext{}
-		hookHandlerContext.SetRemoteConfig(&hh.MockRemoteConfig{})
-		ocelog.Log().Info("hookhandler running in dev mode")
-
-	} else {
-		hookHandlerContext = &hh.HookHandlerContext{}
-		hookHandlerContext.SetRemoteConfig(remoteConfig)
-	}
+	//mode := os.Getenv("ENV")
+	//if strings.EqualFold(mode, "dev") {
+	//	hookHandlerContext = &hh.MockHookHandlerContext{}
+	//	hookHandlerContext.SetRemoteConfig(&hh.MockRemoteConfig{})
+	//	ocelog.Log().Info("hookhandler running in dev mode")
+	//
+	//} else {
+	hookHandlerContext = &hh.HookHandlerContext{}
+	hookHandlerContext.SetRemoteConfig(remoteConfig)
+	//}
 
 	hookHandlerContext.SetDeserializer(deserialize.New())
 	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())

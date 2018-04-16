@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/cli"
 	"io/ioutil"
+	"strings"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -47,6 +48,36 @@ func (c *cmd) init() {
 }
 
 
+// uploadCredential will check if credential already exists. if it does, it will ask if the user wishes to overwrite. if the user responds YES, the credential will be updated.
+// if it does not exist, will be inserted as normal.
+func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI cli.Ui, cred *models.K8SCreds) error {
+	exists, err := client.K8SCredExists(ctx, cred)
+	if err != nil {
+		return err
+	}
+
+	if exists.Exists {
+		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s and Repo Type %s already exists. Do you want to overwrite? " +
+			"Only a YES will continue with update, otherwise the client will exit. ", cred.AcctName, strings.ToLower(cred.SubType.String())))
+		if err != nil {
+			return err
+		}
+		if update != "YES" {
+			UI.Info("Did not recieve a YES at the prompt, will not overwrite. Exiting.")
+			return &commandhelper.DontOverwrite{}
+		}
+		_, err = client.UpdateK8SCreds(ctx, cred)
+		if err != nil {
+			return err
+		}
+		UI.Error("Succesfully update VCS Credential.")
+		return nil
+	}
+	_, err = client.SetK8SCreds(ctx, cred)
+	return err
+}
+
+
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
@@ -55,7 +86,7 @@ func (c *cmd) Run(args []string) int {
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	k8cred := &models.K8SCreds{}
+	k8cred := &models.K8SCreds{SubType:models.SubCredType_KUBECONF}
 	if c.account == "ERROR" {
 		c.UI.Error("-acct was not provided")
 		return 1
@@ -71,9 +102,15 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	k8cred.K8SContents = string(kubeconf)
+	// right now, only support one kubeconfig per account
+	k8cred.Identifier  = "THERECANONLYBEONE"
 
-	if _, err = c.config.Client.SetK8SCreds(ctx, k8cred); err != nil {
-		c.UI.Error(fmt.Sprintf("Could not add Kubernetes kubeconfig to admin. \nError: %s", err.Error()))
+	if err = uploadCredential(ctx, c.config.Client, c.UI, k8cred); err != nil {
+		if _, ok := err.(*commandhelper.DontOverwrite); ok {
+			return 0
+		}
+		c.UI.Error("Could not add Kubernetes kubeconfig to admin")
+		commandhelper.UIErrFromGrpc(err, c.UI, err.Error())
 		return 1
 	}
 	c.UI.Info("Successfully added a kubeconfig to the account " + c.account)

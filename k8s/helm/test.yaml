@@ -1,0 +1,362 @@
+[debug] Created tunnel using local port: '54501'
+
+[debug] SERVER: "127.0.0.1:54501"
+
+[debug] Original chart version: ""
+[debug] CHART PATH: /Users/jesseshank/go/src/bitbucket.org/level11consulting/ocelot/k8s/helm/ocelot
+
+NAME:   icy-billygoat
+REVISION: 1
+RELEASED: Fri Apr 13 10:43:56 2018
+CHART: ocelot-0.1.1
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+admin:
+  affinity: {}
+  image:
+    pullPolicy: Always
+    repository: docker.metaverse.l11.com/ocelot-admin
+    tag: latest
+  ingress:
+    annotations:
+      ingress.kubernetes.io/ssl-passthrough: "true"
+      kubernetes.io/ingress.class: nginx
+    enabled: false
+    hosts:
+    - ocelot-admin.metaverse.l11.com
+    path: /
+    tls:
+    - hosts:
+      - ocelot-admin.metaverse.l11.com
+      secretName: metaverse-secret
+  nodeSelector: {}
+  replicaCount: 3
+  resources: {}
+  service:
+    nodePort: 31000
+    port: 10000
+    type: NodePort
+  tolerations: []
+fullnameOverride: ocelot
+hookhandler:
+  affinity: {}
+  image:
+    pullPolicy: Always
+    repository: docker.metaverse.l11.com/ocelot-hookhandler
+    tag: latest
+  ingress:
+    annotations:
+      ingress.kubernetes.io/ssl-passthrough: "true"
+      kubernetes.io/ingress.class: nginx
+    enabled: false
+    hosts:
+    - ocelot-hookhandler.metaverse.l11.com
+    path: /
+    tls:
+    - hosts:
+      - ocelot-hookhandler.metaverse.l11.com
+      secretName: metaverse-secret
+  nodeSelector: {}
+  replicaCount: 3
+  resources: {}
+  service:
+    port: 8088
+    type: ClusterIP
+  tolerations: []
+loglevel: info
+nameOverride: ocelot
+nsq:
+  nsqd:
+    port: 4150
+  nsqlookupd:
+    ip: nsqlookupd-svc.prod-eng
+    port: 4161
+poller:
+  affinity: {}
+  image:
+    pullPolicy: Always
+    repository: docker.metaverse.l11.com/ocelot-poller
+    tag: latest
+  nodeSelector: {}
+  replicaCount: 1
+  resources: {}
+  tolerations: []
+vault:
+  ip: 10.1.72.190
+  port: 8200
+  protocol: http
+  secretKey: token
+  secretName: vault-token
+
+HOOKS:
+MANIFEST:
+
+---
+# Source: ocelot/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-ocelot
+  labels:
+    app: admin-ocelot
+    chart: ocelot-0.1.1
+    release: icy-billygoat
+    heritage: Tiller
+spec:
+  type: NodePort
+  ports:
+    - port: 10000
+      nodePort: 31000
+      protocol: TCP
+      name: http
+  selector:
+    app: admin-ocelot
+    release: icy-billygoat
+---
+# Source: ocelot/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hookhandler-ocelot
+  labels:
+    app: hookhandler-ocelot
+    chart: ocelot-0.1.1
+    release: icy-billygoat
+    heritage: Tiller
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8088
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: hookhandler-ocelot
+    release: icy-billygoat
+---
+# Source: ocelot/templates/deployment.yaml
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: "admin-ocelot"
+  labels:
+    app: "admin-ocelot"
+    chart: ocelot-0.1.1
+    release: icy-billygoat
+    heritage: Tiller
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: admin-ocelot
+      release: icy-billygoat
+  template:
+    metadata:
+      labels:
+        app: admin-ocelot
+        release: icy-billygoat
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          # location on host
+          path: /var/run/docker.sock
+          # this field is optional
+          type: File
+      containers:
+        - name: admin-ocelot
+          image: "docker.metaverse.l11.com/ocelot-admin:latest"
+          imagePullPolicy: Always
+          command: ["/admin"]
+          args:
+            - -consul-host=$(CONSUL_HOST)}
+          volumeMounts: 
+            - mountPath: /var/run/docker.sock
+              name: docker-sock-volume
+          ports:
+            - name: http
+              containerPort: 10000
+              protocol: TCP
+          env:
+            - name: CONSUL_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: VAULT_ADDR
+              value: "http://10.1.72.190:8200"
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: token
+            - name: NSQLOOKUPD_IP
+              value: "nsqlookupd-svc.prod-eng"
+            - name: NSQLOOKUPD_PORT
+              value: "4161"
+            - name: NSQD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NSQD_PORT
+              value: "4150"
+            - name: LOG_LEVEL
+              value: "info"
+          
+#           livenessProbe:
+#             httpGet:
+#               path: /v1/creds
+#               port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {}
+---
+# Source: ocelot/templates/deployment.yaml
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: "hookhandler-ocelot"
+  labels:
+    app: "hookhandler-ocelot"
+    chart: ocelot-0.1.1
+    release: icy-billygoat
+    heritage: Tiller
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hookhandler-ocelot
+      release: icy-billygoat
+  template:
+    metadata:
+      labels:
+        app: hookhandler-ocelot
+        release: icy-billygoat
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          # location on host
+          path: /var/run/docker.sock
+          # this field is optional
+          type: File
+      containers:
+        - name: hookhandler-ocelot
+          image: "docker.metaverse.l11.com/ocelot-hookhandler:latest"
+          imagePullPolicy: Always
+          command: ["/hookhandler"]
+          args:
+            - -consul-host=$(CONSUL_HOST)}
+          volumeMounts: 
+            - mountPath: /var/run/docker.sock
+              name: docker-sock-volume
+          ports:
+            - name: http
+              containerPort: 8088
+              protocol: TCP
+          env:
+            - name: CONSUL_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: VAULT_ADDR
+              value: "http://10.1.72.190:8200"
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: token
+            - name: NSQLOOKUPD_IP
+              value: "nsqlookupd-svc.prod-eng"
+            - name: NSQLOOKUPD_PORT
+              value: "4161"
+            - name: NSQD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NSQD_PORT
+              value: "4150"
+            - name: LOG_LEVEL
+              value: "info"
+          
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {}
+---
+# Source: ocelot/templates/deployment.yaml
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: "poller-ocelot"
+  labels:
+    app: "poller-ocelot"
+    chart: ocelot-0.1.1
+    release: icy-billygoat
+    heritage: Tiller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: poller-ocelot
+      release: icy-billygoat
+  template:
+    metadata:
+      labels:
+        app: poller-ocelot
+        release: icy-billygoat
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          # location on host
+          path: /var/run/docker.sock
+          # this field is optional
+          type: File
+      containers:
+        - name: poller-ocelot
+          image: "docker.metaverse.l11.com/ocelot-poller:latest"
+          imagePullPolicy: Always
+          command: ["/poller"]
+          args:
+            - -consul-host=$(CONSUL_HOST)}
+          volumeMounts: 
+            - mountPath: /var/run/docker.sock
+              name: docker-sock-volume
+          env:
+            - name: CONSUL_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: VAULT_ADDR
+              value: "http://10.1.72.190:8200"
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: token
+            - name: NSQLOOKUPD_IP
+              value: "nsqlookupd-svc.prod-eng"
+            - name: NSQLOOKUPD_PORT
+              value: "4161"
+            - name: NSQD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NSQD_PORT
+              value: "4150"
+            - name: LOG_LEVEL
+              value: "info"
+          
+          resources:
+            {}

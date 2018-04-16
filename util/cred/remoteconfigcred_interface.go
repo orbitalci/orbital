@@ -17,3 +17,4 @@ type RemoteConfigCred interface {
 	BuildCredPath(credType string, acctName string) string
 	Spawn() RemoteConfigCred
 }
+

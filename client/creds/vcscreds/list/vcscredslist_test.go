@@ -36,14 +36,16 @@ func TestCmd_Run(t *testing.T) {
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
-				Type:         "bitbucket",
+				Identifier:   "howdy",
+				SubType:      models.SubCredType_BITBUCKET,
 			},
 			{
 				ClientId:     "fancy-trickin-identification",
 				ClientSecret: "SHH-BEE-QUIET-ITS-A-SECRET",
 				TokenURL:     "https://oqelot.perf/site/oauth2/access_token",
 				AcctName:     "lamf-shank",
-				Type:         "github",
+				Identifier:   "rowdy",
+				SubType:      models.SubCredType_GITHUB,
 			},
 		},
 	}
@@ -67,7 +69,8 @@ ClientId: fancy-frickin-identification
 ClientSecret: SHH-BE-QUIET-ITS-A-SECRET
 TokenURL: https://ocelot.perf/site/oauth2/access_token
 AcctName: lamb-shank
-Type: bitbucket
+SubType: bitbucket
+Identifier: howdy
 [THIS IS A TEST]
 
 
@@ -75,7 +78,8 @@ ClientId: fancy-trickin-identification
 ClientSecret: SHH-BEE-QUIET-ITS-A-SECRET
 TokenURL: https://oqelot.perf/site/oauth2/access_token
 AcctName: lamf-shank
-Type: github
+SubType: github
+Identifier: rowdy
 [THIS IS A TEST]
 
 
@@ -83,7 +87,7 @@ Type: github
 	text := ui.OutputWriter.String()
 	if strings.Compare(expectedText, text) != 0 {
 		t.Errorf("output and expected not the same,  \n" +
-			"expected:\n%s\ngot:\n%s", expectedText, text)
+			"expected:\n%s-----\ngot:\n%s-----", expectedText, text)
 	}
 
 

@@ -3,13 +3,14 @@ package repocredslist
 import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bytes"
+
 	"context"
 	"flag"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
-	"text/template"
+	"strings"
+
 )
 
 func New(ui cli.Ui) *cmd {
@@ -56,6 +57,7 @@ func (c *cmd) Run(args []string) int {
 	msg, err := c.config.Client.GetRepoCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
+		return 1
 	}
 	printed := false
 	Header(c.UI)
@@ -89,30 +91,15 @@ func NoDataHeader(ui cli.Ui) {
 }
 
 func Prettify(cred *models.RepoCreds) string {
-	pretty := `Username: {{.Username}}
-Password: {{.Password}}
-RepoUrls: {{ range $name, $url := .RepoUrl }}
-   {{ $name }}: {{ $url }} {{ end }}
-AcctName: {{.AcctName}}
-Type: {{.Type}}
-`
 	fallback := `Username: %s
 Password: %s
 RepoUrl: %s
 AcctName: %s
-Type: %s
+SubType: %s
+Identifier: %s
 `
-	tmpl, err := template.New("pretty").Parse(pretty)
-	if err != nil {
-		return fmt.Sprintf(fallback, cred.Username, cred.Password, cred.RepoUrl, cred.AcctName, cred.Type)
-	}
-	var here []byte
-	buff := bytes.NewBuffer(here)
-	err = tmpl.Execute(buff, cred)
-	if err != nil {
-		return fmt.Sprintf(fallback, cred.Username, cred.Password, cred.RepoUrl, cred.AcctName, cred.Type)
-	}
-	return buff.String()
+	return fmt.Sprintf(fallback, cred.Username, cred.Password, cred.RepoUrl, cred.AcctName, strings.ToLower(cred.SubType.String()), cred.Identifier)
+
 }
 
 

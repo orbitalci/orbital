@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/vault"
+	adminModels "bitbucket.org/level11consulting/ocelot/admin/models"
 	pb "bitbucket.org/level11consulting/ocelot/protos"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/dockrhelper"
 	"bitbucket.org/level11consulting/ocelot/util/integrations"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -181,17 +182,20 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + vaultAddr)
 
 	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
+	sctType := adminModels.SubCredType(werk.VcsType)
+	identifier, _ := adminModels.CreateVCSIdentifier(sctType, acctName)
+	ocelog.Log().Debug("identifier is ", identifier)
 	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
-		cred.BuildCredPath(werk.VcsType, acctName, cred.Vcs)), logout)
+		cred.BuildCredPath(sctType, acctName, adminModels.CredType_VCS, identifier)), logout)
 	if len(result.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
 		result.Messages = append(setupMessages, result.Messages...)
 		return result, d.ContainerId
 	}
 
-	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName))
-	result.Messages = append(result.Messages, "completed setup stage \u2713")
+	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName), "completed setup stage \u2713")
+	result.Messages = setupMessages
 	return result, d.ContainerId
 }
 
@@ -207,7 +211,7 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 	return registerdAddr
 }
 
-type RepoSetupFunc func(rc cred.CVRemoteConfig, accountName string) (string, error)
+type RepoSetupFunc func(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error)
 type RepoExecFunc func(string) []string
 
 // IntegrationSetup will use the functions you input to set up integrations on the machine docker container.
@@ -231,8 +235,8 @@ type RepoExecFunc func(string) []string
 // 		accountName is for passing to setupFunc to retrieve creds (if needed)
 // 		stageUtil is the stage object for logging/writing to logout
 //		the messages are the slice of messages that will be saved to build_stage_details, and appended to over the course of a stage
-func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, accountName string, su *StageUtil, msgs []string, logout chan []byte) (result *pb.Result) {
-	if renderedString, err := setupFunc(rc, accountName); err != nil {
+func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, accountName string, su *StageUtil, msgs []string, store storage.CredTable, logout chan []byte) (result *pb.Result) {
+	if renderedString, err := setupFunc(rc, store, accountName); err != nil {
 		_, ok := err.(*integrations.NoCreds)
 		if !ok {
 			ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
@@ -255,7 +259,8 @@ func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, 
 		ocelog.Log().Debug("writing integration for ", integrationName)
 		//msg := execFunc(renderedString)
 		//ocelog.Log().Debug("messages are: ", strings.Join(msg, " "))
-		result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, execFunc(renderedString), logout)
+		subStage := InitStageUtil(su.GetStage() + " | " + integrationName)
+		result := d.Exec(ctx, subStage.GetStage(), subStage.GetStageLabel(), []string{}, execFunc(renderedString), logout)
 		if result.Messages == nil {
 			result.Messages = msgs
 		} else {

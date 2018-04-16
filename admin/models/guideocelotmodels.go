@@ -1,28 +1,44 @@
 package models
 
 import (
-	"bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+
+
 	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"google.golang.org/grpc"
-	"strings"
 )
 
+//OcyCredder is an interface for interacting with credentials in Ocelot
+type OcyCredder interface {
+	SetSecret(string)
+	UnmarshalAdditionalFields(fields []byte) error
+	CreateAdditionalFields() ([]byte, error)
+	GetClientSecret() string
+	GetAcctName() string
+	GetIdentifier() string
+	GetSubType() SubCredType
+	ValidateForInsert() *ValidationErr
+}
+
+func Invalidate(reason string) *ValidationErr {
+	return &ValidationErr{msg: reason}
+}
+
+type ValidationErr struct {
+	msg string
+}
+
+func (v *ValidationErr) Error() string {
+	return v.msg
+}
+
 func NewRepoCreds() *RepoCreds {
-	return &RepoCreds{
-		RepoUrl: make(map[string]string),
-	}
+	return &RepoCreds{}
 }
 
-// these methods are attached to the proto object RepoCreds
-func (m *RepoCreds) SetAcctNameAndType(name string, typ string) {
-	m.AcctName = name
-	m.Type = typ
-}
-
-func (m *RepoCreds) BuildCredPath(credType string, acctName string) string {
-	return cred.BuildCredPath(credType, acctName, cred.Repo)
-}
 
 func (m *RepoCreds) SetSecret(secret string) {
 	m.Password = secret
@@ -32,77 +48,98 @@ func (m *RepoCreds) GetClientSecret() string {
 	return m.Password
 }
 
-func (m *RepoCreds) SetAdditionalFields(infoType string, val string) {
-	if strings.Contains(infoType, "repourl") {
-		paths := strings.Split(infoType, "/")
-		if len(paths) > 2 {
-			panic("WHAT THE FUCK?")
-		}
-		m.RepoUrl[paths[1]] = val
-	}
-	if infoType == "username" {
-		m.Username = val
-	}
+
+func (m *RepoCreds) CreateAdditionalFields() ([]byte, error) {
+	fields := make(map[string]string)
+	fields["username"] = m.Username
+	fields["url"] = m.RepoUrl
+	bytes, err := json.Marshal(fields)
+	return bytes, err
 }
 
-func (m *RepoCreds) AddAdditionalFields(consule *consul.Consulet, path string) (err error) {
-	if err := consule.AddKeyValue(path + "/username", []byte(m.Username)); err != nil {
+func (m *RepoCreds) UnmarshalAdditionalFields(fields []byte) error {
+	unmarshaled := make(map[string]string)
+	if err := json.Unmarshal(fields, &unmarshaled); err != nil {
 		return err
 	}
-	for reponame, url := range m.RepoUrl {
-		if err = consule.AddKeyValue(path + "/repourl/" + reponame, []byte(url)); err != nil {
-			return err
-		}
+	var ok bool
+	if m.RepoUrl, ok = unmarshaled["url"]; !ok {
+		return errors.New(fmt.Sprintf("repo url was not in field map, map is %v", unmarshaled))
 	}
-	return err
+	if m.Username, ok = unmarshaled["username"]; !ok {
+		return errors.New(fmt.Sprintf("username was not in field map, map is %v", unmarshaled))
+	}
+	return nil
 }
 
-func (m *RepoCreds) Spawn() cred.RemoteConfigCred {
-	return &RepoCreds{RepoUrl: make(map[string]string)}
+func (m *RepoCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if m.RepoUrl == "" {
+		errr = append(errr, "repoUrl is required")
+	}
+	if m.Username == "" {
+		errr = append(errr, "username is required")
+	}
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	return nil
 }
+
 
 func NewVCSCreds() *VCSCreds {
 	return &VCSCreds{}
 }
 
-// these methods are to enable remoteconfig cred save with the proto VCSCreds object
-func (m *VCSCreds) SetAcctNameAndType(name string, typ string) {
-	m.AcctName = name
-	m.Type = typ
+
+func (m *VCSCreds) CreateAdditionalFields() ([]byte, error) {
+	fields := make(map[string]string)
+	fields["tokenUrl"] = m.TokenURL
+	fields["clientId"] = m.ClientId
+	bytes, err := json.Marshal(fields)
+	return bytes, err
 }
 
-func (m *VCSCreds) BuildCredPath(credType string, acctName string) string {
-	return cred.BuildCredPath(credType, acctName, cred.Vcs)
-}
-
-func (m *VCSCreds) SetSecret(secret string) {
-	m.ClientSecret = secret
-}
-
-func (m *VCSCreds) SetAdditionalFields(infoType string, val string) {
-	switch infoType {
-	case "clientid":
-		m.ClientId = val
-	case "tokenurl":
-		m.TokenURL = val
-	}
-}
-
-func (m *VCSCreds) AddAdditionalFields(consule *consul.Consulet, path string) error {
-	err := consule.AddKeyValue(path+"/clientid", []byte(m.ClientId))
-	if err != nil {
+func (m *VCSCreds) UnmarshalAdditionalFields(fields []byte) error {
+	unmarshaled := make(map[string]string)
+	if err := json.Unmarshal(fields, &unmarshaled); err != nil {
 		return err
 	}
-	err = consule.AddKeyValue(path+"/tokenurl", []byte(m.TokenURL))
-	if err != nil {
-		return err
+	var ok bool
+	if m.TokenURL, ok = unmarshaled["tokenUrl"]; !ok {
+		return errors.New(fmt.Sprintf("token url was not in field map, map is %v", unmarshaled))
 	}
-	return err
+	if m.ClientId, ok = unmarshaled["clientId"]; !ok {
+		return errors.New(fmt.Sprintf("client id was not in field map, map is %v", unmarshaled))
+	}
+	return nil
 }
 
-func (m *VCSCreds) Spawn() cred.RemoteConfigCred {
-	return &VCSCreds{}
+func (m *VCSCreds) SetSecret(sec string) {
+	m.ClientSecret = sec
 }
+
+// identifier for vcs creds will always be "<BITBUCKET|GITHUB|..>/<ACCTNAME>"
+func (m *VCSCreds) BuildIdentifier() string {
+	// can ignore error here, because VcsCreds will always have subtype in VCS
+	identifier, _ := CreateVCSIdentifier(m.SubType, m.AcctName)
+	return identifier
+}
+
+func (m *VCSCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if m.ClientId == "" {
+		errr = append(errr, "oauth client id is required")
+	}
+	if m.TokenURL == "" {
+		errr = append(errr, "oauth token url is required")
+	}
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	return nil
+}
+
 
 func NewK8sCreds() *K8SCreds {
 	return &K8SCreds{}
@@ -121,26 +158,39 @@ func (m *K8SCreds) SetSecret(str string) {
 	m.K8SContents = str
 }
 
-func (m *K8SCreds) SetAdditionalFields(key string, val string) {
-	// do nothing, there is only one field.
+
+func (m *K8SCreds) CreateAdditionalFields() ([]byte, error) {
+	return []byte("{}"), nil
 }
 
-func (m *K8SCreds) AddAdditionalFields(consule *consul.Consulet, path string) error {
-	err := consule.AddKeyValue(path+"/exists", []byte("true"))
-	return err
+func (m *K8SCreds) UnmarshalAdditionalFields(fields []byte) error {
+	return nil
 }
 
-func (m *K8SCreds) BuildCredPath(credtype, acctName string) string {
-	return cred.BuildCredPath(credtype, acctName, cred.K8s)
+
+func (m *K8SCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	return nil
 }
 
-// todo: should we maybe use type to use different kubeconfigs? idk. for now there can only be 1
-func (m *K8SCreds) GetType() string {
-	return "k8s"
-}
 
-func (m *K8SCreds) Spawn() cred.RemoteConfigCred {
-	return &K8SCreds{}
+func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
+	if credder.GetIdentifier() == "" {
+		errors = append(errors, "identifier is required, creds need a unique name to identify by")
+	}
+	if credder.GetAcctName() == "" {
+		errors = append(errors, "account name is required")
+	}
+	if credder.GetClientSecret() == "" {
+		errors = append(errors, "client secret is required")
+	}
+	if credder.GetSubType() == SubCredType_NIL_SCT {
+		errors = append(errors, "subtype not instantiated")
+	}
+	return
 }
 
 

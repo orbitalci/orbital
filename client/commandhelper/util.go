@@ -48,7 +48,7 @@ func PrettifyTime(timeInSecs float64, queued bool) string {
 
 
 //UploadSSHKeyFile will upload the ssh key for a vcs account. This is used by buildcredsadd.go and cred's add.go
-func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOcelotClient, acctName, buildType, sshKeyPath string) int {
+func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOcelotClient, acctName string, buildType models.SubCredType, sshKeyPath string) int {
 	sshKey, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
 		ui.Error(fmt.Sprintf("\tCould not read file at %s \nError: %s", sshKeyPath, err.Error()))
@@ -57,7 +57,7 @@ func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOce
 
 	_, err = oceClient.SetVCSPrivateKey(ctx, &models.SSHKeyWrapper{
 		AcctName: acctName,
-		Type: buildType,
+		SubType: buildType,
 		PrivateKey: sshKey,
 	})
 

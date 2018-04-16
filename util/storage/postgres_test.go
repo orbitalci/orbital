@@ -195,3 +195,5 @@ func TestPostgresStorage_GetLastData(t *testing.T) {
 		t.Error(test.StrFormatErrors("master last hash", "6363a8a4ef13227218dc5c6d40e78ddfeb21b623", last))
 	}
 }
+
+//todo: add cred tests for postgres!!!! plzplzplz

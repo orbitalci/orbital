@@ -12,7 +12,7 @@ func TestBasher_DownloadCodebaseDefault(t *testing.T) {
 		VcsToken: "something",
 		FullName: "marianne",
 		CheckoutHash: "123",
-		VcsType: "bitbucket",
+		VcsType: protos.SubCredType_BITBUCKET,
 	}
 	defaultResult := b.DownloadCodebase(wt)
 	if len(defaultResult) != 3 {
@@ -36,7 +36,7 @@ func TestBasher_DownloadCodebaseNotDefault(t *testing.T) {
 		VcsToken: "",
 		FullName: "marianne",
 		CheckoutHash: "123",
-		VcsType: "bitbucket",
+		VcsType: protos.SubCredType_BITBUCKET,
 	}
 	defaultResult := b.DownloadCodebase(wt)
 	if len(defaultResult) != 3 {

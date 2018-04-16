@@ -19,40 +19,46 @@ SSH_PRIVATE_KEY ?= $(HOME)/.ssh/id_rsa
 export SSH_PRIVATE_KEY
 GIT_HASH := $(shell git rev-parse --short HEAD)
 
-windows-client: ## install zipped windows ocelot client to pkg/windows_amd64
+versionexists:
+ifndef VERSION
+	$(error VERSION must be applied by maket target VERSION=x or another method if building/uploading clients clients)
+endif
+
+windows-client: versionexists ## install zipped windows ocelot client to pkg/windows_amd64
 	mkdir -p pkg/windows_amd64/
 	@echo "building windows client"
 	env GOOS=windows GOARCH=amd64 go build  -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o pkg/windows_amd64/ocelot  cmd/ocelot/main.go
-	cd pkg/windows_amd64; zip -r ocelot.zip ./ocelot; rm ocelot; cd -
+	cd pkg/windows_amd64; zip -r ocelot_$(VERSION).zip ./ocelot; rm ocelot; cd -
 
-mac-client: ## install zipped mac ocelot client to pkg/darwin_amd64
+mac-client: versionexists ## install zipped mac ocelot client to pkg/darwin_amd64
 	mkdir -p pkg/darwin_amd64/
 	@echo "building mac client"
 	env GOOS=darwin GOARCH=amd64 go build  -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o pkg/darwin_amd64/ocelot  cmd/ocelot/main.go
-	cd pkg/darwin_amd64; zip -r ocelot.zip ./ocelot; rm ocelot; cd -
+	cd pkg/darwin_amd64; zip -r ocelot_$(VERSION).zip ./ocelot; rm ocelot; cd -
 
-linux-client: ## install zipped linux ocelot client to pkg/linux_amd64
+linux-client: versionexists ## install zipped linux ocelot client to pkg/linux_amd64
 	mkdir -p pkg/linux_amd64/
 	@echo "building mac client"
 	env GOOS=linux GOARCH=amd64 go build  -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o pkg/linux_amd64/ocelot  cmd/ocelot/main.go
-	cd pkg/linux_amd64; zip -r ocelot.zip ./ocelot; rm ocelot; cd -
+	cd pkg/linux_amd64; zip -r ocelot_$(VERSION).zip ./ocelot; rm ocelot; cd -
 
 all-clients: windows-client mac-client linux-client ## install all clients
 
-upload-clients: all-clients
-	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot.zip s3://ocelotty/mac-ocelot.zip
-	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot.zip s3://ocelotty/windows-ocelot.zip
-	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot.zip s3://ocelotty/linux-ocelot.zip
+
+upload-clients: versionexists all-clients ## install all clients and upload to s3
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/mac-ocelot-$(VERSION).zip
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot_$(VERSION).zip s3://ocelotty/windows-ocelot-$(VERSION).zip
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/linux-ocelot-$(VERSION).zip
 
 upload-templates: ## tar up werker templates and upload to s3
 	cd werker/builder/template; tar -cvf werker_files.tar *
 	aws s3 cp --acl public-read-write --content-disposition attachment werker/builder/template/werker_files.tar s3://ocelotty/werker_files.tar
 	rm werker/builder/template/werker_files.tar
 
-linux-werker: ## install linux werker zip and upload to s3
-	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -o werker main.go; zip -r ../../linux-werker.zip werker; rm werker; cd -
-	@aws s3 cp --acl public-read-write --content-disposition attachment linux-werker.zip s3://ocelotty/linux-werker.zip
-	rm linux-werker.zip
+linux-werker: versionexists ## install linux werker zip and upload to s3
+	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -o werker main.go; zip -r ../../linux-werker-$(VERSION).zip werker; rm werker; cd -
+	@aws s3 cp --acl public-read-write --content-disposition attachment linux-werker-$(VERSION).zip s3://ocelotty/linux-werker-$(VERSION).zip
+	rm linux-werker-$(VERSION).zip
 
 sshexists:
 ifeq ("$(wildcard $(SSH_PRIVATE_KEY))","")

@@ -4,12 +4,11 @@ vcsCreds:
     clientSecret: SHH-BE-QUIET-ITS-A-SECRET
     tokenURL: https://ocelot.perf/site/oauth2/access_token
     acctName: lamb-shank
-    type: bitbucket
+    subType: bitbucket
 repoCreds:
   repo:
   - username: thisBeMyUserName
     password: SHH-BE-QUIET-ITS-A-SECRET
-    repoUrl:
-      snapshot: https://ocelot.perf/nexus-yo
+    repoUrl: https://ocelot.perf/nexus-yo
     acctName: jessishank
-    type: nexus
+    subType: nexus

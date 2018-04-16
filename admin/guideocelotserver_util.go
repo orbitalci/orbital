@@ -10,29 +10,34 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"errors"
 )
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
 func SetupCredentials(gosss adminModel.GuideOcelotServer, config *adminModel.VCSCreds) error {
 	gos := gosss.(*guideOcelotServer)
 	//hehe right now we only have bitbucket
-	switch config.Type {
-	case "bitbucket":
+	switch config.SubType {
+	case adminModel.SubCredType_BITBUCKET:
 		bitbucketClient := &ocenet.OAuthClient{}
 		bitbucketClient.Setup(config)
 
 		bbHandler := handler.GetBitbucketHandler(config, bitbucketClient)
 		go bbHandler.Walk() //spawning walk in a different thread because we don't want client to wait if there's a lot of repos/files to check
+	default:
+		return errors.New("currently only bitbucket is supported")
 	}
-	configPath := config.BuildCredPath(config.Type, config.AcctName)
-	err := gos.RemoteConfig.AddCreds(configPath, config)
+
+	config.Identifier = config.BuildIdentifier()
+	//right now, we will always overwrite
+	err := gos.RemoteConfig.AddCreds(gos.Storage, config, true)
 	return err
 }
 
-func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, config cred.RemoteConfigCred) error {
-	// todo: probably should do some kind of test if they are valid or not? is there a way to test these creds
-	configPath := config.BuildCredPath(config.GetType(), config.GetAcctName())
-	err := remoteConf.AddCreds(configPath, config)
+func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, store storage.CredTable, config adminModel.OcyCredder) error {
+	//right now, we will always overwrite
+	err := remoteConf.AddCreds(store, config, true)
 	return err
 }
 

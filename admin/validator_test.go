@@ -12,7 +12,7 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		AcctName: "blah",
 		ClientId: "blah2",
 		TokenURL: "slkdjf",
-		Type:     "bitbucket",
+		SubType:   models.SubCredType_BITBUCKET,
 	}
 
 	err := v.ValidateConfig(noClientSecret)
@@ -25,10 +25,23 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		ClientId:     "blah2",
 		TokenURL:     "slkdjf",
 		ClientSecret: "jsdlkfsdfjskdf",
-		Type:         "marianne",
+		SubType:       models.SubCredType_NIL_SCT,
 	}
 
 	wrongType := v.ValidateConfig(invalidCred)
+	if wrongType.Error() != "SUB CRED TYPE WAS NOT INSTANTIATED PROPERLY" {
+		t.Error(test.GenericStrFormatErrors("credential type", "creds must be one of the following type: bitbucket", wrongType.Error()))
+	}
+
+	invalidCred = &models.VCSCreds{
+		AcctName:     "blah",
+		ClientId:     "blah2",
+		TokenURL:     "slkdjf",
+		ClientSecret: "jsdlkfsdfjskdf",
+		SubType:       models.SubCredType_GITHUB,
+	}
+
+	wrongType = v.ValidateConfig(invalidCred)
 	if wrongType.Error() != "creds must be one of the following type: bitbucket" {
 		t.Error(test.GenericStrFormatErrors("credential type", "creds must be one of the following type: bitbucket", wrongType.Error()))
 	}

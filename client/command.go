@@ -3,9 +3,9 @@ package client
 import (
 	"bitbucket.org/level11consulting/ocelot/client/build"
 	"bitbucket.org/level11consulting/ocelot/client/creds"
-	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds"
-	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/add"
-	"bitbucket.org/level11consulting/ocelot/client/creds/buildcreds/list"
+	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds"
+	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds/add"
+	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds/list"
 	"bitbucket.org/level11consulting/ocelot/client/creds/credsadd"
 	"bitbucket.org/level11consulting/ocelot/client/creds/credslist"
 	"bitbucket.org/level11consulting/ocelot/client/creds/k8s/add"
@@ -39,7 +39,7 @@ func init() {
 		"creds":           func() (cli.Command, error) { return creds.New(), nil },
 		"creds add":       func() (cli.Command, error) { return credsadd.New(ui), nil },
 		"creds list":      func() (cli.Command, error) { return credslist.New(ui), nil },
-		"creds vcs":       func() (cli.Command, error) { return buildcreds.New(), nil },
+		"creds vcs":       func() (cli.Command, error) { return vcscreds.New(), nil },
 		"creds vcs list":  func() (cli.Command, error) { return buildcredslist.New(ui), nil },
 		"creds vcs add":   func() (cli.Command, error) { return buildcredsadd.New(ui), nil },
 		"creds repo":      func() (cli.Command, error) { return repocreds.New(), nil },

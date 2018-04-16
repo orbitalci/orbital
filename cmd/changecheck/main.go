@@ -74,7 +74,7 @@ func (w *aWerkerTeller) tellWerker(lastCommit *pb.Commit, conf *changeSetConfig,
 	ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
 	ocelog.Log().WithField("hash", lastCommit.Hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("getting bitbucket commit")
 	var buildConf *pb.BuildConfig
-	buildConf, _, err = build.GetBBConfig(conf.RemoteConf, conf.AcctRepo, lastCommit.Hash, conf.Deserializer, handler)
+	buildConf, _, err = build.GetBBConfig(conf.RemoteConf, store, conf.AcctRepo, lastCommit.Hash, conf.Deserializer, handler)
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("couldn't get build configuration")
 		return
@@ -127,7 +127,12 @@ func main() {
 	conf := configure()
 	var bbHandler handler.VCSHandler
 	var token string
-	cfg, err := build.GetVcsCreds(conf.AcctRepo, conf.RemoteConf)
+	store, err := conf.RemoteConf.GetOcelotStorage()
+	if err != nil {
+		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")
+	}
+	defer store.Close()
+	cfg, err := build.GetVcsCreds(store, conf.AcctRepo, conf.RemoteConf)
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("why")
 	}
@@ -136,11 +141,6 @@ func main() {
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("why")
 	}
-	store, err := conf.RemoteConf.GetOcelotStorage()
-	if err != nil {
-		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")
-	}
-	defer store.Close()
 	_, lastHashes, err := store.GetLastData(conf.AcctRepo)
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Error("couldn't get last cron time, setting last cron to 5 minutes ago")

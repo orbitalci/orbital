@@ -1,10 +1,30 @@
 package cred
 
-const (
-	OcyConfigBase = "config/ocelot"
-	StorageType = OcyConfigBase + "/storagetype"
+import (
+	"os"
+	"sync"
+)
+var once sync.Once
+var prefix string
 
-	PostgresCredLoc =  OcyConfigBase + "/postgres"
+func getPrefix() string {
+	once.Do(func(){
+		prefix = os.Getenv("PATH_PREFIX")
+		if prefix == "" {
+			prefix = ""
+		} else {
+			prefix = prefix + "/"
+		}
+	})
+	return prefix
+}
+
+
+var (
+	OcyConfigBase = getPrefix() +  "config/ocelot"
+	StorageType =  OcyConfigBase + "/storagetype"
+
+	PostgresCredLoc = OcyConfigBase + "/postgres"
 	PostgresDatabaseName = PostgresCredLoc + "/db"
 	PostgresLocation = PostgresCredLoc + "/location"
 	PostgresPort = PostgresCredLoc + "/port"
@@ -12,17 +32,7 @@ const (
 	PostgresPasswordLoc = "secret/" + PostgresCredLoc
 	PostgresPasswordKey = "clientsecret"
 
-	FilesystemConfigLoc = OcyConfigBase + "/filesystem"
+	FilesystemConfigLoc =  OcyConfigBase + "/filesystem"
 	FilesystemDir = FilesystemConfigLoc + "/savedirec"
-
-
 	ConfigPath = "creds"
-	VCSPath = ConfigPath + "/vcs"
-	RepoPath = ConfigPath + "/repo"
-	// nexus stuff
-	Nexus = RepoPath + "/%s/nexus"
-	NexusUrlPath = Nexus + "/repourl"
-	Docker = RepoPath + "/%s/docker"
-	K8sPath = ConfigPath + "/k8s"
-	Kubernetes = K8sPath + "/%s/k8s"
 )

@@ -38,9 +38,10 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:      map[string]string{"snapshot":"https://ocelot.perf/nexus-yo"},
+				RepoUrl:      "https://ocelot.perf/nexus-yo",
+				Identifier:   "snapshot",
 				AcctName:     "jessishank",
-				Type:         "nexus",
+				SubType:      models.SubCredType_NEXUS,
 			},
 		},
 	}
@@ -73,9 +74,10 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 			{
 				Username:     "thisBeMyUserName",
 				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:      map[string]string{"snapshot":"https://ocelot.perf/nexus-yo"},
+				RepoUrl:     "https://ocelot.perf/nexus-yo",
+				Identifier:  "snapshots",
 				AcctName:     "jessishank",
-				Type:         "nexus",
+				SubType:      models.SubCredType_NEXUS,
 			},
 		},
 	}

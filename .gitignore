@@ -21,3 +21,6 @@ vendor/
 
 # Ignore ssh private keys that may be in the directory
 id_*
+pkg/
+k8s/helm/charts/*.tgz
+.version

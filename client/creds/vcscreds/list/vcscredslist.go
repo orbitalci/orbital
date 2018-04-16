@@ -6,6 +6,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"strings"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 )
@@ -92,11 +94,12 @@ func Prettify(cred *models.VCSCreds) string {
 ClientSecret: %s
 TokenURL: %s
 AcctName: %s
-Type: %s
+SubType: %s
+Identifier: %s
 [%s]
 
 `
-	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, cred.Type, cred.SshFileLoc)
+	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, strings.ToLower(cred.SubType.String()), cred.Identifier, cred.SshFileLoc)
 }
 
 

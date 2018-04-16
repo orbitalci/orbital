@@ -4,6 +4,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/cred"
 	"bitbucket.org/level11consulting/ocelot/util/integrations"
+	"bitbucket.org/level11consulting/ocelot/util/storage"
+
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,21 +23,13 @@ type dockerConfigJson struct {
 // GetDockerConfig will find docker creds associated with accountName in the CVRemoteConfig, and will
 // generate a config.json authentication file for docker. The contents will be returned base64 encoded for
 // easy passing as a command line argument.
-func GetDockerConfig(rc cred.CVRemoteConfig, accountName string) (string, error) {
-	repod := models.NewRepoCreds()
-	credz, err := rc.GetCredAt(fmt.Sprintf(cred.Docker, accountName), false, repod)
+func GetDockerConfig(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
+	//GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool)
+	credz, err := rc.GetCredsBySubTypeAndAcct(store, models.SubCredType_DOCKER, accountName, false)
 	if err != nil {
 		return "", err
 	}
-	dockerCred, ok := credz[cred.BuildCredKey("docker", accountName)]
-	if !ok {
-		return "", integrations.NCErr("no creds found")
-	}
-	casted, ok := dockerCred.(*models.RepoCreds)
-	if !ok {
-		return "", errors.New(fmt.Sprintf("unable to cast to RepoCreds, which just shouldn't happen. Object: %v", dockerCred))
-	}
-	bitz, err := RCtoDockerConfig(casted)
+	bitz, err := RCtoDockerConfig(credz)
 	if err != nil {
 		return "", err
 	}
@@ -44,12 +38,16 @@ func GetDockerConfig(rc cred.CVRemoteConfig, accountName string) (string, error)
 }
 
 
-func RCtoDockerConfig(creds *models.RepoCreds) ([]byte, error) {
-	authstring := fmt.Sprintf("%s:%s", creds.Username, creds.Password)
-	b64authstring := integrations.StrToBase64(authstring)
+func RCtoDockerConfig(creds []models.OcyCredder) ([]byte, error) {
 	authz := make(map[string]auth)
-	for _, url := range creds.RepoUrl {
-		authz[url] = map[string]string{"auth":b64authstring}
+	for _, credi := range creds {
+		credx, ok := credi.(*models.RepoCreds)
+		if !ok {
+			return nil, errors.New("unable to cast as repo creds")
+		}
+		authstring := fmt.Sprintf("%s:%s", credx.Username, credx.Password)
+		b64authstring := integrations.StrToBase64(authstring)
+		authz[credx.RepoUrl] = map[string]string{"auth":b64authstring}
 	}
 	config := &dockerConfigJson{
 		Auths: authz,

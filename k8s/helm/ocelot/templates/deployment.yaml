@@ -20,6 +20,10 @@ spec:
         app: admin-{{ template "ocelot.name" . }}
         release: {{ .Release.Name }}
     spec:
+    {{ if .Values.ImagePullSecret }}
+      imagePullSecrets:
+      - name: {{.Values.ImagePullSecret }}
+    {{ end }}
       volumes:
       - name: docker-sock-volume
         hostPath:
@@ -33,7 +37,7 @@ spec:
           imagePullPolicy: {{ .Values.admin.image.pullPolicy }}
           command: ["/admin"]
           args:
-            - -consul-host=$(CONSUL_HOST)}
+            - -consul-host=$(CONSUL_HOST)
           volumeMounts: 
             - mountPath: /var/run/docker.sock
               name: docker-sock-volume
@@ -67,10 +71,14 @@ spec:
               value: "{{.Values.nsq.nsqd.port}}"
             - name: LOG_LEVEL
               value: "{{.Values.loglevel}}"
-          # livenessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
+          {{if .Values.KVPrefix}}
+            - name: PATH_PREFIX
+              value: "{{.Values.KVPrefix}}"
+          {{end}}
+#           livenessProbe:
+#             httpGet:
+#               path: /v1/creds
+#               port: http
           # readinessProbe:
           #   httpGet:
           #     path: /
@@ -112,6 +120,10 @@ spec:
         app: hookhandler-{{ template "ocelot.name" . }}
         release: {{ .Release.Name }}
     spec:
+    {{ if .Values.ImagePullSecret }}
+      imagePullSecrets:
+      - name: {{.Values.ImagePullSecret }}
+    {{ end }}
       volumes:
       - name: docker-sock-volume
         hostPath:
@@ -125,7 +137,7 @@ spec:
           imagePullPolicy: {{ .Values.hookhandler.image.pullPolicy }}
           command: ["/hookhandler"]
           args:
-            - -consul-host=$(CONSUL_HOST)}
+            - -consul-host=$(CONSUL_HOST)
           volumeMounts: 
             - mountPath: /var/run/docker.sock
               name: docker-sock-volume
@@ -157,6 +169,10 @@ spec:
               value: "{{.Values.nsq.nsqd.port}}"
             - name: LOG_LEVEL
               value: "{{.Values.loglevel}}"
+          {{if .Values.KVPrefix}}
+            - name: PATH_PREFIX
+              value: "{{.Values.KVPrefix}}"
+          {{end}}
           # livenessProbe:
           #   httpGet:
           #     path: /
@@ -202,6 +218,10 @@ spec:
         app: poller-{{ template "ocelot.name" . }}
         release: {{ .Release.Name }}
     spec:
+    {{ if .Values.ImagePullSecret }}
+      imagePullSecrets:
+      - name: {{.Values.ImagePullSecret }}
+    {{ end }}
       volumes:
       - name: docker-sock-volume
         hostPath:
@@ -213,9 +233,6 @@ spec:
         - name: poller-{{ .Chart.Name }}
           image: "{{ .Values.poller.image.repository }}:{{ .Values.poller.image.tag }}"
           imagePullPolicy: {{ .Values.poller.image.pullPolicy }}
-          command: ["/poller"]
-          args:
-            - -consul-host=$(CONSUL_HOST)}
           volumeMounts: 
             - mountPath: /var/run/docker.sock
               name: docker-sock-volume
@@ -243,6 +260,10 @@ spec:
               value: "{{.Values.nsq.nsqd.port}}"
             - name: LOG_LEVEL
               value: "{{.Values.loglevel}}"
+          {{if .Values.KVPrefix}}
+            - name: PATH_PREFIX
+              value: "{{.Values.KVPrefix}}"
+          {{end}}
           resources:
 {{ toYaml .Values.admin.resources | indent 12 }}
     {{- with .Values.admin.nodeSelector }}

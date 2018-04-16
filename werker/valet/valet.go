@@ -158,6 +158,9 @@ func (v *Valet) MakeItSoDed(finish chan int) {
 		v.Cleanup()
 	}
 	finish <- 1
+	log.Log().Error("shutting down")
+	time.Sleep(2*time.Second)
+	os.Exit(1)
 }
 
 func (v *Valet) RegisterDoneChan(hash string, done chan int) {

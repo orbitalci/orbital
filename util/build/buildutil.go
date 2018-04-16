@@ -41,24 +41,25 @@ func PopulateStageResult(sr *smods.StageResult, status int, lastMsg, errMsg stri
 	sr.StageDuration = time.Now().Sub(sr.StartTime).Seconds()
 }
 
-//get vcs creds will build a path for you based on the full name of the repo and return the vcsCredentials corresponding
-//with that account
-func GetVcsCreds(repoFullName string, remoteConfig cred.CVRemoteConfig) (*models.VCSCreds, error) {
-	vcs := models.NewVCSCreds()
+// GetVcsCreds will retrieve a VCSCred for account name / bitbucket vcs type
+func GetVcsCreds(store storage.CredTable, repoFullName string, remoteConfig cred.CVRemoteConfig) (*models.VCSCreds, error) {
 	acctName, _, err := GetAcctRepo(repoFullName)
 	if err != nil {
 		return nil, err
 	}
-
-	bbCreds, err := remoteConfig.GetCredAt(cred.BuildCredPath("bitbucket", acctName, cred.Vcs), false, vcs)
-	cf := bbCreds["bitbucket/"+acctName]
-	cfg, ok := cf.(*models.VCSCreds)
-	// todo: this error happens even if there are no creds there, need a nil check for better error, and also to save to database?? for visibility
-	if !ok {
-		err = errors.New(fmt.Sprintf("could not cast config as models.VCSCreds, config: %v", cf))
+	identifier, err := models.CreateVCSIdentifier(models.SubCredType_BITBUCKET, acctName)
+	if err != nil {
 		return nil, err
 	}
-	return cfg, nil
+	bbCreds, err := remoteConfig.GetCred(store, models.SubCredType_BITBUCKET, identifier, acctName, false)
+	if err != nil {
+		return nil, err
+	}
+	vcs, ok := bbCreds.(*models.VCSCreds)
+	if !ok {
+		return nil, errors.New("could not cast as vcs creds")
+	}
+	return vcs, err
 }
 
 //QueueAndStore will create a werker task and put it on the queue, then update database
@@ -133,23 +134,25 @@ func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string
 	return id, nil
 }
 
+
 //GetBBConfig returns the protobuf ocelot.yaml, a valid bitbucket token belonging to that repo, and possible err.
 //If a VcsHandler is passed, this method will use the existing handler to retrieve the bb config. In that case,
 //***IT WILL NOT RETURN A VALID TOKEN FOR YOU - ONLY BUILD CONFIG***
-func GetBBConfig(remoteConfig cred.CVRemoteConfig, repoFullName string, checkoutCommit string, deserializer *deserialize.Deserializer, vcsHandler handler.VCSHandler) (*pb.BuildConfig, string, error) {
+func GetBBConfig(remoteConfig cred.CVRemoteConfig, store storage.CredTable, repoFullName string, checkoutCommit string, deserializer *deserialize.Deserializer, vcsHandler handler.VCSHandler) (*pb.BuildConfig, string, error) {
 	var bbHandler handler.VCSHandler
 	var token string
 
 	if vcsHandler == nil {
-		cfg, err := GetVcsCreds(repoFullName, remoteConfig)
-		if err != nil {
-			ocelog.IncludeErrField(err)
-			return nil, "", err
+		cfg, err1 := GetVcsCreds(store, repoFullName, remoteConfig)
+		if err1 != nil {
+			ocelog.IncludeErrField(err1).Error()
+			return nil, "", err1
 		}
-
+		var err error
+		ocelog.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config")
 		bbHandler, token, err = handler.GetBitbucketClient(cfg)
 		if err != nil {
-			ocelog.IncludeErrField(err)
+			ocelog.IncludeErrField(err).Error()
 			return nil, "", err
 		}
 	} else {
@@ -224,7 +227,7 @@ func tellWerker(buildConf *pb.BuildConfig,
 		Branch:       branch,
 		BuildConf:    buildConf,
 		VcsToken:     bbToken,
-		VcsType:      "bitbucket",
+		VcsType:      pb.SubCredType_BITBUCKET,
 		FullName:     fullName,
 		Id:           dbid,
 	}

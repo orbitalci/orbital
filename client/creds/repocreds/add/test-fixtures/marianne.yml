@@ -1,7 +1,7 @@
 repo:
-- username: thisBeMyUserName
-  password: SHH-BE-QUIET-ITS-A-SECRET
-  repoUrl:
-    snapshot: https://ocelot.perf/nexus-yo
-  acctName: jessishank
-  type: nexus
+- username: admin
+  password: admin123
+  identifier: snapshot
+  repoUrl: http://localhost:8081/nexus/content/repositories/snapshots/
+  acctName: mellowfogs
+  subType: nexus

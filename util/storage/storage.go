@@ -1,6 +1,7 @@
 package storage
 
 import (
+	pb "bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/util/storage/models"
 	"fmt"
 	"time"
@@ -55,6 +56,19 @@ type PollTable interface {
 	DeletePoll(account string, repo string) error
 }
 
+type CredTable interface {
+	InsertCred(credder pb.OcyCredder, overWriteOk bool) error
+	// retrieve ordered by cred type
+	RetrieveAllCreds() ([]pb.OcyCredder, error)
+	// todo: take out all this pb.CredType stuff, can just call Parent() on subcredType. realized too late :"(
+	RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, error)
+	RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error)
+	RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error)
+	CredExists(credder pb.OcyCredder) (bool, error)
+	UpdateCred(credder pb.OcyCredder) error
+}
+
+//GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
 type HealthyChkr interface {
 	Healthy() bool
 }
@@ -65,6 +79,7 @@ type OcelotStorage interface {
 	BuildStage
 	Stringy
 	PollTable
+	CredTable
 	HealthyChkr
 	Close()
 }
@@ -73,6 +88,7 @@ var (
 	BUILD_SUM_404 = "no build summary found for %s"
 	STAGE_REASON_404 = "no stages found for %s"
 	BUILD_OUT_404 = "no build output found for %s"
+	CRED_404 = "no credential found for %s %s"
 )
 
 
@@ -86,6 +102,10 @@ func BuildOutNotFound(id string) *ErrNotFound {
 
 func StagesNotFound(id string) *ErrNotFound {
 	return &ErrNotFound{fmt.Sprintf(STAGE_REASON_404, id)}
+}
+
+func CredNotFound(account string, repoType string) *ErrNotFound {
+	return &ErrNotFound{fmt.Sprintf(CRED_404, account, repoType)}
 }
 
 type ErrNotFound struct {

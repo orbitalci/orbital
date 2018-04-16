@@ -8,11 +8,11 @@ stages:
   - name: triggered
     trigger:
       branches:
-      - master
+      - creds_to_postgres
     script:
       - echo "this should only happen on master"
-      - kubectl cluster-info
-      - kubectl -n prod-eng get all
+      - cat ~/.docker/config.json
+      - if [ -f ~/.kube/config ]; then kubectl cluster-info; else echo "no kubeconfig"; fi
   - name: be_useful
     script:
       - echo "building $BUILD_ID with has $GIT_HASH"
