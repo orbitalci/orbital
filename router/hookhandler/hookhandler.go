@@ -26,15 +26,14 @@ type HookHandler interface {
 	SetValidator(validator *build.OcelotValidator)
 	GetStorage() storage.OcelotStorage
 	SetStorage(storage.OcelotStorage)
+	GetTeller() *signal.BBWerkerTeller
+	GetSignaler() *signal.Signaler
 }
 
 //context contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
-	RemoteConfig cred.CVRemoteConfig
-	Producer     *nsqpb.PbProduce
-	Deserializer *deserialize.Deserializer
-	OcelotValidator *build.OcelotValidator
-	Store           storage.OcelotStorage
+ 	*signal.Signaler
+ 	teller *signal.BBWerkerTeller
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -50,20 +49,8 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	branch := repopush.Push.Changes[0].New.Name
 	//acctName := repopush.Repository.Owner.Username
 
-	buildConf, bbToken, err := signal.GetBBConfig(ctx.GetRemoteConfig(),ctx.GetStorage(), fullName, hash, ctx.GetDeserializer(), nil)
-	if err != nil {
-		// if the build file just isn't there don't worry about it.
-		if err != ocenet.FileNotFound {
-			ocelog.IncludeErrField(err).Error("unable to get build conf")
-			return
-		}
-		ocelog.Log().Debugf("no ocelot yml found for repo %s", repopush.Repository.FullName)
-		return
-	}
-
-	if err = signal.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), ctx.GetStorage()); err != nil {
-		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
-		return
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "" ); err != nil {
+		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }
 
@@ -82,21 +69,8 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	//acctName := pr.Pullrequest.Source.Repository.Owner.Username
 	branch := pr.Pullrequest.Source.Branch.Name
 
-	buildConf, bbToken, err := signal.GetBBConfig(ctx.GetRemoteConfig(), ctx.GetStorage(), fullName, hash, ctx.GetDeserializer(), nil)
-	if err != nil {
-		// if the build file just isn't there don't worry about it.
-		if err != ocenet.FileNotFound {
-			ocelog.IncludeErrField(err).Error("unable to get build conf")
-			return
-		}
-		ocelog.Log().Debugf("no ocelot yml found for repo %s", fullName)
-		return
-	}
-
-
-	if err = signal.QueueAndStore(hash, branch, fullName, bbToken, ctx.GetRemoteConfig(), buildConf, ctx.GetValidator(), ctx.GetProducer(), ctx.GetStorage()); err != nil {
-		ocelog.IncludeErrField(err).Error("could not queue message and store to db")
-		return
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "" ); err != nil {
+		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }
 
@@ -116,10 +90,10 @@ func HandleBBEvent(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 }
 
 func (hhc *HookHandlerContext) GetRemoteConfig() cred.CVRemoteConfig {
-	return hhc.RemoteConfig
+	return hhc.RC
 }
 func (hhc *HookHandlerContext) SetRemoteConfig(remoteConfig cred.CVRemoteConfig) {
-	hhc.RemoteConfig = remoteConfig
+	hhc.RC = remoteConfig
 }
 func (hhc *HookHandlerContext) GetProducer() *nsqpb.PbProduce {
 	return hhc.Producer
@@ -134,11 +108,11 @@ func (hhc *HookHandlerContext) SetDeserializer(deserializer *deserialize.Deseria
 	hhc.Deserializer = deserializer
 }
 func (hhc *HookHandlerContext) SetValidator(validator *build.OcelotValidator) {
-	hhc.OcelotValidator = validator
+	hhc.OcyValidator = validator
 }
 
 func (hhc *HookHandlerContext) GetValidator() *build.OcelotValidator {
-	return hhc.OcelotValidator
+	return hhc.OcyValidator
 }
 
 func (hhc *HookHandlerContext) SetStorage(ocelotStorage storage.OcelotStorage) {
@@ -149,3 +123,14 @@ func (hhc *HookHandlerContext) GetStorage() storage.OcelotStorage {
 	return hhc.Store
 }
 
+func (hhc *HookHandlerContext) GetTeller() *signal.BBWerkerTeller {
+	return hhc.teller
+}
+
+func (hhc *HookHandlerContext) SetTeller(tell *signal.BBWerkerTeller) {
+	hhc.teller = tell
+}
+
+func (hhc *HookHandlerContext) GetSignaler() *signal.Signaler {
+	return hhc.Signaler
+}

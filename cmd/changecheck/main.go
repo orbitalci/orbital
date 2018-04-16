@@ -16,6 +16,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/build"
+	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
 	"bitbucket.org/level11consulting/ocelot/build_signaler/poll"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"github.com/namsral/flag"
@@ -70,12 +71,14 @@ func main() {
 	}
 	defer store.Close()
 	checker := &poll.ChangeChecker{
-		RC: conf.RemoteConf, 
-		Deserializer: conf.Deserializer, 
-		Producer: conf.Producer, 
-		AcctRepo: conf.AcctRepo, 
-		OcyValidator: conf.OcyValidator,
-		Store: store,
+		Signaler: &signal.Signaler{
+			RC:           conf.RemoteConf,
+			Deserializer: conf.Deserializer,
+			Producer:     conf.Producer,
+			AcctRepo:     conf.AcctRepo,
+			OcyValidator: conf.OcyValidator,
+			Store: store,
+		},
 	}
 	
 	if err := checker.SetAuth(); err != nil {

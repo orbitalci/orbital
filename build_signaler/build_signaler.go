@@ -163,7 +163,7 @@ func ValidateAndQueue(buildConf *pb.BuildConfig,
 	return nil
 }
 
-//tellWerker is a private helper function for building a werker task and giving it to nsq
+//TellWerker is a private helper function for building a werker task and giving it to nsq
 func tellWerker(buildConf *pb.BuildConfig,
 	vaulty ocevault.Vaulty,
 	producer *nsqpb.PbProduce,

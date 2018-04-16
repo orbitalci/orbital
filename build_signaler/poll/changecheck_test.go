@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"bitbucket.org/level11consulting/go-til/test"
+	"bitbucket.org/level11consulting/ocelot/build_signaler"
 	"bitbucket.org/level11consulting/ocelot/common/remote"
 	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 )
 
 type fakeCommitLister struct {
@@ -21,7 +21,7 @@ func (f *fakeCommitLister) GetAllCommits(string, string) (*pbb.Commits, error) {
 // faked all this out and wrote an interface because i only wanted to test the logic of whether or not this should trigger a build
 type fakeWerkerTeller struct {}
 
-func (f *fakeWerkerTeller) tellWerker(lastCommit *pbb.Commit, conf *ChangeChecker, branch string, store storage.OcelotStorage, remote remote.VCSHandler, token string) (err error) { return nil }
+func (f *fakeWerkerTeller) TellWerker(lastCommit string, conf *build_signaler.Signaler, branch string, remote remote.VCSHandler, token string) (err error) { return nil }
 
 var branchTests = []struct {
 	name		    string
@@ -39,9 +39,8 @@ func Test_searchBranchCommits(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T){
 			commitList := []*pbb.Commit{{Hash:testcase.commitListHash}}
 			commitListen := &fakeCommitLister{commits:commitList}
-			store := storage.NewPostgresStorage("", "", "", 0, "")
-			conf := &ChangeChecker{AcctRepo: "test/test"}
-			newLastHash, err := searchBranchCommits(commitListen, "test", conf, testcase.oldhash, store, "", &fakeWerkerTeller{})
+			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{AcctRepo: "test/test"}}
+			newLastHash, err := searchBranchCommits(commitListen, "test", conf, testcase.oldhash, "", &fakeWerkerTeller{})
 			if err != nil {
 				t.Error(err)
 			}

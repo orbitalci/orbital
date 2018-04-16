@@ -5,8 +5,9 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
-	hh "bitbucket.org/level11consulting/ocelot/router/hookhandler"
+	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	hh "bitbucket.org/level11consulting/ocelot/router/hookhandler"
 	"github.com/gorilla/mux"
 	"github.com/namsral/flag"
 	"os"
@@ -50,7 +51,7 @@ func main() {
 	//	ocelog.Log().Info("hookhandler running in dev mode")
 	//
 	//} else {
-	hookHandlerContext = &hh.HookHandlerContext{}
+	hookHandlerContext = &hh.HookHandlerContext{Signaler: &signal.Signaler{}}
 	hookHandlerContext.SetRemoteConfig(remoteConfig)
 	//}
 
