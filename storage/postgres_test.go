@@ -20,7 +20,7 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	const shortForm = "2006-01-02 15:04:05"
 	buildTime, err := time.Parse(shortForm,"2018-01-14 18:38:59")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	model := &models.BuildSummary{
 		Hash: "123",
@@ -33,12 +33,12 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	}
 	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	t.Log("id ", id)
 	sumaries, err := pg.RetrieveSum("123")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	sum := sumaries[0]
 	if sum.Hash != "123" {
@@ -62,13 +62,13 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	}
 	err = pg.UpdateSum(model.Failed, model.BuildDuration, id)
 	if err != nil {
-		t.Fatal("could not update build summary: ", err)
+		t.Error("could not update build summary: ", err)
 	}
 	//cleanup
 	//_ = pg.db.QueryRow(`delete from build_summary where hash = 123`)
 	sumaz, err := pg.RetrieveSum("123")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	suum := sumaz[0]
 	if suum.BuildDuration != model.BuildDuration {
@@ -91,11 +91,11 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 	}
 	err := pg.AddOut(out)
 	if err != nil {
-		t.Fatal("could not add out: ", err)
+		t.Error("could not add out: ", err)
 	}
 	retrieved, err := pg.RetrieveOut(id)
 	if err != nil {
-		t.Fatal("could not retrieve out: ", err)
+		t.Error("could not retrieve out: ", err)
 	}
 	if retrieved.BuildId != id {
 		t.Error(test.GenericStrFormatErrors("build id", id, retrieved.BuildId))
@@ -128,13 +128,13 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 	err := pg.AddStageDetail(stageResult)
 	t.Log(pg.db.Stats().OpenConnections)
 	if err != nil {
-		t.Fatal("could not add stage details", err)
+		t.Error("could not add stage details", err)
 	}
 
 	stageResults, err := pg.RetrieveStageDetail(id)
 	t.Log(pg.db.Stats().OpenConnections)
 	if err != nil {
-		t.Fatal("could not get stage details", err)
+		t.Error("could not get stage details", err)
 	}
 
 	if len(stageResults) != 1 {

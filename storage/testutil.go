@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 )
@@ -65,10 +64,10 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Dir(filename)
 	path := filepath.Join(dir, "test-fixtures")
-	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("docker run -p %d:5432  -v %s:/docker-entrypoint-initdb.d -e POSTGRES_PASSWORD=%s -d postgres", port, path, password))
-	if err := createOrUpdateAuditFile(fmt.Sprintf("%s,create", t.Name())); err != nil {
-		t.Error(err)
-	}
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("docker run -p %d:5432  -v %s:/docker-entrypoint-initdb.d -e POSTGRES_PASSWORD=%s --name pgtest -d postgres", port, path, password))
+	//if err := createOrUpdateAuditFile(fmt.Sprintf("%s,create", t.Name())); err != nil {
+	//	t.Error(err)
+	//}
 	var outbe, errbe bytes.Buffer
 	cmd.Stdout = &outbe
 	cmd.Stderr = &errbe
@@ -77,13 +76,13 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 		t.Log(errbe.String())
 		t.Fatal("could not start db, err: ", err.Error())
 	}
-	var containerId string
-	containerId = strings.Trim(outbe.String(), "\n")
+	//var containerId string
+	//containerId = strings.Trim(outbe.String(), "\n")
 	t.Log("successfully started up test pg database on port 5555")
 	cleanup = func(t *testing.T){
-		createOrUpdateAuditFile(fmt.Sprintf("%s,delete", t.Name()))
+		//createOrUpdateAuditFile(fmt.Sprintf("%s,delete", t.Name()))
 		t.Log("attempting to clean up db")
-		cmd := exec.Command("/bin/sh", "-c", "docker ps -a | grep " + containerId)
+		cmd := exec.Command("/bin/sh", "-c", "docker ps -a | grep pgtest")
 		err := cmd.Start()
 		var out, errr bytes.Buffer
 		cmd.Stdout = &out
@@ -101,11 +100,11 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 		}
 		t.Log(out.String())
 		t.Log(errr.String())
-		cmd = exec.Command("/bin/sh", "-c", "docker kill " + containerId)
+		cmd = exec.Command("/bin/sh", "-c", "docker kill pgtest")
 		if err := cmd.Run(); err != nil {
 			t.Log("could not kill db, err: ", err.Error())
 		}
-		cmd = exec.Command("/bin/sh", "-c", "docker rm " + containerId)
+		cmd = exec.Command("/bin/sh", "-c", "docker rm pgtest")
 		if err := cmd.Run(); err != nil {
 			t.Log("could not rm db image, err: ", err.Error())
 		}
