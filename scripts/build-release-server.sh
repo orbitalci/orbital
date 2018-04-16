@@ -59,7 +59,7 @@ fi
 #rm windows-ocelot.zip
 #rm linux-ocelot.zip
 
-docker tag jessishank/ocelot-build:kill.6 ocelot-build
+docker tag docker.metaverse.l11.com/ocelot/base:latest ocelot-build
 
 echo "building admin"
 docker build -f cmd/admin/Dockerfile -t docker.metaverse.l11.com/ocelot-admin:latest .
