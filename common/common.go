@@ -38,9 +38,7 @@ func (f *FormatError) Error() string {
 func GetPrefix() string {
 	once.Do(func(){
 		prefix = os.Getenv("PATH_PREFIX")
-		if prefix == "" {
-			prefix = ""
-		} else {
+		if prefix != "" {
 			prefix = prefix + "/"
 		}
 	})
