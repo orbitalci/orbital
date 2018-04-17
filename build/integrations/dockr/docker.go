@@ -20,6 +20,34 @@ type dockerConfigJson struct {
 
 }
 
+type DockrInt struct {}
+
+func (d *DockrInt) String() string {
+	return "docker login"
+}
+
+func (d *DockrInt) SubType() pb.SubCredType {
+	return pb.SubCredType_DOCKER
+}
+
+func (d *DockrInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, error) {
+	bitz, err := RCtoDockerConfig(credz)
+	if err != nil {
+		return "", err
+	}
+	configEncoded := integrations.BitzToBase64(bitz)
+	return configEncoded, err
+}
+//
+//func (d *DockrInt) GetThemCreds(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) ([]pb.OcyCredder, error) {
+//	credz, err := rc.GetCredsBySubTypeAndAcct(store, pb.SubCredType_DOCKER, accountName, false)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return credz, nil
+//}
+
+
 // GetDockerConfig will find docker creds associated with accountName in the CVRemoteConfig, and will
 // generate a config.json authentication file for docker. The contents will be returned base64 encoded for
 // easy passing as a command line argument.

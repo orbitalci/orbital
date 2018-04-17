@@ -8,6 +8,7 @@ import (
 
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/build"
+	"bitbucket.org/level11consulting/ocelot/build/integrations"
 
 	"bitbucket.org/level11consulting/ocelot/build/integrations/dockr"
 	"bitbucket.org/level11consulting/ocelot/build/integrations/k8s"
@@ -85,7 +86,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 
 	// do integration setup stage
 	start := time.Now()
-	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, w.Store, builder, w.RemoteConf, w.infochan)
+	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, builder)
 	dura := time.Now().Sub(start)
 	if err := storeStageToDb(w.Store, werk.Id, integrationResult, start, dura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
@@ -208,7 +209,7 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 }
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
-func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, store storage.CredTable, bldr build.Builder, rc cred.CVRemoteConfig, logout chan[]byte) (result *pb.Result, id string) {
+func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder) (result *pb.Result, id string) {
 	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
 	id = bldr.GetContainerId()
@@ -216,22 +217,34 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, stor
 	stage := build.InitStageUtil("INTEGRATION_UTIL")
 	result.Messages = setupMessages
 	//only if the build tool is maven do we worry about settings.xml
+	// todo: implement a factory pattern for all these integrations
+	//var grations = []integrations.Integrator{dockr.Create(w.RemoteConf, w.Store, accountName),}
+	var integral = []integrations.StringIntegrator{dockr.Create(), k8s.Create(), nexus.Create()}
+	for _, integ := range integral {
+		newStage := build.InitStageUtil(stage.Stage + " | " + integ.String())
+		credz, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, integ.SubType(), accountName, false)
+		if err != nil {
+			result = handleIntegrationErr(err, integ.String(), newStage, result.Messages)
+			return
+		}
+		
+	}
 	if werk.BuildConf.BuildTool == "maven" {
-		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", rc, accountName, stage, result.Messages, store, logout)
+		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", w.RemoteConf, accountName, stage, result.Messages, w.Store, w.infochan)
 		if result.Status == pb.StageResultVal_FAIL {
 			return
 		}
 	}
-
-	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login", rc, accountName, stage, result.Messages, store, logout)
+	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login",  w.RemoteConf, accountName, stage, result.Messages, w.Store, w.infochan)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
-	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download", rc, accountName, stage, result.Messages, store, logout)
+	// todo: turn this into a "DownloadBinaries" method or something
+	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download",  w.RemoteConf, accountName, stage, result.Messages, w.Store, w.infochan)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
-	result = bldr.IntegrationSetup(ctx, k8s.GetKubeConfig, bldr.InstallKubeconfig, "kubeconfig render", rc, accountName, stage, result.Messages, store, logout)
+	result = bldr.IntegrationSetup(ctx, k8s.GetKubeConfig, bldr.InstallKubeconfig, "kubeconfig render",  w.RemoteConf, accountName, stage, result.Messages, w.Store, w.infochan)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
@@ -242,6 +255,26 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, stor
 func (w *launcher) returnWerkerPort(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 	ocelog.Log().Debug("returning werker port")
 	return  w.ServicePort, nil
+}
+
+func handleIntegrationErr(err error, integrationName string, stage *build.StageUtil, msgs []string) *pb.Result {
+	_, ok := err.(*integrations.NoCreds)
+	if !ok {
+		ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
+		return &pb.Result{
+			Stage: stage.GetStage(),
+			Status: pb.StageResultVal_FAIL,
+			Error: err.Error(),
+		}
+	} else {
+		msgs = append(msgs, "no integration data found for " + integrationName + " so assuming integration not necessary")
+		return &pb.Result{
+			Stage: stage.GetStage(),
+			Status: pb.StageResultVal_PASS,
+			Error: "",
+			Messages: msgs,
+		}
+	}
 }
 
 func branchOk(branch string, buildBranches []string) bool {

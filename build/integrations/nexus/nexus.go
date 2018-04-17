@@ -1,6 +1,7 @@
 package nexus
 
 import (
+	"bitbucket.org/level11consulting/ocelot/build/integrations"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
@@ -40,6 +41,33 @@ var settingsXml = `<?xml version="1.0" encoding="UTF-8"?>
   </profiles>
 </settings>`
 
+type NexusInt struct {}
+
+func (n *NexusInt) String() string {
+	return "nexus m2 settings.xml render"
+}
+
+func (n *NexusInt) SubType() pb.SubCredType {
+	return pb.SubCredType_NEXUS
+}
+
+func Create() integrations.StringIntegrator {
+	return &NexusInt{}
+}
+
+
+func (n *NexusInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, error) {
+	var repoCreds []*pb.RepoCreds
+	for _, credi := range credz {
+		credx, ok := credi.(*pb.RepoCreds)
+		if !ok {
+			return "", errors.New("could not cast as repo creds")
+		}
+		repoCreds = append(repoCreds, credx)
+	}
+	wrap := &pb.RepoCredWrapper{Repo:repoCreds}
+	return executeTempl(wrap)
+}
 
 // GetSettingsXml will render and return a maven settings.xml with credentials correlating to the accountName provided
 // todo: include project name for further filtering

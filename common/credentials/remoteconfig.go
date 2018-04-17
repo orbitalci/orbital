@@ -97,10 +97,11 @@ type InsecureCredStorage interface {
 	AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error)
 	UpdateCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error)
 }
-
-type NewCVRC interface {
-
-}
+//
+//type CredStore struct {
+//	RC    CVRemoteConfig
+//	Store storage.CredTable
+//}
 
 
 type RemoteConfig struct {
