@@ -52,13 +52,3 @@ func RobustImagePull(imageName string) (closer io.ReadCloser, err error) {
 	}
 	return ioutil.NopCloser(&outb), nil
 }
-
-type dumbReadCloser struct {}
-
-func (d *dumbReadCloser) Close() error {
-	return nil
-}
-
-func (d *dumbReadCloser) Read(p []byte) (n int, err error) {
-	return 0, nil
-}
