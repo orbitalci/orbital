@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"bitbucket.org/level11consulting/ocelot/build/basher"
@@ -17,8 +18,8 @@ type Builder interface {
 	basher.OcyBash
 	Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
 	Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
+	ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *StageUtil, logout chan[]byte) *pb.Result
 	GetContainerId() string
-	IntegrationSetup(ctx context.Context, setupFunc RepoSetupFunc, execFunc RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, accountName string, su *StageUtil, msgs []string, store storage.CredTable, logout chan []byte) (result *pb.Result)
 }
 
 //helper functions for stages, doesn't handle camelcase right now so if you want that set the values
@@ -50,4 +51,11 @@ func (s *StageUtil) SetStage(stage string) {
 
 func (s *StageUtil) SetStageLabel(stageLabel string) {
 	s.StageLabel = stageLabel
+}
+
+func CreateSubstage(stg *StageUtil, subStage string) *StageUtil {
+	return &StageUtil{
+		Stage: fmt.Sprintf("%s | %s", stg.GetStage(), strings.ToLower(subStage)),
+		StageLabel: fmt.Sprintf("%s | %s | ", strings.ToUpper(stg.GetStage()), strings.ToUpper(subStage)),
+	}
 }

@@ -90,3 +90,4 @@ func Test_handleTriggers(t *testing.T) {
 		})
 	}
 }
+

@@ -85,15 +85,23 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	}
 
 	// do integration setup stage
-	start := time.Now()
-	integrationResult, dockerUUid := w.doIntegrations(ctx, werk, builder)
-	dura := time.Now().Sub(start)
+	integrationResult, dura, start := w.doIntegrations(ctx, werk, builder)
 	if err := storeStageToDb(w.Store, werk.Id, integrationResult, start, dura.Seconds()); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 		return
 	}
 	if integrationResult.Status == pb.StageResultVal_FAIL {
 		handleFailure(integrationResult, w.Store, "integration setup", dura, werk.Id)
+		return
+	}
+	// download necessary binaries (ie kubectl, w/e)
+	downloadResult, duration, starttime := w.downloadBinaries(ctx, build.InitStageUtil("download binaries"), builder)
+	if err := storeStageToDb(w.Store, werk.Id, downloadResult, starttime, duration.Seconds()); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't store build output")
+		return
+	}
+	if downloadResult.Status == pb.StageResultVal_FAIL {
+		handleFailure(downloadResult, w.Store, "download binaries", duration, werk.Id)
 		return
 	}
 
@@ -209,46 +217,70 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 }
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
-func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder) (result *pb.Result, id string) {
+func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder) (result *pb.Result, duration time.Duration, start time.Time) {
+	start = time.Now()
+	defer func(){duration = time.Now().Sub(start)}()
 	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
-	id = bldr.GetContainerId()
-	var setupMessages []string
+	var integMessages []string
 	stage := build.InitStageUtil("INTEGRATION_UTIL")
-	result.Messages = setupMessages
-	//only if the build tool is maven do we worry about settings.xml
-	// todo: implement a factory pattern for all these integrations
-	//var grations = []integrations.Integrator{dockr.Create(w.RemoteConf, w.Store, accountName),}
+
+	// todo: idk where to put this? where to instantiate integrations.. probably should just be a part of launcher?
 	var integral = []integrations.StringIntegrator{dockr.Create(), k8s.Create(), nexus.Create()}
 	for _, integ := range integral {
-		newStage := build.InitStageUtil(stage.Stage + " | " + integ.String())
+		if !integ.IsRelevant(werk.BuildConf) {
+			continue
+		}
+		subStage := build.CreateSubstage(stage, integ.String())
 		credz, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, integ.SubType(), accountName, false)
 		if err != nil {
-			result = handleIntegrationErr(err, integ.String(), newStage, result.Messages)
+			result = handleIntegrationErr(err, integ.String(), subStage, result.Messages)
+			// if handleIntegrationError decides that this "failure" is actually OK, just continue to next integration
+			if result.Status == pb.StageResultVal_PASS {
+				integMessages = append(integMessages, result.Messages...)
+				result.Messages = []string{}
+				continue
+			}
 			return
 		}
-		
-	}
-	if werk.BuildConf.BuildTool == "maven" {
-		result = bldr.IntegrationSetup(ctx, nexus.GetSettingsXml, bldr.WriteMavenSettingsXml, "maven", w.RemoteConf, accountName, stage, result.Messages, w.Store, w.infochan)
+		integString, err := integ.GenerateIntegrationString(credz)
+		if err != nil {
+			result = &pb.Result{
+				Stage:    subStage.GetStage(),
+				Status:   pb.StageResultVal_FAIL,
+				Error:    err.Error(),
+				Messages: integMessages,
+			}
+			return
+		}
+		stg := &pb.Stage{Env: []string{}, Script: integ.MakeBashable(integString), Name: subStage.Stage}
+		result = bldr.ExecuteIntegration(ctx, stg, subStage, w.infochan)
 		if result.Status == pb.StageResultVal_FAIL {
+			result.Messages = append(integMessages, result.Messages...)
 			return
 		}
+		integMessages = append(integMessages, result.Messages...)
+		result.Messages = []string{}
+		//integMessages = append(integMessages, "finished integration setup for " + subStage.Stage)
 	}
-	result = bldr.IntegrationSetup(ctx, dockr.GetDockerConfig, bldr.WriteDockerJson, "docker login",  w.RemoteConf, accountName, stage, result.Messages, w.Store, w.infochan)
+	// reset stage to integration_util
+	result.Stage = stage.GetStage()
+	result.Messages = append(integMessages, "completed integration util setup stage \u2713")
+	return
+}
+
+func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder) (result *pb.Result, duration time.Duration, start time.Time) {
+	start = time.Now()
+	defer func(){duration = time.Now().Sub(start)}()
+	// todo: there wil likely be more binaries to download in the future, should probably use the same pattern
+	// as StringIntegrator.. maybe a DownloadIntegrator?
+	subStage := build.CreateSubstage(su, "kubectl download")
+	kubectl := &pb.Stage{Env: []string{}, Script: bldr.DownloadKubectl(w.ServicePort), Name: subStage.Stage,}
+	result = bldr.ExecuteIntegration(ctx, kubectl, subStage, w.infochan)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
-	// todo: turn this into a "DownloadBinaries" method or something
-	result = bldr.IntegrationSetup(ctx, w.returnWerkerPort, bldr.DownloadKubectl, "kubectl download",  w.RemoteConf, accountName, stage, result.Messages, w.Store, w.infochan)
-	if result.Status == pb.StageResultVal_FAIL {
-		return
-	}
-	result = bldr.IntegrationSetup(ctx, k8s.GetKubeConfig, bldr.InstallKubeconfig, "kubeconfig render",  w.RemoteConf, accountName, stage, result.Messages, w.Store, w.infochan)
-	if result.Status == pb.StageResultVal_FAIL {
-		return
-	}
-	result.Messages = append(result.Messages, "completed integration util setup stage \u2713")
+	result.Messages = append(result.Messages, "finished " + subStage.Stage)
 	return
 }
 

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os/exec"
+	"path"
 	"runtime"
 	"strings"
 	"testing"
@@ -30,11 +31,16 @@ func tarTemplates(t *testing.T) func(t *testing.T) {
 	cmd.Stderr = &err
 	errr := cmd.Run()
 	t.Log(out.String())
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("no caller???? ")
+	}
+	filep := path.Dir(filename) + "/werker_files.tar"
 	if errr != nil {
 		t.Fatal(fmt.Sprintf("unable to tar up template direc, stdout: %s \n stderr: %s \n err: %s", out.String(), err.String(), errr.Error()))
 	}
 	return func(t *testing.T) {
-		rmcmd := exec.Command("rm", "./werker_files.tar")
+		rmcmd := exec.Command("rm", filep)
 		var rmout, rmerr bytes.Buffer
 		rmcmd.Stdout = &out
 		rmcmd.Stderr = &err
@@ -47,8 +53,13 @@ func tarTemplates(t *testing.T) func(t *testing.T) {
 
 func createDoThingsWebServer() {
 	r := mux.NewRouter()
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("no caller???? ")
+	}
+	filep := path.Dir(filename) + "/werker_files.tar"
 	r.HandleFunc("/do_things.tar", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./werker_files.tar")
+		http.ServeFile(w, r, filep)
 	})
 	http.ListenAndServe(":3333", r)
 }

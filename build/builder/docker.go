@@ -12,11 +12,9 @@ import (
 
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/basher"
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/common/helpers/dockrhelper"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -215,63 +213,12 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 	return registerdAddr
 }
 
-// IntegrationSetup will use the functions you input to set up integrations on the machine docker container.
-//	setupFunc (RepoSetupFunc) is used to render a string that will be passed to execFunc (RepoExecFunc), which will generate the command list to run on the container.
-//  example RepoSetupFunc:
-//		func (w *WorkerMsgHandler) returnWerkerPort(rc cred.CVRemoteConfig, accountName string) (string, error) {
-//			ocelog.Log().Debug("returning werker port")
-//			return  w.WerkConf.ServicePort, nil
-//		}
-//  example RepoExecFunc:
-//		func (b *Basher) DownloadKubectl(werkerPort string) []string {
-//			downloadLink := fmt.Sprintf("http://%s:%s/kubectl", b.LoopbackIp, werkerPort)
-//			return []string{"/bin/sh", "-c", "cd /bin && wget " + downloadLink + " && chmod +x kubectl"}
-//		}
-// the output of RepoSetupFunc will be the werkerPort in the RepoExecFunc DownloadKubectl
-// the commands generated from that will be executed on the container
-//   other inputs:
-//		the stdout will be written to logout
-//		integrationName will be for debugging/errors
-// 		rc cred.CVRemoteConfig is for using w/ the setupFunc to retrieve and creds/configuration
-// 		accountName is for passing to setupFunc to retrieve creds (if needed)
-// 		stageUtil is the stage object for logging/writing to logout
-//		the messages are the slice of messages that will be saved to build_stage_details, and appended to over the course of a stage
-func (d *Docker) IntegrationSetup(ctx context.Context, setupFunc build.RepoSetupFunc, execFunc build.RepoExecFunc, integrationName string, rc cred.CVRemoteConfig, accountName string, su *build.StageUtil, msgs []string, store storage.CredTable, logout chan []byte) (result *pb.Result) {
-	if renderedString, err := setupFunc(rc, store, accountName); err != nil {
-		_, ok := err.(*integrations.NoCreds)
-		if !ok {
-			ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
-			return &pb.Result{
-				Stage: su.GetStage(),
-				Status: pb.StageResultVal_FAIL,
-				Error: err.Error(),
-			}
-		} else {
-			msgs = append(msgs, "no integration data found for " + integrationName + " so assuming integration not necessary")
-			result = &pb.Result{
-				Stage: su.GetStage(),
-				Status: pb.StageResultVal_PASS,
-				Error: "",
-				Messages: msgs,
-			}
-			return result
-		}
-	} else {
-		ocelog.Log().Debug("writing integration for ", integrationName)
-		//msg := execFunc(renderedString)
-		//ocelog.Log().Debug("messages are: ", strings.Join(msg, " "))
-		subStage := build.InitStageUtil(su.GetStage() + " | " + integrationName)
-		result := d.Exec(ctx, subStage.GetStage(), subStage.GetStageLabel(), []string{}, execFunc(renderedString), logout)
-		if result.Messages == nil {
-			result.Messages = msgs
-		} else {
-			result.Messages = append(result.Messages, msgs...)
-		}
-		return result
-	}
-	ocelog.Log().Error("SHOULD NEVER REACH THIS POINT!!!")
-	return result
+
+// ExecuteIntegration will basically run Execute but without the cd and run cmds because we are generating the scripts in the code
+func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan[]byte) *pb.Result {
+	return d.Exec(ctx, stgUtil.GetStage(), stgUtil.GetStageLabel(), stage.Env, stage.Script, logout)
 }
+
 
 func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	if len(d.ContainerId) == 0 {

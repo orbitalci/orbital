@@ -3,6 +3,7 @@ package nexus
 import (
 	"testing"
 
+	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 )
 
@@ -54,5 +55,21 @@ func Test_executeTempl(t *testing.T) {
 	}
 	if expected != template {
 		t.Error("should be the same?")
+	}
+}
+
+func TestNexusInt_GenerateIntegrationString(t *testing.T) {
+	creds := []pb.OcyCredder{
+		&pb.RepoCreds{Username: "testuser1", Password:"testpw", RepoUrl: "testRepo.com", Identifier: "myFirstRepo"},
+		&pb.RepoCreds{Username: "testuser2", Password:"testpw2", RepoUrl: "11testRepo.com", Identifier: "mySecondRepo"},
+	}
+	integ := Create()
+	rendered, err := integ.GenerateIntegrationString(creds)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if rendered != expected {
+		t.Error(test.StrFormatErrors("rendered settings.xml", expected, rendered))
 	}
 }

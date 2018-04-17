@@ -2,9 +2,7 @@ package dockr
 
 import (
 	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 
 	"encoding/json"
 	"errors"
@@ -38,33 +36,14 @@ func (d *DockrInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, err
 	configEncoded := integrations.BitzToBase64(bitz)
 	return configEncoded, err
 }
-//
-//func (d *DockrInt) GetThemCreds(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) ([]pb.OcyCredder, error) {
-//	credz, err := rc.GetCredsBySubTypeAndAcct(store, pb.SubCredType_DOCKER, accountName, false)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return credz, nil
-//}
 
-
-// GetDockerConfig will find docker creds associated with accountName in the CVRemoteConfig, and will
-// generate a config.json authentication file for docker. The contents will be returned base64 encoded for
-// easy passing as a command line argument.
-func GetDockerConfig(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
-	//GetCredsBySubTypeAndAcct(stype pb.SubCredType, accountName string, hideSecret bool)
-	credz, err := rc.GetCredsBySubTypeAndAcct(store, pb.SubCredType_DOCKER, accountName, false)
-	if err != nil {
-		return "", err
-	}
-	bitz, err := RCtoDockerConfig(credz)
-	if err != nil {
-		return "", err
-	}
-	configEncoded := integrations.BitzToBase64(bitz)
-	return configEncoded, err
+func (d *DockrInt) MakeBashable(encoded string) []string {
+	return []string{"/bin/sh", "-c", "/.ocelot/render_docker.sh " + "'" + encoded + "'"}
 }
 
+func (d *DockrInt) IsRelevant(wc *pb.BuildConfig) bool {
+	return true
+}
 
 func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
 	authz := make(map[string]auth)
@@ -84,4 +63,3 @@ func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
 	bitz, err := json.Marshal(config)
 	return bitz, err
 }
-

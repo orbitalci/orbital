@@ -10,6 +10,8 @@ import (
 const DefaultBitbucketURL = "https://x-token-auth:%s@bitbucket.org/%s.git"
 const DefaultGithubURL = ""
 
+type Bashable func(string) []string
+
 type Basher struct {
 	BbDownloadURL 	  string
 	GithubDownloadURL string
@@ -69,14 +71,6 @@ func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
 	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath + "/ssh")}
 }
 
-func (b *Basher) WriteMavenSettingsXml(settingsXML string) []string {
-	return []string{"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + "'" + settingsXML + "'"}
-}
-
-func (b *Basher) WriteDockerJson(encodedDocker string) []string {
-	return []string{"/bin/sh", "-c", "/.ocelot/render_docker.sh " + "'" + encodedDocker + "'"}
-}
-
 
 //DownloadTemplateFiles will download template files necessary to build containers from werker
 func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
@@ -91,9 +85,6 @@ func (b *Basher) DownloadKubectl(werkerPort string) []string {
 	return []string{"/bin/sh", "-c", "cd /bin && wget " + downloadLink + " && chmod +x kubectl"}
 }
 
-func (b *Basher) InstallKubeconfig(encodedKubeConf string) []string {
-	return []string{"/bin/sh", "-c", "/.ocelot/render_kubeconfig.sh " + "'" + encodedKubeConf + "'"}
-}
 
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
