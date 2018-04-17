@@ -24,6 +24,9 @@ ifndef VERSION
 	$(error VERSION must be applied by maket target VERSION=x or another method if building/uploading clients clients)
 endif
 
+local: # install locally but with the tags/flags injected in
+	go install -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' ./...
+
 windows-client: versionexists ## install zipped windows ocelot client to pkg/windows_amd64
 	mkdir -p pkg/windows_amd64/
 	@echo "building windows client"
