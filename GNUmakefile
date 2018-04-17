@@ -24,7 +24,7 @@ ifndef VERSION
 	$(error VERSION must be applied by maket target VERSION=x or another method if building/uploading clients clients)
 endif
 
-local: # install locally but with the tags/flags injected in
+local: ## install locally but with the tags/flags injected in
 	go install -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' ./...
 
 windows-client: versionexists ## install zipped windows ocelot client to pkg/windows_amd64
@@ -59,7 +59,7 @@ upload-templates: ## tar up werker templates and upload to s3
 	rm werker/builder/template/werker_files.tar
 
 linux-werker: versionexists ## install linux werker zip and upload to s3
-	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -o werker .; zip -r ../../linux-werker-$(VERSION).zip werker; rm werker; cd -
+	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o werker .; zip -r ../../linux-werker-$(VERSION).zip werker; rm werker; cd -
 	@aws s3 cp --acl public-read-write --content-disposition attachment linux-werker-$(VERSION).zip s3://ocelotty/linux-werker-$(VERSION).zip
 	rm linux-werker-$(VERSION).zip
 
