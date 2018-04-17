@@ -16,7 +16,7 @@ type cmd struct {
 }
 
 func (c *cmd) Run(_ []string) int {
-	c.UI.Output(fmt.Sprintf("Ocelot %s", c.version))
+	c.UI.Output(fmt.Sprintf("%s", c.version))
 	return 0
 }
 
