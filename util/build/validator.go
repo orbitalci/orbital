@@ -51,13 +51,15 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 	if UI != nil {
 		UI.Info("Connecting to docker to check for image validity..." )
 	}
-	err := dockrhelper.RobustImagePull(config.Image)
+	out, err := dockrhelper.RobustImagePull(config.Image)
 	if UI != nil {
 		if err != nil {
 			UI.Error(config.Image + " does not exist or credentials cannot be found")
 		} else  {
+			out.Close()
 			UI.Info(config.Image + " exists \u2713")
 		}
 	}
+	out.Close()
 	return err
 }

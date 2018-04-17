@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os/exec"
 
 	"github.com/docker/docker/api/types"
@@ -34,19 +35,30 @@ func RobustImagePull(imageName string) (closer io.ReadCloser, err error) {
 		return out, nil
 	}
 
+	var outb, errb bytes.Buffer
+
 	pulledByApi = false
 	// if couldn't pull image through ui, try just calling docker
 	cmd := exec.Command("/bin/sh", "-c", "command -v docker")
 	if err := cmd.Run(); err != nil {
-		return out, errors.New("cannot check for docker pull because docker is not installed on the machine")
+		return ioutil.NopCloser(&errb), errors.New("cannot check for docker pull because docker is not installed on the machine")
 	}
 
 	cmd = exec.Command("/bin/sh", "-c", "docker pull " + imageName)
-	var outb, errb bytes.Buffer
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
 	if err := cmd.Run(); err != nil {
-		return out, errors.New(fmt.Sprintf("An error has occured while trying to pull for image %s. \nFull Error is %s. ", imageName, outb.String() + "\n" + errb.String()))
+		return ioutil.NopCloser(&errb), errors.New(fmt.Sprintf("An error has occured while trying to pull for image %s. \nFull Error is %s. ", imageName, outb.String() + "\n" + errb.String()))
 	}
-	return out, nil
+	return ioutil.NopCloser(&outb), nil
+}
+
+type dumbReadCloser struct {}
+
+func (d *dumbReadCloser) Close() error {
+	return nil
+}
+
+func (d *dumbReadCloser) Read(p []byte) (n int, err error) {
+	return 0, nil
 }
