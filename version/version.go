@@ -42,3 +42,21 @@ func GetHumanVersion() string {
 	// Strip off any single quotes added by the git information.
 	return strings.Replace(version, "'", "", -1)
 }
+
+func GetShort() string {
+	version := Version
+	if GitDescribe != "" {
+		version = GitDescribe
+	}
+
+	release := VersionPrerelease
+	if GitDescribe == "" && release == "" {
+		release = "dev"
+	}
+	if release != "" {
+		version += fmt.Sprintf("-%s", release)
+	}
+
+	// Strip off any single quotes added by the git information.
+	return strings.Replace(version, "'", "", -1)
+}
