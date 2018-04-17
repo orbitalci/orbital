@@ -54,9 +54,8 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		}, ""
 	}
 	imageName := werk.BuildConf.Image
-	reader, out := io.Pipe()
-	err = dockrhelper.RobustImagePull(imageName)
-	out.Close()
+
+	out, err := dockrhelper.RobustImagePull(imageName)
 	if err != nil {
 		return &pb.Result{
 			Stage:  su.GetStage(),
@@ -65,9 +64,9 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 			Messages: setupMessages,
 		}, ""
 	}
+	defer out.Close()
 	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s \u2713", imageName))
-
-	bufReader := bufio.NewReader(reader)
+	bufReader := bufio.NewReader(out)
 	d.writeToInfo(su.GetStageLabel(), bufReader, logout)
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")

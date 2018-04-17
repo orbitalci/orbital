@@ -7,14 +7,16 @@ import (
 	"testing"
 )
 func TestRobustImagePull(t *testing.T) {
-	err := RobustImagePull("busybox:latest")
+	out, err := RobustImagePull("busybox:latest")
+	out.Close()
 	if err != nil {
 		t.Error("should have pulled successfully, error: ", err.Error())
 	}
 	if !pulledByApi {
 		t.Error("should have pulled via the docker api and returned as there are no creds required")
 	}
-	err = RobustImagePull("garbage89123b8")
+	out, err = RobustImagePull("garbage89123b8")
+	defer out.Close()
 	if err == nil {
 		t.Error("should not successfully have pulled a dummy image")
 	}
@@ -36,8 +38,10 @@ func TestRobustImagePull_integration(t *testing.T) {
 		t.Skip("skipping nexus pull test because " + privateRepo + " is not in docker config")
 	}
 	privateImage := privateRepo + "/busybox:test_do_not_delete"
-	err = RobustImagePull(privateImage)
+	out, err := RobustImagePull(privateImage)
+	defer out.Close()
 	if err != nil {
 		t.Error("may have failed because " + privateImage + "has been deleted when it shouldn't have been. error: ", err.Error())
+		return
 	}
 }
