@@ -19,6 +19,7 @@ import (
 	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
 	"bitbucket.org/level11consulting/ocelot/build_signaler/poll"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
 )
 
@@ -43,6 +44,7 @@ func configure() *changeSetConfig {
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
 	flrg.Parse(os.Args[1:])
+	version.MaybePrintVersion(flrg.Args())
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
 	rc, err := cred.GetInstance(consuladdr, consulport, "")

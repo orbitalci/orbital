@@ -8,6 +8,7 @@ import (
 	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	hh "bitbucket.org/level11consulting/ocelot/router/hookhandler"
+	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/gorilla/mux"
 	"github.com/namsral/flag"
 	"os"
@@ -28,7 +29,7 @@ func main() {
 	flrg.StringVar(&loglevel, "log-level", "info", "log level")
 	flrg.IntVar(&consulPort, "consul-port", 8500, "port that consul is running on")
 	flrg.Parse(os.Args[1:])
-
+	version.MaybePrintVersion(flrg.Args())
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
 	port := os.Getenv("PORT")

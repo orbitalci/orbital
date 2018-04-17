@@ -4,6 +4,7 @@ import (
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/storage"
+	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
 
 	"errors"
@@ -77,6 +78,7 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
 	flrg.Parse(os.Args[1:])
+	version.MaybePrintVersion(flrg.Args())
 	werker.WerkerType = strToWerkType(werkerTypeStr)
 	if werker.WerkerType == -1 {
 		return nil, errors.New("werker type can only be: k8s, kubernetes, docker")

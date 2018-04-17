@@ -8,6 +8,7 @@ import (
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/storage"
 	"fmt"
+	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
 	"os"
 	"time"
@@ -21,6 +22,7 @@ func configure() cred.CVRemoteConfig {
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
 	flrg.Parse(os.Args[1:])
+	version.MaybePrintVersion(flrg.Args())
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
 	rc, err := cred.GetInstance(consuladdr, consulport, "")
