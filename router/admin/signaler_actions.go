@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"bitbucket.org/level11consulting/ocelot/common/remote"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -39,7 +40,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
-	bbHandler, token, err := bbh.GetBitbucketClient(cfg)
+	handler, token, err := remote.GetHandler(cfg)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve the bitbucket client config for %s. \n Error: %s", buildReq.AcctRepo, err.Error()))
@@ -92,7 +93,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 
 	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s...", buildReq.AcctRepo)))
-	buildConf, _, err := signal.GetBBConfig(g.RemoteConfig, g.Storage, buildReq.AcctRepo, fullHash, g.Deserializer, bbHandler)
+	buildConf, err := signal.GetConfig(buildReq.AcctRepo, fullHash, g.Deserializer, handler)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get bb config")
 		if err.Error() == "could not find raw data at url" {

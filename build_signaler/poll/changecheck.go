@@ -7,13 +7,13 @@ import (
 	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
 	"bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/common/remote"
-	"bitbucket.org/level11consulting/ocelot/common/remote/bitbucket"
+	"bitbucket.org/level11consulting/ocelot/models"
 )
 
 type ChangeChecker struct {
 	*signal.Signaler
-	bbHandler    remote.VCSHandler
-	token        string
+	handler models.VCSHandler
+	token   string
 }
 
 
@@ -22,17 +22,17 @@ func (w *ChangeChecker) SetAuth() error {
 	if err != nil {
 		return errors.New("couldn't get vcs creds, error: " + err.Error())
 	}
-	bbHandler, token, err := bitbucket.GetBitbucketClient(cfg)
+	handler, token, err := remote.GetHandler(cfg)
 	if err != nil {
-		return errors.New("could not get bitbucket client, error: " + err.Error())
+		return errors.New("could not get remote client, error: " + err.Error())
 	}
-	w.bbHandler = bbHandler
+	w.handler = handler
 	w.token = token
 	return nil
 }
 
 func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastHash string, err error) {
-	commits, err := w.bbHandler.GetAllCommits(w.AcctRepo, branch)
+	commits, err := w.handler.GetAllCommits(w.AcctRepo, branch)
 	if err != nil {
 		return "", errors.New("could not get all commits, error: " + err.Error())
 	}
@@ -45,7 +45,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	// check for empty last hash now that you have the last commit info and can trigger a build
 	if lastHash == "" {
 		newLastHash = lastCommit.Hash
-		if err = wt.TellWerker(lastCommit.Hash, w.Signaler, branch, w.bbHandler, w.token); err != nil {
+		if err = wt.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token); err != nil {
 			ocelog.IncludeErrField(err).Error("could not queue!")
 		}
 		return
@@ -54,7 +54,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if lastHash != lastCommit.Hash {
 		ocelog.Log().Infof("found a new hash %s, telling werker", lastCommit.Hash)
 		newLastHash = lastCommit.Hash
-		if err = wt.TellWerker(lastCommit.Hash, w.Signaler, branch,  w.bbHandler, w.token); err != nil {
+		if err = wt.TellWerker(lastCommit.Hash, w.Signaler, branch,  w.handler, w.token); err != nil {
 			return
 		}
 	} else {
@@ -65,7 +65,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	return
 }
 
-func searchBranchCommits(handler remote.VCSHandler, branch string, conf *ChangeChecker, lastHash string, token string, wt signal.WerkerTeller) (newLastHash string, err error) {
+func searchBranchCommits(handler models.VCSHandler, branch string, conf *ChangeChecker, lastHash string, token string, wt signal.WerkerTeller) (newLastHash string, err error) {
 	commits, err := handler.GetAllCommits(conf.AcctRepo, branch)
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("couldn't get commits ")

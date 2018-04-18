@@ -13,8 +13,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/common"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/common/remote"
-	"bitbucket.org/level11consulting/ocelot/common/remote/bitbucket"
 	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
@@ -92,39 +90,39 @@ func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string
 	return id, nil
 }
 
-
-//GetBBConfig returns the protobuf ocelot.yaml, a valid bitbucket token belonging to that repo, and possible err.
+//todo: pull out check for vcsHandler == nil logic, then this can be just GetConfig()
+// todo (cont): write something in remote to switch between subtypes to instantiate the correct VCSHandler implementation
+//GetConfig returns the protobuf ocelot.yaml, a valid bitbucket token belonging to that repo, and possible err.
 //If a VcsHandler is passed, this method will use the existing handler to retrieve the bb config. In that case,
 //***IT WILL NOT RETURN A VALID TOKEN FOR YOU - ONLY BUILD CONFIG***
-func GetBBConfig(remoteConfig cred.CVRemoteConfig, store storage.CredTable, repoFullName string, checkoutCommit string, deserializer *deserialize.Deserializer, vcsHandler remote.VCSHandler) (*pb.BuildConfig, string, error) {
-	var bbHandler remote.VCSHandler
-	var token string
+func GetConfig(repoFullName string, checkoutCommit string, deserializer *deserialize.Deserializer, vcsHandler models.VCSHandler) (*pb.BuildConfig, error) {
+	//var bbHandler remote.VCSHandler
+	//var token string
 
 	if vcsHandler == nil {
-		cfg, err1 := cred.GetVcsCreds(store, repoFullName, remoteConfig)
-		if err1 != nil {
-			log.IncludeErrField(err1).Error()
-			return nil, "", err1
-		}
-		var err error
-		log.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config")
-		bbHandler, token, err = bitbucket.GetBitbucketClient(cfg)
-		if err != nil {
-			log.IncludeErrField(err).Error()
-			return nil, "", err
-		}
-	} else {
-		bbHandler = vcsHandler
+		//cfg, err1 := cred.GetVcsCreds(store, repoFullName, remoteConfig)
+		//if err1 != nil {
+		//	log.IncludeErrField(err1).Error()
+		//	return nil, "", err1
+		//}
+		//var err error
+		//log.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config")
+		//bbHandler, token, err = bitbucket.GetBitbucketClient(cfg)
+		//if err != nil {
+		//	log.IncludeErrField(err).Error()
+		//	return nil, "", err
+		return nil, errors.New("vcs handler cannot be nul")
 	}
 
-	fileBytz, err := bbHandler.GetFile("ocelot.yml", repoFullName, checkoutCommit)
+
+	fileBytz, err := vcsHandler.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		return nil, token, err
+		return nil, err
 	}
 
 	conf, err := CheckForBuildFile(fileBytz, deserializer)
-	return conf, token, err
+	return conf, err
 }
 
 //CheckForBuildFile will try to retrieve an ocelot.yaml file for a repository and return the protobuf message

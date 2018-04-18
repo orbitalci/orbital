@@ -9,7 +9,7 @@ import (
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/common/remote"
+	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
 )
@@ -27,17 +27,18 @@ type Signaler struct {
 
 // made this interface for easy testing
 type WerkerTeller interface {
-	TellWerker(lastCommit string, conf *Signaler, branch string, handler remote.VCSHandler, token string) (err error)
+	TellWerker(lastCommit string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error)
 }
 
 type BBWerkerTeller struct {}
 
-func (w *BBWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, handler remote.VCSHandler, token string) (err error){
+func (w *BBWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error){
 	ocelog.Log().WithField("hash", hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
+	if token == "" {
+		return errors.New("token cannot be empty")
+	}
 	var buildConf *pb.BuildConfig
-	var tokenPulled string
-	buildConf, tokenPulled, err = GetBBConfig(conf.RC, conf.Store, conf.AcctRepo, hash, conf.Deserializer, handler)
-	if token == "" { token = tokenPulled };
+	buildConf, err = GetConfig(conf.AcctRepo, hash, conf.Deserializer, handler)
 	if err != nil {
 		if err == ocenet.FileNotFound {
 			return errors.New("no ocelot yaml found for repo " + conf.AcctRepo)

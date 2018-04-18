@@ -1,8 +1,8 @@
-package remote
+package models
 
 import (
 	// ugh stuck 4 now
-	pb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
+	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
 )
 
 type VCSHandler interface {
@@ -32,8 +32,8 @@ type VCSHandler interface {
 	FindWebhooks(getWebhookURL string) bool
 
 	//Get Repository details by account name + repo name
-	GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error)
+	GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_RepositoryValues, error)
 
 	//GetAllCommits returns a paginated list of commits corresponding with branch
-	GetAllCommits(acctRepo string, branch string) (*pb.Commits, error)
+	GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error)
 }

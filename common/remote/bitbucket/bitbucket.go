@@ -4,7 +4,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/ocelot/common"
-	"bitbucket.org/level11consulting/ocelot/common/remote"
+	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
 	"errors"
@@ -17,7 +17,7 @@ const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
-func GetBitbucketClient(cfg *pb.VCSCreds) (remote.VCSHandler, string, error) {
+func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 	bbClient := &ocenet.OAuthClient{}
 	token, err := bbClient.Setup(cfg)
 	if err != nil {
@@ -29,7 +29,7 @@ func GetBitbucketClient(cfg *pb.VCSCreds) (remote.VCSHandler, string, error) {
 
 //TODO: callback url is set as env. variable on admin, or passed in via command line
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
-func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) remote.VCSHandler {
+func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) models.VCSHandler {
 	bb := &Bitbucket{
 		Client: client,
 		Marshaler: jsonpb.Marshaler{},
