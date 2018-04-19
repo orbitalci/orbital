@@ -45,6 +45,10 @@ func (d *DockrInt) IsRelevant(wc *pb.BuildConfig) bool {
 	return true
 }
 
+func (d *DockrInt) GetEnv() []string {
+	return []string{}
+}
+
 func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
 	authz := make(map[string]auth)
 	for _, credi := range creds {

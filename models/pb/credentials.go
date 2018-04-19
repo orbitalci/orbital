@@ -172,6 +172,30 @@ func (m *K8SCreds) ValidateForInsert() *ValidationErr {
 	return nil
 }
 
+func (m *SSHKeyWrapper) GetClientSecret() string {
+	return string(m.PrivateKey)
+}
+
+func (m *SSHKeyWrapper) SetSecret(str string) {
+	m.PrivateKey = []byte(str)
+}
+
+func (m *SSHKeyWrapper) CreateAdditionalFields() ([]byte, error) {
+	return []byte("{}"), nil
+}
+
+func (m *SSHKeyWrapper) UnmarshalAdditionalFields(fields []byte) error {
+	return nil
+}
+
+func (m *SSHKeyWrapper) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	return nil
+}
+
 
 func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
 	if credder.GetIdentifier() == "" {
@@ -211,6 +235,7 @@ var (
 	vcsSubTypes = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}
 	repoSubTypes = []SubCredType{SubCredType_NEXUS, SubCredType_MAVEN, SubCredType_DOCKER}
 	k8sSubTypes = []SubCredType{SubCredType_KUBECONF}
+	sshSubTypes = []SubCredType{SubCredType_SSHKEY}
 )
 
 // Subtypes will return all the SubCredTypes that are associated with that CredType. Will return nil if it is unknown
@@ -222,6 +247,8 @@ func (x CredType) Subtypes() []SubCredType {
 		return repoSubTypes
 	case CredType_K8S:
 		return k8sSubTypes
+	case CredType_SSH:
+		return sshSubTypes
 	}
 	// this shouldn't happen, unless a new CredType is added and not updated here.
 	return nil
@@ -242,6 +269,10 @@ func (x CredType) SubtypesString() []string {
 		for _, st := range repoSubTypes {
 			subtypes = append(subtypes, st.String())
 		}
+	case CredType_SSH:
+		for _, st := range sshSubTypes {
+			subtypes = append(subtypes, st.String())
+		}
 	}
 	return subtypes
 }
@@ -255,6 +286,8 @@ func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCre
 		return &RepoCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	case CredType_K8S:
 		return &K8SCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
+	case CredType_SSH:
+		return &SSHKeyWrapper{AcctName: account, Identifier: identifier, SubType:subCredType}
 	default:
 		return nil
 	}
@@ -268,6 +301,8 @@ func (x SubCredType) Parent() CredType {
 		return CredType_VCS
 	case Contains(x, repoSubTypes):
 		return CredType_REPO
+	case Contains(x, sshSubTypes):
+		return CredType_SSH
 	}
 	return -1
 }
@@ -295,22 +330,6 @@ func (i *SubCredType) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-//
-//func (this Stuff) UnmarshalJSON(b []byte) error {
-//	var stuff map[string]string
-//	err := json.Unmarshal(b, &stuff)
-//	if err != nil {
-//		return err
-//	}
-//	for key, value := range stuff {
-//		numericKey, err := strconv.Atoi(key)
-//		if err != nil {
-//			return err
-//		}
-//		this[numericKey] = value
-//	}
-//	return nil
-//}
 // MarshalYAML implements a YAML Marshaler for SubCredType
 func (i SubCredType) MarshalYAML() (interface{}, error) {
 	return i.String(), nil

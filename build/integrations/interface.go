@@ -10,5 +10,6 @@ type StringIntegrator interface {
 	String() string
 	SubType() pb.SubCredType
 	MakeBashable(input string) []string
+	GetEnv() []string
 	IsRelevant(wc *pb.BuildConfig) bool
 }

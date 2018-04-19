@@ -63,6 +63,11 @@ service GuideOcelot {
     rpc UpdateK8SCreds (K8SCreds) returns (google.protobuf.Empty) {}
     rpc K8SCredExists (K8SCreds) returns (Exists) {}
 
+    rpc UpdateSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {}
+    rpc SSHCredExists (SSHKeyWrapper) returns (Exists) {}
+    rpc SetSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {}
+    rpc GetSSHCreds (google.protobuf.Empty) returns (SSHWrap) {}
+
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {
         option (google.api.http) = {
 			get: "/v1/creds/repo"
@@ -204,6 +209,12 @@ message SSHKeyWrapper {
     // the contents of the private key
     bytes privateKey = 2;
     SubCredType subType = 10;
+    // identifier is the unique identifier for when an ssh key is not associated with a VCS account.
+    string identifier = 11;
+}
+
+message SSHWrap {
+    repeated SSHKeyWrapper keys = 1;
 }
 
 message VCSCreds {
@@ -239,6 +250,7 @@ enum CredType {
     VCS = 1;
     REPO = 2;
     K8S = 3;
+    SSH = 5;
 
 }
 
@@ -252,6 +264,8 @@ enum SubCredType {
 
     DOCKER = 5;
     KUBECONF = 6;
+
+    SSHKEY = 8;
 }
 
 message RepoCreds {

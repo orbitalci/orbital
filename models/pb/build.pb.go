@@ -19,6 +19,7 @@ It has these top-level messages:
 	AllCredsWrapper
 	CredWrapper
 	SSHKeyWrapper
+	SSHWrap
 	VCSCreds
 	RepoCredWrapper
 	RepoCreds

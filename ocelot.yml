@@ -7,7 +7,7 @@ env:
 stages:
   - name: check ssh file
     script: 
-     - ls ~/.ssh
+     - ls -ltr ~/.ssh
   - name: triggered
     trigger:
       branches:

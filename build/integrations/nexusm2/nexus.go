@@ -53,6 +53,9 @@ func Create() integrations.StringIntegrator {
 	return &NexusInt{}
 }
 
+func (n *NexusInt) GetEnv() []string {
+	return []string{}
+}
 
 func (n *NexusInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, error) {
 	var repoCreds []*pb.RepoCreds

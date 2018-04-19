@@ -9,6 +9,7 @@ import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/integrations"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/sshkey"
 
 	"bitbucket.org/level11consulting/ocelot/build/integrations/dockerconfig"
 	"bitbucket.org/level11consulting/ocelot/build/integrations/kubeconf"
@@ -226,7 +227,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	stage := build.InitStageUtil("INTEGRATION_UTIL")
 
 	// todo: idk where to put this? where to instantiate integrations.. probably should just be a part of launcher?
-	var integral = []integrations.StringIntegrator{dockerconfig.Create(), kubeconf.Create(), nexusm2.Create()}
+	var integral = []integrations.StringIntegrator{sshkey.Create(), dockerconfig.Create(), kubeconf.Create(), nexusm2.Create()}
 	for _, integ := range integral {
 		if !integ.IsRelevant(werk.BuildConf) {
 			continue
@@ -253,7 +254,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 			}
 			return
 		}
-		stg := &pb.Stage{Env: []string{}, Script: integ.MakeBashable(integString), Name: subStage.Stage}
+		stg := &pb.Stage{Env: integ.GetEnv(), Script: integ.MakeBashable(integString), Name: subStage.Stage}
 		result = bldr.ExecuteIntegration(ctx, stg, subStage, w.infochan)
 		if result.Status == pb.StageResultVal_FAIL {
 			result.Messages = append(integMessages, result.Messages...)

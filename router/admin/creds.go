@@ -202,3 +202,41 @@ func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper 
 	}
 	return &empty.Empty{}, nil
 }
+
+
+func (g *guideOcelotServer) UpdateSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+	return g.updateAnyCred(ctx, creds)
+}
+
+func (g *guideOcelotServer) SSHCredExists(ctx context.Context, creds *pb.SSHKeyWrapper) (*pb.Exists, error) {
+	return g.checkAnyCredExists(ctx, creds)
+}
+
+func (g *guideOcelotServer) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+	if creds.SubType.Parent() != pb.CredType_SSH {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of ssh type: " + strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
+	}
+	// no validation necessary, its a file upload
+
+	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	if err != nil {
+		// todo: make this better error
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+	}
+	return &empty.Empty{}, nil
+}
+
+func (g *guideOcelotServer) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHWrap, error) {
+	credWrapper := &pb.SSHWrap{}
+	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_SSH, true)
+	if err != nil {
+		return credWrapper, status.Errorf(codes.Internal, "unable to get k8s creds! error: %s", err.Error())
+	}
+	for _, v := range credz {
+		credWrapper.Keys = append(credWrapper.Keys, v.(*pb.SSHKeyWrapper))
+	}
+	if len(credWrapper.Keys) == 0 {
+		return credWrapper, status.Error(codes.NotFound, "no ssh keys found")
+	}
+	return credWrapper, nil
+}
