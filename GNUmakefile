@@ -13,7 +13,7 @@ GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 GIT_DESCRIBE=$(shell git describe --tags --always)
 GIT_IMPORT=bitbucket.org/level11consulting/ocelot/version
 GOLDFLAGS=-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)
-
+GOLDFLAGS_REL=$(GOLDFLAGS) -X $(GIT_IMPORT).VersionPrerelease=
 export GOLDFLAGS
 SSH_PRIVATE_KEY ?= $(HOME)/.ssh/id_rsa
 export SSH_PRIVATE_KEY
@@ -26,6 +26,9 @@ endif
 
 local: ## install locally but with the tags/flags injected in
 	go install -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' ./...
+
+local-release:
+	go install -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' ./...
 
 windows-client: versionexists ## install zipped windows ocelot client to pkg/windows_amd64
 	mkdir -p pkg/windows_amd64/
