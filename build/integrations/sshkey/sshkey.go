@@ -46,7 +46,7 @@ func (n *SSHKeyInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, er
 func (n *SSHKeyInt) MakeBashable(str string) []string {
 	var cmds []string
 	for identifier, _ := range n.sshKeys {
-		cmd := fmt.Sprintf("echo ${%s} > ~/.ssh/%s && chmod 600 ~/.ssh/%s", identifier, identifier, identifier)
+		cmd := fmt.Sprintf("echo \"${%s}\" > ~/.ssh/%s && chmod 600 ~/.ssh/%s", identifier, identifier, identifier)
 		cmds = append(cmds, cmd)
 	}
 	return []string{"/bin/sh", "-c", strings.Join(cmds, " && ")}

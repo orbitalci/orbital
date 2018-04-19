@@ -42,8 +42,24 @@ service GuideOcelot {
             description: "Add a new VCS credential configuration to ocelot for code checkout.";
         };
     }
-    rpc UpdateVCSCreds (VCSCreds) returns (google.protobuf.Empty) {}
-    rpc VCSCredExists (VCSCreds) returns (Exists) {}
+    rpc UpdateVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			put: "/v1/creds/vcs"
+			body: "*"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Update a VCS Credential";
+        };
+    }
+    rpc VCSCredExists (VCSCreds) returns (Exists) {
+        option (google.api.http) = {
+			get: "/v1/creds/vcs/exists"
+
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Check if VCS Credential exists in ocelot already. For knowing whether to call Update or Set";
+        };
+    }
     rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
     rpc SetVCSPrivateKey (SSHKeyWrapper) returns (google.protobuf.Empty) {
@@ -57,16 +73,77 @@ service GuideOcelot {
     }
 
 
-    rpc UpdateRepoCreds (RepoCreds) returns (google.protobuf.Empty) {}
-    rpc RepoCredExists (RepoCreds) returns (Exists) {}
+    rpc UpdateRepoCreds (RepoCreds) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			put: "/v1/creds/repo"
+			body: "*"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Update new credential configuration to ocelot for repository integration.";
+        };
+    }
+    rpc RepoCredExists (RepoCreds) returns (Exists) {
+        option (google.api.http) = {
+			get: "/v1/creds/repo/exists"
 
-    rpc UpdateK8SCreds (K8SCreds) returns (google.protobuf.Empty) {}
-    rpc K8SCredExists (K8SCreds) returns (Exists) {}
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Check if Repo Credential exists in ocelot already. For knowing whether to call Update or Set";
+        };
+    }
 
-    rpc UpdateSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {}
-    rpc SSHCredExists (SSHKeyWrapper) returns (Exists) {}
-    rpc SetSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {}
-    rpc GetSSHCreds (google.protobuf.Empty) returns (SSHWrap) {}
+    rpc UpdateK8SCreds (K8SCreds) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			put: "/v1/creds/k8s"
+			body: "*"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Update a kubeconfig in ocelot for kubernetes integration.";
+        };
+    }
+    rpc K8SCredExists (K8SCreds) returns (Exists) {
+        option (google.api.http) = {
+			get: "/v1/creds/k8s/exists"
+
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Check if kubeconfig Credential exists in ocelot already. For knowing whether to call Update or Set";
+        };
+    }
+
+    rpc UpdateSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			put: "/v1/creds/ssh"
+			body: "*"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Update a ssh key for use in build scripts";
+        };
+    }
+    rpc SSHCredExists (SSHKeyWrapper) returns (Exists) {
+        option (google.api.http) = {
+			get: "/v1/creds/ssh/exists"
+
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Check if ssh key file Credential exists in ocelot already. For knowing whether to call Update or Set";
+        };
+    }
+    rpc SetSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			post: "/v1/creds/ssh"
+			body: "*"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Add a new ssh key to an account so builds can access them at runtime.";
+        };
+    }
+    rpc GetSSHCreds (google.protobuf.Empty) returns (SSHWrap) {
+        option (google.api.http) = {
+			get: "/v1/creds/ssh"
+
+		};
+    }
 
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {
         option (google.api.http) = {
@@ -256,15 +333,21 @@ enum CredType {
 
 enum SubCredType {
     NIL_SCT = 0;
+    // BITBUCKET is a child of VCS
     BITBUCKET = 1;
+    //GITHUB is a child of VCS
     GITHUB = 2;
 
+    //NEXUS is a child of REPO
     NEXUS = 3;
+    //MAVEN is a child of REPO
     MAVEN = 4;
-
+    //DOCKER is a child of REPO
     DOCKER = 5;
+    //KUBECONF is a child of K8S
     KUBECONF = 6;
 
+    //SSHKEY is a child of SSH
     SSHKEY = 8;
 }
 
@@ -286,8 +369,11 @@ message RepoCreds {
 }
 
 message K8SCreds {
+    // account name to associate this credential with
     string acctName = 1;
+    // k8scontents is the contents of the kubeconfig file
     string k8sContents = 2;
+    // identifier in K8s creds is currently irrelevant, as there can only be one per account
     string identifier = 3;
     // @inject_tag: yaml:"subType"
     SubCredType subType = 5;
@@ -319,9 +405,13 @@ message Builds {
 }
 
 message BuildRuntimeInfo {
+    // done says whether or not the build has completed
     bool   done     = 1;
+    // ip is the ip of the werker node that is running the build
     string ip       = 2;
+    // grpcPort is the grpc port of the werker running the build
     string grpcPort = 3;
+    // hash is the hash
     string hash = 4;
     string acctName = 5;
     string repoName = 6;
