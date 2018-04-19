@@ -5,6 +5,9 @@ branches:
 env:
   - "OCELOT_PATH=src/bitbucket.org/level11consulting/ocelot"
 stages:
+  - name: check ssh file
+    script: 
+     - ls ~/.ssh
   - name: triggered
     trigger:
       branches:
