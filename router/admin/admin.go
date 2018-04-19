@@ -111,11 +111,12 @@ func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		// hack, should probably take env vars
 		dir = "/swagger"
+	} else {
+		dir = filepath.Join(dir, "models", "pb")
 	}
 	os.Stat(dir)
 	fmt.Println(dir)
-	swaggerdir := filepath.Join(dir, "models", "pb")
-	p = path.Join(swaggerdir, p)
+	p = path.Join(dir, p)
 	http.ServeFile(w, r, p)
 }
 
