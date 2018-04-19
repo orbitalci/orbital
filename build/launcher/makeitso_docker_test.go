@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/builder"
 	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/dockr"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/dockerconfig"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	//"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
@@ -135,7 +135,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	//
 	//// create config in ~/.docker directory w/ auth creds
 	logout := make(chan[]byte, 10000)
-	dckr := dockr.Create()
+	dckr := dockerconfig.Create()
 	creds, err := testRemoteConfig.GetCredsBySubTypeAndAcct(pg, dckr.SubType(), acctName, false)
 	if err != nil {
 		t.Log(err)

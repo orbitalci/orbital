@@ -1,4 +1,4 @@
-package dockr
+package dockerconfig
 
 import (
 	"bitbucket.org/level11consulting/ocelot/build/integrations"

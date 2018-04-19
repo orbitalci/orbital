@@ -1,4 +1,4 @@
-package nexus
+package nexusm2
 
 import (
 	"testing"

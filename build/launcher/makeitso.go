@@ -10,9 +10,9 @@ import (
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/integrations"
 
-	"bitbucket.org/level11consulting/ocelot/build/integrations/dockr"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/k8s"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/nexus"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/dockerconfig"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/kubeconf"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/nexusm2"
 	"bitbucket.org/level11consulting/ocelot/build/valet"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models"
@@ -226,7 +226,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	stage := build.InitStageUtil("INTEGRATION_UTIL")
 
 	// todo: idk where to put this? where to instantiate integrations.. probably should just be a part of launcher?
-	var integral = []integrations.StringIntegrator{dockr.Create(), k8s.Create(), nexus.Create()}
+	var integral = []integrations.StringIntegrator{dockerconfig.Create(), kubeconf.Create(), nexusm2.Create()}
 	for _, integ := range integral {
 		if !integ.IsRelevant(werk.BuildConf) {
 			continue
