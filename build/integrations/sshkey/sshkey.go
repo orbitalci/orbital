@@ -44,7 +44,7 @@ func (n *SSHKeyInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, er
 }
 
 func (n *SSHKeyInt) MakeBashable(str string) []string {
-	var cmds []string
+	var cmds = []string{"echo \"StrictHostKeyChecking no\" >> ~/.ssh/config && chmod 400 ~/.ssh/config"}
 	for identifier, _ := range n.sshKeys {
 		cmd := fmt.Sprintf("echo \"${%s}\" > ~/.ssh/%s && chmod 600 ~/.ssh/%s", identifier, identifier, identifier)
 		cmds = append(cmds, cmd)
