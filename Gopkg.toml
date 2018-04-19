@@ -89,3 +89,6 @@
   name = "github.com/SAP/go-hdb"
   revision = "c80549df883e955dff808b1258c26f32b3ed10a4"
 #  version = "v0.9.5"
+[[constraint]]
+  name = "github.com/go-test/deep"
+  version = "1.0.1"

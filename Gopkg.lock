@@ -149,6 +149,12 @@
   version = "v1.3"
 
 [[projects]]
+  name = "github.com/go-test/deep"
+  packages = ["."]
+  revision = "6592d9cc0a499ad2d5f574fde80a2b5c5cc3b4f5"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/gocql/gocql"
   packages = [
@@ -739,6 +745,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5159036cf9af1d28f389aa270ae832d2a9121c20451814c200abe5bf42c8d030"
+  inputs-digest = "837bbe2eb24a80fd5db553d176eee23a7f7a28264c8ebd7070ddf4b72f0b900d"
   solver-name = "gps-cdcl"
   solver-version = 1
