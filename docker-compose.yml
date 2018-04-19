@@ -6,7 +6,7 @@ services:
     command: /admin -log-level=debug
     build:
       context: .
-      dockerfile: admin/Dockerfile
+      dockerfile: cmd/admin/Dockerfile
       cache_from:
         - golang:1.9-alpine
     logging:
@@ -29,7 +29,7 @@ services:
     command: /hookhandler 
     build:
       context: .
-      dockerfile: hookhandler/Dockerfile
+      dockerfile: cmd/hookhandler/Dockerfile
       cache_from:
         - golang:1.9-alpine
     logging:

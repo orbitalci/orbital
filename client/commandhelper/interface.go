@@ -1,9 +1,10 @@
 package commandhelper
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"context"
 	"fmt"
+	
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 )

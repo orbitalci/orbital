@@ -2,10 +2,11 @@ package main
 
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/admin"
-	"bitbucket.org/level11consulting/ocelot/util/cred"
-	"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
+	"bitbucket.org/level11consulting/ocelot/router/admin"
+	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"bitbucket.org/level11consulting/ocelot/common/secure_grpc"
 	"fmt"
+	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
 	"os"
 )
@@ -27,6 +28,7 @@ func main() {
 	adminFlags.StringVar(&logLevel, "log-level", "debug", "ocelot admin log level")
 	adminFlags.BoolVar(&insecure, "insecure", false, "use insecure certs")
 	adminFlags.Parse(os.Args[1:])
+	version.MaybePrintVersion(adminFlags.Args())
 
 	ocelog.InitializeLog(logLevel)
 

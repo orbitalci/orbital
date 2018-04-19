@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -12,7 +13,7 @@ var (
 	GitDescribe string
 
 	// The main version number that is being run at the moment.
-	Version = "0.2.0"
+	Version = "0.2.1"
 
 	// A pre-release marker for the version. If this is "" (empty string)
 	// then it means that it is a final release. Otherwise, this is a pre-release
@@ -41,4 +42,40 @@ func GetHumanVersion() string {
 
 	// Strip off any single quotes added by the git information.
 	return strings.Replace(version, "'", "", -1)
+}
+
+func GetShort() string {
+	version := Version
+	if GitDescribe != "" {
+		version = GitDescribe
+	}
+
+	release := VersionPrerelease
+	if GitDescribe == "" && release == "" {
+		release = "dev"
+	}
+	if release != "" {
+		version += fmt.Sprintf("-%s", release)
+	}
+
+	// Strip off any single quotes added by the git information.
+	return strings.Replace(version, "'", "", -1)
+}
+
+//MaybePrintVersion super simple get for version in remainder of flag arguments.
+// it will, if the length of the leftover arguments > 0; check if the any of the args is "version"
+// if it is, it will print the version and exit
+func MaybePrintVersion(remainders []string) {
+	switch len(remainders) {
+	case 0:
+		return
+	default:
+		for _, remain := range remainders {
+			if remain == "version" {
+				fmt.Println(GetHumanVersion())
+				os.Exit(0)
+			}
+		}
+	}
+
 }

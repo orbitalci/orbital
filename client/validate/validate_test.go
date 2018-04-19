@@ -1,14 +1,14 @@
 package validate
 
 import (
-	"bitbucket.org/level11consulting/ocelot/util"
-	"fmt"
-	"testing"
-	//"context"
-	"github.com/mitchellh/cli"
 	"flag"
-	"strings"
+	"fmt"
 	"os"
+	"strings"
+	"testing"
+
+	"bitbucket.org/level11consulting/ocelot/common/testutil"
+	"github.com/mitchellh/cli"
 )
 
 func TestCmd_RunPathNoFile(t *testing.T) {
@@ -34,7 +34,7 @@ Error: open /abc/def/test: no such file or directory
 }
 
 func TestCmd_RunPathFileNoProcess(t *testing.T) {
-	util.BuildServerHack(t)
+	testutil.BuildServerHack(t)
 	ui := cli.NewMockUi()
 	pwd, _ := os.Getwd()
 	cmdd := &cmd{
@@ -47,7 +47,7 @@ func TestCmd_RunPathFileNoProcess(t *testing.T) {
 	filepth := os.ExpandEnv("$HOME/go/src/bitbucket.org/level11consulting/ocelot/client/validate/test-fixtures/wrong-ocelot.yml")
 	expectedError := fmt.Sprintf(`Could not process file, please check make sure the file at %s exists
 Error: yaml: unmarshal errors:
-  line 1: cannot unmarshal !!str ` + "`wrong`" + ` into protos.BuildConfig
+  line 1: cannot unmarshal !!str ` + "`wrong`" + ` into pb.BuildConfig
 `, filepth)
 	if exit := cmdd.Run(args); exit != 1 {
 		t.Error("should exit with error code 1", exit)

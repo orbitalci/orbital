@@ -59,16 +59,16 @@ fi
 #rm windows-ocelot.zip
 #rm linux-ocelot.zip
 
-docker tag jessishank/ocelot-build:kill.6 ocelot-build
+docker tag docker.metaverse.l11.com/ocelot/base:latest ocelot-build
 
 echo "building admin"
-docker build -f admin/Dockerfile -t docker.metaverse.l11.com/ocelot-admin:latest .
-echo "building werker"
-docker build -f werker/Dockerfile -t docker.metaverse.l11.com/ocelot-werker:latest .
+docker build -f cmd/admin/Dockerfile -t docker.metaverse.l11.com/ocelot-admin:latest .
+#echo "building werker"
+#docker build -f werker/Dockerfile -t docker.metaverse.l11.com/ocelot-werker:latest .
 echo "building poller"
 docker build -f cmd/poller/Dockerfile -t docker.metaverse.l11.com/ocelot-poller:latest .
 echo "building hookhandler"
-docker build -f hookhandler/Dockerfile -t docker.metaverse.l11.com/ocelot-hookhandler:latest .
+docker build -f cmd/hookhandler/Dockerfile -t docker.metaverse.l11.com/ocelot-hookhandler:latest .
 
 docker push docker.metaverse.l11.com/ocelot-admin:latest
 docker push docker.metaverse.l11.com/ocelot-werker:latest

@@ -1,13 +1,14 @@
 package kill
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin/models"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	pb "bitbucket.org/level11consulting/ocelot/werker/protobuf"
+	bld "bitbucket.org/level11consulting/ocelot/common/build"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/mitchellh/cli"
+
 	"context"
 	"flag"
 	"fmt"
-	"github.com/mitchellh/cli"
 )
 
 const synopsis = "kill an active build for a hash"
@@ -74,14 +75,14 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	client, err := build.CreateBuildClient()
+	client, err := bld.CreateBuildClient(build)
 	commandhelper.Debuggit(c.UI, fmt.Sprintf("dialing werker at %s:%s", build.GetIp(), build.GetGrpcPort()))
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.GetIp(), build.GetGrpcPort(), err.Error()))
 		return 1
 	}
 
-	stream, err := client.KillHash(ctx, &pb.Request{ Hash: build.Hash})
+	stream, err := client.KillHash(ctx, &models.Request{ Hash: build.Hash})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1

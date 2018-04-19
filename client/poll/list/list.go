@@ -2,18 +2,19 @@ package polllist
 
 
 import (
-	"bitbucket.org/level11consulting/ocelot/admin/models"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bytes"
 	"context"
 	"flag"
 	"fmt"
+	"time"
+
+	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 	"github.com/olekukonko/tablewriter"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"time"
 )
 
 

@@ -3,12 +3,13 @@ package commandhelper
 import (
 	"errors"
 	"fmt"
-	"strings"
-	"os"
-	"syscall"
-	"os/signal"
-	"bitbucket.org/level11consulting/ocelot/werker/protobuf"
 	"io"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+	
+	protobuf "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
 	"google.golang.org/grpc"
 )

@@ -1,0 +1,41 @@
+package k8s
+
+import (
+	"errors"
+
+	"bitbucket.org/level11consulting/ocelot/build/integrations"
+	"bitbucket.org/level11consulting/ocelot/models/pb"
+)
+
+func Create() integrations.StringIntegrator {
+	return &K8sInt{}
+}
+
+type K8sInt struct {}
+
+func (k *K8sInt) String() string {
+	return "kubeconfig render"
+}
+
+func (k *K8sInt) SubType() pb.SubCredType {
+	return pb.SubCredType_KUBECONF
+}
+
+
+func (k *K8sInt) MakeBashable(encoded string) []string {
+	return []string{"/bin/sh", "-c", "/.ocelot/render_kubeconfig.sh " + "'" + encoded + "'"}
+}
+
+func (k *K8sInt) IsRelevant(wc *pb.BuildConfig) bool {
+	return true
+}
+
+
+func (k *K8sInt) GenerateIntegrationString(creds []pb.OcyCredder) (string, error) {
+	kubeCred, ok := creds[0].(*pb.K8SCreds)
+	if !ok {
+		return "", errors.New("could not cast to k8s cred")
+	}
+	configEncoded := integrations.StrToBase64(kubeCred.K8SContents)
+	return configEncoded, nil
+}

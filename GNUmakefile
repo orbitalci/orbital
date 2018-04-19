@@ -13,7 +13,7 @@ GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 GIT_DESCRIBE=$(shell git describe --tags --always)
 GIT_IMPORT=bitbucket.org/level11consulting/ocelot/version
 GOLDFLAGS=-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)
-
+GOLDFLAGS_REL=$(GOLDFLAGS) -X $(GIT_IMPORT).VersionPrerelease=
 export GOLDFLAGS
 SSH_PRIVATE_KEY ?= $(HOME)/.ssh/id_rsa
 export SSH_PRIVATE_KEY
@@ -23,6 +23,12 @@ versionexists:
 ifndef VERSION
 	$(error VERSION must be applied by maket target VERSION=x or another method if building/uploading clients clients)
 endif
+
+local: ## install locally but with the tags/flags injected in
+	go install -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' ./...
+
+local-release:
+	go install -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' ./...
 
 windows-client: versionexists ## install zipped windows ocelot client to pkg/windows_amd64
 	mkdir -p pkg/windows_amd64/
@@ -56,7 +62,7 @@ upload-templates: ## tar up werker templates and upload to s3
 	rm werker/builder/template/werker_files.tar
 
 linux-werker: versionexists ## install linux werker zip and upload to s3
-	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -o werker main.go; zip -r ../../linux-werker-$(VERSION).zip werker; rm werker; cd -
+	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o werker .; zip -r ../../linux-werker-$(VERSION).zip werker; rm werker; cd -
 	@aws s3 cp --acl public-read-write --content-disposition attachment linux-werker-$(VERSION).zip s3://ocelotty/linux-werker-$(VERSION).zip
 	rm linux-werker-$(VERSION).zip
 
@@ -78,7 +84,7 @@ docker-build: ## build all images
 release: proto upload-clients upload-templates linux-werker docker-base docker-build ## build protos, install & upload clients, upload werker templates, install & upload linux werker, build docker base, build all images
 
 proto: ## build all protos
-	@scripts/build-protos.sh
+	@cd models; ./build-protos.sh;
 
 pushtags: ## tag built docker images with the short hash and push all to nexus
 	@scripts/tag_and_push.sh $(GIT_HASH)

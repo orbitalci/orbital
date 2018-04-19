@@ -2,10 +2,11 @@ package build
 
 import (
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
-	"flag"
-	"bitbucket.org/level11consulting/ocelot/admin/models"
+
 	"context"
+	"flag"
 )
 
 

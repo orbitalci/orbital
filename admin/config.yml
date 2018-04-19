@@ -1,6 +1,0 @@
-vcs:
-- clientId: 3wu3GtQvj4bAG7LNac
-  clientSecret: SfpQ3vTRxNLTvAVaaZFNv5N953GFaMJ3
-  tokenURL: https://bitbucket.org/site/oauth2/access_token
-  acctName: jessishank
-  type: bitbucket
