@@ -12,7 +12,6 @@ import (
 	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/common/secure_grpc"
-	"github.com/golang/glog"
 
 	//"bitbucket.org/level11consulting/ocelot/util/handler"
 	//"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
@@ -99,15 +98,21 @@ func allowCORS(h http.Handler) http.Handler {
 
 func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(r.URL.Path, ".swagger.json") {
-		glog.Errorf("Not Found: %s", r.URL.Path)
+		log.Log().Errorf("Not Found: %s", r.URL.Path)
 		http.NotFound(w, r)
 		return
 	}
 
-	glog.Infof("Serving %s", r.URL.Path)
+	log.Log().Infof("Serving %s", r.URL.Path)
 	p := strings.TrimPrefix(r.URL.Path, "/swagger/")
 	_, filename, _, _ := rt.Caller(0)
-	dir := filepath.Dir(filepath.Dir(filepath.Dir(filename)))
+	var dir string
+	dir = filepath.Dir(filepath.Dir(filepath.Dir(filename)))
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		// hack, should probably take env vars
+		dir = "/swagger"
+	}
+	os.Stat(dir)
 	fmt.Println(dir)
 	swaggerdir := filepath.Join(dir, "models", "pb")
 	p = path.Join(swaggerdir, p)
