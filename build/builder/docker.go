@@ -32,10 +32,6 @@ func NewDockerBuilder(b *basher.Basher) build.Builder {
 	return &Docker{nil, "", nil, b}
 }
 
-func (d *Docker) GetContainerId() string {
-	return d.ContainerId
-}
-
 func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	var setupMessages []string
 
