@@ -8,7 +8,7 @@ RUN cd cmd/${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -a -installsuffi
 
 FROM alpine:3.7
 ENV SERVICE_NAME admin
-COPY models/pb/*.swagger.json /swagger
+COPY models/pb/*.swagger.json /swagger/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/${SERVICE_NAME} /
 COPY --from=builder /sbin/tini /sbin/
