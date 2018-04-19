@@ -55,6 +55,7 @@ func (c *cmd) Run(args []string) int {
 	msg, err := c.config.Client.GetSSHCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
+		return 1
 	}
 	printed := false
 	Header(c.UI)

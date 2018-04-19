@@ -52,7 +52,7 @@ all-clients: windows-client mac-client linux-client ## install all clients
 
 
 upload-clients: versionexists all-clients ## install all clients and upload to s3
-	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/mac-ocelot-$(VERSION).zip
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/darwin_amd64/ocelot_$(VERSION).zip s3://ocelotty/mac-ocelot-$(VERSION).zip
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot_$(VERSION).zip s3://ocelotty/windows-ocelot-$(VERSION).zip
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/linux-ocelot-$(VERSION).zip
 

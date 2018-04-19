@@ -230,7 +230,7 @@ func (g *guideOcelotServer) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHW
 	credWrapper := &pb.SSHWrap{}
 	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_SSH, true)
 	if err != nil {
-		return credWrapper, status.Errorf(codes.Internal, "unable to get k8s creds! error: %s", err.Error())
+		return credWrapper, status.Errorf(codes.Internal, "unable to get ssh creds! error: %s", err.Error())
 	}
 	for _, v := range credz {
 		credWrapper.Keys = append(credWrapper.Keys, v.(*pb.SSHKeyWrapper))

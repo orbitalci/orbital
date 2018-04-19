@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"os"
 	rt "runtime"
 	"path"
 	"path/filepath"
@@ -52,9 +53,11 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 		log.IncludeErrField(err).Fatal("could not register endpoints")
 	}
 	mux.Handle("/", gw)
-	// uncomment if you want swagger to work
-	//go http.ListenAndServe(":" + httpPort, allowCORS(mux))
-	go http.ListenAndServe(":" + httpPort, mux)
+	if _, ok := os.LookupEnv("SWAGGERITUP"); ok {
+		go http.ListenAndServe(":" + httpPort, allowCORS(mux))
+	} else {
+		go http.ListenAndServe(":" + httpPort, mux)
+	}
 
 	//grpc server
 	con, err := net.Listen("tcp", ":"+port)
