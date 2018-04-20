@@ -3,6 +3,8 @@ package basher
 import (
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
+
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -12,10 +14,29 @@ const DefaultGithubURL = ""
 
 type Bashable func(string) []string
 
+func NewBasher(downloadUrl, GHubDownloadUrl, LoopbackIP, dotOcelotPrefix string) (*Basher, error) {
+	if dotOcelotPrefix != "" {
+		// we are fine with using just slash, because all of this is bash/linux/unix specific
+		if string(dotOcelotPrefix[0]) != "/" {
+			return nil, errors.New("ocelot prefix must begin with a filepath separator")
+		}
+		if string(dotOcelotPrefix[len(dotOcelotPrefix) -1 ]) == "/" {
+			dotOcelotPrefix = string(dotOcelotPrefix[(len(dotOcelotPrefix) - 1):])
+		}
+	}
+	return &Basher{
+		BbDownloadURL: downloadUrl,
+		GithubDownloadURL: GHubDownloadUrl,
+		LoopbackIp: LoopbackIP,
+		dotOcelotPrefix: dotOcelotPrefix,
+	}, nil
+}
+
 type Basher struct {
 	BbDownloadURL 	  string
 	GithubDownloadURL string
 	LoopbackIp        string
+	dotOcelotPrefix   string
 }
 
 func (b *Basher) GetBbDownloadURL() string {
@@ -41,7 +62,7 @@ func (b *Basher) SetGithubDownloadURL(downloadURL string) {
 }
 
 func (b *Basher) InstallPackageDeps() []string {
-	return []string{"/bin/sh", "-c", "/.ocelot/install_deps.sh"}
+	return []string{"/bin/sh", "-c", b.OcelotDir() + "/install_deps.sh"}
 }
 
 //DownloadCodebase builds bash commands to be executed for downloading the codebase
@@ -52,9 +73,9 @@ func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 	case pb.SubCredType_BITBUCKET:
 		//if download url is not the default, then we assume whoever set it knows exactly what they're doing and no replacements
 		if b.GetBbDownloadURL() != DefaultBitbucketURL {
-			downloadCmd = fmt.Sprintf("/.ocelot/bb_download.sh %s %s %s", werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
+			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s", b.OcelotDir(), werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
 		} else {
-			downloadCmd = fmt.Sprintf("/.ocelot/bb_download.sh %s %s %s", werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash)
+			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s", b.OcelotDir(), werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash)
 		}
 	case pb.SubCredType_GITHUB:
 		ocelog.Log().Error("not implemented")
@@ -68,7 +89,7 @@ func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 
 //DownloadSSHKey will using the vault token to try to download the ssh key located at the path + `/ssh`
 func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
-	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath + "/ssh")}
+	return []string{"/bin/sh", "-c", fmt.Sprintf("%s/get_ssh_key.sh %s %s", b.OcelotDir(), vaultKey, vaultPath + "/ssh")}
 }
 
 
@@ -76,8 +97,9 @@ func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
 func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
 	downloadLink := fmt.Sprintf("http://%s:%s/do_things.tar", b.LoopbackIp, werkerPort)
 	//downloadLink := fmt.Sprintf("http://172.17.0.1:%s/do_things.tar", werkerPort)
+	command := fmt.Sprintf("mkdir %s && wget %s && tar -xf do_things.tar -C %s && cd %s  && chmod +x * && echo \"Ocelot has finished with downloading templates\" && sleep 3600", b.OcelotDir(), downloadLink, b.OcelotDir(), b.OcelotDir())
 	//warning: sleep has to be a integer; infinity doesn't exist everywhere.
-	return []string{"/bin/sh", "-c", "mkdir /.ocelot && wget " + downloadLink + " && tar -xf do_things.tar -C /.ocelot && cd /.ocelot && chmod +x * && echo \"Ocelot has finished with downloading templates\" && sleep 3600"}
+	return []string{"/bin/sh", "-c", command}
 }
 
 func (b *Basher) DownloadKubectl(werkerPort string) []string {
@@ -91,4 +113,8 @@ func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
 	build := append([]string{"cd /" + commitHash}, cmds...)
 	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(build, " && ")})
 	return buildAndDeploy
+}
+
+func (b *Basher) OcelotDir() string {
+	return b.dotOcelotPrefix + "/.ocelot"
 }
