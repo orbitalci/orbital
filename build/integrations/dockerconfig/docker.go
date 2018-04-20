@@ -1,4 +1,4 @@
-package dockr
+package dockerconfig
 
 import (
 	"bitbucket.org/level11consulting/ocelot/build/integrations"
@@ -43,6 +43,10 @@ func (d *DockrInt) MakeBashable(encoded string) []string {
 
 func (d *DockrInt) IsRelevant(wc *pb.BuildConfig) bool {
 	return true
+}
+
+func (d *DockrInt) GetEnv() []string {
+	return []string{}
 }
 
 func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {

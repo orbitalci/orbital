@@ -85,6 +85,37 @@ func (f *fakeGuideOcelotClient) GetK8SCreds(ctx context.Context, in *empty.Empty
 }
 
 
+
+func (f *fakeGuideOcelotClient) SetSSHCreds(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+	//f.k8sCreds.K8SCreds = append(f.k8sCreds.K8SCreds, in)
+	return &empty.Empty{}, nil
+}
+
+func (f *fakeGuideOcelotClient) UpdateSSHCreds(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+	//for _, cred := range f.k8sCreds.K8SCreds {
+		//if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
+		//	fmt.Println("setting cred")
+		//	cred = in
+		//}
+	//}
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) SSHCredExists (ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*pb.Exists, error) {
+	//for _, cred := range f.k8sCreds.K8SCreds {
+	//	if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
+	//		return &pb.Exists{Exists:true}, nil
+	//	}
+	//}
+	return &pb.Exists{Exists:false}, nil
+}
+
+
+func (f *fakeGuideOcelotClient) GetSSHCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.SSHWrap, error) {
+	return nil, nil
+}
+
+
 func (f *fakeGuideOcelotClient) WatchRepo(ctx context.Context, in *pb.RepoAccount, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }

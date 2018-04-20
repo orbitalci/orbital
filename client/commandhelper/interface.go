@@ -7,6 +7,7 @@ import (
 	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
+	"google.golang.org/grpc/status"
 )
 
 type GuideOcelotCmd interface {
@@ -22,8 +23,10 @@ func CheckConnection(cmd GuideOcelotCmd, ctx context.Context) error {
 	Debuggit(cmd.GetUI(), "checking connection of " + cmd.GetConfig().AdminLocation)
 	_, err := cmd.GetClient().CheckConn(ctx, &empty.Empty{})
 	if err != nil {
-		cmd.GetUI().Error(err.Error())
-		cmd.GetUI().Error(fmt.Sprintf("could not connect to server at %s", cmd.GetConfig().AdminLocation))
+		if _, ok := status.FromError(err); !ok {
+			cmd.GetUI().Error(err.Error())
+		}
+		cmd.GetUI().Error(fmt.Sprintf("Could not connect to server! Admin location is %s", cmd.GetConfig().AdminLocation))
 	}
 	return err
 }

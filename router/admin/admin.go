@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"os"
 	rt "runtime"
 	"path"
 	"path/filepath"
@@ -11,7 +12,6 @@ import (
 	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/common/secure_grpc"
-	"github.com/golang/glog"
 
 	//"bitbucket.org/level11consulting/ocelot/util/handler"
 	//"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
@@ -52,9 +52,11 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 		log.IncludeErrField(err).Fatal("could not register endpoints")
 	}
 	mux.Handle("/", gw)
-	// uncomment if you want swagger to work
-	//go http.ListenAndServe(":" + httpPort, allowCORS(mux))
-	go http.ListenAndServe(":" + httpPort, mux)
+	if _, ok := os.LookupEnv("SWAGGERITUP"); ok {
+		go http.ListenAndServe(":" + httpPort, allowCORS(mux))
+	} else {
+		go http.ListenAndServe(":" + httpPort, mux)
+	}
 
 	//grpc server
 	con, err := net.Listen("tcp", ":"+port)
@@ -96,17 +98,25 @@ func allowCORS(h http.Handler) http.Handler {
 
 func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(r.URL.Path, ".swagger.json") {
-		glog.Errorf("Not Found: %s", r.URL.Path)
+		log.Log().Errorf("Not Found: %s", r.URL.Path)
 		http.NotFound(w, r)
 		return
 	}
 
-	glog.Infof("Serving %s", r.URL.Path)
+	log.Log().Infof("Serving %s", r.URL.Path)
 	p := strings.TrimPrefix(r.URL.Path, "/swagger/")
 	_, filename, _, _ := rt.Caller(0)
-	dir := filepath.Dir(filename)
-	swaggerdir := filepath.Join(dir, "models")
-	p = path.Join(swaggerdir, p)
+	var dir string
+	dir = filepath.Dir(filepath.Dir(filepath.Dir(filename)))
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		// hack, should probably take env vars
+		dir = "/swagger"
+	} else {
+		dir = filepath.Join(dir, "models", "pb")
+	}
+	os.Stat(dir)
+	fmt.Println(dir)
+	p = path.Join(dir, p)
 	http.ServeFile(w, r, p)
 }
 

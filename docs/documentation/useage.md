@@ -52,8 +52,7 @@ stages:
      env:
       - "BUILDENVVAR=2"
      script:
-        - mvn clean install
-        
+        - mvn clean install     
    - name: build2
      script:
         - docker build -t "docker.metaverse.l11.com/myrepo:v2_$GIT_HASH" .
@@ -66,13 +65,21 @@ stages:
      script:
         - echo "$GIT_HASH"
         - echo "MYENVVAR"
+   - name: deploy
+     trigger:
+       branches:
+         - master
+     script: 
+        - echo "on branch master, deploying..."
+        - kubectl set image deploy/mydeployment mydeployment=docker.metaverse.l11.com/mydeployment:latest
+        - kubectl rollout status deploy/mydeployment
 ``` 
 
 ### `ocelot.yml` top level fields
 |  key	| significance | required |
 |--- |--- |--- |
 | `image` | Image to run the build on. Can be a custom built image in a private repo or one on dockerhub.  |  Yes  |
-| `buildTool` | Flag that drives integration. If buildTool is maven, then a `settings.xml` will be generated with repository credentials  |  No (?)  |
+| `buildTool` | Flag that drives integration. If buildTool is maven, then a `settings.xml` will be generated with repository credentials  |  Yes |
 | `branches` |  A list of branches to build. If the branch pushed does not match a value in this list, it wil not be built.  | Yes  |
 | `env` |  List of environment variables that will be injected into the container on startup. The environment variables from this list will be available for all stages in the build.  |  No  |
 | `stages` | List of stages that comprise the build and deployment. There must be on `build` stage, which is connected to the `buildTool` flag  | Yes  |
@@ -84,7 +91,7 @@ stages:
 | `name` |  Name of stage. Stages will be returned when running various `ocelot` commands for more detail on running builds.  |  Yes  |
 | `script` |  List of commands to run that comprise that stage. If these commands return an exit code other than zero, it is recorded as failed. | Yes  |
 | `env` |  List of environment variables to inject for current stage. |  No  | 
-
+| `trigger`| Block that defines the conditions in which a stage will be run. Currently, a list of branches can be passed, and the stage will only execute if the build branch is in this list.| No |
 
 ## Ocelot client interaction 
 Interactions with ocelot are driven with the command line client. 
@@ -135,7 +142,38 @@ repo: mytestocy
 ### Tracking your repository   
 When vcs credentials are first uploaded with `ocelot creds vcs add`, all repositories under that account are searched for the presence of the `ocelot.yml` file. If you wish to have ocelot track your 
 repository after credentials have been added, you can run `ocelot watch -acct-repo <vcs_account>/<repo_name>`. You can also, from the directory of the project you wish tracked, run `ocelot watch`. 
-Git commands will be run under the hood to detect the account and repository name. 
+Git commands will be run under the hood to detect the account and repository name. This will set up a webhook in VCS that will let ocelot know every time  
+
+When webhooks are not a possibility, there is also an option to poll repositories for changes, by using `ocelot poll`.   
+**To set up repo for polling**:   
+```
+11:18:00 jesseshank jessishank /Users/jesseshank/go/_/level11consulting/ocelot master
+$ ocelot poll -acct-repo <vcs_account>/<repo_name> -branches <branch1>,<branch2>,<etc>,<etc> -cron "* * * * *"
+```  
+
+The cron string will be be validated before uploading to the server, then a service called poller will check for changes on that cron interval. To see a list of repos that are being tracked via polling and when they were last checked for changes, run:  
+
+```
+11:18:13 jesseshank jessishank /Users/jesseshank
+$ ocelot poll list
+   
+   +-------------------------------------------+-------------+----------------+-------------------+
+   |                 ACCT/REPO                 | CRON STRING |    BRANCHES    |    LAST POLLED    |
+   +-------------------------------------------+-------------+----------------+-------------------+
+   | level11consulting/gg-report               | */3 * * * * | master         | 04/20/18 11:18:03 |
+   | level11consulting/ingress-service         | */3 * * * * | master         | 04/20/18 11:18:03 |
+   | level11consulting/ui-gg                   | */3 * * * * | master         | 04/20/18 11:18:03 |
+   | level11consulting/dx-account              | */3 * * * * | master         | 04/20/18 11:18:03 |
+   | level11consulting/ad-admin-ui             | */3 * * * * | master         | 04/20/18 11:18:03 |
+   | level11consulting/ad-tms                  | */3 * * * * | master         | 04/20/18 11:18:03 |
+   | level11consulting/wayfinding-task-service | */3 * * * * | master         | 04/20/18 11:18:03 |
+   | level11consulting/ocelot                  | */3 * * * * | master         | 04/20/18 11:18:04 |
+   | level11consulting/ggmc-admin              | */3 * * * * | master         | 04/20/18 11:18:04 |
+   | level11consulting/wayfinding-web          | */3 * * * * | master         | 04/20/18 11:18:04 |
+   | level11consulting/ad-poc-service          | */3 * * * * | master,develop | 04/20/18 11:18:04 |
+   +-------------------------------------------+-------------+----------------+-------------------+
+```
+ 
 
 ### Triggering a build 
 Builds are triggered by webhooks from bitbucket. Every time a changeset of commit(s) is pushed to the remote repository, a build will run. If you wish to trigger a build yourself, 

@@ -4,8 +4,8 @@ package streamer
 import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/test"
 	protobuf "bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/go-test/deep"
 	"google.golang.org/grpc"
 	"testing"
 	"time"
@@ -67,8 +67,8 @@ func Test_iterateOverBuildData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !test.CompareByteArrays(ws.MsgData, testData) {
-		t.Errorf("arrays not the same. expected: %v, actual: %v", testData, ws.MsgData)
+	if diff := deep.Equal(ws.MsgData, testData); diff != nil {
+		t.Error(diff)
 	}
 	var streamGrpc = NewTestStreamArray()
 	grp := &testBuildInfoGrpcServer{}
@@ -79,8 +79,8 @@ func Test_iterateOverBuildData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !test.CompareStringArrays(grp.testData, stringTestData) {
-		t.Errorf("arrays not same for grpc. expected: %s, actual: %s", stringTestData, grp.testData)
+	if diff := deep.Equal(grp.testData, stringTestData); diff != nil {
+		t.Error(diff)
 	}
 }
 
@@ -94,21 +94,28 @@ func Test_streamFromArray(t *testing.T) {
 	streamobj.AddToData(testData[:fstIndex])
 	go StreamFromArray(streamobj, ws, log.Log())
 	time.Sleep(1 * time.Second)
-	if !test.CompareByteArrays(testData[:fstIndex], ws.MsgData) {
-		t.Errorf("first slices not the same. expected: %v, actual: %v", testData[:fstIndex], streamobj.GetData())
+	if diff := deep.Equal(testData[:fstIndex], ws.MsgData); diff != nil {
+		t.Error(diff)
+	}
+	if diff := deep.Equal(testData[:fstIndex], streamobj.GetData()); diff != nil {
+		t.Error(diff)
 	}
 	streamobj.AddToData(testData[fstIndex:secIndex])
 
 	time.Sleep(1 * time.Second)
 	middleTest := testData[:secIndex]
 	middleActual := ws.MsgData[:secIndex]
-	if !test.CompareByteArrays(middleTest, middleActual) {
-		t.Errorf("second slices not the same. expected: %v, actual: %v", testData, streamobj.GetData()[:secIndex])
+	if diff := deep.Equal(middleTest, middleActual); diff != nil {
+		t.Error(diff)
 	}
+	if diff := deep.Equal(middleTest, streamobj.GetData()[:secIndex]); diff != nil {
+		t.Error(diff)
+	}
+
 	streamobj.AddToData(testData[secIndex:])
 	time.Sleep(1 * time.Second)
-	if !test.CompareByteArrays(testData, ws.MsgData) {
-		t.Errorf("full arrays not the same. expected: %v, actual: %v", testData, ws.MsgData)
+	if diff := deep.Equal(testData, ws.MsgData); diff != nil {
+		t.Error(diff)
 	}
 }
 

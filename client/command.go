@@ -10,6 +10,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/creds/credslist"
 	"bitbucket.org/level11consulting/ocelot/client/creds/k8s/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/k8s/list"
+	"bitbucket.org/level11consulting/ocelot/client/creds/ssh/sshadd"
+	"bitbucket.org/level11consulting/ocelot/client/creds/ssh/sshlist"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
@@ -42,6 +44,8 @@ func init() {
 		"creds vcs":       func() (cli.Command, error) { return vcscreds.New(), nil },
 		"creds vcs list":  func() (cli.Command, error) { return buildcredslist.New(ui), nil },
 		"creds vcs add":   func() (cli.Command, error) { return buildcredsadd.New(ui), nil },
+		"creds ssh list":  func() (cli.Command, error) { return sshlist.New(ui), nil },
+		"creds ssh add":   func() (cli.Command, error) { return sshadd.New(ui), nil },
 		"creds repo":      func() (cli.Command, error) { return repocreds.New(), nil },
 		"creds repo add":  func() (cli.Command, error) { return repocredsadd.New(ui), nil },
 		"creds repo list": func() (cli.Command, error) { return repocredslist.New(ui), nil },

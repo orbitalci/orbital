@@ -725,6 +725,21 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType"
+        },
+        "identifier": {
+          "type": "string",
+          "description": "identifier is the unique identifier for when an ssh key is not associated with a VCS account."
+        }
+      }
+    },
+    "modelsSSHWrap": {
+      "type": "object",
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsSSHKeyWrapper"
+          }
         }
       }
     },
@@ -784,7 +799,8 @@
         "NEXUS",
         "MAVEN",
         "DOCKER",
-        "KUBECONF"
+        "KUBECONF",
+        "SSHKEY"
       ],
       "default": "NIL_SCT"
     },

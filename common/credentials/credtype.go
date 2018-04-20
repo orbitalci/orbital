@@ -16,6 +16,7 @@ func BuildCredPath(scType pb.SubCredType, AcctName string, ocyCredType pb.CredTy
 	case pb.CredType_VCS: pattern = "%s/vcs/%s/%s/%s"
 	case pb.CredType_REPO: pattern = "%s/repo/%s/%s/%s"
 	case pb.CredType_K8S: pattern = "%s/k8s/%s/%s/%s"
+	case pb.CredType_SSH: pattern = "%s/ssh/%s/%s/%s"
 	//this will not happen in real life because all the setcred methods for guideOcelotServer check for this specific issue
 	default: panic("only repo|vcs|k8s")
 	}

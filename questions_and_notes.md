@@ -13,6 +13,7 @@
 
 ## little TODOs?:
 - create `ocelot init` command
+- mechanism for uploading test data
 - env variable for vault address to be used by get_ssh_key.sh from s3
 - fix PR's triggering builds
 - something that says X isn't tracked by ocelot (ADD THIS CHECK TO ALL COMMANDS SO THAT BEHAVIOR IS CONSISTENT) 

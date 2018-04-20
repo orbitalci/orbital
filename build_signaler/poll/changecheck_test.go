@@ -5,13 +5,13 @@ import (
 
 	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/build_signaler"
-	"bitbucket.org/level11consulting/ocelot/common/remote"
+	"bitbucket.org/level11consulting/ocelot/models"
 	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
 )
 
 type fakeCommitLister struct {
 	commits []*pbb.Commit
-	remote.VCSHandler
+	models.VCSHandler
 }
 
 func (f *fakeCommitLister) GetAllCommits(string, string) (*pbb.Commits, error) {
@@ -21,7 +21,7 @@ func (f *fakeCommitLister) GetAllCommits(string, string) (*pbb.Commits, error) {
 // faked all this out and wrote an interface because i only wanted to test the logic of whether or not this should trigger a build
 type fakeWerkerTeller struct {}
 
-func (f *fakeWerkerTeller) TellWerker(lastCommit string, conf *build_signaler.Signaler, branch string, remote remote.VCSHandler, token string) (err error) { return nil }
+func (f *fakeWerkerTeller) TellWerker(lastCommit string, conf *build_signaler.Signaler, branch string, remote models.VCSHandler, token string) (err error) { return nil }
 
 var branchTests = []struct {
 	name		    string

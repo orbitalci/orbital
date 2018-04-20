@@ -1,4 +1,4 @@
-package k8s
+package kubeconf
 
 import (
 	"errors"
@@ -38,4 +38,8 @@ func (k *K8sInt) GenerateIntegrationString(creds []pb.OcyCredder) (string, error
 	}
 	configEncoded := integrations.StrToBase64(kubeCred.K8SContents)
 	return configEncoded, nil
+}
+
+func (k *K8sInt) GetEnv() []string {
+	return []string{}
 }

@@ -1,15 +1,15 @@
 package launcher
 
 import (
-	"reflect"
 
 	"bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/builder"
 	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/dockr"
+	"bitbucket.org/level11consulting/ocelot/build/integrations/dockerconfig"
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
+	"github.com/go-test/deep"
+
 	//"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
@@ -75,22 +75,24 @@ func TestLauncher_doIntegrations(t *testing.T) {
 		t.Error(result.Error)
 	}
 	expectedMsgs := []string{
+		"no integration data found for ssh keyfile integration so assuming integration not necessary",
 		"completed integration_util | docker login stage ✓",
 		"completed integration_util | kubeconfig render stage ✓",
 		"no integration data found for nexus m2 settings.xml render so assuming integration not necessary",
 		"completed integration util setup stage ✓",
 	}
-	if !reflect.DeepEqual(expectedMsgs, result.Messages) {
-		t.Error(test.GenericStrFormatErrors("result messages", expectedMsgs, result.Messages))
+	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {
+		t.Error(diff)
 	}
 	result, _, _ = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf:&pb.BuildConfig{BuildTool:"gala"}}, docker)
 	expectedMsgs = []string{
+		"no integration data found for ssh keyfile integration so assuming integration not necessary",
 		"completed integration_util | docker login stage ✓",
 		"completed integration_util | kubeconfig render stage ✓",
 		"completed integration util setup stage ✓",
 	}
-	if !reflect.DeepEqual(expectedMsgs, result.Messages) {
-		t.Error(test.GenericStrFormatErrors("result messages", expectedMsgs, result.Messages))
+	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {
+		t.Error(diff)
 	}
 
 
@@ -135,7 +137,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	//
 	//// create config in ~/.docker directory w/ auth creds
 	logout := make(chan[]byte, 10000)
-	dckr := dockr.Create()
+	dckr := dockerconfig.Create()
 	creds, err := testRemoteConfig.GetCredsBySubTypeAndAcct(pg, dckr.SubType(), acctName, false)
 	if err != nil {
 		t.Log(err)
