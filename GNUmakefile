@@ -24,6 +24,7 @@ ifndef VERSION
 	$(error VERSION must be applied by maket target VERSION=x or another method if building/uploading clients clients)
 endif
 
+
 local: ## install locally but with the tags/flags injected in
 	go install -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' ./...
 
@@ -50,6 +51,10 @@ linux-client: versionexists ## install zipped linux ocelot client to pkg/linux_a
 
 all-clients: windows-client mac-client linux-client ## install all clients
 
+all-clients-latest: all-clients  ## upload all clients to s3 without a version
+	 @aws s3 cp --acl public-read-write --content-disposition attachment pkg/darwin_amd64/ocelot_$(VERSION).zip s3://ocelotty/mac-ocelot.zip
+	 @aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot_$(VERSION).zip s3://ocelotty/windows-ocelot.zip
+     @aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/linux-ocelot.zip
 
 upload-clients: versionexists all-clients ## install all clients and upload to s3
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/darwin_amd64/ocelot_$(VERSION).zip s3://ocelotty/mac-ocelot-$(VERSION).zip

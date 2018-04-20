@@ -52,8 +52,7 @@ stages:
      env:
       - "BUILDENVVAR=2"
      script:
-        - mvn clean install
-        
+        - mvn clean install     
    - name: build2
      script:
         - docker build -t "docker.metaverse.l11.com/myrepo:v2_$GIT_HASH" .
@@ -66,13 +65,21 @@ stages:
      script:
         - echo "$GIT_HASH"
         - echo "MYENVVAR"
+   - name: deploy
+     trigger:
+       branches:
+         - master
+     script: 
+        - echo "on branch master, deploying..."
+        - kubectl set image deploy/mydeployment mydeployment=docker.metaverse.l11.com/mydeployment:latest
+        - kubectl rollout status deploy/mydeployment
 ``` 
 
 ### `ocelot.yml` top level fields
 |  key	| significance | required |
 |--- |--- |--- |
 | `image` | Image to run the build on. Can be a custom built image in a private repo or one on dockerhub.  |  Yes  |
-| `buildTool` | Flag that drives integration. If buildTool is maven, then a `settings.xml` will be generated with repository credentials  |  No (?)  |
+| `buildTool` | Flag that drives integration. If buildTool is maven, then a `settings.xml` will be generated with repository credentials  |  Yes |
 | `branches` |  A list of branches to build. If the branch pushed does not match a value in this list, it wil not be built.  | Yes  |
 | `env` |  List of environment variables that will be injected into the container on startup. The environment variables from this list will be available for all stages in the build.  |  No  |
 | `stages` | List of stages that comprise the build and deployment. There must be on `build` stage, which is connected to the `buildTool` flag  | Yes  |
@@ -84,7 +91,7 @@ stages:
 | `name` |  Name of stage. Stages will be returned when running various `ocelot` commands for more detail on running builds.  |  Yes  |
 | `script` |  List of commands to run that comprise that stage. If these commands return an exit code other than zero, it is recorded as failed. | Yes  |
 | `env` |  List of environment variables to inject for current stage. |  No  | 
-
+| `trigger`| Block that defines the conditions in which a stage will be run. Currently, a list of branches can be passed, and the stage will only execute if the build branch is in this list.| No |
 
 ## Ocelot client interaction 
 Interactions with ocelot are driven with the command line client. 
