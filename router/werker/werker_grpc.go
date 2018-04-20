@@ -10,17 +10,19 @@ import (
 	"bitbucket.org/level11consulting/ocelot/build/streamer"
 	"bitbucket.org/level11consulting/ocelot/build/valet"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/pkg/errors"
 )
 
-//embeds the werkerappcontext so we can stream + access active builds
+//WerkerServer embeds the werkerappcontext so we can stream + access active builds
 type WerkerServer struct {
 	*WerkerContext
 	cleaner.Cleaner
 }
 
-//streams logs for an active build
+//BuildInfo streams logs for an active build
 func (w *WerkerServer) BuildInfo(request *pb.Request, stream pb.Build_BuildInfoServer) error {
 	stream.Send(wrap(request.Hash))
 	//stream.Send(wrap(w.Conf.WerkerName))
@@ -32,12 +34,11 @@ func (w *WerkerServer) BuildInfo(request *pb.Request, stream pb.Build_BuildInfoS
 	return nil
 }
 
-//handles build kills
+//KillHash handles build kills
 func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashServer) error {
 	stream.Send(wrap(fmt.Sprintf("Checking active builds for %s...", request.Hash)))
-	build, ok := w.BuildContexts[request.Hash]; if ok {
+	if err := w.killValet.Kill(request.Hash); err == nil {
 		stream.Send(wrap(fmt.Sprintf("An active build was found for %s, attempting to cancel...", request.Hash)))
-		build.CancelFunc()
 
 		// remove container
 		stream.Send(wrap("Performing build cleanup..."))
@@ -45,7 +46,7 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 		hashes, err := rt.GetHashRuntimesByWerker(w.consul, w.Uuid.String())
 		if err != nil {
 			log.IncludeErrField(err).Error("unable to retrieve active builds from consul")
-			return err
+			return status.Error(codes.Internal, err.Error())
 		}
 		build := hashes[request.Hash]
 		if len(build.DockerUuid) > 0 {
@@ -61,7 +62,7 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 
 		return nil
 	}
-	return errors.New(fmt.Sprintf("No active build was found for %s", request.Hash))
+	return status.Error(codes.NotFound, fmt.Sprintf("No active build was found for %s", request.Hash))
 }
 
 func NewWerkerServer(werkerCtx *WerkerContext) pb.BuildServer {

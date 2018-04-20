@@ -6,18 +6,28 @@ import (
 	"io"
 	"os/exec"
 
+	"bitbucket.org/level11consulting/ocelot/build/basher"
+	"bitbucket.org/level11consulting/ocelot/build/valet"
 	cred"bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 )
 
 type Host struct {
-
+	*basher.Basher
+	// host needs buildValet because it's gonna need to update the proc file at every damn turn
+	bv *valet.Valet
 }
 /*
 what do we need out of bare metal builds? this is pretty much *exclusively* for any ios builds, because you can't run those in a docker container or on kubernetes.
 
 */
 
+//type Builder interface {
+//	basher.OcyBash
+//	Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
+//	Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
+//	ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *StageUtil, logout chan[]byte) *pb.Result
+//}
 
 func runCommandLogToChan(command *exec.Cmd, logout chan []byte) error{
 	stdout, _ := command.StdoutPipe()

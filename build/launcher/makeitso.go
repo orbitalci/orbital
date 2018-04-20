@@ -15,7 +15,6 @@ import (
 	"bitbucket.org/level11consulting/ocelot/build/integrations/kubeconf"
 	"bitbucket.org/level11consulting/ocelot/build/integrations/nexusm2"
 	"bitbucket.org/level11consulting/ocelot/build/valet"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/storage"
@@ -285,10 +284,6 @@ func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bl
 	return
 }
 
-func (w *launcher) returnWerkerPort(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
-	ocelog.Log().Debug("returning werker port")
-	return  w.ServicePort, nil
-}
 
 func handleIntegrationErr(err error, integrationName string, stage *build.StageUtil, msgs []string) *pb.Result {
 	_, ok := err.(*integrations.NoCreds)

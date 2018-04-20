@@ -99,7 +99,7 @@ func TestRecovery(t *testing.T) {
 	}
 	serv.SetKVString(t, common.MakeDockerUuidPath(uid.String(), hash), hrt.DockerUuid)
 	serv.SetKVString(t, common.MakeWerkerIpPath(uid.String()), "localheist")
-	rcvr.Cleanup()
+	rcvr.RemoveAllTrace()
 	// check all paths have been removed
 	//
 	// ci/builds/<werkerId>/<hash>

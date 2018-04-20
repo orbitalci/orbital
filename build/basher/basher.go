@@ -95,11 +95,20 @@ func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
 
 //DownloadTemplateFiles will download template files necessary to build containers from werker
 func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
-	downloadLink := fmt.Sprintf("http://%s:%s/do_things.tar", b.LoopbackIp, werkerPort)
-	//downloadLink := fmt.Sprintf("http://172.17.0.1:%s/do_things.tar", werkerPort)
-	command := fmt.Sprintf("mkdir %s && wget %s && tar -xf do_things.tar -C %s && cd %s  && chmod +x * && echo \"Ocelot has finished with downloading templates\" && sleep 3600", b.OcelotDir(), downloadLink, b.OcelotDir(), b.OcelotDir())
-	//warning: sleep has to be a integer; infinity doesn't exist everywhere.
+	////downloadLink := fmt.Sprintf("http://%s:%s/do_things.tar", b.LoopbackIp, werkerPort)
+	//////downloadLink := fmt.Sprintf("http://172.17.0.1:%s/do_things.tar", werkerPort)
+	//////warning: sleep has to be a integer; infinity doesn't exist everywhere.
+	////command := fmt.Sprintf("mkdir %s && wget %s && tar -xf do_things.tar -C %s && cd %s  && chmod +x * && echo \"Ocelot has finished with downloading templates\" && sleep 3600", b.OcelotDir(), downloadLink, b.OcelotDir(), b.OcelotDir())
+	sleepless := b.SleeplessDownloadTemplateFiles(werkerPort)
+	command := sleepless[2] + " && sleep 3600"
 	return []string{"/bin/sh", "-c", command}
+}
+
+//SleeplessDownloadTemplateFiles will download the template files to
+func (b *Basher) SleeplessDownloadTemplateFiles(werkerPort string) [3]string {
+	downloadLink := fmt.Sprintf("http://%s:%s/do_things.tar", b.LoopbackIp, werkerPort)
+	command := fmt.Sprintf("mkdir %s && wget %s && tar -xf do_things.tar -C %s && cd %s  && chmod +x * && echo \"Ocelot has finished with downloading templates\"", b.OcelotDir(), downloadLink, b.OcelotDir(), b.OcelotDir())
+	return [3]string{"/bin/sh", "-c", command}
 }
 
 func (b *Basher) DownloadKubectl(werkerPort string) []string {

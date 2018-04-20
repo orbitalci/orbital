@@ -44,9 +44,8 @@ func (b *buildDatum) CheckDone() bool {
 	return b.done
 }
 
-func GetStreamPack(buildContexts map[string]*models.BuildContext, store storage.OcelotStorage, consulet *consul.Consulet) *StreamPack {
+func GetStreamPack(store storage.OcelotStorage, consulet *consul.Consulet) *StreamPack {
 	return &StreamPack{
-		BuildContexts: buildContexts,
 		Consul: consulet,
 		Store:  store,
 		BuildInfo: make(map[string]*buildDatum),
@@ -57,7 +56,6 @@ type StreamPack struct {
 	Consul    *consul.Consulet
 	Store     storage.OcelotStorage
 	BuildInfo map[string]*buildDatum
-	BuildContexts map[string]*models.BuildContext
 }
 
 // pumpBundle writes build data to web socket
@@ -148,27 +146,3 @@ func (sp *StreamPack) ListenTransport(transpo chan *models.Transport) {
 		go sp.processTransport(i)
 	}
 }
-
-func (sp *StreamPack) ListenBuilds(buildsChan chan *models.BuildContext, mapLock sync.Mutex) {
-	for newBuild := range buildsChan {
-		mapLock.Lock()
-		ocelog.Log().Debugf("got new build context for %s", newBuild.Hash)
-		sp.BuildContexts[newBuild.Hash] = newBuild
-		mapLock.Unlock()
-		go sp.contextCleanup(newBuild, mapLock)
-	}
-}
-
-func (sp *StreamPack) contextCleanup(buildCtx *models.BuildContext, mapLock sync.Mutex) {
-	select {
-	case <-buildCtx.Context.Done():
-		mapLock.Lock()
-		ocelog.Log().Debugf("build for hash %s is complete", buildCtx.Hash)
-		if _, ok := sp.BuildContexts[buildCtx.Hash]; ok {
-			delete(sp.BuildContexts, buildCtx.Hash)
-		}
-		mapLock.Lock()
-		return
-	}
-}
-

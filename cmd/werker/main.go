@@ -21,6 +21,8 @@ provide results endpoint, way for server to access data
 package main
 
 import (
+	"sync"
+
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/nsqpb"
 
@@ -56,7 +58,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 				panic("couldnt' create instance of basher, bailing: " + err.Error())
 			}
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
-				bshr.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
+				bshr.SetBbDownloadURL(conf.LoopbackIp + ":9090/dev")
 			}
 
 			handler := listener.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan)
@@ -115,7 +117,8 @@ func main() {
 		protoConsumers = append(protoConsumers, protoConsume)
 	}
 	go nsqwatch.WatchAndPause(60, protoConsumers, conf.RemoteConfig, store) // todo: put interval in conf
-	go werker.ServeMe(streamingTunnel, buildCtxTunnel, conf.WerkerFacts, store)
+	go werker.ServeMe(streamingTunnel, conf.WerkerFacts, store, buildValet.KillaValet)
+	go buildValet.ListenBuilds(buildCtxTunnel, sync.Mutex{})
 	for _, consumer := range protoConsumers {
 		<-consumer.StopChan
 	}

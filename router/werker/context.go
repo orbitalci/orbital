@@ -8,16 +8,18 @@ import (
 	consulet "bitbucket.org/level11consulting/go-til/consul"
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/ocelot/build/streamer"
+	"bitbucket.org/level11consulting/ocelot/build/valet"
 	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/storage"
 
 )
+
 type WerkerContext struct {
-	BuildContexts map[string]*models.BuildContext
 	*models.WerkerFacts
 	consul        *consulet.Consulet
 	store         storage.OcelotStorage
 	streamPack    *streamer.StreamPack
+	killValet     *valet.KillaValet
 }
 //
 //func (w *WerkerContext) dumpData(wr http.ResponseWriter, r *http.Request) {
@@ -38,15 +40,15 @@ type WerkerContext struct {
 //	wr.Write(bit)
 //}
 
-func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage) *WerkerContext {
+func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, killaValet *valet.KillaValet) *WerkerContext {
 	werkerConsul, err := consulet.Default()
 	if err != nil {
 		ocelog.IncludeErrField(err)
 	}
 	werkerCtx := &WerkerContext{
-		BuildContexts: make(map[string]*models.BuildContext),
 		WerkerFacts:   conf,
 		consul:        werkerConsul,
+		killValet:    killaValet,
 		store:         store,
 	}
 	return werkerCtx
