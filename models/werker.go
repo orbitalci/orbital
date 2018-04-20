@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"os"
 
 	"github.com/google/uuid"
 )
@@ -11,6 +12,7 @@ type WerkType int
 const (
 	Kubernetes WerkType = iota
 	Docker
+	Bare
 )
 
 
@@ -27,6 +29,19 @@ type BuildContext struct {
 	Hash string
 	Context context.Context
 	CancelFunc func()
+}
+
+func GetOcyPrefixFromWerkerType(wt WerkType) string {
+	switch wt {
+	case Docker:
+		return ""
+	case Kubernetes:
+		return ""
+	case Bare:
+		return os.ExpandEnv("$HOME")
+	default:
+		return ""
+	}
 }
 
 // WerkerFacts is a struct for the configurations in werker that affect actual builds.
