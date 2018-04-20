@@ -4,7 +4,6 @@ package streamer
 import (
 	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/test"
 	protobuf "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/go-test/deep"
 	"google.golang.org/grpc"

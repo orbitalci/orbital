@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -31,22 +33,21 @@ func tarTemplates(t *testing.T) func(t *testing.T) {
 	cmd.Stderr = &err
 	errr := cmd.Run()
 	t.Log(out.String())
+	t.Log(cmd.Dir)
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("no caller???? ")
 	}
-	filep := path.Dir(filename) + "/werker_files.tar"
+	t.Log(filepath.Dir(filename))
 	if errr != nil {
-		t.Fatal(fmt.Sprintf("unable to tar up template direc, stdout: %s \n stderr: %s \n err: %s", out.String(), err.String(), errr.Error()))
+		t.Error(fmt.Sprintf("unable to tar up template direc, stdout: %s \n stderr: %s \n err: %s", out.String(), err.String(), errr.Error()))
 	}
 	return func(t *testing.T) {
-		rmcmd := exec.Command("rm", filep)
-		var rmout, rmerr bytes.Buffer
-		rmcmd.Stdout = &out
-		rmcmd.Stderr = &err
-		errr := rmcmd.Run()
+		errr := os.Remove(path.Join(filepath.Dir(filename), "werker_files.tar"))
 		if errr != nil {
-			t.Fatal("couldn't clean up werker_files.tar, stdout: ", rmout.String(), "\nstderr: ", rmerr.String(), "\nerror: ", errr.Error())
+			if !os.IsNotExist(errr) {
+				t.Error("couldn't clean up werker_files.tar, error: ", errr.Error())
+			}
 		}
 	}
 }
