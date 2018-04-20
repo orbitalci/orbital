@@ -13,6 +13,7 @@
 
 ## little TODOs?:
 - create `ocelot init` command
+- regex matching for accepted branches
 - mechanism for uploading test data
 - env variable for vault address to be used by get_ssh_key.sh from s3
 - fix PR's triggering builds

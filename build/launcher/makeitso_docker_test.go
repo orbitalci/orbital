@@ -1,8 +1,11 @@
 package launcher
 
 import (
+	"bytes"
+	"strings"
 
 	"bitbucket.org/level11consulting/go-til/net"
+	"bitbucket.org/level11consulting/go-til/test"
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/builder"
 	"bitbucket.org/level11consulting/ocelot/build/integrations"
@@ -24,13 +27,47 @@ import (
 )
 
 var kubeconfs = []pb.OcyCredder{
-	&pb.K8SCreds{"acct1", "herearemyk8scontentshowsickisthat", "THERECANONLYBEONE", pb.SubCredType_KUBECONF},
+	&pb.K8SCreds{"acct1", `herearemyk8scontentshowsickisthat
+wowowoowowowoowoowowowo
+herebeanotherlinebudshowniceisthaaat`, "THERECANONLYBEONE", pb.SubCredType_KUBECONF},
 }
+
 
 var dockerCreds = []pb.OcyCredder{
 	makeDockerCred("mydockeridentity", "dockeruser", "dockerpw", "http://urls.go", "jessdanshnak"),
 	makeDockerCred("dockerid123", "uname", "xyzzzz", "http://docker.hub.io", "level11"),
 }
+
+var sshCreds = []pb.OcyCredder{
+	&pb.SSHKeyWrapper{"account1", []byte(testSSHKey), pb.SubCredType_SSHKEY, "THISISANSSHKEY"},
+}
+var testSSHKey = `-----BEGIN RSA PRIVATE KEY-----
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+-----END RSA PRIVATE KEY-----`
 
 func makeDockerCred(id, uname, pw, url, acctname string) *pb.RepoCreds {
 	return &pb.RepoCreds{Identifier:id, Username:uname, Password:pw, RepoUrl:url, AcctName:acctname, SubType: pb.SubCredType_DOCKER}
@@ -47,6 +84,8 @@ func (d *dummyCVRC) GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.S
 		return kubeconfs, nil
 	case pb.SubCredType_DOCKER:
 		return dockerCreds, nil
+	case pb.SubCredType_SSHKEY:
+		return sshCreds, nil
 	}
 	return nil, integrations.NCErr("only did docker and kubeconf")
 }
@@ -75,7 +114,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 		t.Error(result.Error)
 	}
 	expectedMsgs := []string{
-		"no integration data found for ssh keyfile integration so assuming integration not necessary",
+		"completed integration_util | ssh keyfile integration stage ✓",
 		"completed integration_util | docker login stage ✓",
 		"completed integration_util | kubeconfig render stage ✓",
 		"no integration data found for nexus m2 settings.xml render so assuming integration not necessary",
@@ -85,17 +124,65 @@ func TestLauncher_doIntegrations(t *testing.T) {
 		t.Error(diff)
 	}
 	result, _, _ = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf:&pb.BuildConfig{BuildTool:"gala"}}, docker)
+	close(launch.infochan)
 	expectedMsgs = []string{
-		"no integration data found for ssh keyfile integration so assuming integration not necessary",
+		"completed integration_util | ssh keyfile integration stage ✓",
 		"completed integration_util | docker login stage ✓",
 		"completed integration_util | kubeconfig render stage ✓",
 		"completed integration util setup stage ✓",
 	}
 	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {
+		var i []byte
+		i =  <- launch.infochan
+		t.Log(string(i))
+		//t.Log(<-launch.infochan)
 		t.Error(diff)
 	}
+	launch.infochan = make(chan []byte, 1000)
+	// check that docker config.json was properly rendered
+	expectedDockerConfig := []byte(`{"auths":{"http://docker.hub.io":{"auth":"dW5hbWU6eHl6enp6"},"http://urls.go":{"auth":"ZG9ja2VydXNlcjpkb2NrZXJwdw=="}},"HttpHeaders":{"User-Agent":"Docker-Client/17.12.0-ce (linux)"}}`)
+	res := docker.Exec(ctx, "test docker config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.docker/config.json"}, launch.infochan)
+	if res.Status == pb.StageResultVal_FAIL {
+		t.Log(res.Messages)
+		t.Error(result.Error)
+	}
+	config := <- launch.infochan
+	if !bytes.Equal(expectedDockerConfig, config) {
+		t.Error(test.GenericStrFormatErrors("docker config contents", string(expectedDockerConfig), string(config)))
+	}
+	close(launch.infochan)
 
+	// check that kubeconfig was properly rendered
 
+	// this is going to be multiline, so we have to set up a new info channel
+	kubeLogout := make(chan []byte, 1000)
+	res = docker.Exec(ctx, "test k8s config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/conf"}, kubeLogout)
+	close(kubeLogout)
+	if res.Status == pb.StageResultVal_FAIL {
+		t.Log(res.Messages)
+		t.Error(result.Error)
+	}
+	var kubelines []string
+	for kubeline := range kubeLogout {
+		kubelines = append(kubelines, string(kubeline))
+	}
+	kube := strings.Join(kubelines, "\n")
+	if kube != kubeconfs[0].GetClientSecret() {
+		t.Error(test.StrFormatErrors("kubeconfig contents", kubeconfs[0].GetClientSecret(), kube))
+	}
+	// finally, check that ssh key properly rendered
+	sshLogout := make(chan []byte, 1000)
+	res = docker.Exec(ctx, "test ssh file render", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.ssh/THISISANSSHKEY"}, sshLogout)
+	close(sshLogout)
+	var sshKeyRendered string
+	for sshLIne := range sshLogout {
+		sshKeyRendered += string(sshLIne) + "\n"
+	}
+	// add one more newline to expected as a result of the script that echoed the env var into the container
+	testSSHKey += "\n"
+	if sshKeyRendered  != testSSHKey {
+		t.Error(test.StrFormatErrors("ssh file contents", testSSHKey, sshKeyRendered))
+	}
 }
 
 // An extremely involved integration test with our local nexus repo and a docker image being brought up.

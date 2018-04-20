@@ -18,7 +18,9 @@ type dockerConfigJson struct {
 
 }
 
-type DockrInt struct {}
+type DockrInt struct {
+	dConfig string
+}
 
 func (d *DockrInt) String() string {
 	return "docker login"
@@ -34,11 +36,12 @@ func (d *DockrInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, err
 		return "", err
 	}
 	configEncoded := integrations.BitzToBase64(bitz)
+	d.dConfig = configEncoded
 	return configEncoded, err
 }
 
 func (d *DockrInt) MakeBashable(encoded string) []string {
-	return []string{"/bin/sh", "-c", "/.ocelot/render_docker.sh " + "'" + encoded + "'"}
+	return []string{"/bin/sh", "-c", "mkdir -p ~/.docker && echo \"${DCONF}\" | base64 -d > ~/.docker/config.json"}
 }
 
 func (d *DockrInt) IsRelevant(wc *pb.BuildConfig) bool {
@@ -46,7 +49,7 @@ func (d *DockrInt) IsRelevant(wc *pb.BuildConfig) bool {
 }
 
 func (d *DockrInt) GetEnv() []string {
-	return []string{}
+	return []string{"DCONF=" + d.dConfig}
 }
 
 func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
