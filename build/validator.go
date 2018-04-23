@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"bitbucket.org/level11consulting/ocelot/common/helpers/dockrhelper"
+	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
 )
@@ -25,7 +26,7 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 		return errors.New("BuildTool must be specified")
 	}
 	if UI != nil {
-		UI.Info("BuildTool is specified \u2713" )
+		UI.Info("BuildTool is specified " + models.CHECKMARK)
 	}
 	if len(config.Stages) == 0 {
 		return errors.New("there must be at least one stage listed")
@@ -44,7 +45,7 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 	}
 
 	if UI != nil {
-		UI.Info("Required stage `build` exists \u2713" )
+		UI.Info("Required stage `build` exists " + models.FAILED)
 	}
 
 
@@ -57,7 +58,7 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 			UI.Error(config.Image + " does not exist or credentials cannot be found")
 		} else  {
 			out.Close()
-			UI.Info(config.Image + " exists \u2713")
+			UI.Info(config.Image + " exists " + models.CHECKMARK)
 		}
 	}
 	out.Close()

@@ -38,7 +38,7 @@ func GetStatus(queued, buildStarted, finished, failed_validation bool) BuildStat
 //| ec8ea5f46cdd198c135c1ba73984ac6d6192cc16 | orchestr8-locationservices | level11consulting |
 //+------------------------------------------+----------------------------+-------------------+
 //It takes in ocelot server's BuildRuntime response
-func SelectFromHashes(build *models.Builds) string {
+func SelectFromHashes(build *models.Builds, theme *ColorDefs) string {
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
 	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
@@ -69,7 +69,7 @@ func SelectFromHashes(build *models.Builds) string {
 	}
 
 	writ.Render()
-	explanationMsg := fmt.Sprintf("\033[0;34mit's your lucky day, there's %d hashes matching that value. Please enter a more complete git hash\n\033[m", len(build.Builds))
+	explanationMsg := fmt.Sprintf("%sit's your lucky day, there's %d hashes matching that value. Please enter a more complete git hash\n%s", theme.Info, len(build.Builds), theme.Reset)
 	return explanationMsg + writer.String()
 }
 
@@ -82,27 +82,27 @@ func SelectFromHashes(build *models.Builds) string {
 //it takes in a boolean argument indicating whether or not the build is running, and a protobuf Status
 //object. It returns a PASS/FAIL/Running status string, a color corresponding with that status,
 //and the string representation of stages, stage messages, and errors if exists
-func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool) (string, int, string) {
+func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool, theme *ColorDefs) (string, string, string) {
 	var status, stageStatus string
-	var color int
+	var color string
 	switch bs {
 	case RUNNING:
 		status = "Running"
-		color = 33
+		color = theme.Running
 	case QUEUED:
 		status = "Queued and waiting to be built"
-		color = 30
+		color = theme.Queued
 		return stageStatus, color, status
 	case FAILED_PRESTART:
 		status = "Failed PreStart"
-		color = 31
+		color = theme.Failed
 	case DONE:
 		if !statuses.BuildSum.Failed {
 			status = "PASS"
-			color = 32
+			color = theme.Passed
 		} else {
 			status = "FAIL"
-			color = 31
+			color = theme.Failed
 		}
 	}
 
@@ -118,7 +118,7 @@ func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool) (stri
 			if statuses.BuildSum.Failed || wide {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {
-					stageStatus += fmt.Sprintf(": \033[1;30m%s\033[0m", stage.Error)
+					stageStatus += fmt.Sprintf(": %s%s%s", theme.Normal, stage.Error, theme.Reset)
 				}
 			}
 		}
@@ -127,8 +127,8 @@ func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool) (stri
 	return stageStatus, color, status
 }
 
-func PrintStatusOverview(color int, acctName, repoName, hash, status string) string {
-	buildStatus := fmt.Sprintf("\n\033[1;%dmstatus: %s\033[0m \n\033[0;33mhash: %s\033[0m\naccount: %s \nrepo: %s\n", color, status, hash, acctName, repoName)
+func PrintStatusOverview(color int, acctName, repoName, hash, status string, theme *ColorDefs) string {
+	buildStatus := fmt.Sprintf("\n%sstatus: %s%s \n%shash: %s%s\naccount: %s \nrepo: %s\n", color, status,  theme.Reset, theme.Warning, hash, theme.Reset, acctName, repoName)
 	return buildStatus
 }
 

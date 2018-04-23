@@ -119,10 +119,10 @@ func (c *cmd) Run(args []string) int {
 	return 0
 }
 
-func generateTableRow(summary *models.BuildSummary) []string {
+func generateTableRow(summary *models.BuildSummary, theme *commandhelper.ColorDefs) []string {
 	tym := time.Unix(summary.BuildTime.Seconds, int64(summary.BuildTime.Nanos))
 	var row []string
-	var color int
+	var color string
 	var status string
 	failedValidation := summary.QueueTime.Seconds == 0
 	isQueued := summary.BuildDuration < 0 && summary.BuildTime.Seconds == 0
@@ -130,28 +130,26 @@ func generateTableRow(summary *models.BuildSummary) []string {
 	//we color line output based on success/failure
 	if isRunning || isQueued {
 		status = "N/A"
-		color = 35
+		color = theme.Running
 	} else if failedValidation {
 		status = "FAILED PRESTART"
-		color = 31
+		color = theme.Failed
 	} else if summary.Failed {
 		status = "FAIL"
-		//status = "\u2717"
-		color = 31
+		color = theme.Failed
 	} else {
 		status = "PASS"
-		//status = "\u2713"
-		color = 32
+		color = theme.Passed
 	}
 
 	row = append(row,
-		fmt.Sprintf("\033[0;%dm%d",color, summary.BuildId),
+		fmt.Sprintf("%s%d", color, summary.BuildId),
 		summary.Repo,
 		commandhelper.PrettifyTime(summary.BuildDuration, isQueued),
 		tym.Format("Mon Jan 2 15:04:05"),
 		status,
 		summary.Branch,
-		fmt.Sprintf("%v\033[0m",summary.Hash),
+		fmt.Sprintf("%v%s",summary.Hash, theme.Reset   ),
 	)
 	return row
 }

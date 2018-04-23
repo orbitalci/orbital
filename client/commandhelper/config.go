@@ -12,6 +12,7 @@ type ClientConfig struct {
 	AdminLocation string
 	Client        models.GuideOcelotClient
 	OcyDns        string
+	Theme         *ColorDefs
 }
 
 func NewClientConfig() *ClientConfig {
@@ -47,6 +48,7 @@ func NewClientConfig() *ClientConfig {
 		AdminLocation: adminHost + ":" + adminPort,
 		Client: client,
 		OcyDns: ocyDns,
+		Theme: Default(),
 	}
 }
 
