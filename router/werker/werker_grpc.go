@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/level11consulting/ocelot/build/cleaner"
 	"bitbucket.org/level11consulting/ocelot/build/streamer"
 	"bitbucket.org/level11consulting/ocelot/build/valet"
+	"bitbucket.org/level11consulting/ocelot/models"
 	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -51,7 +52,7 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 		build := hashes[request.Hash]
 		if len(build.DockerUuid) > 0 {
 			w.Cleanup(context.Background(), build.DockerUuid, nil)
-			stream.Send(wrap(fmt.Sprintf("Successfully killed build for %s \u2713", request.Hash)))
+			stream.Send(wrap(fmt.Sprintf("Successfully killed build for %s %s", request.Hash, models.CHECKMARK)))
 		} else {
 			stream.Send(wrap("Wow you killed your build before it even got to the setup stage??"))
 		}

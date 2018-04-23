@@ -9,6 +9,7 @@ import (
 
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/vault"
+	"bitbucket.org/level11consulting/ocelot/models"
 
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/basher"
@@ -25,11 +26,12 @@ type Docker struct{
 	Log	io.ReadCloser
 	ContainerId	string
 	DockerClient *client.Client
+	globalEnvs []string
 	*basher.Basher
 }
 
 func NewDockerBuilder(b *basher.Basher) build.Builder {
-	return &Docker{nil, "", nil, b}
+	return &Docker{nil, "", nil, nil, b}
 }
 
 func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
@@ -61,22 +63,18 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		}, ""
 	}
 	defer out.Close()
-	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s \u2713", imageName))
+	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s %s", imageName, models.CHECKMARK))
 	bufReader := bufio.NewReader(out)
 	d.writeToInfo(su.GetStageLabel(), bufReader, logout)
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")
-
-	//add environment variables that will always be avilable on the machine - GIT_HASH, BUILD_ID, GIT_HASH_SHORT, GIT_BRANCH
-	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id), fmt.Sprintf("GIT_HASH_SHORT=%s", werk.CheckoutHash[:7]), fmt.Sprintf("GIT_BRANCH=%s", werk.Branch)}
-	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 
 
 	//container configurations
 	containerConfig := &container.Config{
 		Image: imageName,
 		User: "root",
-		Env: paddedEnvs,
+		Env: d.globalEnvs,
 		Cmd: d.DownloadTemplateFiles(werkerPort),
 		AttachStderr: true,
 		AttachStdout: true,
@@ -106,7 +104,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		}, ""
 	}
 
-	setupMessages = append(setupMessages, fmt.Sprint("created build container \u2713"))
+	setupMessages = append(setupMessages, fmt.Sprintf("created build container %s", models.CHECKMARK))
 
 	for _, warning := range resp.Warnings {
 		logout <- []byte(warning)
@@ -191,7 +189,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		return result, d.ContainerId
 	}
 
-	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName), "completed setup stage \u2713")
+	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  %s", werk.FullName, models.CHECKMARK), "completed setup stage " + models.CHECKMARK)
 	result.Messages = setupMessages
 	return result, d.ContainerId
 }
@@ -208,6 +206,9 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 	return registerdAddr
 }
 
+func (d *Docker) SetGlobalEnv(envs []string) {
+	d.globalEnvs = envs
+}
 
 // ExecuteIntegration will basically run Execute but without the cd and run cmds because we are generating the scripts in the code
 func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan[]byte) *pb.Result {
@@ -263,7 +264,7 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 
 	// todo: have stage have exit code in case a stage doesn't care if exit code is nonzero (tj recommendation)
 	if inspector.ExitCode != 0 || err != nil {
-		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage \u2717", currStage))
+		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage %s", currStage, models.FAILED))
 		var errStr string
 		if err == nil {
 			errStr = "exit code was not 0"
@@ -278,7 +279,7 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 			Messages: stageMessages,
 		}
 	}
-	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
+	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage %s", currStage, models.CHECKMARK))
 	return &pb.Result{
 		Stage:  currStage,
 		Status: pb.StageResultVal_PASS,

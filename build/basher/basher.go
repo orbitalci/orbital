@@ -25,18 +25,18 @@ func NewBasher(downloadUrl, GHubDownloadUrl, LoopbackIP, dotOcelotPrefix string)
 		}
 	}
 	return &Basher{
-		BbDownloadURL: downloadUrl,
+		BbDownloadURL:     downloadUrl,
 		GithubDownloadURL: GHubDownloadUrl,
-		LoopbackIp: LoopbackIP,
-		dotOcelotPrefix: dotOcelotPrefix,
+		LoopbackIp:        LoopbackIP,
+		ocelotPrefix:      dotOcelotPrefix,
 	}, nil
 }
 
 type Basher struct {
-	BbDownloadURL 	  string
+	BbDownloadURL     string
 	GithubDownloadURL string
 	LoopbackIp        string
-	dotOcelotPrefix   string
+	ocelotPrefix      string
 }
 
 func (b *Basher) GetBbDownloadURL() string {
@@ -73,9 +73,9 @@ func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 	case pb.SubCredType_BITBUCKET:
 		//if download url is not the default, then we assume whoever set it knows exactly what they're doing and no replacements
 		if b.GetBbDownloadURL() != DefaultBitbucketURL {
-			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s", b.OcelotDir(), werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash)
+			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s %s", b.OcelotDir(), werk.VcsToken, b.GetBbDownloadURL(), werk.CheckoutHash, b.CloneDir(werk.CheckoutHash))
 		} else {
-			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s", b.OcelotDir(), werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash)
+			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s %s", b.OcelotDir(), werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash, b.CloneDir(werk.CheckoutHash))
 		}
 	case pb.SubCredType_GITHUB:
 		ocelog.Log().Error("not implemented")
@@ -119,11 +119,20 @@ func (b *Basher) DownloadKubectl(werkerPort string) []string {
 
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
-	build := append([]string{"cd /" + commitHash}, cmds...)
+	cdCmd := fmt.Sprintf("cd %s/%s", b.PrefixDir(), commitHash)
+	build := append([]string{cdCmd}, cmds...)
 	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(build, " && ")})
 	return buildAndDeploy
 }
 
 func (b *Basher) OcelotDir() string {
-	return b.dotOcelotPrefix + "/.ocelot"
+	return b.ocelotPrefix + "/.ocelot"
+}
+
+func (b *Basher) PrefixDir() string {
+	return b.ocelotPrefix
+}
+
+func (b *Basher) CloneDir(hash string) string {
+	return fmt.Sprintf("%s/%s", b.ocelotPrefix, hash)
 }

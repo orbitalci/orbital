@@ -225,11 +225,6 @@ type BuildRuntime interface {
 
 
 
-func (pr *PollRequest) Validate() error {
-	pr.Cron = strings.TrimSpace(pr.Cron)
-	//todo: add validating acct/repo
-	return nil
-}
 
 var (
 	vcsSubTypes = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}

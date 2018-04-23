@@ -30,9 +30,9 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.SubType.Parent(), v.GetIdentifier())
 		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
 		if err != nil {
-			vcsCred.SshFileLoc = "\033[0;33mNo SSH Key\033[0m"
+			vcsCred.SshFileLoc = "No SSH Key"
 		} else {
-			vcsCred.SshFileLoc = "\033[0;34mSSH Key on file\033[0m"
+			vcsCred.SshFileLoc = "SSH Key on file"
 		}
 		credWrapper.Vcs = append(credWrapper.Vcs, vcsCred)
 	}
@@ -44,6 +44,9 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 
 
 func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
+	if err := credentials.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "VCS Insert Request is invalid; error: " + err.Error())
+	}
 	if credentials.SubType.Parent() != pb.CredType_VCS {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of vcs type: " + strings.Join(pb.CredType_VCS.SubtypesString(), " | "))
 	}
@@ -64,6 +67,9 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *pb.VCS
 
 
 func (g *guideOcelotServer) UpdateVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
+	if err := credentials.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "VCS Update Request is invalid; error: " + err.Error())
+	}
 	credentials.Identifier = credentials.BuildIdentifier()
 	return g.updateAnyCred(ctx, credentials)
 }
@@ -93,6 +99,9 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 }
 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
+	if err := creds.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Repo Insert Request is invalid; error: " + err.Error())
+	}
 	if creds.SubType.Parent() != pb.CredType_REPO {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of repo type: " + strings.Join(pb.CredType_REPO.SubtypesString(), " | "))
 	}
@@ -111,6 +120,9 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCred
 }
 
 func (g *guideOcelotServer) UpdateRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
+	if err := creds.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Repo Update Request is invalid; error: " + err.Error())
+	}
 	return g.updateAnyCred(ctx, creds)
 }
 
@@ -119,6 +131,9 @@ func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *pb.RepoCr
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
+	if err := creds.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Kubeconfig Insert Request is invalid; error: " + err.Error())
+	}
 	if creds.SubType.Parent() != pb.CredType_K8S {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of k8s type: " + strings.Join(pb.CredType_K8S.SubtypesString(), " | "))
 	}
@@ -148,6 +163,9 @@ func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty)
 }
 
 func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
+	if err := creds.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Kubeconfig Update Request is invalid; error: " + err.Error())
+	}
 	return g.updateAnyCred(ctx, creds)
 }
 

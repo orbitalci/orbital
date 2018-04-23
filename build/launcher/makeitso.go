@@ -30,8 +30,10 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
+	// right off the bat we know all the environment variables that will exist for the
+	// lifetime of the container, so just add them now
+	w.addGlobalEnvVars(werk, builder)
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
-
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
 	defer w.BuildValet.MakeItSoDed(finish)
 	defer w.BuildValet.UnregisterDoneChan(werk.CheckoutHash)
@@ -175,6 +177,19 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 	return
 }
 
+
+func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) {
+	paddedEnvs := []string{
+		fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash),
+		fmt.Sprintf("BUILD_ID=%d", werk.Id),
+		fmt.Sprintf("GIT_HASH_SHORT=%s", werk.CheckoutHash[:7]),
+		fmt.Sprintf("GIT_BRANCH=%s", werk.Branch),
+	}
+	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
+	builder.SetGlobalEnv(paddedEnvs)
+}
+
+
 func (w *launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
 	dockerUuid := <- dockerChan
 
@@ -265,7 +280,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	}
 	// reset stage to integration_util
 	result.Stage = stage.GetStage()
-	result.Messages = append(integMessages, "completed integration util setup stage \u2713")
+	result.Messages = append(integMessages, "completed integration util setup stage " + models.CHECKMARK)
 	return
 }
 

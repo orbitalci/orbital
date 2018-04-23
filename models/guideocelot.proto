@@ -6,6 +6,8 @@ import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "protoc-gen-swagger/options/annotations.proto";
+import "github.com/mwitkow/go-proto-validators/validator.proto";
+
 //import "google/protobuf/wrappers.proto"; //use this when you have to pass a string value
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
@@ -259,9 +261,9 @@ service GuideOcelot {
 
 message BuildReq {
     // acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo
-    string acctRepo = 1;
+    string acctRepo = 1 [(validator.field) = {msg_exists : true}];
     // hash is the git hash to trigger.
-    string hash = 2;
+    string hash = 2 [(validator.field) = {msg_exists : true}];
     // branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required.
     string branch = 3;
 }
@@ -282,12 +284,12 @@ message CredWrapper {
 
 message SSHKeyWrapper {
     // account name to associate ssh key with
-    string acctName = 1;
+    string acctName = 1 [(validator.field) = {msg_exists : true}];
     // the contents of the private key
-    bytes privateKey = 2;
-    SubCredType subType = 10;
+    bytes privateKey = 2 [(validator.field) = {msg_exists : true}];
+    SubCredType subType = 10 [(validator.field) = {msg_exists : true}];
     // identifier is the unique identifier for when an ssh key is not associated with a VCS account.
-    string identifier = 11;
+    string identifier = 11 [(validator.field) = {msg_exists : true}];
 }
 
 message SSHWrap {
@@ -302,19 +304,19 @@ message VCSCreds {
     // @inject_tag: yaml:"clientSecret"
     string clientSecret = 2;
     // identifier is the name the user calls teh credential set
-    string identifier = 8;
+    string identifier = 8 [(validator.field) = {msg_exists : true}];
     // tokenUrl is the url at which to retrieve the token
     // @inject_tag: yaml:"tokenURL"
     string tokenURL = 3;
     // @inject_tag: yaml:"acctName"
     // acctName is the account to associate the VCSCred with. Must be the account name of the owner of the repository they wish to track (ie level11consulting)
-    string acctName = 4;
+    string acctName = 4 [(validator.field) = {msg_exists : true}];
 
     // just a string that says whether or not there is an ssh key on file
     // @inject_tag: yaml:"sshFileLoc"
     string sshFileLoc = 6;
     // @inject_tag: yaml:"subType"
-    SubCredType subType = 10;
+    SubCredType subType = 10 [(validator.field) = {msg_exists : true}];
 }
 
 // container for list of repo creds
@@ -359,24 +361,24 @@ message RepoCreds {
 
     // @inject_tag: yaml:"repoUrl"
     string repoUrl= 6;
-    string identifier = 8;
+    string identifier = 8 [(validator.field) = {msg_exists : true}];
     // @inject_tag: yaml:"acctName"
     // account name (same as from vcs)
-    string acctName = 4;
+    string acctName = 4 [(validator.field) = {msg_exists : true}];
     // @inject_tag: yaml:"subType"
-    SubCredType subType = 10;
+    SubCredType subType = 10 [(validator.field) = {msg_exists : true}];
 
 }
 
 message K8SCreds {
     // account name to associate this credential with
-    string acctName = 1;
+    string acctName = 1 [(validator.field) = {msg_exists : true}];
     // k8scontents is the contents of the kubeconfig file
-    string k8sContents = 2;
+    string k8sContents = 2 [(validator.field) = {msg_exists : true}];
     // identifier in K8s creds is currently irrelevant, as there can only be one per account
-    string identifier = 3;
+    string identifier = 3 [(validator.field) = {msg_exists : true}];
     // @inject_tag: yaml:"subType"
-    SubCredType subType = 5;
+    SubCredType subType = 5 [(validator.field) = {msg_exists : true}];
 
 }
 
@@ -460,10 +462,10 @@ message Summaries {
 }
 
 message PollRequest {
-    string account = 1;
-    string repo = 2;
-    string cron = 4;
-    string branches = 5;
+    string account = 1 [(validator.field) = {msg_exists : true}];
+    string repo = 2 [(validator.field) = {msg_exists : true}];
+    string cron = 4 [(validator.field) = {msg_exists : true}];
+    string branches = 5 [(validator.field) = {msg_exists : true}];
     google.protobuf.Timestamp lastCronTime = 6;
     map<string, string> lastHashes = 7;
 }
