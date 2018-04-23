@@ -1,54 +1,55 @@
 package commandhelper
 
 import (
+	//"runtime"
+
 	"runtime"
+
+	"github.com/fatih/color"
 )
 
-const (
-	gitIdentifier = `\[\033[`
-	normal = gitIdentifier + `0;`
-	bold = gitIdentifier + `1;`
-	Black = `30m\]`
-	Red = `31m\]`
-	Green = `32m\]`
-	Yellow = `33m\]`
-	Blue = `34m\]`
-	Purple = `35m\]`
-	Cyan = `36m\]`
-	White = `37m\]`
-	Reset = `\[\033[0m\]`
-)
+type SprintfFunc func(format string, a ...interface{}) string
+type Color struct {
+	*color.Color
+}
 
 type ColorDefs struct {
-	Failed      	 string
-	Queued 			 string
-	Passed           string
-	Done  			 string
-	Running          string
-	Reset      		 string
-	Normal			 string
-	Info			 string
-	Error            string
-	Warning          string
-	Status           string
-	TableHeaderColor string
+	Failed           *Color
+	Queued           *Color
+	Passed           *Color
+	Done             *Color
+	Running          *Color
+	Normal           *Color
+	Info             *Color
+	Error            *Color
+	Warning          *Color
+	Status           *Color
+	TableHeaderColor *Color
+	NoColor 		 bool
 }
 
 func Default() *ColorDefs {
-	if runtime.GOOS != "windows" {
-		return &ColorDefs{
-			Failed: bold+Red,
-			Queued: normal+Black,
-			Passed: normal+Green,
-			Done: normal+Black,
-			Info: normal+Blue,
-			Warning: normal+Yellow,
-			Normal: normal+Black,
-			Reset: Reset,
-			Running: normal+Purple,
-			Error: bold+Red,
-		}
-	} else {
-		return &ColorDefs{}
+	yellow := color.New(color.FgYellow)
+	red := color.New(color.FgRed)
+	black := color.New(color.FgBlack)
+	green := color.New(color.FgGreen)
+	purple := color.New(color.FgMagenta)
+	//blue := color.New(color.FgBlue).SprintfFunc()
+	cyan := color.New(color.FgCyan)
+	theme := &ColorDefs{
+		Failed: &Color{red},
+		Queued: &Color{black},
+		Passed: &Color{green},
+		Done: &Color{black},
+		Info: &Color{cyan},
+		Warning: &Color{yellow},
+		Normal: &Color{black},
+		Running: &Color{purple},
+		Error: &Color{red},
 	}
+	if runtime.GOOS == "windows" {
+		color.NoColor = true
+		theme.NoColor = true
+	}
+	return theme
 }

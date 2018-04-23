@@ -1,6 +1,8 @@
 package summary
 
 import (
+	clr "github.com/fatih/color"
+
 	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bytes"
@@ -102,17 +104,19 @@ func (c *cmd) Run(args []string) int {
 	writ := tablewriter.NewWriter(writer)
 	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
 	writ.SetHeader([]string{"Build ID", "Repo", "Build Duration", "Start Time", "Result", "Branch", "Hash"})
-	writ.SetHeaderColor(
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
+	if !c.config.Theme.NoColor {
+		writ.SetHeaderColor(
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
+	}
 
 	for _, sum := range summaries.Sums {
-		writ.Append(generateTableRow(sum))
+		writ.Append(generateTableRow(sum, c.config.Theme))
 	}
 	writ.Render()
 	c.UI.Output("\n" + writer.String())
@@ -122,7 +126,7 @@ func (c *cmd) Run(args []string) int {
 func generateTableRow(summary *models.BuildSummary, theme *commandhelper.ColorDefs) []string {
 	tym := time.Unix(summary.BuildTime.Seconds, int64(summary.BuildTime.Nanos))
 	var row []string
-	var color string
+	var color *commandhelper.Color
 	var status string
 	failedValidation := summary.QueueTime.Seconds == 0
 	isQueued := summary.BuildDuration < 0 && summary.BuildTime.Seconds == 0
@@ -141,16 +145,32 @@ func generateTableRow(summary *models.BuildSummary, theme *commandhelper.ColorDe
 		status = "PASS"
 		color = theme.Passed
 	}
+	start, end := writeFirstAndLastColumns(summary, color)
 
 	row = append(row,
-		fmt.Sprintf("%s%d", color, summary.BuildId),
+		start,
 		summary.Repo,
 		commandhelper.PrettifyTime(summary.BuildDuration, isQueued),
 		tym.Format("Mon Jan 2 15:04:05"),
 		status,
 		summary.Branch,
-		fmt.Sprintf("%v%s",summary.Hash, theme.Reset   ),
+		end,
 	)
 	return row
 }
 
+
+func writeFirstAndLastColumns(summary *models.BuildSummary, color *commandhelper.Color) (start, end string) {
+	buf := bytes.NewBuffer([]byte{})
+	old := clr.Output
+	clr.Output = buf
+	defer func(){ clr.Output = old }()
+	color.Set()
+	fmt.Fprintf(buf, "%d", summary.BuildId)
+	start = buf.String()
+	buf.Reset()
+	fmt.Fprint(buf, summary.Hash)
+	clr.Unset()
+	end = buf.String()
+	return
+}

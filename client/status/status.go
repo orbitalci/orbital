@@ -162,8 +162,8 @@ STATUS_FOUND:
 	finished := !statuses.IsInConsul && statuses.BuildSum.BuildTime.Seconds > 0
 	commandhelper.Debuggit(c.UI, fmt.Sprintf("finished is %v, buildStarted is %v, queued is %v, buildTime is %v", finished, buildStarted, queued, time.Unix(statuses.BuildSum.BuildTime.Seconds, 0)))
 	//statuses.BuildSum.QueueTime time.Unix(0,0)
-	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished, failed_validation), statuses, c.wide)
-	buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss)
+	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished, failed_validation), statuses, c.wide, c.config.Theme)
+	buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss, c.config.Theme)
 	c.UI.Output(buildStatus + stageStatus)
 	return 0
 }

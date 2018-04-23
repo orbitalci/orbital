@@ -43,10 +43,12 @@ func SelectFromHashes(build *models.Builds, theme *ColorDefs) string {
 	writ := tablewriter.NewWriter(writer)
 	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
 	writ.SetHeader([]string{"Hash", "Repo", "Account Name"})
-	writ.SetHeaderColor(
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
-		tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
+	if !theme.NoColor {
+		writ.SetHeaderColor(
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold},
+			tablewriter.Colors{tablewriter.FgBlackColor, tablewriter.Bold})
+	}
 
 	for _, build := range build.Builds {
 		var buildLine []string
@@ -69,7 +71,7 @@ func SelectFromHashes(build *models.Builds, theme *ColorDefs) string {
 	}
 
 	writ.Render()
-	explanationMsg := fmt.Sprintf("%sit's your lucky day, there's %d hashes matching that value. Please enter a more complete git hash\n%s", theme.Info, len(build.Builds), theme.Reset)
+	explanationMsg := theme.Info.Sprintf("it's your lucky day, there's %d hashes matching that value. Please enter a more complete git hash\n", len(build.Builds))
 	return explanationMsg + writer.String()
 }
 
@@ -82,9 +84,9 @@ func SelectFromHashes(build *models.Builds, theme *ColorDefs) string {
 //it takes in a boolean argument indicating whether or not the build is running, and a protobuf Status
 //object. It returns a PASS/FAIL/Running status string, a color corresponding with that status,
 //and the string representation of stages, stage messages, and errors if exists
-func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool, theme *ColorDefs) (string, string, string) {
+func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool, theme *ColorDefs) (string, *Color, string) {
 	var status, stageStatus string
-	var color string
+	var color *Color
 	switch bs {
 	case RUNNING:
 		status = "Running"
@@ -118,7 +120,7 @@ func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool, theme
 			if statuses.BuildSum.Failed || wide {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {
-					stageStatus += fmt.Sprintf(": %s%s%s", theme.Normal, stage.Error, theme.Reset)
+					stageStatus += theme.Normal.Sprintf(": %s", stage.Error)
 				}
 			}
 		}
@@ -127,8 +129,8 @@ func PrintStatusStages(bs BuildStatus, statuses *models.Status, wide bool, theme
 	return stageStatus, color, status
 }
 
-func PrintStatusOverview(color int, acctName, repoName, hash, status string, theme *ColorDefs) string {
-	buildStatus := fmt.Sprintf("\n%sstatus: %s%s \n%shash: %s%s\naccount: %s \nrepo: %s\n", color, status,  theme.Reset, theme.Warning, hash, theme.Reset, acctName, repoName)
+func PrintStatusOverview(color *Color, acctName, repoName, hash, status string, theme *ColorDefs) string {
+	buildStatus := color.Sprintf("\nstatus: %s ", status) + theme.Warning.Sprintf("\nhash: %s", hash) + fmt.Sprintf("\naccount: %s \nrepo: %s\n", acctName, repoName)
 	return buildStatus
 }
 
