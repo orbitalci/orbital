@@ -106,6 +106,8 @@ export ADMIN_HOST=10.1.72.229
 export ADMIN_PORT=31000
 ```
 
+If your operating system is windows, the output from the client will be colorless. If you are a mac/linux user and wish to disable the colorized output, you can set the environment variable `NO_COLOR`
+
 The ocelot client can be downloaded here: 
 
 [**Mac**](https://s3-us-west-2.amazonaws.com/ocelotty/mac-ocelot.zip), [**Windows**](https://s3-us-west-2.amazonaws.com/ocelotty/windows-ocelot.zip), [**Linux**](https://s3-us-west-2.amazonaws.com/ocelotty/linux-ocelot.zip)

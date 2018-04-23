@@ -9,6 +9,7 @@ import (
 
 	ocelog "bitbucket.org/level11consulting/go-til/log"
 	"bitbucket.org/level11consulting/go-til/vault"
+	"bitbucket.org/level11consulting/ocelot/models"
 
 	"bitbucket.org/level11consulting/ocelot/build"
 	"bitbucket.org/level11consulting/ocelot/build/basher"
@@ -65,7 +66,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		}, ""
 	}
 	defer out.Close()
-	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s \u2713", imageName))
+	setupMessages = append(setupMessages, fmt.Sprintf("pulled image %s %s", imageName, models.CHECKMARK))
 	bufReader := bufio.NewReader(out)
 	d.writeToInfo(su.GetStageLabel(), bufReader, logout)
 
@@ -110,7 +111,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		}, ""
 	}
 
-	setupMessages = append(setupMessages, fmt.Sprint("created build container \u2713"))
+	setupMessages = append(setupMessages, fmt.Sprintf("created build container %s", models.CHECKMARK))
 
 	for _, warning := range resp.Warnings {
 		logout <- []byte(warning)
@@ -195,7 +196,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		return result, d.ContainerId
 	}
 
-	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  \u2713", werk.FullName), "completed setup stage \u2713")
+	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  %s", werk.FullName, models.CHECKMARK), "completed setup stage \u2713")
 	result.Messages = setupMessages
 	return result, d.ContainerId
 }
@@ -267,7 +268,7 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 
 	// todo: have stage have exit code in case a stage doesn't care if exit code is nonzero (tj recommendation)
 	if inspector.ExitCode != 0 || err != nil {
-		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage \u2717", currStage))
+		stageMessages = append(stageMessages, fmt.Sprintf("failed to complete %s stage %s", currStage, models.FAILED))
 		var errStr string
 		if err == nil {
 			errStr = "exit code was not 0"
@@ -282,7 +283,7 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 			Messages: stageMessages,
 		}
 	}
-	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage \u2713", currStage))
+	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage %s", currStage, models.CHECKMARK))
 	return &pb.Result{
 		Stage:  currStage,
 		Status: pb.StageResultVal_PASS,

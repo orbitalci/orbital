@@ -14,6 +14,7 @@ import (
 var (
 	HOOKHANDLER_VALIDATION = "pre-build-validation"
 	CHECKMARK = "\u2713"
+	FAILED = "\u2717"
 )
 
 type BuildSummary struct {

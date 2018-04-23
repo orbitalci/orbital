@@ -266,7 +266,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	}
 	// reset stage to integration_util
 	result.Stage = stage.GetStage()
-	result.Messages = append(integMessages, "completed integration util setup stage \u2713")
+	result.Messages = append(integMessages, "completed integration util setup stage " + models.CHECKMARK)
 	return
 }
 

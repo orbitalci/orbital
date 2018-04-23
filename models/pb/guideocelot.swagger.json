@@ -131,6 +131,89 @@
         "tags": [
           "GuideOcelot"
         ]
+      },
+      "put": {
+        "description": "Update a kubeconfig in ocelot for kubernetes integration.",
+        "operationId": "UpdateK8SCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsK8SCreds"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/k8s/exists": {
+      "get": {
+        "description": "Check if kubeconfig Credential exists in ocelot already. For knowing whether to call Update or Set",
+        "operationId": "K8SCredExists",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsExists"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "description": "account name to associate this credential with.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "k8sContents",
+            "description": "k8scontents is the contents of the kubeconfig file.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "description": "identifier in K8s creds is currently irrelevant, as there can only be one per account.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "KUBECONF",
+              "SSHKEY"
+            ],
+            "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
       }
     },
     "/v1/creds/repo": {
@@ -173,6 +256,227 @@
         "tags": [
           "GuideOcelot"
         ]
+      },
+      "put": {
+        "description": "Update new credential configuration to ocelot for repository integration.",
+        "operationId": "UpdateRepoCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsRepoCreds"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/repo/exists": {
+      "get": {
+        "description": "Check if Repo Credential exists in ocelot already. For knowing whether to call Update or Set",
+        "operationId": "RepoCredExists",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsExists"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "username",
+            "description": "username of repository.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "description": "password of repository.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "repoUrl",
+            "description": "@inject_tag: yaml:\"repoUrl\".",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "acctName",
+            "description": "@inject_tag: yaml:\"acctName\"\naccount name (same as from vcs).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "KUBECONF",
+              "SSHKEY"
+            ],
+            "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/ssh": {
+      "get": {
+        "operationId": "GetSSHCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsSSHWrap"
+            }
+          }
+        },
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "post": {
+        "description": "Add a new ssh key to an account so builds can access them at runtime.",
+        "operationId": "SetSSHCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsSSHKeyWrapper"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "put": {
+        "description": "Update a ssh key for use in build scripts",
+        "operationId": "UpdateSSHCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsSSHKeyWrapper"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/ssh/exists": {
+      "get": {
+        "description": "Check if ssh key file Credential exists in ocelot already. For knowing whether to call Update or Set",
+        "operationId": "SSHCredExists",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsExists"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "description": "account name to associate ssh key with.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "privateKey",
+            "description": "the contents of the private key.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "subType",
+            "description": " - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "KUBECONF",
+              "SSHKEY"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "identifier",
+            "description": "identifier is the unique identifier for when an ssh key is not associated with a VCS account.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
       }
     },
     "/v1/creds/vcs": {
@@ -210,6 +514,110 @@
             "schema": {
               "$ref": "#/definitions/modelsVCSCreds"
             }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "put": {
+        "description": "Update a VCS Credential",
+        "operationId": "UpdateVCSCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsVCSCreds"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/creds/vcs/exists": {
+      "get": {
+        "description": "Check if VCS Credential exists in ocelot already. For knowing whether to call Update or Set",
+        "operationId": "VCSCredExists",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsExists"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clientId",
+            "description": "clientId is generated by creating an oAuth consumer in bitbucket. it is required to generate tokens.\n@inject_tag: yaml:\"clientId\".",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clientSecret",
+            "description": "clientSecret is generated by creating an oAuth consumer in bitbucket. it is required to generate tokens.\n@inject_tag: yaml:\"clientSecret\".",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "description": "identifier is the name the user calls teh credential set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "tokenURL",
+            "description": "tokenUrl is the url at which to retrieve the token\n@inject_tag: yaml:\"tokenURL\".",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "acctName",
+            "description": "@inject_tag: yaml:\"acctName\"\nacctName is the account to associate the VCSCred with. Must be the account name of the owner of the repository they wish to track (ie level11consulting).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sshFileLoc",
+            "description": "just a string that says whether or not there is an ssh key on file\n@inject_tag: yaml:\"sshFileLoc\".",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "KUBECONF",
+              "SSHKEY"
+            ],
+            "default": "NIL_SCT"
           }
         ],
         "tags": [
@@ -490,16 +898,20 @@
       "properties": {
         "done": {
           "type": "boolean",
-          "format": "boolean"
+          "format": "boolean",
+          "title": "done says whether or not the build has completed"
         },
         "ip": {
-          "type": "string"
+          "type": "string",
+          "title": "ip is the ip of the werker node that is running the build"
         },
         "grpcPort": {
-          "type": "string"
+          "type": "string",
+          "title": "grpcPort is the grpc port of the werker running the build"
         },
         "hash": {
-          "type": "string"
+          "type": "string",
+          "title": "hash is the hash"
         },
         "acctName": {
           "type": "string"
@@ -585,13 +997,16 @@
       "type": "object",
       "properties": {
         "acctName": {
-          "type": "string"
+          "type": "string",
+          "title": "account name to associate this credential with"
         },
         "k8sContents": {
-          "type": "string"
+          "type": "string",
+          "title": "k8scontents is the contents of the kubeconfig file"
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "title": "identifier in K8s creds is currently irrelevant, as there can only be one per account"
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
@@ -802,7 +1217,8 @@
         "KUBECONF",
         "SSHKEY"
       ],
-      "default": "NIL_SCT"
+      "default": "NIL_SCT",
+      "title": "- BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH"
     },
     "modelsSummaries": {
       "type": "object",

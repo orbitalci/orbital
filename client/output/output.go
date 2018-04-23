@@ -87,7 +87,7 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	if len(build.Builds) > 1 {
-		c.UI.Output(commandhelper.SelectFromHashes(build))
+		c.UI.Output(commandhelper.SelectFromHashes(build, c.config.Theme))
 		return 0
 	} else if len(build.Builds) == 1 {
 		for _, build := range build.Builds {
