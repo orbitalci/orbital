@@ -28,7 +28,7 @@ type ColorDefs struct {
 	NoColor 		 bool
 }
 
-func Default() *ColorDefs {
+func Default(noColor bool) *ColorDefs {
 	yellow := color.New(color.FgYellow)
 	red := color.New(color.FgRed)
 	black := color.New(color.FgBlack)
@@ -47,7 +47,7 @@ func Default() *ColorDefs {
 		Running: &Color{purple},
 		Error: &Color{red},
 	}
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" || noColor {
 		color.NoColor = true
 		theme.NoColor = true
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: commandhelper.NewClientConfig()}
+	c := &cmd{UI: ui, config: commandhelper.Config}
 	c.init()
 	return c
 }

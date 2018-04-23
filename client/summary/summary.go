@@ -119,7 +119,8 @@ func (c *cmd) Run(args []string) int {
 		writ.Append(generateTableRow(sum, c.config.Theme))
 	}
 	writ.Render()
-	c.UI.Output("\n" + writer.String())
+	her := writer.String()
+	c.UI.Output("\n" + her)
 	return 0
 }
 
