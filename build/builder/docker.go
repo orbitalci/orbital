@@ -160,14 +160,6 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		installed.Messages = append(setupMessages, installed.Messages...)
 		return installed, d.ContainerId
 	}
-	setupMessages = append(setupMessages, "attempting to download codebase...")
-	downloadCodebase := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
-	if len(downloadCodebase.Error) > 0 {
-		ocelog.Log().Error("an err happened trying to download codebase", downloadCodebase.Error)
-		downloadCodebase.Messages = append(setupMessages, downloadCodebase.Messages...)
-		return downloadCodebase, d.ContainerId
-	}
-
 
 	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
 

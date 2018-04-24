@@ -74,7 +74,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 func main() {
 	conf, err := GetConf()
 	if err != nil {
-		fmt.Errorf("cannot get configuration, exiting.... error: %s", err)
+		fmt.Printf("cannot get configuration, exiting.... error: %s\n", err)
 		return
 	}
 	ocelog.InitializeLog(conf.LogLevel)
@@ -117,7 +117,7 @@ func main() {
 		protoConsumers = append(protoConsumers, protoConsume)
 	}
 	go nsqwatch.WatchAndPause(60, protoConsumers, conf.RemoteConfig, store) // todo: put interval in conf
-	go werker.ServeMe(streamingTunnel, conf.WerkerFacts, store, buildValet.KillaValet)
+	go werker.ServeMe(streamingTunnel, conf.WerkerFacts, store, buildValet.ContextValet)
 	go buildValet.ListenBuilds(buildCtxTunnel, sync.Mutex{})
 	for _, consumer := range protoConsumers {
 		<-consumer.StopChan

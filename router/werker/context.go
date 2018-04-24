@@ -19,7 +19,7 @@ type WerkerContext struct {
 	consul        *consulet.Consulet
 	store         storage.OcelotStorage
 	streamPack    *streamer.StreamPack
-	killValet     *valet.KillaValet
+	killValet     *valet.ContextValet
 }
 //
 //func (w *WerkerContext) dumpData(wr http.ResponseWriter, r *http.Request) {
@@ -40,7 +40,7 @@ type WerkerContext struct {
 //	wr.Write(bit)
 //}
 
-func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, killaValet *valet.KillaValet) *WerkerContext {
+func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, contextValet *valet.ContextValet) *WerkerContext {
 	werkerConsul, err := consulet.Default()
 	if err != nil {
 		ocelog.IncludeErrField(err)
@@ -48,7 +48,7 @@ func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, kil
 	werkerCtx := &WerkerContext{
 		WerkerFacts:   conf,
 		consul:        werkerConsul,
-		killValet:    killaValet,
+		killValet:    contextValet,
 		store:         store,
 	}
 	return werkerCtx

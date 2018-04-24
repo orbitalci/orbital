@@ -2,9 +2,11 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/mitchellh/go-homedir"
 )
 
 type WerkType int
@@ -12,7 +14,7 @@ type WerkType int
 const (
 	Kubernetes WerkType = iota
 	Docker
-	Bare
+	Host
 )
 
 
@@ -37,8 +39,12 @@ func GetOcyPrefixFromWerkerType(wt WerkType) string {
 		return ""
 	case Kubernetes:
 		return ""
-	case Bare:
-		return os.ExpandEnv("$HOME")
+	case Host:
+		dir, err := homedir.Dir()
+		if err != nil {
+			panic("Couldn't get home directory! " + err.Error())
+		}
+		return dir
 	default:
 		return ""
 	}

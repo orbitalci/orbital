@@ -21,7 +21,6 @@ import (
 type WorkerMsgHandler struct {
 	*models.WerkerFacts
 	Topic           string
-	Type        models.WerkType
 	infochan        chan []byte
 	StreamChan   chan *models.Transport
 	BuildCtxChan chan *models.BuildContext
@@ -69,9 +68,11 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
 	//
 	var builder build.Builder
-	switch w.Type {
+	switch w.WerkerType {
 	case models.Docker:
 		builder = bldr.NewDockerBuilder(w.Basher)
+	case models.Host:
+		builder = bldr.NewHostBuilder(w.Basher)
 	default:
 		builder = bldr.NewDockerBuilder(w.Basher)
 	}

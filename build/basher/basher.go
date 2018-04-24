@@ -107,7 +107,7 @@ func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
 //SleeplessDownloadTemplateFiles will download the template files to
 func (b *Basher) SleeplessDownloadTemplateFiles(werkerPort string) [3]string {
 	downloadLink := fmt.Sprintf("http://%s:%s/do_things.tar", b.LoopbackIp, werkerPort)
-	command := fmt.Sprintf("mkdir %s && wget %s && tar -xf do_things.tar -C %s && cd %s  && chmod +x * && echo \"Ocelot has finished with downloading templates\"", b.OcelotDir(), downloadLink, b.OcelotDir(), b.OcelotDir())
+	command := fmt.Sprintf("mkdir -p %s && wget %s && tar -xf do_things.tar -C %s && cd %s  && chmod +x * && echo \"Ocelot has finished with downloading templates\"", b.OcelotDir(), downloadLink, b.OcelotDir(), b.OcelotDir())
 	return [3]string{"/bin/sh", "-c", command}
 }
 
@@ -119,7 +119,7 @@ func (b *Basher) DownloadKubectl(werkerPort string) []string {
 
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
-	cdCmd := fmt.Sprintf("cd %s/%s", b.PrefixDir(), commitHash)
+	cdCmd := fmt.Sprintf("cd %s", b.CloneDir(commitHash))
 	build := append([]string{cdCmd}, cmds...)
 	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(build, " && ")})
 	return buildAndDeploy
@@ -134,5 +134,5 @@ func (b *Basher) PrefixDir() string {
 }
 
 func (b *Basher) CloneDir(hash string) string {
-	return fmt.Sprintf("%s/%s", b.ocelotPrefix, hash)
+	return fmt.Sprintf("%s/%s", b.OcelotDir(), hash)
 }

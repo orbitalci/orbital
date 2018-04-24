@@ -32,7 +32,7 @@ type Valet struct {
 	store			storage.OcelotStorage
 	WerkerUuid		uuid.UUID
 	doneChannels    map[string]chan int
-	*KillaValet
+	*ContextValet
 	sync.Mutex
 	c.Cleaner
 }
@@ -40,7 +40,7 @@ type Valet struct {
 func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage) *Valet {
 	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store:store}
 	valet.Cleaner = c.GetNewCleaner(werkerType)
-	valet.KillaValet = NewKillaValet()
+	valet.ContextValet = NewContextValet()
 	return valet
 }
 

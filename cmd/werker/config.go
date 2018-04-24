@@ -24,6 +24,8 @@ func strToWerkType(str string) models.WerkType {
 		return models.Kubernetes
 	case "docker":
 		return models.Docker
+	case "host":
+		return models.Host
 	default:
 		return -1
 	}
@@ -66,7 +68,7 @@ func GetConf() (*WerkerConf, error) {
 	var consuladdr string
 	var consulport int
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
-	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes or docker")
+	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes|docker|host")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
 	flrg.StringVar(&werker.ServicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
 	flrg.StringVar(&werker.GrpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
@@ -81,7 +83,7 @@ func GetConf() (*WerkerConf, error) {
 	version.MaybePrintVersion(flrg.Args())
 	werker.WerkerType = strToWerkType(werkerTypeStr)
 	if werker.WerkerType == -1 {
-		return nil, errors.New("werker type can only be: k8s, kubernetes, docker")
+		return nil, errors.New("werker type can only be: k8s, kubernetes, docker, host")
 	}
 	if werker.WerkerName == "" {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")

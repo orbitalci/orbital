@@ -16,7 +16,7 @@ import (
 )
 
 //ServeMe will start HTTP Server as needed for streaming build output by hash
-func ServeMe(transportChan chan *models.Transport, conf *models.WerkerFacts, store storage.OcelotStorage, killValet *valet.KillaValet) {
+func ServeMe(transportChan chan *models.Transport, conf *models.WerkerFacts, store storage.OcelotStorage, killValet *valet.ContextValet) {
 	// todo: defer a recovery here
 	werkStream := getWerkerContext(conf, store, killValet)
 	streamPack := streamer.GetStreamPack(werkStream.store, werkStream.consul)
