@@ -2,8 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/mitchellh/go-homedir"

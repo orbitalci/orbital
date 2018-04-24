@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
@@ -14,6 +15,9 @@ import (
 
 func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *pb.RepoAccount) (*pb.Summaries, error) {
 	log.Log().Debug("getting last few summaries")
+	if repoAct.Limit == 0 || repoAct.Account == "" || repoAct.Repo == "" {
+		return nil, status.Error(codes.InvalidArgument, "limit, account, and repo are all required")
+	}
 	var summaries = &pb.Summaries{}
 	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
@@ -37,6 +41,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *pb.Re
 		}
 		summaries.Sums = append(summaries.Sums, summary)
 	}
+	fmt.Println(summaries)
 	return summaries, nil
 
 }
