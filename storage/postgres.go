@@ -911,6 +911,8 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 	return creds, rows.Err()
 }
 
+//func (p *)
+
 func (p *PostgresStorage) StorageType() string {
 	return fmt.Sprintf("Postgres Database at %s", p.location)
 }

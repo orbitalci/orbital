@@ -38,6 +38,8 @@ It has these top-level messages:
 	PollRequest
 	Polls
 	Exists
+	AcctRepo
+	ActiveRepos
 	Request
 	Response
 */

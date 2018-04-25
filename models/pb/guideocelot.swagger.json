@@ -19,6 +19,23 @@
     "application/json"
   ],
   "paths": {
+    "/v1/activeRepos": {
+      "get": {
+        "description": "list all account/repos that ocelot is tracking",
+        "operationId": "GetActiveRepos",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsActiveRepos"
+            }
+          }
+        },
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
     "/v1/build": {
       "post": {
         "description": "build will attempt to trigger a build. If the git hash has already been built before, it can be triggered with just acctRepo and hash fields. If it has not been built before, the branch flag is required as well.",
@@ -823,7 +840,7 @@
     },
     "/v1/werker/loc": {
       "get": {
-        "description": "get network location of werker that is currrently ",
+        "description": "get network location of werker that is currrently building the BuildReq object",
         "operationId": "FindWerker",
         "responses": {
           "200": {
@@ -863,6 +880,28 @@
     }
   },
   "definitions": {
+    "modelsAcctRepo": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string"
+        }
+      }
+    },
+    "modelsActiveRepos": {
+      "type": "object",
+      "properties": {
+        "activeRepos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsAcctRepo"
+          }
+        }
+      }
+    },
     "modelsAllCredsWrapper": {
       "type": "object",
       "properties": {
