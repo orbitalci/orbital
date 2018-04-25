@@ -14,6 +14,9 @@ import (
 )
 
 func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
+	if poll.Account == "" && poll.Repo == "" {
+		return nil, status.Error(codes.InvalidArgument, "account and repo are required fields")
+	}
 	log.Log().Info("received delete poll request for ", poll.Account, " ", poll.Repo)
 	empti := &empty.Empty{}
 	if err := g.Storage.DeletePoll(poll.Account, poll.Repo); err != nil {

@@ -26,6 +26,10 @@ type fakeGuideOcelotClient struct {
 	logLines []string
 }
 
+func (f *fakeGuideOcelotClient) GetTrackedRepos(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.AcctRepos, error) {
+	return nil, nil
+}
+
 func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.CredWrapper, error) {
 	return f.creds, nil
 }

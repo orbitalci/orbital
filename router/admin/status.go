@@ -20,16 +20,15 @@ import (
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
 func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery) (result *pb.Status, err error) {
 	var buildSum models.BuildSummary
-	if len(query.Hash) > 0 {
+	switch {
+	case len(query.Hash) > 0:
 		partialHash := query.Hash
 		buildSum, err = g.Storage.RetrieveLatestSum(partialHash)
 		if err != nil {
 			return nil, handleStorageError(err)
 		}
 		goto BUILD_FOUND
-
-	}
-	if len(query.AcctName) > 0 && len(query.RepoName) > 0 {
+	case len(query.AcctName) > 0 && len(query.RepoName) > 0:
 		buildSums, err := g.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
 		if err != nil {
 			return nil, handleStorageError(err)
@@ -47,9 +46,7 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery
 			log.IncludeErrField(uhOh)
 			return nil, status.Error(codes.InvalidArgument, uhOh.Error())
 		}
-	}
-
-	if len(query.PartialRepo) > 0 {
+	case len(query.PartialRepo) > 0:
 		buildSums, err := g.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
 		if err != nil {
 			return nil, handleStorageError(err)
@@ -76,8 +73,9 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery
 			log.IncludeErrField(uhOh)
 			return nil, status.Error(codes.InvalidArgument, uhOh.Error())
 		}
+	default:
+		return nil, status.Error(codes.InvalidArgument, "either hash is required, acctName and repoName is required, or partialRepo is required")
 	}
-	return
 BUILD_FOUND:
 	stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
 	if err != nil {

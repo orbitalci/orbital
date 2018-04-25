@@ -16,6 +16,8 @@ import (
 	"errors"
 )
 
+var unsupported = errors.New("currently only bitbucket is supported")
+
 //when new configurations are added to the config channel, create bitbucket client and webhooks
 func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
 	gos := gosss.(*guideOcelotServer)
@@ -28,7 +30,7 @@ func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
 		bbHandler := bb.GetBitbucketHandler(config, bitbucketClient)
 		go bbHandler.Walk() //spawning walk in a different thread because we don't want client to wait if there's a lot of repos/files to check
 	default:
-		return errors.New("currently only bitbucket is supported")
+		return unsupported
 	}
 
 	config.Identifier = config.BuildIdentifier()
