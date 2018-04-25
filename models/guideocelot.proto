@@ -186,9 +186,10 @@ service GuideOcelot {
 			get: "/v1/buildruntime"
 		};
     }
+    rpc Logs (BuildQuery) returns (stream LineResponse) {}
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {
         option (google.api.http) = {
-			get: "/v1/summary/{repo}/{account}"
+			get: "/v1/summary"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.";
@@ -251,18 +252,9 @@ service GuideOcelot {
 			get: "/v1/werker/loc"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "get network location of werker that is currrently building the BuildReq object"
+            description: "get network location of werker that is currrently ";
         };
     }
-    rpc GetActiveRepos(google.protobuf.Empty) returns (ActiveRepos) {
-        option (google.api.http) = {
-			get: "/v1/activeRepos"
-		};
-        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "list all account/repos that ocelot is tracking"
-        };
-    }
-
 }
 
 message BuildReq {
@@ -482,14 +474,4 @@ message Polls {
 
 message Exists {
     bool exists = 1;
-}
-
-
-message AcctRepo {
-    string account = 1;
-    string repo = 2;
-}
-
-message ActiveRepos {
-    repeated AcctRepo activeRepos = 1;
 }
