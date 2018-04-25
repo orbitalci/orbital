@@ -7,5 +7,6 @@ import (
 func NewTestClientConfig(logLines []string) *ClientConfig {
 	return &ClientConfig{
 		Client: testutil.NewFakeGuideOcelotClient(logLines),
+		Theme: Default(false),
 	}
 }
