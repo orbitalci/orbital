@@ -186,7 +186,14 @@ service GuideOcelot {
 			get: "/v1/buildruntime"
 		};
     }
-    rpc Logs (BuildQuery) returns (stream LineResponse) {}
+    rpc Logs (BuildQuery) returns (stream LineResponse) {
+        option (google.api.http) = {
+			get: "/v1/logs"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ";
+        };
+    }
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {
         option (google.api.http) = {
 			get: "/v1/summary"

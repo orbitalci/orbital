@@ -277,6 +277,31 @@ func request_GuideOcelot_BuildRuntime_0(ctx context.Context, marshaler runtime.M
 }
 
 var (
+	filter_GuideOcelot_Logs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_GuideOcelot_Logs_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (GuideOcelot_LogsClient, runtime.ServerMetadata, error) {
+	var protoReq BuildQuery
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_Logs_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.Logs(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
+var (
 	filter_GuideOcelot_LastFewSummaries_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
@@ -989,6 +1014,35 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
+	mux.Handle("GET", pattern_GuideOcelot_Logs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_GuideOcelot_Logs_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_GuideOcelot_Logs_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_GuideOcelot_LastFewSummaries_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1263,6 +1317,8 @@ var (
 
 	pattern_GuideOcelot_BuildRuntime_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "buildruntime"}, ""))
 
+	pattern_GuideOcelot_Logs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "logs"}, ""))
+
 	pattern_GuideOcelot_LastFewSummaries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "summary"}, ""))
 
 	pattern_GuideOcelot_GetStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "status"}, ""))
@@ -1318,6 +1374,8 @@ var (
 	forward_GuideOcelot_GetAllCreds_0 = runtime.ForwardResponseMessage
 
 	forward_GuideOcelot_BuildRuntime_0 = runtime.ForwardResponseMessage
+
+	forward_GuideOcelot_Logs_0 = runtime.ForwardResponseStream
 
 	forward_GuideOcelot_LastFewSummaries_0 = runtime.ForwardResponseMessage
 

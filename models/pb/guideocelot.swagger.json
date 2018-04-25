@@ -652,6 +652,38 @@
         ]
       }
     },
+    "/v1/logs": {
+      "get": {
+        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ",
+        "operationId": "Logs",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/modelsLineResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "buildId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
     "/v1/poll": {
       "get": {
         "description": "list all repositories that are being polled for changes",
