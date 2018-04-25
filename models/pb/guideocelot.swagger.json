@@ -8,6 +8,7 @@
       "email": "jessishank@level11.com"
     }
   },
+  "basePath": "/v1",
   "schemes": [
     "http",
     "https"
@@ -19,15 +20,15 @@
     "application/json"
   ],
   "paths": {
-    "/v1/activeRepos": {
+    "/v1/acctRepos": {
       "get": {
-        "description": "list all account/repos that ocelot is tracking",
-        "operationId": "GetActiveRepos",
+        "summary": "get list of currently tracked account/repos",
+        "operationId": "GetTrackedRepos",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/modelsActiveRepos"
+              "$ref": "#/definitions/modelsAcctRepos"
             }
           }
         },
@@ -65,6 +66,8 @@
     },
     "/v1/buildruntime": {
       "get": {
+        "summary": "get runtime specification of a specific build",
+        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ",
         "operationId": "BuildRuntime",
         "responses": {
           "200": {
@@ -538,7 +541,8 @@
         ]
       },
       "put": {
-        "description": "Update a VCS Credential",
+        "summary": "Update a VCS Credential",
+        "description": "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists",
         "operationId": "UpdateVCSCreds",
         "responses": {
           "200": {
@@ -565,6 +569,7 @@
     },
     "/v1/creds/vcs/exists": {
       "get": {
+        "summary": "account,identifier,cred_sub_type",
         "description": "Check if VCS Credential exists in ocelot already. For knowing whether to call Update or Set",
         "operationId": "VCSCredExists",
         "responses": {
@@ -662,6 +667,38 @@
             "schema": {
               "$ref": "#/definitions/modelsSSHKeyWrapper"
             }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/logs": {
+      "get": {
+        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ",
+        "operationId": "Logs",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/modelsLineResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "buildId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -840,7 +877,7 @@
     },
     "/v1/werker/loc": {
       "get": {
-        "description": "get network location of werker that is currrently building the BuildReq object",
+        "description": "get network location of werker that is currrently ",
         "operationId": "FindWerker",
         "responses": {
           "200": {
@@ -891,10 +928,10 @@
         }
       }
     },
-    "modelsActiveRepos": {
+    "modelsAcctRepos": {
       "type": "object",
       "properties": {
-        "activeRepos": {
+        "acctRepos": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/modelsAcctRepo"

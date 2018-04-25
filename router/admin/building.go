@@ -17,6 +17,9 @@ import (
 
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Builds, error) {
+	if bq.Hash == "" && bq.BuildId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "either hash or build id is required")
+	}
 	buildRtInfo := make(map[string]*pb.BuildRuntimeInfo)
 	var err error
 
@@ -81,6 +84,9 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 
 
 func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
+	if bq.Hash == "" && bq.BuildId == 0 {
+		return status.Error(codes.InvalidArgument, "must request with either a hash or a buildId")
+	}
 	if !build.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
 		errmsg :=  "build is not finished, use BuildRuntime method and stream from the werker registered"
 		stream.Send(&pb.LineResponse{OutputLine: errmsg})

@@ -9,17 +9,18 @@ import "protoc-gen-swagger/options/annotations.proto";
 //import "google/protobuf/wrappers.proto"; //use this when you have to pass a string value
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+    base_path: "/v1"
     info: {
-        title: "Guide Ocelot Server";
-        version: "1.0";
+        title: "Guide Ocelot Server"
+        version: "1.0"
         contact: {
-            name: "jessi shank";
-            email: "jessishank@level11.com";
+            name: "jessi shank"
+            email: "jessishank@level11.com"
         };
     };
     schemes: HTTP;
     schemes: HTTPS;
-    consumes: "application/json";
+    consumes: "application/json"
     produces: "application/json";
 
 };
@@ -48,9 +49,11 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Update a VCS Credential";
+            summary: "Update a VCS Credential"
+            description: "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists";
         };
     }
+//    account,identifier,cred_sub_type
     rpc VCSCredExists (VCSCreds) returns (Exists) {
         option (google.api.http) = {
 			get: "/v1/creds/vcs/exists"
@@ -177,16 +180,28 @@ service GuideOcelot {
 
     rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {
         option (google.api.http) = {
-			get: "/v1/creds"
+			get: "/v1/creds";
 		};
     }
+
 
     rpc BuildRuntime (BuildQuery) returns (Builds) {
         option (google.api.http) = {
 			get: "/v1/buildruntime"
 		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. "
+            summary: "get runtime specification of a specific build";
+        };
     }
-    rpc Logs (BuildQuery) returns (stream LineResponse) {}
+    rpc Logs (BuildQuery) returns (stream LineResponse) {
+        option (google.api.http) = {
+			get: "/v1/logs"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ";
+        };
+    }
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {
         option (google.api.http) = {
 			get: "/v1/summary"
@@ -253,6 +268,14 @@ service GuideOcelot {
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "get network location of werker that is currrently ";
+        };
+    }
+    rpc GetTrackedRepos(google.protobuf.Empty) returns (AcctRepos) {
+        option (google.api.http) = {
+			get: "/v1/acctRepos"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "get list of currently tracked account/repos"
         };
     }
 }
@@ -474,4 +497,13 @@ message Polls {
 
 message Exists {
     bool exists = 1;
+}
+
+message AcctRepo {
+    string account = 1;
+    string repo  = 2;
+}
+
+message AcctRepos {
+    repeated AcctRepo acctRepos = 1;
 }

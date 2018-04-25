@@ -39,7 +39,7 @@ It has these top-level messages:
 	Polls
 	Exists
 	AcctRepo
-	ActiveRepos
+	AcctRepos
 	Request
 	Response
 */

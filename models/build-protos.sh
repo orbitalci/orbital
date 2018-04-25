@@ -16,7 +16,7 @@ echo "building root model proto files"
 #  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 #  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
 #  models/*.proto
-protoc --js_out=models/pb/js/ --go_out=plugins=grpc:models/pb/ -I=models \
+protoc  --go_out=plugins=grpc:models/pb/ -I=models \
   -I$GOPATH/src \
   -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
   -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
