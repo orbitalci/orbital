@@ -21,7 +21,7 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
-			return credWrapper, err
+			return credWrapper, status.Error(codes.NotFound, err.Error())
 		}
 		return credWrapper, status.Error(codes.Internal, "unable to get credentials, err: " + err.Error())
 	}
@@ -113,8 +113,9 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
-			return credWrapper, err
+			return credWrapper, status.Error(codes.ResourceExhausted, err.Error())
 		}
+		return credWrapper, status.Error(codes.NotFound, err.Error())
 	}
 
 	for _, v := range creds {
@@ -241,11 +242,17 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 	allCreds := &pb.AllCredsWrapper{}
 	repoCreds, err := g.GetRepoCreds(ctx, msg)
 	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return allCreds, status.Error(codes.NotFound, err.Error())
+		}
 		return allCreds, status.Errorf(codes.Internal, "unable to get repo creds! error: %s", err.Error())
 	}
 	allCreds.RepoCreds = repoCreds
 	adminCreds, err := g.GetVCSCreds(ctx, msg)
 	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return allCreds, status.Error(codes.NotFound, err.Error())
+		}
 		return allCreds, status.Errorf(codes.Internal, "unable to get vcs creds! error: %s", err.Error())
 	}
 	allCreds.VcsCreds = adminCreds
@@ -295,6 +302,9 @@ func (g *guideOcelotServer) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHW
 	credWrapper := &pb.SSHWrap{}
 	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_SSH, true)
 	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
 		return credWrapper, status.Errorf(codes.Internal, "unable to get ssh creds! error: %s", err.Error())
 	}
 	for _, v := range credz {
