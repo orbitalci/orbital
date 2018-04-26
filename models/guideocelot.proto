@@ -17,7 +17,6 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
             email: "jessishank@level11.com"
         };
     };
-    schemes: HTTP;
     schemes: HTTPS;
     consumes: "application/json"
     produces: "application/json";

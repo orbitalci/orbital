@@ -9,7 +9,6 @@
     }
   },
   "schemes": [
-    "http",
     "https"
   ],
   "consumes": [
