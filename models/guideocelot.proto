@@ -33,7 +33,14 @@ service GuideOcelot {
             description: "Returns all VCS creds that ocelot has and can use for checking out code to build.";
         };
     }
-
+    rpc GetVCSCred(VCSCreds) returns (VCSCreds) {
+        option (google.api.http) = {
+			get: "/v1/creds/vcs/{acctName}/{identifier}"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Returns vcs cred if it exists. subtype is a required query param";
+        };
+    }
     rpc SetVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			post: "/v1/creds/vcs"
@@ -45,93 +52,84 @@ service GuideOcelot {
     }
     rpc UpdateVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			put: "/v1/creds/vcs"
+			put: "/v1/creds/vcs/{acctName}/{identifier}"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             summary: "Update a VCS Credential"
-            description: "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists";
+            description: "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists. subType is a required query param";
         };
     }
 //    account,identifier,cred_sub_type
-    rpc VCSCredExists (VCSCreds) returns (Exists) {
-        option (google.api.http) = {
-			get: "/v1/creds/vcs/exists"
-
-		};
-        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Check if VCS Credential exists in ocelot already. For knowing whether to call Update or Set";
-        };
-    }
+    rpc VCSCredExists (VCSCreds) returns (Exists) {}
     rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
     rpc SetVCSPrivateKey (SSHKeyWrapper) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			post: "/v1/creds/vcs/ssh"
+			post: "/v1/creds/vcs/{acctName}/{identifier}/ssh"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository.";
+            description: "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository. subType is a required query param";
         };
     }
 
+    rpc GetRepoCred(RepoCreds) returns (RepoCreds) {
+        option (google.api.http) = {
+			get: "/v1/creds/repo/{acctName}/{identifier}"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Returns repo cred if it exists. subType is a required query param";
+        };
+    }
 
     rpc UpdateRepoCreds (RepoCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			put: "/v1/creds/repo"
+			put: "/v1/creds/repo/{acctName}/{identifier}"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Update new credential configuration to ocelot for repository integration.";
+            description: "Update new credential configuration to ocelot for repository integration. subType is a required query param";
         };
     }
-    rpc RepoCredExists (RepoCreds) returns (Exists) {
+    rpc RepoCredExists (RepoCreds) returns (Exists) {}
+    rpc GetK8SCred(K8SCreds) returns (K8SCreds) {
         option (google.api.http) = {
-			get: "/v1/creds/repo/exists"
-
+			get: "/v1/creds/k8s/{acctName}/{identifier}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Check if Repo Credential exists in ocelot already. For knowing whether to call Update or Set";
+            description: "Returns k8s cred if it exists. subtype is a required query param";
         };
     }
-
     rpc UpdateK8SCreds (K8SCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			put: "/v1/creds/k8s"
+			put: "/v1/creds/k8s/{acctName}/{identifier}"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "Update a kubeconfig in ocelot for kubernetes integration.";
         };
     }
-    rpc K8SCredExists (K8SCreds) returns (Exists) {
-        option (google.api.http) = {
-			get: "/v1/creds/k8s/exists"
-
-		};
-        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Check if kubeconfig Credential exists in ocelot already. For knowing whether to call Update or Set";
-        };
-    }
+    rpc K8SCredExists (K8SCreds) returns (Exists) {}
 
     rpc UpdateSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			put: "/v1/creds/ssh"
+			put: "/v1/creds/ssh/{acctName}/{identifier}"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "Update a ssh key for use in build scripts";
         };
     }
-    rpc SSHCredExists (SSHKeyWrapper) returns (Exists) {
+    rpc GetSSHCred(SSHKeyWrapper) returns (SSHKeyWrapper) {
         option (google.api.http) = {
-			get: "/v1/creds/ssh/exists"
-
+			get: "/v1/creds/ssh/{acctName}/{identifier}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Check if ssh key file Credential exists in ocelot already. For knowing whether to call Update or Set";
+            description: "Returns ssh cred if it exists. subtype is a required query param";
         };
     }
+    rpc SSHCredExists (SSHKeyWrapper) returns (Exists) {    }
     rpc SetSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			post: "/v1/creds/ssh"
@@ -204,10 +202,10 @@ service GuideOcelot {
     }
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {
         option (google.api.http) = {
-			get: "/v1/summary"
+			get: "/v1/summary/{account}/{repo}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.";
+            description: "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned";
         };
     }
     rpc GetStatus (StatusQuery) returns (Status) {
@@ -247,7 +245,7 @@ service GuideOcelot {
     }
     rpc DeletePollRepo(PollRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			delete: "/v1/poll"
+			delete: "/v1/poll/{account}/{repo}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "delete polling for a repo. account and repo are required.";
@@ -264,10 +262,10 @@ service GuideOcelot {
     rpc FindWerker (BuildReq) returns (BuildRuntimeInfo) {
         // find a better place for this?
         option (google.api.http) = {
-			get: "/v1/werker/loc"
+			get: "/v1/werker/{hash}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "get network location of werker that is currrently ";
+            description: "get network location of werker that is currrently executing a build on the specifed hash";
         };
     }
     rpc GetTrackedRepos(google.protobuf.Empty) returns (AcctRepos) {

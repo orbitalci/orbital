@@ -38,6 +38,52 @@ func request_GuideOcelot_GetVCSCreds_0(ctx context.Context, marshaler runtime.Ma
 
 }
 
+var (
+	filter_GuideOcelot_GetVCSCred_0 = &utilities.DoubleArray{Encoding: map[string]int{"acctName": 0, "identifier": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+)
+
+func request_GuideOcelot_GetVCSCred_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq VCSCreds
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
+	}
+
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_GetVCSCred_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.GetVCSCred(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
 func request_GuideOcelot_SetVCSCreds_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq VCSCreds
 	var metadata runtime.ServerMetadata
@@ -59,24 +105,36 @@ func request_GuideOcelot_UpdateVCSCreds_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.UpdateVCSCreds(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
 
-}
-
-var (
-	filter_GuideOcelot_VCSCredExists_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_GuideOcelot_VCSCredExists_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VCSCreds
-	var metadata runtime.ServerMetadata
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_VCSCredExists_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
 	}
 
-	msg, err := client.VCSCredExists(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
+	msg, err := client.UpdateVCSCreds(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -89,7 +147,82 @@ func request_GuideOcelot_SetVCSPrivateKey_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
+	}
+
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
 	msg, err := client.SetVCSPrivateKey(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+var (
+	filter_GuideOcelot_GetRepoCred_0 = &utilities.DoubleArray{Encoding: map[string]int{"acctName": 0, "identifier": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+)
+
+func request_GuideOcelot_GetRepoCred_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq RepoCreds
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
+	}
+
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_GetRepoCred_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.GetRepoCred(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -102,24 +235,82 @@ func request_GuideOcelot_UpdateRepoCreds_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
+	}
+
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
 	msg, err := client.UpdateRepoCreds(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_GuideOcelot_RepoCredExists_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_GuideOcelot_GetK8SCred_0 = &utilities.DoubleArray{Encoding: map[string]int{"acctName": 0, "identifier": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
 )
 
-func request_GuideOcelot_RepoCredExists_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RepoCreds
+func request_GuideOcelot_GetK8SCred_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq K8SCreds
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_RepoCredExists_0); err != nil {
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
+	}
+
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_GetK8SCred_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.RepoCredExists(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetK8SCred(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -132,24 +323,36 @@ func request_GuideOcelot_UpdateK8SCreds_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.UpdateK8SCreds(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
 
-}
-
-var (
-	filter_GuideOcelot_K8SCredExists_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_GuideOcelot_K8SCredExists_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq K8SCreds
-	var metadata runtime.ServerMetadata
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_K8SCredExists_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
 	}
 
-	msg, err := client.K8SCredExists(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
+	msg, err := client.UpdateK8SCreds(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -162,24 +365,82 @@ func request_GuideOcelot_UpdateSSHCreds_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
+	}
+
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
 	msg, err := client.UpdateSSHCreds(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_GuideOcelot_SSHCredExists_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_GuideOcelot_GetSSHCred_0 = &utilities.DoubleArray{Encoding: map[string]int{"acctName": 0, "identifier": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
 )
 
-func request_GuideOcelot_SSHCredExists_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_GuideOcelot_GetSSHCred_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SSHKeyWrapper
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_SSHCredExists_0); err != nil {
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["acctName"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "acctName")
+	}
+
+	protoReq.AcctName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "acctName", err)
+	}
+
+	val, ok = pathParams["identifier"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "identifier")
+	}
+
+	protoReq.Identifier, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "identifier", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_GetSSHCred_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.SSHCredExists(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetSSHCred(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -302,12 +563,41 @@ func request_GuideOcelot_Logs_0(ctx context.Context, marshaler runtime.Marshaler
 }
 
 var (
-	filter_GuideOcelot_LastFewSummaries_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_GuideOcelot_LastFewSummaries_0 = &utilities.DoubleArray{Encoding: map[string]int{"account": 0, "repo": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
 )
 
 func request_GuideOcelot_LastFewSummaries_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq RepoAccount
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["account"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "account")
+	}
+
+	protoReq.Account, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "account", err)
+	}
+
+	val, ok = pathParams["repo"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repo")
+	}
+
+	protoReq.Repo, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repo", err)
+	}
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_LastFewSummaries_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -383,12 +673,41 @@ func request_GuideOcelot_PollRepo_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 var (
-	filter_GuideOcelot_DeletePollRepo_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_GuideOcelot_DeletePollRepo_0 = &utilities.DoubleArray{Encoding: map[string]int{"account": 0, "repo": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
 )
 
 func request_GuideOcelot_DeletePollRepo_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq PollRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["account"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "account")
+	}
+
+	protoReq.Account, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "account", err)
+	}
+
+	val, ok = pathParams["repo"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repo")
+	}
+
+	protoReq.Repo, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repo", err)
+	}
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_DeletePollRepo_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -409,12 +728,30 @@ func request_GuideOcelot_ListPolledRepos_0(ctx context.Context, marshaler runtim
 }
 
 var (
-	filter_GuideOcelot_FindWerker_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_GuideOcelot_FindWerker_0 = &utilities.DoubleArray{Encoding: map[string]int{"hash": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_GuideOcelot_FindWerker_0(ctx context.Context, marshaler runtime.Marshaler, client GuideOcelotClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq BuildReq
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["hash"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "hash")
+	}
+
+	protoReq.Hash, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "hash", err)
+	}
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_GuideOcelot_FindWerker_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -501,6 +838,35 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
+	mux.Handle("GET", pattern_GuideOcelot_GetVCSCred_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_GuideOcelot_GetVCSCred_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_GuideOcelot_GetVCSCred_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_GuideOcelot_SetVCSCreds_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -559,35 +925,6 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("GET", pattern_GuideOcelot_VCSCredExists_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_GuideOcelot_VCSCredExists_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_GuideOcelot_VCSCredExists_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("POST", pattern_GuideOcelot_SetVCSPrivateKey_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -614,6 +951,35 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 
 		forward_GuideOcelot_SetVCSPrivateKey_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_GuideOcelot_GetRepoCred_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_GuideOcelot_GetRepoCred_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_GuideOcelot_GetRepoCred_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -646,7 +1012,7 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("GET", pattern_GuideOcelot_RepoCredExists_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_GuideOcelot_GetK8SCred_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -664,14 +1030,14 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_GuideOcelot_RepoCredExists_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_GuideOcelot_GetK8SCred_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_GuideOcelot_RepoCredExists_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_GuideOcelot_GetK8SCred_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -704,35 +1070,6 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("GET", pattern_GuideOcelot_K8SCredExists_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_GuideOcelot_K8SCredExists_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_GuideOcelot_K8SCredExists_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("PUT", pattern_GuideOcelot_UpdateSSHCreds_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -762,7 +1099,7 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("GET", pattern_GuideOcelot_SSHCredExists_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_GuideOcelot_GetSSHCred_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -780,14 +1117,14 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_GuideOcelot_SSHCredExists_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_GuideOcelot_GetSSHCred_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_GuideOcelot_SSHCredExists_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_GuideOcelot_GetSSHCred_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1319,25 +1656,25 @@ func RegisterGuideOcelotHandlerClient(ctx context.Context, mux *runtime.ServeMux
 var (
 	pattern_GuideOcelot_GetVCSCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "creds", "vcs"}, ""))
 
+	pattern_GuideOcelot_GetVCSCred_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "creds", "vcs", "acctName", "identifier"}, ""))
+
 	pattern_GuideOcelot_SetVCSCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "creds", "vcs"}, ""))
 
-	pattern_GuideOcelot_UpdateVCSCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "creds", "vcs"}, ""))
+	pattern_GuideOcelot_UpdateVCSCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "creds", "vcs", "acctName", "identifier"}, ""))
 
-	pattern_GuideOcelot_VCSCredExists_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "creds", "vcs", "exists"}, ""))
+	pattern_GuideOcelot_SetVCSPrivateKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "creds", "vcs", "acctName", "identifier", "ssh"}, ""))
 
-	pattern_GuideOcelot_SetVCSPrivateKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "creds", "vcs", "ssh"}, ""))
+	pattern_GuideOcelot_GetRepoCred_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "creds", "repo", "acctName", "identifier"}, ""))
 
-	pattern_GuideOcelot_UpdateRepoCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "creds", "repo"}, ""))
+	pattern_GuideOcelot_UpdateRepoCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "creds", "repo", "acctName", "identifier"}, ""))
 
-	pattern_GuideOcelot_RepoCredExists_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "creds", "repo", "exists"}, ""))
+	pattern_GuideOcelot_GetK8SCred_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "creds", "k8s", "acctName", "identifier"}, ""))
 
-	pattern_GuideOcelot_UpdateK8SCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "creds", "k8s"}, ""))
+	pattern_GuideOcelot_UpdateK8SCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "creds", "k8s", "acctName", "identifier"}, ""))
 
-	pattern_GuideOcelot_K8SCredExists_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "creds", "k8s", "exists"}, ""))
+	pattern_GuideOcelot_UpdateSSHCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "creds", "ssh", "acctName", "identifier"}, ""))
 
-	pattern_GuideOcelot_UpdateSSHCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "creds", "ssh"}, ""))
-
-	pattern_GuideOcelot_SSHCredExists_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "creds", "ssh", "exists"}, ""))
+	pattern_GuideOcelot_GetSSHCred_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "creds", "ssh", "acctName", "identifier"}, ""))
 
 	pattern_GuideOcelot_SetSSHCreds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "creds", "ssh"}, ""))
 
@@ -1357,7 +1694,7 @@ var (
 
 	pattern_GuideOcelot_Logs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "logs"}, ""))
 
-	pattern_GuideOcelot_LastFewSummaries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "summary"}, ""))
+	pattern_GuideOcelot_LastFewSummaries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "summary", "account", "repo"}, ""))
 
 	pattern_GuideOcelot_GetStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "status"}, ""))
 
@@ -1367,11 +1704,11 @@ var (
 
 	pattern_GuideOcelot_PollRepo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "poll"}, ""))
 
-	pattern_GuideOcelot_DeletePollRepo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "poll"}, ""))
+	pattern_GuideOcelot_DeletePollRepo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "poll", "account", "repo"}, ""))
 
 	pattern_GuideOcelot_ListPolledRepos_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "poll"}, ""))
 
-	pattern_GuideOcelot_FindWerker_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "werker", "loc"}, ""))
+	pattern_GuideOcelot_FindWerker_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "werker", "hash"}, ""))
 
 	pattern_GuideOcelot_GetTrackedRepos_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "acctRepos"}, ""))
 )
@@ -1379,25 +1716,25 @@ var (
 var (
 	forward_GuideOcelot_GetVCSCreds_0 = runtime.ForwardResponseMessage
 
+	forward_GuideOcelot_GetVCSCred_0 = runtime.ForwardResponseMessage
+
 	forward_GuideOcelot_SetVCSCreds_0 = runtime.ForwardResponseMessage
 
 	forward_GuideOcelot_UpdateVCSCreds_0 = runtime.ForwardResponseMessage
 
-	forward_GuideOcelot_VCSCredExists_0 = runtime.ForwardResponseMessage
-
 	forward_GuideOcelot_SetVCSPrivateKey_0 = runtime.ForwardResponseMessage
+
+	forward_GuideOcelot_GetRepoCred_0 = runtime.ForwardResponseMessage
 
 	forward_GuideOcelot_UpdateRepoCreds_0 = runtime.ForwardResponseMessage
 
-	forward_GuideOcelot_RepoCredExists_0 = runtime.ForwardResponseMessage
+	forward_GuideOcelot_GetK8SCred_0 = runtime.ForwardResponseMessage
 
 	forward_GuideOcelot_UpdateK8SCreds_0 = runtime.ForwardResponseMessage
 
-	forward_GuideOcelot_K8SCredExists_0 = runtime.ForwardResponseMessage
-
 	forward_GuideOcelot_UpdateSSHCreds_0 = runtime.ForwardResponseMessage
 
-	forward_GuideOcelot_SSHCredExists_0 = runtime.ForwardResponseMessage
+	forward_GuideOcelot_GetSSHCred_0 = runtime.ForwardResponseMessage
 
 	forward_GuideOcelot_SetSSHCreds_0 = runtime.ForwardResponseMessage
 

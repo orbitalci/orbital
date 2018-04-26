@@ -30,6 +30,22 @@ func (f *fakeGuideOcelotClient) GetTrackedRepos(ctx context.Context, in *empty.E
 	return nil, nil
 }
 
+func (f *fakeGuideOcelotClient) GetVCSCred(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*pb.VCSCreds, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) GetRepoCred(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*pb.RepoCreds, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) GetK8SCred(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*pb.K8SCreds, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) GetSSHCred(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*pb.SSHKeyWrapper, error) {
+	return nil, nil
+}
+
 func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.CredWrapper, error) {
 	return f.creds, nil
 }

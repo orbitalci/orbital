@@ -847,6 +847,7 @@ func (p *PostgresStorage) RetrieveCred(subCredType pb.SubCredType, identifier, a
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `SELECT additional_fields FROM credentials WHERE (cred_sub_type,identifier,account)=($1,$2,$3)`
+	ocelog.Log().Debugf("%d %s %s", subCredType, identifier, accountName)
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")

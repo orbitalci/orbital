@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
@@ -67,7 +68,34 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *pb.VCS
 	return &empty.Empty{}, nil
 }
 
+func (g *guideOcelotServer) GetVCSCred(ctx context.Context, credentials *pb.VCSCreds) (*pb.VCSCreds, error) {
+	creddy, err := g.getAnyCred(credentials)
+	if err != nil {
+		return nil, err
+	}
+	vcs, ok := creddy.(*pb.VCSCreds)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Unable to cast as VCS Creds")
+	}
+	return vcs, nil
+}
 
+func (g *guideOcelotServer) getAnyCred(credder pb.OcyCredder) (pb.OcyCredder, error){
+	if credder.GetSubType() == 0 || credder.GetAcctName() ==  "" || credder.GetIdentifier() == "" {
+		return nil, status.Error(codes.InvalidArgument, "subType, acctName, and identifier are required fields")
+	}
+	creddy, err := g.RemoteConfig.GetCred(g.Storage, credder.GetSubType(), credder.GetIdentifier(), credder.GetAcctName(), true)
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Credential %s/%s of Type %s Not Found", credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType()))
+		}
+		if _, ok := err.(*pb.ValidationErr); ok {
+			return nil, status.Error(codes.InvalidArgument, "Invalid arguments, error: " + err.Error())
+		}
+		return nil, status.Error(codes.Unavailable, "Credential interface not available, error: " + err.Error())
+	}
+	return creddy, nil
+}
 
 func (g *guideOcelotServer) UpdateVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
 	credentials.Identifier = credentials.BuildIdentifier()
@@ -96,6 +124,19 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 		return nil, status.Error(codes.NotFound, "no repo creds found")
 	}
 	return credWrapper, nil
+}
+
+
+func (g *guideOcelotServer) GetRepoCred(ctx context.Context, credentials *pb.RepoCreds) (*pb.RepoCreds, error) {
+	creddy, err := g.getAnyCred(credentials)
+	if err != nil {
+		return nil, err
+	}
+	repo, ok := creddy.(*pb.RepoCreds)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Unable to cast as Repo Creds")
+	}
+	return repo, nil
 }
 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
@@ -154,6 +195,19 @@ func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty)
 		return credWrapper, status.Error(codes.NotFound, "no kubernetes integration creds found")
 	}
 	return credWrapper, nil
+}
+
+
+func (g *guideOcelotServer) GetK8SCred(ctx context.Context, credentials *pb.K8SCreds) (*pb.K8SCreds, error) {
+	creddy, err := g.getAnyCred(credentials)
+	if err != nil {
+		return nil, err
+	}
+	repo, ok := creddy.(*pb.K8SCreds)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Unable to cast as Kubernetes Creds")
+	}
+	return repo, nil
 }
 
 func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
@@ -250,4 +304,16 @@ func (g *guideOcelotServer) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHW
 		return credWrapper, status.Error(codes.NotFound, "no ssh keys found")
 	}
 	return credWrapper, nil
+}
+
+func (g *guideOcelotServer) GetSSHCred(ctx context.Context, credentials *pb.SSHKeyWrapper) (*pb.SSHKeyWrapper, error) {
+	creddy, err := g.getAnyCred(credentials)
+	if err != nil {
+		return nil, err
+	}
+	ssh, ok := creddy.(*pb.SSHKeyWrapper)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Unable to cast as SSH Creds")
+	}
+	return ssh, nil
 }

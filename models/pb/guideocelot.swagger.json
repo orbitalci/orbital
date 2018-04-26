@@ -151,63 +151,36 @@
         "tags": [
           "GuideOcelot"
         ]
-      },
-      "put": {
-        "description": "Update a kubeconfig in ocelot for kubernetes integration.",
-        "operationId": "UpdateK8SCreds",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/modelsK8SCreds"
-            }
-          }
-        ],
-        "tags": [
-          "GuideOcelot"
-        ]
       }
     },
-    "/v1/creds/k8s/exists": {
+    "/v1/creds/k8s/{acctName}/{identifier}": {
       "get": {
-        "description": "Check if kubeconfig Credential exists in ocelot already. For knowing whether to call Update or Set",
-        "operationId": "K8SCredExists",
+        "description": "Returns k8s cred if it exists. subtype is a required query param",
+        "operationId": "GetK8SCred",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/modelsExists"
+              "$ref": "#/definitions/modelsK8SCreds"
             }
           }
         },
         "parameters": [
           {
             "name": "acctName",
-            "description": "account name to associate this credential with.",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
             "name": "k8sContents",
             "description": "k8scontents is the contents of the kubeconfig file.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "identifier",
-            "description": "identifier in K8s creds is currently irrelevant, as there can only be one per account.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -229,6 +202,43 @@
               "SSHKEY"
             ],
             "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "put": {
+        "description": "Update a kubeconfig in ocelot for kubernetes integration.",
+        "operationId": "UpdateK8SCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsK8SCreds"
+            }
           }
         ],
         "tags": [
@@ -276,46 +286,33 @@
         "tags": [
           "GuideOcelot"
         ]
-      },
-      "put": {
-        "description": "Update new credential configuration to ocelot for repository integration.",
-        "operationId": "UpdateRepoCreds",
+      }
+    },
+    "/v1/creds/repo/{acctName}/{identifier}": {
+      "get": {
+        "description": "Returns repo cred if it exists. subType is a required query param",
+        "operationId": "GetRepoCred",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/protobufEmpty"
+              "$ref": "#/definitions/modelsRepoCreds"
             }
           }
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
+            "name": "acctName",
+            "in": "path",
             "required": true,
-            "schema": {
-              "$ref": "#/definitions/modelsRepoCreds"
-            }
-          }
-        ],
-        "tags": [
-          "GuideOcelot"
-        ]
-      }
-    },
-    "/v1/creds/repo/exists": {
-      "get": {
-        "description": "Check if Repo Credential exists in ocelot already. For knowing whether to call Update or Set",
-        "operationId": "RepoCredExists",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/modelsExists"
-            }
-          }
-        },
-        "parameters": [
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "username",
             "description": "username of repository.",
@@ -338,19 +335,6 @@
             "type": "string"
           },
           {
-            "name": "identifier",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "acctName",
-            "description": "@inject_tag: yaml:\"acctName\"\naccount name (same as from vcs).",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "subType",
             "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
             "in": "query",
@@ -367,6 +351,43 @@
               "SSHKEY"
             ],
             "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "put": {
+        "description": "Update new credential configuration to ocelot for repository integration. subType is a required query param",
+        "operationId": "UpdateRepoCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsRepoCreds"
+            }
           }
         ],
         "tags": [
@@ -413,51 +434,31 @@
         "tags": [
           "GuideOcelot"
         ]
-      },
-      "put": {
-        "description": "Update a ssh key for use in build scripts",
-        "operationId": "UpdateSSHCreds",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/modelsSSHKeyWrapper"
-            }
-          }
-        ],
-        "tags": [
-          "GuideOcelot"
-        ]
       }
     },
-    "/v1/creds/ssh/exists": {
+    "/v1/creds/ssh/{acctName}/{identifier}": {
       "get": {
-        "description": "Check if ssh key file Credential exists in ocelot already. For knowing whether to call Update or Set",
-        "operationId": "SSHCredExists",
+        "description": "Returns ssh cred if it exists. subtype is a required query param",
+        "operationId": "GetSSHCred",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/modelsExists"
+              "$ref": "#/definitions/modelsSSHKeyWrapper"
             }
           }
         },
         "parameters": [
           {
             "name": "acctName",
-            "description": "account name to associate ssh key with.",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
@@ -485,13 +486,43 @@
               "SSHKEY"
             ],
             "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      },
+      "put": {
+        "description": "Update a ssh key for use in build scripts",
+        "operationId": "UpdateSSHCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
           },
           {
             "name": "identifier",
-            "description": "identifier is the unique identifier for when an ssh key is not associated with a VCS account.",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsSSHKeyWrapper"
+            }
           }
         ],
         "tags": [
@@ -539,48 +570,33 @@
         "tags": [
           "GuideOcelot"
         ]
-      },
-      "put": {
-        "summary": "Update a VCS Credential",
-        "description": "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists",
-        "operationId": "UpdateVCSCreds",
+      }
+    },
+    "/v1/creds/vcs/{acctName}/{identifier}": {
+      "get": {
+        "description": "Returns vcs cred if it exists. subtype is a required query param",
+        "operationId": "GetVCSCred",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/protobufEmpty"
+              "$ref": "#/definitions/modelsVCSCreds"
             }
           }
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
+            "name": "acctName",
+            "in": "path",
             "required": true,
-            "schema": {
-              "$ref": "#/definitions/modelsVCSCreds"
-            }
-          }
-        ],
-        "tags": [
-          "GuideOcelot"
-        ]
-      }
-    },
-    "/v1/creds/vcs/exists": {
-      "get": {
-        "summary": "account,identifier,cred_sub_type",
-        "description": "Check if VCS Credential exists in ocelot already. For knowing whether to call Update or Set",
-        "operationId": "VCSCredExists",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/modelsExists"
-            }
-          }
-        },
-        "parameters": [
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "clientId",
             "description": "clientId is generated by creating an oAuth consumer in bitbucket. it is required to generate tokens.\n@inject_tag: yaml:\"clientId\".",
@@ -596,22 +612,8 @@
             "type": "string"
           },
           {
-            "name": "identifier",
-            "description": "identifier is the name the user calls teh credential set.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "tokenURL",
             "description": "tokenUrl is the url at which to retrieve the token\n@inject_tag: yaml:\"tokenURL\".",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "acctName",
-            "description": "@inject_tag: yaml:\"acctName\"\nacctName is the account to associate the VCSCred with. Must be the account name of the owner of the repository they wish to track (ie level11consulting).",
             "in": "query",
             "required": false,
             "type": "string"
@@ -645,11 +647,49 @@
         "tags": [
           "GuideOcelot"
         ]
+      },
+      "put": {
+        "summary": "Update a VCS Credential",
+        "description": "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists. subType is a required query param",
+        "operationId": "UpdateVCSCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsVCSCreds"
+            }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
       }
     },
-    "/v1/creds/vcs/ssh": {
+    "/v1/creds/vcs/{acctName}/{identifier}/ssh": {
       "post": {
-        "description": "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository.",
+        "description": "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository. subType is a required query param",
         "operationId": "SetVCSPrivateKey",
         "responses": {
           "200": {
@@ -660,6 +700,18 @@
           }
         },
         "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "body",
             "in": "body",
@@ -722,21 +774,6 @@
           "GuideOcelot"
         ]
       },
-      "delete": {
-        "description": "delete polling for a repo. account and repo are required.",
-        "operationId": "DeletePollRepo",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        },
-        "tags": [
-          "GuideOcelot"
-        ]
-      },
       "post": {
         "description": "poll will set up a polling request. account, repo, cron, and branches are all required fields.",
         "operationId": "PollRepo",
@@ -756,6 +793,37 @@
             "schema": {
               "$ref": "#/definitions/modelsPollRequest"
             }
+          }
+        ],
+        "tags": [
+          "GuideOcelot"
+        ]
+      }
+    },
+    "/v1/poll/{account}/{repo}": {
+      "delete": {
+        "description": "delete polling for a repo. account and repo are required.",
+        "operationId": "DeletePollRepo",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -810,9 +878,9 @@
         ]
       }
     },
-    "/v1/summary": {
+    "/v1/summary/{account}/{repo}": {
       "get": {
-        "description": "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.",
+        "description": "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned",
         "operationId": "LastFewSummaries",
         "responses": {
           "200": {
@@ -824,15 +892,15 @@
         },
         "parameters": [
           {
-            "name": "repo",
-            "in": "query",
-            "required": false,
+            "name": "account",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
-            "name": "account",
-            "in": "query",
-            "required": false,
+            "name": "repo",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
@@ -875,9 +943,9 @@
         ]
       }
     },
-    "/v1/werker/loc": {
+    "/v1/werker/{hash}": {
       "get": {
-        "description": "get network location of werker that is currrently ",
+        "description": "get network location of werker that is currrently executing a build on the specifed hash",
         "operationId": "FindWerker",
         "responses": {
           "200": {
@@ -889,15 +957,14 @@
         },
         "parameters": [
           {
-            "name": "acctRepo",
-            "description": "acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo.",
-            "in": "query",
-            "required": false,
+            "name": "hash",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
-            "name": "hash",
-            "description": "hash is the git hash to trigger.",
+            "name": "acctRepo",
+            "description": "acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo.",
             "in": "query",
             "required": false,
             "type": "string"
