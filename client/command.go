@@ -6,8 +6,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds"
 	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds/list"
-	"bitbucket.org/level11consulting/ocelot/client/creds/credsadd"
-	"bitbucket.org/level11consulting/ocelot/client/creds/credslist"
+	//"bitbucket.org/level11consulting/ocelot/client/creds/credsadd"
+	//"bitbucket.org/level11consulting/ocelot/client/creds/credslist"
 	"bitbucket.org/level11consulting/ocelot/client/creds/k8s/add"
 	"bitbucket.org/level11consulting/ocelot/client/creds/k8s/list"
 	"bitbucket.org/level11consulting/ocelot/client/creds/ssh/sshadd"
@@ -39,8 +39,9 @@ func init() {
 	verHuman := ocyVersion.GetHumanVersion()
 	Commands = map[string]cli.CommandFactory{
 		"creds":           func() (cli.Command, error) { return creds.New(), nil },
-		"creds add":       func() (cli.Command, error) { return credsadd.New(ui), nil },
-		"creds list":      func() (cli.Command, error) { return credslist.New(ui), nil },
+		// todo: fix these functions then add them back in
+		//"creds add":       func() (cli.Command, error) { return credsadd.New(ui), nil },
+		//"creds list":      func() (cli.Command, error) { return credslist.New(ui), nil },
 		"creds vcs":       func() (cli.Command, error) { return vcscreds.New(), nil },
 		"creds vcs list":  func() (cli.Command, error) { return buildcredslist.New(ui), nil },
 		"creds vcs add":   func() (cli.Command, error) { return buildcredsadd.New(ui), nil },
