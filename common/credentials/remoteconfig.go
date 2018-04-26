@@ -196,7 +196,9 @@ func (rc *RemoteConfig) CheckSSHKeyExists(path string) (error) {
 
 //GetPassword will return to you the vault password at specified path
 func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error) {
-	authData, err := rc.Vault.GetUserAuthData(BuildCredPath(scType, acctName, ocyCredType, identifier))
+	credPath := BuildCredPath(scType, acctName, ocyCredType, identifier)
+	ocelog.Log().Debug("CREDPATH=", credPath)
+	authData, err := rc.Vault.GetUserAuthData(credPath)
 	if err != nil {
 		return "", err
 	}
