@@ -20,5 +20,5 @@ var (
 
 	FilesystemConfigLoc =  OcyConfigBase + "/filesystem"
 	FilesystemDir = FilesystemConfigLoc + "/savedirec"
-	ConfigPath = "creds"
+	ConfigPath = GetPrefix() + "creds"
 )
