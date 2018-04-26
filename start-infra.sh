@@ -50,23 +50,23 @@ esac
 done
 
 if (( CONSUL == 1 )); then
-    args+=(" -f infra/consul-docker-compose.yml")
+    args+=(" -f deploy/infra/consul-docker-compose.yml")
 fi
 
 if (( VAULT == 1 )); then
-    args+=(" -f infra/vault-docker-compose.yml")
+    args+=(" -f deploy/infra/vault-docker-compose.yml")
 fi
 
 if (( POSTGRES == 1 )); then
-    args+=(" -f infra/postgres-docker-compose.yml")
+    args+=(" -f deploy/infra/postgres-docker-compose.yml")
 fi
 
 if (( NSQ == 1 )); then
-    args+=(" -f infra/nsq-docker-compose.yml")
+    args+=(" -f deploy/infra/nsq-docker-compose.yml")
 fi
 
 if (( NEXUS == 1 )); then
-    args+=(" -f infra/nexus-docker-compose.yml")
+    args+=(" -f deploy/infra/nexus-docker-compose.yml")
 fi
 
 docker-compose${args[@]} up${follow[@]}

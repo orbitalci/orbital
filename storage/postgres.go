@@ -911,6 +911,37 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 	return creds, rows.Err()
 }
 
+func (p *PostgresStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
+	if err := p.Connect(); err != nil {
+		return nil, errors.New("could not connect to postgres: " + err.Error())
+	}
+	aMonthAgo := time.Now().Add(-(time.Hour * 24 * 30))
+	queryStr := `select distinct account,repo from build_summary where date(starttime) > date($1) ;`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return  nil, err
+	}
+	//Mon Jan 2 15:04:05 -0700 MST 2006
+	rows, err := stmt.Query(aMonthAgo.Format("01/02/2006"))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	acctRepos := &pb.AcctRepos{}
+	for rows.Next() {
+		acctRepo := &pb.AcctRepo{}
+		if err := rows.Scan(&acctRepo.Account, &acctRepo.Repo); err != nil {
+			if err == sql.ErrNoRows {
+				return nil, BuildSumNotFound("any account/repo")
+			}
+			return nil, err
+		}
+		acctRepos.AcctRepos = append(acctRepos.AcctRepos, acctRepo)
+	}
+	return acctRepos, nil
+}
+
 func (p *PostgresStorage) StorageType() string {
 	return fmt.Sprintf("Postgres Database at %s", p.location)
 }
