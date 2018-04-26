@@ -9,7 +9,6 @@ import "protoc-gen-swagger/options/annotations.proto";
 //import "google/protobuf/wrappers.proto"; //use this when you have to pass a string value
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
-    base_path: "/v1"
     info: {
         title: "Guide Ocelot Server"
         version: "1.0"
@@ -30,6 +29,7 @@ service GuideOcelot {
 			get: "/v1/creds/vcs"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Return all vcs creds"
             description: "Returns all VCS creds that ocelot has and can use for checking out code to build.";
         };
     }
@@ -38,7 +38,8 @@ service GuideOcelot {
 			get: "/v1/creds/vcs/{acctName}/{identifier}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Returns vcs cred if it exists. subtype is a required query param";
+            summary: "Retrieve single VCS cred"
+            description: "Returns vcs cred if it exists. subtype is a required query param. \nRefer to modelsVCSCreds for the object fields";
         };
     }
     rpc SetVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
@@ -47,7 +48,8 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Add a new VCS credential configuration to ocelot for code checkout.";
+            summary: "Add VCS Credential"
+            description: "Add a new VCS credential configuration to ocelot for code checkout. \nRefer to modelsVCSCreds for the object fields";
         };
     }
     rpc UpdateVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
@@ -57,7 +59,7 @@ service GuideOcelot {
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             summary: "Update a VCS Credential"
-            description: "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists. subType is a required query param";
+            description: "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists. subType is a required query param \nRefer to modelsVCSCreds for the object fields";
         };
     }
 //    account,identifier,cred_sub_type
@@ -70,7 +72,8 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository. subType is a required query param";
+            summary: "Attach ssh key to VCS Account"
+            description: "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository. subType is a required query param \nRefer to modelsSSHKeyWrapper for the object fields";
         };
     }
 
@@ -79,6 +82,7 @@ service GuideOcelot {
 			get: "/v1/creds/repo/{acctName}/{identifier}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "return single repo cred"
             description: "Returns repo cred if it exists. subType is a required query param";
         };
     }
@@ -89,7 +93,8 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Update new credential configuration to ocelot for repository integration. subType is a required query param";
+            summary: "Update repo cred"
+            description: "Update new credential configuration to ocelot for repository integration. \nRefer to modelsRepoCreds for the object fields";
         };
     }
     rpc RepoCredExists (RepoCreds) returns (Exists) {}
@@ -98,6 +103,7 @@ service GuideOcelot {
 			get: "/v1/creds/k8s/{acctName}/{identifier}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Get Kubernetes credential"
             description: "Returns k8s cred if it exists. subtype is a required query param";
         };
     }
@@ -107,7 +113,7 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Update a kubeconfig in ocelot for kubernetes integration.";
+            summary: "Update a kubeconfig in ocelot for kubernetes integration. \nRefer to modelsK8SCreds for the object fields";
         };
     }
     rpc K8SCredExists (K8SCreds) returns (Exists) {}
@@ -118,7 +124,8 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Update a ssh key for use in build scripts";
+            summary: "Update ssh key"
+            description: "Update a ssh key for use in build scripts. \nRefer to modelsSSHKeyWrapper for the object fields";
         };
     }
     rpc GetSSHCred(SSHKeyWrapper) returns (SSHKeyWrapper) {
@@ -126,6 +133,7 @@ service GuideOcelot {
 			get: "/v1/creds/ssh/{acctName}/{identifier}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Get ssh key"
             description: "Returns ssh cred if it exists. subtype is a required query param";
         };
     }
@@ -136,14 +144,17 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Add a new ssh key to an account so builds can access them at runtime.";
+            summary: "Attach new SSH key to account"
+            description: "Add a new ssh key to an account so builds can access them at runtime. \nRefer to modelsSSHKeyWrapper for the object fields";
         };
     }
     rpc GetSSHCreds (google.protobuf.Empty) returns (SSHWrap) {
         option (google.api.http) = {
 			get: "/v1/creds/ssh"
-
 		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Get all known SSH integration credentials."
+        };
     }
 
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {
@@ -151,6 +162,7 @@ service GuideOcelot {
 			get: "/v1/creds/repo"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Get all known repo integration credentials."
             description: "Get all known repo integration credentials.";
         };
     }
@@ -160,7 +172,8 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker.";
+            summary: "Add new Repo cred"
+            description: "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker. \nRefer to modelsRepoCreds for the object fields";
         };
     }
 
@@ -169,18 +182,21 @@ service GuideOcelot {
 			post: "/v1/creds/k8s"
 			body: "*"
 		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Add new Kubernetes Credential"
+            description: "Add New kubernetes credential. \nRefer to modelsK8SCreds for the object fields"
+        };
     }
     rpc GetK8SCreds (google.protobuf.Empty) returns (K8SCredsWrapper) {
         option (google.api.http) = {
 			get: "/v1/creds/k8s"
 		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Retrieve all kubernetes related credentials"
+        };
     }
 
-    rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {
-        option (google.api.http) = {
-			get: "/v1/creds";
-		};
-    }
+    rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
 
 
     rpc BuildRuntime (BuildQuery) returns (Builds) {
@@ -188,7 +204,7 @@ service GuideOcelot {
 			get: "/v1/buildruntime"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. "
+            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. \nRefer to modelsBuildQuery for object fields"
             summary: "get runtime specification of a specific build";
         };
     }
@@ -197,7 +213,7 @@ service GuideOcelot {
 			get: "/v1/logs"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ";
+            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. \nRefer to modelsBuildQuery for object fields";
         };
     }
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {
@@ -306,6 +322,7 @@ message SSHKeyWrapper {
     string acctName = 1;
     // the contents of the private key
     bytes privateKey = 2;
+    // There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY
     SubCredType subType = 10;
     // identifier is the unique identifier for when an ssh key is not associated with a VCS account.
     string identifier = 11;
@@ -334,6 +351,7 @@ message VCSCreds {
     // just a string that says whether or not there is an ssh key on file
     // @inject_tag: yaml:"sshFileLoc"
     string sshFileLoc = 6;
+    // there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET
     // @inject_tag: yaml:"subType"
     SubCredType subType = 10;
 }
@@ -384,6 +402,7 @@ message RepoCreds {
     // @inject_tag: yaml:"acctName"
     // account name (same as from vcs)
     string acctName = 4;
+    // there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS
     // @inject_tag: yaml:"subType"
     SubCredType subType = 10;
 
@@ -396,6 +415,7 @@ message K8SCreds {
     string k8sContents = 2;
     // identifier in K8s creds is currently irrelevant, as there can only be one per account
     string identifier = 3;
+    // there is currently only one subtype for k8SCreds, and it is KUBECONF
     // @inject_tag: yaml:"subType"
     SubCredType subType = 5;
 

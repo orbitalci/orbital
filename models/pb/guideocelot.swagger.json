@@ -8,7 +8,6 @@
       "email": "jessishank@level11.com"
     }
   },
-  "basePath": "/v1",
   "schemes": [
     "http",
     "https"
@@ -67,7 +66,7 @@
     "/v1/buildruntime": {
       "get": {
         "summary": "get runtime specification of a specific build",
-        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ",
+        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. \nRefer to modelsBuildQuery for object fields",
         "operationId": "BuildRuntime",
         "responses": {
           "200": {
@@ -97,24 +96,9 @@
         ]
       }
     },
-    "/v1/creds": {
-      "get": {
-        "operationId": "GetAllCreds",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/modelsAllCredsWrapper"
-            }
-          }
-        },
-        "tags": [
-          "GuideOcelot"
-        ]
-      }
-    },
     "/v1/creds/k8s": {
       "get": {
+        "summary": "Retrieve all kubernetes related credentials",
         "operationId": "GetK8SCreds",
         "responses": {
           "200": {
@@ -129,6 +113,8 @@
         ]
       },
       "post": {
+        "summary": "Add new Kubernetes Credential",
+        "description": "Add New kubernetes credential. \nRefer to modelsK8SCreds for the object fields",
         "operationId": "SetK8SCreds",
         "responses": {
           "200": {
@@ -155,6 +141,7 @@
     },
     "/v1/creds/k8s/{acctName}/{identifier}": {
       "get": {
+        "summary": "Get Kubernetes credential",
         "description": "Returns k8s cred if it exists. subtype is a required query param",
         "operationId": "GetK8SCred",
         "responses": {
@@ -187,7 +174,7 @@
           },
           {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "description": "there is currently only one subtype for k8SCreds, and it is KUBECONF\n@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
             "in": "query",
             "required": false,
             "type": "string",
@@ -209,7 +196,7 @@
         ]
       },
       "put": {
-        "description": "Update a kubeconfig in ocelot for kubernetes integration.",
+        "summary": "Update a kubeconfig in ocelot for kubernetes integration. \nRefer to modelsK8SCreds for the object fields",
         "operationId": "UpdateK8SCreds",
         "responses": {
           "200": {
@@ -248,6 +235,7 @@
     },
     "/v1/creds/repo": {
       "get": {
+        "summary": "Get all known repo integration credentials.",
         "description": "Get all known repo integration credentials.",
         "operationId": "GetRepoCreds",
         "responses": {
@@ -263,7 +251,8 @@
         ]
       },
       "post": {
-        "description": "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker.",
+        "summary": "Add new Repo cred",
+        "description": "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker. \nRefer to modelsRepoCreds for the object fields",
         "operationId": "SetRepoCreds",
         "responses": {
           "200": {
@@ -290,6 +279,7 @@
     },
     "/v1/creds/repo/{acctName}/{identifier}": {
       "get": {
+        "summary": "return single repo cred",
         "description": "Returns repo cred if it exists. subType is a required query param",
         "operationId": "GetRepoCred",
         "responses": {
@@ -336,7 +326,7 @@
           },
           {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "description": "there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS\n@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
             "in": "query",
             "required": false,
             "type": "string",
@@ -358,7 +348,8 @@
         ]
       },
       "put": {
-        "description": "Update new credential configuration to ocelot for repository integration. subType is a required query param",
+        "summary": "Update repo cred",
+        "description": "Update new credential configuration to ocelot for repository integration. \nRefer to modelsRepoCreds for the object fields",
         "operationId": "UpdateRepoCreds",
         "responses": {
           "200": {
@@ -397,6 +388,7 @@
     },
     "/v1/creds/ssh": {
       "get": {
+        "summary": "Get all known SSH integration credentials.",
         "operationId": "GetSSHCreds",
         "responses": {
           "200": {
@@ -411,7 +403,8 @@
         ]
       },
       "post": {
-        "description": "Add a new ssh key to an account so builds can access them at runtime.",
+        "summary": "Attach new SSH key to account",
+        "description": "Add a new ssh key to an account so builds can access them at runtime. \nRefer to modelsSSHKeyWrapper for the object fields",
         "operationId": "SetSSHCreds",
         "responses": {
           "200": {
@@ -438,6 +431,7 @@
     },
     "/v1/creds/ssh/{acctName}/{identifier}": {
       "get": {
+        "summary": "Get ssh key",
         "description": "Returns ssh cred if it exists. subtype is a required query param",
         "operationId": "GetSSHCred",
         "responses": {
@@ -471,7 +465,7 @@
           },
           {
             "name": "subType",
-            "description": " - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "description": "There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY.\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
             "in": "query",
             "required": false,
             "type": "string",
@@ -493,7 +487,8 @@
         ]
       },
       "put": {
-        "description": "Update a ssh key for use in build scripts",
+        "summary": "Update ssh key",
+        "description": "Update a ssh key for use in build scripts. \nRefer to modelsSSHKeyWrapper for the object fields",
         "operationId": "UpdateSSHCreds",
         "responses": {
           "200": {
@@ -532,6 +527,7 @@
     },
     "/v1/creds/vcs": {
       "get": {
+        "summary": "Return all vcs creds",
         "description": "Returns all VCS creds that ocelot has and can use for checking out code to build.",
         "operationId": "GetVCSCreds",
         "responses": {
@@ -547,7 +543,8 @@
         ]
       },
       "post": {
-        "description": "Add a new VCS credential configuration to ocelot for code checkout.",
+        "summary": "Add VCS Credential",
+        "description": "Add a new VCS credential configuration to ocelot for code checkout. \nRefer to modelsVCSCreds for the object fields",
         "operationId": "SetVCSCreds",
         "responses": {
           "200": {
@@ -574,7 +571,8 @@
     },
     "/v1/creds/vcs/{acctName}/{identifier}": {
       "get": {
-        "description": "Returns vcs cred if it exists. subtype is a required query param",
+        "summary": "Retrieve single VCS cred",
+        "description": "Returns vcs cred if it exists. subtype is a required query param. \nRefer to modelsVCSCreds for the object fields",
         "operationId": "GetVCSCred",
         "responses": {
           "200": {
@@ -627,7 +625,7 @@
           },
           {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "description": "there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET\n@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
             "in": "query",
             "required": false,
             "type": "string",
@@ -650,7 +648,7 @@
       },
       "put": {
         "summary": "Update a VCS Credential",
-        "description": "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists. subType is a required query param",
+        "description": "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists. subType is a required query param \nRefer to modelsVCSCreds for the object fields",
         "operationId": "UpdateVCSCreds",
         "responses": {
           "200": {
@@ -689,7 +687,8 @@
     },
     "/v1/creds/vcs/{acctName}/{identifier}/ssh": {
       "post": {
-        "description": "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository. subType is a required query param",
+        "summary": "Attach ssh key to VCS Account",
+        "description": "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository. subType is a required query param \nRefer to modelsSSHKeyWrapper for the object fields",
         "operationId": "SetVCSPrivateKey",
         "responses": {
           "200": {
@@ -728,7 +727,7 @@
     },
     "/v1/logs": {
       "get": {
-        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ",
+        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. \nRefer to modelsBuildQuery for object fields",
         "operationId": "Logs",
         "responses": {
           "200": {
@@ -1153,7 +1152,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "@inject_tag: yaml:\"subType\""
+          "title": "there is currently only one subtype for k8SCreds, and it is KUBECONF\n@inject_tag: yaml:\"subType\""
         }
       }
     },
@@ -1265,7 +1264,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "@inject_tag: yaml:\"subType\""
+          "title": "there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS\n@inject_tag: yaml:\"subType\""
         }
       }
     },
@@ -1282,7 +1281,8 @@
           "title": "the contents of the private key"
         },
         "subType": {
-          "$ref": "#/definitions/modelsSubCredType"
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY"
         },
         "identifier": {
           "type": "string",
@@ -1403,7 +1403,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "@inject_tag: yaml:\"subType\""
+          "title": "there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET\n@inject_tag: yaml:\"subType\""
         }
       }
     },
