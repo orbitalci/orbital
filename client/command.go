@@ -25,6 +25,8 @@ import (
 	"bitbucket.org/level11consulting/ocelot/client/validate"
 	"bitbucket.org/level11consulting/ocelot/client/version"
 	"bitbucket.org/level11consulting/ocelot/client/watch"
+	"bitbucket.org/level11consulting/ocelot/client/repos"
+	"bitbucket.org/level11consulting/ocelot/client/repos/list"
 	ocyVersion "bitbucket.org/level11consulting/ocelot/version"
 	"github.com/mitchellh/cli"
 
@@ -62,5 +64,7 @@ func init() {
 		"poll list": 	   func() (cli.Command, error) { return polllist.New(ui), nil },
 		"kill":			   func() (cli.Command, error) { return kill.New(ui), nil },
 		"version": 		   func() (cli.Command, error) { return version.New(ui, verHuman), nil},
+		"repos":           func() (cli.Command, error) { return repos.New(), nil},
+		"repos list":      func() (cli.Command, error) { return reposlist.New(ui), nil},
 	}
 }
