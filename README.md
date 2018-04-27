@@ -2,7 +2,7 @@
 
 [USEAGE NOTES](./docs/documentation/useage.md)
 
-Ocelot is a distributed CI for running in container orchestration environments. It utilizes Vault, Consul, Postgres and NSQ. See [ARCHITECTURE](./docs/documentation/architecture.md) for more details.
+Ocelot is a distributed CI for running in container orchestration environments. It utilizes Vault, Consul, Postgres and NSQ and comes with a bangin' cli. See [ARCHITECTURE](./docs/documentation/architecture.md) for more details.
 
 
 Future big wants:
