@@ -12,25 +12,25 @@ import (
 	"os"
 	"strings"
 
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/build"
-	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
-	"bitbucket.org/level11consulting/ocelot/build_signaler/poll"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
+	"github.com/shankj3/go-til/deserialize"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/build"
+	signal "github.com/shankj3/ocelot/build_signaler"
+	"github.com/shankj3/ocelot/build_signaler/poll"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/version"
 )
 
 type changeSetConfig struct {
-	RemoteConf   cred.CVRemoteConfig
+	RemoteConf cred.CVRemoteConfig
 	*deserialize.Deserializer
-	OcyValidator   *build.OcelotValidator
-	Producer       *nsqpb.PbProduce
-	AcctRepo  	string
-	Acct        string
-	Repo        string
+	OcyValidator *build.OcelotValidator
+	Producer     *nsqpb.PbProduce
+	AcctRepo     string
+	Acct         string
+	Repo         string
 	Branches     []string
 }
 
@@ -55,7 +55,7 @@ func configure() *changeSetConfig {
 		ocelog.Log().Fatal("-acct-repo and -branches is required")
 	}
 	branchList := strings.Split(branches, ",")
-	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches:branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator()}
+	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator()}
 	acctrepolist := strings.Split(acctRepo, "/")
 	if len(acctrepolist) != 2 {
 		ocelog.Log().Fatal("-acct-repo must be in format <acct>/<repo>")
@@ -63,7 +63,6 @@ func configure() *changeSetConfig {
 	conf.Acct, conf.Repo = acctrepolist[0], acctrepolist[1]
 	return conf
 }
-
 
 func main() {
 	conf := configure()
@@ -79,20 +78,20 @@ func main() {
 			Producer:     conf.Producer,
 			AcctRepo:     conf.AcctRepo,
 			OcyValidator: conf.OcyValidator,
-			Store: store,
+			Store:        store,
 		},
 	}
-	
+
 	if err := checker.SetAuth(); err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("could not get auth")
 	}
-	
+
 	_, lastHashes, err := store.GetLastData(conf.AcctRepo)
 	if err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Error("couldn't get last cron time, setting last cron to 5 minutes ago")
 	}
 	// no matter what, we are inside the cron job, so we should be updating the db
-	defer func(){
+	defer func() {
 		if err = store.SetLastData(conf.Acct, conf.Repo, lastHashes); err != nil {
 			ocelog.IncludeErrField(err).Error("unable to set last cron time")
 			return

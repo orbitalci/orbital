@@ -1,12 +1,12 @@
 package kubeadd
 
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"io/ioutil"
 	"strings"
 )
@@ -17,13 +17,12 @@ func New(ui cli.Ui) *cmd {
 	return c
 }
 
-
 type cmd struct {
-	UI cli.Ui
+	UI      cli.Ui
 	flags   *flag.FlagSet
 	fileloc string
 	account string
-	config *commandhelper.ClientConfig
+	config  *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
@@ -47,7 +46,6 @@ func (c *cmd) init() {
 		"Account name to file kubeconfig under.")
 }
 
-
 // uploadCredential will check if credential already exists. if it does, it will ask if the user wishes to overwrite. if the user responds YES, the credential will be updated.
 // if it does not exist, will be inserted as normal.
 func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI cli.Ui, cred *models.K8SCreds) error {
@@ -57,7 +55,7 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 	}
 
 	if exists.Exists {
-		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s and Repo Type %s already exists. Do you want to overwrite? " +
+		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s and Repo Type %s already exists. Do you want to overwrite? "+
 			"Only a YES will continue with update, otherwise the client will exit. ", cred.AcctName, strings.ToLower(cred.SubType.String())))
 		if err != nil {
 			return err
@@ -77,7 +75,6 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 	return err
 }
 
-
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
@@ -86,7 +83,7 @@ func (c *cmd) Run(args []string) int {
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	k8cred := &models.K8SCreds{SubType:models.SubCredType_KUBECONF}
+	k8cred := &models.K8SCreds{SubType: models.SubCredType_KUBECONF}
 	if c.account == "ERROR" {
 		c.UI.Error("-acct was not provided")
 		return 1
@@ -103,7 +100,7 @@ func (c *cmd) Run(args []string) int {
 	}
 	k8cred.K8SContents = string(kubeconf)
 	// right now, only support one kubeconfig per account
-	k8cred.Identifier  = "THERECANONLYBEONE"
+	k8cred.Identifier = "THERECANONLYBEONE"
 
 	if err = uploadCredential(ctx, c.config.Client, c.UI, k8cred); err != nil {
 		if _, ok := err.(*commandhelper.DontOverwrite); ok {

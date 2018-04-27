@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/common"
-	util "bitbucket.org/level11consulting/ocelot/common/testutil"
-
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/common"
+	util "github.com/shankj3/ocelot/common/testutil"
 )
-
 
 func Test_Register(t *testing.T) {
 	//hash := "1231231231"

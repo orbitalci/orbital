@@ -1,14 +1,13 @@
 package credsadd
 
-
 import (
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/go-til/deserialize"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"io/ioutil"
 )
 
@@ -18,14 +17,12 @@ func New(ui cli.Ui) *cmd {
 	return c
 }
 
-
 type cmd struct {
 	UI      cli.Ui
 	flags   *flag.FlagSet
 	fileloc string
 	config  *commandhelper.ClientConfig
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -81,7 +78,6 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 		}
 	}
 
-
 	if credWrap.RepoCreds != nil {
 		for _, configVal := range credWrap.RepoCreds.Repo {
 			_, err = c.config.Client.SetRepoCreds(ctx, configVal)
@@ -99,7 +95,6 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 	}
 	return 0
 }
-
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
@@ -153,4 +148,3 @@ Usage: ocelot creds add --credfile-loc ~/credfile-yaml.yaml
   sshFileLoc is an optional field to set when uploading your vcs credentials, if added, it will be used 
   for cloning repositories belonging to that account
 `
-

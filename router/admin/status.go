@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
@@ -84,7 +82,7 @@ BUILD_FOUND:
 	result = ParseStagesByBuildId(buildSum, stageResults)
 	inConsul, err := build.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
 	if err != nil {
-		return nil, status.Error(codes.Unavailable, "An error occurred checking build status in consul. Cannot retrieve status at this time.\n\n" + err.Error())
+		return nil, status.Error(codes.Unavailable, "An error occurred checking build status in consul. Cannot retrieve status at this time.\n\n"+err.Error())
 	}
 	result.IsInConsul = inConsul
 	return

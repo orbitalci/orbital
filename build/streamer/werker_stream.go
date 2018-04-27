@@ -6,21 +6,19 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/level11consulting/go-til/consul"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	rt "bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/consul"
+	ocelog "github.com/shankj3/go-til/log"
+	rt "github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/valet"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
 )
-
 
 type buildDatum struct {
 	sync.Mutex
 	buildData [][]byte
 	done      bool
 }
-
 
 func (b *buildDatum) Append(line []byte) {
 	b.Lock()
@@ -47,16 +45,16 @@ func (b *buildDatum) CheckDone() bool {
 func GetStreamPack(buildContexts map[string]*models.BuildContext, store storage.OcelotStorage, consulet *consul.Consulet) *StreamPack {
 	return &StreamPack{
 		BuildContexts: buildContexts,
-		Consul: consulet,
-		Store:  store,
-		BuildInfo: make(map[string]*buildDatum),
+		Consul:        consulet,
+		Store:         store,
+		BuildInfo:     make(map[string]*buildDatum),
 	}
 }
 
 type StreamPack struct {
-	Consul    *consul.Consulet
-	Store     storage.OcelotStorage
-	BuildInfo map[string]*buildDatum
+	Consul        *consul.Consulet
+	Store         storage.OcelotStorage
+	BuildInfo     map[string]*buildDatum
 	BuildContexts map[string]*models.BuildContext
 }
 
@@ -171,4 +169,3 @@ func (sp *StreamPack) contextCleanup(buildCtx *models.BuildContext, mapLock sync
 		return
 	}
 }
-

@@ -1,18 +1,18 @@
 package basher
 
 import (
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models/pb"
 	"testing"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/go-til/test"
 )
 
 func TestBasher_DownloadCodebaseDefault(t *testing.T) {
 	b := &Basher{}
 	wt := &pb.WerkerTask{
-		VcsToken: "something",
-		FullName: "marianne",
+		VcsToken:     "something",
+		FullName:     "marianne",
 		CheckoutHash: "123",
-		VcsType: pb.SubCredType_BITBUCKET,
+		VcsType:      pb.SubCredType_BITBUCKET,
 	}
 	defaultResult := b.DownloadCodebase(wt)
 	if len(defaultResult) != 3 {
@@ -33,10 +33,10 @@ func TestBasher_DownloadCodebaseNotDefault(t *testing.T) {
 	b := &Basher{}
 	b.SetBbDownloadURL("https://localhost:9090/marianne/is/number/one")
 	wt := &pb.WerkerTask{
-		VcsToken: "",
-		FullName: "marianne",
+		VcsToken:     "",
+		FullName:     "marianne",
 		CheckoutHash: "123",
-		VcsType: pb.SubCredType_BITBUCKET,
+		VcsType:      pb.SubCredType_BITBUCKET,
 	}
 	defaultResult := b.DownloadCodebase(wt)
 	if len(defaultResult) != 3 {
@@ -52,4 +52,3 @@ func TestBasher_DownloadCodebaseNotDefault(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("download first param", "/.ocelot/bb_download.sh", defaultResult[2]))
 	}
 }
-

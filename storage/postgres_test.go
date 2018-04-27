@@ -1,9 +1,9 @@
 package storage
 
 import (
-	"bitbucket.org/level11consulting/go-til/test"
-	util "bitbucket.org/level11consulting/ocelot/common/testutil"
-	"bitbucket.org/level11consulting/ocelot/models"
+	"github.com/shankj3/go-til/test"
+	util "github.com/shankj3/ocelot/common/testutil"
+	"github.com/shankj3/ocelot/models"
 
 	"bytes"
 	"testing"
@@ -18,18 +18,18 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	pg.Connect()
 	defer PostgresTeardown(t, pg.db)
 	const shortForm = "2006-01-02 15:04:05"
-	buildTime, err := time.Parse(shortForm,"2018-01-14 18:38:59")
+	buildTime, err := time.Parse(shortForm, "2018-01-14 18:38:59")
 	if err != nil {
 		t.Error(err)
 	}
 	model := &models.BuildSummary{
-		Hash: "123",
-		Failed: false,
-		BuildTime: buildTime,
-		Account: "testAccount",
+		Hash:          "123",
+		Failed:        false,
+		BuildTime:     buildTime,
+		Account:       "testAccount",
 		BuildDuration: 23.232,
-		Repo: "testRepo",
-		Branch: "aBranch",
+		Repo:          "testRepo",
+		Branch:        "aBranch",
 	}
 	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch)
 	if err != nil {
@@ -87,7 +87,7 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 	txt := []byte("a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf")
 	out := &models.BuildOutput{
 		BuildId: id,
-		Output: txt,
+		Output:  txt,
 	}
 	err := pg.AddOut(out)
 	if err != nil {
@@ -100,7 +100,7 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 	if retrieved.BuildId != id {
 		t.Error(test.GenericStrFormatErrors("build id", id, retrieved.BuildId))
 	}
-	if bytes.Compare(retrieved.Output, txt) != 0{
+	if bytes.Compare(retrieved.Output, txt) != 0 {
 		t.Error(test.GenericStrFormatErrors("output", txt, retrieved.Output))
 	}
 
@@ -113,17 +113,17 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 	pg.Connect()
 	defer PostgresTeardown(t, pg.db)
 	const shortForm = "2006-01-02 15:04:05"
-	startTime, _ := time.Parse(shortForm,"2018-01-14 18:38:59")
+	startTime, _ := time.Parse(shortForm, "2018-01-14 18:38:59")
 	stageMessage := []string{"wow I am amazing"}
 
 	stageResult := &models.StageResult{
-		BuildId: id,
-		Error: "",
-		StartTime: startTime,
+		BuildId:       id,
+		Error:         "",
+		StartTime:     startTime,
 		StageDuration: 100,
-		Status: 1,
-		Messages: stageMessage,
-		Stage: "marianne",
+		Status:        1,
+		Messages:      stageMessage,
+		Stage:         "marianne",
 	}
 	err := pg.AddStageDetail(stageResult)
 	t.Log(pg.db.Stats().OpenConnections)
@@ -166,13 +166,13 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 func TestPostgresStorage_Healthy(t *testing.T) {
 	cleanup, pw, port := CreateTestPgDatabase(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
-	time.Sleep(4*time.Second)
+	time.Sleep(4 * time.Second)
 	defer cleanup(t)
 	if !pg.Healthy() {
 		t.Error("postgres storage instance should return healthy, it isn't.")
 	}
 	cleanup(t)
-	time.Sleep(2*time.Second)
+	time.Sleep(2 * time.Second)
 	if pg.Healthy() {
 		t.Error("postgres storage instance has been shut down, should return not healthy")
 	}
@@ -182,7 +182,7 @@ func TestPostgresStorage_Healthy(t *testing.T) {
 func TestPostgresStorage_GetLastData(t *testing.T) {
 	cleanup, pw, port := CreateTestPgDatabase(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
-	time.Sleep(4*time.Second)
+	time.Sleep(4 * time.Second)
 	defer cleanup(t)
 	_, hashes, err := pg.GetLastData("level11consulting/ocelot")
 	if err != nil {
@@ -191,7 +191,7 @@ func TestPostgresStorage_GetLastData(t *testing.T) {
 	if last, ok := hashes["master"]; !ok {
 		t.Error("hash map should have master branch, it doesnlt")
 		t.Log(hashes)
-	} else if last != "6363a8a4ef13227218dc5c6d40e78ddfeb21b623"{
+	} else if last != "6363a8a4ef13227218dc5c6d40e78ddfeb21b623" {
 		t.Error(test.StrFormatErrors("master last hash", "6363a8a4ef13227218dc5c6d40e78ddfeb21b623", last))
 	}
 }

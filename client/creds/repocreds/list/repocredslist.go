@@ -1,8 +1,8 @@
 package repocredslist
 
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 
 	"context"
 	"flag"
@@ -10,7 +10,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 	"strings"
-
 )
 
 func New(ui cli.Ui) *cmd {
@@ -20,10 +19,10 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
-	flags   *flag.FlagSet
+	UI            cli.Ui
+	flags         *flag.FlagSet
 	accountFilter string
-	config *commandhelper.ClientConfig
+	config        *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
@@ -37,7 +36,6 @@ func (c *cmd) GetUI() cli.Ui {
 func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 	return c.config
 }
-
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -81,7 +79,6 @@ func (c *cmd) Help() string {
 	return help
 }
 
-
 func Header(ui cli.Ui) {
 	ui.Output("\n--- Repo Credentials ---\n")
 }
@@ -101,7 +98,6 @@ Identifier: %s
 	return fmt.Sprintf(fallback, cred.Username, cred.Password, cred.RepoUrl, cred.AcctName, strings.ToLower(cred.SubType.String()), cred.Identifier)
 
 }
-
 
 const synopsis = "List all credentials used for artifact repositories"
 const help = `

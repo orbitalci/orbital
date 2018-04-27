@@ -1,12 +1,12 @@
 package streamer
 
 import (
-	consulet "bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"bufio"
 	"bytes"
+	consulet "github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
 	"testing"
 	"time"
 )
@@ -33,7 +33,7 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	}
 	trans := &models.Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: id}
 	werkerConsulet, _ := consulet.Default()
-	sp := &StreamPack{Consul: werkerConsulet, Store: store, BuildInfo: make(map[string]*buildDatum), BuildContexts: make(map[string]*models.BuildContext),}
+	sp := &StreamPack{Consul: werkerConsulet, Store: store, BuildInfo: make(map[string]*buildDatum), BuildContexts: make(map[string]*models.BuildContext)}
 
 	middleIndex := 6
 	go sp.writeInfoChanToInMemMap(trans)

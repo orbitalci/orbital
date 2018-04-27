@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bitbucket.org/level11consulting/ocelot/client"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client"
 	"os"
 )
-
 
 func mainDo() int {
 	args := os.Args[1:]
@@ -17,12 +16,12 @@ func mainDo() int {
 		cmds = append(cmds, c)
 	}
 	clie := &cli.CLI{
-		Args: args,
-		Commands: client.Commands,
+		Args:         args,
+		Commands:     client.Commands,
 		Autocomplete: true,
-		Name: "ocelot",
-		Version: "0.1.0",
-		HelpFunc: cli.FilteredHelpFunc(cmds, cli.BasicHelpFunc("ocelot")),
+		Name:         "ocelot",
+		Version:      "0.1.0",
+		HelpFunc:     cli.FilteredHelpFunc(cmds, cli.BasicHelpFunc("ocelot")),
 	}
 
 	exitCode, err := clie.Run()
@@ -32,7 +31,6 @@ func mainDo() int {
 	return exitCode
 }
 
-
-func main(){
+func main() {
 	os.Exit(mainDo())
 }

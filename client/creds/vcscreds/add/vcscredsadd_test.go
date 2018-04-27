@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/common/testutil"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	"github.com/shankj3/ocelot/common/testutil"
+	models "github.com/shankj3/ocelot/models/pb"
 )
 
 // testNew will return the bare minimum. flags and fileloc of yaml will have to be set after instantiation
@@ -23,7 +23,7 @@ func testNew(inputReaderData []byte) *cmd {
 		ui.InputReader = bytes.NewReader(inputReaderData)
 	}
 	c := &cmd{
-		UI: ui,
+		UI:     ui,
 		config: commandhelper.NewTestClientConfig([]string{}),
 	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -39,7 +39,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 		ui.InputReader = bytes.NewReader(input)
 	}
 	c := &cmd{
-		UI: ui,
+		UI:     ui,
 		config: commandhelper.NewTestClientConfig([]string{}),
 	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -55,7 +55,7 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
 				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
-				SubType:       models.SubCredType_BITBUCKET,
+				SubType:      models.SubCredType_BITBUCKET,
 				SshFileLoc:   "THIS IS A TEST",
 			},
 		},
@@ -81,7 +81,6 @@ Error: open THIS IS A TEST: no such file or directory`
 	if !testutil.CompareCredWrappers(expectedCreds, actualCreds) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", actualCreds)
 	}
-
 
 }
 

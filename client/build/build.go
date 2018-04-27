@@ -1,14 +1,13 @@
 package build
 
 import (
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 
 	"context"
 	"flag"
 )
-
 
 const synopsis = "build a project hash"
 const help = `
@@ -28,13 +27,12 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
-	flags   *flag.FlagSet
+	UI     cli.Ui
+	flags  *flag.FlagSet
 	config *commandhelper.ClientConfig
-	Branch 	string
+	Branch string
 	*commandhelper.OcyHelper
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -64,7 +62,6 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.Branch, "branch", "ERROR", "branch to build (only required if passing a previously un-built hash or overriding the branch associated with a previous build)")
 }
 
-
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		commandhelper.Debuggit(c.UI, err.Error())
@@ -90,7 +87,7 @@ func (c *cmd) Run(args []string) int {
 
 	buildRequest := &models.BuildReq{
 		AcctRepo: c.AcctRepo,
-		Hash: c.Hash,
+		Hash:     c.Hash,
 	}
 
 	if c.Branch != "ERROR" && len(c.Branch) > 0 {

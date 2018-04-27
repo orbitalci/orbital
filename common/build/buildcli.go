@@ -1,7 +1,7 @@
 package build
 
 import (
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc"
 )
 
@@ -11,10 +11,9 @@ func CreateBuildClient(m *pb.BuildRuntimeInfo) (pb.BuildClient, error) {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
 
-	conn, err :=  grpc.Dial(m.Ip + ":" + m.GrpcPort, opts...)
+	conn, err := grpc.Dial(m.Ip+":"+m.GrpcPort, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return pb.NewBuildClient(conn), nil
 }
-

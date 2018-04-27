@@ -21,16 +21,16 @@ provide results endpoint, way for server to access data
 package main
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/go-til/nsqpb"
 
-	"bitbucket.org/level11consulting/ocelot/build/basher"
-	"bitbucket.org/level11consulting/ocelot/build/listener"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	"bitbucket.org/level11consulting/ocelot/common/nsqwatch"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/router/werker"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/ocelot/build/basher"
+	"github.com/shankj3/ocelot/build/listener"
+	"github.com/shankj3/ocelot/build/valet"
+	"github.com/shankj3/ocelot/common/nsqwatch"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/router/werker"
+	"github.com/shankj3/ocelot/storage"
 
 	"fmt"
 	"os"
@@ -50,7 +50,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 		} else {
 			mode := os.Getenv("ENV")
 			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
-			bshr := &basher.Basher{LoopbackIp:conf.LoopBackIp}
+			bshr := &basher.Basher{LoopbackIp: conf.LoopBackIp}
 			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
 				bshr.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
 			}
@@ -64,7 +64,6 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 	}
 }
 
-
 func main() {
 	conf, err := GetConf()
 	if err != nil {
@@ -76,7 +75,6 @@ func main() {
 	buildCtxTunnel := make(chan *models.BuildContext)
 
 	ocelog.Log().Debug("starting up worker on off channels w/ ", conf.WerkerName)
-
 
 	store, err := conf.RemoteConfig.GetOcelotStorage()
 	if err != nil {
@@ -117,5 +115,3 @@ func main() {
 		<-consumer.StopChan
 	}
 }
-
-

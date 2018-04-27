@@ -1,12 +1,12 @@
 package status
 
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc/codes"
 	grpcStatus "google.golang.org/grpc/status"
 	"time"
@@ -23,7 +23,7 @@ Usage: ocelot status
 func New(ui cli.Ui) *cmd {
 	// suppress ui here because there's an ordering to status and the error messages that come stock
 	// with OcyHelper may be confusing
-	c := &cmd{UI: ui, config: commandhelper.Config, OcyHelper: &commandhelper.OcyHelper{SuppressUI: true,}}
+	c := &cmd{UI: ui, config: commandhelper.Config, OcyHelper: &commandhelper.OcyHelper{SuppressUI: true}}
 	c.init()
 	return c
 }
@@ -35,7 +35,6 @@ type cmd struct {
 	wide   bool
 	*commandhelper.OcyHelper
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -112,7 +111,7 @@ func (c *cmd) Run(args []string) int {
 	if c.OcyHelper.Hash != "ERROR" && len(c.OcyHelper.Hash) > 0 {
 		commandhelper.Debuggit(c.UI, "using hash for status")
 		query := &models.StatusQuery{
-			Hash: c.OcyHelper.Hash ,
+			Hash: c.OcyHelper.Hash,
 		}
 		statuses, err = c.GetClient().GetStatus(ctx, query)
 		if err != nil {

@@ -1,11 +1,11 @@
 package buildcredslist
 
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,12 +19,11 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
-	flags   *flag.FlagSet
-	config *commandhelper.ClientConfig
+	UI            cli.Ui
+	flags         *flag.FlagSet
+	config        *commandhelper.ClientConfig
 	accountFilter string
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -88,7 +87,6 @@ func NoDataHeader(ui cli.Ui) {
 	ui.Warn("\n--- No Admin Credentials Found ---\n")
 }
 
-
 func Prettify(cred *models.VCSCreds) string {
 	pretty := `ClientId: %s
 ClientSecret: %s
@@ -101,7 +99,6 @@ Identifier: %s
 `
 	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, strings.ToLower(cred.SubType.String()), cred.Identifier, cred.SshFileLoc)
 }
-
 
 const synopsis = "List all credentials used for tracking repositories to build"
 const help = `

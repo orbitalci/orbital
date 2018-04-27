@@ -1,16 +1,15 @@
 package nsqwatch
 
 import (
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/hashicorp/consul/testutil"
+	"github.com/shankj3/go-til/nsqpb"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/storage"
 	"net"
 	"time"
 	//"github.com/nsqio/go-nsq"
 	"testing"
 )
-
 
 func getStructs(t *testing.T, store storage.OcelotStorage) (func(), net.Listener, *testutil.TestServer, *NsqWatch) {
 	testRemoteConfig, vaultListener, consulServer := cred.TestSetupVaultAndConsul(t)
@@ -18,12 +17,12 @@ func getStructs(t *testing.T, store storage.OcelotStorage) (func(), net.Listener
 	// don't care about errors right now because i don't actually want to connect
 	consumer.ConsumeMessages("testtesttesttest", "test")
 	nsqw := &NsqWatch{
-		interval: 1,
+		interval:   1,
 		pConsumers: []*nsqpb.ProtoConsume{consumer},
 		remoteConf: testRemoteConfig,
-		store: store,
+		store:      store,
 	}
-	return func(){cred.TeardownVaultAndConsul(vaultListener, consulServer)}, vaultListener, consulServer, nsqw
+	return func() { cred.TeardownVaultAndConsul(vaultListener, consulServer) }, vaultListener, consulServer, nsqw
 }
 
 func TestNsqWatch_MaintainHealths(t *testing.T) {
@@ -32,10 +31,10 @@ func TestNsqWatch_MaintainHealths(t *testing.T) {
 	consumer := nsqpb.NewDefaultProtoConsume()
 	consumer.ConsumeMessages("testtesttesttest", "test")
 	nsqw := &NsqWatch{
-		interval: 1,
+		interval:   1,
 		pConsumers: []*nsqpb.ProtoConsume{consumer},
 		remoteConf: rcHelathy,
-		store: storeHealth,
+		store:      storeHealth,
 	}
 	go nsqw.MaintainHealths()
 	if nsqw.paused {
@@ -44,19 +43,19 @@ func TestNsqWatch_MaintainHealths(t *testing.T) {
 	}
 	rcHelathy.IsHealthy = false
 	rcHelathy.SuccessfulReconnect = false
-	time.Sleep(2*time.Second)
+	time.Sleep(2 * time.Second)
 	if !nsqw.paused {
 		t.Error("vault has been shut down, nsq consumer  should be paused")
 		return
 	}
 	rcHelathy.IsHealthy = true
 	rcHelathy.SuccessfulReconnect = true
-	time.Sleep(2*time.Second)
+	time.Sleep(2 * time.Second)
 	if nsqw.paused {
 		t.Error("everything is up, nsq consumer  should not be paused")
 	}
 	storeHealth.IsHealthy = false
-	time.Sleep(2*time.Second)
+	time.Sleep(2 * time.Second)
 	if !nsqw.paused {
 		t.Error("postgres has been shut down, nsq consumer should be paused")
 	}

@@ -1,16 +1,16 @@
 package validate
 
 import (
-	"github.com/mitchellh/cli"
-	"flag"
 	"context"
-	"io/ioutil"
+	"flag"
 	"fmt"
-	"bitbucket.org/level11consulting/go-til/deserialize"
+	"github.com/mitchellh/cli"
+	"github.com/shankj3/go-til/deserialize"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
+	"io/ioutil"
 	"strings"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/build"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -20,10 +20,10 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI      cli.Ui
-	flags   *flag.FlagSet
+	UI            cli.Ui
+	flags         *flag.FlagSet
 	ocelotFileLoc string
-	config *commandhelper.ClientConfig
+	config        *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
@@ -43,7 +43,6 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.ocelotFileLoc, "file-loc", "ERROR", "*REQUIRED* location of your ocelot.yml file")
 }
 
-
 func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 	conf := &models.BuildConfig{}
 	dese := deserialize.New()
@@ -58,7 +57,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context) int {
 		return 1
 	}
 
-	fileName := c.ocelotFileLoc[strings.LastIndex(c.ocelotFileLoc, "/") + 1:]
+	fileName := c.ocelotFileLoc[strings.LastIndex(c.ocelotFileLoc, "/")+1:]
 	if fileName != "ocelot.yml" {
 		c.UI.Error("Your file must be named ocelot.yml")
 		return 1

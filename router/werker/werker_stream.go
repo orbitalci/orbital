@@ -10,17 +10,16 @@ import (
 	"strings"
 	"sync"
 
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/ocelot/build/streamer"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	"github.com/shankj3/ocelot/build/streamer"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 	"google.golang.org/grpc"
 )
-
 
 var (
 	upgrader = websocket.Upgrader{}
@@ -52,7 +51,6 @@ func stream(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 	ocelog.Log().Debug("sending infoChan over web socket, waiting for the channel to be closed.")
 	<-pumpDone
 }
-
 
 //ServeMe will start HTTP Server as needed for streaming build output by hash
 func ServeMe(transportChan chan *models.Transport, buildCtxChan chan *models.BuildContext, conf *models.WerkerFacts, store storage.OcelotStorage) {

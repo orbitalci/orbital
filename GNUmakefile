@@ -11,7 +11,7 @@ GOPATH=$(shell go env GOPATH)
 GIT_COMMIT=$(shell git rev-parse --short HEAD)
 GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 GIT_DESCRIBE=$(shell git describe --tags --always)
-GIT_IMPORT=bitbucket.org/level11consulting/ocelot/version
+GIT_IMPORT=github.com/shankj3/ocelot/version
 GOLDFLAGS=-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)
 GOLDFLAGS_REL=$(GOLDFLAGS) -X $(GIT_IMPORT).VersionPrerelease=
 export GOLDFLAGS

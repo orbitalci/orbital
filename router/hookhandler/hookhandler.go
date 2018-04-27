@@ -1,19 +1,19 @@
 package hookhandler
+
 //todo: break out signaling logic and put in signaler
 import (
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/build"
-	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/deserialize"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/build"
+	signal "github.com/shankj3/ocelot/build_signaler"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
+	"github.com/shankj3/ocelot/storage"
 
 	"net/http"
 )
-
 
 type HookHandler interface {
 	GetRemoteConfig() cred.CVRemoteConfig
@@ -32,8 +32,8 @@ type HookHandler interface {
 
 //context contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
- 	*signal.Signaler
- 	teller *signal.BBWerkerTeller
+	*signal.Signaler
+	teller *signal.BBWerkerTeller
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -49,11 +49,10 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	branch := repopush.Push.Changes[0].New.Name
 	//acctName := repopush.Repository.Owner.Username
 
-	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "" ); err != nil {
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, ""); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }
-
 
 //TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -69,7 +68,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	//acctName := pr.Pullrequest.Source.Repository.Owner.Username
 	branch := pr.Pullrequest.Source.Branch.Name
 
-	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "" ); err != nil {
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, ""); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }

@@ -1,18 +1,16 @@
 package polladd
 
-
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"strings"
 
 	"github.com/gorhill/cronexpr"
 	"github.com/mitchellh/cli"
 )
-
 
 const synopsis = "set up repo to be polled by ocelot"
 const help = `
@@ -29,14 +27,13 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI 		 cli.Ui
+	UI       cli.Ui
 	flags    *flag.FlagSet
-	cron  	 string
+	cron     string
 	branches string
-	config  *commandhelper.ClientConfig
+	config   *commandhelper.ClientConfig
 	*commandhelper.OcyHelper
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -64,7 +61,6 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.cron, "cron", "ERROR", "cron string for polling repo ")
 	c.flags.StringVar(&c.branches, "branches", "ERROR", "comma separated list of branches to poll vcs for")
 }
-
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
@@ -98,9 +94,9 @@ Error: %s`
 		return 1
 	}
 	_, err := c.config.Client.PollRepo(ctx, &models.PollRequest{
-		Account: c.OcyHelper.Account,
-		Repo: c.OcyHelper.Repo,
-		Cron: c.cron,
+		Account:  c.OcyHelper.Account,
+		Repo:     c.OcyHelper.Repo,
+		Cron:     c.cron,
 		Branches: c.branches,
 	})
 

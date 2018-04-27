@@ -3,7 +3,7 @@
 [debug] SERVER: "127.0.0.1:54501"
 
 [debug] Original chart version: ""
-[debug] CHART PATH: /Users/jesseshank/go/src/bitbucket.org/level11consulting/ocelot/k8s/helm/ocelot
+[debug] CHART PATH: /Users/jesseshank/go/src/github.com/shankj3/ocelot/k8s/helm/ocelot
 
 NAME:   icy-billygoat
 REVISION: 1

@@ -1,10 +1,10 @@
 package commandhelper
 
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"bytes"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
+	models "github.com/shankj3/ocelot/models/pb"
 	"strings"
 )
 
@@ -23,10 +23,18 @@ const (
 //buildStarted := statuses.BuildSum.BuildTime.Seconds > 0 && statuses.IsInConsul
 //finished := !statuses.IsInConsul && buildStarted
 func GetStatus(queued, buildStarted, finished, failed_validation bool) BuildStatus {
-	if queued { return QUEUED }
-	if buildStarted { return RUNNING }
-	if finished { return DONE }
-	if failed_validation { return FAILED_PRESTART }
+	if queued {
+		return QUEUED
+	}
+	if buildStarted {
+		return RUNNING
+	}
+	if finished {
+		return DONE
+	}
+	if failed_validation {
+		return FAILED_PRESTART
+	}
 	panic("none of these!")
 }
 
@@ -41,7 +49,7 @@ func GetStatus(queued, buildStarted, finished, failed_validation bool) BuildStat
 func SelectFromHashes(build *models.Builds, theme *ColorDefs) string {
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
-	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
+	writ.SetAlignment(tablewriter.ALIGN_LEFT) // Set Alignment
 	writ.SetHeader([]string{"Hash", "Repo", "Account Name"})
 	if !theme.NoColor {
 		writ.SetHeaderColor(
@@ -133,4 +141,3 @@ func PrintStatusOverview(color *Color, acctName, repoName, hash, status string, 
 	buildStatus := color.Sprintf("\nstatus: %s ", status) + theme.Warning.Sprintf("\nhash: %s", hash) + fmt.Sprintf("\naccount: %s \nrepo: %s\n", acctName, repoName)
 	return buildStatus
 }
-

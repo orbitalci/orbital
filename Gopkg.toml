@@ -93,7 +93,7 @@
 [[constraint]]
 #  version = "0.2.1"
   revision = "34065da83cb6514ceac36e6f0f46be1b4cdeaddc"
-  name = "bitbucket.org/level11consulting/go-til"
+  name = "github.com/shankj3/go-til"
 
 [[constraint]]
   branch = "master"

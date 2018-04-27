@@ -1,8 +1,8 @@
 package dockerconfig
 
 import (
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"bytes"
 	"testing"

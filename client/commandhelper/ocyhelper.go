@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	
-	protobuf "bitbucket.org/level11consulting/ocelot/models/pb"
+
 	"github.com/mitchellh/cli"
+	protobuf "github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc"
 )
 
@@ -18,9 +18,9 @@ import (
 This gets embedded inside of ocelot clients and performs helper functions common across all clients.
 All the helper functions will print things in the UI. Good rule of thumb is if it doesn't print things,
 then it doesn't take cli.Ui as a param.
- */
+*/
 type OcyHelper struct {
-	Hash 	   string
+	Hash       string
 	AcctRepo   string
 	Repo       string
 	Account    string
@@ -32,7 +32,7 @@ func (oh *OcyHelper) DetectRepo(ui cli.Ui) error {
 		acctRepo, err := FindAcctRepo()
 		ui.Info("Flag -repo was not set, detecting account and repository using git commands")
 		if err != nil {
-			Debuggit(ui, "error!!! " + err.Error())
+			Debuggit(ui, "error!!! "+err.Error())
 			ui.Error("flag -repo must be set or you must be in the directory you wish to view a summary of. see --help")
 			return err
 		}
@@ -70,7 +70,7 @@ func (oh *OcyHelper) DetectAcctRepo(ui cli.Ui) error {
 		acctRepo, err := FindAcctRepo()
 		ui.Info("Flag -acct-repo was not set, detecting account and repository using git commands")
 		if err != nil {
-			Debuggit(ui, "error!!! " + err.Error())
+			Debuggit(ui, "error!!! "+err.Error())
 			oh.WriteUi(ui.Error, "flag -acct-repo must be in the format <account>/<repo> or you must be in the directory you wish to view a summary of. see --help")
 			return err
 		}
@@ -107,8 +107,8 @@ func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream grpc.ClientStream) error 
 	}()
 	for {
 		Debuggit(ui, "receiving stream")
-		resp := new (protobuf.Response)
-		err := stream.RecvMsg(resp);
+		resp := new(protobuf.Response)
+		err := stream.RecvMsg(resp)
 
 		if err == io.EOF {
 			stream.CloseSend()

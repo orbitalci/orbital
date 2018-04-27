@@ -3,9 +3,9 @@ package admin
 import (
 	"context"
 
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

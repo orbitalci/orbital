@@ -1,13 +1,13 @@
 package output
 
 import (
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
+	"flag"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/client/commandhelper"
 	"strings"
 	"testing"
-	"flag"
 )
 
 func TestCmd_fromStorage(t *testing.T) {
@@ -16,8 +16,8 @@ func TestCmd_fromStorage(t *testing.T) {
 	ui := cli.NewMockUi()
 	cliConf := commandhelper.NewTestClientConfig(strings.Split(streamText, "\n"))
 	cmdd := &cmd{
-		UI: ui,
-		config: cliConf,
+		UI:        ui,
+		config:    cliConf,
 		OcyHelper: &commandhelper.OcyHelper{Hash: hash},
 	}
 	ctx := context.Background()
@@ -26,8 +26,8 @@ func TestCmd_fromStorage(t *testing.T) {
 		t.Error("non zero exit code")
 	}
 	text := ui.OutputWriter.String()
-	if text != streamText + "\n" {
-		test.StrFormatErrors("output", streamText + "\n", text)
+	if text != streamText+"\n" {
+		test.StrFormatErrors("output", streamText+"\n", text)
 	}
 }
 
@@ -37,8 +37,8 @@ func TestCmd_RunMultipleBuilds(t *testing.T) {
 	cliConf := commandhelper.NewTestClientConfig([]string{})
 	cliConf.Theme = commandhelper.Default(true)
 	cmdd := &cmd{
-		UI: ui,
-		config: cliConf,
+		UI:        ui,
+		config:    cliConf,
 		OcyHelper: &commandhelper.OcyHelper{Hash: hash},
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -48,7 +48,7 @@ func TestCmd_RunMultipleBuilds(t *testing.T) {
 
 	if exit != 0 {
 		t.Error("non zero exit code")
-}
+	}
 
 	expectedOutput := "it's your lucky day, there's 2 hashes matching that value. Please enter a more complete git hash"
 	text := ui.OutputWriter.String()
@@ -56,7 +56,6 @@ func TestCmd_RunMultipleBuilds(t *testing.T) {
 		t.Error(test.StrFormatErrors("multiple hashes output", expectedOutput, text))
 	}
 }
-
 
 //removing this because it requires mocking out grpc.ClientStream in our mocks, which is difficult
 

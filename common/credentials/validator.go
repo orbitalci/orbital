@@ -1,7 +1,7 @@
 package credentials
 
 import (
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"errors"
 )
@@ -37,7 +37,6 @@ func (adminValidator AdminValidator) ValidateConfig(adminCreds *pb.VCSCreds) err
 	}
 	return nil
 }
-
 
 type RepoValidator struct{}
 

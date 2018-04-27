@@ -3,16 +3,9 @@
 
 [[projects]]
   name = "bitbucket.org/level11consulting/go-til"
-  packages = [
-    "consul",
-    "deserialize",
-    "log",
-    "net",
-    "nsqpb",
-    "test",
-    "vault"
-  ]
-  revision = "34065da83cb6514ceac36e6f0f46be1b4cdeaddc"
+  packages = ["log"]
+  revision = "a0abd530ad931f177d9f9c17c71328804045283a"
+  version = "0.2.2"
 
 [[projects]]
   name = "github.com/Jeffail/gabs"
@@ -566,6 +559,19 @@
   revision = "ed9870dad3170c0b25ab9b11830cc57c3a7798fb"
 
 [[projects]]
+  name = "github.com/shankj3/go-til"
+  packages = [
+    "consul",
+    "deserialize",
+    "log",
+    "net",
+    "nsqpb",
+    "test",
+    "vault"
+  ]
+  revision = "34065da83cb6514ceac36e6f0f46be1b4cdeaddc"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
@@ -736,6 +742,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b1909a6b49fd44d48ab84bd09acf73a4c198591f99637ae4b2ec502f1643e422"
+  inputs-digest = "10673e781df5579b2f30ee57c8517f0e7108bbdb04ae6b481dc9247dad93c333"
   solver-name = "gps-cdcl"
   solver-version = 1

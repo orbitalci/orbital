@@ -8,17 +8,18 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/go-til/log"
-	brt "bitbucket.org/level11consulting/ocelot/build"
-	c "bitbucket.org/level11consulting/ocelot/build/cleaner"
-	"bitbucket.org/level11consulting/ocelot/common"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/log"
+	brt "github.com/shankj3/ocelot/build"
+	c "github.com/shankj3/ocelot/build/cleaner"
+	"github.com/shankj3/ocelot/common"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
 
 	"github.com/google/uuid"
 )
+
 //go:generate stringer -type=Interrupt
 type Interrupt int
 
@@ -28,21 +29,20 @@ const (
 )
 
 type Valet struct {
-	RemoteConfig    cred.CVRemoteConfig
-	store			storage.OcelotStorage
-	WerkerUuid		uuid.UUID
-	doneChannels    map[string]chan int
+	RemoteConfig cred.CVRemoteConfig
+	store        storage.OcelotStorage
+	WerkerUuid   uuid.UUID
+	doneChannels map[string]chan int
 	sync.Mutex
 	c.Cleaner
 }
 
 func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage) *Valet {
-	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store:store}
+	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store: store}
 	valet.Cleaner = c.GetNewCleaner(werkerType)
 
 	return valet
 }
-
 
 // Reset will set the build stage for the runtime of the hash, and it will add a start time.
 func (v *Valet) Reset(newStage string, hash string) error {
@@ -75,12 +75,12 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 	for _, hrt := range hrts {
 		duration := time.Now().Sub(hrt.StageStart).Seconds()
 		detail := &models.StageResult{
-			BuildId: hrt.BuildId,
+			BuildId:       hrt.BuildId,
 			StageDuration: duration,
-			Stage: hrt.CurrentStage,
-			Error: "An interrupt of type " + typ.String() + " occurred!",
-			Messages: messages,
-			StartTime: hrt.StageStart,
+			Stage:         hrt.CurrentStage,
+			Error:         "An interrupt of type " + typ.String() + " occurred!",
+			Messages:      messages,
+			StartTime:     hrt.StageStart,
 		}
 		if err := v.store.AddStageDetail(detail); err != nil {
 			log.IncludeErrField(err).Error("couldn't store stage detail!")
@@ -150,7 +150,6 @@ func (v *Valet) Cleanup() {
 	}
 }
 
-
 func (v *Valet) MakeItSoDed(finish chan int) {
 	if rec := recover(); rec != nil {
 		defer os.Exit(1)
@@ -161,7 +160,7 @@ func (v *Valet) MakeItSoDed(finish chan int) {
 	}
 	finish <- 1
 	log.Log().Error("shutting down")
-	time.Sleep(2*time.Second)
+	time.Sleep(2 * time.Second)
 	os.Exit(1)
 }
 
@@ -187,14 +186,12 @@ func (v *Valet) UnregisterDoneChan(hash string) {
 
 }
 
-
 func (v *Valet) CallDoneForEverything() {
 	// this will add to every done channel in its doneChannels map, triggering the nsqpb library to call Finish()
 	for _, done := range v.doneChannels {
 		done <- 1
 	}
 }
-
 
 func (v *Valet) SignalRecvDed() {
 	log.Log().Info("received interrupt, cleaning up after myself...")
@@ -203,9 +200,6 @@ func (v *Valet) SignalRecvDed() {
 	v.Cleanup()
 	os.Exit(1)
 }
-
-
-
 
 // Delete will remove everything related to that werker's build of the gitHash out of consul
 // will delete:

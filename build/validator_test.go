@@ -6,17 +6,17 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 func TestOcelotValidator_ValidateConfig(t *testing.T) {
 	goodconfig := &pb.BuildConfig{
-		Image: "busybox:latest",
+		Image:     "busybox:latest",
 		BuildTool: "maven",
-		Packages: []string{},
-		Branches: []string{"ALL"},
-		Env: []string{},
-		Stages: []*pb.Stage{{Name: "one"}, {Name: "build"}},
+		Packages:  []string{},
+		Branches:  []string{"ALL"},
+		Env:       []string{},
+		Stages:    []*pb.Stage{{Name: "one"}, {Name: "build"}},
 	}
 	valid8r := GetOcelotValidator()
 	err := valid8r.ValidateConfig(goodconfig, nil)
@@ -24,12 +24,12 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 		t.Error(err)
 	}
 	badConfig := &pb.BuildConfig{
-		Image: "busybox:latest",
+		Image:     "busybox:latest",
 		BuildTool: "maven",
-		Packages: []string{},
-		Branches: []string{"ALL"},
-		Env: []string{},
-		Stages: []*pb.Stage{{Name: "one"}},
+		Packages:  []string{},
+		Branches:  []string{"ALL"},
+		Env:       []string{},
+		Stages:    []*pb.Stage{{Name: "one"}},
 	}
 	err = valid8r.ValidateConfig(badConfig, nil)
 	if err == nil {
@@ -52,16 +52,16 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 		return
 	}
 	goodPrivateConfig := &pb.BuildConfig{
-		Image: privateRepo + "/busybox:test_do_not_delete",
+		Image:     privateRepo + "/busybox:test_do_not_delete",
 		BuildTool: "maven",
-		Packages: []string{},
-		Branches: []string{"ALL"},
-		Env: []string{},
-		Stages: []*pb.Stage{{Name: "one"}, {Name: "build"}},
+		Packages:  []string{},
+		Branches:  []string{"ALL"},
+		Env:       []string{},
+		Stages:    []*pb.Stage{{Name: "one"}, {Name: "build"}},
 	}
 	err = valid8r.ValidateConfig(goodPrivateConfig, nil)
 	if err != nil {
-		t.Log("this may have failed becasue " + privateRepo +"/busybox:test_do_not_delete is not in metaverse anymore")
+		t.Log("this may have failed becasue " + privateRepo + "/busybox:test_do_not_delete is not in metaverse anymore")
 		t.Error(err)
 	}
 

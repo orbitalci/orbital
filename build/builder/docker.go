@@ -7,24 +7,24 @@ import (
 	"io"
 	"strings"
 
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/vault"
-	"bitbucket.org/level11consulting/ocelot/models"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/go-til/vault"
+	"github.com/shankj3/ocelot/models"
 
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/basher"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/common/helpers/dockrhelper"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/basher"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/common/helpers/dockrhelper"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
-type Docker struct{
-	Log	io.ReadCloser
-	ContainerId	string
+type Docker struct {
+	Log          io.ReadCloser
+	ContainerId  string
 	DockerClient *client.Client
 	*basher.Basher
 }
@@ -48,10 +48,10 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 
 	if err != nil {
 		ocelog.Log().Debug("returning failed stage because could not create docker env client")
-		return &pb.Result {
+		return &pb.Result{
 			Stage:  su.GetStage(),
 			Status: pb.StageResultVal_FAIL,
-			Error: err.Error(),
+			Error:  err.Error(),
 		}, ""
 	}
 	imageName := werk.BuildConf.Image
@@ -59,9 +59,9 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	out, err := dockrhelper.RobustImagePull(imageName)
 	if err != nil {
 		return &pb.Result{
-			Stage:  su.GetStage(),
-			Status: pb.StageResultVal_FAIL,
-			Error:  err.Error(),
+			Stage:    su.GetStage(),
+			Status:   pb.StageResultVal_FAIL,
+			Error:    err.Error(),
 			Messages: setupMessages,
 		}, ""
 	}
@@ -76,17 +76,16 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id), fmt.Sprintf("GIT_HASH_SHORT=%s", werk.CheckoutHash[:7]), fmt.Sprintf("GIT_BRANCH=%s", werk.Branch)}
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 
-
 	//container configurations
 	containerConfig := &container.Config{
-		Image: imageName,
-		User: "root",
-		Env: paddedEnvs,
-		Cmd: d.DownloadTemplateFiles(werkerPort),
+		Image:        imageName,
+		User:         "root",
+		Env:          paddedEnvs,
+		Cmd:          d.DownloadTemplateFiles(werkerPort),
 		AttachStderr: true,
 		AttachStdout: true,
-		AttachStdin:true,
-		Tty:true,
+		AttachStdin:  true,
+		Tty:          true,
 	}
 
 	//homeDirectory, _ := homedir.Expand("~/.ocelot")
@@ -98,15 +97,14 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		NetworkMode: "host",
 	}
 
-	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")
-
+	resp, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
 
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("returning failed because could not create container")
 		return &pb.Result{
-			Stage:  su.GetStage(),
-			Status: pb.StageResultVal_FAIL,
-			Error:  err.Error(),
+			Stage:    su.GetStage(),
+			Status:   pb.StageResultVal_FAIL,
+			Error:    err.Error(),
 			Messages: setupMessages,
 		}, ""
 	}
@@ -129,29 +127,28 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		ocelog.IncludeErrField(err).Error("returning failed because could not start container")
 		return &pb.Result{
-			Stage:  su.GetStage(),
-			Status: pb.StageResultVal_FAIL,
-			Error:  err.Error(),
+			Stage:    su.GetStage(),
+			Status:   pb.StageResultVal_FAIL,
+			Error:    err.Error(),
 			Messages: setupMessages,
 		}, ""
 	}
 
-	logout <- []byte(su.GetStageLabel()  + "Container " + resp.ID + " started")
-
+	logout <- []byte(su.GetStageLabel() + "Container " + resp.ID + " started")
 
 	//since container is created in setup, log tailing via container is also kicked off in setup
 	containerLog, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
-		Follow: true,
+		Follow:     true,
 	})
 
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("returning failed setup because could not get logs of container")
 		return &pb.Result{
-			Stage: su.GetStage(),
-			Status: pb.StageResultVal_FAIL,
-			Error:  err.Error(),
+			Stage:    su.GetStage(),
+			Status:   pb.StageResultVal_FAIL,
+			Error:    err.Error(),
 			Messages: setupMessages,
 		}, d.ContainerId
 	}
@@ -159,7 +156,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	d.Log = containerLog
 	bufReader = bufio.NewReader(containerLog)
 
-	d.writeToInfo(su.GetStageLabel() , bufReader, logout)
+	d.writeToInfo(su.GetStageLabel(), bufReader, logout)
 	setupMessages = append(setupMessages, "attempting to download ocelot package dependencies...")
 	installed := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, d.InstallPackageDeps(), logout)
 	if len(installed.Error) > 0 {
@@ -175,9 +172,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		return downloadCodebase, d.ContainerId
 	}
 
-
-	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
-
+	logout <- []byte(su.GetStageLabel() + "Retrieving SSH Key")
 
 	acctName := strings.Split(werk.FullName, "/")[0]
 	vaultAddr := d.getVaultAddr(rc.GetVault())
@@ -187,7 +182,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	sctType := pb.SubCredType(werk.VcsType)
 	identifier, _ := pb.CreateVCSIdentifier(sctType, acctName)
 	ocelog.Log().Debug("identifier is ", identifier)
-	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR="+vaultAddr}, d.DownloadSSHKey(
+	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR=" + vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
 		cred.BuildCredPath(sctType, acctName, pb.CredType_VCS, identifier)), logout)
 	if len(result.Error) > 0 {
@@ -213,19 +208,17 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 	return registerdAddr
 }
 
-
 // ExecuteIntegration will basically run Execute but without the cd and run cmds because we are generating the scripts in the code
-func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan[]byte) *pb.Result {
+func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan []byte) *pb.Result {
 	return d.Exec(ctx, stgUtil.GetStage(), stgUtil.GetStageLabel(), stage.Env, stage.Script, logout)
 }
 
-
 func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	if len(d.ContainerId) == 0 {
-		return &pb.Result {
-			Stage: stage.Name,
+		return &pb.Result{
+			Stage:  stage.Name,
 			Status: pb.StageResultVal_FAIL,
-			Error: "no container exists, setup before executing",
+			Error:  "no container exists, setup before executing",
 		}
 	}
 
@@ -236,29 +229,29 @@ func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byt
 func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *pb.Result {
 	var stageMessages []string
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
-		Tty: true,
-		AttachStdin: true,
+		Tty:          true,
+		AttachStdin:  true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env: env,
-		Cmd: cmds,
+		Env:          env,
+		Cmd:          cmds,
 	})
 	if err != nil {
 		return &pb.Result{
-			Stage:  currStage,
-			Status: pb.StageResultVal_FAIL,
-			Error:  err.Error(),
+			Stage:    currStage,
+			Status:   pb.StageResultVal_FAIL,
+			Error:    err.Error(),
 			Messages: stageMessages,
 		}
 	}
 
 	attachedExec, err := d.DockerClient.ContainerExecAttach(ctx, resp.ID, types.ExecConfig{
-		Tty: true,
-		AttachStdin: true,
+		Tty:          true,
+		AttachStdin:  true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env: env,
-		Cmd: cmds,
+		Env:          env,
+		Cmd:          cmds,
 	})
 
 	defer attachedExec.Conn.Close()
@@ -277,17 +270,17 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 		}
 
 		return &pb.Result{
-			Stage: currStage,
-			Status: pb.StageResultVal_FAIL,
-			Error: errStr,
+			Stage:    currStage,
+			Status:   pb.StageResultVal_FAIL,
+			Error:    errStr,
 			Messages: stageMessages,
 		}
 	}
 	stageMessages = append(stageMessages, fmt.Sprintf("completed %s stage %s", currStage, models.CHECKMARK))
 	return &pb.Result{
-		Stage:  currStage,
-		Status: pb.StageResultVal_PASS,
-		Error:  "",
+		Stage:    currStage,
+		Status:   pb.StageResultVal_PASS,
+		Error:    "",
 		Messages: stageMessages,
 	}
 }

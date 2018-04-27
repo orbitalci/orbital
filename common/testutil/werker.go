@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/models/pb"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"io"
@@ -18,7 +18,7 @@ func NewFakeBuildClient(logLines []string) *fakeBuildClient {
 }
 
 type fakeBuildClient struct {
-	index int
+	index       int
 	outputLines []string
 	grpc.ClientStream
 }
@@ -28,7 +28,7 @@ func (c *fakeBuildClient) CloseSend() error {
 }
 
 func (c *fakeBuildClient) Recv() (*pb.Response, error) {
-	if c.index + 1 > len(c.outputLines) {
+	if c.index+1 > len(c.outputLines) {
 		return nil, io.EOF
 	}
 	resp := &pb.Response{OutputLine: c.outputLines[c.index]}
@@ -45,7 +45,7 @@ func (c *fakeBuildClient) SendMsg(m interface{}) error {
 }
 
 func (c *fakeBuildClient) RecvMsg(m interface{}) error {
-	if c.index + 1 > len(c.outputLines) {
+	if c.index+1 > len(c.outputLines) {
 		return io.EOF
 	}
 	original, ok := m.(pb.Response)
@@ -55,4 +55,3 @@ func (c *fakeBuildClient) RecvMsg(m interface{}) error {
 	c.index++
 	return nil
 }
-

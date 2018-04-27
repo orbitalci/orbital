@@ -1,15 +1,15 @@
 package reposlist
 
 import (
+  "bytes"
   "context"
   "flag"
   "fmt"
-  "bitbucket.org/level11consulting/ocelot/client/commandhelper"
-  models "bitbucket.org/level11consulting/ocelot/models/pb"
   "github.com/golang/protobuf/ptypes/empty"
   "github.com/mitchellh/cli"
   "github.com/olekukonko/tablewriter"
-  "bytes"
+  "github.com/shankj3/ocelot/client/commandhelper"
+  models "github.com/shankj3/ocelot/models/pb"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -19,10 +19,10 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-  UI cli.Ui
-  flags   *flag.FlagSet
+  UI            cli.Ui
+  flags         *flag.FlagSet
   accountFilter string
-  config *commandhelper.ClientConfig
+  config        *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
@@ -64,8 +64,8 @@ func (c *cmd) Run(args []string) int {
     for _, acctrepo := range msg.AcctRepos {
       var row []string
       row = append(row,
-          acctrepo.Account,
-          acctrepo.Repo,
+        acctrepo.Account,
+        acctrepo.Repo,
       )
       writ.Append(row)
     }

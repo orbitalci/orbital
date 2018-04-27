@@ -5,22 +5,22 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/go-til/test"
+	"github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/test"
 
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/common"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	util "bitbucket.org/level11consulting/ocelot/common/testutil"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/google/uuid"
 	"github.com/hashicorp/consul/testutil"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/common"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	util "github.com/shankj3/ocelot/common/testutil"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
 )
 
 type recoveryCVRemoteConfig struct {
 	cred.CVRemoteConfig
-	consul *consul.Consulet
+	consul  *consul.Consulet
 	storage storage.OcelotStorage
 }
 
@@ -34,10 +34,10 @@ func (r *recoveryCVRemoteConfig) GetOcelotStorage() (storage.OcelotStorage, erro
 
 func addHashRuntimeData(t *testing.T, serv *testutil.TestServer, werkerId string, hash string, id int64) *build.HashRuntime {
 	hrt := &build.HashRuntime{
-		DockerUuid: "here-is-my-uuid",
-		BuildId: id,
+		DockerUuid:   "here-is-my-uuid",
+		BuildId:      id,
 		CurrentStage: "test",
-		StageStart: time.Now(),
+		StageStart:   time.Now(),
 	}
 	serv.SetKVString(t, common.MakeBuildStartpath(werkerId, hash), fmt.Sprintf("%d", hrt.StageStart.Unix()))
 	serv.SetKVString(t, common.MakeDockerUuidPath(werkerId, hash), hrt.DockerUuid)
