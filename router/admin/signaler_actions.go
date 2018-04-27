@@ -116,6 +116,9 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
+	if repoAcct.Repo == "" || repoAcct.Account == "" {
+		return nil, status.Error(codes.InvalidArgument, "repo and account are required fields")
+	}
 	var vcs *pb.VCSCreds
 	bb := pb.SubCredType_BITBUCKET
 	identifier, err := pb.CreateVCSIdentifier(bb, repoAcct.Account)
@@ -151,6 +154,9 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 
 
 func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
+	if poll.Account == "" || poll.Repo == "" || poll.Cron == "" || poll.Branches == "" {
+		return nil, status.Error(codes.InvalidArgument, "account, repo, cron, and branches are required fields")
+	}
 	log.Log().Info("recieved poll request for ", poll.Account, poll.Repo, poll.Cron)
 	empti := &empty.Empty{}
 	if poll.Repo == "" || poll.Account == "" || poll.Branches == "" || poll.Cron == "" {

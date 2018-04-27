@@ -91,9 +91,9 @@ func (v *Vagrant) Setup(ctx context.Context, logout chan []byte, dockerId chan s
 }
 
 func (v *Vagrant) Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
-
+	return nil
 }
 
 func (v *Vagrant) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan[]byte) *pb.Result {
-
+	return nil
 }

@@ -58,6 +58,12 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *pb.VCS
 
 	err = SetupCredentials(g, credentials)
 	if err != nil {
+		if err == unsupported {
+			return nil, status.Error(codes.Unimplemented, "bitbucket is currently the only supported vcs type")
+		}
+		if er, ok := err.(*pb.ValidationErr); ok {
+			return nil, status.Error(codes.InvalidArgument, er.Error())
+		}
 		// todo: make this a better error
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
@@ -141,6 +147,9 @@ func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds)
 
 	err := SetupRCCCredentials(g.RemoteConfig,g.Storage, creds)
 	if err != nil {
+		if _, ok := err.(*pb.ValidationErr); ok {
+			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "K8s Creds failed validation. Errors are: " + err.Error())
+		}
 		// todo: make this better error
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
@@ -177,7 +186,7 @@ func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *pb.K8SCred
 func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds pb.OcyCredder) (*empty.Empty, error) {
 	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
-			return &empty.Empty{}, status.Errorf(codes.FailedPrecondition, "%s cred failed validation. Errors are: %s", creds.GetSubType().Parent(), err.Error())
+			return &empty.Empty{}, status.Errorf(codes.InvalidArgument, "%s cred failed validation. Errors are: %s", creds.GetSubType().Parent(), err.Error())
 		}
 		return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())
 	}
@@ -238,7 +247,9 @@ func (g *guideOcelotServer) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWra
 
 	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
 	if err != nil {
-		// todo: make this better error
+		if _, ok := err.(*pb.ValidationErr); ok {
+			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "SSH Creds Upload failed validation. Errors are: " + err.Error())
+		}
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
 	return &empty.Empty{}, nil

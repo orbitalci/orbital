@@ -13,7 +13,7 @@ import (
 )
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: commandhelper.NewClientConfig()}
+	c := &cmd{UI: ui, config: commandhelper.Config}
 	c.init()
 	return c
 }
@@ -83,11 +83,11 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat st
 	creds = &models.RepoCreds{}
 	var err error
 	if creds.Username, err = UI.Ask("Username: "); err != nil {
-		errorConcat += "\n" + "Username Err: " +  err.Error()
+		return nil, err.Error()
 	}
 	var dummySubType string
 	if dummySubType, err = UI.Ask("Subtype (nexus|docker|k8s): "); err != nil {
-		errorConcat += "\n" + "Type Err: " +  err.Error()
+		return nil, err.Error()
 	}
 	var ok bool
 	int32type, ok := models.SubCredType_value[strings.ToUpper(dummySubType)]
@@ -96,19 +96,16 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat st
 	}
 	creds.SubType = models.SubCredType(int32type)
 	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
-		errorConcat += "\n" + "Account Name Err: " +  err.Error()
+		return nil, err.Error()
 	}
 	if creds.RepoUrl, err = UI.Ask("Repo Domain for uploading repo artifacts: "); err != nil {
 		errorConcat += "\n" + "Repo URL Err: " + err.Error()
 	}
-	//} else if strings.Contains(creds.RepoUrl, "http") {
-	//	errorConcat += "\n" + "Repo Domain must not include <http|s://>, see --help"
-	//}
 	if creds.Password, err = UI.AskSecret("Password for Repo Integration: "); err != nil {
-		errorConcat += "\n" + "Password Err: " + err.Error()
+		return nil, err.Error()
 	}
 	if creds.Identifier, err = UI.Ask("Identifier: "); err != nil {
-		errorConcat += "\n" + "Identifier Err: " + err.Error()
+		return nil, err.Error()
 	}
 	return creds, errorConcat
 }

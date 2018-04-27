@@ -1,28 +1,27 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: admin-{{ template "ocelot.fullname" . }}
-  labels:
-    app: admin-{{ template "ocelot.name" . }}
-    chart: {{ template "ocelot.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-spec:
-  type: {{ .Values.admin.service.type }}
-  ports:
-    - port: {{ .Values.admin.service.port }}
-      nodePort: {{.Values.admin.service.nodePort}}
-      protocol: TCP
-      name: grpc
-  selector:
-    app: admin-{{ template "ocelot.name" . }}
-    release: {{ .Release.Name }}
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: admin-{{ template "ocelot.fullname" . }}
+#  labels:
+#    app: admin-{{ template "ocelot.name" . }}
+#    chart: {{ template "ocelot.chart" . }}
+#    release: {{ .Release.Name }}
+#    heritage: {{ .Release.Service }}
+#spec:
+#  type: {{ .Values.admin.service.type }}
+#  ports:
+#    - port: {{ .Values.admin.service.port }}
+#      nodePort: {{.Values.admin.service.nodePort}}
+#      protocol: TCP
+#      name: grpc
+#  selector:
+#    app: admin-{{ template "ocelot.name" . }}
+#    release: {{ .Release.Name }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ocelot-admin-svc
-  namespace: prod-eng
+  name: ocelot-admin
   # annotations:
   #   prometheus.io/scrape: "true"
 spec:

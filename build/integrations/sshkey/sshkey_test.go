@@ -62,8 +62,17 @@ AALIW3UYBCUAW6129394
 -- END PRIVATE KEas6d4f7eY OR WHATEVER -- 
 `,
 	}
-	if diff := deep.Equal(expectedEnvs, envs); diff != nil {
-		t.Error(diff)
+	// have to do this iterate bs because getEnv uses a map, and that isn't ordered
+	for _, env := range expectedEnvs {
+		var found bool
+		for _, livenv := range envs {
+			if env == livenv {
+				found = true
+			}
+		}
+		if found == false {
+			t.Errorf("could not find env var\n %s\n in list of live envs", env)
+		}
 	}
 }
 

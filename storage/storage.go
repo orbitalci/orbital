@@ -38,6 +38,7 @@ type BuildSum interface {
 	StartBuild(id int64) error
 	StoreFailedValidation(id int64) error
 	SetQueueTime(id int64) error
+	GetTrackedRepos() (*pb.AcctRepos, error)
 
 }
 

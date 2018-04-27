@@ -9,12 +9,17 @@ protoc --go_out=plugins=grpc:models/bitbucket/pb -I=models/bitbucket/ \
   models/bitbucket/*.proto
 
 echo "building root model proto files"
-protoc --go_out=plugins=grpc:models/pb/ -I=models \
-  -I${GOPATH}/src \
-  --govalidators_out=models/pb/ \
-  --proto_path=${GOPATH}/src/github.com/google/protobuf/src \
-  -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-  -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway \
+
+#uncomment if you want to generate javascript
+#protoc --js_out=models/pb/js/ -I=models \
+#  -I$GOPATH/src \
+#  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+#  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
+#  models/*.proto
+protoc  --go_out=plugins=grpc:models/pb/ -I=models \
+  -I$GOPATH/src \
+  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
   --grpc-gateway_out=logtostderr=true:models/pb \
   --swagger_out=logtostderr=true:models/pb \
   models/*.proto

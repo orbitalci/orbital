@@ -12,9 +12,11 @@ type ClientConfig struct {
 	AdminLocation string
 	Client        models.GuideOcelotClient
 	OcyDns        string
+	Theme         *ColorDefs
 }
 
 func NewClientConfig() *ClientConfig {
+	// todo: add these as actual flagsets, then merge them with the command-specific ones
 	var adminPort string
 	var adminHost string
 	var ocyDns string
@@ -42,11 +44,13 @@ func NewClientConfig() *ClientConfig {
 		fmt.Println("Could not get client! Error: ", err)
 		os.Exit(1)
 	}
+	_, colorless := os.LookupEnv("NO_COLOR")
 
 	return &ClientConfig{
 		AdminLocation: adminHost + ":" + adminPort,
 		Client: client,
 		OcyDns: ocyDns,
+		Theme: Default(colorless),
 	}
 }
 

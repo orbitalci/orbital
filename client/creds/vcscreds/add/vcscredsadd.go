@@ -122,30 +122,29 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 
 // seems really unlikely that hashicorps tool will fail, but this way if it does its all in one
 // function.
-//TODO: fix - this doesn't work
 func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.VCSCreds, errorConcat string) {
 	creds = &models.VCSCreds{}
 	var err error
 	if creds.ClientId, err = UI.Ask("Client ID: "); err != nil {
-		errorConcat += "\n" + "Client ID Err: " +  err.Error()
+		return nil, err.Error()
 	}
 	var unCastedSt string
 	if unCastedSt, err = UI.Ask("Type: "); err != nil {
-		errorConcat += "\n" + "Type Err: " +  err.Error()
+		return nil, err.Error()
 	}
-	if int32SubType, ok := models.SubCredType_value[strings.ToUpper(unCastedSt)]; !ok {
+	if int32SubType, ok := models.SubCredType_value[strings.ToUpper(strings.Replace(unCastedSt, " ", "", -1))]; !ok {
 		errorConcat += "\n Type must be bitbucket|github"
 	} else {
 		creds.SubType = models.SubCredType(int32SubType)
 	}
 	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
-		errorConcat += "\n" + "Account Name Err: " +  err.Error()
+		return nil, err.Error()
 	}
 	if creds.TokenURL, err = UI.Ask("OAuth token URL for repository: "); err != nil {
-		errorConcat += "\n" + "OAuth token URL for repository: " + err.Error()
+		return nil, err.Error()
 	}
 	if creds.ClientSecret, err = UI.AskSecret("Secret for OAuth: "); err != nil {
-		errorConcat += "\n" + "OAuth Secret Err: " + err.Error()
+		return nil, err.Error()
 	}
 	return creds, errorConcat
 }

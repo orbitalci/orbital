@@ -45,7 +45,7 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	mux := http.NewServeMux()
 	mux.HandleFunc("/swagger/", serveSwagger)
 
-	gw := runtime.NewServeMux()
+	gw := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}))
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gw, serverRunsAt, opts)
 	if err != nil {
