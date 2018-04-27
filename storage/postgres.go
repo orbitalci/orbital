@@ -915,15 +915,13 @@ func (p *PostgresStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	aMonthAgo := time.Now().Add(-(time.Hour * 24 * 30))
-	queryStr := `select distinct account,repo from build_summary where date(starttime) > date($1) ;`
+	queryStr := `SELECT distinct account,repo FROM build_summary;`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return  nil, err
 	}
-	//Mon Jan 2 15:04:05 -0700 MST 2006
-	rows, err := stmt.Query(aMonthAgo.Format("01/02/2006"))
+	rows, err := stmt.Query()
 	if err != nil {
 		return nil, err
 	}
