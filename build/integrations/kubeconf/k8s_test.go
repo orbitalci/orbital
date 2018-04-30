@@ -3,16 +3,16 @@ package kubeconf
 import (
 	"testing"
 
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 func TestK8sInt_GenerateIntegrationString(t *testing.T) {
 	inte := &K8sInt{}
 	conf := []pb.OcyCredder{&pb.K8SCreds{
 		K8SContents: "wasssuppppppp",
-		Identifier: "derpy",
-		SubType:    pb.SubCredType_KUBECONF,
+		Identifier:  "derpy",
+		SubType:     pb.SubCredType_KUBECONF,
 	},
 	}
 	kubeconf, err := inte.GenerateIntegrationString(conf)

@@ -1,25 +1,20 @@
 package launcher
 
 import (
-	"bytes"
-	"strings"
-
-	"bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/builder"
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/dockerconfig"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
 	"github.com/go-test/deep"
+	"github.com/shankj3/go-til/net"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/builder"
+	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/build/integrations/dockerconfig"
+	cred "github.com/shankj3/ocelot/common/credentials"
 
-	//"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	//"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 
-
-	"github.com/gorilla/mux"
 	"context"
+	"github.com/gorilla/mux"
 	"net/http"
 	"os"
 	"testing"
@@ -70,7 +65,7 @@ wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 -----END RSA PRIVATE KEY-----`
 
 func makeDockerCred(id, uname, pw, url, acctname string) *pb.RepoCreds {
-	return &pb.RepoCreds{Identifier:id, Username:uname, Password:pw, RepoUrl:url, AcctName:acctname, SubType: pb.SubCredType_DOCKER}
+	return &pb.RepoCreds{Identifier: id, Username: uname, Password: pw, RepoUrl: url, AcctName: acctname, SubType: pb.SubCredType_DOCKER}
 }
 
 type dummyCVRC struct {
@@ -105,10 +100,10 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	//go createKubectlEndpoint(t)
 	ctx := context.Background()
 	docker, cleanupFunc := builder.CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
-	time.Sleep(2*time.Second)
+	time.Sleep(2 * time.Second)
 	defer cleanupFunc(t)
 	launch.infochan = make(chan []byte, 1000)
-	result, _, _ := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf:&pb.BuildConfig{BuildTool:"maven"}}, docker)
+	result, _, _ := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, docker)
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Log(result.Messages)
 		t.Error(result.Error)
@@ -217,13 +212,13 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	result := docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, out)
 	if result.Status != pb.StageResultVal_FAIL {
 		data := <-out
-		t.Error("pull from metaverse should fail if there are no creds to authenticate with. stdout: " , data)
+		t.Error("pull from metaverse should fail if there are no creds to authenticate with. stdout: ", data)
 	}
 	// add in docker repo credentials,
 	cred.AddDockerRepoCreds(t, testRemoteConfig, pg, "docker.metaverse.l11.com", password, "admin", acctName, projectName)
 	//
 	//// create config in ~/.docker directory w/ auth creds
-	logout := make(chan[]byte, 10000)
+	logout := make(chan []byte, 10000)
 	dckr := dockerconfig.Create()
 	creds, err := testRemoteConfig.GetCredsBySubTypeAndAcct(pg, dckr.SubType(), acctName, false)
 	if err != nil {
@@ -231,17 +226,20 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 		return
 	}
 	intstring, err := dckr.GenerateIntegrationString(creds)
-	if err != nil { t.Log(err); return }
-	res := docker.ExecuteIntegration(ctx,  &pb.Stage{Env: []string{}, Name: "docker login", Script: dckr.MakeBashable(intstring)}, build.InitStageUtil("docker login"), logout)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	res := docker.ExecuteIntegration(ctx, &pb.Stage{Env: []string{}, Name: "docker login", Script: dckr.MakeBashable(intstring)}, build.InitStageUtil("docker login"), logout)
 	if res.Status == pb.StageResultVal_FAIL {
-		data := <- logout
+		data := <-logout
 		t.Error("stage failed! logout data: ", string(data))
 	}
 
 	// try to pull the image from metaverse again. this should now pass.
-	logout = make(chan[]byte, 100000)
+	logout = make(chan []byte, 100000)
 	res = docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, logout)
-	outByte := <- logout
+	outByte := <-logout
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Error("could not pull from metaverse docker! out: ", string(outByte))
 	}

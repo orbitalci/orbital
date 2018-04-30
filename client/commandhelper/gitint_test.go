@@ -1,19 +1,19 @@
 package commandhelper
 
 import (
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/common/testutil"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/common/testutil"
 	"testing"
 )
 
 // todo: do we know of any other type of url....?
 var goodgiturls = []struct {
-	name string
-	url []byte
+	name     string
+	url      []byte
 	acctRepo string
 }{
-	{"bitbucket ssh",[]byte("git@bitbucket.org:level11consulting/ocelot.git"), "level11consulting/ocelot"},
-	{"bitbucket https", []byte("https://jessishank@bitbucket.org/level11consulting/ocelot.git"), "level11consulting/ocelot"},
+	{"bitbucket ssh", []byte("git@bitbucket.org:level11consulting/ocelot.git"), "level11consulting/ocelot"},
+	{"bitbucket https", []byte("https://jessishank@github.com/shankj3/ocelot.git"), "level11consulting/ocelot"},
 	{"github https", []byte("https://github.com/kubernetes/charts.git"), "kubernetes/charts"},
 	{"github ssh", []byte("git@github.com:kubernetes/charts.git"), "kubernetes/charts"},
 }
@@ -31,7 +31,7 @@ func TestFindAcctRepo(t *testing.T) {
 
 func Test_matchThis(t *testing.T) {
 	for _, tt := range goodgiturls {
-		t.Run(tt.name,  func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			acctRepo, err := matchThis(tt.url)
 			if err != nil {
 				t.Fatal(err)

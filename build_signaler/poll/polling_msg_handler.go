@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/golang/protobuf/proto"
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
 
 var cronDir = "/etc/cron.d"
@@ -23,7 +23,7 @@ type MsgHandler struct {
 func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
 	log.Log().Debug("unmarshaling and processing a poll update msg")
 	pollMsg := &pb.PollRequest{}
-	defer func(){
+	defer func() {
 		done <- 1
 	}()
 	if err := proto.Unmarshal(msg, pollMsg); err != nil {
@@ -54,14 +54,14 @@ func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan 
 }
 
 func DeleteCronFile(event *pb.PollRequest) error {
-	fullPath := filepath.Join(cronDir, event.Account + "_" + event.Repo)
+	fullPath := filepath.Join(cronDir, event.Account+"_"+event.Repo)
 	err := os.Remove(fullPath)
 	return err
 }
 
 func WriteCronFile(event *pb.PollRequest) error {
 	cron := fmt.Sprintf("%s root /bin/run_changecheck.sh %s/%s %s\n", event.Cron, event.Account, event.Repo, event.Branches)
-	fullPath := filepath.Join(cronDir, event.Account + "_" + event.Repo)
+	fullPath := filepath.Join(cronDir, event.Account+"_"+event.Repo)
 	isfile, err := exists(fullPath)
 	if err != nil {
 		return err
@@ -76,7 +76,11 @@ func WriteCronFile(event *pb.PollRequest) error {
 
 func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
-	if err == nil { return true, nil }
-	if os.IsNotExist(err) { return false, nil }
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
 	return true, err
 }

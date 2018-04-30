@@ -1,12 +1,11 @@
 package sshlist
 
-
 import (
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"context"
 	"flag"
 	"fmt"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
@@ -19,12 +18,11 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
-	flags   *flag.FlagSet
-	config *commandhelper.ClientConfig
+	UI            cli.Ui
+	flags         *flag.FlagSet
+	config        *commandhelper.ClientConfig
 	accountFilter string
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -87,7 +85,6 @@ func NoDataHeader(ui cli.Ui) {
 	ui.Warn("\n--- No SSH Key Credentials Found ---\n")
 }
 
-
 func Prettify(cred *models.SSHKeyWrapper) string {
 	pretty := `Acccount: %s
 Identifier: %s
@@ -96,11 +93,9 @@ Identifier: %s
 	return fmt.Sprintf(pretty, cred.AcctName, cred.Identifier)
 }
 
-
 const synopsis = "List all credentials used for tracking repositories to build"
 const help = `
 Usage: ocelot creds ssh list
 
   Retrieves all ssh keys that ocelot has for use in builds. 
 `
-

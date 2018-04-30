@@ -6,21 +6,19 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/level11consulting/go-til/consul"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	rt "bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/consul"
+	ocelog "github.com/shankj3/go-til/log"
+	rt "github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/valet"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
 )
-
 
 type buildDatum struct {
 	sync.Mutex
 	buildData [][]byte
 	done      bool
 }
-
 
 func (b *buildDatum) Append(line []byte) {
 	b.Lock()

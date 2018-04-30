@@ -2,16 +2,8 @@
 
 
 [[projects]]
-  name = "bitbucket.org/level11consulting/go-til"
-  packages = [
-    "consul",
-    "deserialize",
-    "log",
-    "net",
-    "nsqpb",
-    "test",
-    "vault"
-  ]
+  name = "github.com/shankj3/go-til"
+  packages = ["log"]
   revision = "a0abd530ad931f177d9f9c17c71328804045283a"
   version = "0.2.2"
 
@@ -75,7 +67,7 @@
     ".",
     "internal/cp"
   ]
-  revision = "e32faac87a2220f9342289f2c3b567d1424b8ec5"
+  revision = "b594cb31ff9cf2d061450ef0e1cc1f33fd211a5a"
 
 [[projects]]
   name = "github.com/docker/distribution"
@@ -121,8 +113,8 @@
 [[projects]]
   name = "github.com/docker/go-units"
   packages = ["."]
-  revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
-  version = "v0.3.3"
+  revision = "0dadbb0345b35ec7ef35e228dabb8de89a65bf52"
+  version = "v0.3.2"
 
 [[projects]]
   name = "github.com/fatih/color"
@@ -163,19 +155,13 @@
     "internal/murmur",
     "internal/streams"
   ]
-  revision = "3540fc649cd7fc57cef5612b7bacac7a4fc443d6"
+  revision = "12e3a8c05db483441932e84ab6c35c339fb01de7"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
   revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
   version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[projects]]
   branch = "master"
@@ -255,8 +241,8 @@
     "testutil",
     "testutil/retry"
   ]
-  revision = "fb848fc48818f58690db09d14640513aa6bf3c02"
-  version = "v1.0.7"
+  revision = "9a494b5fb9c86180a5702e29c485df1507a47198"
+  version = "v1.0.6"
 
 [[projects]]
   branch = "master"
@@ -274,7 +260,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-hclog"
   packages = ["."]
-  revision = "69ff559dc25f3b435631604f573a5fa1efdb6433"
+  revision = "5bcb0f17e36442247290887cc914a6e507afa5c4"
 
 [[projects]]
   branch = "master"
@@ -298,7 +284,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-plugin"
   packages = ["."]
-  revision = "e8d22c780116115ae5624720c9af0c97afe4f551"
+  revision = "8068b0bdcfb702b4ab69d0e42c6023b4996c3026"
 
 [[projects]]
   branch = "master"
@@ -341,7 +327,7 @@
     "json/scanner",
     "json/token"
   ]
-  revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
+  revision = "f40e974e75af4e271d97ce0fc917af5898ae7bda"
 
 [[projects]]
   name = "github.com/hashicorp/serf"
@@ -430,7 +416,7 @@
     "openpgp/s2k",
     "rsa"
   ]
-  revision = "d11a37f123888ff060339f516e392032dfcb98ff"
+  revision = "c86609b27f9eaa80962974009eb5472d58bb4043"
 
 [[projects]]
   branch = "master"
@@ -475,7 +461,7 @@
   branch = "master"
   name = "github.com/mitchellh/cli"
   packages = ["."]
-  revision = "c48282d14eba4b0817ddef3f832ff8d13851aefd"
+  revision = "b068abc08c994321eafd9fd500d0704cb6defcb1"
 
 [[projects]]
   branch = "master"
@@ -529,7 +515,7 @@
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
-  revision = "d5dd8a50526aadb3d5f2c9b5233277bc2db90e88"
+  revision = "b8a9be070da40449e501c3c4730a889e42d87a9e"
 
 [[projects]]
   name = "github.com/patrickmn/go-cache"
@@ -573,6 +559,19 @@
   revision = "ed9870dad3170c0b25ab9b11830cc57c3a7798fb"
 
 [[projects]]
+  name = "github.com/shankj3/go-til"
+  packages = [
+    "consul",
+    "deserialize",
+    "log",
+    "net",
+    "nsqpb",
+    "test",
+    "vault"
+  ]
+  revision = "34065da83cb6514ceac36e6f0f46be1b4cdeaddc"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
@@ -603,7 +602,7 @@
     "ssh",
     "ssh/terminal"
   ]
-  revision = "d6449816ce06963d9d136eee5a56fca5b0616e7e"
+  revision = "88942b9c40a4c9d203b82b3731787b672d6e809b"
 
 [[projects]]
   branch = "master"
@@ -611,17 +610,15 @@
   packages = [
     "context",
     "context/ctxhttp",
-    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
-    "internal/socks",
     "internal/timeseries",
     "lex/httplex",
     "proxy",
     "trace"
   ]
-  revision = "d41e8174641f662c5a2d1c7a5f9e828788eb8706"
+  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
 
 [[projects]]
   branch = "master"
@@ -631,7 +628,7 @@
     "clientcredentials",
     "internal"
   ]
-  revision = "6881fee410a5daf86371371f9ad451b95e168b71"
+  revision = "fdc9e635145ae97e6c2cb777c48305600cf515cb"
 
 [[projects]]
   branch = "master"
@@ -640,7 +637,7 @@
     "unix",
     "windows"
   ]
-  revision = "3ccc7e5779793fd54564baf60c51bf017955e0ba"
+  revision = "13d03a9a82fba647c21a0ef8fba44a795d0f0835"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -684,7 +681,7 @@
     "googleapis/api/annotations",
     "googleapis/rpc/status"
   ]
-  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
+  revision = "ab0870e398d5dd054b868c0db1481ab029b9a9f2"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -715,8 +712,8 @@
     "tap",
     "transport"
   ]
-  revision = "d11072e7ca9811b1100b80ca0269ac831f06d024"
-  version = "v1.11.3"
+  revision = "afc05b9e1d36f289ea16ba294894486a3e458246"
+  version = "v1.11.0"
 
 [[projects]]
   name = "gopkg.in/inf.v0"
@@ -739,12 +736,12 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
+  revision = "86f5ed62f8a0ee96bd888d2efdfd6d4fb100a4eb"
+  version = "v2.2.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "837bbe2eb24a80fd5db553d176eee23a7f7a28264c8ebd7070ddf4b72f0b900d"
+  inputs-digest = "10673e781df5579b2f30ee57c8517f0e7108bbdb04ae6b481dc9247dad93c333"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -3,17 +3,16 @@ package build_signaler
 import (
 	"errors"
 
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/deserialize"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
-
 
 type Signaler struct {
 	RC credentials.CVRemoteConfig
@@ -21,18 +20,17 @@ type Signaler struct {
 	Producer     *nsqpb.PbProduce
 	OcyValidator *build.OcelotValidator
 	Store        storage.OcelotStorage
-	AcctRepo  	  string
+	AcctRepo     string
 }
-
 
 // made this interface for easy testing
 type WerkerTeller interface {
 	TellWerker(lastCommit string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error)
 }
 
-type BBWerkerTeller struct {}
+type BBWerkerTeller struct{}
 
-func (w *BBWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error){
+func (w *BBWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error) {
 	ocelog.Log().WithField("hash", hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
 	if token == "" {
 		return errors.New("token cannot be empty")

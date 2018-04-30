@@ -7,13 +7,13 @@ import (
 	"io"
 	"os/exec"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/basher"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/basher"
+	"github.com/shankj3/ocelot/build/valet"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 type Host struct {
@@ -70,6 +70,9 @@ func (h *Host) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil 
 	return h.execute(ctx, stgUtil, stage.Env, stage.Script, logout)
 }
 
+func (h *Host) GetContainerId() string {
+	return ""
+}
 
 func (h *Host) execute(ctx context.Context, stage *build.StageUtil, env []string, cmds []string, logout chan []byte) *pb.Result {
 	cmd := exec.CommandContext(ctx, cmds[0], cmds[1:]...)

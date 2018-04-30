@@ -3,8 +3,8 @@ package kubeconf
 import (
 	"errors"
 
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 func Create() integrations.StringIntegrator {
@@ -23,7 +23,6 @@ func (k *K8sInt) SubType() pb.SubCredType {
 	return pb.SubCredType_KUBECONF
 }
 
-
 func (k *K8sInt) MakeBashable(encoded string) []string {
 	return []string{"/bin/sh", "-c", "mkdir -p ~/.kube && echo \"${KCONF}\" | base64 -d > ~/.kube/conf"}
 }
@@ -31,7 +30,6 @@ func (k *K8sInt) MakeBashable(encoded string) []string {
 func (k *K8sInt) IsRelevant(wc *pb.BuildConfig) bool {
 	return true
 }
-
 
 func (k *K8sInt) GenerateIntegrationString(creds []pb.OcyCredder) (string, error) {
 	kubeCred, ok := creds[0].(*pb.K8SCreds)

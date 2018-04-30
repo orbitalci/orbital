@@ -4,8 +4,8 @@ import (
 	"context"
 	"os/exec"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build"
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
 )
 
 // VagrantUp will run the command "vagrant up" from the vagrantDir specified. It will also save the output

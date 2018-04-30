@@ -1,12 +1,11 @@
 package repocredslist
 
-
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"strings"
 	"testing"
 )
@@ -15,7 +14,7 @@ func TestCmd_Run(t *testing.T) {
 	ctx := context.Background()
 	ui := cli.NewMockUi()
 	cmdd := &cmd{
-		UI: ui,
+		UI:     ui,
 		config: commandhelper.NewTestClientConfig([]string{}),
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -24,27 +23,27 @@ func TestCmd_Run(t *testing.T) {
 	expectedCreds := &models.RepoCredWrapper{
 		Repo: []*models.RepoCreds{
 			{
-				Username:     "thisBeMyUserName",
-				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:      "https://ocelot.perf/nexus-yo",
-				Identifier:    "snapshot",
-				AcctName:     "jessishank",
-				SubType:      models.SubCredType_NEXUS,
+				Username:   "thisBeMyUserName",
+				Password:   "SHH-BE-QUIET-ITS-A-SECRET",
+				RepoUrl:    "https://ocelot.perf/nexus-yo",
+				Identifier: "snapshot",
+				AcctName:   "jessishank",
+				SubType:    models.SubCredType_NEXUS,
 			},
 			{
-				Username:     "thisBeM1yUserName",
-				Password:     "SHH-BE-Q2UIET-ITS-A-SECRET",
-				RepoUrl:       "https://o3celot.perf/nexus-yo",
-				Identifier:    "snapshot",
-				AcctName:     "jessishank45",
-				SubType:      models.SubCredType_NEXUS,
-			},{
-				Username:     "thisB2eMyUserName",
-				Password:     "SHH-BEd-QUIET-asdITS-A-SECRET",
-				RepoUrl:       "https:/h/ocelot.perf/nexus-yo",
-				Identifier:    "snapshot",
-				AcctName:     "jessishasnk",
-				SubType:      models.SubCredType_NEXUS,
+				Username:   "thisBeM1yUserName",
+				Password:   "SHH-BE-Q2UIET-ITS-A-SECRET",
+				RepoUrl:    "https://o3celot.perf/nexus-yo",
+				Identifier: "snapshot",
+				AcctName:   "jessishank45",
+				SubType:    models.SubCredType_NEXUS,
+			}, {
+				Username:   "thisB2eMyUserName",
+				Password:   "SHH-BEd-QUIET-asdITS-A-SECRET",
+				RepoUrl:    "https:/h/ocelot.perf/nexus-yo",
+				Identifier: "snapshot",
+				AcctName:   "jessishasnk",
+				SubType:    models.SubCredType_NEXUS,
 			},
 		},
 	}
@@ -88,9 +87,8 @@ Identifier: snapshot
 `
 	text := ui.OutputWriter.String()
 	if strings.Compare(expectedText, text) != 0 {
-		t.Errorf("output and expected not the same,  \n" +
+		t.Errorf("output and expected not the same,  \n"+
 			"expected:\n%s\ngot:\n%s", expectedText, text)
 	}
-
 
 }

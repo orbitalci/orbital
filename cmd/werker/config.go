@@ -1,11 +1,11 @@
 package main
 
 import (
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
-	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
+	"github.com/shankj3/ocelot/version"
 
 	"errors"
 	"os"
@@ -49,7 +49,7 @@ type WerkerConf struct {
 	//WerkerType  models.WerkType
 	//WerkerUuid		uuid.UUID
 	*models.WerkerFacts
-	WerkerName  string
+	WerkerName string
 	//werkerProcessor builder.Processor
 	LogLevel        string
 	RegisterIP      string
@@ -57,11 +57,10 @@ type WerkerConf struct {
 	RemoteConfig    cred.CVRemoteConfig
 }
 
-
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
 // alright because it only happens on startup of the application
 func GetConf() (*WerkerConf, error) {
-	werker := &WerkerConf{WerkerFacts:&models.WerkerFacts{}}
+	werker := &WerkerConf{WerkerFacts: &models.WerkerFacts{}}
 	werkerName, _ := os.Hostname()
 	var werkerTypeStr string
 	var storageTypeStr string

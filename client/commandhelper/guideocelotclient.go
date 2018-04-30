@@ -1,7 +1,8 @@
 package commandhelper
+
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	//"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
+	models "github.com/shankj3/ocelot/models/pb"
+	//"github.com/shankj3/ocelot/util/secure_grpc"
 	"flag"
 	"google.golang.org/grpc"
 )
@@ -11,8 +12,7 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name use to verify the hostname returned by TLS handshake")
 )
 
-
-func GetClient(serverAddr string, insecure bool, tlsDns string) (client models.GuideOcelotClient, err error){
+func GetClient(serverAddr string, insecure bool, tlsDns string) (client models.GuideOcelotClient, err error) {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
 	conn, err := grpc.Dial(serverAddr, opts...)

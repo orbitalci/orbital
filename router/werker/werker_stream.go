@@ -8,12 +8,11 @@ import (
 	"runtime"
 	"strings"
 
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
 )
-
 
 var (
 	upgrader = websocket.Upgrader{}

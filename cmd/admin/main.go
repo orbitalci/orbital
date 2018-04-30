@@ -1,13 +1,13 @@
 package main
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/router/admin"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/common/secure_grpc"
 	"fmt"
-	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
+	ocelog "github.com/shankj3/go-til/log"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/common/secure_grpc"
+	"github.com/shankj3/ocelot/router/admin"
+	"github.com/shankj3/ocelot/version"
 	"os"
 )
 

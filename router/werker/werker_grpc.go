@@ -2,19 +2,20 @@ package werker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	rt "bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/cleaner"
-	"bitbucket.org/level11consulting/ocelot/build/streamer"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
+	rt "github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/cleaner"
+	"github.com/shankj3/ocelot/build/streamer"
+	"github.com/shankj3/ocelot/build/valet"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/pkg/errors"
 )
 
 //WerkerServer embeds the werkerappcontext so we can stream + access active builds
@@ -69,11 +70,10 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 func NewWerkerServer(werkerCtx *WerkerContext) pb.BuildServer {
 	werkerServer := &WerkerServer{
 		WerkerContext: werkerCtx,
-		Cleaner: cleaner.GetNewCleaner(werkerCtx.WerkerType),
+		Cleaner:       cleaner.GetNewCleaner(werkerCtx.WerkerType),
 	}
 	return werkerServer
 }
-
 
 func wrap(textToSend string) *pb.Response {
 	return &pb.Response{

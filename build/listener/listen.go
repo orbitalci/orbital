@@ -1,18 +1,17 @@
 package listener
 
-
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/basher"
-	bldr "bitbucket.org/level11consulting/ocelot/build/builder"
-	"bitbucket.org/level11consulting/ocelot/build/launcher"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	"bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/golang/protobuf/proto"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/basher"
+	bldr "github.com/shankj3/ocelot/build/builder"
+	"github.com/shankj3/ocelot/build/launcher"
+	"github.com/shankj3/ocelot/build/valet"
+	"github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 
 	//"runtime/debug"
 	"fmt"
@@ -20,23 +19,22 @@ import (
 
 type WorkerMsgHandler struct {
 	*models.WerkerFacts
-	Topic           string
-	infochan        chan []byte
+	Topic        string
+	infochan     chan []byte
 	StreamChan   chan *models.Transport
 	BuildCtxChan chan *models.BuildContext
-	Basher          *basher.Basher
-	Store           storage.OcelotStorage
+	Basher       *basher.Basher
+	Store        storage.OcelotStorage
 	BuildValet   *valet.Valet
-	RemoteConfig  credentials.CVRemoteConfig
-
+	RemoteConfig credentials.CVRemoteConfig
 }
 
 func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, rc credentials.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
 	return &WorkerMsgHandler{
-		Topic: 		   topic,
-		Basher: 	   b,
-		Store: 		   st,
-		BuildValet:	   bv,
+		Topic:        topic,
+		Basher:       b,
+		Store:        st,
+		BuildValet:   bv,
 		StreamChan:   tunnel,
 		BuildCtxChan: buildChan,
 		RemoteConfig: rc,
@@ -80,4 +78,3 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	launch.MakeItSo(werkerTask, builder, finish, done)
 	return nil
 }
-

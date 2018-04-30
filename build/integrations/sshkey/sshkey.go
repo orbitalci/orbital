@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 type SSHKeyInt struct {
 	strictHostKey string
-	sshKeys map[string]string
+	sshKeys       map[string]string
 }
 
 func (n *SSHKeyInt) String() string {

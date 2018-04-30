@@ -1,15 +1,13 @@
 package polldelete
 
-
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 )
-
 
 const synopsis = "delete git poll for repo tracked by ocelot"
 const help = `
@@ -26,14 +24,13 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI 		 cli.Ui
+	UI       cli.Ui
 	flags    *flag.FlagSet
-	cron  	 string
+	cron     string
 	branches string
-	config  *commandhelper.ClientConfig
+	config   *commandhelper.ClientConfig
 	*commandhelper.OcyHelper
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -60,7 +57,6 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
 }
 
-
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
@@ -72,14 +68,13 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-
 	ctx := context.Background()
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
 	_, err := c.config.Client.DeletePollRepo(ctx, &models.PollRequest{
 		Account: c.OcyHelper.Account,
-		Repo: c.OcyHelper.Repo,
+		Repo:    c.OcyHelper.Repo,
 	})
 
 	if err != nil {

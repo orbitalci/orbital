@@ -1,21 +1,19 @@
 package dockerconfig
 
 import (
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"encoding/json"
 	"errors"
 	"fmt"
 )
 
-
 type auth map[string]string
 
 type dockerConfigJson struct {
-	Auths map[string]auth `json:"auths,omitempty"`
+	Auths       map[string]auth   `json:"auths,omitempty"`
 	HttpHeaders map[string]string `json:"HttpHeaders,omitempty"`
-
 }
 
 type DockrInt struct {
@@ -61,10 +59,10 @@ func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
 		}
 		authstring := fmt.Sprintf("%s:%s", credx.Username, credx.Password)
 		b64authstring := integrations.StrToBase64(authstring)
-		authz[credx.RepoUrl] = map[string]string{"auth":b64authstring}
+		authz[credx.RepoUrl] = map[string]string{"auth": b64authstring}
 	}
 	config := &dockerConfigJson{
-		Auths: authz,
+		Auths:       authz,
 		HttpHeaders: map[string]string{"User-Agent": "Docker-Client/17.12.0-ce (linux)"},
 	}
 	bitz, err := json.Marshal(config)

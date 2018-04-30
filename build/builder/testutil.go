@@ -14,12 +14,12 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/level11consulting/ocelot/build/basher"
-	cleaner2 "bitbucket.org/level11consulting/ocelot/build/cleaner"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/gorilla/mux"
+	"github.com/shankj3/ocelot/build/basher"
+	cleaner2 "github.com/shankj3/ocelot/build/cleaner"
 )
 
 func tarTemplates(t *testing.T) func(t *testing.T) {
@@ -66,7 +66,7 @@ func createDoThingsWebServer() {
 }
 
 type Cleanup struct {
-	tarCleanup func(t *testing.T)
+	tarCleanup    func(t *testing.T)
 	dockerCleanup func(t *testing.T)
 }
 
@@ -110,12 +110,12 @@ func CreateLivingDockerContainer(t *testing.T, ctx context.Context, imageName st
 	cleanupTar := tarTemplates(t)
 	go createDoThingsWebServer()
 	containerConfig := &container.Config{
-		Image: imageName,
-		Cmd: d.DownloadTemplateFiles("3333"),
+		Image:        imageName,
+		Cmd:          d.DownloadTemplateFiles("3333"),
 		AttachStderr: true,
 		AttachStdout: true,
-		AttachStdin:true,
-		Tty:true,
+		AttachStdin:  true,
+		Tty:          true,
 	}
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
@@ -123,9 +123,9 @@ func CreateLivingDockerContainer(t *testing.T, ctx context.Context, imageName st
 		//Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
 	}
-	resp, err := cli.ContainerCreate(ctx, containerConfig , hostConfig, nil, "")
+	resp, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
 	if err != nil {
-		t.Fatal("could not create container, error: ", err.Error(),"\nwarnings: ", strings.Join(resp.Warnings, "\n  - "))
+		t.Fatal("could not create container, error: ", err.Error(), "\nwarnings: ", strings.Join(resp.Warnings, "\n  - "))
 	}
 	d.ContainerId = resp.ID
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
@@ -135,20 +135,19 @@ func CreateLivingDockerContainer(t *testing.T, ctx context.Context, imageName st
 	containerLog, err := cli.ContainerLogs(ctx, d.ContainerId, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
-		Follow: true,
+		Follow:     true,
 	})
 	if err != nil {
 		t.Fatal("couldn't get container log, error: ", err.Error())
 	}
 	d.Log = containerLog
-	dockerCleanup := func(t *testing.T){
-		logout := make(chan[]byte, 100)
+	dockerCleanup := func(t *testing.T) {
+		logout := make(chan []byte, 100)
 		dockerCleaner.Cleanup(ctx, d.ContainerId, logout)
 	}
 	cleaner := &Cleanup{
-		tarCleanup: cleanupTar,
+		tarCleanup:    cleanupTar,
 		dockerCleanup: dockerCleanup,
 	}
 	return d, cleaner.Clean
 }
-

@@ -1,29 +1,29 @@
 package common
 
 import (
-	"bitbucket.org/level11consulting/go-til/test"
+	"github.com/shankj3/go-til/test"
 	"testing"
 )
 
 var idAndHashTests = []struct {
-	field string
-	werkerId string
-	gitHash string
-	buildFunc func(string,string)string
-	expected string
+	field     string
+	werkerId  string
+	gitHash   string
+	buildFunc func(string, string) string
+	expected  string
 }{
 	{"build path", "1234-8974-3818-asdf", "123nd9xz", MakeBuildPath, "ci/builds/1234-8974-3818-asdf/123nd9xz"},
 	{"build summary", "123123123123", "hashhashhash", MakeBuildSummaryIdPath, "ci/builds/123123123123/hashhashhash/build_id"},
-	{"build stage","123123123123", "hashhashhash", MakeBuildStagePath, "ci/builds/123123123123/hashhashhash/current_stage"},
-	{"build start time","123123123123", "hashhashhash", MakeBuildStartpath, "ci/builds/123123123123/hashhashhash/start_time"},
-	{"build docker uuid","123123123123", "hashhashhash", MakeDockerUuidPath, "ci/builds/123123123123/hashhashhash/docker_uuid"},
+	{"build stage", "123123123123", "hashhashhash", MakeBuildStagePath, "ci/builds/123123123123/hashhashhash/current_stage"},
+	{"build start time", "123123123123", "hashhashhash", MakeBuildStartpath, "ci/builds/123123123123/hashhashhash/start_time"},
+	{"build docker uuid", "123123123123", "hashhashhash", MakeDockerUuidPath, "ci/builds/123123123123/hashhashhash/docker_uuid"},
 }
 
 var singleFieldTests = []struct {
-	field string
+	field      string
 	fieldvalue string
-	buildFunc func(string) string
-	expected string
+	buildFunc  func(string) string
+	expected   string
 }{
 	{"werker id path", "werkerwerks", MakeBuildWerkerIdPath, "ci/builds/werkerwerks"},
 	{"build map path", "hashyhashy", MakeBuildMapPath, "ci/werker_build_map/hashyhashy"},
@@ -60,7 +60,6 @@ func Test_MakeBuildPath(t *testing.T) {
 		t.Error(test.StrFormatErrors("build runtime path", expectedPath, path))
 	}
 }
-
 
 func Test_MakeBuildMapPath(t *testing.T) {
 	gitHash := "123123"

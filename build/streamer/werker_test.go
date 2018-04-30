@@ -1,12 +1,12 @@
 package streamer
 
 import (
-	consulet "bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"bufio"
 	"bytes"
+	consulet "github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
 	"testing"
 	"time"
 )

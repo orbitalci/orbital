@@ -3,12 +3,12 @@ package cleaner
 import (
 	"context"
 
-	"bitbucket.org/level11consulting/go-til/log"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/shankj3/go-til/log"
 )
 
-type DockerCleaner struct {}
+type DockerCleaner struct{}
 
 func (d *DockerCleaner) Cleanup(ctx context.Context, id string, logout chan []byte) error {
 	cli, err := client.NewEnvClient()

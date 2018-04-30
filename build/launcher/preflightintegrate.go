@@ -5,15 +5,15 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/dockerconfig"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/kubeconf"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/nexusm2"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/sshkey"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/build/integrations/dockerconfig"
+	"github.com/shankj3/ocelot/build/integrations/kubeconf"
+	"github.com/shankj3/ocelot/build/integrations/nexusm2"
+	"github.com/shankj3/ocelot/build/integrations/sshkey"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.

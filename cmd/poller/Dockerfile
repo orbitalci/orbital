@@ -1,7 +1,7 @@
 FROM ocelot-build as builder
 
 ARG SERVICE_NAME=poller
-WORKDIR /go/src/bitbucket.org/level11consulting/ocelot/
+WORKDIR /go/src/github.com/shankj3/ocelot/
 COPY . .
 
 RUN cd cmd/${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .

@@ -3,7 +3,7 @@ buildTool: go
 branches:
   - ALL
 env:
-  - "OCELOT_PATH=src/bitbucket.org/level11consulting/ocelot"
+  - "OCELOT_PATH=src/github.com/shankj3/ocelot"
 stages:
   - name: check ssh file
     script: 

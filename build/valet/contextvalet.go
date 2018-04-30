@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/models"
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/models"
 )
 
 func NewContextValet() *ContextValet {

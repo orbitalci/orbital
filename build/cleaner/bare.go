@@ -3,7 +3,7 @@ package cleaner
 import (
 	"context"
 
-	"bitbucket.org/level11consulting/go-til/log"
+	"github.com/shankj3/go-til/log"
 )
 
 type BareCleaner struct {}

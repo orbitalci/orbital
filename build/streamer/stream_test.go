@@ -1,11 +1,10 @@
 package streamer
 
-
 import (
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/go-til/log"
-	protobuf "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/go-test/deep"
+	"github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	protobuf "github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc"
 	"testing"
 	"time"
@@ -50,11 +49,9 @@ func (t *testBuildInfoGrpcServer) SendIt(data []byte) error {
 	return err
 }
 
-
 func (t *testBuildInfoGrpcServer) SendError(errorDes []byte) {}
 
 func (t *testBuildInfoGrpcServer) Finish(chan int) {}
-
 
 func Test_iterateOverBuildData(t *testing.T) {
 	var stream = NewTestStreamArray()
@@ -118,5 +115,3 @@ func Test_streamFromArray(t *testing.T) {
 		t.Error(diff)
 	}
 }
-
-

@@ -1,8 +1,9 @@
 package credentials
+
 import (
-	"bitbucket.org/level11consulting/ocelot/common"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/ocelot/common"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 
 	"errors"
 )

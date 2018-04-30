@@ -1,7 +1,7 @@
 package credentials
 
 import (
-	"bitbucket.org/level11consulting/go-til/consul"
+	"github.com/shankj3/go-til/consul"
 )
 
 // RemoteConfigCred is the interface that remoteConfig requires credential structs to adhere to
@@ -17,4 +17,3 @@ type RemoteConfigCred interface {
 	BuildCredPath(credType string, acctName string) string
 	Spawn() RemoteConfigCred
 }
-

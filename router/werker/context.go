@@ -5,13 +5,12 @@ import (
 	//"net/http"
 	//"time"
 
-	consulet "bitbucket.org/level11consulting/go-til/consul"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build/streamer"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
-
+	consulet "github.com/shankj3/go-til/consul"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build/streamer"
+	"github.com/shankj3/ocelot/build/valet"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
 )
 
 type WerkerContext struct {
@@ -21,6 +20,7 @@ type WerkerContext struct {
 	streamPack    *streamer.StreamPack
 	killValet     *valet.ContextValet
 }
+
 //
 //func (w *WerkerContext) dumpData(wr http.ResponseWriter, r *http.Request) {
 //	ocelog.Log().Info("writing out data for buildInfo")
@@ -48,7 +48,7 @@ func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, con
 	werkerCtx := &WerkerContext{
 		WerkerFacts:   conf,
 		consul:        werkerConsul,
-		killValet:    contextValet,
+		killValet:     contextValet,
 		store:         store,
 	}
 	return werkerCtx

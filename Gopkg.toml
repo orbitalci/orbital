@@ -27,6 +27,10 @@
 #  version = "v1.13.1"
 
 [[constraint]]
+  name = "github.com/ghodss/yaml"
+  version = "1.0.0"
+
+[[constraint]]
   branch = "master"
   name = "github.com/golang/protobuf"
 
@@ -46,6 +50,9 @@
   name = "github.com/hashicorp/vault"
   version = "0.9.0"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/meatballhat/negroni-logrus"
 
 [[constraint]]
   branch = "master"
@@ -64,6 +71,18 @@
   version = "0.8.0"
 
 [[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.3"
+
+[[constraint]]
+  name = "github.com/urfave/negroni"
+  version = "0.3.0"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/oauth2"
+
+[[constraint]]
   name = "gopkg.in/go-playground/validator.v9"
   version = "9.9.0"
 
@@ -72,9 +91,9 @@
   name = "gopkg.in/yaml.v2"
 
 [[constraint]]
-  version = "0.2.2"
-#  revision = "34065da83cb6514ceac36e6f0f46be1b4cdeaddc"
-  name = "bitbucket.org/level11consulting/go-til"
+#  version = "0.2.1"
+  revision = "34065da83cb6514ceac36e6f0f46be1b4cdeaddc"
+  name = "github.com/shankj3/go-til"
 
 [[constraint]]
   branch = "master"
@@ -89,6 +108,3 @@
   name = "github.com/SAP/go-hdb"
   revision = "c80549df883e955dff808b1258c26f32b3ed10a4"
 #  version = "v0.9.5"
-[[constraint]]
-  name = "github.com/go-test/deep"
-  version = "1.0.1"

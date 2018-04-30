@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/valet"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
@@ -19,7 +19,6 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 	transport := &models.Transport{Hash: hash, InfoChan: w.infochan, DbId: dbId}
 	w.StreamChan <- transport
 }
-
 
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
@@ -31,7 +30,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
 	defer w.BuildValet.MakeItSoDed(finish)
 	defer w.BuildValet.UnregisterDoneChan(werk.CheckoutHash)
-	defer func(){
+	defer func() {
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
 	}()
@@ -41,13 +40,13 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 
 	//send build context off, build kills are performed by calling cancel on the cancellable context
 	w.BuildCtxChan <- &models.BuildContext{
-		Hash: werk.CheckoutHash,
-		Context: ctx,
+		Hash:       werk.CheckoutHash,
+		Context:    ctx,
 		CancelFunc: cancel,
 	}
 
 	defer cancel()
-	defer func(){
+	defer func() {
 		ocelog.Log().Info("closing infochan for ", werk.Id)
 		close(w.infochan)
 	}()
@@ -61,12 +60,13 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 		return
 	}
 
-	dockerIdChan := make (chan string)
+	setupStart := time.Now()
+	w.BuildValet.Reset("setup", werk.CheckoutHash)
+
+	dockerIdChan := make(chan string)
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
 
 	// do setup stage
-	setupStart := time.Now()
-	w.BuildValet.Reset("setup", werk.CheckoutHash)
 	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.RemoteConf, w.ServicePort)
 	defer w.BuildValet.Cleanup(ctx, dockerUUid, w.infochan)
 	setupDura := time.Now().Sub(setupStart)
@@ -115,7 +115,7 @@ func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) 
 
 
 func (w *launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
-	dockerUuid := <- dockerChan
+	dockerUuid := <-dockerChan
 
 	if err := valet.RegisterBuild(w.RemoteConf.GetConsul(), w.Uuid.String(), checkoutHash, dockerUuid); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")

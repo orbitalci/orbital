@@ -3,8 +3,8 @@ package version
 import (
 	"flag"
 
-	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/version"
 )
 
 func New(ui cli.Ui, version string) *cmd {

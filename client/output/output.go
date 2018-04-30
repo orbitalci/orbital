@@ -1,13 +1,13 @@
 package output
 
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	bldr "bitbucket.org/level11consulting/ocelot/common/build"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	bldr "github.com/shankj3/ocelot/common/build"
+	models "github.com/shankj3/ocelot/models/pb"
 	"io"
 )
 
@@ -24,7 +24,6 @@ Usage: ocelot logs --hash <git_hash>
     ocelot logs -build-id <id>
 `
 
-
 func New(ui cli.Ui) *cmd {
 	c := &cmd{UI: ui, config: commandhelper.Config, OcyHelper: &commandhelper.OcyHelper{}}
 	c.init()
@@ -32,13 +31,12 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
+	UI      cli.Ui
 	flags   *flag.FlagSet
-	config *commandhelper.ClientConfig
+	config  *commandhelper.ClientConfig
 	buildId int
 	*commandhelper.OcyHelper
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -51,7 +49,6 @@ func (c *cmd) GetUI() cli.Ui {
 func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 	return c.config
 }
-
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -114,7 +111,6 @@ func (c *cmd) Help() string {
 	return help
 }
 
-
 func (c *cmd) fromStorage(ctx context.Context, hash string) int {
 	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: hash})
 	if err != nil {
@@ -157,5 +153,3 @@ func (c *cmd) fromWerker(ctx context.Context, build *models.BuildRuntimeInfo) in
 	}
 	return 0
 }
-
-

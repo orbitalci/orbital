@@ -3,14 +3,14 @@ package summary
 import (
 	clr "github.com/fatih/color"
 
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bytes"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
 	"github.com/olekukonko/tablewriter"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"time"
 )
 
@@ -32,7 +32,6 @@ Usage: ocelot summary -acct-repo <acct>/<repo>
 
 ` + commandhelper.AcctRepoHelp
 
-
 func New(ui cli.Ui) *cmd {
 	c := &cmd{UI: ui, config: commandhelper.Config, OcyHelper: &commandhelper.OcyHelper{}}
 	c.init()
@@ -40,8 +39,8 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
-	flags   *flag.FlagSet
+	UI     cli.Ui
+	flags  *flag.FlagSet
 	config *commandhelper.ClientConfig
 	*commandhelper.OcyHelper
 	limit int
@@ -73,7 +72,6 @@ func (c *cmd) init() {
 	c.flags.IntVar(&c.limit, "limit", 5, "number of rows to fetch")
 }
 
-
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
@@ -90,7 +88,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	commandhelper.Debuggit(c.UI, "getting last few summaries")
-	commandhelper.Debuggit(c.UI, c.OcyHelper.Repo + ": " + c.OcyHelper.Account + "  " + c.OcyHelper.AcctRepo)
+	commandhelper.Debuggit(c.UI, c.OcyHelper.Repo+": "+c.OcyHelper.Account+"  "+c.OcyHelper.AcctRepo)
 	commandhelper.Debuggit(c.UI, fmt.Sprintf("%v", &models.RepoAccount{Repo: c.OcyHelper.Repo, Account: c.OcyHelper.Account, Limit: int32(c.limit)}))
 	summaries, err := c.config.Client.LastFewSummaries(ctx, &models.RepoAccount{Repo: c.OcyHelper.Repo, Account: c.OcyHelper.Account, Limit: int32(c.limit)})
 	if err != nil {
@@ -102,7 +100,7 @@ func (c *cmd) Run(args []string) int {
 	// todo: need a check/error for when nothing is found, right now just generated an empty table
 	writer := &bytes.Buffer{}
 	writ := tablewriter.NewWriter(writer)
-	writ.SetAlignment(tablewriter.ALIGN_LEFT)   // Set Alignment
+	writ.SetAlignment(tablewriter.ALIGN_LEFT) // Set Alignment
 	writ.SetHeader([]string{"Build ID", "Repo", "Build Duration", "Start Time", "Result", "Branch", "Hash"})
 	if !c.config.Theme.NoColor {
 		writ.SetHeaderColor(
@@ -160,12 +158,11 @@ func generateTableRow(summary *models.BuildSummary, theme *commandhelper.ColorDe
 	return row
 }
 
-
 func writeFirstAndLastColumns(summary *models.BuildSummary, color *commandhelper.Color) (start, end string) {
 	buf := bytes.NewBuffer([]byte{})
 	old := clr.Output
 	clr.Output = buf
-	defer func(){ clr.Output = old }()
+	defer func() { clr.Output = old }()
 	color.Set()
 	fmt.Fprintf(buf, "%d", summary.BuildId)
 	start = buf.String()

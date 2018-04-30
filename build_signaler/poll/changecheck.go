@@ -3,11 +3,11 @@ package poll
 import (
 	"errors"
 
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
-	"bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/common/remote"
-	"bitbucket.org/level11consulting/ocelot/models"
+	ocelog "github.com/shankj3/go-til/log"
+	signal "github.com/shankj3/ocelot/build_signaler"
+	"github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/common/remote"
+	"github.com/shankj3/ocelot/models"
 )
 
 type ChangeChecker struct {
@@ -15,7 +15,6 @@ type ChangeChecker struct {
 	handler models.VCSHandler
 	token   string
 }
-
 
 func (w *ChangeChecker) SetAuth() error {
 	cfg, err := credentials.GetVcsCreds(w.Store, w.AcctRepo, w.RC)
@@ -54,7 +53,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if lastHash != lastCommit.Hash {
 		ocelog.Log().Infof("found a new hash %s, telling werker", lastCommit.Hash)
 		newLastHash = lastCommit.Hash
-		if err = wt.TellWerker(lastCommit.Hash, w.Signaler, branch,  w.handler, w.token); err != nil {
+		if err = wt.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token); err != nil {
 			return
 		}
 	} else {
@@ -99,4 +98,3 @@ func searchBranchCommits(handler models.VCSHandler, branch string, conf *ChangeC
 	}
 	return
 }
-

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bitbucket.org/level11consulting/go-til/test"
-	util "bitbucket.org/level11consulting/ocelot/common/testutil"
-	"bitbucket.org/level11consulting/ocelot/models"
+	"github.com/shankj3/go-til/test"
+	util "github.com/shankj3/ocelot/common/testutil"
+	"github.com/shankj3/ocelot/models"
 	"os"
 	"testing"
 )
@@ -14,8 +14,8 @@ func TestGetConf_fromEnv(t *testing.T) {
 	util.BuildServerHack(t)
 	factz := &models.WerkerFacts{
 		ServicePort: "9899",
-		GrpcPort:  defaultGrpcPort,
-		WerkerType: models.Kubernetes,
+		GrpcPort:    defaultGrpcPort,
+		WerkerType:  models.Kubernetes,
 	}
 	testConf := &WerkerConf{
 		WerkerFacts: factz,

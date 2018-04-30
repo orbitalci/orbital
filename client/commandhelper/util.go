@@ -1,8 +1,8 @@
 package commandhelper
 
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
+	models "github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc/status"
 
 	"context"
@@ -12,7 +12,6 @@ import (
 	"os"
 	"strings"
 )
-
 
 // UIErrFromGrpc will attempt to use grpc status package to parse out message from rpc err.
 // if it is unable, it will use the default message and attach the err.Error() text separated by a newline
@@ -25,7 +24,6 @@ func UIErrFromGrpc(err error, ui cli.Ui, defaultMsg string) {
 	}
 }
 
-
 //prettifyTime takes in time in seconds and returns a pretty string representation of it
 func PrettifyTime(timeInSecs float64, queued bool) string {
 	if queued {
@@ -35,7 +33,7 @@ func PrettifyTime(timeInSecs float64, queued bool) string {
 		return "running"
 	}
 	var prettyTime []string
-	minutes := int(timeInSecs/60)
+	minutes := int(timeInSecs / 60)
 	if minutes > 0 {
 		prettyTime = append(prettyTime, fmt.Sprintf("%v minutes", minutes))
 	}
@@ -47,9 +45,8 @@ func PrettifyTime(timeInSecs float64, queued bool) string {
 	return strings.Join(prettyTime, " ")
 }
 
-
 //UploadSSHKeyFile will upload the ssh key for a vcs account. This is used by buildcredsadd.go and cred's add.go
-func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOcelotClient, acctName string, buildType models.SubCredType, sshKeyPath string) int {
+func UploadSSHKeyFile(ctx context.Context, ui cli.Ui, oceClient models.GuideOcelotClient, acctName string, buildType models.SubCredType, sshKeyPath string) int {
 	sshKey, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
 		ui.Error(fmt.Sprintf("\tCould not read file at %s \nError: %s", sshKeyPath, err.Error()))
@@ -57,8 +54,8 @@ func UploadSSHKeyFile (ctx context.Context, ui cli.Ui, oceClient models.GuideOce
 	}
 
 	_, err = oceClient.SetVCSPrivateKey(ctx, &models.SSHKeyWrapper{
-		AcctName: acctName,
-		SubType: buildType,
+		AcctName:   acctName,
+		SubType:    buildType,
 		PrivateKey: sshKey,
 	})
 

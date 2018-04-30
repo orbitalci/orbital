@@ -5,23 +5,21 @@ import (
 	"errors"
 	"fmt"
 
-	"bitbucket.org/level11consulting/ocelot/common/remote"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/shankj3/ocelot/common/remote"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/net"
-	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
-	"bitbucket.org/level11consulting/ocelot/common"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	bbh "bitbucket.org/level11consulting/ocelot/common/remote/bitbucket"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
-
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/go-til/net"
+	signal "github.com/shankj3/ocelot/build_signaler"
+	"github.com/shankj3/ocelot/common"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	bbh "github.com/shankj3/ocelot/common/remote/bitbucket"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
-
 
 func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot_BuildRepoAndHashServer) error {
 	log.Log().Info(buildReq)
@@ -34,9 +32,9 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		if _, ok := err.(*common.FormatError); ok {
-			return status.Error(codes.InvalidArgument, "Format error: " + err.Error())
+			return status.Error(codes.InvalidArgument, "Format error: "+err.Error())
 		}
-		return status.Error(codes.Internal, "Could not retrieve vcs creds: " + err.Error())
+		return status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
@@ -75,11 +73,10 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 			return status.Error(codes.InvalidArgument, "Bad format of acctRepo, must be account/repo")
 		}
 		if buildSum.Repo != repo || buildSum.Account != acct {
-			mismatchErr := errors.New(fmt.Sprintf("The account/repo passed (%s) doesn't match with the account/repo (%s) associated with build #%v", buildReq.AcctRepo, buildSum.Account + "/" + buildSum.Repo, buildSum.BuildId))
+			mismatchErr := errors.New(fmt.Sprintf("The account/repo passed (%s) doesn't match with the account/repo (%s) associated with build #%v", buildReq.AcctRepo, buildSum.Account+"/"+buildSum.Repo, buildSum.BuildId))
 			log.IncludeErrField(mismatchErr).Error()
 			return status.Error(codes.InvalidArgument, mismatchErr.Error())
 		}
-
 
 		if len(buildReq.Branch) == 0 {
 			stream.Send(RespWrap(fmt.Sprintf("No branch was passed, using `%s` from build #%v instead...", buildSum.Branch, buildSum.BuildId)))
@@ -99,7 +96,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		if err.Error() == "could not find raw data at url" {
 			err = status.Error(codes.NotFound, fmt.Sprintf("File not found at commit %s for Acct/Repo %s", fullHash, buildReq.AcctRepo))
 		} else {
-			err = status.Error(codes.InvalidArgument, "Could not get bitbucket ocelot.yml. Error: " + err.Error())
+			err = status.Error(codes.InvalidArgument, "Could not get bitbucket ocelot.yml. Error: "+err.Error())
 		}
 		return err
 	}
@@ -107,13 +104,11 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	stream.Send(RespWrap(fmt.Sprintf("Storing build data for %s...", buildReq.AcctRepo)))
 	if err = signal.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
 		log.IncludeErrField(err).Error("couldn't add to build queue or store in db")
-		return status.Error(codes.InvalidArgument, "Couldn't add to build queue or store in DB, err: " + err.Error())
+		return status.Error(codes.InvalidArgument, "Couldn't add to build queue or store in DB, err: "+err.Error())
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", fullHash, buildReq.AcctRepo, models.CHECKMARK)))
 	return nil
 }
-
-
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
 	if repoAcct.Repo == "" || repoAcct.Account == "" {
@@ -136,7 +131,6 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	bbClient := &net.OAuthClient{}
 	bbClient.Setup(vcs)
 
-
 	bbHandler := bbh.GetBitbucketHandler(vcs, bbClient)
 	repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
 	if repoDetail.Type == "error" || err != nil {
@@ -152,7 +146,6 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	return &empty.Empty{}, nil
 }
 
-
 func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
 	if poll.Account == "" || poll.Repo == "" || poll.Cron == "" || poll.Branches == "" {
 		return nil, status.Error(codes.InvalidArgument, "account, repo, cron, and branches are required fields")
@@ -164,21 +157,21 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) 
 	}
 	exists, err := g.Storage.PollExists(poll.Account, poll.Repo)
 	if err != nil {
-		return empti, status.Error(codes.Unavailable, "unable to retrieve poll table from storage. err: " + err.Error())
+		return empti, status.Error(codes.Unavailable, "unable to retrieve poll table from storage. err: "+err.Error())
 	}
 	if exists == true {
 		log.Log().Info("updating poll in db")
 		if err = g.Storage.UpdatePoll(poll.Account, poll.Repo, poll.Cron, poll.Branches); err != nil {
 			msg := "unable to update poll in storage"
 			log.IncludeErrField(err).Error(msg)
-			return empti, status.Error(codes.Unavailable, msg + ": " + err.Error())
+			return empti, status.Error(codes.Unavailable, msg+": "+err.Error())
 		}
 	} else {
 		log.Log().Info("inserting poll in db")
 		if err = g.Storage.InsertPoll(poll.Account, poll.Repo, poll.Cron, poll.Branches); err != nil {
 			msg := "unable to insert poll into storage"
 			log.IncludeErrField(err).Error(msg)
-			return empti, status.Error(codes.Unavailable, msg + ": " + err.Error())
+			return empti, status.Error(codes.Unavailable, msg+": "+err.Error())
 		}
 	}
 	log.Log().WithField("account", poll.Account).WithField("repo", poll.Repo).Info("successfully added/updated poll in storage")

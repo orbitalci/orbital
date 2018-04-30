@@ -1,11 +1,11 @@
 package admin
 
 import (
-	"bitbucket.org/level11consulting/go-til/test"
+	"github.com/shankj3/go-til/test"
 
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	am "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	am "github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 
 	"testing"
 )
@@ -18,14 +18,13 @@ func (d *dummyCredTable) InsertCred(credder am.OcyCredder, overWriteOk bool) err
 	return nil
 }
 
-
 func TestSetupRCCCredentials(t *testing.T) {
 	// test all implementations of cred.RemoteConfigCred
 	testRemoteConfig, vaultListener, consulServer := cred.TestSetupVaultAndConsul(t)
 	defer cred.TeardownVaultAndConsul(vaultListener, consulServer)
 	kubeconf := &am.K8SCreds{
-		AcctName: "test",
-		SubType:  am.SubCredType_KUBECONF,
+		AcctName:    "test",
+		SubType:     am.SubCredType_KUBECONF,
 		K8SContents: "laksjdflkjasdlkfjaeifnasd,mcnxo8r23$%(*asdf,zxddfh9\n\n\n\n\n\t\t\tdaslkdr73d8n!@#@!",
 	}
 	err := SetupRCCCredentials(testRemoteConfig, &dummyCredTable{}, kubeconf)
@@ -56,11 +55,11 @@ func TestSetupRCCCredentials(t *testing.T) {
 		t.Error(test.StrFormatErrors("contents", kubeconf.K8SContents, secret))
 	}
 	vcsCreds := &am.VCSCreds{
-		ClientId: "123",
+		ClientId:     "123",
 		ClientSecret: "secsecsecret",
-		TokenURL: "herebeaurl",
-		AcctName: "herebeanaccount",
-		SubType: am.SubCredType_BITBUCKET,
+		TokenURL:     "herebeaurl",
+		AcctName:     "herebeanaccount",
+		SubType:      am.SubCredType_BITBUCKET,
 	}
 	err = SetupRCCCredentials(testRemoteConfig, &dummyCredTable{}, vcsCreds)
 	if err != nil {

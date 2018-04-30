@@ -1,12 +1,11 @@
 package build
 
-
 import (
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/common"
-	util "bitbucket.org/level11consulting/ocelot/common/testutil"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"fmt"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/common"
+	util "github.com/shankj3/ocelot/common/testutil"
+	"github.com/shankj3/ocelot/storage"
 	"os"
 	"testing"
 )
@@ -63,7 +62,7 @@ func Test_GetBuildRuntime(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("result length", 1, len(brt)))
 	}
 
-	for _, val := range brt{
+	for _, val := range brt {
 		if val.Done != false {
 			t.Error(test.GenericStrFormatErrors("done", false, val.Done))
 		}

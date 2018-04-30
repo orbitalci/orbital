@@ -1,9 +1,9 @@
 package storage
 
 import (
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"fmt"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 	"time"
 )
 
@@ -24,7 +24,6 @@ type BuildOut interface {
 	RetrieveLastOutByHash(gitHash string) (models.BuildOutput, error)
 }
 
-
 type BuildSum interface {
 	// AddSumStart will
 	AddSumStart(hash string, account string, repo string, branch string) (int64, error)
@@ -39,7 +38,6 @@ type BuildSum interface {
 	StoreFailedValidation(id int64) error
 	SetQueueTime(id int64) error
 	GetTrackedRepos() (*pb.AcctRepos, error)
-
 }
 
 type BuildStage interface {
@@ -86,12 +84,11 @@ type OcelotStorage interface {
 }
 
 var (
-	BUILD_SUM_404 = "no build summary found for %s"
+	BUILD_SUM_404    = "no build summary found for %s"
 	STAGE_REASON_404 = "no stages found for %s"
-	BUILD_OUT_404 = "no build output found for %s"
-	CRED_404 = "no credential found for %s %s"
+	BUILD_OUT_404    = "no build output found for %s"
+	CRED_404         = "no credential found for %s %s"
 )
-
 
 func BuildSumNotFound(id string) *ErrNotFound {
 	return &ErrNotFound{fmt.Sprintf(BUILD_SUM_404, id)}

@@ -1,14 +1,13 @@
 package valet
 
-
 import (
 	"fmt"
 	"time"
 
-	"bitbucket.org/level11consulting/go-til/consul"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/common"
 	"github.com/google/uuid"
+	"github.com/shankj3/go-til/consul"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/common"
 )
 
 // Register will add all the appropriate build details that the admin needs to contact the werker for stream info
@@ -38,7 +37,6 @@ func UnRegister(consulete *consul.Consulet, werkerId string) error {
 	return err
 }
 
-
 func RegisterStartedBuild(consulete *consul.Consulet, werkerId string, gitHash string) error {
 	if err := consulete.AddKeyValue(common.MakeBuildMapPath(gitHash), []byte(werkerId)); err != nil {
 		return err
@@ -59,7 +57,6 @@ func RegisterBuildSummaryId(consulete *consul.Consulet, werkerId string, gitHash
 	return err
 }
 
-
 func RegisterBuildStage(consulete *consul.Consulet, werkerId string, gitHash string, buildStage string) error {
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("buildStage", buildStage).Info("registering build")
 	err := consulete.AddKeyValue(common.MakeBuildStagePath(werkerId, gitHash), []byte(buildStage))
@@ -71,4 +68,3 @@ func RegisterStageStartTime(consulete *consul.Consulet, werkerId string, gitHash
 	err := consulete.AddKeyValue(common.MakeBuildStartpath(werkerId, gitHash), []byte(str))
 	return err
 }
-

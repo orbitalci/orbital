@@ -3,10 +3,10 @@ package build
 import (
 	"errors"
 
-	"bitbucket.org/level11consulting/ocelot/common/helpers/dockrhelper"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/common/helpers/dockrhelper"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 //contains all validators for commands as recognized by ocelot <command> [args]
@@ -37,7 +37,9 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 		if len(stg.Name) == 0 {
 			return errors.New("double check your stages, name is a required field")
 		}
-		if stg.Name == "build" { ok = true }
+		if stg.Name == "build" {
+			ok = true
+		}
 	}
 
 	if !ok {
@@ -48,15 +50,14 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 		UI.Info("Required stage `build` exists " + models.FAILED)
 	}
 
-
 	if UI != nil {
-		UI.Info("Connecting to docker to check for image validity..." )
+		UI.Info("Connecting to docker to check for image validity...")
 	}
 	out, err := dockrhelper.RobustImagePull(config.Image)
 	if UI != nil {
 		if err != nil {
 			UI.Error(config.Image + " does not exist or credentials cannot be found")
-		} else  {
+		} else {
 			out.Close()
 			UI.Info(config.Image + " exists " + models.CHECKMARK)
 		}

@@ -17,22 +17,21 @@ save-direc/
         ├── out.json
         └── sum.json
 
- */
+*/
 package storage
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/models"
 	"encoding/json"
 	"github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/models"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"github.com/pkg/errors"
 )
-
 
 // FileBuildStorage is an implementation of BuildOutput that is for filesystem.
 type FileBuildStorage struct {
@@ -49,7 +48,7 @@ func NewFileBuildStorage(saveDir string) (f *FileBuildStorage) {
 	return
 }
 
-func (f *FileBuildStorage) setup(){
+func (f *FileBuildStorage) setup() {
 	var err error
 	if f.saveDirec == "" {
 		direc, err := homedir.Expand(filepath.Join("~", ".ocelot", "build-output"))
@@ -99,8 +98,8 @@ func (f *FileBuildStorage) AddSumStart(hash string, account string, repo string,
 		Hash: hash,
 		//BuildTime: starttime,
 		Account: account,
-		Repo: repo,
-		Branch: branch,
+		Repo:    repo,
+		Branch:  branch,
 	}
 	bytez, err := json.Marshal(sum)
 	if err != nil {
@@ -261,7 +260,7 @@ func (f *FileBuildStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOu
 	var arry []*Drawer
 	for _, draw := range cab.files {
 		paths := strings.Split(draw.path, string(os.PathSeparator))
-		if !(paths[len(paths) - 1] == gitHash) {
+		if !(paths[len(paths)-1] == gitHash) {
 			arry = append(arry, draw)
 		}
 	}
@@ -280,6 +279,6 @@ func (f *FileBuildStorage) AddStageDetail(stageResult *models.StageResult) error
 	return nil
 }
 
-func(f *FileBuildStorage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
+func (f *FileBuildStorage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
 	return []models.StageResult{}, nil
 }

@@ -1,7 +1,7 @@
 package integrations
 
 import (
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 // Interface for injecting data during the build process, used in runIntegrations in build/launcher/makeitso.go

@@ -3,14 +3,14 @@ package admin
 import (
 	"context"
 
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
+	"github.com/shankj3/go-til/deserialize"
+	"github.com/shankj3/go-til/nsqpb"
 
-	"bitbucket.org/level11consulting/ocelot/build"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/shankj3/ocelot/build"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
 
 //this is our grpc server, it responds to client requests
@@ -23,7 +23,6 @@ type guideOcelotServer struct {
 	Storage        storage.OcelotStorage
 	Producer       *nsqpb.PbProduce
 }
-
 
 // for checking if the server is reachable
 func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*empty.Empty, error) {
@@ -44,4 +43,3 @@ func NewGuideOcelotServer(config cred.CVRemoteConfig, d *deserialize.Deserialize
 	}
 	return guideOcelotServer
 }
-
