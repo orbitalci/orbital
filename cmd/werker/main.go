@@ -23,6 +23,8 @@ package main
 import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/build"
+
 	"sync"
 
 	"github.com/shankj3/ocelot/build/basher"
@@ -36,7 +38,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
+	//"strings"
 	"syscall"
 	"time"
 )
@@ -46,19 +48,19 @@ import (
 func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan chan *models.Transport, buildChan chan *models.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
-			ocelog.Log().Debug("i am about to sleep for 10s because i couldn't find the topic at ", p.Config.LookupDAddress())
+			ocelog.Log().Info("i am about to sleep for 10s because i couldn't find the topic " + topic + " at ", p.Config.LookupDAddress())
 			time.Sleep(10 * time.Second)
 		} else {
-			mode := os.Getenv("ENV")
+			//mode := os.Getenv("ENV")
 			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
 			bshr, err := basher.NewBasher("", "", conf.LoopbackIp, models.GetOcyPrefixFromWerkerType(conf.WerkerType))
 			// if couldn't make a new basher, just panic
 			if err != nil {
 				panic("couldnt' create instance of basher, bailing: " + err.Error())
 			}
-			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
-				bshr.SetBbDownloadURL(conf.LoopbackIp + ":9090/dev")
-			}
+			//if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
+			//	bshr.SetBbDownloadURL(conf.LoopbackIp + ":9090/dev")
+			//}
 
 			handler := listener.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan)
 			p.Handler = handler
@@ -101,8 +103,7 @@ func main() {
 	}()
 	// start protoConsumers
 	var protoConsumers []*nsqpb.ProtoConsume
-	//you should know what channels to subscribe to
-	supportedTopics := []string{"build"}
+	supportedTopics := build.GetTopics(conf.WerkerType)
 
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()

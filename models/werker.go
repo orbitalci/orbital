@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/mitchellh/go-homedir"
 )
 
 type WerkType int
@@ -12,7 +11,7 @@ type WerkType int
 const (
 	Kubernetes WerkType = iota
 	Docker
-	Host
+	SSH
 )
 
 
@@ -31,29 +30,50 @@ type BuildContext struct {
 	CancelFunc func()
 }
 
+// GetOcyPrefixFromWerkerType will return "" for anything that runs in a container because root access can be assumed
+// If it is running with the SSH connection (ie mac builds) then it will find the home direc and use that as the prefix for the .ocelot directory
 func GetOcyPrefixFromWerkerType(wt WerkType) string {
 	switch wt {
 	case Docker:
 		return ""
 	case Kubernetes:
 		return ""
-	case Host:
-		dir, err := homedir.Dir()
-		if err != nil {
-			panic("Couldn't get home directory! " + err.Error())
-		}
-		return dir
+	case SSH:
+		return "/tmp"
 	default:
 		return ""
 	}
 }
 
+func NewFacts() *WerkerFacts {
+	return &WerkerFacts{Ssh:&SSHFacts{}}
+}
+
 // WerkerFacts is a struct for the configurations in werker that affect actual builds.
 // Think of it like gather facts w/ ansible.
 type WerkerFacts struct {
-	Uuid 	    	uuid.UUID
-	WerkerType           WerkType
-	LoopbackIp  	string
+	Uuid 	       uuid.UUID
+	WerkerType     WerkType
+	LoopbackIp     string
+	RegisterIP     string
 	ServicePort    string
 	GrpcPort       string
+	// this is only for SSH type werkers
+	Ssh            *SSHFacts
+}
+
+// When a werker starts up as an SSH werker, it will also need to be initialized with these fields so it knows
+//   what to connect to
+type SSHFacts struct {
+	User      string
+	Host      string
+	Port      int
+	KeyFP     string
+}
+
+func (sf *SSHFacts) IsValid() bool {
+	if sf.User == "" || sf.Host == "" || sf.Port == 0 || sf.KeyFP == "" {
+		return false
+	}
+	return true
 }

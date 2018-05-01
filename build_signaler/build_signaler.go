@@ -174,7 +174,6 @@ func tellWerker(buildConf *pb.BuildConfig,
 		log.IncludeErrField(err).Error("unable to create one-time vault token")
 		return
 	}
-
 	werkerTask := &pb.WerkerTask{
 		VaultToken:   token,
 		CheckoutHash: hash,
@@ -186,7 +185,7 @@ func tellWerker(buildConf *pb.BuildConfig,
 		Id:           dbid,
 	}
 
-	go producer.WriteProto(werkerTask, "build")
+	go producer.WriteProto(werkerTask, build.DetermineTopic(buildConf.BuildTool))
 }
 
 //before we build pipeline config for werker, validate and make sure this is good candidate

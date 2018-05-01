@@ -38,12 +38,12 @@ func (v *Vagrant) getVagrantDirec(hash string) string {
 
 
 func runCommandLogToChan(command *exec.Cmd, logout chan []byte, stage *build.StageUtil) error{
-	stdout, _ := command.StdoutPipe()
-	stderr, _ := command.StderrPipe()
+	//stdout, _ := command.StdoutPipe()
+	//stderr, _ := command.StderrPipe()
 	command.Start()
 	//https://stackoverflow.com/questions/45922528/how-to-force-golang-to-close-opened-pipe
-	go streamFromPipe(logout, stdout, stage)
-	go streamFromPipe(logout, stderr, stage)
+	//go streamFromPipe(logout, stdout, stage)
+	//go streamFromPipe(logout, stderr, stage)
 	err := command.Wait()
 	return err
 }

@@ -20,8 +20,8 @@ func GetNewCleaner(werkerType models.WerkType) Cleaner {
 		return &DockerCleaner{}
 	case models.Kubernetes:
 		return &K8Cleaner{}
-	case models.Host:
-		return &BareCleaner{}
+	case models.SSH:
+		return &SSHCleaner{}
 	default:
 		return &DockerCleaner{}
 	}

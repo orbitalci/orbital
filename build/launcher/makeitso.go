@@ -69,8 +69,10 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	// do setup stage
 	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.RemoteConf, w.ServicePort)
 	defer w.BuildValet.Cleanup(ctx, dockerUUid, w.infochan)
+	ocelog.Log().Info("finished setup")
 	setupDura := time.Now().Sub(setupStart)
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
+		ocelog.Log().Debug("storing failure")
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 		return
 	}

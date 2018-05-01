@@ -28,11 +28,19 @@ func addHandlers(muxi *mux.Router, werkData *WerkerContext) {
 	if strings.EqualFold(mode, "dev") {
 		muxi.PathPrefix("/dev/").Handler(http.StripPrefix("/dev/", http.FileServer(http.Dir("./dev"))))
 	}
-
 	//serve up zip files that spawned containers need
 	muxi.HandleFunc("/do_things.tar", func(w http.ResponseWriter, r *http.Request) {
-		ocelog.Log().Debug("serving up zip files from s3")
-		http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/werker_files.tar", 301)
+		if strings.EqualFold(mode, "dev") {
+			ocelog.Log().Info("DEV MODE, SERVING WERKER FILES LOCALLY")
+			_, filename, _, ok := runtime.Caller(0)
+			if !ok {
+				panic("no caller???? ")
+			}
+			http.ServeFile(w, r, path.Dir(filename)+"/werker_files.tar")
+		} else {
+			ocelog.Log().Debug("serving up zip files from s3")
+			http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/werker_files.tar", 301)
+		}
 	})
 
 	muxi.HandleFunc("/kubectl", func(w http.ResponseWriter, r *http.Request) {

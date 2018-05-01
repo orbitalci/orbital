@@ -50,8 +50,8 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 			log.IncludeErrField(err).Error("unable to retrieve active builds from consul")
 			return status.Error(codes.Internal, err.Error())
 		}
-		build := hashes[request.Hash]
-		if len(build.DockerUuid) > 0 {
+		build, ok := hashes[request.Hash]
+		if ok {
 			w.Cleanup(context.Background(), build.DockerUuid, nil)
 			stream.Send(wrap(fmt.Sprintf("Successfully killed build for %s %s", request.Hash, models.CHECKMARK)))
 		} else {

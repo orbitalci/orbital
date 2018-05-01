@@ -24,3 +24,4 @@ id_*
 pkg/
 k8s/helm/charts/*.tgz
 .version
+werker_files.tar

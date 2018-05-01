@@ -69,8 +69,8 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	switch w.WerkerType {
 	case models.Docker:
 		builder = bldr.NewDockerBuilder(w.Basher)
-	case models.Host:
-		builder = bldr.NewHostBuilder(w.Basher)
+	case models.SSH:
+		builder = bldr.NewSSHBuilder(w.Basher, w.WerkerFacts)
 	default:
 		builder = bldr.NewDockerBuilder(w.Basher)
 	}

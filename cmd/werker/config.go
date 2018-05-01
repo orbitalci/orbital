@@ -24,8 +24,8 @@ func strToWerkType(str string) models.WerkType {
 		return models.Kubernetes
 	case "docker":
 		return models.Docker
-	case "host":
-		return models.Host
+	case "ssh":
+		return models.SSH
 	default:
 		return -1
 	}
@@ -52,7 +52,6 @@ type WerkerConf struct {
 	WerkerName string
 	//werkerProcessor builder.Processor
 	LogLevel        string
-	RegisterIP      string
 	//LoopBackIp      string
 	RemoteConfig    cred.CVRemoteConfig
 }
@@ -60,14 +59,14 @@ type WerkerConf struct {
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
 // alright because it only happens on startup of the application
 func GetConf() (*WerkerConf, error) {
-	werker := &WerkerConf{WerkerFacts: &models.WerkerFacts{}}
+	werker := &WerkerConf{WerkerFacts: models.NewFacts()}
 	werkerName, _ := os.Hostname()
 	var werkerTypeStr string
 	var storageTypeStr string
 	var consuladdr string
 	var consulport int
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
-	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes|docker|host")
+	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes|docker|ssh")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
 	flrg.StringVar(&werker.ServicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
 	flrg.StringVar(&werker.GrpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
@@ -78,11 +77,19 @@ func GetConf() (*WerkerConf, error) {
 		"This may be different for different container systems / host machines. For example, when using docker for mac the loopback-ip would be docker.for.mac.localhost")
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
+	// ssh werker configuration
+	flrg.IntVar(&werker.Ssh.Port, "ssh-port", 22, "port to ssh to for build exectuion | ONLY VALID FOR SSH TYPE WERKERS")
+	flrg.StringVar(&werker.Ssh.Host, "ssh-host", "", "host to ssh to for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flrg.StringVar(&werker.Ssh.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flrg.StringVar(&werker.Ssh.User, "ssh-user", "root", "ssh user for build execution | ONLY VALID FOR SSH TYPE WERKERS")
 	flrg.Parse(os.Args[1:])
 	version.MaybePrintVersion(flrg.Args())
 	werker.WerkerType = strToWerkType(werkerTypeStr)
 	if werker.WerkerType == -1 {
-		return nil, errors.New("werker type can only be: k8s, kubernetes, docker, host")
+		return nil, errors.New("werker type can only be: k8s, kubernetes, docker, ssh")
+	}
+	if werker.WerkerType == models.SSH && !werker.Ssh.IsValid() {
+		return nil, errors.New("if werker type is ssh, then -ssh-port, -ssh-host, -ssh-private-key, and -ssh-user are required fields")
 	}
 	if werker.WerkerName == "" {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")
