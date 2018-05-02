@@ -5,7 +5,8 @@ import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/basher"
-	bldr "github.com/shankj3/ocelot/build/builder"
+	"github.com/shankj3/ocelot/build/builder/docker"
+	"github.com/shankj3/ocelot/build/builder/ssh"
 	"github.com/shankj3/ocelot/build/launcher"
 	"github.com/shankj3/ocelot/build/valet"
 	"github.com/shankj3/ocelot/common/credentials"
@@ -68,11 +69,11 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	var builder build.Builder
 	switch w.WerkerType {
 	case models.Docker:
-		builder = bldr.NewDockerBuilder(w.Basher)
+		builder = docker.NewDockerBuilder(w.Basher)
 	case models.SSH:
-		builder = bldr.NewSSHBuilder(w.Basher, w.WerkerFacts)
+		builder = ssh.NewSSHBuilder(w.Basher, w.WerkerFacts)
 	default:
-		builder = bldr.NewDockerBuilder(w.Basher)
+		builder = docker.NewDockerBuilder(w.Basher)
 	}
 	launch := launcher.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildValet)
 	launch.MakeItSo(werkerTask, builder, finish, done)

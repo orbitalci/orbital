@@ -50,6 +50,8 @@ func GetStreamPack(store storage.OcelotStorage, consulet *consul.Consulet) *Stre
 	}
 }
 
+// StreamPack holds all the connections that the grpc streamer needs to check if a build is active, and eventually
+//   save the log data to the store
 type StreamPack struct {
 	Consul    *consul.Consulet
 	Store     storage.OcelotStorage

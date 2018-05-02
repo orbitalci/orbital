@@ -1,4 +1,4 @@
-package builder
+package docker
 
 import (
 	"bufio"

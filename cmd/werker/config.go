@@ -71,6 +71,7 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&werker.ServicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
 	flrg.StringVar(&werker.GrpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
 	flrg.StringVar(&werker.LogLevel, "log-level", "info", "log level")
+	flrg.BoolVar(&werker.Dev, "dev", false, "run dev mode")
 	flrg.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
 	flrg.StringVar(&werker.RegisterIP, "register-ip", "localhost", "ip to register with consul when picking up builds")
 	flrg.StringVar(&werker.LoopbackIp, "loopback-ip", "172.17.0.1", "ip to use for spawned containers to successfully contact the host. " +
@@ -82,6 +83,7 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&werker.Ssh.Host, "ssh-host", "", "host to ssh to for build execution | ONLY VALID FOR SSH TYPE WERKERS")
 	flrg.StringVar(&werker.Ssh.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution | ONLY VALID FOR SSH TYPE WERKERS")
 	flrg.StringVar(&werker.Ssh.User, "ssh-user", "root", "ssh user for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flrg.StringVar(&werker.Ssh.Password, "ssh-password", "", "password for ssh user if no key file | ONLY VALID FOR SSH TYPE WERKERS")
 	flrg.Parse(os.Args[1:])
 	version.MaybePrintVersion(flrg.Args())
 	werker.WerkerType = strToWerkType(werkerTypeStr)
@@ -89,7 +91,7 @@ func GetConf() (*WerkerConf, error) {
 		return nil, errors.New("werker type can only be: k8s, kubernetes, docker, ssh")
 	}
 	if werker.WerkerType == models.SSH && !werker.Ssh.IsValid() {
-		return nil, errors.New("if werker type is ssh, then -ssh-port, -ssh-host, -ssh-private-key, and -ssh-user are required fields")
+		return nil, errors.New("if werker type is ssh, then -ssh-port, -ssh-host, -ssh-user, and either -ssh-private-key or -ssh-password are required fields")
 	}
 	if werker.WerkerName == "" {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")

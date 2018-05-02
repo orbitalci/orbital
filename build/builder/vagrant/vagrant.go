@@ -1,4 +1,4 @@
-package builder
+package vagrant
 /*
 vagrant implementation of builder should:
   SETUP: create directory for vagrantfile, run vagrant up

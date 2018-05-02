@@ -58,6 +58,8 @@ type WerkerFacts struct {
 	RegisterIP     string
 	ServicePort    string
 	GrpcPort       string
+	// set dev mode
+	Dev			   bool
 	// this is only for SSH type werkers
 	Ssh            *SSHFacts
 }
@@ -69,10 +71,14 @@ type SSHFacts struct {
 	Host      string
 	Port      int
 	KeyFP     string
+	Password  string
 }
 
 func (sf *SSHFacts) IsValid() bool {
-	if sf.User == "" || sf.Host == "" || sf.Port == 0 || sf.KeyFP == "" {
+	if sf.User == "" || sf.Host == "" || sf.Port == 0 {
+		return false
+	}
+	if sf.Password == "" && sf.KeyFP == "" {
 		return false
 	}
 	return true

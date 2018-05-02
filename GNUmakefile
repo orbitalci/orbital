@@ -68,7 +68,7 @@ upload-templates: ## tar up werker templates and upload to s3
 
 dev-templates: ## tar up templates and move tarball to cmd/werker/dev
 	cd build/template && tar -cvf werker_files.tar *
-	mv build/template/werker_files.tar cmd/werker/dev/werker_files.tar
+	mv build/template/werker_files.tar router/werker/werker_files.tar
 
 linux-werker: versionexists ## install linux werker zip and upload to s3
 	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o werker .; zip -r ../../linux-werker-$(VERSION).zip werker; rm werker; cd -

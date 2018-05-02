@@ -1,4 +1,4 @@
-package builder
+package docker
 
 import (
 	"github.com/shankj3/ocelot/build"

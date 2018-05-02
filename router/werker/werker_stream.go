@@ -1,17 +1,20 @@
 package werker
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-	"path"
-	"runtime"
-	"strings"
+"fmt"
+"net/http"
+"path"
+"runtime"
 
-	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
-	ocelog "github.com/shankj3/go-til/log"
-	ocenet "github.com/shankj3/go-til/net"
+
+
+
+
+"github.com/gorilla/mux"
+"github.com/gorilla/websocket"
+ocelog "github.com/shankj3/go-til/log"
+ocenet "github.com/shankj3/go-til/net"
+
 )
 
 var (
@@ -24,13 +27,12 @@ func addHandlers(muxi *mux.Router, werkData *WerkerContext) {
 	//muxi.HandleFunc("/DUMP", werkStream.dumpData).Methods("GET")
 
 	//if we're in dev mode, serve everything out of test-fixtures at /dev
-	mode := os.Getenv("ENV")
-	if strings.EqualFold(mode, "dev") {
+	if werkData.Dev {
 		muxi.PathPrefix("/dev/").Handler(http.StripPrefix("/dev/", http.FileServer(http.Dir("./dev"))))
 	}
 	//serve up zip files that spawned containers need
 	muxi.HandleFunc("/do_things.tar", func(w http.ResponseWriter, r *http.Request) {
-		if strings.EqualFold(mode, "dev") {
+		if werkData.Dev {
 			ocelog.Log().Info("DEV MODE, SERVING WERKER FILES LOCALLY")
 			_, filename, _, ok := runtime.Caller(0)
 			if !ok {

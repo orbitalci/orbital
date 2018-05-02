@@ -1,4 +1,4 @@
-package builder
+package ssh
 
 import (
 	"bufio"
@@ -30,7 +30,7 @@ type SSH struct {
 func NewSSHBuilder(b *basher.Basher, facts *models.WerkerFacts) build.Builder {
 	return &SSH{
 		Basher: b,
-		connection: sshhelper.InitContextConnect(facts.Ssh.KeyFP, facts.Ssh.User, facts.Ssh.Host, facts.Ssh.Port),
+		connection: sshhelper.InitContextConnect(facts.Ssh.KeyFP, facts.Ssh.Password, facts.Ssh.User, facts.Ssh.Host, facts.Ssh.Port),
 		WerkerFacts: facts,
 	}
 }
@@ -54,14 +54,14 @@ func (h *SSH) establishConnection(ctx context.Context, logout chan[]byte, setupM
 	return nil
 }
 
+// Setup for the SSH werker type will send off the checkout hash as the "docker id" on the docker id channel
 func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
-	var dockerId string
-	dockerIdChan <- dockerId
+	dockerIdChan <- werk.CheckoutHash
 	var setupMessages []string
 	su := build.InitStageUtil("setup")
 	setupMessages = append(setupMessages, "attempting to establish ssh connection...")
 	if res := h.establishConnection(ctx, logout, setupMessages, su.GetStage()); res != nil {
-		return res, dockerId
+		return res, werk.CheckoutHash
 	}
 	setupMessages = append(setupMessages, "successfully established ssh connection " + models.CHECKMARK)
 	cmd := h.SleeplessDownloadTemplateFiles(h.RegisterIP, h.ServicePort)
@@ -90,7 +90,7 @@ func (h *SSH) GetContainerId() string {
 	return ""
 }
 
-func (h *SSH) writeToInfo(reader io.Reader, infoChan chan []byte) {
+func (h *SSH) writeToInfo(reader io.Reader, infoChan chan []byte, done chan int) {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		infoChan <- append([]byte(h.stage.GetStageLabel()), scanner.Bytes()...)
@@ -101,7 +101,7 @@ func (h *SSH) writeToInfo(reader io.Reader, infoChan chan []byte) {
 		log.IncludeErrField(err).Error("error outputting to info channel!")
 		infoChan <- []byte("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING STAGE INPUT FOR " + h.stage.Stage)
 	}
-
+	close(done)
 }
 
 //unwrapCommand will strip out the first two elems of the lists of cmds run in basher. ssh has a different interface than docker, and

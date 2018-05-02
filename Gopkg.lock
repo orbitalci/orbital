@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  name = "github.com/shankj3/go-til"
+  name = "bitbucket.org/level11consulting/go-til"
   packages = ["log"]
   revision = "a0abd530ad931f177d9f9c17c71328804045283a"
   version = "0.2.2"
@@ -159,7 +159,10 @@
 
 [[projects]]
   name = "github.com/gogo/protobuf"
-  packages = ["proto"]
+  packages = [
+    "proto",
+    "protoc-gen-gogo/descriptor"
+  ]
   revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
   version = "v1.0.0"
 
@@ -494,6 +497,12 @@
   revision = "63d60e9d0dbc60cf9164e6510889b0db6683d98c"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mwitkow/go-proto-validators"
+  packages = ["."]
+  revision = "0950a79900071e9f3f5979b78078c599376422fd"
+
+[[projects]]
   name = "github.com/namsral/flag"
   packages = ["."]
   revision = "71ceffbeb0ba60fccc853971bb3ed4d7d90bfd04"
@@ -742,6 +751,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "10673e781df5579b2f30ee57c8517f0e7108bbdb04ae6b481dc9247dad93c333"
+  inputs-digest = "72b508ce8a52ad657a8af46a56b07d4279c597c655fa664836dd888a28514f59"
   solver-name = "gps-cdcl"
   solver-version = 1
