@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/shankj3/ocelot/build/basher"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	pb "github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
@@ -15,7 +14,7 @@ type RepoSetupFunc func(rc cred.CVRemoteConfig, store storage.CredTable, account
 type RepoExecFunc func(string) []string
 
 type Builder interface {
-	basher.OcyBash
+	OcyBash
 	SetGlobalEnv(envs []string)
 	Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
 	Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result

@@ -30,21 +30,6 @@ type BuildContext struct {
 	CancelFunc func()
 }
 
-// GetOcyPrefixFromWerkerType will return "" for anything that runs in a container because root access can be assumed
-// If it is running with the SSH connection (ie mac builds) then it will find the home direc and use that as the prefix for the .ocelot directory
-func GetOcyPrefixFromWerkerType(wt WerkType) string {
-	switch wt {
-	case Docker:
-		return ""
-	case Kubernetes:
-		return ""
-	case SSH:
-		return "/tmp"
-	default:
-		return ""
-	}
-}
-
 func NewFacts() *WerkerFacts {
 	return &WerkerFacts{Ssh:&SSHFacts{}}
 }
@@ -72,6 +57,8 @@ type SSHFacts struct {
 	Port      int
 	KeyFP     string
 	Password  string
+	// KeepRepo; if true then the repositories will be left on machine and new commits will be checked out instead of re-cloned? idk. maybe not.
+	KeepRepo  bool
 }
 
 func (sf *SSHFacts) IsValid() bool {

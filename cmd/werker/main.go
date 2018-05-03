@@ -53,7 +53,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 		} else {
 			//mode := os.Getenv("ENV")
 			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
-			bshr, err := basher.NewBasher("", "", conf.LoopbackIp, models.GetOcyPrefixFromWerkerType(conf.WerkerType))
+			bshr, err := basher.NewBasher("", "", conf.LoopbackIp, build.GetOcyPrefixFromWerkerType(conf.WerkerType))
 			// if couldn't make a new basher, just panic
 			if err != nil {
 				panic("couldnt' create instance of basher, bailing: " + err.Error())

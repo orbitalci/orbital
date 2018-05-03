@@ -56,6 +56,7 @@ func (h *SSH) establishConnection(ctx context.Context, logout chan[]byte, setupM
 
 // Setup for the SSH werker type will send off the checkout hash as the "docker id" on the docker id channel
 func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
+	log.Log().Infof("setting up hash %s", werk.CheckoutHash)
 	dockerIdChan <- werk.CheckoutHash
 	var setupMessages []string
 	su := build.InitStageUtil("setup")
@@ -70,10 +71,10 @@ func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan s
 		log.Log().Error("An error occured while trying to download templates ", downloadTemplates.Error)
 		setupMessages = append(setupMessages, "failed to download templates " + models.FAILED)
 		downloadTemplates.Messages = append(setupMessages, downloadTemplates.Messages...)
-		return downloadTemplates, ""
+		return downloadTemplates, werk.CheckoutHash
 	}
 	setupMessages = append(setupMessages, "Set up via SSH " + models.CHECKMARK)
-	return &pb.Result{Stage: su.GetStage(), Status: pb.StageResultVal_PASS, Error:"", Messages:setupMessages}, ""
+	return &pb.Result{Stage: su.GetStage(), Status: pb.StageResultVal_PASS, Error:"", Messages:setupMessages}, werk.CheckoutHash
 }
 
 func (h *SSH) Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
