@@ -1,11 +1,11 @@
 package main
 
 import (
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/storage"
-	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/storage"
+	"github.com/shankj3/ocelot/version"
 
 	"errors"
 	"os"
@@ -47,19 +47,18 @@ type WerkerConf struct {
 	//WerkerType  models.WerkType
 	//WerkerUuid		uuid.UUID
 	*models.WerkerFacts
-	WerkerName  string
+	WerkerName string
 	//werkerProcessor builder.Processor
-	LogLevel        string
-	RegisterIP      string
-	LoopBackIp      string
-	RemoteConfig    cred.CVRemoteConfig
+	LogLevel     string
+	RegisterIP   string
+	LoopBackIp   string
+	RemoteConfig cred.CVRemoteConfig
 }
-
 
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
 // alright because it only happens on startup of the application
 func GetConf() (*WerkerConf, error) {
-	werker := &WerkerConf{WerkerFacts:&models.WerkerFacts{}}
+	werker := &WerkerConf{WerkerFacts: &models.WerkerFacts{}}
 	werkerName, _ := os.Hostname()
 	var werkerTypeStr string
 	var storageTypeStr string
@@ -73,7 +72,7 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&werker.LogLevel, "log-level", "info", "log level")
 	flrg.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
 	flrg.StringVar(&werker.RegisterIP, "register-ip", "localhost", "ip to register with consul when picking up builds")
-	flrg.StringVar(&werker.LoopBackIp, "loopback-ip", "172.17.0.1", "ip to use for spawned containers to successfully contact the host. " +
+	flrg.StringVar(&werker.LoopBackIp, "loopback-ip", "172.17.0.1", "ip to use for spawned containers to successfully contact the host. "+
 		"This may be different for different container systems / host machines. For example, when using docker for mac the loopback-ip would be docker.for.mac.localhost")
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")

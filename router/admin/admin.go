@@ -2,19 +2,19 @@ package admin
 
 import (
 	"os"
-	rt "runtime"
 	"path"
 	"path/filepath"
+	rt "runtime"
 
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	"bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/common/secure_grpc"
+	"github.com/shankj3/go-til/deserialize"
+	"github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/common/secure_grpc"
+	models "github.com/shankj3/ocelot/models/pb"
 
-	//"bitbucket.org/level11consulting/ocelot/util/handler"
-	//"bitbucket.org/level11consulting/ocelot/util/secure_grpc"
+	//"github.com/shankj3/ocelot/util/handler"
+	//"github.com/shankj3/ocelot/util/secure_grpc"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
@@ -25,7 +25,6 @@ import (
 )
 
 //TODO: floe integration? putting this note here so we remember
-
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) {
@@ -53,9 +52,9 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	}
 	mux.Handle("/", gw)
 	if _, ok := os.LookupEnv("SWAGGERITUP"); ok {
-		go http.ListenAndServe(":" + httpPort, allowCORS(mux))
+		go http.ListenAndServe(":"+httpPort, allowCORS(mux))
 	} else {
-		go http.ListenAndServe(":" + httpPort, mux)
+		go http.ListenAndServe(":"+httpPort, mux)
 	}
 
 	//grpc server
@@ -95,7 +94,6 @@ func allowCORS(h http.Handler) http.Handler {
 	})
 }
 
-
 func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(r.URL.Path, ".swagger.json") {
 		log.Log().Errorf("Not Found: %s", r.URL.Path)
@@ -119,7 +117,6 @@ func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	p = path.Join(dir, p)
 	http.ServeFile(w, r, p)
 }
-
 
 //TODO: how to propagate error codes up????
 //TODO: cast this back to MY error type and set status

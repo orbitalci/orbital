@@ -1,10 +1,10 @@
 package kill
 
 import (
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	bld "bitbucket.org/level11consulting/ocelot/common/build"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	bld "github.com/shankj3/ocelot/common/build"
+	models "github.com/shankj3/ocelot/models/pb"
 
 	"context"
 	"flag"
@@ -24,9 +24,9 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI      cli.Ui
-	flags   *flag.FlagSet
-	config  *commandhelper.ClientConfig
+	UI     cli.Ui
+	flags  *flag.FlagSet
+	config *commandhelper.ClientConfig
 	*commandhelper.OcyHelper
 }
 
@@ -82,7 +82,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	stream, err := client.KillHash(ctx, &models.Request{ Hash: build.Hash})
+	stream, err := client.KillHash(ctx, &models.Request{Hash: build.Hash})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, fmt.Sprintf("Unable to get build info stream from client at %s:%s!", build.GetIp(), build.GetGrpcPort()))
 		return 1
@@ -103,4 +103,3 @@ func (c *cmd) Synopsis() string {
 func (c *cmd) Help() string {
 	return help
 }
-

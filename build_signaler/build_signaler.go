@@ -4,18 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"time"
-	
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	"bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	ocevault "bitbucket.org/level11consulting/go-til/vault"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/common"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+
+	"github.com/shankj3/go-til/deserialize"
+	"github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	"github.com/shankj3/go-til/nsqpb"
+	ocevault "github.com/shankj3/go-til/vault"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/common"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
 
 //QueueAndStore will create a werker task and put it on the queue, then update database
@@ -80,7 +80,6 @@ func storeQueued(store storage.BuildSum, id int64) error {
 	return err
 }
 
-
 func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string) (int64, error) {
 	id, err := store.AddSumStart(hash, account, repo, branch)
 	if err != nil {
@@ -113,7 +112,6 @@ func GetConfig(repoFullName string, checkoutCommit string, deserializer *deseria
 		//	return nil, "", err
 		return nil, errors.New("vcs handler cannot be nul")
 	}
-
 
 	fileBytz, err := vcsHandler.GetFile("ocelot.yml", repoFullName, checkoutCommit)
 	if err != nil {
@@ -153,7 +151,7 @@ func ValidateAndQueue(buildConf *pb.BuildConfig,
 	if err := validateBuild(buildConf, branch, validator); err == nil {
 		tellWerker(buildConf, vaulty, producer, hash, fullAcctRepo, bbToken, buildId, branch)
 		log.Log().Debug("told werker!")
-		PopulateStageResult(sr, 0, "Passed initial validation " + models.CHECKMARK, "")
+		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
 	} else {
 		PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
 		return err
@@ -210,8 +208,6 @@ func validateBuild(buildConf *pb.BuildConfig, branch string, validator *build.Oc
 	return errors.New(fmt.Sprintf("build does not match any branches listed: %v", buildConf.Branches))
 }
 
-
-
 func PopulateStageResult(sr *models.StageResult, status int, lastMsg, errMsg string) {
 	sr.Messages = append(sr.Messages, lastMsg)
 	sr.Status = status
@@ -223,14 +219,10 @@ func PopulateStageResult(sr *models.StageResult, status int, lastMsg, errMsg str
 func getSignalerStageResult(id int64) *models.StageResult {
 	start := time.Now()
 	return &models.StageResult{
-		Messages: 	   []string{},
+		Messages:      []string{},
 		BuildId:       id,
 		Stage:         models.HOOKHANDLER_VALIDATION,
 		StartTime:     start,
 		StageDuration: -99.99,
 	}
 }
-
-
-
-

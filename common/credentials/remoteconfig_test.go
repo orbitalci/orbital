@@ -1,12 +1,12 @@
 package credentials
 
 import (
-	"bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/go-til/vault"
-	util "bitbucket.org/level11consulting/ocelot/common/testutil"
-	pb "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/go-til/vault"
+	util "github.com/shankj3/ocelot/common/testutil"
+	pb "github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 
 	"testing"
 	"time"
@@ -105,7 +105,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		AcctName:     "ariannefeng",
 		TokenURL:     "another-real-url",
 		Identifier:   "345",
-		SubType:	   pb.SubCredType_BITBUCKET,
+		SubType:      pb.SubCredType_BITBUCKET,
 	}
 
 	err = testRemoteConfig.AddCreds(pg, secondConfig, true)
@@ -113,11 +113,11 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("adding second set of creds to consul", nil, err))
 	}
 
-	cred, err :=  testRemoteConfig.GetCred(pg, pb.SubCredType_GITHUB, "123", "mariannefeng", false)
+	cred, err := testRemoteConfig.GetCred(pg, pb.SubCredType_GITHUB, "123", "mariannefeng", false)
 	if err != nil || cred == nil {
 		t.Error(test.GenericStrFormatErrors("original creds marianne should exist", true, ok))
 	}
-	newCred, err :=  testRemoteConfig.GetCred(pg, pb.SubCredType_BITBUCKET, "345", "ariannefeng", false)
+	newCred, err := testRemoteConfig.GetCred(pg, pb.SubCredType_BITBUCKET, "345", "ariannefeng", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,12 +147,12 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	}
 
 	repoCreds := &pb.RepoCreds{
-		Username: "tasty-gummy-vitamin",
-		Password: "FLINTSTONE",
-		RepoUrl: "http://take-ur-vitamins.org/uploadGummy",
+		Username:   "tasty-gummy-vitamin",
+		Password:   "FLINTSTONE",
+		RepoUrl:    "http://take-ur-vitamins.org/uploadGummy",
 		Identifier: "890",
-		AcctName: "jessdanshnak",
-		SubType: pb.SubCredType_NEXUS,
+		AcctName:   "jessdanshnak",
+		SubType:    pb.SubCredType_NEXUS,
 	}
 
 	err = testRemoteConfig.AddCreds(pg, repoCreds, true)
@@ -160,7 +160,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("adding repo creds", nil, err))
 	}
 	shank, err := testRemoteConfig.GetCred(pg, pb.SubCredType_NEXUS, "890", "jessdanshnak", false)
-	if err != nil  {
+	if err != nil {
 		t.Fatal(err)
 	}
 	shnak, ok := shank.(*pb.RepoCreds)
@@ -206,7 +206,6 @@ func TestRemoteConfig_GetStorageType(t *testing.T) {
 
 }
 
-
 func Test_BuildCredPath(t *testing.T) {
 	expected := "creds/vcs/banana/bitbucket/derp"
 	live := BuildCredPath(pb.SubCredType_BITBUCKET, "banana", pb.CredType_VCS, "derp")
@@ -229,7 +228,7 @@ func TestRemoteConfig_Healthy(t *testing.T) {
 		t.Error("consul & vault are up, should return status of healthy")
 	}
 	consulServer.Stop()
-	time.Sleep(1*time.Second)
+	time.Sleep(1 * time.Second)
 	if testRemoteConfig.Healthy() {
 		t.Error("consul has been taken down, should return status of not healthy.")
 	}
@@ -241,12 +240,12 @@ func TestRemoteConfig_Healthy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(1*time.Second)
+	time.Sleep(1 * time.Second)
 	if !testRemoteConfig.Healthy() {
 		t.Error("consul has been stood back up, should return status of healthy.")
 	}
 	vaultListener.Close()
-	time.Sleep(1*time.Second)
+	time.Sleep(1 * time.Second)
 	if testRemoteConfig.Healthy() {
 		t.Error("vault has been shut down, shouldn ot return status of healthy.")
 	}
@@ -263,7 +262,7 @@ func TestRemoteConfig_Reconnect(t *testing.T) {
 	}
 	vaultListener.Close()
 	//vaultClient, err := ocevault.NewAuthedClient(token)
-	time.Sleep(1*time.Second)
+	time.Sleep(1 * time.Second)
 	if err := testRemoteConfig.Reconnect(); err == nil {
 		t.Error("should not be able to 'reconnect' as vault is down.")
 	}
@@ -274,12 +273,12 @@ func TestRemoteConfig_Reconnect(t *testing.T) {
 		t.Error(err)
 	}
 	rc.Vault = vaultClient
-	time.Sleep(500*time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	if err := testRemoteConfig.Reconnect(); err != nil {
 		t.Error("should be able to 'reconnect' because vault has been stood back up. instead the error is ", err.Error())
 	}
 	consulServer.Stop()
-	time.Sleep(3*time.Second)
+	time.Sleep(3 * time.Second)
 	if err := testRemoteConfig.Reconnect(); err == nil {
 		t.Error("should not be able to 'reconnect' as consul is down.")
 	}
@@ -289,7 +288,7 @@ func TestRemoteConfig_Reconnect(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	time.Sleep(2*time.Second)
+	time.Sleep(2 * time.Second)
 	if err := testRemoteConfig.Reconnect(); err != nil {
 		t.Error("should be able to 'reconnect' because consul has been stood back up. instead the error is ", err.Error())
 	}

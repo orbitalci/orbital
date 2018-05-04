@@ -38,7 +38,7 @@ The build occurs in 3 steps.
 If the build is acting funny, you can use this `docker run` command to start a shell in the builder environment.
 
     docker run --rm -it \
-    -v $(pwd):/go/src/bitbucket.org/level11consulting/ocelot/ \
+    -v $(pwd):/go/src/github.com/shankj3/ocelot/ \
     -e SSH_PRIVATE_KEY="$(cat ~/.ssh/id_rsa)" \
     ocelot-build sh
 

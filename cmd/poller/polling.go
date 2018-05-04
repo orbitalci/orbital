@@ -1,15 +1,15 @@
 package main
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	"bitbucket.org/level11consulting/ocelot/build_signaler/poll"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"fmt"
-	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/build_signaler/poll"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
+	"github.com/shankj3/ocelot/version"
 	"os"
 	"time"
 )
@@ -40,9 +40,9 @@ func loadFromDb(store storage.OcelotStorage) error {
 	}
 	for _, oldPoll := range oldPolls {
 		msg := &pb.PollRequest{
-			Account: oldPoll.Account,
-			Repo: oldPoll.Repo,
-			Cron: oldPoll.Cron,
+			Account:  oldPoll.Account,
+			Repo:     oldPoll.Repo,
+			Cron:     oldPoll.Cron,
 			Branches: oldPoll.Branches,
 		}
 		if err = poll.WriteCronFile(msg); err != nil {

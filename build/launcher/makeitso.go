@@ -6,19 +6,19 @@ import (
 	"strings"
 	"time"
 
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/sshkey"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/build/integrations/sshkey"
 
-	"bitbucket.org/level11consulting/ocelot/build/integrations/dockerconfig"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/kubeconf"
-	"bitbucket.org/level11consulting/ocelot/build/integrations/nexusm2"
-	"bitbucket.org/level11consulting/ocelot/build/valet"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/ocelot/build/integrations/dockerconfig"
+	"github.com/shankj3/ocelot/build/integrations/kubeconf"
+	"github.com/shankj3/ocelot/build/integrations/nexusm2"
+	"github.com/shankj3/ocelot/build/valet"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
@@ -28,7 +28,6 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 	w.StreamChan <- transport
 }
 
-
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
@@ -36,7 +35,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
 	defer w.BuildValet.MakeItSoDed(finish)
 	defer w.BuildValet.UnregisterDoneChan(werk.CheckoutHash)
-	defer func(){
+	defer func() {
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
 	}()
@@ -45,13 +44,13 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 
 	//send build context off, build kills are performed by calling cancel on the cacellable context
 	w.BuildCtxChan <- &models.BuildContext{
-		Hash: werk.CheckoutHash,
-		Context: ctx,
+		Hash:       werk.CheckoutHash,
+		Context:    ctx,
 		CancelFunc: cancel,
 	}
 
 	defer cancel()
-	defer func(){
+	defer func() {
 		ocelog.Log().Info("closing infochan for ", werk.Id)
 		close(w.infochan)
 	}()
@@ -68,7 +67,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	setupStart := time.Now()
 	w.BuildValet.Reset("setup", werk.CheckoutHash)
 
-	dockerIdChan := make (chan string)
+	dockerIdChan := make(chan string)
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
 	// do setup stage
 	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.RemoteConf, w.ServicePort)
@@ -130,7 +129,6 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 			break
 		}
 
-
 		if err := storeStageToDb(w.Store, werk.Id, stageResult, stageStart, stageDura.Seconds()); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't store build output")
 			return
@@ -156,7 +154,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 	if stage.Trigger != nil {
 		if len(stage.Trigger.Branches) == 0 {
 			ocelog.Log().Info("fyi, got a trigger block with an empty list of branches. seems dumb.")
-			// return false, the block is empty and there is nothing to check 
+			// return false, the block is empty and there is nothing to check
 			return
 		}
 		if !branchOk(branch, stage.Trigger.Branches) {
@@ -177,7 +175,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 }
 
 func (w *launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
-	dockerUuid := <- dockerChan
+	dockerUuid := <-dockerChan
 
 	if err := valet.RegisterBuild(w.RemoteConf.GetConsul(), w.Uuid.String(), checkoutHash, dockerUuid); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")
@@ -220,7 +218,7 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
 func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder) (result *pb.Result, duration time.Duration, start time.Time) {
 	start = time.Now()
-	defer func(){duration = time.Now().Sub(start)}()
+	defer func() { duration = time.Now().Sub(start) }()
 	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
 	var integMessages []string
@@ -266,28 +264,28 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	}
 	// reset stage to integration_util
 	result.Stage = stage.GetStage()
-	result.Messages = append(integMessages, "completed integration util setup stage " + models.CHECKMARK)
+	result.Messages = append(integMessages, "completed integration util setup stage "+models.CHECKMARK)
 	return
 }
 
 func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder) (result *pb.Result, duration time.Duration, start time.Time) {
 	start = time.Now()
-	defer func(){duration = time.Now().Sub(start)}()
+	defer func() { duration = time.Now().Sub(start) }()
 	// todo: there wil likely be more binaries to download in the future, should probably use the same pattern
 	// as StringIntegrator.. maybe a DownloadIntegrator?
 	subStage := build.CreateSubstage(su, "kubectl download")
-	kubectl := &pb.Stage{Env: []string{}, Script: bldr.DownloadKubectl(w.ServicePort), Name: subStage.Stage,}
+	kubectl := &pb.Stage{Env: []string{}, Script: bldr.DownloadKubectl(w.ServicePort), Name: subStage.Stage}
 	result = bldr.ExecuteIntegration(ctx, kubectl, subStage, w.infochan)
 	if result.Status == pb.StageResultVal_FAIL {
 		return
 	}
-	result.Messages = append(result.Messages, "finished " + subStage.Stage)
+	result.Messages = append(result.Messages, "finished "+subStage.Stage)
 	return
 }
 
 func (w *launcher) returnWerkerPort(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error) {
 	ocelog.Log().Debug("returning werker port")
-	return  w.ServicePort, nil
+	return w.ServicePort, nil
 }
 
 func handleIntegrationErr(err error, integrationName string, stage *build.StageUtil, msgs []string) *pb.Result {
@@ -295,16 +293,16 @@ func handleIntegrationErr(err error, integrationName string, stage *build.StageU
 	if !ok {
 		ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
 		return &pb.Result{
-			Stage: stage.GetStage(),
+			Stage:  stage.GetStage(),
 			Status: pb.StageResultVal_FAIL,
-			Error: err.Error(),
+			Error:  err.Error(),
 		}
 	} else {
-		msgs = append(msgs, "no integration data found for " + integrationName + " so assuming integration not necessary")
+		msgs = append(msgs, "no integration data found for "+integrationName+" so assuming integration not necessary")
 		return &pb.Result{
-			Stage: stage.GetStage(),
-			Status: pb.StageResultVal_PASS,
-			Error: "",
+			Stage:    stage.GetStage(),
+			Status:   pb.StageResultVal_PASS,
+			Error:    "",
 			Messages: msgs,
 		}
 	}

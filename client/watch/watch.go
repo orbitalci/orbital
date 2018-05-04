@@ -5,11 +5,10 @@ import (
 	"flag"
 	"fmt"
 
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 )
-
 
 const synopsis = "add a repo to ocelot"
 const help = `
@@ -26,12 +25,11 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
-	flags   *flag.FlagSet
+	UI     cli.Ui
+	flags  *flag.FlagSet
 	config *commandhelper.ClientConfig
 	*commandhelper.OcyHelper
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -58,7 +56,6 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
 }
 
-
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
@@ -76,7 +73,7 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	_, err := c.config.Client.WatchRepo(ctx, &models.RepoAccount{
-		Repo: c.OcyHelper.Repo,
+		Repo:    c.OcyHelper.Repo,
 		Account: c.OcyHelper.Account,
 	})
 

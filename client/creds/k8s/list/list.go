@@ -1,14 +1,13 @@
 package kubelist
 
-
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -18,10 +17,10 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
-	flags   *flag.FlagSet
+	UI            cli.Ui
+	flags         *flag.FlagSet
 	accountFilter string
-	config *commandhelper.ClientConfig
+	config        *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
@@ -35,7 +34,6 @@ func (c *cmd) GetUI() cli.Ui {
 func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 	return c.config
 }
-
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -79,7 +77,6 @@ func (c *cmd) Help() string {
 	return help
 }
 
-
 func Header(ui cli.Ui) {
 	ui.Output("\n--- Kubernetes Credentials ---\n")
 }
@@ -93,7 +90,6 @@ func Prettify(cred *models.K8SCreds) string {
 `
 	return fmt.Sprintf(str, cred.AcctName)
 }
-
 
 const synopsis = "List all credentials used for artifact repositories"
 const help = `

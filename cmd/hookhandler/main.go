@@ -1,20 +1,19 @@
 package main
 
 import (
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	signal "bitbucket.org/level11consulting/ocelot/build_signaler"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	hh "bitbucket.org/level11consulting/ocelot/router/hookhandler"
-	"bitbucket.org/level11consulting/ocelot/version"
 	"github.com/gorilla/mux"
 	"github.com/namsral/flag"
+	"github.com/shankj3/go-til/deserialize"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/build"
+	signal "github.com/shankj3/ocelot/build_signaler"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	hh "github.com/shankj3/ocelot/router/hookhandler"
+	"github.com/shankj3/ocelot/version"
 	"os"
-	"bitbucket.org/level11consulting/ocelot/build"
 )
-
 
 func main() {
 	//ocelog.InitializeLog("debug")

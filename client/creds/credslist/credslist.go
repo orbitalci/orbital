@@ -4,13 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	"bitbucket.org/level11consulting/ocelot/client/creds/repocreds/list"
-	"bitbucket.org/level11consulting/ocelot/client/creds/vcscreds/list"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	"github.com/shankj3/ocelot/client/creds/repocreds/list"
+	"github.com/shankj3/ocelot/client/creds/vcscreds/list"
+	models "github.com/shankj3/ocelot/models/pb"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -20,12 +20,11 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI cli.Ui
-	flags   *flag.FlagSet
+	UI            cli.Ui
+	flags         *flag.FlagSet
 	accountFilter string
-	config *commandhelper.ClientConfig
+	config        *commandhelper.ClientConfig
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -38,7 +37,6 @@ func (c *cmd) GetUI() cli.Ui {
 func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 	return c.config
 }
-
 
 func (c *cmd) init() {
 
@@ -67,7 +65,7 @@ func (c *cmd) Run(args []string) int {
 
 	if len(msg.VcsCreds.Vcs) > 0 {
 		buildcredslist.Header(c.UI)
-		for _, oneline :=  range msg.VcsCreds.Vcs {
+		for _, oneline := range msg.VcsCreds.Vcs {
 			c.UI.Output(buildcredslist.Prettify(oneline))
 		}
 	} else {
@@ -84,7 +82,6 @@ func (c *cmd) Synopsis() string {
 func (c *cmd) Help() string {
 	return help
 }
-
 
 const synopsis = "list all credentials added to ocelot"
 const help = `

@@ -1,15 +1,15 @@
 package credentials
 
 import (
-	"bitbucket.org/level11consulting/go-til/consul"
-	"bitbucket.org/level11consulting/go-til/vault"
-	"bitbucket.org/level11consulting/ocelot/common"
-	tu "bitbucket.org/level11consulting/ocelot/common/testutil"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/hashicorp/consul/testutil"
 	"github.com/hashicorp/vault/http"
 	hashiVault "github.com/hashicorp/vault/vault"
+	"github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/vault"
+	"github.com/shankj3/ocelot/common"
+	tu "github.com/shankj3/ocelot/common/testutil"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 
 	"errors"
 	"net"
@@ -19,8 +19,7 @@ import (
 	"testing"
 )
 
-
-func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName string, location string, port string, username string, pw string) (err error){
+func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName string, location string, port string, username string, pw string) (err error) {
 	err = consulet.AddKeyValue(common.StorageType, []byte("postgres"))
 	if err != nil {
 		return
@@ -41,11 +40,10 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 	if err != nil {
 		return
 	}
-	var a = map[string]interface{} {common.PostgresPasswordKey: pw}
+	var a = map[string]interface{}{common.PostgresPasswordKey: pw}
 	_, err = vaulty.AddVaultData(common.PostgresPasswordLoc, a)
 	return err
 }
-
 
 //////test setup and tear down///////
 
@@ -62,7 +60,6 @@ func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testu
 	}
 	return remoteConfig, ln, testServer
 }
-
 
 func TestSetupConsul(t *testing.T) (*testutil.TestServer, string, int) {
 	//setup consul for testing
@@ -90,17 +87,18 @@ func TeardownVaultAndConsul(testvault net.Listener, testconsul *testutil.TestSer
 
 func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, store storage.CredTable, repourl, password, username, acctName, projectName string) {
 	creds := &pb.RepoCreds{
-		Password: password,
-		Username: username,
-		RepoUrl: repourl,
-		SubType: pb.SubCredType_DOCKER,
-		AcctName: acctName,
+		Password:   password,
+		Username:   username,
+		RepoUrl:    repourl,
+		SubType:    pb.SubCredType_DOCKER,
+		AcctName:   acctName,
 		Identifier: projectName,
 	}
 	if err := rc.AddCreds(store, creds, true); err != nil {
 		t.Error("couldnt add creds, error: ", err.Error())
 	}
 }
+
 //
 //func AddMvnRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
 //	creds := &RepoConfig{
@@ -124,9 +122,10 @@ func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, store storage.CredTable
 func NewHealthyMaintain() *HealthyMaintain {
 	return &HealthyMaintain{true, true}
 }
+
 type HealthyMaintain struct {
 	SuccessfulReconnect bool
-	IsHealthy bool
+	IsHealthy           bool
 }
 
 func (h *HealthyMaintain) Reconnect() error {

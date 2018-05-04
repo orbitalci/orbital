@@ -6,15 +6,14 @@ import (
 	"context"
 	"fmt"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Builds, error) {
 	if bq.Hash == "" && bq.BuildId == 0 {
@@ -29,7 +28,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 		if err != nil {
 			if _, ok := err.(*build.ErrBuildDone); !ok {
 				log.IncludeErrField(err)
-				return nil, status.Error(codes.Internal, "could not get build runtime, err: " + err.Error())
+				return nil, status.Error(codes.Internal, "could not get build runtime, err: "+err.Error())
 			} else {
 				//we set error back to nil so that we can continue with the rest of the logic here
 				err = nil
@@ -81,14 +80,12 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 	return builds, err
 }
 
-
-
 func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
 	if bq.Hash == "" && bq.BuildId == 0 {
 		return status.Error(codes.InvalidArgument, "must request with either a hash or a buildId")
 	}
 	if !build.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
-		errmsg :=  "build is not finished, use BuildRuntime method and stream from the werker registered"
+		errmsg := "build is not finished, use BuildRuntime method and stream from the werker registered"
 		stream.Send(&pb.LineResponse{OutputLine: errmsg})
 		return status.Error(codes.InvalidArgument,  errmsg)
 	} else {
@@ -116,7 +113,6 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 	}
 	return nil
 }
-
 
 func (g *guideOcelotServer) FindWerker(ctx context.Context, br *pb.BuildReq) (*pb.BuildRuntimeInfo, error) {
 	if len(br.Hash) > 0 {

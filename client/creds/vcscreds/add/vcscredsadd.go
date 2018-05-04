@@ -1,14 +1,13 @@
 package buildcredsadd
 
-
 import (
-	"bitbucket.org/level11consulting/go-til/deserialize"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/go-til/deserialize"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"io/ioutil"
 	"strings"
 )
@@ -19,17 +18,15 @@ func New(ui cli.Ui) *cmd {
 	return c
 }
 
-
 type cmd struct {
-	UI      cli.Ui
-	flags   *flag.FlagSet
-	fileloc string
+	UI         cli.Ui
+	flags      *flag.FlagSet
+	fileloc    string
 	sshKeyFile string
-	acctName string
-	buildType string
-	config  *commandhelper.ClientConfig
+	acctName   string
+	buildType  string
+	config     *commandhelper.ClientConfig
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -49,7 +46,7 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.acctName, "acctname", "", "account name matching with sshfile-loc")
 	c.flags.StringVar(&c.buildType, "type", "", "build type for this sshfile. Ex: bitbucket")
 
-	c.flags.StringVar(&c.fileloc, "credfile-loc", "","Location of yaml file containing creds to upload")
+	c.flags.StringVar(&c.fileloc, "credfile-loc", "", "Location of yaml file containing creds to upload")
 }
 
 //TODO: fix - this doesn't work - yes it does?
@@ -90,7 +87,6 @@ func (c *cmd) runCredFileUpload(ctx context.Context) int {
 	return 0
 }
 
-
 // uploadCredential will check if credential already exists. if it does, it will ask if the user wishes to overwrite. if the user responds YES, the credential will be updated.
 // if it does not exist, will be inserted as normal.
 func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI cli.Ui, cred *models.VCSCreds) error {
@@ -100,7 +96,7 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 	}
 
 	if exists.Exists {
-		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s and Vcs Type %s already exists. Do you want to overwrite? " +
+		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s and Vcs Type %s already exists. Do you want to overwrite? "+
 			"Only a YES will continue with update, otherwise the client will exit. ", cred.AcctName, strings.ToLower(cred.SubType.String())))
 		if err != nil {
 			return err
@@ -155,7 +151,7 @@ func (c *cmd) runStdinUpload(ctx context.Context) int {
 		c.UI.Error(fmt.Sprint("Error recieving input: ", errConcat))
 		return 1
 	}
-	if  err := uploadCredential(ctx, c.config.Client, c.UI, creds); err != nil {
+	if err := uploadCredential(ctx, c.config.Client, c.UI, creds); err != nil {
 		if _, ok := err.(*commandhelper.DontOverwrite); ok {
 			return 0
 		}
@@ -182,7 +178,7 @@ func (c *cmd) Run(args []string) int {
 	}
 
 	if c.acctName != "" && c.sshKeyFile != "" && c.buildType != "" {
-		subType, ok:= models.SubCredType_value[strings.ToUpper(c.buildType)]
+		subType, ok := models.SubCredType_value[strings.ToUpper(c.buildType)]
 		if !ok {
 			c.UI.Error("-type must be vcs type, ie bitbucket")
 		}

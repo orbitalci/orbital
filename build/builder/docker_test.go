@@ -1,13 +1,12 @@
 package builder
 
 import (
-	"bitbucket.org/level11consulting/ocelot/build"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/models/pb"
 	"golang.org/x/net/context"
 
 	"testing"
 )
-
 
 // test that in docker, can run the InstallPackageDeps to multiple image types
 func TestDockerBasher_InstallPackageDeps(t *testing.T) {
@@ -18,7 +17,7 @@ func TestDockerBasher_InstallPackageDeps(t *testing.T) {
 	alpine, cleanupFunc := CreateLivingDockerContainer(t, ctx, "alpine:latest")
 	defer cleanupFunc(t)
 	su := build.InitStageUtil("alpineTest")
-	logout := make(chan[]byte, 10000)
+	logout := make(chan []byte, 10000)
 	result := alpine.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, alpine.InstallPackageDeps(), logout)
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Error("couldn't download deps! oh nuuu!")
@@ -32,7 +31,5 @@ func TestDockerBasher_InstallPackageDeps(t *testing.T) {
 	}
 	t.Log(result.Status)
 	t.Log(string(<-logout))
-
-
 
 }

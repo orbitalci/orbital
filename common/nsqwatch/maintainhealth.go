@@ -1,29 +1,29 @@
 package nsqwatch
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/go-til/nsqpb"
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/go-til/nsqpb"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/storage"
 	"time"
 )
 
 // NsqWatch is for keeping an eye on Ocelot's dependencies and pausing the reception of messages
 //  from NSQ if any other dependency goes down. the `paused` bool will be switched to true if the queue is shut down temporarily.
 type NsqWatch struct {
-	interval 	int64
-	pConsumers  []*nsqpb.ProtoConsume
-	remoteConf  cred.HealthyMaintainer
-	store       storage.HealthyChkr
-	paused      bool
+	interval   int64
+	pConsumers []*nsqpb.ProtoConsume
+	remoteConf cred.HealthyMaintainer
+	store      storage.HealthyChkr
+	paused     bool
 }
 
 func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRemoteConfig, store storage.OcelotStorage) {
 	nsqwatch := &NsqWatch{
-		interval: interval,
+		interval:   interval,
 		pConsumers: consumers,
 		remoteConf: rc,
-		store: store,
+		store:      store,
 	}
 	nsqwatch.MaintainHealths()
 }

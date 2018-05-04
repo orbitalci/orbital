@@ -1,9 +1,9 @@
 package basher
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"fmt"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/models/pb"
 	"strings"
 )
 
@@ -13,7 +13,7 @@ const DefaultGithubURL = ""
 type Bashable func(string) []string
 
 type Basher struct {
-	BbDownloadURL 	  string
+	BbDownloadURL     string
 	GithubDownloadURL string
 	LoopbackIp        string
 }
@@ -46,7 +46,7 @@ func (b *Basher) InstallPackageDeps() []string {
 
 //DownloadCodebase builds bash commands to be executed for downloading the codebase
 func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
-	downloadCode := []string {"/bin/sh", "-c"}
+	downloadCode := []string{"/bin/sh", "-c"}
 	var downloadCmd string
 	switch werk.VcsType {
 	case pb.SubCredType_BITBUCKET:
@@ -68,9 +68,8 @@ func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 
 //DownloadSSHKey will using the vault token to try to download the ssh key located at the path + `/ssh`
 func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
-	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath + "/ssh")}
+	return []string{"/bin/sh", "-c", fmt.Sprintf("/.ocelot/get_ssh_key.sh %s %s", vaultKey, vaultPath+"/ssh")}
 }
-
 
 //DownloadTemplateFiles will download template files necessary to build containers from werker
 func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
@@ -84,7 +83,6 @@ func (b *Basher) DownloadKubectl(werkerPort string) []string {
 	downloadLink := fmt.Sprintf("http://%s:%s/kubectl", b.LoopbackIp, werkerPort)
 	return []string{"/bin/sh", "-c", "cd /bin && wget " + downloadLink + " && chmod +x kubectl"}
 }
-
 
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {

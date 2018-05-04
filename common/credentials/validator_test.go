@@ -1,8 +1,8 @@
 package credentials
 
 import (
-	"bitbucket.org/level11consulting/go-til/test"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models/pb"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		AcctName: "blah",
 		ClientId: "blah2",
 		TokenURL: "slkdjf",
-		SubType:   pb.SubCredType_BITBUCKET,
+		SubType:  pb.SubCredType_BITBUCKET,
 	}
 
 	err := v.ValidateConfig(noClientSecret)
@@ -25,7 +25,7 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		ClientId:     "blah2",
 		TokenURL:     "slkdjf",
 		ClientSecret: "jsdlkfsdfjskdf",
-		SubType:       pb.SubCredType_NIL_SCT,
+		SubType:      pb.SubCredType_NIL_SCT,
 	}
 
 	wrongType := v.ValidateConfig(invalidCred)
@@ -38,7 +38,7 @@ func TestAdminValidator_ValidateConfig(t *testing.T) {
 		ClientId:     "blah2",
 		TokenURL:     "slkdjf",
 		ClientSecret: "jsdlkfsdfjskdf",
-		SubType:       pb.SubCredType_GITHUB,
+		SubType:      pb.SubCredType_GITHUB,
 	}
 
 	wrongType = v.ValidateConfig(invalidCred)

@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"bitbucket.org/level11consulting/go-til/log"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
 
 func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
@@ -43,11 +43,11 @@ func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*pb.
 	pollz := &pb.Polls{}
 	for _, pll := range polls {
 		pbpoll := &pb.PollRequest{
-			Account: pll.Account,
-			Repo: pll.Repo,
-			Cron: pll.Cron,
-			Branches: pll.Branches,
-			LastCronTime: &timestamp.Timestamp{Seconds:pll.LastCron.Unix(), Nanos:0},
+			Account:      pll.Account,
+			Repo:         pll.Repo,
+			Cron:         pll.Cron,
+			Branches:     pll.Branches,
+			LastCronTime: &timestamp.Timestamp{Seconds: pll.LastCron.Unix(), Nanos: 0},
 		}
 		pollz.Polls = append(pollz.Polls, pbpoll)
 	}

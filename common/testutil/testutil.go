@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	consulet "bitbucket.org/level11consulting/go-til/consul"
 	"github.com/hashicorp/consul/testutil"
+	consulet "github.com/shankj3/go-til/consul"
 	"os"
 	"strconv"
 	"strings"
@@ -13,7 +13,7 @@ func modifyServerConfig(c *testutil.TestServerConfig) {
 	c.LogLevel = "err"
 }
 
-func InitServerAndConsulet(t *testing.T) ( *consulet.Consulet, *testutil.TestServer) {
+func InitServerAndConsulet(t *testing.T) (*consulet.Consulet, *testutil.TestServer) {
 	//todo: idk if we want to add the consul binary to our build image, but it is required
 	BuildServerHack(t)
 	testServer, err := testutil.NewTestServerConfig(modifyServerConfig)

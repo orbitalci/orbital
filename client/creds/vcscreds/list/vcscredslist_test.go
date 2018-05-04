@@ -6,15 +6,15 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 )
 
 func testNew() (*cmd, *cli.MockUi) {
 	ui := cli.NewMockUi()
 	c := &cmd{
-		UI: ui,
+		UI:     ui,
 		config: commandhelper.NewTestClientConfig([]string{}),
 	}
 	return c, ui
@@ -24,7 +24,7 @@ func TestCmd_Run(t *testing.T) {
 	ctx := context.Background()
 	ui := cli.NewMockUi()
 	cmdd := &cmd{
-		UI: ui,
+		UI:     ui,
 		config: commandhelper.NewTestClientConfig([]string{}),
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -87,9 +87,8 @@ Identifier: rowdy
 `
 	text := ui.OutputWriter.String()
 	if strings.Compare(expectedText, text) != 0 {
-		t.Errorf("output and expected not the same,  \n" +
+		t.Errorf("output and expected not the same,  \n"+
 			"expected:\n%s-----\ngot:\n%s-----", expectedText, text)
 	}
-
 
 }

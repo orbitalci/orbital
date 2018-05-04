@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"strconv"
 
-	"bitbucket.org/level11consulting/go-til/consul"
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	ocevault "bitbucket.org/level11consulting/go-til/vault"
-	"bitbucket.org/level11consulting/ocelot/common"
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/consul"
+	ocelog "github.com/shankj3/go-til/log"
+	ocevault "github.com/shankj3/go-til/vault"
+	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/common"
+	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 )
-
 
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
@@ -76,12 +75,12 @@ type HealthyMaintainer interface {
 //CVRemoteConfig is an abstraction for retrieving/setting creds for ocelot
 //currently uses consul + vault
 type CVRemoteConfig interface {
-	GetConsul()	*consul.Consulet
+	GetConsul() *consul.Consulet
 	SetConsul(consul *consul.Consulet)
 	GetVault() ocevault.Vaulty
 	SetVault(vault ocevault.Vaulty)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
-	CheckSSHKeyExists(path string) (error)
+	CheckSSHKeyExists(path string) error
 	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error)
 	InsecureCredStorage
 	HealthyMaintainer
@@ -97,19 +96,17 @@ type InsecureCredStorage interface {
 	AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error)
 	UpdateCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error)
 }
+
 //
 //type CredStore struct {
 //	RC    CVRemoteConfig
 //	Store storage.CredTable
 //}
 
-
 type RemoteConfig struct {
 	Consul *consul.Consulet
 	Vault  ocevault.Vaulty
 }
-
-
 
 func (rc *RemoteConfig) GetConsul() *consul.Consulet {
 	return rc.Consul
@@ -119,7 +116,7 @@ func (rc *RemoteConfig) SetConsul(consul *consul.Consulet) {
 	rc.Consul = consul
 }
 
-func (rc *RemoteConfig)  GetVault() ocevault.Vaulty {
+func (rc *RemoteConfig) GetVault() ocevault.Vaulty {
 	return rc.Vault
 }
 
@@ -137,7 +134,7 @@ func (rc *RemoteConfig) Healthy() bool {
 		}
 	}
 	rc.Consul.GetKeyValue("here")
-	if !vaultConnected || !rc.Consul.Connected  {
+	if !vaultConnected || !rc.Consul.Connected {
 		ocelog.Log().Error("remoteConfig is not healthy")
 		return false
 	}
@@ -164,12 +161,11 @@ func BuildCredKey(credType string, acctName string) string {
 	return credType + "/" + acctName
 }
 
-
 // AddSSHKey adds repo ssh private key to vault at the usual vault path + /ssh
 func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
 	if rc.Vault != nil {
 		secret := buildSecretPayload(string(sshKeyFile))
-		if _, err = rc.Vault.AddUserAuthData(path + "/ssh", secret); err != nil {
+		if _, err = rc.Vault.AddUserAuthData(path+"/ssh", secret); err != nil {
 			return
 		}
 	} else {
@@ -179,7 +175,7 @@ func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
 }
 
 // CheckSSHKey returns a boolean indicating whether or not an ssh key has been uploaded
-func (rc *RemoteConfig) CheckSSHKeyExists(path string) (error) {
+func (rc *RemoteConfig) CheckSSHKeyExists(path string) error {
 	var err error
 
 	if rc.Vault != nil {
@@ -244,7 +240,6 @@ func (rc *RemoteConfig) UpdateCreds(store storage.CredTable, anyCred pb.OcyCredd
 	return
 }
 
-
 //this builds the secret payload as accepted by vault docs here: https://www.vaultproject.io/api/secret/kv/kv-v2.html
 func buildSecretPayload(secret string) map[string]interface{} {
 	dataWrapper := make(map[string]interface{})
@@ -254,9 +249,7 @@ func buildSecretPayload(secret string) map[string]interface{} {
 	return dataWrapper
 }
 
-
-
-func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName string, hideSecret bool, identifier string) (secret string){
+func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName string, hideSecret bool, identifier string) (secret string) {
 	if !hideSecret {
 		passcode, passErr := rc.GetPassword(subCredType, accountName, subCredType.Parent(), identifier)
 		if passErr != nil {
@@ -415,4 +408,3 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	}
 	return nil, errors.New("could not grab ocelot storage")
 }
-

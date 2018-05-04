@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"bitbucket.org/level11consulting/ocelot/models/pb"
 	"github.com/go-test/deep"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 var sshKeys = []pb.OcyCredder{
@@ -21,10 +21,10 @@ asdifu3nazlxci7ensk
 AALIW3UYBCUAW6129394
 -- END PRIVATE KEY OR WHATEVER -- 
 `),
-		SubType: pb.SubCredType_SSHKEY,
+		SubType:    pb.SubCredType_SSHKEY,
 		Identifier: "id1OCELOTTEST",
- 	},
- 	&pb.SSHKeyWrapper{
+	},
+	&pb.SSHKeyWrapper{
 		AcctName: "level11orwhatever",
 		PrivateKey: []byte(`-------thisisprivatekeydoyouhearme----
 aklfj;osdf5468572iulx,cmnfg
@@ -33,11 +33,10 @@ asdifu3nazlxci7ensk
 AALIW3UYBCUAW6129394
 -- END PRIVATE KEas6d4f7eY OR WHATEVER -- 
 `),
-		SubType: pb.SubCredType_SSHKEY,
+		SubType:    pb.SubCredType_SSHKEY,
 		Identifier: "id2OCELOTTEST",
 	},
 }
-
 
 func TestSSHKeyInt_GetEnv(t *testing.T) {
 	sshInt := &SSHKeyInt{}
@@ -78,7 +77,7 @@ AALIW3UYBCUAW6129394
 
 func TestSSHKeyInt_MakeBashable(t *testing.T) {
 	// we don't want to add to every testers' strict host key checking
-	sshInt := &SSHKeyInt{strictHostKey:"echo testing"}
+	sshInt := &SSHKeyInt{strictHostKey: "echo testing"}
 	_, err := sshInt.GenerateIntegrationString(sshKeys)
 	if err != nil {
 		t.Error(err)
@@ -94,7 +93,7 @@ func TestSSHKeyInt_MakeBashable(t *testing.T) {
 		t.Log(stderr.String())
 		t.Error(err)
 	}
-	defer func(){
+	defer func() {
 		t.Log("getting rid of test rendered files")
 		os.Remove(os.ExpandEnv("$HOME/.ssh/id2OCELOTTEST"))
 		os.Remove(os.ExpandEnv("$HOME/.ssh/id1OCELOTTEST"))

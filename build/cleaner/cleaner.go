@@ -1,10 +1,9 @@
 package cleaner
 
-
 import (
 	"context"
 
-	"bitbucket.org/level11consulting/ocelot/models"
+	"github.com/shankj3/ocelot/models"
 )
 
 //this interface handles build cleanup

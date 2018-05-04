@@ -1,14 +1,14 @@
 package repocredsadd
 
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"bytes"
 	"context"
 	"flag"
 	"github.com/golang/protobuf/ptypes/empty"
-	"bitbucket.org/level11consulting/ocelot/common/testutil"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	"github.com/shankj3/ocelot/common/testutil"
+	models "github.com/shankj3/ocelot/models/pb"
 	"testing"
 )
 
@@ -20,7 +20,7 @@ func testNew(inputReaderData []byte) *cmd {
 		ui.InputReader = bytes.NewReader(inputReaderData)
 	}
 	c := &cmd{
-		UI: ui,
+		UI:     ui,
 		config: commandhelper.NewTestClientConfig([]string{}),
 	}
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -37,12 +37,12 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 	expectedCreds := &models.RepoCredWrapper{
 		Repo: []*models.RepoCreds{
 			{
-				Username:     "thisBeMyUserName",
-				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:      "https://ocelot.perf/nexus-yo",
-				Identifier:   "snapshot",
-				AcctName:     "jessishank",
-				SubType:      models.SubCredType_NEXUS,
+				Username:   "thisBeMyUserName",
+				Password:   "SHH-BE-QUIET-ITS-A-SECRET",
+				RepoUrl:    "https://ocelot.perf/nexus-yo",
+				Identifier: "snapshot",
+				AcctName:   "jessishank",
+				SubType:    models.SubCredType_NEXUS,
 			},
 		},
 	}
@@ -58,7 +58,6 @@ func Test_cmd_Run_Yaml(t *testing.T) {
 		t.Error("expected creds mismatch\n expected: ", expectedCreds, "\n actual: ", actualCreds)
 	}
 
-
 }
 
 func Test_cmd_Run_noYaml(t *testing.T) {
@@ -73,12 +72,12 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 	expectedCreds := &models.RepoCredWrapper{
 		Repo: []*models.RepoCreds{
 			{
-				Username:     "thisBeMyUserName",
-				Password:     "SHH-BE-QUIET-ITS-A-SECRET",
-				RepoUrl:     "https://ocelot.perf/nexus-yo",
-				Identifier:  "snapshots",
-				AcctName:     "jessishank",
-				SubType:      models.SubCredType_NEXUS,
+				Username:   "thisBeMyUserName",
+				Password:   "SHH-BE-QUIET-ITS-A-SECRET",
+				RepoUrl:    "https://ocelot.perf/nexus-yo",
+				Identifier: "snapshots",
+				AcctName:   "jessishank",
+				SubType:    models.SubCredType_NEXUS,
 			},
 		},
 	}

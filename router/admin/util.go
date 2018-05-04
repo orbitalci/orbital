@@ -1,15 +1,15 @@
 package admin
 
 import (
-	ocenet "bitbucket.org/level11consulting/go-til/net"
+	ocenet "github.com/shankj3/go-til/net"
 
-	cred "bitbucket.org/level11consulting/ocelot/common/credentials"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 
-	bb "bitbucket.org/level11consulting/ocelot/common/remote/bitbucket"
-	"bitbucket.org/level11consulting/ocelot/storage"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	bb "github.com/shankj3/ocelot/common/remote/bitbucket"
+	"github.com/shankj3/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -50,11 +50,11 @@ func ParseStagesByBuildId(buildSum models.BuildSummary, stageResults []models.St
 	var parsedStages []*pb.StageStatus
 	for _, result := range stageResults {
 		stageDupe := &pb.StageStatus{
-			StageStatus: result.Stage,
-			Error: result.Error,
-			Status: int32(result.Status),
-			Messages: result.Messages,
-			StartTime: &timestamp.Timestamp{Seconds: result.StartTime.UTC().Unix()},
+			StageStatus:   result.Stage,
+			Error:         result.Error,
+			Status:        int32(result.Status),
+			Messages:      result.Messages,
+			StartTime:     &timestamp.Timestamp{Seconds: result.StartTime.UTC().Unix()},
 			StageDuration: result.StageDuration,
 		}
 		parsedStages = append(parsedStages, stageDupe)
@@ -62,15 +62,15 @@ func ParseStagesByBuildId(buildSum models.BuildSummary, stageResults []models.St
 
 	hashStatus := &pb.Status{
 		BuildSum: &pb.BuildSummary{
-			Hash: buildSum.Hash,
-			Failed: buildSum.Failed,
-			BuildTime: &timestamp.Timestamp{Seconds: buildSum.BuildTime.UTC().Unix()},
-			Account: buildSum.Account,
+			Hash:          buildSum.Hash,
+			Failed:        buildSum.Failed,
+			BuildTime:     &timestamp.Timestamp{Seconds: buildSum.BuildTime.UTC().Unix()},
+			Account:       buildSum.Account,
 			BuildDuration: buildSum.BuildDuration,
-			Repo: buildSum.Repo,
-			Branch: buildSum.Branch,
-			BuildId: buildSum.BuildId,
-			QueueTime: &timestamp.Timestamp{Seconds: buildSum.QueueTime.UTC().Unix()},
+			Repo:          buildSum.Repo,
+			Branch:        buildSum.Branch,
+			BuildId:       buildSum.BuildId,
+			QueueTime:     &timestamp.Timestamp{Seconds: buildSum.QueueTime.UTC().Unix()},
 		},
 		Stages: parsedStages,
 	}

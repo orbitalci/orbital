@@ -1,10 +1,10 @@
 package storage
 
 import (
-	"bitbucket.org/level11consulting/ocelot/models"
 	"bytes"
 	"database/sql"
 	"fmt"
+	"github.com/shankj3/ocelot/models"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,18 +19,18 @@ func CreateTestFileSystemStorage(t *testing.T) BuildSum {
 
 // create a test postgres database on port 5555 using the official docker image, create the tables, and insert some
 // seed data
-func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing.T)){
+func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing.T)) {
 	cleanup, pw, port := CreateTestPgDatabase(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	hash := "123"
 	model := &models.BuildSummary{
-		Hash: hash,
-		Failed: false,
-		BuildTime: time.Now(),
-		Account: "testAccount",
+		Hash:          hash,
+		Failed:        false,
+		BuildTime:     time.Now(),
+		Account:       "testAccount",
 		BuildDuration: 23.232,
-		Repo: "testRepo",
-		Branch: "aBranch",
+		Repo:          "testRepo",
+		Branch:        "aBranch",
 	}
 	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch)
 	if err != nil {
@@ -46,7 +46,7 @@ func createOrUpdateAuditFile(msg string) error {
 		return err
 	}
 	defer f.Close()
-	if _, err = f.WriteString(msg+"\n"); err != nil {
+	if _, err = f.WriteString(msg + "\n"); err != nil {
 		return err
 	}
 	return nil
@@ -79,7 +79,7 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 	//var containerId string
 	//containerId = strings.Trim(outbe.String(), "\n")
 	t.Log("successfully started up test pg database on port 5555")
-	cleanup = func(t *testing.T){
+	cleanup = func(t *testing.T) {
 		//createOrUpdateAuditFile(fmt.Sprintf("%s,delete", t.Name()))
 		t.Log("attempting to clean up db")
 		cmd := exec.Command("/bin/sh", "-c", "docker ps -a | grep pgtest")

@@ -1,20 +1,19 @@
 package bitbucket
 
 import (
-	ocelog "bitbucket.org/level11consulting/go-til/log"
-	ocenet "bitbucket.org/level11consulting/go-til/net"
-	"bitbucket.org/level11consulting/ocelot/common"
-	"bitbucket.org/level11consulting/ocelot/models"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
-	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	"github.com/shankj3/ocelot/common"
+	"github.com/shankj3/ocelot/models"
+	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
-
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
 func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
@@ -31,9 +30,9 @@ func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
 func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) models.VCSHandler {
 	bb := &Bitbucket{
-		Client: client,
-		Marshaler: jsonpb.Marshaler{},
-		credConfig: adminConfig,
+		Client:        client,
+		Marshaler:     jsonpb.Marshaler{},
+		credConfig:    adminConfig,
 		isInitialized: true,
 	}
 	return bb
@@ -43,7 +42,7 @@ func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) mod
 //registering webhooks for necessary repositories
 type Bitbucket struct {
 	CallbackURL string
-	RepoBaseURL	string
+	RepoBaseURL string
 	Client      ocenet.HttpClient
 	Marshaler   jsonpb.Marshaler
 
@@ -74,15 +73,15 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 	}
 	return
 }
+
 ///2.0/repositories/{username}/{repo_slug}/commits
 func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error) {
 	commits := &pbb.Commits{}
-	err := bb.Client.GetUrl(fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/" + branch, commits)
+	err := bb.Client.GetUrl(fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch, commits)
 	return commits, err
 }
 
-
-func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_RepositoryValues, error){
+func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_RepositoryValues, error) {
 	repoVal := &pbb.PaginatedRepository_RepositoryValues{}
 	err := bb.Client.GetUrl(fmt.Sprintf(DefaultRepoBaseURL, acctRepo), repoVal)
 	if err != nil {
@@ -133,7 +132,7 @@ func (bb *Bitbucket) SetBaseURL(baseURL string) {
 }
 
 func (bb *Bitbucket) GetBaseURL() string {
-	if len (bb.RepoBaseURL) > 0 {
+	if len(bb.RepoBaseURL) > 0 {
 		return bb.RepoBaseURL
 	}
 	return DefaultRepoBaseURL
@@ -161,7 +160,6 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 	return bb.recurseOverRepos(repositories.GetNext())
 }
 
-
 //recursively iterates over all source files trying to find build file
 func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) error {
 	if sourceFileUrl == "" {
@@ -183,7 +181,6 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) er
 	}
 	return bb.recurseOverFiles(repositories.GetNext(), webhookUrl)
 }
-
 
 //recursively iterates over all webhooks and returns true (matches our callback urls) if one already exists
 func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {

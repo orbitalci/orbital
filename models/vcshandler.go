@@ -2,7 +2,7 @@ package models
 
 import (
 	// ugh stuck 4 now
-	pbb "bitbucket.org/level11consulting/ocelot/models/bitbucket/pb"
+	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 )
 
 type VCSHandler interface {

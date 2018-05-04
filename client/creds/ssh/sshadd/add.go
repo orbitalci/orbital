@@ -1,13 +1,12 @@
 package sshadd
 
-
 import (
-	models "bitbucket.org/level11consulting/ocelot/models/pb"
-	"bitbucket.org/level11consulting/ocelot/client/commandhelper"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/client/commandhelper"
+	models "github.com/shankj3/ocelot/models/pb"
 	"io/ioutil"
 	"strings"
 )
@@ -18,16 +17,14 @@ func New(ui cli.Ui) *cmd {
 	return c
 }
 
-
 type cmd struct {
-	UI      cli.Ui
-	flags   *flag.FlagSet
+	UI         cli.Ui
+	flags      *flag.FlagSet
 	sshKeyFile string
-	acctName string
+	acctName   string
 	identifier string
-	config  *commandhelper.ClientConfig
+	config     *commandhelper.ClientConfig
 }
-
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
 	return c.config.Client
@@ -48,7 +45,6 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.identifier, "identifier", "ERROR", "unique identifier for this ssh key")
 }
 
-
 // uploadCredential will check if credential already exists. if it does, it will ask if the user wishes to overwrite. if the user responds YES, the credential will be updated.
 // if it does not exist, will be inserted as normal.
 func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI cli.Ui, cred *models.SSHKeyWrapper) error {
@@ -58,7 +54,7 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 	}
 
 	if exists.Exists {
-		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s, SSH Type %s, and Idnetifier %s already exists. Do you want to overwrite? " +
+		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s, SSH Type %s, and Idnetifier %s already exists. Do you want to overwrite? "+
 			"Only a YES will continue with update, otherwise the client will exit. ", cred.AcctName, strings.ToLower(cred.SubType.String()), cred.Identifier))
 		if err != nil {
 			return err
@@ -94,9 +90,9 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	cred := &models.SSHKeyWrapper{
-		AcctName: c.acctName,
+		AcctName:   c.acctName,
 		Identifier: c.identifier,
-		SubType: models.SubCredType_SSHKEY,
+		SubType:    models.SubCredType_SSHKEY,
 	}
 	sshKey, err := ioutil.ReadFile(c.sshKeyFile)
 	if err != nil {
@@ -111,7 +107,6 @@ func (c *cmd) Run(args []string) int {
 	return 0
 }
 
-
 func (c *cmd) Synopsis() string {
 	return synopsis
 }
@@ -125,4 +120,3 @@ const help = `
 Usage: ocelot creds ssh add --identifier JESSI_SSH_KEY --acctname level11consulting --sshfile-loc /Users/jesseshank/.ssh/id_rsa
   Will add an ssh key and attach it to an account. In the useage above, the ssh key will be accessible within the script as ~/.ssh/JESSI_SSH_KEY to use as an identity file. 
 `
-

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"bitbucket.org/level11consulting/ocelot/build/integrations"
-	"bitbucket.org/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 type SSHKeyInt struct {
 	strictHostKey string
-	sshKeys map[string]string
+	sshKeys       map[string]string
 }
 
 func (n *SSHKeyInt) String() string {
@@ -46,7 +46,7 @@ func (n *SSHKeyInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, er
 
 func (n *SSHKeyInt) MakeBashable(str string) []string {
 	var cmds = []string{n.strictHostKey}
-	for identifier, _ := range n.sshKeys {
+	for identifier := range n.sshKeys {
 		cmd := fmt.Sprintf("echo \"${%s}\" > ~/.ssh/%s && chmod 600 ~/.ssh/%s", identifier, identifier, identifier)
 		cmds = append(cmds, cmd)
 	}
