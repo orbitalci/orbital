@@ -28,6 +28,8 @@ const (
 	Panic
 )
 
+// Valet is the overseer of builds. It handles registration of when the build is started, what stage it is actively on,
+// when to close the channel that signifies to nsqpb to stop refreshing the status of the message
 type Valet struct {
 	RemoteConfig    cred.CVRemoteConfig
 	store			storage.OcelotStorage
@@ -38,9 +40,9 @@ type Valet struct {
 	c.Cleaner
 }
 
-func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage) *Valet {
+func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage, facts *models.SSHFacts) *Valet {
 	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store: store}
-	valet.Cleaner = c.GetNewCleaner(werkerType)
+	valet.Cleaner = c.GetNewCleaner(werkerType, facts)
 	valet.ContextValet = NewContextValet()
 	return valet
 }

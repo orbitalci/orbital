@@ -29,16 +29,16 @@ func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder b
 	}
 
 	//// download necessary binaries (ie kubectl, w/e)
-	//downloadResult, duration, starttime := w.downloadBinaries(ctx, build.InitStageUtil("download binaries"), builder)
-	//if err = storeStageToDb(w.Store, werk.Id, downloadResult, starttime, duration.Seconds()); err != nil {
-	//	ocelog.IncludeErrField(err).Error("couldn't store build output")
-	//	return
-	//}
-	//if downloadResult.Status == pb.StageResultVal_FAIL {
-	//	handleFailure(downloadResult, w.Store, "download binaries", duration, werk.Id)
-	//	err = errors.New("extra binaries download failed")
-	//	return
-	//}
+	downloadResult, duration, starttime := w.downloadBinaries(ctx, build.InitStageUtil("download binaries"), builder)
+	if err = storeStageToDb(w.Store, werk.Id, downloadResult, starttime, duration.Seconds()); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't store build output")
+		return
+	}
+	if downloadResult.Status == pb.StageResultVal_FAIL {
+		handleFailure(downloadResult, w.Store, "download binaries", duration, werk.Id)
+		err = errors.New("extra binaries download failed")
+		return
+	}
 
 	// download codebase to werker node
 	codeResult, duration, starttime := downloadCodebase(ctx, werk, builder, w.infochan)

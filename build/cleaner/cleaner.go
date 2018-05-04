@@ -14,14 +14,14 @@ type Cleaner interface {
 }
 
 //returns a new cleaner interface
-func GetNewCleaner(werkerType models.WerkType) Cleaner {
+func GetNewCleaner(werkerType models.WerkType, facts *models.SSHFacts) Cleaner {
 	switch werkerType {
 	case models.Docker:
 		return &DockerCleaner{}
 	case models.Kubernetes:
 		return &K8Cleaner{}
 	case models.SSH:
-		return &SSHCleaner{}
+		return &SSHCleaner{SSHFacts: facts}
 	default:
 		return &DockerCleaner{}
 	}

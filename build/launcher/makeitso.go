@@ -22,9 +22,6 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
-	// right off the bat we know all the environment variables that will exist for the
-	// lifetime of the container, so just add them now
-	w.addGlobalEnvVars(werk, builder)
 
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
@@ -44,8 +41,19 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 		Context:    ctx,
 		CancelFunc: cancel,
 	}
-
 	defer cancel()
+
+	// start building with the Builder
+	result := builder.Init(ctx, werk.CheckoutHash, w.infochan)
+	if result.Status == pb.StageResultVal_FAIL {
+		ocelog.Log().Error("Failed to initialize, error: " + result.Error)
+		handleFailure(result, w.Store, "INIT", 0, werk.Id)
+		return
+	}
+
+	// we know all the environment variables that will exist for the
+	// lifetime of the container, so just add them now
+	w.addGlobalEnvVars(werk, builder)
 	defer func() {
 		ocelog.Log().Info("closing infochan for ", werk.Id)
 		close(w.infochan)

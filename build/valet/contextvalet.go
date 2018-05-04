@@ -26,7 +26,8 @@ func (kv *ContextValet) ListenForKillRequests(hashKillChan chan string) {
 	}
 }
 
-
+// Kill will pull the cancelable context from from the context map, and call the CancelFunc() on it.
+// it will then delete the hash out of the context map
 func (kv *ContextValet) Kill(killHash string) error {
 	ctx, active := kv.contexts[killHash]
 	if !active {

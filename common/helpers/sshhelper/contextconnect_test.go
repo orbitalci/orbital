@@ -2,15 +2,12 @@ package sshhelper
 
 import (
 	"bufio"
-	"context"
 	"io"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/common/testutil"
 )
 
 func Test_splitEnvs(t *testing.T) {
@@ -33,9 +30,9 @@ func Test_splitEnvs(t *testing.T) {
 }
 
 func TestContextConnection_CheckConnection(t *testing.T) {
-	cleanup, ctx := createSSHDockerContainer(t, "2222")
+	cleanup, ctx := CreateSSHDockerContainer(t, "2222")
 	defer cleanup()
-	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "root", "localhost", 2222)
+	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "", "root", "localhost", 2222)
 	err := cnxn.Connect(ctx)
 	if err != nil {
 		t.Error(err)
@@ -47,26 +44,11 @@ func TestContextConnection_CheckConnection(t *testing.T) {
 	}
 }
 
-func createSSHDockerContainer(t *testing.T, forwardPort string) (cleanup func(), ctx context.Context){
-	var err error
-	if testing.Short() {
-		t.Skip("skipping docker container test because -short flag set")
-	}
-	sshMount := os.ExpandEnv("$PWD/test-fixtures/docker_id_rsa.pub") + ":/root/.ssh/authorized_keys"
-	configMount := os.ExpandEnv("$PWD/test-fixtures/sshd_config") + ":/etc/ssh/sshd_config:ro"
-	ctx, _ = context.WithCancel(context.Background())
-	cleanup, err = testutil.DockerCreateExec(t,  ctx, "panubo/sshd", []string{forwardPort + ":22"}, sshMount, configMount)
-	if err != nil {
-		t.Fatal("couldn't create container", err.Error())
-		return
-	}
-	return cleanup, ctx
-}
 
 func TestContextConnection_RunAndLog(t *testing.T) {
-	cleanup, ctx := createSSHDockerContainer(t, "2223")
+	cleanup, ctx := CreateSSHDockerContainer(t, "2223")
 	defer cleanup()
-	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "root", "localhost", 2223)
+	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "","root", "localhost", 2223)
 	err := cnxn.Connect(ctx)
 	if err != nil {
 		t.Error(err)
@@ -102,9 +84,9 @@ func testPipeHandler(rc io.Reader, logout chan[]byte, donechan chan int) {
 
 
 func TestContextConnection_Setenvs(t *testing.T) {
-	cleanup, ctx := createSSHDockerContainer(t, "2224")
+	cleanup, ctx := CreateSSHDockerContainer(t, "2224")
 	defer cleanup()
-	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "root", "localhost", 2224)
+	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "","root", "localhost", 2224)
 	err := cnxn.Connect(ctx)
 	if err != nil {
 		t.Error(err)

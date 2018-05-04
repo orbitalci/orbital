@@ -19,39 +19,41 @@ import (
 
 type SSH struct {
 	*basher.Basher
-	killer 	   *valet.ContextValet
-	connection *sshhelper.ContextConnection
-	stage 	   *build.StageUtil
-	envs	   []string
+	killer *valet.ContextValet
+	cnxn   *sshhelper.Channel
+	stage  *build.StageUtil
+	envs   []string
 	*models.WerkerFacts
 }
 
 
-func NewSSHBuilder(b *basher.Basher, facts *models.WerkerFacts) build.Builder {
-	return &SSH{
-		Basher: b,
-		connection: sshhelper.InitContextConnect(facts.Ssh.KeyFP, facts.Ssh.Password, facts.Ssh.User, facts.Ssh.Host, facts.Ssh.Port),
-		WerkerFacts: facts,
-	}
+// NewSSHBuilder will establish the SSH connection then return the SSH builder. It will fail if it cannot
+// establish a connection, as it should. It requires more than the docker builder say, because this ssh conneciton
+// isn't a "clean" builder, unfortunately. It is not destroyed afterword, so we need things like hash to know what to clean up
+// once the build process has completed.
+func NewSSHBuilder(b *basher.Basher, facts *models.WerkerFacts) (build.Builder, error) {
+	return &SSH{Basher:b, WerkerFacts: facts}, nil
 }
 
 func (h *SSH) SetGlobalEnv(envs []string) {
-	h.connection.SetGlobals(envs)
+	h.cnxn.SetGlobals(envs)
 }
 
-func (h *SSH) establishConnection(ctx context.Context, logout chan[]byte, setupMessages []string, stage string) *pb.Result {
-	err := h.connection.Connect(ctx)
+
+func (h *SSH) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Result {
+	res := &pb.Result{
+		Stage: "Init",
+		Status: pb.StageResultVal_PASS,
+		Messages: []string{"Initializing SSH builder..."},
+	}
+	cnxn, err := sshhelper.CreateSSHChannel(ctx, h.Ssh, hash)
+	h.cnxn = cnxn
 	if err != nil {
-		logout <- []byte("unable to establish ssh connection")
-		setupMessages = append(setupMessages, "unable to establish ssh connection " + models.FAILED)
-		return &pb.Result{Stage: stage, Status: pb.StageResultVal_FAIL, Messages: setupMessages, Error: err.Error()}
+		res.Status = pb.StageResultVal_FAIL
+		res.Error = err.Error()
+		res.Messages = append(res.Messages, "Failed to initialize ssh builder " + models.FAILED)
 	}
-	if err = h.connection.CheckConnection(); err != nil {
-		logout <- []byte("unable to establish ssh connection")
-		setupMessages = append(setupMessages, "unable to establish ssh connection " + models.FAILED)
-		return &pb.Result{Stage: stage, Status: pb.StageResultVal_FAIL, Messages: setupMessages, Error: err.Error()}
-	}
-	return nil
+	return res
 }
 
 // Setup for the SSH werker type will send off the checkout hash as the "docker id" on the docker id channel
@@ -60,10 +62,6 @@ func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan s
 	dockerIdChan <- werk.CheckoutHash
 	var setupMessages []string
 	su := build.InitStageUtil("setup")
-	setupMessages = append(setupMessages, "attempting to establish ssh connection...")
-	if res := h.establishConnection(ctx, logout, setupMessages, su.GetStage()); res != nil {
-		return res, werk.CheckoutHash
-	}
 	setupMessages = append(setupMessages, "successfully established ssh connection " + models.CHECKMARK)
 	cmd := h.SleeplessDownloadTemplateFiles(h.RegisterIP, h.ServicePort)
 	downloadTemplates := h.execute(ctx, su, []string{}, []string{cmd}, logout)
@@ -119,7 +117,7 @@ func (h *SSH) execute(ctx context.Context, stage *build.StageUtil, env []string,
 	sshcmd := strings.Join(cmds, " ")
 	h.stage = stage
 	//defer func(){h.stage = nil}()
-	err := h.connection.RunAndLog(sshcmd, env, logout, h.writeToInfo)
+	err := h.cnxn.RunAndLog(sshcmd, env, logout, h.writeToInfo)
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to complete %s stage %s", stage.Stage, models.FAILED)
 		return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_FAIL, Error: err.Error(), Messages:[]string{errMsg}}

@@ -94,7 +94,7 @@ func main() {
 	}
 	conf.Uuid = uuid
 	// kick off ctl-c signal handling
-	buildValet := valet.NewValet(conf.RemoteConfig, conf.Uuid, conf.WerkerType, store)
+	buildValet := valet.NewValet(conf.RemoteConfig, conf.Uuid, conf.WerkerType, store, conf.Ssh)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {

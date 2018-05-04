@@ -8,7 +8,7 @@ import (
 	"github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/build/builder"
+	"github.com/shankj3/ocelot/build/builder/docker"
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/integrations/dockerconfig"
 	cred "github.com/shankj3/ocelot/common/credentials"
@@ -103,11 +103,11 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	launch := &launcher{RemoteConf: &dummyCVRC{}}
 	//go createKubectlEndpoint(t)
 	ctx := context.Background()
-	docker, cleanupFunc := builder.CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
+	dckr, cleanupFunc := docker.CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
 	time.Sleep(2 * time.Second)
 	defer cleanupFunc(t)
 	launch.infochan = make(chan []byte, 1000)
-	result, _, _ := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, docker)
+	result, _, _ := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, dckr)
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Log(result.Messages)
 		t.Error(result.Error)
@@ -122,7 +122,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {
 		t.Error(diff)
 	}
-	result, _, _ = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf:&pb.BuildConfig{BuildTool:"gala"}}, docker)
+	result, _, _ = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf:&pb.BuildConfig{BuildTool:"gala"}}, dckr)
 	close(launch.infochan)
 	expectedMsgs = []string{
 		"completed integration_util | ssh keyfile integration stage ✓",
@@ -140,7 +140,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	launch.infochan = make(chan []byte, 1000)
 	// check that docker config.json was properly rendered
 	expectedDockerConfig := []byte(`{"auths":{"http://docker.hub.io":{"auth":"dW5hbWU6eHl6enp6"},"http://urls.go":{"auth":"ZG9ja2VydXNlcjpkb2NrZXJwdw=="}},"HttpHeaders":{"User-Agent":"Docker-Client/17.12.0-ce (linux)"}}`)
-	res := docker.Exec(ctx, "test docker config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.docker/config.json"}, launch.infochan)
+	res := dckr.Exec(ctx, "test docker config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.docker/config.json"}, launch.infochan)
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Log(res.Messages)
 		t.Error(result.Error)
@@ -155,7 +155,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 
 	// this is going to be multiline, so we have to set up a new info channel
 	kubeLogout := make(chan []byte, 1000)
-	res = docker.Exec(ctx, "test k8s config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/conf"}, kubeLogout)
+	res = dckr.Exec(ctx, "test k8s config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/conf"}, kubeLogout)
 	close(kubeLogout)
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Log(res.Messages)
@@ -171,7 +171,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	}
 	// finally, check that ssh key properly rendered
 	sshLogout := make(chan []byte, 1000)
-	res = docker.Exec(ctx, "test ssh file render", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.ssh/THISISANSSHKEY"}, sshLogout)
+	res = dckr.Exec(ctx, "test ssh file render", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.ssh/THISISANSSHKEY"}, sshLogout)
 	close(sshLogout)
 	var sshKeyRendered string
 	for sshLIne := range sshLogout {
@@ -201,7 +201,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	acctName := "test"
 	projectName := "project"
 	ctx := context.Background()
-	docker, cleanupFunc := builder.CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
+	dckr, cleanupFunc := docker.CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
 	defer cleanupFunc(t)
 
 	pull := []string{"/bin/sh", "-c", "docker pull docker.metaverse.l11.com/busybox:test_do_not_delete"}
@@ -213,7 +213,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	// try to do a docker pull on private repo without creds written. this should fail.
 	out := make(chan []byte, 10000)
-	result := docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, out)
+	result := dckr.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, out)
 	if result.Status != pb.StageResultVal_FAIL {
 		data := <-out
 		t.Error("pull from metaverse should fail if there are no creds to authenticate with. stdout: ", data)
@@ -223,18 +223,18 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	//
 	//// create config in ~/.docker directory w/ auth creds
 	logout := make(chan []byte, 10000)
-	dckr := dockerconfig.Create()
-	creds, err := testRemoteConfig.GetCredsBySubTypeAndAcct(pg, dckr.SubType(), acctName, false)
+	dcker := dockerconfig.Create()
+	creds, err := testRemoteConfig.GetCredsBySubTypeAndAcct(pg, dcker.SubType(), acctName, false)
 	if err != nil {
 		t.Log(err)
 		return
 	}
-	intstring, err := dckr.GenerateIntegrationString(creds)
+	intstring, err := dcker.GenerateIntegrationString(creds)
 	if err != nil {
 		t.Log(err)
 		return
 	}
-	res := docker.ExecuteIntegration(ctx, &pb.Stage{Env: []string{}, Name: "docker login", Script: dckr.MakeBashable(intstring)}, build.InitStageUtil("docker login"), logout)
+	res := dckr.ExecuteIntegration(ctx, &pb.Stage{Env: []string{}, Name: "docker login", Script: dcker.MakeBashable(intstring)}, build.InitStageUtil("docker login"), logout)
 	if res.Status == pb.StageResultVal_FAIL {
 		data := <-logout
 		t.Error("stage failed! logout data: ", string(data))
@@ -242,7 +242,7 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 
 	// try to pull the image from metaverse again. this should now pass.
 	logout = make(chan []byte, 100000)
-	res = docker.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, logout)
+	res = dckr.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, pull, logout)
 	outByte := <-logout
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Error("could not pull from metaverse docker! out: ", string(outByte))

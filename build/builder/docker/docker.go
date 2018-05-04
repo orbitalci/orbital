@@ -34,6 +34,18 @@ func NewDockerBuilder(b *basher.Basher) build.Builder {
 	return &Docker{nil, "", nil, nil, b}
 }
 
+func (d *Docker) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Result {
+	// todo: maybe this could go in here??
+	//cli, err := client.NewEnvClient()
+	//d.DockerClient = cli
+	res := &pb.Result{
+		Status: pb.StageResultVal_PASS,
+		Stage: "INIT",
+		Messages: []string{"Initializing docker builder..."},
+	}
+	return res
+}
+
 func (d *Docker) GetContainerId() string {
 	return d.ContainerId
 }

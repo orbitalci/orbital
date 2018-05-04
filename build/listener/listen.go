@@ -71,7 +71,11 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	case models.Docker:
 		builder = docker.NewDockerBuilder(w.Basher)
 	case models.SSH:
-		builder = ssh.NewSSHBuilder(w.Basher, w.WerkerFacts)
+		var err error
+		builder, err = ssh.NewSSHBuilder(w.Basher, w.WerkerFacts)
+		if err != nil {
+			return err
+		}
 	default:
 		builder = docker.NewDockerBuilder(w.Basher)
 	}

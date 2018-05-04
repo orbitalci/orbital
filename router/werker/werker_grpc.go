@@ -1,7 +1,6 @@
 package werker
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -50,9 +49,10 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 			log.IncludeErrField(err).Error("unable to retrieve active builds from consul")
 			return status.Error(codes.Internal, err.Error())
 		}
-		build, ok := hashes[request.Hash]
+		_, ok := hashes[request.Hash]
 		if ok {
-			w.Cleanup(context.Background(), build.DockerUuid, nil)
+			// this should be handled by valet
+			//w.Cleanup(context.Background(), build.DockerUuid, nil)
 			stream.Send(wrap(fmt.Sprintf("Successfully killed build for %s %s", request.Hash, models.CHECKMARK)))
 		} else {
 			stream.Send(wrap("Wow you killed your build before it even got to the setup stage??"))
@@ -70,7 +70,7 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 func NewWerkerServer(werkerCtx *WerkerContext) pb.BuildServer {
 	werkerServer := &WerkerServer{
 		WerkerContext: werkerCtx,
-		Cleaner:       cleaner.GetNewCleaner(werkerCtx.WerkerType),
+		Cleaner:       cleaner.GetNewCleaner(werkerCtx.WerkerType, werkerCtx.Ssh),
 	}
 	return werkerServer
 }

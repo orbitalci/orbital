@@ -37,6 +37,7 @@ func UnRegister(consulete *consul.Consulet, werkerId string) error {
 	return err
 }
 
+// RegisterStartedBuild creates an entry in consul that maps the git hash to the werker's uuid so that clients can find the werker for live streaming
 func RegisterStartedBuild(consulete *consul.Consulet, werkerId string, gitHash string) error {
 	if err := consulete.AddKeyValue(common.MakeBuildMapPath(gitHash), []byte(werkerId)); err != nil {
 		return err
@@ -44,12 +45,14 @@ func RegisterStartedBuild(consulete *consul.Consulet, werkerId string, gitHash s
 	return nil
 }
 
+// RegisterBuild will add the mapping of docker uuid (or unique identifier, w/e) to the associated werkerId/commit build
 func RegisterBuild(consulete *consul.Consulet, werkerId string, gitHash string, dockerUuid string) error {
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("docker_uuid", dockerUuid).Info("registering build")
 	err := consulete.AddKeyValue(common.MakeDockerUuidPath(werkerId, gitHash), []byte(dockerUuid))
 	return err
 }
 
+// RegisterBuildSummaryId will associate the build_summary's database id number with the executing build
 func RegisterBuildSummaryId(consulete *consul.Consulet, werkerId string, gitHash string, buildId int64) error {
 	str := fmt.Sprintf("%d", buildId)
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("buildId", buildId).Info("registering build")
