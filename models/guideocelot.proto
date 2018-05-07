@@ -9,7 +9,6 @@ import "protoc-gen-swagger/options/annotations.proto";
 //import "google/protobuf/wrappers.proto"; //use this when you have to pass a string value
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
-    base_path: "/v1"
     info: {
         title: "Guide Ocelot Server"
         version: "1.0"
@@ -18,7 +17,6 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
             email: "jessishank@level11.com"
         };
     };
-    schemes: HTTP;
     schemes: HTTPS;
     consumes: "application/json"
     produces: "application/json";
@@ -30,122 +28,158 @@ service GuideOcelot {
 			get: "/v1/creds/vcs"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Return all vcs creds"
             description: "Returns all VCS creds that ocelot has and can use for checking out code to build.";
+            tags: "creds"
+            tags: "vcs"
         };
     }
-
+    rpc GetVCSCred(VCSCreds) returns (VCSCreds) {
+        option (google.api.http) = {
+			get: "/v1/creds/vcs/{acctName}/{identifier}"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Retrieve single VCS cred"
+            description: "Returns vcs cred if it exists. subtype is a required query param. \nRefer to modelsVCSCreds for the object fields";
+            tags: "creds"
+            tags: "vcs"
+        };
+    }
     rpc SetVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			post: "/v1/creds/vcs"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Add a new VCS credential configuration to ocelot for code checkout.";
+            summary: "Add VCS Credential"
+            description: "Add a new VCS credential configuration to ocelot for code checkout. \nRefer to modelsVCSCreds for the object fields"
+            tags: "creds"
+            tags: "vcs"
         };
     }
     rpc UpdateVCSCreds (VCSCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			put: "/v1/creds/vcs"
+			put: "/v1/creds/vcs/{acctName}/{identifier}"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             summary: "Update a VCS Credential"
-            description: "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists";
+            description: "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists. subType is a required query param \nRefer to modelsVCSCreds for the object fields"
+            tags: "creds"
+            tags: "vcs"
         };
     }
 //    account,identifier,cred_sub_type
-    rpc VCSCredExists (VCSCreds) returns (Exists) {
-        option (google.api.http) = {
-			get: "/v1/creds/vcs/exists"
-
-		};
-        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Check if VCS Credential exists in ocelot already. For knowing whether to call Update or Set";
-        };
-    }
+    rpc VCSCredExists (VCSCreds) returns (Exists) {}
     rpc CheckConn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
     rpc SetVCSPrivateKey (SSHKeyWrapper) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			post: "/v1/creds/vcs/ssh"
+			post: "/v1/creds/vcs/{acctName}/{identifier}/ssh"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository.";
+            summary: "Attach ssh key to VCS Account"
+            description: "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository. subType is a required query param \nRefer to modelsSSHKeyWrapper for the object fields"
+            tags: "creds"
+            tags: "vcs"
         };
     }
 
+    rpc GetRepoCred(RepoCreds) returns (RepoCreds) {
+        option (google.api.http) = {
+			get: "/v1/creds/repo/{acctName}/{identifier}"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "return single repo cred"
+            description: "Returns repo cred if it exists. subType is a required query param"
+            tags: "creds"
+            tags: "repo"
+        };
+    }
 
     rpc UpdateRepoCreds (RepoCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			put: "/v1/creds/repo"
+			put: "/v1/creds/repo/{acctName}/{identifier}"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Update new credential configuration to ocelot for repository integration.";
+            summary: "Update repo credential"
+            description: "update new credential configuration to ocelot for repository integration. \nRefer to modelsRepoCreds for the object fields"
+            tags: "creds"
+            tags: "repo"
         };
     }
-    rpc RepoCredExists (RepoCreds) returns (Exists) {
+    rpc RepoCredExists (RepoCreds) returns (Exists) {}
+    rpc GetK8SCred(K8SCreds) returns (K8SCreds) {
         option (google.api.http) = {
-			get: "/v1/creds/repo/exists"
-
+			get: "/v1/creds/k8s/{acctName}/{identifier}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Check if Repo Credential exists in ocelot already. For knowing whether to call Update or Set";
+            summary: "get Kubernetes credential"
+            description: "Returns k8s cred if it exists. subtype is a required query param";
+            tags: "creds"
+            tags: "kubernetes"
         };
     }
-
     rpc UpdateK8SCreds (K8SCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			put: "/v1/creds/k8s"
+			put: "/v1/creds/k8s/{acctName}/{identifier}"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Update a kubeconfig in ocelot for kubernetes integration.";
+            summary: "Update a kubeconfig in ocelot for kubernetes integration. \nRefer to modelsK8SCreds for the object fields"
+            tags: "creds"
+            tags: "kubernetes"
         };
     }
-    rpc K8SCredExists (K8SCreds) returns (Exists) {
-        option (google.api.http) = {
-			get: "/v1/creds/k8s/exists"
-
-		};
-        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Check if kubeconfig Credential exists in ocelot already. For knowing whether to call Update or Set";
-        };
-    }
+    rpc K8SCredExists (K8SCreds) returns (Exists) {}
 
     rpc UpdateSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			put: "/v1/creds/ssh"
+			put: "/v1/creds/ssh/{acctName}/{identifier}"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Update a ssh key for use in build scripts";
+            summary: "Update ssh key"
+            description: "Update a ssh key for use in build scripts. Must already exist in the database. \nRefer to modelsSSHKeyWrapper for the object fields"
+            tags: "creds"
+            tags: "ssh"
         };
     }
-    rpc SSHCredExists (SSHKeyWrapper) returns (Exists) {
+    rpc GetSSHCred(SSHKeyWrapper) returns (SSHKeyWrapper) {
         option (google.api.http) = {
-			get: "/v1/creds/ssh/exists"
-
+			get: "/v1/creds/ssh/{acctName}/{identifier}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Check if ssh key file Credential exists in ocelot already. For knowing whether to call Update or Set";
+            summary: "retrieve single ssh key"
+            description: "Returns ssh cred if it exists. subtype is a required query param"
+            tags: "creds"
+            tags: "ssh"
         };
     }
+    rpc SSHCredExists (SSHKeyWrapper) returns (Exists) {    }
     rpc SetSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			post: "/v1/creds/ssh"
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Add a new ssh key to an account so builds can access them at runtime.";
+            summary: "Attach new SSH key to account"
+            description: "Add a new ssh key to an account so builds can access them at runtime. \nRefer to modelsSSHKeyWrapper for the object fields"
+            tags: "creds"
+            tags: "ssh"
         };
     }
     rpc GetSSHCreds (google.protobuf.Empty) returns (SSHWrap) {
         option (google.api.http) = {
 			get: "/v1/creds/ssh"
-
 		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Get all known SSH integration credentials."
+            tags: "creds"
+            tags: "ssh"
+        };
     }
 
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {
@@ -153,7 +187,10 @@ service GuideOcelot {
 			get: "/v1/creds/repo"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Get all known repo integration credentials."
             description: "Get all known repo integration credentials.";
+            tags: "creds"
+            tags: "repo"
         };
     }
     rpc SetRepoCreds (RepoCreds) returns (google.protobuf.Empty) {
@@ -162,7 +199,10 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker.";
+            summary: "Add new Repo cred"
+            description: "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker. \nRefer to modelsRepoCreds for the object fields"
+            tags: "creds"
+            tags: "repo"
         };
     }
 
@@ -171,18 +211,25 @@ service GuideOcelot {
 			post: "/v1/creds/k8s"
 			body: "*"
 		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Add new Kubernetes Credential"
+            description: "Add New kubernetes credential. \nRefer to modelsK8SCreds for the object fields"
+            tags: "creds"
+            tags: "kubernetes"
+        };
     }
     rpc GetK8SCreds (google.protobuf.Empty) returns (K8SCredsWrapper) {
         option (google.api.http) = {
 			get: "/v1/creds/k8s"
 		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Retrieve all kubernetes related credentials"
+            tags: "creds"
+            tags: "kubernetes"
+        };
     }
 
-    rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {
-        option (google.api.http) = {
-			get: "/v1/creds";
-		};
-    }
+    rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
 
 
     rpc BuildRuntime (BuildQuery) returns (Builds) {
@@ -190,8 +237,9 @@ service GuideOcelot {
 			get: "/v1/buildruntime"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. "
-            summary: "get runtime specification of a specific build";
+            description: "buildRuntime is used for getting node details for an active build. When you query via a hash, ocelot will do a lookup in postgres for the top-level build information, then look in consul to find all of the runtime data, ie the werker node's ip and port for streaming build logs. \n If the build is finished and streaming logs should query the admin instead of the werker nodes, then the bool field `Done` will be true."
+            summary: "get runtime specification of a specific build"
+            tags: "build-runtime"
         };
     }
     rpc Logs (BuildQuery) returns (stream LineResponse) {
@@ -199,15 +247,19 @@ service GuideOcelot {
 			get: "/v1/logs"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ";
+            summary: "stream logs of a previous build"
+            description: "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. \n This method will error out if the build is still active. Active builds MUST be streamed from the werkers themselves, and  you must call /v1/buildruntime to retrive the werker connection information  \nif hash is specified and there are multiple builds with the same hash, ocelot will stream the latest one. \nRefer to modelsBuildQuery for object fields"
+            tags: "build-runtime"
         };
     }
     rpc LastFewSummaries (RepoAccount) returns (Summaries) {
         option (google.api.http) = {
-			get: "/v1/summary"
+			get: "/v1/summary/{account}/{repo}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.";
+            summary: "retrive summaries corresponding to an account & repo"
+            description: "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned";
+            tags: "overview"
         };
     }
     rpc GetStatus (StatusQuery) returns (Status) {
@@ -215,7 +267,10 @@ service GuideOcelot {
 			get: "/v1/status"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "GetStatus will return the status of a specific build. Hierarchy for key to lookup with: if hash supplied, will only search by hash. If acctName and repoName are supplied and not hash, \nit will be used as a key for looking up status. If only partialRepo is given in the request, ocelot will attempt to find a match and return the latest build stage details for that.";
+            summary: "get detailed status on every stage in a build"
+            description: "GetStatus will return the status of a specific build. Hierarchy for key to lookup with: if `hash` supplied, ocelot will only get status by hash. If `acctName` and `repoName` are supplied and not hash, it will be used as a key for looking up status. If only `partialRepo` is given in the request, ocelot will attempt to find a match and return the latest build stage details for that."
+            tags: "overview"
+            tags: "build-runtime"
         };
     }
     rpc WatchRepo (RepoAccount) returns (google.protobuf.Empty) {
@@ -224,7 +279,9 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "watch will set up a webhook for the given repo/account. all fields required.";
+            summary: "create a webhook in bitbucket for a repository"
+            description: "watch will set up a webhook for the given repo/account. `repo`, `account`, and `limit` are required fields in the POST body"
+            tags: "tracking"
         };
     }
     rpc BuildRepoAndHash (BuildReq) returns (stream LineResponse) {
@@ -233,7 +290,10 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "build will attempt to trigger a build. If the git hash has already been built before, it can be triggered with just acctRepo and hash fields. If it has not been built before, the branch flag is required as well.";
+            summary: "trigger a build"
+            description: "build will attempt to trigger a build. If the git hash has already been built before, it can be triggered with just `acctRepo` and `hash` fields. If it has not been built before, the `branch` field is required as well."
+            tags: "build-runtime"
+            tags: "overview"
         };
     }
     rpc PollRepo(PollRequest) returns (google.protobuf.Empty) {
@@ -242,15 +302,19 @@ service GuideOcelot {
 			body: "*"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "poll will set up a polling request. account, repo, cron, and branches are all required fields.";
+            summary: "set up git poll tracking for a repository"
+            description: "poll will set up a polling request. `account`, `repo`, `cron`, and `branches` are all required fields."
+            tags: "tracking"
         };
     }
     rpc DeletePollRepo(PollRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-			delete: "/v1/poll"
+			delete: "/v1/poll/{account}/{repo}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "delete polling for a repo. account and repo are required.";
+            summary: "delete poll tracking for a repo"
+            description: "delete polling for a repo"
+            tags: "tracking"
         };
     }
     rpc ListPolledRepos(google.protobuf.Empty) returns (Polls) {
@@ -258,24 +322,29 @@ service GuideOcelot {
 			get: "/v1/poll"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "list all repositories that are being polled for changes";
+            summary: "list all repositories that are being polled for changes"
+            description: "list all repositories that are being polled for changes"
+            tags: "tracking"
         };
     }
     rpc FindWerker (BuildReq) returns (BuildRuntimeInfo) {
         // find a better place for this?
         option (google.api.http) = {
-			get: "/v1/werker/loc"
+			get: "/v1/werker/{hash}"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            description: "get network location of werker that is currrently ";
+            description: "get network location of werker that is currrently executing a build on the specifed hash. use when you want to kill a specific build to get werker node info. "
+            summary: "get details of node running specific build"
+            tags: "build-runtime"
         };
     }
     rpc GetTrackedRepos(google.protobuf.Empty) returns (AcctRepos) {
         option (google.api.http) = {
-			get: "/v1/acctRepos"
+			get: "/v1/tracked-repositories"
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "get list of currently tracked account/repos"
+            summary: "get list of all currently tracked account/repos"
+            tags: "tracking"
         };
     }
 }
@@ -308,6 +377,7 @@ message SSHKeyWrapper {
     string acctName = 1;
     // the contents of the private key
     bytes privateKey = 2;
+    // There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY
     SubCredType subType = 10;
     // identifier is the unique identifier for when an ssh key is not associated with a VCS account.
     string identifier = 11;
@@ -336,6 +406,7 @@ message VCSCreds {
     // just a string that says whether or not there is an ssh key on file
     // @inject_tag: yaml:"sshFileLoc"
     string sshFileLoc = 6;
+    // there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET
     // @inject_tag: yaml:"subType"
     SubCredType subType = 10;
 }
@@ -347,30 +418,25 @@ message RepoCredWrapper {
 
 enum CredType {
     NIL_CT = 0;
+    // VCS Cred type has 2 SubCredTypes: BITBUCKET and GITHUB
     VCS = 1;
+    // REPO has 2 SubCredTypes: NEXUS and DOCKER
     REPO = 2;
+    // K8S has 1 SubCredType: KUBECONF
     K8S = 3;
+    // SSH has 1 SubCredType: SSHKEY
     SSH = 5;
 
 }
 
 enum SubCredType {
     NIL_SCT = 0;
-    // BITBUCKET is a child of VCS
     BITBUCKET = 1;
-    //GITHUB is a child of VCS
     GITHUB = 2;
-
-    //NEXUS is a child of REPO
     NEXUS = 3;
-    //MAVEN is a child of REPO
     MAVEN = 4;
-    //DOCKER is a child of REPO
     DOCKER = 5;
-    //KUBECONF is a child of K8S
     KUBECONF = 6;
-
-    //SSHKEY is a child of SSH
     SSHKEY = 8;
 }
 
@@ -381,12 +447,15 @@ message RepoCreds {
     string password = 2;
 
     // @inject_tag: yaml:"repoUrl"
+    //repoUrl is the url that is associated with that repository, for example hub.docker.io
     string repoUrl= 6;
+    // identifier is the unique identifier that is associated with this acctName
     string identifier = 8;
     // @inject_tag: yaml:"acctName"
     // account name (same as from vcs)
     string acctName = 4;
     // @inject_tag: yaml:"subType"
+    // there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS
     SubCredType subType = 10;
 
 }
@@ -398,6 +467,7 @@ message K8SCreds {
     string k8sContents = 2;
     // identifier in K8s creds is currently irrelevant, as there can only be one per account
     string identifier = 3;
+    // there is currently only one subtype for k8SCreds, and it is KUBECONF
     // @inject_tag: yaml:"subType"
     SubCredType subType = 5;
 
@@ -418,8 +488,13 @@ message StatusQuery {
     string partialRepo = 4;
 }
 
+//BuildQuery is the message that is used for getting data on a specific build.
+// You can query by hash, in which case if there are multiple of the same commit it will pick the latest,
+// or you can query by build-id which in the case of log retrieval is only allowed if the build is completed.
 message BuildQuery {
+    // hash is the git hash that corresponds to a commit you wish to get information on
     string hash = 1;
+    // build id is the build number given by ocelot that is associated with the commit
     int64 buildId = 2;
 }
 
@@ -434,9 +509,11 @@ message BuildRuntimeInfo {
     string ip       = 2;
     // grpcPort is the grpc port of the werker running the build
     string grpcPort = 3;
-    // hash is the hash
+    // hash is the git hash that is currently being built
     string hash = 4;
+    // acctName is the vcs account that this build is assocated with
     string acctName = 5;
+    //repoName is the name of the git repository that is associated with this commit/build
     string repoName = 6;
     string wsPort   = 7;
 }
@@ -446,51 +523,83 @@ message LineResponse {
 }
 
 message RepoAccount {
+    // repo is the VCS repository
     string repo = 1;
+    // account is the VCS account
     string account = 2;
+    // limit is the number of summary records desired to be returned
     int32  limit = 3;
 }
 
 message Status {
+    // buildSum is the BuildSummary object that correlates to the build in question
     BuildSummary buildSum = 1;
+    // stages is a all the StageStatus objects associated to the build in question
     repeated StageStatus stages = 2;
+    // isInConsul is a boolean that is used for determining if the build is "running" or not. if isInConsul=true, the build is still running
     bool isInConsul       = 3;
 }
 
+// StageStatus is the detailed information about a specific stage that was executed during the build
 message StageStatus {
     string StageStatus = 1;
+    // error is the error message; will either be populated by a stage not returning exit code 0 or an error handled in the code during the build
     string error = 2;
+    // status is whether or not hte build failed; 0 for pass; 1 for failed
     int32 status = 3;
+    // messages are some descriptions of each stage that are generated at runtime
     repeated string messages = 4;
+    // startTime is when this stage began execution
     google.protobuf.Timestamp startTime = 5;
+    //stageDuration is how long the stage took to execute
     double stageDuration = 6;
 }
 
+//BuildSummary represents the build_summary table in postgres
+// it is a top level view of how a repository is "doing" in ocelot, ie build times, fail status..
 message BuildSummary {
+    // hash is the git commit hash that corresponds with this build information
     string hash = 1;
+    // failed is whether or not the build failed
     bool failed = 2;
+    // buildTime is the datetime that the build was picked up off the queue by the werker
     google.protobuf.Timestamp buildTime = 3;
+    // account is the VCS account associated with the repository / commit
     string account = 4;
+    // buildDuration is the length of time the whole build took to execute
     double buildDuration = 5;
+    // repo is the repository associated with the account / commit
     string repo = 6;
+    // branch is the branch associated with the commit when it was pushed
     string branch = 7;
+    // buildId is the id given to the build entry by postgres. it is unique
     int64 buildId = 8;
+    // queueTime is the datetime that either a tracking component or the admin put the build request on the queue to be processed by the werker node
     google.protobuf.Timestamp queueTime = 9;
 }
 
+// summaries is a wrapper for a list of BuildSummary objects because protobuf can be dumb
 message Summaries {
     repeated BuildSummary sums = 1;
 }
 
+// PollRequest encompasses all the data necessary to set up poll tracking in ocelot.
 message PollRequest {
+    // account is the VCS account
     string account = 1;
+    // repo is the VCS repository name
     string repo = 2;
+    // cron is the cron string that will determine how often a check for changes should occur
     string cron = 4;
+    // branches tells ocelot which branches should be checked for changes
     string branches = 5;
+    // internal use only
     google.protobuf.Timestamp lastCronTime = 6;
+    // internal use only
     map<string, string> lastHashes = 7;
 }
 
+// polls is a wrapper for a PollRequest list because protobuf can be dumb
 message Polls {
     repeated PollRequest polls = 1;
 }
@@ -499,11 +608,15 @@ message Exists {
     bool exists = 1;
 }
 
+// Used in displaying all repos that are tracked by ocelot
 message AcctRepo {
+    // VCS Account
     string account = 1;
+    // VCS Repository
     string repo  = 2;
 }
 
+// AcctRepos is used in the response to /v1/tracked-repositories, it is an array of AcctRepo objects. have to wrap it cuz proto -_-
 message AcctRepos {
     repeated AcctRepo acctRepos = 1;
 }

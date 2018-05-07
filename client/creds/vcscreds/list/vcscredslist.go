@@ -61,6 +61,13 @@ func (c *cmd) Run(args []string) int {
 	Header(c.UI)
 	for _, oneline := range msg.Vcs {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
+			//todo: do the commented out thing
+			//commandhelper.Debuggit(c.UI, oneline.SshFileLoc)
+			//if oneline.SshFileLoc == "" {
+			//	oneline.SshFileLoc = c.config.Theme.Warning.Sprint("No SSH Key")
+			//} else {
+			//	oneline.SshFileLoc = c.config.Theme.Passed.Sprint("SSH Key on File")
+			//}
 			c.UI.Output(Prettify(oneline))
 			printed = true
 		}

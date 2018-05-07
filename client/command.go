@@ -4,8 +4,8 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/build"
 	"github.com/shankj3/ocelot/client/creds"
-	"github.com/shankj3/ocelot/client/creds/credsadd"
-	"github.com/shankj3/ocelot/client/creds/credslist"
+	//"github.com/shankj3/ocelot/client/creds/credsadd"
+	//"github.com/shankj3/ocelot/client/creds/credslist"
 	"github.com/shankj3/ocelot/client/creds/k8s/add"
 	"github.com/shankj3/ocelot/client/creds/k8s/list"
 	"github.com/shankj3/ocelot/client/creds/repocreds"
@@ -41,8 +41,9 @@ func init() {
 	verHuman := ocyVersion.GetHumanVersion()
 	Commands = map[string]cli.CommandFactory{
 		"creds":           func() (cli.Command, error) { return creds.New(), nil },
-		"creds add":       func() (cli.Command, error) { return credsadd.New(ui), nil },
-		"creds list":      func() (cli.Command, error) { return credslist.New(ui), nil },
+		// todo: fix these functions then add them back in
+		//"creds add":       func() (cli.Command, error) { return credsadd.New(ui), nil },
+		//"creds list":      func() (cli.Command, error) { return credslist.New(ui), nil },
 		"creds vcs":       func() (cli.Command, error) { return vcscreds.New(), nil },
 		"creds vcs list":  func() (cli.Command, error) { return buildcredslist.New(ui), nil },
 		"creds vcs add":   func() (cli.Command, error) { return buildcredsadd.New(ui), nil },
