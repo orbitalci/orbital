@@ -20,9 +20,11 @@ func BuildCredPath(scType pb.SubCredType, AcctName string, ocyCredType pb.CredTy
 		pattern = "%s/k8s/%s/%s/%s"
 	case pb.CredType_SSH:
 		pattern = "%s/ssh/%s/%s/%s"
-	//this will not happen in real life because all the setcred methods for guideOcelotServer check for this specific issue
+	case pb.CredType_APPLE:
+		pattern = "%s/apple/%s/%s/%s"
+	//if this happens, it means you havent updated the buildcredpath function
 	default:
-		panic("only repo|vcs|k8s")
+		panic("only repo|vcs|k8s|apple|ssh")
 	}
 	path := fmt.Sprintf(pattern, common.ConfigPath, AcctName, strings.ToLower(scType.String()), identifier)
 	return path

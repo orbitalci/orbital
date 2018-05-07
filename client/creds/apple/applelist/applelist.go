@@ -1,4 +1,4 @@
-package sshlist
+package applelist
 
 import (
 	"context"
@@ -50,14 +50,14 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	var protoReq empty.Empty
-	msg, err := c.config.Client.GetSSHCreds(ctx, &protoReq)
+	msg, err := c.config.Client.GetAppleCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 		return 1
 	}
 	printed := false
 	Header(c.UI)
-	for _, oneline := range msg.Keys {
+	for _, oneline := range msg.AppleCreds {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
 			c.UI.Output(c.prettify(oneline))
 			printed = true
@@ -78,24 +78,26 @@ func (c *cmd) Help() string {
 }
 
 func Header(ui cli.Ui) {
-	ui.Output("\n--- SSH Key Credentials ---\n")
+	ui.Output("\n--- Apple Credentials ---\n")
 }
 
 func NoDataHeader(ui cli.Ui) {
-	ui.Warn("\n--- No SSH Key Credentials Found ---\n")
+	ui.Warn("\n--- No Apple Credentials Found ---\n")
 }
 
-func (c *cmd) prettify(cred *models.SSHKeyWrapper) string {
+func (c *cmd) prettify(cred *models.AppleCreds) string {
 	pretty := `Acccount: %s
 Identifier: %s
 %s
+
 `
 	return fmt.Sprintf(pretty, cred.AcctName, cred.Identifier, c.GetConfig().Theme.Info.Sprint("[On File]"))
 }
 
 const synopsis = "List all credentials used for tracking repositories to build"
 const help = `
-Usage: ocelot creds ssh list
+Usage: ocelot creds apple list
 
-  Retrieves all ssh keys that ocelot has for use in builds. 
+  Retrieves all apple profiles that ocelot has for use in builds. 
 `
+
