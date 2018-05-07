@@ -241,7 +241,7 @@ func (g *guideOcelotServer) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWra
 	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
-			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "SSH Creds Upload failed validation. Errors are: "+err.Error())
+			return &empty.Empty{}, status.Error(codes.InvalidArgument, "SSH Creds Upload failed validation. Errors are: "+err.Error())
 		}
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
@@ -262,3 +262,22 @@ func (g *guideOcelotServer) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHW
 	}
 	return credWrapper, nil
 }
+
+func (g *guideOcelotServer) SetAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
+	vempty := &empty.Empty{}
+	if creds.GetSubType().Parent() != pb.CredType_APPLE {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of apple type: " + strings.Join(pb.CredType_APPLE.SubtypesString(), " | "))
+	}
+
+	// no validation necessary, its a file upload
+
+	if err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds); err != nil {
+		if _, ok := err.(*pb.ValidationErr); ok {
+			return vempty, status.Error(codes.InvalidArgument, "Apple creds upload failed validation, errors are: " + err.Error())
+		}
+		return vempty, status.Error(codes.Internal, "Apple creds could not be uploaded, error is: " + err.Error())
+	}
+	return vempty, nil
+}
+
+func (g *guideOcelotServer) GetAppleCreds(ctx context.Cont)

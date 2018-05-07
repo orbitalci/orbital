@@ -10,7 +10,6 @@
   },
   "basePath": "/v1",
   "schemes": [
-    "http",
     "https"
   ],
   "consumes": [
@@ -214,7 +213,7 @@
           },
           {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE",
             "in": "query",
             "required": false,
             "type": "string",
@@ -226,7 +225,8 @@
               "MAVEN",
               "DOCKER",
               "KUBECONF",
-              "SSHKEY"
+              "SSHKEY",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           }
@@ -352,7 +352,7 @@
           },
           {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE",
             "in": "query",
             "required": false,
             "type": "string",
@@ -364,7 +364,8 @@
               "MAVEN",
               "DOCKER",
               "KUBECONF",
-              "SSHKEY"
+              "SSHKEY",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           }
@@ -470,7 +471,7 @@
           },
           {
             "name": "subType",
-            "description": " - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "description": " - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE",
             "in": "query",
             "required": false,
             "type": "string",
@@ -482,7 +483,8 @@
               "MAVEN",
               "DOCKER",
               "KUBECONF",
-              "SSHKEY"
+              "SSHKEY",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           },
@@ -625,7 +627,7 @@
           },
           {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH",
+            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE",
             "in": "query",
             "required": false,
             "type": "string",
@@ -637,7 +639,8 @@
               "MAVEN",
               "DOCKER",
               "KUBECONF",
-              "SSHKEY"
+              "SSHKEY",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           }
@@ -1291,10 +1294,11 @@
         "MAVEN",
         "DOCKER",
         "KUBECONF",
-        "SSHKEY"
+        "SSHKEY",
+        "DEVPROFILE"
       ],
       "default": "NIL_SCT",
-      "title": "- BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH"
+      "title": "- BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE"
     },
     "modelsSummaries": {
       "type": "object",

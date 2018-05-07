@@ -2,28 +2,121 @@ package xcode
 
 import (
 	"archive/zip"
+	"fmt"
+	"io/ioutil"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
+const (
+	appleProfileDirec   = "/tmp/.appleProfs"
+)
+
 type AppleDevProfile struct {
 	// the zipped *.developerprofile secrets are retrieved from vault and set here
-	zippedEncodedProfiles map[string]string
+	*appleKeychain
 }
 
-func (a *AppleDevProfile) GenerateIntegrationString(creds []pb.OcyCredder) (string, error) {
-	for _, cred := range creds {
-		a.zippedEncodedProfiles[cred.GetIdentifier()] = integrations.StrToBase64(cred.GetClientSecret())
-		oldReader := strings.NewReader(cred.GetClientSecret())
-		reader, err := zip.NewReader(oldReader, int64(oldReader.Len()))
-		if err != nil {
+func NewAppleDevProfile() *AppleDevProfile {
+	return &AppleDevProfile{appleKeychain: &appleKeychain{}}
+}
 
+
+// appleKeychain holds the identities for ever added apple developer profile
+type appleKeychain struct {
+	// privateKeys are the *.p12 extensions
+	privateKeys map[string]string
+	// mobileProvisions are the *.mobileprovision files
+	mobileProvisions map[string]string
+}
+
+
+func (a *appleKeychain) GetSecretsFromZip(profileZip *zip.Reader) error {
+	for _, secretFile := range profileZip.File {
+		if secretFile.FileInfo().IsDir() {
+			continue
 		}
-
+		fn := secretFile.FileInfo().Name()
+		// currently we don't care about anything in the zip except the mobileprovison files and the p12 files
+		if !strings.Contains(fn, ".mobileprovision") && !strings.Contains(fn, ".p12") {
+			continue
+		}
+		contents, err := secretFile.Open()
+		if err != nil {
+			return err
+		}
+		bytec, err := ioutil.ReadAll(contents)
+		if err != nil {
+			return err
+		}
+		switch {
+		case strings.Contains(fn, ".mobileprovision"):
+			a.mobileProvisions[fn] = integrations.BitzToBase64(bytec)
+		case strings.Contains(fn, ".p12"):
+			a.privateKeys[fn] = integrations.BitzToBase64(bytec)
+		}
 	}
-	return "", nil
+	return nil
+}
+
+func (a *AppleDevProfile) GenerateIntegrationString(creds []pb.OcyCredder) (contents string, err error) {
+	for _, cred := range creds {
+		oldReader := strings.NewReader(cred.GetClientSecret())
+		var devprofilezip *zip.Reader
+		devprofilezip, err = zip.NewReader(oldReader, int64(oldReader.Len()))
+		if err != nil {
+			return
+		}
+		err = a.GetSecretsFromZip(devprofilezip)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (a *AppleDevProfile) IsRelevant(wc *pb.BuildConfig) bool {
+	// todo: is this the best way?
+	if wc.BuildTool == "xcode" {
+		return true
+	}
+	return false
+}
+
+func (a *AppleDevProfile) GetEnv() []string {
+	var envs []string
+	// environment variables will be the contents of the apple keys to be imported to the keychain
+	for envVarName, privateKeyData := range a.privateKeys {
+		envs = append(envs, fmt.Sprintf("%s=%s", envVarName, privateKeyData))
+	}
+	for envVarName, mobileData := range a.mobileProvisions {
+		envs = append(envs, fmt.Sprintf("%s=%s", envVarName, mobileData))
+	}
+	return envs
+}
+
+func (a *AppleDevProfile) MakeBashable(str string) []string {
+	cmds := []string{"mkdir -p " + appleProfileDirec}
+	pass := uuid.New().String()
+	// delete old security profile if it exists
+	cmds = append(cmds, "if security list-keychains | grep ocelotty; then echo 'deleting' && security delete-keychain; fi")
+	// create a new security profile
+	cmds = append(cmds, fmt.Sprintf("security create-keychain ocelotty -p %s && security unlock-keychain ocelotty -p %s", pass, pass))
+	for privKey := range a.privateKeys {
+		// echo the private data to files
+		cmds = append(cmds, fmt.Sprintf("echo ${%s} > %s/%s", privKey, appleProfileDirec, privKey))
+		// add keys to ocelotty keychain
+		cmds = append(cmds,  fmt.Sprintf("security import %s/%s -k ocelotty -p %s -T /usr/bin/codesign -T /usr/bin/productsign", appleProfileDirec, privKey, pass))
+	}
+	provisioningDir := "${HOME}/Library/MobileDevice/Provisioning Profiles"
+	for mobile := range a.mobileProvisions {
+		cmds = append(cmds, fmt.Sprintf("echo \"installing %s\"", mobile))
+		cmds = append(cmds, fmt.Sprintf("echo ${%s} > %s/%s", mobile, provisioningDir, mobile))
+	}
+	return cmds
 }
 
 

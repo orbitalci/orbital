@@ -9,7 +9,6 @@ It is generated from these files:
 	commonevententities.proto
 	projectrootdir.proto
 	respositories.proto
-	status.proto
 	webhook.proto
 
 It has these top-level messages:
@@ -28,7 +27,6 @@ It has these top-level messages:
 	PaginatedRootDirs
 	PaginatedRepository
 	ChangeSetV1
-	Status
 	RepoPush
 	PullRequest
 	PullRequestApproved

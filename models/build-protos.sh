@@ -28,6 +28,7 @@ echo "injecting custom tags"
 # inject our custom tags into build protobuf
 protoc-go-inject-tag -input=models/pb/guideocelot.pb.go
 protoc-go-inject-tag -input=models/pb/build.pb.go
+protoc-go-inject-tag -input=models/pb/creds.pb.go
 
 # then we have to run go get in the stub directory cause grpc gateway ¯\_(ツ)_/¯ does this even work
 cd models/pb

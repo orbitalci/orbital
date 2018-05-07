@@ -2,7 +2,7 @@ syntax = "proto3";
 option go_package = "pb";
 package models;
 
-import "guideocelot.proto";
+import "creds.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
