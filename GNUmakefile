@@ -98,6 +98,10 @@ proto: ## build all protos
 pushtags: ## tag built docker images with the short hash and push all to nexus
 	@scripts/tag_and_push.sh $(GIT_HASH)
 
+admintagpush: versionexists ## tag and push admin docker image
+	 docker tag ocelot-admin docker.metaverse.l11.com/ocelot-admin:$(VERSION)
+	 docker push docker.metaverse.l11.com/ocelot-admin:$(VERSION)
+
 .PHONY: help
 
 help:

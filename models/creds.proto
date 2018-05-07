@@ -6,10 +6,15 @@ import "github.com/mwitkow/go-proto-validators/validator.proto";
 
 enum CredType {
     NIL_CT = 0;
+    // VCS Cred type has 2 SubCredTypes: BITBUCKET and GITHUB
     VCS = 1;
+    // REPO has 2 SubCredTypes: NEXUS and DOCKER
     REPO = 2;
+    // K8S has 1 SubCredType: KUBECONF
     K8S = 3;
+    // SSH has 1 SubCredType: SSHKEY
     SSH = 5;
+    // APPLE has 1 SubCredType: DEVPROFILE
     APPLE = 6;
 
 }
@@ -17,24 +22,16 @@ enum CredType {
 enum SubCredType {
 
     NIL_SCT = 0;
-    // BITBUCKET is a child of VCS
     BITBUCKET = 1;
-    //GITHUB is a child of VCS
     GITHUB = 2;
 
-    //NEXUS is a child of REPO
     NEXUS = 3;
-    //MAVEN is a child of REPO
     MAVEN = 4;
-    //DOCKER is a child of REPO
     DOCKER = 5;
-    //KUBECONF is a child of K8S
     KUBECONF = 6;
 
-    //SSHKEY is a child of SSH
     SSHKEY = 8;
 
-    //DEVPROFILE is a child of APPLE
     DEVPROFILE = 9;
 }
 
@@ -57,6 +54,7 @@ message SSHKeyWrapper {
     string acctName = 1 [(validator.field) = {msg_exists : true}];
     // the contents of the private key
     bytes privateKey = 2 [(validator.field) = {msg_exists : true}];
+    // There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY
     SubCredType subType = 10 [(validator.field) = {msg_exists : true}];
     // identifier is the unique identifier for when an ssh key is not associated with a VCS account.
     string identifier = 11 [(validator.field) = {msg_exists : true}];
@@ -85,6 +83,7 @@ message VCSCreds {
     // just a string that says whether or not there is an ssh key on file
     // @inject_tag: yaml:"sshFileLoc"
     string sshFileLoc = 6;
+    // there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET
     // @inject_tag: yaml:"subType"
     SubCredType subType = 10 [(validator.field) = {msg_exists : true}];
 }
@@ -102,12 +101,15 @@ message RepoCreds {
     string password = 2;
 
     // @inject_tag: yaml:"repoUrl"
+    //repoUrl is the url that is associated with that repository, for example hub.docker.io
     string repoUrl= 6;
+    // identifier is the unique identifier that is associated with this acctName
     string identifier = 8 [(validator.field) = {msg_exists : true}];
     // @inject_tag: yaml:"acctName"
     // account name (same as from vcs)
     string acctName = 4 [(validator.field) = {msg_exists : true}];
     // @inject_tag: yaml:"subType"
+    // there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS
     SubCredType subType = 10 [(validator.field) = {msg_exists : true}];
 
 }
@@ -120,6 +122,7 @@ message K8SCreds {
     // identifier in K8s creds is currently irrelevant, as there can only be one per account
     string identifier = 3 [(validator.field) = {msg_exists : true}];
     // @inject_tag: yaml:"subType"
+    // there is currently only one subtype for k8SCreds, and it is KUBECONF
     SubCredType subType = 5 [(validator.field) = {msg_exists : true}];
 
 }

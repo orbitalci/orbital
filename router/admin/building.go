@@ -87,7 +87,7 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 	if !build.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
 		errmsg := "build is not finished, use BuildRuntime method and stream from the werker registered"
 		stream.Send(&pb.LineResponse{OutputLine: errmsg})
-		return status.Error(codes.NotFound, errmsg)
+		return status.Error(codes.InvalidArgument,  errmsg)
 	} else {
 		var out models.BuildOutput
 		var err error

@@ -8,7 +8,6 @@
       "email": "jessishank@level11.com"
     }
   },
-  "basePath": "/v1",
   "schemes": [
     "https"
   ],
@@ -19,26 +18,10 @@
     "application/json"
   ],
   "paths": {
-    "/v1/acctRepos": {
-      "get": {
-        "summary": "get list of currently tracked account/repos",
-        "operationId": "GetTrackedRepos",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/modelsAcctRepos"
-            }
-          }
-        },
-        "tags": [
-          "GuideOcelot"
-        ]
-      }
-    },
     "/v1/build": {
       "post": {
-        "description": "build will attempt to trigger a build. If the git hash has already been built before, it can be triggered with just acctRepo and hash fields. If it has not been built before, the branch flag is required as well.",
+        "summary": "trigger a build",
+        "description": "build will attempt to trigger a build. If the git hash has already been built before, it can be triggered with just `acctRepo` and `hash` fields. If it has not been built before, the `branch` field is required as well.",
         "operationId": "BuildRepoAndHash",
         "responses": {
           "200": {
@@ -59,14 +42,15 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "build-runtime",
+          "overview"
         ]
       }
     },
     "/v1/buildruntime": {
       "get": {
         "summary": "get runtime specification of a specific build",
-        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ",
+        "description": "buildRuntime is used for getting node details for an active build. When you query via a hash, ocelot will do a lookup in postgres for the top-level build information, then look in consul to find all of the runtime data, ie the werker node's ip and port for streaming build logs. \n If the build is finished and streaming logs should query the admin instead of the werker nodes, then the bool field `Done` will be true.",
         "operationId": "BuildRuntime",
         "responses": {
           "200": {
@@ -79,12 +63,14 @@
         "parameters": [
           {
             "name": "hash",
+            "description": "hash is the git hash that corresponds to a commit you wish to get information on.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "buildId",
+            "description": "build id is the build number given by ocelot that is associated with the commit.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -92,28 +78,156 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "build-runtime"
         ]
       }
     },
-    "/v1/creds": {
+    "/v1/creds/apple": {
       "get": {
-        "operationId": "GetAllCreds",
+        "summary": "Retrieve all apple related credentials",
+        "operationId": "GetAppleCreds",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/modelsAllCredsWrapper"
+              "$ref": "#/definitions/modelsAppleCredsWrapper"
             }
           }
         },
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "apple"
+        ]
+      },
+      "post": {
+        "summary": "Add new Apple Credential",
+        "description": "Add New Apple credential. Currently only a apple developer profile is supported \nRefer to modelsAppleCreds for the object fields",
+        "operationId": "SetAppleCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsAppleCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "apple"
+        ]
+      }
+    },
+    "/v1/creds/apple/{acctName}/{identifier}": {
+      "get": {
+        "summary": "return single apple cred",
+        "description": "Returns apple cred if it exists. subType is a required query param",
+        "operationId": "GetAppleCred",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsAppleCreds"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "appleSecrets",
+            "description": "appleSecrets is the zip contents of the apple developer profile that you export in XCode ??.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "subType",
+            "description": "@inject_tag: yaml:\"subType\".",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "KUBECONF",
+              "SSHKEY",
+              "DEVPROFILE"
+            ],
+            "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "creds",
+          "apple"
+        ]
+      },
+      "put": {
+        "summary": "Update an apple config in ocelot for xcode integration. \nRefer to modelsAppleCreds for the object fields",
+        "operationId": "UpdateAppleCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsAppleCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "apple"
         ]
       }
     },
     "/v1/creds/k8s": {
       "get": {
+        "summary": "Retrieve all kubernetes related credentials",
         "operationId": "GetK8SCreds",
         "responses": {
           "200": {
@@ -124,10 +238,13 @@
           }
         },
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "kubernetes"
         ]
       },
       "post": {
+        "summary": "Add new Kubernetes Credential",
+        "description": "Add New kubernetes credential. \nRefer to modelsK8SCreds for the object fields",
         "operationId": "SetK8SCreds",
         "responses": {
           "200": {
@@ -148,53 +265,35 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
-        ]
-      },
-      "put": {
-        "description": "Update a kubeconfig in ocelot for kubernetes integration.",
-        "operationId": "UpdateK8SCreds",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/modelsK8SCreds"
-            }
-          }
-        ],
-        "tags": [
-          "GuideOcelot"
+          "creds",
+          "kubernetes"
         ]
       }
     },
-    "/v1/creds/k8s/exists": {
+    "/v1/creds/k8s/{acctName}/{identifier}": {
       "get": {
-        "description": "Check if kubeconfig Credential exists in ocelot already. For knowing whether to call Update or Set",
-        "operationId": "K8SCredExists",
+        "summary": "get Kubernetes credential",
+        "description": "Returns k8s cred if it exists. subtype is a required query param",
+        "operationId": "GetK8SCred",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/modelsExists"
+              "$ref": "#/definitions/modelsK8SCreds"
             }
           }
         },
         "parameters": [
           {
             "name": "acctName",
-            "description": "account name to associate this credential with.",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
@@ -205,15 +304,8 @@
             "type": "string"
           },
           {
-            "name": "identifier",
-            "description": "identifier in K8s creds is currently irrelevant, as there can only be one per account.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE",
+            "description": "@inject_tag: yaml:\"subType\"\nthere is currently only one subtype for k8SCreds, and it is KUBECONF.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -232,12 +324,52 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "kubernetes"
+        ]
+      },
+      "put": {
+        "summary": "Update a kubeconfig in ocelot for kubernetes integration. \nRefer to modelsK8SCreds for the object fields",
+        "operationId": "UpdateK8SCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsK8SCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "kubernetes"
         ]
       }
     },
     "/v1/creds/repo": {
       "get": {
+        "summary": "Get all known repo integration credentials.",
         "description": "Get all known repo integration credentials.",
         "operationId": "GetRepoCreds",
         "responses": {
@@ -249,11 +381,13 @@
           }
         },
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "repo"
         ]
       },
       "post": {
-        "description": "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker.",
+        "summary": "Add new Repo cred",
+        "description": "Add new repo credential. password, repoUrl, acctName, username and type are required. type must be nexus|docker. \nRefer to modelsRepoCreds for the object fields",
         "operationId": "SetRepoCreds",
         "responses": {
           "200": {
@@ -274,48 +408,37 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "repo"
         ]
-      },
-      "put": {
-        "description": "Update new credential configuration to ocelot for repository integration.",
-        "operationId": "UpdateRepoCreds",
+      }
+    },
+    "/v1/creds/repo/{acctName}/{identifier}": {
+      "get": {
+        "summary": "return single repo cred",
+        "description": "Returns repo cred if it exists. subType is a required query param",
+        "operationId": "GetRepoCred",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/protobufEmpty"
+              "$ref": "#/definitions/modelsRepoCreds"
             }
           }
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
+            "name": "acctName",
+            "in": "path",
             "required": true,
-            "schema": {
-              "$ref": "#/definitions/modelsRepoCreds"
-            }
-          }
-        ],
-        "tags": [
-          "GuideOcelot"
-        ]
-      }
-    },
-    "/v1/creds/repo/exists": {
-      "get": {
-        "description": "Check if Repo Credential exists in ocelot already. For knowing whether to call Update or Set",
-        "operationId": "RepoCredExists",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/modelsExists"
-            }
-          }
-        },
-        "parameters": [
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "username",
             "description": "username of repository.",
@@ -332,27 +455,14 @@
           },
           {
             "name": "repoUrl",
-            "description": "@inject_tag: yaml:\"repoUrl\".",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "identifier",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "acctName",
-            "description": "@inject_tag: yaml:\"acctName\"\naccount name (same as from vcs).",
+            "description": "@inject_tag: yaml:\"repoUrl\"\nrepoUrl is the url that is associated with that repository, for example hub.docker.io.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE",
+            "description": "@inject_tag: yaml:\"subType\"\nthere are two subtypes that are valid for RepoCreds: DOCKER, NEXUS.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -371,12 +481,53 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "repo"
+        ]
+      },
+      "put": {
+        "summary": "Update repo credential",
+        "description": "update new credential configuration to ocelot for repository integration. \nRefer to modelsRepoCreds for the object fields",
+        "operationId": "UpdateRepoCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsRepoCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "repo"
         ]
       }
     },
     "/v1/creds/ssh": {
       "get": {
+        "summary": "Get all known SSH integration credentials.",
         "operationId": "GetSSHCreds",
         "responses": {
           "200": {
@@ -387,11 +538,13 @@
           }
         },
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "ssh"
         ]
       },
       "post": {
-        "description": "Add a new ssh key to an account so builds can access them at runtime.",
+        "summary": "Attach new SSH key to account",
+        "description": "Add a new ssh key to an account so builds can access them at runtime. \nRefer to modelsSSHKeyWrapper for the object fields",
         "operationId": "SetSSHCreds",
         "responses": {
           "200": {
@@ -412,53 +565,35 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
-        ]
-      },
-      "put": {
-        "description": "Update a ssh key for use in build scripts",
-        "operationId": "UpdateSSHCreds",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/modelsSSHKeyWrapper"
-            }
-          }
-        ],
-        "tags": [
-          "GuideOcelot"
+          "creds",
+          "ssh"
         ]
       }
     },
-    "/v1/creds/ssh/exists": {
+    "/v1/creds/ssh/{acctName}/{identifier}": {
       "get": {
-        "description": "Check if ssh key file Credential exists in ocelot already. For knowing whether to call Update or Set",
-        "operationId": "SSHCredExists",
+        "summary": "retrieve single ssh key",
+        "description": "Returns ssh cred if it exists. subtype is a required query param",
+        "operationId": "GetSSHCred",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/modelsExists"
+              "$ref": "#/definitions/modelsSSHKeyWrapper"
             }
           }
         },
         "parameters": [
           {
             "name": "acctName",
-            "description": "account name to associate ssh key with.",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
@@ -471,7 +606,7 @@
           },
           {
             "name": "subType",
-            "description": " - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE",
+            "description": "There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -487,22 +622,56 @@
               "DEVPROFILE"
             ],
             "default": "NIL_SCT"
-          },
-          {
-            "name": "identifier",
-            "description": "identifier is the unique identifier for when an ssh key is not associated with a VCS account.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "ssh"
+        ]
+      },
+      "put": {
+        "summary": "Update ssh key",
+        "description": "Update a ssh key for use in build scripts. Must already exist in the database. \nRefer to modelsSSHKeyWrapper for the object fields",
+        "operationId": "UpdateSSHCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsSSHKeyWrapper"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "ssh"
         ]
       }
     },
     "/v1/creds/vcs": {
       "get": {
+        "summary": "Return all vcs creds",
         "description": "Returns all VCS creds that ocelot has and can use for checking out code to build.",
         "operationId": "GetVCSCreds",
         "responses": {
@@ -514,11 +683,13 @@
           }
         },
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "vcs"
         ]
       },
       "post": {
-        "description": "Add a new VCS credential configuration to ocelot for code checkout.",
+        "summary": "Add VCS Credential",
+        "description": "Add a new VCS credential configuration to ocelot for code checkout. \nRefer to modelsVCSCreds for the object fields",
         "operationId": "SetVCSCreds",
         "responses": {
           "200": {
@@ -539,50 +710,37 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "vcs"
         ]
-      },
-      "put": {
-        "summary": "Update a VCS Credential",
-        "description": "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists",
-        "operationId": "UpdateVCSCreds",
+      }
+    },
+    "/v1/creds/vcs/{acctName}/{identifier}": {
+      "get": {
+        "summary": "Retrieve single VCS cred",
+        "description": "Returns vcs cred if it exists. subtype is a required query param. \nRefer to modelsVCSCreds for the object fields",
+        "operationId": "GetVCSCred",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/protobufEmpty"
+              "$ref": "#/definitions/modelsVCSCreds"
             }
           }
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
+            "name": "acctName",
+            "in": "path",
             "required": true,
-            "schema": {
-              "$ref": "#/definitions/modelsVCSCreds"
-            }
-          }
-        ],
-        "tags": [
-          "GuideOcelot"
-        ]
-      }
-    },
-    "/v1/creds/vcs/exists": {
-      "get": {
-        "summary": "account,identifier,cred_sub_type",
-        "description": "Check if VCS Credential exists in ocelot already. For knowing whether to call Update or Set",
-        "operationId": "VCSCredExists",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/modelsExists"
-            }
-          }
-        },
-        "parameters": [
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "clientId",
             "description": "clientId is generated by creating an oAuth consumer in bitbucket. it is required to generate tokens.\n@inject_tag: yaml:\"clientId\".",
@@ -598,22 +756,8 @@
             "type": "string"
           },
           {
-            "name": "identifier",
-            "description": "identifier is the name the user calls teh credential set.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "tokenURL",
             "description": "tokenUrl is the url at which to retrieve the token\n@inject_tag: yaml:\"tokenURL\".",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "acctName",
-            "description": "@inject_tag: yaml:\"acctName\"\nacctName is the account to associate the VCSCred with. Must be the account name of the owner of the repository they wish to track (ie level11consulting).",
             "in": "query",
             "required": false,
             "type": "string"
@@ -627,7 +771,7 @@
           },
           {
             "name": "subType",
-            "description": "@inject_tag: yaml:\"subType\".\n\n - BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE",
+            "description": "there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET\n@inject_tag: yaml:\"subType\".",
             "in": "query",
             "required": false,
             "type": "string",
@@ -646,13 +790,54 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "vcs"
+        ]
+      },
+      "put": {
+        "summary": "Update a VCS Credential",
+        "description": "Endpoint for updating a VCS credential in ocelot. This should only be called if hte credential exists. subType is a required query param \nRefer to modelsVCSCreds for the object fields",
+        "operationId": "UpdateVCSCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsVCSCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "vcs"
         ]
       }
     },
-    "/v1/creds/vcs/ssh": {
+    "/v1/creds/vcs/{acctName}/{identifier}/ssh": {
       "post": {
-        "description": "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository.",
+        "summary": "Attach ssh key to VCS Account",
+        "description": "Attach the contents of an ssh file to a vcs account. This file will be attached to the build container for cloning the repository. subType is a required query param \nRefer to modelsSSHKeyWrapper for the object fields",
         "operationId": "SetVCSPrivateKey",
         "responses": {
           "200": {
@@ -664,6 +849,18 @@
         },
         "parameters": [
           {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "body",
             "in": "body",
             "required": true,
@@ -673,13 +870,15 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "creds",
+          "vcs"
         ]
       }
     },
     "/v1/logs": {
       "get": {
-        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. if hash is specified and there are multiple builds with the same hash, it iwll stream the latest one. ",
+        "summary": "stream logs of a previous build",
+        "description": "get stream of logs for a specific build. can either query by buildId or hash, if buildId is specified it takes precendence over hash. \n This method will error out if the build is still active. Active builds MUST be streamed from the werkers themselves, and  you must call /v1/buildruntime to retrive the werker connection information  \nif hash is specified and there are multiple builds with the same hash, ocelot will stream the latest one. \nRefer to modelsBuildQuery for object fields",
         "operationId": "Logs",
         "responses": {
           "200": {
@@ -692,12 +891,14 @@
         "parameters": [
           {
             "name": "hash",
+            "description": "hash is the git hash that corresponds to a commit you wish to get information on.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "buildId",
+            "description": "build id is the build number given by ocelot that is associated with the commit.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -705,12 +906,13 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "build-runtime"
         ]
       }
     },
     "/v1/poll": {
       "get": {
+        "summary": "list all repositories that are being polled for changes",
         "description": "list all repositories that are being polled for changes",
         "operationId": "ListPolledRepos",
         "responses": {
@@ -722,26 +924,12 @@
           }
         },
         "tags": [
-          "GuideOcelot"
-        ]
-      },
-      "delete": {
-        "description": "delete polling for a repo. account and repo are required.",
-        "operationId": "DeletePollRepo",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/protobufEmpty"
-            }
-          }
-        },
-        "tags": [
-          "GuideOcelot"
+          "tracking"
         ]
       },
       "post": {
-        "description": "poll will set up a polling request. account, repo, cron, and branches are all required fields.",
+        "summary": "set up git poll tracking for a repository",
+        "description": "poll will set up a polling request. `account`, `repo`, `cron`, and `branches` are all required fields.",
         "operationId": "PollRepo",
         "responses": {
           "200": {
@@ -762,13 +950,46 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "tracking"
+        ]
+      }
+    },
+    "/v1/poll/{account}/{repo}": {
+      "delete": {
+        "summary": "delete poll tracking for a repo",
+        "description": "delete polling for a repo",
+        "operationId": "DeletePollRepo",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "tracking"
         ]
       }
     },
     "/v1/status": {
       "get": {
-        "description": "GetStatus will return the status of a specific build. Hierarchy for key to lookup with: if hash supplied, will only search by hash. If acctName and repoName are supplied and not hash, \nit will be used as a key for looking up status. If only partialRepo is given in the request, ocelot will attempt to find a match and return the latest build stage details for that.",
+        "summary": "get detailed status on every stage in a build",
+        "description": "GetStatus will return the status of a specific build. Hierarchy for key to lookup with: if `hash` supplied, ocelot will only get status by hash. If `acctName` and `repoName` are supplied and not hash, it will be used as a key for looking up status. If only `partialRepo` is given in the request, ocelot will attempt to find a match and return the latest build stage details for that.",
         "operationId": "GetStatus",
         "responses": {
           "200": {
@@ -809,13 +1030,15 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "overview",
+          "build-runtime"
         ]
       }
     },
-    "/v1/summary": {
+    "/v1/summary/{account}/{repo}": {
       "get": {
-        "description": "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned, will default to 5.",
+        "summary": "retrive summaries corresponding to an account \u0026 repo",
+        "description": "will return summaries of the builds for the corresponding repo/account. limit will set how many entries will be returned",
         "operationId": "LastFewSummaries",
         "responses": {
           "200": {
@@ -827,19 +1050,20 @@
         },
         "parameters": [
           {
-            "name": "repo",
-            "in": "query",
-            "required": false,
+            "name": "account",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
-            "name": "account",
-            "in": "query",
-            "required": false,
+            "name": "repo",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
             "name": "limit",
+            "description": "limit is the number of summary records desired to be returned.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -847,13 +1071,31 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "overview"
+        ]
+      }
+    },
+    "/v1/tracked-repositories": {
+      "get": {
+        "summary": "get list of all currently tracked account/repos",
+        "operationId": "GetTrackedRepos",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsAcctRepos"
+            }
+          }
+        },
+        "tags": [
+          "tracking"
         ]
       }
     },
     "/v1/watch": {
       "post": {
-        "description": "watch will set up a webhook for the given repo/account. all fields required.",
+        "summary": "create a webhook in bitbucket for a repository",
+        "description": "watch will set up a webhook for the given repo/account. `repo`, `account`, and `limit` are required fields in the POST body",
         "operationId": "WatchRepo",
         "responses": {
           "200": {
@@ -874,13 +1116,14 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "tracking"
         ]
       }
     },
-    "/v1/werker/loc": {
+    "/v1/werker/{hash}": {
       "get": {
-        "description": "get network location of werker that is currrently ",
+        "summary": "get details of node running specific build",
+        "description": "get network location of werker that is currrently executing a build on the specifed hash. use when you want to kill a specific build to get werker node info. ",
         "operationId": "FindWerker",
         "responses": {
           "200": {
@@ -892,15 +1135,14 @@
         },
         "parameters": [
           {
-            "name": "acctRepo",
-            "description": "acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo.",
-            "in": "query",
-            "required": false,
+            "name": "hash",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
-            "name": "hash",
-            "description": "hash is the git hash to trigger.",
+            "name": "acctRepo",
+            "description": "acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -914,7 +1156,7 @@
           }
         ],
         "tags": [
-          "GuideOcelot"
+          "build-runtime"
         ]
       }
     }
@@ -924,12 +1166,15 @@
       "type": "object",
       "properties": {
         "account": {
-          "type": "string"
+          "type": "string",
+          "title": "VCS Account"
         },
         "repo": {
-          "type": "string"
+          "type": "string",
+          "title": "VCS Repository"
         }
-      }
+      },
+      "title": "Used in displaying all repos that are tracked by ocelot"
     },
     "modelsAcctRepos": {
       "type": "object",
@@ -940,7 +1185,8 @@
             "$ref": "#/definitions/modelsAcctRepo"
           }
         }
-      }
+      },
+      "title": "AcctRepos is used in the response to /v1/tracked-repositories, it is an array of AcctRepo objects. have to wrap it cuz proto -_-"
     },
     "modelsAllCredsWrapper": {
       "type": "object",
@@ -952,6 +1198,39 @@
         "vcsCreds": {
           "$ref": "#/definitions/modelsCredWrapper",
           "title": "All VCS credentials for building\n@inject_tag: yaml:\"vcsCreds\""
+        }
+      }
+    },
+    "modelsAppleCreds": {
+      "type": "object",
+      "properties": {
+        "acctName": {
+          "type": "string",
+          "title": "account name to associate this credential with"
+        },
+        "identifier": {
+          "type": "string",
+          "title": "identifier in dev profile creds is currently irrelevant, as there can only be one per account"
+        },
+        "appleSecrets": {
+          "type": "string",
+          "format": "byte",
+          "title": "appleSecrets is the zip contents of the apple developer profile that you export in XCode ??"
+        },
+        "subType": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "@inject_tag: yaml:\"subType\""
+        }
+      }
+    },
+    "modelsAppleCredsWrapper": {
+      "type": "object",
+      "properties": {
+        "appleCreds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsAppleCreds"
+          }
         }
       }
     },
@@ -990,13 +1269,15 @@
         },
         "hash": {
           "type": "string",
-          "title": "hash is the hash"
+          "title": "hash is the git hash that is currently being built"
         },
         "acctName": {
-          "type": "string"
+          "type": "string",
+          "title": "acctName is the vcs account that this build is assocated with"
         },
         "repoName": {
-          "type": "string"
+          "type": "string",
+          "title": "repoName is the name of the git repository that is associated with this commit/build"
         },
         "wsPort": {
           "type": "string"
@@ -1007,38 +1288,48 @@
       "type": "object",
       "properties": {
         "hash": {
-          "type": "string"
+          "type": "string",
+          "title": "hash is the git commit hash that corresponds with this build information"
         },
         "failed": {
           "type": "boolean",
-          "format": "boolean"
+          "format": "boolean",
+          "title": "failed is whether or not the build failed"
         },
         "buildTime": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "buildTime is the datetime that the build was picked up off the queue by the werker"
         },
         "account": {
-          "type": "string"
+          "type": "string",
+          "title": "account is the VCS account associated with the repository / commit"
         },
         "buildDuration": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "title": "buildDuration is the length of time the whole build took to execute"
         },
         "repo": {
-          "type": "string"
+          "type": "string",
+          "title": "repo is the repository associated with the account / commit"
         },
         "branch": {
-          "type": "string"
+          "type": "string",
+          "title": "branch is the branch associated with the commit when it was pushed"
         },
         "buildId": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "buildId is the id given to the build entry by postgres. it is unique"
         },
         "queueTime": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "queueTime is the datetime that either a tracking component or the admin put the build request on the queue to be processed by the werker node"
         }
-      }
+      },
+      "description": "BuildSummary represents the build_summary table in postgres\nit is a top level view of how a repository is \"doing\" in ocelot, ie build times, fail status.."
     },
     "modelsBuilds": {
       "type": "object",
@@ -1089,7 +1380,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "@inject_tag: yaml:\"subType\""
+          "title": "@inject_tag: yaml:\"subType\"\nthere is currently only one subtype for k8SCreds, and it is KUBECONF"
         }
       }
     },
@@ -1116,28 +1407,35 @@
       "type": "object",
       "properties": {
         "account": {
-          "type": "string"
+          "type": "string",
+          "title": "account is the VCS account"
         },
         "repo": {
-          "type": "string"
+          "type": "string",
+          "title": "repo is the VCS repository name"
         },
         "cron": {
-          "type": "string"
+          "type": "string",
+          "title": "cron is the cron string that will determine how often a check for changes should occur"
         },
         "branches": {
-          "type": "string"
+          "type": "string",
+          "title": "branches tells ocelot which branches should be checked for changes"
         },
         "lastCronTime": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "internal use only"
         },
         "lastHashes": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "title": "internal use only"
         }
-      }
+      },
+      "description": "PollRequest encompasses all the data necessary to set up poll tracking in ocelot."
     },
     "modelsPolls": {
       "type": "object",
@@ -1148,20 +1446,24 @@
             "$ref": "#/definitions/modelsPollRequest"
           }
         }
-      }
+      },
+      "title": "polls is a wrapper for a PollRequest list because protobuf can be dumb"
     },
     "modelsRepoAccount": {
       "type": "object",
       "properties": {
         "repo": {
-          "type": "string"
+          "type": "string",
+          "title": "repo is the VCS repository"
         },
         "account": {
-          "type": "string"
+          "type": "string",
+          "title": "account is the VCS account"
         },
         "limit": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "limit is the number of summary records desired to be returned"
         }
       }
     },
@@ -1190,10 +1492,11 @@
         },
         "repoUrl": {
           "type": "string",
-          "title": "@inject_tag: yaml:\"repoUrl\""
+          "title": "@inject_tag: yaml:\"repoUrl\"\nrepoUrl is the url that is associated with that repository, for example hub.docker.io"
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "title": "identifier is the unique identifier that is associated with this acctName"
         },
         "acctName": {
           "type": "string",
@@ -1201,7 +1504,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "@inject_tag: yaml:\"subType\""
+          "title": "@inject_tag: yaml:\"subType\"\nthere are two subtypes that are valid for RepoCreds: DOCKER, NEXUS"
         }
       }
     },
@@ -1218,7 +1521,8 @@
           "title": "the contents of the private key"
         },
         "subType": {
-          "$ref": "#/definitions/modelsSubCredType"
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY"
         },
         "identifier": {
           "type": "string",
@@ -1244,43 +1548,52 @@
           "type": "string"
         },
         "error": {
-          "type": "string"
+          "type": "string",
+          "title": "error is the error message; will either be populated by a stage not returning exit code 0 or an error handled in the code during the build"
         },
         "status": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "status is whether or not hte build failed; 0 for pass; 1 for failed"
         },
         "messages": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "messages are some descriptions of each stage that are generated at runtime"
         },
         "startTime": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "startTime is when this stage began execution"
         },
         "stageDuration": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "title": "stageDuration is how long the stage took to execute"
         }
-      }
+      },
+      "title": "StageStatus is the detailed information about a specific stage that was executed during the build"
     },
     "modelsStatus": {
       "type": "object",
       "properties": {
         "buildSum": {
-          "$ref": "#/definitions/modelsBuildSummary"
+          "$ref": "#/definitions/modelsBuildSummary",
+          "title": "buildSum is the BuildSummary object that correlates to the build in question"
         },
         "stages": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/modelsStageStatus"
-          }
+          },
+          "title": "stages is a all the StageStatus objects associated to the build in question"
         },
         "isInConsul": {
           "type": "boolean",
-          "format": "boolean"
+          "format": "boolean",
+          "title": "isInConsul is a boolean that is used for determining if the build is \"running\" or not. if isInConsul=true, the build is still running"
         }
       }
     },
@@ -1297,8 +1610,7 @@
         "SSHKEY",
         "DEVPROFILE"
       ],
-      "default": "NIL_SCT",
-      "title": "- BITBUCKET: BITBUCKET is a child of VCS\n - GITHUB: GITHUB is a child of VCS\n - NEXUS: NEXUS is a child of REPO\n - MAVEN: MAVEN is a child of REPO\n - DOCKER: DOCKER is a child of REPO\n - KUBECONF: KUBECONF is a child of K8S\n - SSHKEY: SSHKEY is a child of SSH\n - DEVPROFILE: DEVPROFILE is a child of APPLE"
+      "default": "NIL_SCT"
     },
     "modelsSummaries": {
       "type": "object",
@@ -1309,7 +1621,8 @@
             "$ref": "#/definitions/modelsBuildSummary"
           }
         }
-      }
+      },
+      "title": "summaries is a wrapper for a list of BuildSummary objects because protobuf can be dumb"
     },
     "modelsVCSCreds": {
       "type": "object",
@@ -1340,7 +1653,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "@inject_tag: yaml:\"subType\""
+          "title": "there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET\n@inject_tag: yaml:\"subType\""
         }
       }
     },

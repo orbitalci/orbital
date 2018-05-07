@@ -17,11 +17,16 @@ type CredType int32
 
 const (
 	CredType_NIL_CT CredType = 0
-	CredType_VCS    CredType = 1
-	CredType_REPO   CredType = 2
-	CredType_K8S    CredType = 3
-	CredType_SSH    CredType = 5
-	CredType_APPLE  CredType = 6
+	// VCS Cred type has 2 SubCredTypes: BITBUCKET and GITHUB
+	CredType_VCS CredType = 1
+	// REPO has 2 SubCredTypes: NEXUS and DOCKER
+	CredType_REPO CredType = 2
+	// K8S has 1 SubCredType: KUBECONF
+	CredType_K8S CredType = 3
+	// SSH has 1 SubCredType: SSHKEY
+	CredType_SSH CredType = 5
+	// APPLE has 1 SubCredType: DEVPROFILE
+	CredType_APPLE CredType = 6
 )
 
 var CredType_name = map[int32]string{
@@ -49,22 +54,14 @@ func (CredType) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int
 type SubCredType int32
 
 const (
-	SubCredType_NIL_SCT SubCredType = 0
-	// BITBUCKET is a child of VCS
-	SubCredType_BITBUCKET SubCredType = 1
-	// GITHUB is a child of VCS
-	SubCredType_GITHUB SubCredType = 2
-	// NEXUS is a child of REPO
-	SubCredType_NEXUS SubCredType = 3
-	// MAVEN is a child of REPO
-	SubCredType_MAVEN SubCredType = 4
-	// DOCKER is a child of REPO
-	SubCredType_DOCKER SubCredType = 5
-	// KUBECONF is a child of K8S
-	SubCredType_KUBECONF SubCredType = 6
-	// SSHKEY is a child of SSH
-	SubCredType_SSHKEY SubCredType = 8
-	// DEVPROFILE is a child of APPLE
+	SubCredType_NIL_SCT    SubCredType = 0
+	SubCredType_BITBUCKET  SubCredType = 1
+	SubCredType_GITHUB     SubCredType = 2
+	SubCredType_NEXUS      SubCredType = 3
+	SubCredType_MAVEN      SubCredType = 4
+	SubCredType_DOCKER     SubCredType = 5
+	SubCredType_KUBECONF   SubCredType = 6
+	SubCredType_SSHKEY     SubCredType = 8
 	SubCredType_DEVPROFILE SubCredType = 9
 )
 
@@ -145,8 +142,9 @@ type SSHKeyWrapper struct {
 	// account name to associate ssh key with
 	AcctName string `protobuf:"bytes,1,opt,name=acctName" json:"acctName,omitempty"`
 	// the contents of the private key
-	PrivateKey []byte      `protobuf:"bytes,2,opt,name=privateKey,proto3" json:"privateKey,omitempty"`
-	SubType    SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty"`
+	PrivateKey []byte `protobuf:"bytes,2,opt,name=privateKey,proto3" json:"privateKey,omitempty"`
+	// There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY
+	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty"`
 	// identifier is the unique identifier for when an ssh key is not associated with a VCS account.
 	Identifier string `protobuf:"bytes,11,opt,name=identifier" json:"identifier,omitempty"`
 }
@@ -218,6 +216,7 @@ type VCSCreds struct {
 	// just a string that says whether or not there is an ssh key on file
 	// @inject_tag: yaml:"sshFileLoc"
 	SshFileLoc string `protobuf:"bytes,6,opt,name=sshFileLoc" json:"sshFileLoc,omitempty" yaml:"sshFileLoc"`
+	// there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET
 	// @inject_tag: yaml:"subType"
 	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 }
@@ -299,12 +298,15 @@ type RepoCreds struct {
 	// password of repository
 	Password string `protobuf:"bytes,2,opt,name=password" json:"password,omitempty"`
 	// @inject_tag: yaml:"repoUrl"
-	RepoUrl    string `protobuf:"bytes,6,opt,name=repoUrl" json:"repoUrl,omitempty" yaml:"repoUrl"`
+	// repoUrl is the url that is associated with that repository, for example hub.docker.io
+	RepoUrl string `protobuf:"bytes,6,opt,name=repoUrl" json:"repoUrl,omitempty" yaml:"repoUrl"`
+	// identifier is the unique identifier that is associated with this acctName
 	Identifier string `protobuf:"bytes,8,opt,name=identifier" json:"identifier,omitempty"`
 	// @inject_tag: yaml:"acctName"
 	// account name (same as from vcs)
 	AcctName string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty" yaml:"acctName"`
 	// @inject_tag: yaml:"subType"
+	// there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS
 	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 }
 
@@ -363,6 +365,7 @@ type K8SCreds struct {
 	// identifier in K8s creds is currently irrelevant, as there can only be one per account
 	Identifier string `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
 	// @inject_tag: yaml:"subType"
+	// there is currently only one subtype for k8SCreds, and it is KUBECONF
 	SubType SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 }
 

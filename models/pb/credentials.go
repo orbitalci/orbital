@@ -224,6 +224,11 @@ func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
 	if credder.GetIdentifier() == "" {
 		errors = append(errors, "identifier is required, creds need a unique name to identify by")
 	}
+	idHasBadChars := strings.IndexAny(credder.GetIdentifier(), `\/  	
+`)
+	if idHasBadChars != -1 {
+		errors = append(errors, "there cannot be white space or slashes in the identifier")
+	}
 	if credder.GetAcctName() == "" {
 		errors = append(errors, "account name is required")
 	}
@@ -365,6 +370,6 @@ func CreateVCSIdentifier(sct SubCredType, acctName string) (string, error){
 	if !Contains(sct, CredType_VCS.Subtypes()) {
 		return "", errors.New("must be of type CredType_VCS")
 	}
-	identifier := SubCredType_name[int32(sct)] + "/" + acctName
+	identifier := SubCredType_name[int32(sct)] + "_" + acctName
 	return identifier, nil
 }
