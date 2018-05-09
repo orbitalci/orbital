@@ -22,6 +22,8 @@ func GetNewCleaner(werkerType models.WerkType, facts *models.SSHFacts) Cleaner {
 		return &K8Cleaner{}
 	case models.SSH:
 		return &SSHCleaner{SSHFacts: facts}
+	case models.Exec:
+		return NewExecCleaner()
 	default:
 		return &DockerCleaner{}
 	}
