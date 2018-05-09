@@ -25,6 +25,7 @@ type cmd struct {
 	fileloc    string
 	account    string
 	identifier string
+	profPw     string
 	config     *commandhelper.ClientConfig
 }
 
@@ -49,6 +50,7 @@ func (c *cmd) init() {
 		"Account name to file the xcode profile under.")
 	c.flags.StringVar(&c.identifier, "identifier", "ERROR",
 		"unique identifier for this ssh key")
+	c.flags.StringVar(&c.profPw, "password", "ERROR", "password set when developer profile was exported from xcode")
 }
 
 // uploadCredential will check if credential already exists. if it does, it will ask if the user wishes to overwrite. if the user responds YES, the credential will be updated.
@@ -102,6 +104,14 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error("-zip required")
 		return 1
 	}
+	if c.profPw == "ERROR" {
+		var err error
+		c.profPw, err = c.UI.AskSecret("Profile Password: ")
+		if err != nil {
+			c.UI.Error("Error: " + err.Error())
+			return 1
+		}
+	}
 	profile, err := ioutil.ReadFile(c.fileloc)
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
@@ -109,6 +119,7 @@ func (c *cmd) Run(args []string) int {
 	}
 	creds.AppleSecrets = profile
 	creds.Identifier = c.identifier
+	creds.AppleSecretsPassword = c.profPw
 
 	if err = uploadCredential(ctx, c.config.Client, c.UI, creds); err != nil {
 		if _, ok := err.(*commandhelper.DontOverwrite); ok {

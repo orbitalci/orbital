@@ -412,7 +412,7 @@ func (g *guideOcelotServer) GetAppleCred(ctx context.Context, creds *pb.AppleCre
 
 func (g *guideOcelotServer) UpdateAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
 	var err error
-	creds.AppleSecrets, err = appleNastiness(creds.AppleSecrets)
+	creds.AppleSecrets, err = appleNastiness(creds.AppleSecrets, creds.AppleSecretsPassword)
 	if err != nil {
 		return nil, err
 	}
