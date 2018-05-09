@@ -345,8 +345,8 @@ func (g *guideOcelotServer) GetSSHCred(ctx context.Context, credentials *pb.SSHK
 	return ssh, nil
 }
 
-func appleNastiness(zipFile []byte) (parsed []byte, err error) {
-	appleKeychain, err := ioshelper.UnpackAppleDevAccount(zipFile)
+func appleNastiness(zipFile []byte, devProfilePassword string) (parsed []byte, err error) {
+	appleKeychain, err := ioshelper.UnpackAppleDevAccount(zipFile, devProfilePassword)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't deal with this zip file...")
 		return nil, status.Error(codes.InvalidArgument, "could not unpack developeraccount zip to keychain, error is :" + err.Error())
@@ -361,7 +361,7 @@ func (g *guideOcelotServer) SetAppleCreds(ctx context.Context, creds *pb.AppleCr
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of apple type: " + strings.Join(pb.CredType_APPLE.SubtypesString(), " | "))
 	}
 	var err error
-	creds.AppleSecrets, err = appleNastiness(creds.AppleSecrets)
+	creds.AppleSecrets, err = appleNastiness(creds.AppleSecrets, creds.AppleSecretsPassword)
 	if err != nil {
 		return nil, err
 	}

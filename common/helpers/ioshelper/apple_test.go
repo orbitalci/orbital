@@ -66,7 +66,7 @@ func TestUnpackAppleDevAccount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	liveBits, err := UnpackAppleDevAccount(zipData)
+	liveBits, err := UnpackAppleDevAccount(zipData, "pw")
 	if err != nil {
 		t.Fatal("couldn't unzip dev account", err)
 	}

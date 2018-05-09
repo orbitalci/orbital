@@ -162,6 +162,13 @@
             "format": "byte"
           },
           {
+            "name": "appleSecretsPassword",
+            "description": "appleSecretsPassword is the password you set when you export the developer profile.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "subType",
             "description": "@inject_tag: yaml:\"subType\".",
             "in": "query",
@@ -1216,6 +1223,10 @@
           "type": "string",
           "format": "byte",
           "title": "appleSecrets is the zip contents of the apple developer profile that you export in XCode ??"
+        },
+        "appleSecretsPassword": {
+          "type": "string",
+          "title": "appleSecretsPassword is the password you set when you export the developer profile"
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",

@@ -33,11 +33,11 @@ type AppleKeychain struct {
 
 // UnpackAppleDevAccount will take in the byte array of a sent zip file, assign each value to the appropriate
 // fields in AppleKeychain, and return the marshalaled json
-func UnpackAppleDevAccount(zipBytes []byte) ([]byte, error) {
+func UnpackAppleDevAccount(zipBytes []byte, devProfilePw string) ([]byte, error) {
 	//unpack all that zippy goodness
 	zipData := bytes.NewReader(zipBytes)
 	keyc := NewKeychain()
-	err := keyc.GetSecretsFromZip(zipData, "pw")
+	err := keyc.GetSecretsFromZip(zipData, devProfilePw)
 	if err != nil {
 		return nil, err
 	}

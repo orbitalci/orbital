@@ -138,6 +138,8 @@ message AppleCreds {
     string identifier = 3 [(validator.field) = {msg_exists : true}];
     // appleSecrets is the zip contents of the apple developer profile that you export in XCode ??
     bytes appleSecrets= 2 [(validator.field) = {msg_exists : true}];
+    // appleSecretsPassword is the password you set when you export the developer profile
+    string appleSecretsPassword = 6 [(validator.field) = {msg_exists : true}];
     // @inject_tag: yaml:"subType"
     SubCredType subType = 5 [(validator.field) = {msg_exists : true}];
 }

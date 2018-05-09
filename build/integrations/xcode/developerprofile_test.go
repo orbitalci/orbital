@@ -83,7 +83,7 @@ func TestAppleDevProfile_MakeBashable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	keyc.GetSecretsFromZip(bytes.NewReader(zipBits), "pw")
+	keyc.GetSecretsFromZip(bytes.NewReader(zipBits), "DEVTESTPASS")
 	devProfile.keys = []*ioshelper.AppleKeychain{keyc}
 	rendered := devProfile.MakeBashable("")
 	expected, err := ioutil.ReadFile("./test-fixtures/expected.sh")

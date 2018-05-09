@@ -86,7 +86,7 @@ func (a *AppleDevProfile) MakeBashable(str string) []string {
 			// echo the private data to files
 			cmds = append(cmds, fmt.Sprintf("echo ${%s} | base64 -D > %s/%s", makeEnvValid(privKey), appleProfileDirec, privKey))
 			// add keys to ocelotty keychain
-			cmds = append(cmds,  fmt.Sprintf("security import %s/%s -k ocelotty -p %s -T /usr/bin/codesign -T /usr/bin/productsign", appleProfileDirec, privKey, a.pass))
+			cmds = append(cmds,  fmt.Sprintf("security import %s/%s -k ocelotty -P %s -T /usr/bin/codesign -T /usr/bin/productsign", appleProfileDirec, privKey, key.DevProfilePassword))
 		}
 		provisioningDir := "${HOME}/Library/MobileDevice/Provisioning\\ Profiles"
 		for mobile := range key.MobileProvisions {

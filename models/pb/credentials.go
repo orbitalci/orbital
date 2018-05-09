@@ -200,6 +200,9 @@ func (m *AppleCreds) ValidateForInsert() *ValidationErr {
 	if errorz := validateCommonFieldsForInsert(m); len(errorz) != 0 {
 		return Invalidate(strings.Join(errorz, "\n"))
 	}
+	if m.AppleSecretsPassword == "" {
+		return Invalidate("appleSecretsPassword is required")
+	}
 	return nil
 }
 
