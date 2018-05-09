@@ -1,7 +1,7 @@
 package dockerconfig
 
 import (
-	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models/pb"
 
 	"encoding/json"
@@ -33,7 +33,7 @@ func (d *DockrInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, err
 	if err != nil {
 		return "", err
 	}
-	configEncoded := integrations.BitzToBase64(bitz)
+	configEncoded := common.BitzToBase64(bitz)
 	d.dConfig = configEncoded
 	return configEncoded, err
 }
@@ -58,7 +58,7 @@ func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
 			return nil, errors.New("unable to cast as repo creds")
 		}
 		authstring := fmt.Sprintf("%s:%s", credx.Username, credx.Password)
-		b64authstring := integrations.StrToBase64(authstring)
+		b64authstring := common.StrToBase64(authstring)
 		authz[credx.RepoUrl] = map[string]string{"auth": b64authstring}
 	}
 	config := &dockerConfigJson{

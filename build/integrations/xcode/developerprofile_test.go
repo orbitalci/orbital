@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
@@ -18,19 +18,19 @@ func TestAppleDevProfile_GenerateIntegrationString(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	zipDString := string(zipData)
-	creder := &pb.K8SCreds{Identifier: "testytestytestytesty", K8SContents: zipDString,}
+	creder := &pb.AppleCreds{Identifier: "testytestytestytesty", AppleSecrets: zipData}
 	creds := []pb.OcyCredder{creder}
-	adp := NewAppleDevProfile()
-	adp.GenerateIntegrationString(creds)
-	unzippedBinaryFile, ok := adp.zippedEncodedProfiles["testytestytestytesty"+idFilePathSeparator+"developer/profiles/0ee11910-8825-47e3-9ade-1ce6a7387fb6.mobileprovision"]
+	appledevprof := Create()
+	appledevprof.GenerateIntegrationString(creds)
+
+	unzippedBinaryFile, ok := appledevprof.zippedEncodedProfiles["testytestytestytesty"+idFilePathSeparator+"developer/profiles/0ee11910-8825-47e3-9ade-1ce6a7387fb6.mobileprovision"]
 	if !ok {
-		for key := range adp.zippedEncodedProfiles {
+		for key := range appledevprof.zippedEncodedProfiles {
 			t.Log(key)
 		}
 		t.Error("testytestytestytesty"+ idFilePathSeparator + "developer/profiles/0ee11910-8825-47e3-9ade-1ce6a7387fb6.mobileprovision should exist in zippedEncodedProfiles")
 	}
-	binaryFileBitz, err := integrations.Base64ToBitz(unzippedBinaryFile)
+	binaryFileBitz, err := common.Base64ToBitz(unzippedBinaryFile)
 	if err != nil {
 		t.Error(err)
 		return

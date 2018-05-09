@@ -10,14 +10,10 @@ import (
 )
 
 // GetOcyPrefixFromWerkerType will return "" for anything that runs in a container because root access can be assumed
-// If it is running with the SSH connection (ie mac builds) then it will find the home direc and use that as the prefix for the .ocelot directory
+// If it is running with the SSH connection (ie mac builds) or via Exec then it will find the home direc and use that as the prefix for the .ocelot directory
 func GetOcyPrefixFromWerkerType(wt models.WerkType) string {
 	switch wt {
-	case models.Docker:
-		return ""
-	case models.Kubernetes:
-		return ""
-	case models.SSH:
+	case models.SSH, models.Exec:
 		return "/tmp"
 	default:
 		return ""

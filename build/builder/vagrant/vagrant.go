@@ -1,5 +1,6 @@
 package vagrant
 /*
+this is not implemented!!
 vagrant implementation of builder should:
   SETUP: create directory for vagrantfile, run vagrant up
   EXECUTION: use crypto/ssh library to
@@ -19,6 +20,10 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
+
+func NewVagrant() *Vagrant {
+	panic("not implemented")
+}
 
 type Vagrant struct {
 	globalEnvs     []string

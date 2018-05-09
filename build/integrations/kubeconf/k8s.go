@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
@@ -36,7 +37,7 @@ func (k *K8sInt) GenerateIntegrationString(creds []pb.OcyCredder) (string, error
 	if !ok {
 		return "", errors.New("could not cast to k8s cred")
 	}
-	configEncoded := integrations.StrToBase64(kubeCred.K8SContents)
+	configEncoded := common.StrToBase64(kubeCred.K8SContents)
 	k.k8sContents = configEncoded
 	return configEncoded, nil
 }

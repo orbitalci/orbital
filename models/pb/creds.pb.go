@@ -424,6 +424,7 @@ type AppleCreds struct {
 	// identifier in dev profile creds is currently irrelevant, as there can only be one per account
 	Identifier string `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
 	// appleSecrets is the zip contents of the apple developer profile that you export in XCode ??
+
 	AppleSecrets []byte `protobuf:"bytes,2,opt,name=appleSecrets,proto3" json:"appleSecrets,omitempty"`
 	// @inject_tag: yaml:"subType"
 	SubType SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`

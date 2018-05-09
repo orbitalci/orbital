@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
@@ -44,14 +45,15 @@ func (h *SSH) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Resu
 	res := &pb.Result{
 		Stage: "Init",
 		Status: pb.StageResultVal_PASS,
-		Messages: []string{"Initializing SSH builder..."},
 	}
 	cnxn, err := sshhelper.CreateSSHChannel(ctx, h.Ssh, hash)
 	h.cnxn = cnxn
 	if err != nil {
 		res.Status = pb.StageResultVal_FAIL
 		res.Error = err.Error()
-		res.Messages = append(res.Messages, "Failed to initialize ssh builder " + models.FAILED)
+		res.Messages = []string{"Failed to initialize ssh builder " + models.FAILED}
+	} else {
+		res.Messages = []string{"Successfully established ssh connection " + models.CHECKMARK}
 	}
 	return res
 }
@@ -62,16 +64,15 @@ func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan s
 	dockerIdChan <- werk.CheckoutHash
 	var setupMessages []string
 	su := build.InitStageUtil("setup")
-	setupMessages = append(setupMessages, "successfully established ssh connection " + models.CHECKMARK)
 	cmd := h.SleeplessDownloadTemplateFiles(h.RegisterIP, h.ServicePort)
 	downloadTemplates := h.execute(ctx, su, []string{}, []string{cmd}, logout)
 	if downloadTemplates.Status == pb.StageResultVal_FAIL {
 		log.Log().Error("An error occured while trying to download templates ", downloadTemplates.Error)
 		setupMessages = append(setupMessages, "failed to download templates " + models.FAILED)
-		downloadTemplates.Messages = append(setupMessages, downloadTemplates.Messages...)
+		downloadTemplates.Messages = setupMessages
 		return downloadTemplates, werk.CheckoutHash
 	}
-	setupMessages = append(setupMessages, "Set up via SSH " + models.CHECKMARK)
+	setupMessages = append(setupMessages, "successfully downloaded templates " + models.CHECKMARK)
 	return &pb.Result{Stage: su.GetStage(), Status: pb.StageResultVal_PASS, Error:"", Messages:setupMessages}, werk.CheckoutHash
 }
 
@@ -89,7 +90,8 @@ func (h *SSH) GetContainerId() string {
 	return ""
 }
 
-func (h *SSH) writeToInfo(reader io.Reader, infoChan chan []byte, done chan int) {
+func (h *SSH) writeToInfo(reader io.Reader, infoChan chan []byte, wg *sync.WaitGroup) {
+	defer wg.Done()
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		infoChan <- append([]byte(h.stage.GetStageLabel()), scanner.Bytes()...)
@@ -100,7 +102,6 @@ func (h *SSH) writeToInfo(reader io.Reader, infoChan chan []byte, done chan int)
 		log.IncludeErrField(err).Error("error outputting to info channel!")
 		infoChan <- []byte("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING STAGE INPUT FOR " + h.stage.Stage)
 	}
-	close(done)
 }
 
 //unwrapCommand will strip out the first two elems of the lists of cmds run in basher. ssh has a different interface than docker, and
@@ -124,4 +125,12 @@ func (h *SSH) execute(ctx context.Context, stage *build.StageUtil, env []string,
 	}
 	success := []string{fmt.Sprintf("completed %s stage %s", stage.Stage, models.CHECKMARK)}
 	return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_PASS, Error: "", Messages:success}
+}
+
+
+func (h *SSH) Close() error {
+	if h.cnxn != nil {
+		return h.cnxn.Close()
+	}
+	return nil
 }

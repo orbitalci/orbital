@@ -12,6 +12,7 @@ const (
 	Kubernetes WerkType = iota
 	Docker
 	SSH
+	Exec
 )
 
 
@@ -59,6 +60,15 @@ type SSHFacts struct {
 	Password  string
 	// KeepRepo; if true then the repositories will be left on machine and new commits will be checked out instead of re-cloned? idk. maybe not.
 	KeepRepo  bool
+}
+
+
+func (sf *SSHFacts) SetFlags(flg Flagger) {
+	flg.IntVar(&sf.Port, "ssh-port", 22, "port to ssh to for build exectuion | ONLY VALID FOR SSH TYPE WERKERS")
+	flg.StringVar(&sf.Host, "ssh-host", "", "host to ssh to for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flg.StringVar(&sf.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flg.StringVar(&sf.User, "ssh-user", "root", "ssh user for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flg.StringVar(&sf.Password, "ssh-password", "", "password for ssh user if no key file | ONLY VALID FOR SSH TYPE WERKERS")
 }
 
 func (sf *SSHFacts) IsValid() bool {

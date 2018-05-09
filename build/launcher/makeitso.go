@@ -45,6 +45,12 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 
 	// start building with the Builder
 	result := builder.Init(ctx, werk.CheckoutHash, w.infochan)
+	// at the end of the build, close out any build-length connections associated with build
+	defer func(){
+		if err := builder.Close(); err != nil {
+			ocelog.IncludeErrField(err).Error("unable to close builder connections cleanly")
+		}
+	}()
 	if result.Status == pb.StageResultVal_FAIL {
 		ocelog.Log().Error("Failed to initialize, error: " + result.Error)
 		handleFailure(result, w.Store, "INIT", 0, werk.Id)

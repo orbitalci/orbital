@@ -1,12 +1,16 @@
 package admin
 
 import (
+	//"bytes"
+	//"encoding/json"
 	"context"
 	"fmt"
 	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/shankj3/go-til/log"
 	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/common/helpers/ioshelper"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 
@@ -341,14 +345,26 @@ func (g *guideOcelotServer) GetSSHCred(ctx context.Context, credentials *pb.SSHK
 	return ssh, nil
 }
 
+func appleNastiness(zipFile []byte) (parsed []byte, err error) {
+	appleKeychain, err := ioshelper.UnpackAppleDevAccount(zipFile)
+	if err != nil {
+		log.IncludeErrField(err).Error("couldn't deal with this zip file...")
+		return nil, status.Error(codes.InvalidArgument, "could not unpack developeraccount zip to keychain, error is :" + err.Error())
+	}
+	return appleKeychain, nil
+}
+
 
 func (g *guideOcelotServer) SetAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
 	vempty := &empty.Empty{}
 	if creds.GetSubType().Parent() != pb.CredType_APPLE {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of apple type: " + strings.Join(pb.CredType_APPLE.SubtypesString(), " | "))
 	}
-
-	// no validation necessary, its a file upload
+	var err error
+	creds.AppleSecrets, err = appleNastiness(creds.AppleSecrets)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds); err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
@@ -356,6 +372,7 @@ func (g *guideOcelotServer) SetAppleCreds(ctx context.Context, creds *pb.AppleCr
 		}
 		return vempty, status.Error(codes.Internal, "Apple creds could not be uploaded, error is: " + err.Error())
 	}
+	log.Log().Info("unpacked & stored apple dev profile")
 	return vempty, nil
 }
 
@@ -394,6 +411,11 @@ func (g *guideOcelotServer) GetAppleCred(ctx context.Context, creds *pb.AppleCre
 }
 
 func (g *guideOcelotServer) UpdateAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
+	var err error
+	creds.AppleSecrets, err = appleNastiness(creds.AppleSecrets)
+	if err != nil {
+		return nil, err
+	}
 	return g.updateAnyCred(ctx, creds)
 }
 

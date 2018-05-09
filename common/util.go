@@ -1,4 +1,4 @@
-package integrations
+package common
 
 import (
 	"encoding/base64"

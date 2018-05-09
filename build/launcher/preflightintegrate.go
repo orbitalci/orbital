@@ -12,9 +12,22 @@ import (
 	"github.com/shankj3/ocelot/build/integrations/kubeconf"
 	"github.com/shankj3/ocelot/build/integrations/nexusm2"
 	"github.com/shankj3/ocelot/build/integrations/sshkey"
+	"github.com/shankj3/ocelot/build/integrations/xcode"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
+
+// todo: idk where to put this? where to instantiate integrations.. probably should just be a part of launcher?
+func getIntegrationList() []integrations.StringIntegrator {
+	return []integrations.StringIntegrator{
+		sshkey.Create(),
+		dockerconfig.Create(),
+		kubeconf.Create(),
+		nexusm2.Create(),
+		xcode.Create(),
+	}
+}
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
 func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder) (result *pb.Result, duration time.Duration, start time.Time) {
@@ -25,8 +38,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	var integMessages []string
 	stage := build.InitStageUtil("INTEGRATION_UTIL")
 
-	// todo: idk where to put this? where to instantiate integrations.. probably should just be a part of launcher?
-	var integral = []integrations.StringIntegrator{sshkey.Create(), dockerconfig.Create(), kubeconf.Create(), nexusm2.Create()}
+	var integral = getIntegrationList()
 	for _, integ := range integral {
 		if !integ.IsRelevant(werk.BuildConf) {
 			continue
@@ -78,7 +90,8 @@ func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bl
 	kubectl := &pb.Stage{Env: []string{}, Script: bldr.DownloadKubectl(w.ServicePort), Name: subStage.Stage,}
 	result = bldr.ExecuteIntegration(ctx, kubectl, subStage, w.infochan)
 	if result.Status == pb.StageResultVal_FAIL {
-		return
+		result.Messages = append(result.Messages, "failed to download kubectl, continuing anyway as it may not be used...")
+		result.Status = pb.StageResultVal_PASS
 	}
 	result.Messages = append(result.Messages, "finished " + subStage.Stage)
 	return
@@ -86,7 +99,7 @@ func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bl
 
 
 func handleIntegrationErr(err error, integrationName string, stage *build.StageUtil, msgs []string) *pb.Result {
-	_, ok := err.(*integrations.NoCreds)
+	_, ok := err.(*common.NoCreds)
 	if !ok {
 		log.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
 		return &pb.Result{

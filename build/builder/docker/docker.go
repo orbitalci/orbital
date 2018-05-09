@@ -292,6 +292,11 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 	}
 }
 
+func (d *Docker) Close() error {
+	// do nothing, this is for closing any connections that needed to be persisted for the build
+	return nil
+}
+
 func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byte) {
 	scanner := bufio.NewScanner(rd)
 	buf := make([]byte, 0, 64*1024)
@@ -311,3 +316,4 @@ func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byt
 		infochan <- []byte("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING STAGE INPUT")
 	}
 }
+

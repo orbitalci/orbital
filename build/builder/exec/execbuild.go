@@ -8,12 +8,14 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/basher"
 	"github.com/shankj3/ocelot/build/valet"
 	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/common/helpers/exechelper"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
@@ -27,8 +29,8 @@ type Exec struct {
 	*models.WerkerFacts
 }
 
-func NewExecBuilder(b *basher.Basher, facts *models.WerkerFacts) (build.Builder, error) {
-	return &Exec{Basher:b, WerkerFacts: facts}, nil
+func NewExecBuilder(b *basher.Basher, facts *models.WerkerFacts) build.Builder {
+	return &Exec{Basher:b, WerkerFacts: facts}
 }
 
 func (e *Exec) SetGlobalEnv(envs []string) {
@@ -56,7 +58,7 @@ func (e *Exec) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan 
 	if downloadTemplates.Status == pb.StageResultVal_FAIL {
 		log.Log().Error("An error occured while trying to download templates ", downloadTemplates.Error)
 		setupMessages = append(setupMessages, "failed to download templates " + models.FAILED)
-		downloadTemplates.Messages = append(setupMessages, downloadTemplates.Messages...)
+		downloadTemplates.Messages = setupMessages
 		return downloadTemplates, werk.CheckoutHash
 	}
 	setupMessages = append(setupMessages, "Set up via Exec " + models.CHECKMARK)
@@ -77,74 +79,59 @@ func (e *Exec) GetContainerId() string {
 	return ""
 }
 
-func (e *Exec) writeToInfo(reader io.Reader, infoChan chan []byte, done chan int, readerTypeDesc string) {
+func (e *Exec) writeToInfo(reader io.ReadCloser, infoChan chan []byte, wg *sync.WaitGroup, readerTypeDesc string) {
+	defer wg.Done()
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		infoChan <- append([]byte(e.stage.GetStageLabel()), scanner.Bytes()...)
 	}
-	//infoChan <- append([]byte(e.stage.StageLabel), []byte("Finished with stage.")...)
-	log.Log().Debugf("finished writing to channel of % for stage %s", readerTypeDesc, e.stage.Stage)
+	log.Log().Debugf("finished writing to channel of %s for stage %s", readerTypeDesc, e.stage.Stage)
 	if err := scanner.Err(); err != nil {
 		log.IncludeErrField(err).Error("error outputting to info channel!")
 		infoChan <- []byte(fmt.Sprintf("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING %s STAGE INPUT FOR %s", readerTypeDesc, e.stage.Stage))
 	}
-	close(done)
+}
+
+// prepCmds will reorganize the list of cmd's into a /bin/bash -c "cmds" format. it will join all the actual commands with '&&'
+func prepCmds(cmds []string) (prepped [3]string) {
+	if len(cmds) >= 2 && strings.Contains(cmds[1], "-c") {
+		final := strings.Join(cmds[2:], " && ")
+		prepped[0] = cmds[0]
+		prepped[1] = cmds[1]
+		prepped[2] = final
+	} else {
+		prepped[0] = "/bin/bash"
+		prepped[1] = "-c"
+		prepped[2] = strings.Join(cmds, " && ")
+	}
+	return
 }
 
 // execute will attempt to organize the cmd list in a /bin/sh -c format, then will execute the command while piping the stdout and stderr to the logout channel
 func (e *Exec) execute(ctx context.Context, stage *build.StageUtil, env []string, cmds []string, logout chan []byte) *pb.Result {
+	e.stage = stage
+	var err error
 	messages := []string{"starting stage " + stage.GetStage()}
-	var preppedCmds [3]string
-	if len(cmds) >= 2 && strings.Contains(cmds[1], "-c") {
-		final := strings.Join(cmds[2:], " && ")
-		preppedCmds[0] = cmds[0]
-		preppedCmds[1] = cmds[1]
-		preppedCmds[2] = final
-	} else {
-		log.Log().WithField("cmds", cmds).Error("WHEN DOES THIS EVER HAPPEN?")
-		preppedCmds[0] = cmds[0]
-		preppedCmds[1] = ""
-		preppedCmds[2] = strings.Join(cmds[1:], " && ")
-	}
+	preppedCmds := prepCmds(cmds)
 	command := exec.CommandContext(ctx, preppedCmds[0], preppedCmds[1:]...)
-	commandStdout, err := command.StdoutPipe()
-	if err != nil {
-		return &pb.Result{
-			Status: pb.StageResultVal_FAIL,
-			Stage: stage.GetStage(),
-			Error: err.Error(),
-			Messages: append(messages, "could not get stdout pipe " + models.FAILED),
-		}
-	}
-	defer commandStdout.Close()
-	commandStderr, err := command.StderrPipe()
-	if err != nil {
-		return &pb.Result{
-			Status: pb.StageResultVal_FAIL,
-			Stage: stage.GetStage(),
-			Error: err.Error(),
-			Messages: append(messages, "could not get stderr pipe " + models.FAILED),
-		}
-	}
-	defer commandStderr.Close()
+	setEnvs := append(env, e.globalEnvs...)
 	// todo: should we append to the environment? with exec package, if you set the environment it overwrites _all_ other ones. do we want this behavior? or do we want to keep stuff like $HOME
-	fullEnv := append(os.Environ(), env...)
+	fullEnv := append(os.Environ(), setEnvs...)
 	command.Env = fullEnv
 	log.Log().Debugf("full env is %s", strings.Join(fullEnv, " "))
-	if err = command.Start(); err != nil {
-		log.IncludeErrField(err).Error("couldn't start command")
-		return &pb.Result{Status:pb.StageResultVal_FAIL, Stage: stage.GetStage(), Error:err.Error(), Messages:append(messages, "could not execute shell command " + models.FAILED)}
+	err = exechelper.RunAndStreamCmd(command, logout, e.writeToInfo)
+	if err != nil {
+		return &pb.Result{
+			Stage: stage.Stage,
+			Status: pb.StageResultVal_FAIL,
+			Error: err.Error(),
+			Messages: messages,
+		}
 	}
-	stderrdone := make(chan int, 1)
-	stdoutdone := make(chan int, 1)
-	go e.writeToInfo(commandStdout, logout, stdoutdone, "stdout")
-	go e.writeToInfo(commandStderr, logout, stderrdone, "stderr")
-	if err = command.Wait(); err != nil {
-		log.IncludeErrField(err).Error("command failed")
-		return &pb.Result{Status: pb.StageResultVal_FAIL, Stage: stage.GetStage(), Error: err.Error(), Messages: append(messages, "shell command execution failed " + models.FAILED)}
-	}
-	<-stderrdone
-	<-stdoutdone
-
 	return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_PASS, Error: "", Messages:append(messages, fmt.Sprintf("completed %s stage %s", stage.Stage, models.CHECKMARK))}
+}
+
+func (e *Exec) Close() error {
+	// do nothing, there are no connections to close after the build for an exec builder
+	return nil
 }

@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+	"sync"
 
 	"github.com/shankj3/ocelot/models"
 	"golang.org/x/crypto/ssh"
@@ -124,7 +125,7 @@ func (c *Channel) Setenvs(extraEnvs ...string) error {
 	if c.session == nil {
 		return errors.New("woah there bud, can't set an env variable if there is no session to attach it to")
 	}
-
+	//c.session.Setenv("PATH", "$PATH:/usr/local/bin")
 	for _, splitEnv := range c.globalEnvVars {
 		if err = c.session.Setenv(splitEnv[0], splitEnv[1]); err != nil {
 			return err
@@ -139,11 +140,14 @@ func (c *Channel) Setenvs(extraEnvs ...string) error {
 	return nil
 }
 
-// Pipehandler is the function that will read off the Reader and transform it, then write it to the logout channel.
-// close the done channel when the function has finished processing, it synchronizes the ssh command execution.
-type PipeHandler func(r io.Reader, logout chan[]byte, done chan int)
+// StreamingFunc is the function that will read off the Reader and transform it, then write it to the logout channel.
+// call wg.Done(), it synchronizes the ssh command execution. See BasicPipeHandler for implementation
+type StreamingFunc func(r io.Reader, logout chan[]byte, wg *sync.WaitGroup)
 
-func BasicPipeHandler(r io.Reader, logout chan[]byte, done chan int) {
+// BasicPipeHandler is a simple implementation of the StreamingFunc function type. It does not transform the data coming in,
+// it just writes it directly to the logout channel.
+func BasicPipeHandler(r io.Reader, logout chan[]byte, wg *sync.WaitGroup) {
+	defer wg.Done()
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		logout <- scanner.Bytes()
@@ -152,13 +156,12 @@ func BasicPipeHandler(r io.Reader, logout chan[]byte, done chan int) {
 		logout <- []byte("An error has occured!")
 		logout <- []byte(scanner.Err().Error())
 	}
-	close(done)
 }
 
 // RunAndLog runs a given command remotely via the ContextConnection's ssh client. The stdout and stderr will be processed
-// by the given PipeHandler function and written to logout. the function will wait for the pipehandler function to
+// by the given StreamingFunc function and written to logout. the function will wait for the StreamingFunc function to
 // close its done channel on both the stdout processing and the stderr processing.
-func (c *Channel) RunAndLog(cmd string, envs []string, logout chan []byte,  pipeHandler PipeHandler) error {
+func (c *Channel) RunAndLog(cmd string, envs []string, logout chan []byte,  streamingFunc StreamingFunc) error {
 	session, err := c.client.NewSession()
 	if err != nil {
 		return err
@@ -185,13 +188,12 @@ func (c *Channel) RunAndLog(cmd string, envs []string, logout chan []byte,  pipe
 	if err != nil {
 		return err
 	}
-	outchan := make(chan int)
-	errchan := make(chan int)
-	go pipeHandler(out, logout, outchan)
-	go pipeHandler(stderr, logout, errchan)
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
+	go streamingFunc(out, logout, wg)
+	go streamingFunc(stderr, logout, wg)
 	err = session.Wait()
-	<- outchan
-	<- errchan
+	wg.Wait()
 	return err
 }
 

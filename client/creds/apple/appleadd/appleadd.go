@@ -73,7 +73,7 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 		if err != nil {
 			return err
 		}
-		UI.Error("Succesfully update VCS Credential.")
+		UI.Error("Succesfully updated Apple Credential.")
 		return nil
 	}
 	_, err = client.SetAppleCreds(ctx, cred)

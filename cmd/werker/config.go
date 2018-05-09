@@ -26,6 +26,8 @@ func strToWerkType(str string) models.WerkType {
 		return models.Docker
 	case "ssh":
 		return models.SSH
+	case "exec":
+		return models.Exec
 	default:
 		return -1
 	}
@@ -65,6 +67,7 @@ func GetConf() (*WerkerConf, error) {
 	var storageTypeStr string
 	var consuladdr string
 	var consulport int
+
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
 	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes|docker|ssh")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
@@ -79,16 +82,13 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
 	// ssh werker configuration
-	flrg.IntVar(&werker.Ssh.Port, "ssh-port", 22, "port to ssh to for build exectuion | ONLY VALID FOR SSH TYPE WERKERS")
-	flrg.StringVar(&werker.Ssh.Host, "ssh-host", "", "host to ssh to for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flrg.StringVar(&werker.Ssh.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flrg.StringVar(&werker.Ssh.User, "ssh-user", "root", "ssh user for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flrg.StringVar(&werker.Ssh.Password, "ssh-password", "", "password for ssh user if no key file | ONLY VALID FOR SSH TYPE WERKERS")
+	werker.Ssh.SetFlags(flrg)
 	flrg.Parse(os.Args[1:])
+
 	version.MaybePrintVersion(flrg.Args())
 	werker.WerkerType = strToWerkType(werkerTypeStr)
 	if werker.WerkerType == -1 {
-		return nil, errors.New("werker type can only be: k8s, kubernetes, docker, ssh")
+		return nil, errors.New("werker type can only be: k8s, kubernetes, docker, ssh, exec")
 	}
 	if werker.WerkerType == models.SSH && !werker.Ssh.IsValid() {
 		return nil, errors.New("if werker type is ssh, then -ssh-port, -ssh-host, -ssh-user, and either -ssh-private-key or -ssh-password are required fields")

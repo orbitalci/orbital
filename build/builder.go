@@ -3,6 +3,7 @@ package build
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	cred "github.com/shankj3/ocelot/common/credentials"
@@ -21,6 +22,8 @@ type Builder interface {
 	Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
 	ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *StageUtil, logout chan []byte) *pb.Result
 	GetContainerId() string
+
+	io.Closer
 }
 
 //helper functions for stages, doesn't handle camelcase right now so if you want that set the values
