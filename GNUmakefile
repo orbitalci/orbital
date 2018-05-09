@@ -75,6 +75,11 @@ linux-werker: versionexists ## install linux werker zip and upload to s3
 	@aws s3 cp --acl public-read-write --content-disposition attachment linux-werker-$(VERSION).zip s3://ocelotty/linux-werker-$(VERSION).zip
 	rm linux-werker-$(VERSION).zip
 
+darwin-werker: versionexists ## install mac werker zip and upload to s3
+	cd cmd/werker/; env GOOS=darwin GOARCH=amd64 go build -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o werker .; zip -r ../../darwin-werker-$(VERSION).zip werker; rm werker; cd -
+	@aws s3 cp --acl public-read-write --content-disposition attachment darwin-werker-$(VERSION).zip s3://ocelotty/darwin-werker-$(VERSION).zip
+	rm darwin-werker-$(VERSION).zip
+
 sshexists:
 ifeq ("$(wildcard $(SSH_PRIVATE_KEY))","")
 	$(error SSH_PRIVATE_KEY must exist or ~/.ssh/id_rsa must exist!)
