@@ -135,6 +135,55 @@ service GuideOcelot {
     }
     rpc K8SCredExists (K8SCreds) returns (Exists) {}
 
+    rpc SetNotifyCreds (NotifyCreds) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			post: "/v1/creds/notify"
+			body: "*"
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Attach new notification integration to account"
+            description: "Attach a new notify integration to an account "
+            tags: "creds"
+            tags: "notify"
+        };
+    }
+    rpc GetNotifyCred(NotifyCreds) returns (NotifyCreds) {
+        option (google.api.http) = {
+            get: "/v1/creds/notify/{acctName}/{identifier}"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "get notify integration credential"
+            description: "Returns notify integration cred if it exists. subtype is a required query param";
+            tags: "creds"
+            tags: "notify"
+        };
+    }
+
+    rpc GetNotifyCreds (google.protobuf.Empty) returns (NotifyWrap) {
+        option (google.api.http) = {
+            get: "/v1/creds/notify"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Get all known Notify integration credentials."
+            tags: "creds"
+            tags: "notify"
+        };
+    }
+
+    rpc UpdateNotifyCreds (NotifyCreds) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            put: "/v1/creds/notify/{acctName}/{identifier}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Update a notify integration cred"
+            tags: "creds"
+            tags: "integration"
+        };
+    }
+    rpc NotifyCredExists (NotifyCreds) returns (Exists) {}
+
+
     rpc UpdateSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			put: "/v1/creds/ssh/{acctName}/{identifier}"
@@ -426,6 +475,8 @@ enum CredType {
     K8S = 3;
     // SSH has 1 SubCredType: SSHKEY
     SSH = 5;
+    // NOTIFIER has 1 SubCredType: SLACK
+    NOTIFIER = 6;
 
 }
 
@@ -438,6 +489,7 @@ enum SubCredType {
     DOCKER = 5;
     KUBECONF = 6;
     SSHKEY = 8;
+    SLACK = 9;
 }
 
 message RepoCreds {
@@ -619,4 +671,19 @@ message AcctRepo {
 // AcctRepos is used in the response to /v1/tracked-repositories, it is an array of AcctRepo objects. have to wrap it cuz proto -_-
 message AcctRepos {
     repeated AcctRepo acctRepos = 1;
+}
+
+message NotifyWrap {
+    repeated NotifyCreds creds = 1;
+}
+
+message NotifyCreds {
+    // account name to associate integration cred with
+    string acctName = 1;
+    // There is currently only one subType that is valid for Integrations, and it is SLACK
+    SubCredType subType = 2;
+    // identifier is the unique identifier for the integration
+    string identifier = 3;
+    // clientSecret is the secret associated with the integration cred
+    string clientSecret = 4;
 }

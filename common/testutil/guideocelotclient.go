@@ -130,6 +130,25 @@ func (f *fakeGuideOcelotClient) SSHCredExists(ctx context.Context, in *pb.SSHKey
 func (f *fakeGuideOcelotClient) GetSSHCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.SSHWrap, error) {
 	return nil, nil
 }
+func (f *fakeGuideOcelotClient) SetNotifyCreds(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) GetNotifyCred(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*pb.NotifyCreds, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) GetNotifyCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.NotifyWrap, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) UpdateNotifyCreds(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error){
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) NotifyCredExists(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+	return nil, nil
+}
 
 func (f *fakeGuideOcelotClient) WatchRepo(ctx context.Context, in *pb.RepoAccount, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return &empty.Empty{}, nil

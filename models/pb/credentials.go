@@ -196,6 +196,26 @@ func (m *SSHKeyWrapper) ValidateForInsert() *ValidationErr {
 	return nil
 }
 
+func (m *NotifyCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	return nil
+}
+
+func (m *NotifyCreds) CreateAdditionalFields() ([]byte, error) {
+	return []byte("{}"), nil
+}
+
+func (m *NotifyCreds) UnmarshalAdditionalFields(fields []byte) error {
+	return nil
+}
+
+func (m *NotifyCreds) SetSecret(secret string) {
+	m.ClientSecret = secret
+}
+
 
 func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
 	if credder.GetIdentifier() == "" {
@@ -237,10 +257,11 @@ func (pr *PollRequest) Validate() error {
 }
 
 var (
-	vcsSubTypes = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}
-	repoSubTypes = []SubCredType{SubCredType_NEXUS, SubCredType_MAVEN, SubCredType_DOCKER}
-	k8sSubTypes = []SubCredType{SubCredType_KUBECONF}
-	sshSubTypes = []SubCredType{SubCredType_SSHKEY}
+	vcsSubTypes    = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}
+	repoSubTypes   = []SubCredType{SubCredType_NEXUS, SubCredType_MAVEN, SubCredType_DOCKER}
+	k8sSubTypes    = []SubCredType{SubCredType_KUBECONF}
+	sshSubTypes    = []SubCredType{SubCredType_SSHKEY}
+	notifySubTypes = []SubCredType{SubCredType_SLACK}
 )
 
 // Subtypes will return all the SubCredTypes that are associated with that CredType. Will return nil if it is unknown
@@ -254,6 +275,8 @@ func (x CredType) Subtypes() []SubCredType {
 		return k8sSubTypes
 	case CredType_SSH:
 		return sshSubTypes
+	case CredType_NOTIFIER:
+		return notifySubTypes
 	}
 	// this shouldn't happen, unless a new CredType is added and not updated here.
 	return nil
@@ -278,6 +301,10 @@ func (x CredType) SubtypesString() []string {
 		for _, st := range sshSubTypes {
 			subtypes = append(subtypes, st.String())
 		}
+	case CredType_NOTIFIER:
+		for _, st := range CredType_NOTIFIER.Subtypes() {
+			subtypes = append(subtypes, st.String())
+		}
 	}
 	return subtypes
 }
@@ -293,6 +320,8 @@ func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCre
 		return &K8SCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	case CredType_SSH:
 		return &SSHKeyWrapper{AcctName: account, Identifier: identifier, SubType:subCredType}
+	case CredType_NOTIFIER:
+		return &NotifyCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	default:
 		return nil
 	}
@@ -308,6 +337,8 @@ func (x SubCredType) Parent() CredType {
 		return CredType_REPO
 	case Contains(x, sshSubTypes):
 		return CredType_SSH
+	case Contains(x, notifySubTypes):
+		return CredType_NOTIFIER
 	}
 	return -1
 }
