@@ -175,13 +175,13 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		return installed, d.ContainerId
 	}
 
-	logout <- []byte(su.GetStageLabel()  + "Retrieving SSH Key")
+	logout <- []byte(su.GetStageLabel()  + "Retrieving BARE Key")
 
 	acctName := strings.Split(werk.FullName, "/")[0]
 	vaultAddr := d.getVaultAddr(rc.GetVault())
 	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + vaultAddr)
 
-	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
+	setupMessages = append(setupMessages, fmt.Sprintf("downloading BARE key for %s...", werk.FullName))
 	sctType := pb.SubCredType(werk.VcsType)
 	identifier, _ := pb.CreateVCSIdentifier(sctType, acctName)
 	ocelog.Log().Debug("identifier is ", identifier)
@@ -194,7 +194,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		return result, d.ContainerId
 	}
 
-	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  %s", werk.FullName, models.CHECKMARK), "completed setup stage " + models.CHECKMARK)
+	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded BARE key for %s  %s", werk.FullName, models.CHECKMARK), "completed setup stage " + models.CHECKMARK)
 	result.Messages = setupMessages
 	return result, d.ContainerId
 }

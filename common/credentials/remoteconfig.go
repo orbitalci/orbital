@@ -401,7 +401,9 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	case storage.FileSystem:
 		return storage.NewFileBuildStorage(creds.Location), nil
 	case storage.Postgres:
-		return storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName), nil
+		store := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+		ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+		return store, store.Connect()
 	default:
 		return nil, errors.New("unknown type")
 	}

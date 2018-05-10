@@ -8,7 +8,6 @@ import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "protoc-gen-swagger/options/annotations.proto";
-import "github.com/mwitkow/go-proto-validators/validator.proto";
 
 //import "google/protobuf/wrappers.proto"; //use this when you have to pass a string value
 
@@ -402,9 +401,9 @@ service GuideOcelot {
 
 message BuildReq {
     // acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo
-    string acctRepo = 1 [(validator.field) = {msg_exists : true}];
+    string acctRepo = 1;
     // hash is the git hash to trigger.
-    string hash = 2 [(validator.field) = {msg_exists : true}];
+    string hash = 2;
     // branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required.
     string branch = 3;
 }
@@ -519,13 +518,13 @@ message Summaries {
 // PollRequest encompasses all the data necessary to set up poll tracking in ocelot.
 message PollRequest {
     // account is the VCS account
-    string account = 1 [(validator.field) = {msg_exists : true}];
+    string account = 1;
     // repo is the VCS repository name
-    string repo = 2 [(validator.field) = {msg_exists : true}];
+    string repo = 2;
     // cron is the cron string that will determine how often a check for changes should occur
-    string cron = 4 [(validator.field) = {msg_exists : true}];
+    string cron = 4;
     // branches tells ocelot which branches should be checked for changes
-    string branches = 5 [(validator.field) = {msg_exists : true}];
+    string branches = 5;
     // internal use only
     google.protobuf.Timestamp lastCronTime = 6;
     // internal use only

@@ -28,7 +28,7 @@ type SSH struct {
 }
 
 
-// NewSSHBuilder will establish the SSH connection then return the SSH builder. It will fail if it cannot
+// NewSSHBuilder will establish the BARE connection then return the BARE builder. It will fail if it cannot
 // establish a connection, as it should. It requires more than the docker builder say, because this ssh conneciton
 // isn't a "clean" builder, unfortunately. It is not destroyed afterword, so we need things like hash to know what to clean up
 // once the build process has completed.
@@ -58,7 +58,7 @@ func (h *SSH) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Resu
 	return res
 }
 
-// Setup for the SSH werker type will send off the checkout hash as the "docker id" on the docker id channel
+// Setup for the BARE werker type will send off the checkout hash as the "docker id" on the docker id channel
 func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	log.Log().Infof("setting up hash %s", werk.CheckoutHash)
 	dockerIdChan <- werk.CheckoutHash

@@ -8,15 +8,15 @@ import (
 
 const (
 	DEFAULT = "build"
-	SSH     = "build_ssh"
+	BARE    = "build_baremetal"
 )
 
 // GetTopics will return the list of topics that the werker should subscribe to as defined by his werk type
-//  Right now, the only type that changes the topic list is SSH.
+//   Right now, the only types that change the topic list are SSH and EXEC
 func GetTopics(werkType models.WerkType) []string {
 	switch werkType {
-	case models.SSH:
-		return []string{SSH}
+	case models.SSH, models.Exec:
+		return []string{BARE}
 	default:
 		return []string{DEFAULT}
 	}
@@ -26,7 +26,7 @@ func GetTopics(werkType models.WerkType) []string {
 func DetermineTopic(buildTool string) (topic string) {
 	switch {
 	case strings.Contains(buildTool, "xcode"):
-		return SSH
+		return BARE
 	default:
 		return DEFAULT
 	}

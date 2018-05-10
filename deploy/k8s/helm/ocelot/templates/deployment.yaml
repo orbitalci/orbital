@@ -49,9 +49,17 @@ spec:
               containerPort: 11000
           env:
             - name: CONSUL_HOST
+          {{ if .Values.consul.host }}
+              value: "{{ .Values.consul.host }}"
+          {{ else }}
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+          {{ end }}
+          {{ if .Values.consul.port }}
+            - name: CONSUL_PORT
+              value: "{{ .Values.consul.port }}"
+          {{ end }}
             - name: VAULT_ADDR
               value: "{{.Values.vault.protocol}}://{{.Values.vault.ip}}:{{.Values.vault.port}}"
             - name: VAULT_TOKEN
@@ -147,9 +155,17 @@ spec:
               protocol: TCP
           env:
             - name: CONSUL_HOST
+          {{ if .Values.consul.host }}
+              value: "{{ .Values.consul.host }}"
+          {{ else }}
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+          {{ end }}
+          {{ if .Values.consul.port }}
+            - name: CONSUL_PORT
+              value: "{{ .Values.consul.port }}"
+          {{ end }}
             - name: VAULT_ADDR
               value: "{{.Values.vault.protocol}}://{{.Values.vault.ip}}:{{.Values.vault.port}}"
             - name: VAULT_TOKEN
@@ -238,9 +254,17 @@ spec:
               name: docker-sock-volume
           env:
             - name: CONSUL_HOST
+          {{ if .Values.consul.host }}
+              value: "{{ .Values.consul.host }}"
+          {{ else }}
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+          {{ end }}
+          {{ if .Values.consul.port }}
+            - name: CONSUL_PORT
+              value: "{{ .Values.consul.port }}"
+          {{ end }}
             - name: VAULT_ADDR
               value: "{{.Values.vault.protocol}}://{{.Values.vault.ip}}:{{.Values.vault.port}}"
             - name: VAULT_TOKEN
