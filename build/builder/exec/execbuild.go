@@ -87,8 +87,10 @@ func (e *Exec) writeToInfo(reader io.ReadCloser, infoChan chan []byte, wg *sync.
 	}
 	log.Log().Debugf("finished writing to channel of %s for stage %s", readerTypeDesc, e.stage.Stage)
 	if err := scanner.Err(); err != nil {
-		log.IncludeErrField(err).Error("error outputting to info channel!")
-		infoChan <- []byte(fmt.Sprintf("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING %s STAGE INPUT FOR %s", readerTypeDesc, e.stage.Stage))
+		if err != os.ErrClosed {
+			log.IncludeErrField(err).Error("error outputting to info channel!")
+			infoChan <- []byte(fmt.Sprintf("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING %s STAGE INPUT FOR %s", readerTypeDesc, e.stage.Stage))
+		}
 	}
 }
 

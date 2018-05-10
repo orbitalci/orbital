@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"sync"
 
@@ -99,8 +100,10 @@ func (h *SSH) writeToInfo(reader io.Reader, infoChan chan []byte, wg *sync.WaitG
 	//infoChan <- append([]byte(h.stage.StageLabel), []byte("Finished with stage.")...)
 	log.Log().Debugf("finished writing to channel for stage %s", h.stage.Stage)
 	if err := scanner.Err(); err != nil {
-		log.IncludeErrField(err).Error("error outputting to info channel!")
-		infoChan <- []byte("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING STAGE INPUT FOR " + h.stage.Stage)
+		if err != os.ErrClosed {
+			log.IncludeErrField(err).Error("error outputting to info channel!")
+			infoChan <- []byte(fmt.Sprintf("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING STAGE INPUT FOR %s", strings.ToUpper(h.stage.Stage)))
+		}
 	}
 }
 
