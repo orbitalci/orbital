@@ -12,6 +12,8 @@ import (
 	slack "github.com/shankj3/ocelot/models/slack/pb"
 )
 
+const ocelotIcon = "https://78.media.tumblr.com/avatar_06e2167f3e45_128.pnj"
+
 // ThrowStatusWebhook will create a status string from the protobuf message Status as defined in guideocelot.proto and
 //   will post the data to the slack url provided. If the status code is not 200 OK, then a WebhookRejectedErr will be generated and the error
 // 	 body will contain the error returned from the slack api.
@@ -52,7 +54,7 @@ func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Stat
 	combined := mid + stageStatus + runCommand
 	postMsg := &slack.WebhookMsg{
 		Username: "ocelot",
-		IconUrl: "https://78.media.tumblr.com/avatar_06e2167f3e45_128.pnj",
+		IconUrl: ocelotIcon,
 		Attachments: []*slack.Attachment{
 			{
 				Fallback: fallback,
@@ -95,7 +97,7 @@ func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Stat
 
 // WebhookRejected will return a RejectedError with the reason as the message to be returned by a call to Error()
 func WebhookRejected(statusCode int, errorMsg string) *WebhookRejectedErr {
-	return &WebhookRejectedErr{msg: fmt.Sprintf("recieved a %d, error is: %s", statusCode, errorMsg)}
+	return &WebhookRejectedErr{msg: fmt.Sprintf("received a %d, error is: %s", statusCode, errorMsg)}
 }
 
 type WebhookRejectedErr struct {
