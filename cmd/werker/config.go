@@ -68,7 +68,6 @@ func GetConf() (*WerkerConf, error) {
 	werker := &WerkerConf{WerkerFacts: models.NewFacts()}
 	werkerName, _ := os.Hostname()
 	var werkerTypeStr string
-	var storageTypeStr string
 	var consuladdr string
 	var consulport int
 	var tags string
@@ -80,13 +79,12 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&werker.GrpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
 	flrg.StringVar(&werker.LogLevel, "log-level", "info", "log level")
 	flrg.BoolVar(&werker.Dev, "dev", false, "run dev mode")
-	flrg.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
 	flrg.StringVar(&werker.RegisterIP, "register-ip", "localhost", "ip to register with consul when picking up builds")
 	flrg.StringVar(&werker.LoopbackIp, "loopback-ip", "172.17.0.1", "ip to use for spawned containers to successfully contact the host. " +
 		"This may be different for different container systems / host machines. For example, when using docker for mac the loopback-ip would be docker.for.mac.localhost")
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
-	flrg.StringVar(&tags, "topics", "", "comma separated list of tags for this build node")
+	flrg.StringVar(&tags, "tags", "", "comma separated list of tags for this build node")
 	// ssh werker configuration
 	werker.Ssh.SetFlags(flrg)
 	flrg.Parse(os.Args[1:])

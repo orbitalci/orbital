@@ -10,6 +10,9 @@ func GetTopics(tags []string) []string {
 	if len(tags) == 0 {
 		return []string{DEFAULT}
 	}
+	if tags[0] == "" {
+		return []string{DEFAULT}
+	}
 	var topics []string
 	for _, tag := range tags {
 		topics = append(topics, getTopicFromTag(tag))
@@ -18,6 +21,9 @@ func GetTopics(tags []string) []string {
 }
 
 func getTopicFromTag(tag string) string {
+	if tag == "" {
+		return "build"
+	}
 	return "build_" + tag
 }
 

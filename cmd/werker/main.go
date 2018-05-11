@@ -104,6 +104,7 @@ func main() {
 	// start protoConsumers
 	var protoConsumers []*nsqpb.ProtoConsume
 	supportedTopics := build.GetTopics(conf.tags)
+	ocelog.Log().Debug("topics!", supportedTopics)
 
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()
