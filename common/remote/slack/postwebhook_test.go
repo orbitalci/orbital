@@ -3,10 +3,7 @@ package slack
 import (
 	"bytes"
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/shankj3/go-til/test"
@@ -15,26 +12,7 @@ import (
 	slack "github.com/shankj3/ocelot/models/slack/pb"
 )
 
-type fakePoster struct {
-	// the data that was posted to FakePoster will be posted here
-	postBody []byte
-	// response code to return
-	responseCode int
-	// body to return in response
-	responseBody string
 
-}
-
-func (f *fakePoster) Post(url string, contentType string, body io.Reader) (resp *http.Response, err error) {
-	resp = &http.Response{}
-	f.postBody, err = ioutil.ReadAll(body)
-	if err != nil {
-		return
-	}
-	resp.StatusCode = f.responseCode
-	resp.Body = ioutil.NopCloser(strings.NewReader(f.responseBody))
-	return
-}
 
 func TestThrowStatusWebhook(t *testing.T) {
 	url := "https://hooks.slack.com/fake"
@@ -65,7 +43,7 @@ func TestThrowStatusWebhook(t *testing.T) {
 		},
 	}
 	channel := ""
-	fakeCli := &fakePoster{responseCode: http.StatusOK}
+	fakeCli := &FakePoster{ResponseCode: http.StatusOK}
 	// uncomment below and set url to a real slack url to see what it looks like
 	//err := ThrowStatusWebhook(http.DefaultClient, url, channel, status)
 	err := ThrowStatusWebhook(fakeCli, url, channel, status)
@@ -95,14 +73,14 @@ func TestThrowStatusWebhook(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if !bytes.Equal(expectedBits, fakeCli.postBody) {
-		t.Errorf("webhooks not equal:\nexpected is: \n%s\n\nlive is:\n%s", string(expectedBits), string(fakeCli.postBody))
+	if !bytes.Equal(expectedBits, fakeCli.PostBody) {
+		t.Errorf("webhooks not equal:\nexpected is: \n%s\n\nlive is:\n%s", string(expectedBits), string(fakeCli.PostBody))
 	}
 }
 
 func TestThrowStatusWebhook_pass(t *testing.T) {
 	url := "https://hooks.slack.com/fake"
-	fakeCli := &fakePoster{responseCode: http.StatusOK}
+	fakeCli := &FakePoster{ResponseCode: http.StatusOK}
 	status := &pb.Status{
 		BuildSum: &pb.BuildSummary{
 			BuildId: 1234,
@@ -155,14 +133,14 @@ func TestThrowStatusWebhook_pass(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if !bytes.Equal(expectedBits, fakeCli.postBody) {
-		t.Errorf("webhooks not equal:\nexpected is: \n%s\n\nlive is:\n%s", string(expectedBits), string(fakeCli.postBody))
+	if !bytes.Equal(expectedBits, fakeCli.PostBody) {
+		t.Errorf("webhooks not equal:\nexpected is: \n%s\n\nlive is:\n%s", string(expectedBits), string(fakeCli.PostBody))
 	}
 }
 
 func TestThrowStatusWebhook_handleError(t *testing.T) {
 	url := "https://hooks.slack.com/fake"
-	fakeCli := &fakePoster{responseCode: http.StatusBadRequest, responseBody: "bad job guy"}
+	fakeCli := &FakePoster{ResponseCode: http.StatusBadRequest, ResponseBody: "bad job guy"}
 	status := &pb.Status{
 		BuildSum: &pb.BuildSummary{
 			BuildId: 1234,
