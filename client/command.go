@@ -4,6 +4,9 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/build"
 	"github.com/shankj3/ocelot/client/creds"
+	"github.com/shankj3/ocelot/client/creds/notify/notifyadd"
+	"github.com/shankj3/ocelot/client/creds/notify/notifylist"
+
 	//"github.com/shankj3/ocelot/client/creds/credsadd"
 	//"github.com/shankj3/ocelot/client/creds/credslist"
 	"github.com/shankj3/ocelot/client/creds/k8s/add"
@@ -40,32 +43,34 @@ func init() {
 	ui := &cli.ColoredUi{Ui: base, OutputColor: cli.UiColorNone, InfoColor: cli.UiColorBlue, ErrorColor: cli.UiColorRed, WarnColor: cli.UiColorYellow}
 	verHuman := ocyVersion.GetHumanVersion()
 	Commands = map[string]cli.CommandFactory{
-		"creds":           func() (cli.Command, error) { return creds.New(), nil },
+		"creds":             func() (cli.Command, error) { return creds.New(), nil },
 		// todo: fix these functions then add them back in
 		//"creds add":       func() (cli.Command, error) { return credsadd.New(ui), nil },
 		//"creds list":      func() (cli.Command, error) { return credslist.New(ui), nil },
-		"creds vcs":       func() (cli.Command, error) { return vcscreds.New(), nil },
-		"creds vcs list":  func() (cli.Command, error) { return buildcredslist.New(ui), nil },
-		"creds vcs add":   func() (cli.Command, error) { return buildcredsadd.New(ui), nil },
-		"creds ssh list":  func() (cli.Command, error) { return sshlist.New(ui), nil },
-		"creds ssh add":   func() (cli.Command, error) { return sshadd.New(ui), nil },
-		"creds repo":      func() (cli.Command, error) { return repocreds.New(), nil },
-		"creds repo add":  func() (cli.Command, error) { return repocredsadd.New(ui), nil },
-		"creds repo list": func() (cli.Command, error) { return repocredslist.New(ui), nil },
-		"creds k8s add":   func() (cli.Command, error) { return kubeadd.New(ui), nil },
-		"creds k8s list":  func() (cli.Command, error) { return kubelist.New(ui), nil },
-		"logs":            func() (cli.Command, error) { return output.New(ui), nil },
-		"summary":         func() (cli.Command, error) { return summary.New(ui), nil },
-		"validate":        func() (cli.Command, error) { return validate.New(ui), nil },
-		"status":          func() (cli.Command, error) { return status.New(ui), nil },
-		"watch":           func() (cli.Command, error) { return watch.New(ui), nil },
-		"build":           func() (cli.Command, error) { return build.New(ui), nil },
-		"poll":            func() (cli.Command, error) { return polladd.New(ui), nil },
-		"poll delete":     func() (cli.Command, error) { return polldelete.New(ui), nil },
-		"poll list":       func() (cli.Command, error) { return polllist.New(ui), nil },
-		"kill":            func() (cli.Command, error) { return kill.New(ui), nil },
-		"version":         func() (cli.Command, error) { return version.New(ui, verHuman), nil },
-		"repos":           func() (cli.Command, error) { return repos.New(), nil },
-		"repos list":      func() (cli.Command, error) { return reposlist.New(ui), nil },
+		"creds vcs":         func() (cli.Command, error) { return vcscreds.New(), nil },
+		"creds vcs list":    func() (cli.Command, error) { return buildcredslist.New(ui), nil },
+		"creds vcs add":     func() (cli.Command, error) { return buildcredsadd.New(ui), nil },
+		"creds ssh list":    func() (cli.Command, error) { return sshlist.New(ui), nil },
+		"creds ssh add":     func() (cli.Command, error) { return sshadd.New(ui), nil },
+		"creds repo":        func() (cli.Command, error) { return repocreds.New(), nil },
+		"creds repo add":    func() (cli.Command, error) { return repocredsadd.New(ui), nil },
+		"creds repo list":   func() (cli.Command, error) { return repocredslist.New(ui), nil },
+		"creds k8s add":     func() (cli.Command, error) { return kubeadd.New(ui), nil },
+		"creds k8s list":    func() (cli.Command, error) { return kubelist.New(ui), nil },
+		"creds notify add":  func() (cli.Command, error) { return notifyadd.New(ui), nil},
+		"creds notify list": func() (cli.Command, error) { return notifylist.New(ui), nil},
+		"logs":              func() (cli.Command, error) { return output.New(ui), nil },
+		"summary":           func() (cli.Command, error) { return summary.New(ui), nil },
+		"validate":          func() (cli.Command, error) { return validate.New(ui), nil },
+		"status":            func() (cli.Command, error) { return status.New(ui), nil },
+		"watch":             func() (cli.Command, error) { return watch.New(ui), nil },
+		"build":             func() (cli.Command, error) { return build.New(ui), nil },
+		"poll":              func() (cli.Command, error) { return polladd.New(ui), nil },
+		"poll delete":       func() (cli.Command, error) { return polldelete.New(ui), nil },
+		"poll list":         func() (cli.Command, error) { return polllist.New(ui), nil },
+		"kill":              func() (cli.Command, error) { return kill.New(ui), nil },
+		"version":           func() (cli.Command, error) { return version.New(ui, verHuman), nil },
+		"repos":             func() (cli.Command, error) { return repos.New(), nil },
+		"repos list":        func() (cli.Command, error) { return reposlist.New(ui), nil },
 	}
 }

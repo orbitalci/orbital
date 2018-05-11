@@ -34,6 +34,8 @@ You can also run `ocelot creds vcs add` from the command line and it will prompt
 **todo** add repo walkthrough here  
 For credentials relating to items within your build, such as docker, gradle, or maven, you can upload using the `ocelot creds repo add` command  
 
+## Notify Credentials 
+You can upload creds for notifying on build status using `ocelot creds notify add`, documentation [here](notifications.md).
 
 ## `ocelot.yml`
 Ocelot uses a file in the root of a git project to configure how to build, `ocelot.yml` 
@@ -43,6 +45,13 @@ Once you write the ocelot file, you can validate using `ocelot validate -file-lo
 ```yaml
 image: jessishank/mavendocker
 buildTool: maven
+notify:
+  slack:
+    channel: "@jessishank"
+    identifier: "ocelot-base"
+    on:
+      - "PASS"
+      - "FAIL"
 branches:
 - master
 env:
@@ -80,6 +89,7 @@ stages:
 |--- |--- |--- |
 | `image` | Image to run the build on. Can be a custom built image in a private repo or one on dockerhub.  |  Yes  |
 | `buildTool` | Flag that drives integration. If buildTool is maven, then a `settings.xml` will be generated with repository credentials  |  Yes |
+| `notify` | Configuration for notifying on the status of builds  |  No |
 | `branches` |  A list of branches to build. If the branch pushed does not match a value in this list, it wil not be built.  | Yes  |
 | `env` |  List of environment variables that will be injected into the container on startup. The environment variables from this list will be available for all stages in the build.  |  No  |
 | `stages` | List of stages that comprise the build and deployment. There must be on `build` stage, which is connected to the `buildTool` flag  | Yes  |
@@ -92,6 +102,14 @@ stages:
 | `script` |  List of commands to run that comprise that stage. If these commands return an exit code other than zero, it is recorded as failed. | Yes  |
 | `env` |  List of environment variables to inject for current stage. |  No  | 
 | `trigger`| Block that defines the conditions in which a stage will be run. Currently, a list of branches can be passed, and the stage will only execute if the build branch is in this list.| No |
+
+
+### `ocelot.yml` slack notify object fields
+|  key	| significance | required |
+|--- |--- |--- |
+| `identifier` |  The identifier you assigned to the notify cred when it was uploaded via `ocelot creds notify add` | Yes  |
+| `channel` |  Which channel to post slack notification to. If this is blank, it will default to the channel that was chosen when the webhook was created  |  No  | 
+| `on`| What statuses to send notification on, must be PASS or FAIL or both | Yes |
 
 ## Ocelot client interaction 
 Interactions with ocelot are driven with the command line client. 

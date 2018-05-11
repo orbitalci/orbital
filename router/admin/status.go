@@ -79,7 +79,7 @@ BUILD_FOUND:
 	if err != nil {
 		return nil, handleStorageError(err)
 	}
-	result = ParseStagesByBuildId(buildSum, stageResults)
+	result = models.ParseStagesByBuildId(buildSum, stageResults)
 	inConsul, err := build.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
 	if err != nil {
 		return nil, status.Error(codes.Unavailable, "An error occurred checking build status in consul. Cannot retrieve status at this time.\n\n"+err.Error())

@@ -8,6 +8,12 @@ protoc --go_out=plugins=grpc:models/bitbucket/pb -I=models/bitbucket/ \
   -I$GOPATH/src \
   models/bitbucket/*.proto
 
+echo "building slack model proto files"
+protoc --go_out=models/slack/pb -I=models/slack/ \
+  -I$GOPATH/src \
+  models/slack/*.proto
+
+
 echo "building root model proto files"
 
 #uncomment if you want to generate javascript

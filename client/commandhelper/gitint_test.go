@@ -13,7 +13,7 @@ var goodgiturls = []struct {
 	acctRepo string
 }{
 	{"bitbucket ssh", []byte("git@bitbucket.org:level11consulting/ocelot.git"), "level11consulting/ocelot"},
-	{"bitbucket https", []byte("https://jessishank@github.com/shankj3/ocelot.git"), "level11consulting/ocelot"},
+	{"bitbucket https", []byte("https://jessishank@bitbucket.org/level11consulting/ocelot.git"), "level11consulting/ocelot"},
 	{"github https", []byte("https://github.com/kubernetes/charts.git"), "kubernetes/charts"},
 	{"github ssh", []byte("git@github.com:kubernetes/charts.git"), "kubernetes/charts"},
 }
@@ -24,8 +24,8 @@ func TestFindAcctRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if acctRepo != "level11consulting/ocelot" {
-		t.Error(test.StrFormatErrors("detected acct/repo", "level11consulting/ocelot", acctRepo))
+	if acctRepo != "shankj3/ocelot" {
+		t.Error(test.StrFormatErrors("detected acct/repo", "shankj3/ocelot", acctRepo))
 	}
 }
 

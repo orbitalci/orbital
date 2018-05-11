@@ -1,5 +1,12 @@
 image: docker.metaverse.l11.com/ocelot/base:latest
 buildTool: go
+notify:
+  slack:
+    channel: "@jessishank"
+    identifier: "ocelot-base"
+    on:
+      - "PASS"
+      - "FAIL"
 branches:
   - ALL
 env:
