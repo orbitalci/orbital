@@ -1,4 +1,6 @@
-# Notifications 
+# Notifications (>0.3.0)
+
+**Notify cred upload is for ocelot cli > 0.3.0**
 
 Notifications are configured using the `notify` block in the `ocelot.yml` file. Currently only slack notifications are supported. You can see useage in the [useage doc](useage.md).
 
