@@ -94,6 +94,7 @@ func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
+	c.UI.Warn("Currently --type will default to slack as that is the only notify credential. This will not always be the case.")
 	ctx := context.Background()
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
