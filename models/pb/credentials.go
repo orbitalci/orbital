@@ -222,6 +222,26 @@ func (m *AppleCreds) UnmarshalAdditionalFields(fields []byte) error {
 	return nil
 }
 
+func (m *NotifyCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	return nil
+}
+
+func (m *NotifyCreds) CreateAdditionalFields() ([]byte, error) {
+	return []byte("{}"), nil
+}
+
+func (m *NotifyCreds) UnmarshalAdditionalFields(fields []byte) error {
+	return nil
+}
+
+func (m *NotifyCreds) SetSecret(secret string) {
+	m.ClientSecret = secret
+}
+
 
 func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
 	if credder.GetIdentifier() == "" {
@@ -255,14 +275,13 @@ type BuildRuntime interface {
 }
 
 
-
-
 var (
 	vcsSubTypes   = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}
 	repoSubTypes  = []SubCredType{SubCredType_NEXUS, SubCredType_MAVEN, SubCredType_DOCKER}
 	k8sSubTypes   = []SubCredType{SubCredType_KUBECONF}
 	sshSubTypes   = []SubCredType{SubCredType_SSHKEY}
 	appleSubTypes = []SubCredType{SubCredType_DEVPROFILE}
+	notifySubTypes = []SubCredType{SubCredType_SLACK}
 )
 
 // Subtypes will return all the SubCredTypes that are associated with that CredType. Will return nil if it is unknown
@@ -278,6 +297,8 @@ func (x CredType) Subtypes() []SubCredType {
 		return sshSubTypes
 	case CredType_APPLE:
 		return appleSubTypes
+	case CredType_NOTIFIER:
+		return notifySubTypes
 	}
 	// this shouldn't happen, unless a new CredType is added and not updated here.
 	return nil
@@ -304,6 +325,8 @@ func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCre
 		return &SSHKeyWrapper{AcctName: account, Identifier: identifier, SubType:subCredType}
 	case CredType_APPLE:
 		return &AppleCreds{AcctName: account, Identifier: identifier, SubType:subCredType}
+	case CredType_NOTIFIER:
+		return &NotifyCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	default:
 		return nil
 	}
@@ -319,6 +342,8 @@ func (x SubCredType) Parent() CredType {
 		return CredType_REPO
 	case Contains(x, sshSubTypes):
 		return CredType_SSH
+	case Contains(x, notifySubTypes):
+		return CredType_NOTIFIER
 	case Contains(x, appleSubTypes):
 		return CredType_APPLE
 	}

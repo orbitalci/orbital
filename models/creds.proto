@@ -13,8 +13,10 @@ enum CredType {
     K8S = 3;
     // SSH has 1 SubCredType: SSHKEY
     SSH = 5;
+    // NOTIFIER has 1 SubCredType: SLACK
+    NOTIFIER = 6;
     // APPLE has 1 SubCredType: DEVPROFILE
-    APPLE = 6;
+    APPLE = 7;
 
 }
 
@@ -30,8 +32,8 @@ enum SubCredType {
     KUBECONF = 6;
 
     SSHKEY = 8;
-
-    DEVPROFILE = 9;
+    SLACK = 9;
+    DEVPROFILE = 10;
 }
 
 message AllCredsWrapper {
@@ -145,4 +147,19 @@ message AppleCreds {
 
 message AppleCredsWrapper {
     repeated AppleCreds appleCreds = 1;
+}
+
+message NotifyWrap {
+    repeated NotifyCreds creds = 1;
+}
+
+message NotifyCreds {
+    // account name to associate integration cred with
+    string acctName = 1;
+    // There is currently only one subType that is valid for Integrations, and it is SLACK
+    SubCredType subType = 2;
+    // identifier is the unique identifier for the integration
+    string identifier = 3;
+    // clientSecret is the secret associated with the integration cred
+    string clientSecret = 4;
 }

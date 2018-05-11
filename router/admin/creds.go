@@ -1,8 +1,6 @@
 package admin
 
 import (
-	//"bytes"
-	//"encoding/json"
 	"context"
 	"fmt"
 	"strings"
@@ -47,9 +45,6 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 }
 
 func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
-	if err := credentials.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "VCS Insert Request is invalid; error: " + err.Error())
-	}
 	if credentials.SubType.Parent() != pb.CredType_VCS {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of vcs type: "+strings.Join(pb.CredType_VCS.SubtypesString(), " | "))
 	}
@@ -103,9 +98,6 @@ func (g *guideOcelotServer) getAnyCred(credder pb.OcyCredder) (pb.OcyCredder, er
 }
 
 func (g *guideOcelotServer) UpdateVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
-	if err := credentials.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "VCS Update Request is invalid; error: " + err.Error())
-	}
 	credentials.Identifier = credentials.BuildIdentifier()
 	return g.updateAnyCred(ctx, credentials)
 }
@@ -149,9 +141,6 @@ func (g *guideOcelotServer) GetRepoCred(ctx context.Context, credentials *pb.Rep
 }
 
 func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
-	if err := creds.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Repo Insert Request is invalid; error: " + err.Error())
-	}
 	if creds.SubType.Parent() != pb.CredType_REPO {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of repo type: "+strings.Join(pb.CredType_REPO.SubtypesString(), " | "))
 	}
@@ -170,9 +159,6 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCred
 }
 
 func (g *guideOcelotServer) UpdateRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
-	if err := creds.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Repo Update Request is invalid; error: " + err.Error())
-	}
 	return g.updateAnyCred(ctx, creds)
 }
 
@@ -181,9 +167,6 @@ func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *pb.RepoCr
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
-	if err := creds.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Kubeconfig Insert Request is invalid; error: " + err.Error())
-	}
 	if creds.SubType.Parent() != pb.CredType_K8S {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of k8s type: "+strings.Join(pb.CredType_K8S.SubtypesString(), " | "))
 	}
@@ -229,9 +212,6 @@ func (g *guideOcelotServer) GetK8SCred(ctx context.Context, credentials *pb.K8SC
 }
 
 func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
-	if err := creds.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Kubeconfig Update Request is invalid; error: " + err.Error())
-	}
 	return g.updateAnyCred(ctx, creds)
 }
 
@@ -421,4 +401,61 @@ func (g *guideOcelotServer) UpdateAppleCreds(ctx context.Context, creds *pb.Appl
 
 func (g *guideOcelotServer) AppleCredExists(ctx context.Context, creds *pb.AppleCreds) (*pb.Exists, error) {
 	return g.checkAnyCredExists(ctx, creds)
+}
+/*SetNotifyCreds(context.Context, *NotifyCreds) (*google_protobuf.Empty, error)
+	GetNotifyCred(context.Context, *NotifyCreds) (*NotifyCreds, error)
+	UpdateNotifyCreds(context.Context, *NotifyCreds) (*google_protobuf.Empty, error)
+	NotifyCredExists(context.Context, *NotifyCreds) (*Exists, error)
+*/
+
+func (g *guideOcelotServer) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+	if creds.SubType.Parent() != pb.CredType_NOTIFIER {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of notifier type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
+	}
+	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	if err != nil {
+		if _, ok := err.(*pb.ValidationErr); ok {
+			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Notify Creds Upload failed validation. Errors are: "+err.Error())
+		}
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
+	}
+	return &empty.Empty{}, nil
+}
+
+func (g *guideOcelotServer) NotifyCredExists(ctx context.Context, creds *pb.NotifyCreds) (*pb.Exists, error) {
+	return g.checkAnyCredExists(ctx, creds)
+}
+
+func (g *guideOcelotServer) UpdateNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+	return g.updateAnyCred(ctx, creds)
+}
+
+func (g *guideOcelotServer) GetNotifyCred(ctx context.Context, creds *pb.NotifyCreds) (*pb.NotifyCreds, error) {
+	creddy, err := g.getAnyCred(creds)
+	if err != nil {
+		return nil, err
+	}
+	notifier, ok := creddy.(*pb.NotifyCreds)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Unable to cast as Notifier Creds")
+	}
+	return notifier, nil
+}
+
+func (g *guideOcelotServer) GetNotifyCreds(ctx context.Context, empty2 *empty.Empty) (*pb.NotifyWrap, error) {
+	credWrapper := &pb.NotifyWrap{}
+	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_NOTIFIER, true)
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+		return credWrapper, status.Errorf(codes.Internal, "unable to get notify creds! error: %s", err.Error())
+	}
+	for _, v := range credz {
+		credWrapper.Creds = append(credWrapper.Creds, v.(*pb.NotifyCreds))
+	}
+	if len(credWrapper.Creds) == 0 {
+		return credWrapper, status.Error(codes.NotFound, "no notifier creds found")
+	}
+	return credWrapper, nil
 }

@@ -11,13 +11,14 @@ message BuildConfig {
     string image = 1;
     // machineTag is the
     // @inject_tag: yaml:"machineTag"
-    string machineTag = 8;
+    string machineTag = 9;
     // @inject_tag: yaml:"buildTool"
     string buildTool = 2;
     repeated string packages = 3;
     repeated string branches = 4;
     repeated string env = 5;
     repeated Stage stages = 7;
+    Notifications notify = 8;
 }
 
 message Stage {
@@ -26,6 +27,21 @@ message Stage {
     string name = 3;
     // @inject_tag: yaml:"trigger"
     Triggers trigger = 4;
+}
+
+// todo: move to a new notifications.proto?
+message Notifications {
+    Slack slack = 1;
+}
+
+// todo: move to a new notifications.proto?
+message Slack {
+    // channel is which channel to post to. if empty, will be default channel set up by person who created url
+    string channel = 1;
+    //  identifier attached to url uploaded via `ocelot creds slack add`
+    string identifier = 2;
+    // on is what type of event to trigger a webhook on can be both PASS and FAIL
+    repeated StageResultVal on = 3;
 }
 
 message Result {

@@ -183,6 +183,7 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
+              "SLACK",
               "DEVPROFILE"
             ],
             "default": "NIL_SCT"
@@ -325,6 +326,7 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
+              "SLACK",
               "DEVPROFILE"
             ],
             "default": "NIL_SCT"
@@ -371,6 +373,149 @@
         "tags": [
           "creds",
           "kubernetes"
+        ]
+      }
+    },
+    "/v1/creds/notify": {
+      "get": {
+        "summary": "Get all known Notify integration credentials.",
+        "operationId": "GetNotifyCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsNotifyWrap"
+            }
+          }
+        },
+        "tags": [
+          "creds",
+          "notify"
+        ]
+      },
+      "post": {
+        "summary": "Attach new notification integration to account",
+        "description": "Attach a new notify integration to an account ",
+        "operationId": "SetNotifyCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsNotifyCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "notify"
+        ]
+      }
+    },
+    "/v1/creds/notify/{acctName}/{identifier}": {
+      "get": {
+        "summary": "get notify integration credential",
+        "description": "Returns notify integration cred if it exists. subtype is a required query param",
+        "operationId": "GetNotifyCred",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsNotifyCreds"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "There is currently only one subType that is valid for Integrations, and it is SLACK.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "clientSecret",
+            "description": "clientSecret is the secret associated with the integration cred.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "creds",
+          "notify"
+        ]
+      },
+      "put": {
+        "summary": "Update a notify integration cred",
+        "operationId": "UpdateNotifyCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsNotifyCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "integration"
         ]
       }
     },
@@ -482,6 +627,7 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
+              "SLACK",
               "DEVPROFILE"
             ],
             "default": "NIL_SCT"
@@ -626,6 +772,7 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
+              "SLACK",
               "DEVPROFILE"
             ],
             "default": "NIL_SCT"
@@ -791,6 +938,7 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
+              "SLACK",
               "DEVPROFILE"
             ],
             "default": "NIL_SCT"
@@ -1414,6 +1562,38 @@
         }
       }
     },
+    "modelsNotifyCreds": {
+      "type": "object",
+      "properties": {
+        "acctName": {
+          "type": "string",
+          "title": "account name to associate integration cred with"
+        },
+        "subType": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "There is currently only one subType that is valid for Integrations, and it is SLACK"
+        },
+        "identifier": {
+          "type": "string",
+          "title": "identifier is the unique identifier for the integration"
+        },
+        "clientSecret": {
+          "type": "string",
+          "title": "clientSecret is the secret associated with the integration cred"
+        }
+      }
+    },
+    "modelsNotifyWrap": {
+      "type": "object",
+      "properties": {
+        "creds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsNotifyCreds"
+          }
+        }
+      }
+    },
     "modelsPollRequest": {
       "type": "object",
       "properties": {
@@ -1619,6 +1799,7 @@
         "DOCKER",
         "KUBECONF",
         "SSHKEY",
+        "SLACK",
         "DEVPROFILE"
       ],
       "default": "NIL_SCT"

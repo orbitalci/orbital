@@ -31,6 +31,12 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
 	}()
+	// set up notifications to be executed on build completion
+	defer func(){
+		if err := w.doNotifications(werk); err != nil {
+			ocelog.IncludeErrField(err).Error("build notification failed!")
+		}
+	}()
 
 	// create context for entire build
 	ctx, cancel := context.WithCancel(context.Background())
@@ -85,6 +91,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	defer w.BuildValet.Cleanup(ctx, dockerUUid, w.infochan)
 	ocelog.Log().Info("finished setup")
 	setupDura := time.Now().Sub(setupStart)
+
 	if err := storeStageToDb(w.Store, werk.Id, setupResult, setupStart, setupDura.Seconds()); err != nil {
 		ocelog.Log().Debug("storing failure")
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
