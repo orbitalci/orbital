@@ -305,7 +305,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	creds, err := store.RetrieveCredBySubTypeAndAcct(stype, accountName)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
-			return nil, integrations.NCErr(fmt.Sprintf("credentials not found for account %s and integration %s", accountName, "kubeconf"))
+			return nil, integrations.NCErr(fmt.Sprintf("credentials not found for account %s and integration %s", accountName, stype.String()))
 		}
 		return nil, err
 	}
