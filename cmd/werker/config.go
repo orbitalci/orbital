@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/namsral/flag"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
@@ -52,6 +54,8 @@ type WerkerConf struct {
 	//WerkerUuid		uuid.UUID
 	*models.WerkerFacts
 	WerkerName string
+	// list of tags for this build node
+	tags     []string
 	//werkerProcessor builder.Processor
 	LogLevel        string
 	//LoopBackIp      string
@@ -67,6 +71,7 @@ func GetConf() (*WerkerConf, error) {
 	var storageTypeStr string
 	var consuladdr string
 	var consulport int
+	var tags string
 
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
 	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes|docker|ssh")
@@ -81,11 +86,12 @@ func GetConf() (*WerkerConf, error) {
 		"This may be different for different container systems / host machines. For example, when using docker for mac the loopback-ip would be docker.for.mac.localhost")
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
+	flrg.StringVar(&tags, "topics", "", "comma separated list of tags for this build node")
 	// ssh werker configuration
 	werker.Ssh.SetFlags(flrg)
 	flrg.Parse(os.Args[1:])
-
 	version.MaybePrintVersion(flrg.Args())
+	werker.tags = strings.Split(tags, ",")
 	werker.WerkerType = strToWerkType(werkerTypeStr)
 	if werker.WerkerType == -1 {
 		return nil, errors.New("werker type can only be: k8s, kubernetes, docker, ssh, exec")

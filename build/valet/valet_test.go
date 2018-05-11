@@ -61,7 +61,7 @@ func TestRecovery(t *testing.T) {
 	defer serv.Stop()
 	remoteConf := &recoveryCVRemoteConfig{consul: consu, storage: store}
 	uid := uuid.New()
-	rcvr := NewValet(remoteConf, uid, models.Docker, store)
+	rcvr := NewValet(remoteConf, uid, models.Docker, store, &models.SSHFacts{})
 	RegisterStartedBuild(consu, uid.String(), hash)
 	err = rcvr.Reset("START", hash)
 	if err != nil {

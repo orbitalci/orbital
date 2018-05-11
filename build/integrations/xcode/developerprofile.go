@@ -48,10 +48,11 @@ func (a *AppleDevProfile) GenerateIntegrationString(creds []pb.OcyCredder) (cont
 }
 
 func (a *AppleDevProfile) IsRelevant(wc *pb.BuildConfig) bool {
+	// todo: make apple dev profile more robust / not f*** with any existing keychains and then use this. for now people will have to be logged in to the mac build node
 	// todo: is this the best way?
-	if wc.BuildTool == "xcode" {
-		return true
-	}
+	//if wc.BuildTool == "xcode" {
+	//	return true
+	//}
 	return false
 }
 

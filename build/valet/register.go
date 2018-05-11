@@ -2,6 +2,7 @@ package valet
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,8 +17,9 @@ import (
 // ci/werker_location/<werkid> + werker_ip        = ip
 // 		'' 			           + werker_grpc_port = grpcPort
 // 		''				       + werker_ws_port   = wsPort
+// 		''				       + tags		      = comma separated list of tags
 // returns a generated uuid for the werker
-func Register(consulete *consul.Consulet, ip string, grpcPort string, wsPort string) (werkerId uuid.UUID, err error) {
+func Register(consulete *consul.Consulet, ip, grpcPort, wsPort string, tags []string) (werkerId uuid.UUID, err error) {
 	werkerId = uuid.New()
 	strId := werkerId.String()
 	if err = consulete.AddKeyValue(common.MakeWerkerIpPath(strId), []byte(ip)); err != nil {
@@ -27,6 +29,9 @@ func Register(consulete *consul.Consulet, ip string, grpcPort string, wsPort str
 		return
 	}
 	if err = consulete.AddKeyValue(common.MakeWerkerWsPath(strId), []byte(wsPort)); err != nil {
+		return
+	}
+	if err = consulete.AddKeyValue(common.MakeWerkerTagsPath(strId), []byte(strings.Join(tags, ","))); err != nil {
 		return
 	}
 	return

@@ -43,8 +43,8 @@ func TestAppleDevProfile_staticstuffs(t *testing.T) {
 		t.Error("subcredtype of apple dev profile should be DEVPROFILE")
 	}
 	wc := &pb.BuildConfig{BuildTool:"xcode"}
-	if !prf.IsRelevant(wc) {
-		t.Error("build tool is xcode, this integration is relevant")
+	if prf.IsRelevant(wc) {
+		t.Error("xcode should be disabled")
 	}
 	wc = &pb.BuildConfig{BuildTool:"maven"}
 	if prf.IsRelevant(wc) {

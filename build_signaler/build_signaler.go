@@ -185,7 +185,7 @@ func tellWerker(buildConf *pb.BuildConfig,
 		Id:           dbid,
 	}
 
-	go producer.WriteProto(werkerTask, build.DetermineTopic(buildConf.BuildTool))
+	go producer.WriteProto(werkerTask, build.DetermineTopic(buildConf.MachineTag))
 }
 
 //before we build pipeline config for werker, validate and make sure this is good candidate
