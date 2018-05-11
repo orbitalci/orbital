@@ -52,6 +52,12 @@ func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Stat
 	runCommand := fmt.Sprintf("Execute `ocelot logs -build-id %d` in a terminal for more information.", results.BuildSum.BuildId)
 	fallback := header + runCommand
 	combined := mid + stageStatus + runCommand
+	var shortSha string
+	if len(results.BuildSum.Hash) <= 7 {
+		shortSha = results.BuildSum.Hash
+	} else {
+		shortSha = results.BuildSum.Hash[:7]
+	}
 	postMsg := &slack.WebhookMsg{
 		Username: "ocelot",
 		IconUrl: ocelotIcon,
@@ -65,7 +71,7 @@ func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Stat
 				Fields: []*slack.Field{
 					{"Repo", fmt.Sprintf("%s/%s", results.BuildSum.Account, results.BuildSum.Repo), false},
 					{"Branch", results.BuildSum.Branch, true},
-					{"Commit", results.BuildSum.Hash[:7], true},
+					{"Commit", shortSha, true},
 				},
 			},
 		},
