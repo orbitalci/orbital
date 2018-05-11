@@ -35,7 +35,7 @@ You can also run `ocelot creds vcs add` from the command line and it will prompt
 For credentials relating to items within your build, such as docker, gradle, or maven, you can upload using the `ocelot creds repo add` command  
 
 ## Notify Credentials 
-You can upload creds for notifying on build status using `ocelot creds notify add`, documentation [here](notifications.md).
+You can upload creds for notifying on build status using `ocelot creds notify add`, documentation [here](notifications.md). For cli version > 0.3.0.
 
 ## `ocelot.yml`
 Ocelot uses a file in the root of a git project to configure how to build, `ocelot.yml` 
