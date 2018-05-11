@@ -39,7 +39,12 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
 	}()
-
+	// set up notifications to be executed on build completion
+	defer func(){
+		if err := w.doNotifications(werk); err != nil {
+			ocelog.IncludeErrField(err).Error("build notification failed!")
+		}
+	}()
 	ctx, cancel := context.WithCancel(context.Background())
 
 	//send build context off, build kills are performed by calling cancel on the cacellable context
