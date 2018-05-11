@@ -65,7 +65,7 @@ func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Stat
 				Fields: []*slack.Field{
 					{"Repo", fmt.Sprintf("%s/%s", results.BuildSum.Account, results.BuildSum.Repo), false},
 					{"Branch", results.BuildSum.Branch, true},
-					{"Commit", results.BuildSum.Hash, true},
+					{"Commit", results.BuildSum.Hash[:7], true},
 				},
 			},
 		},

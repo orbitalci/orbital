@@ -63,7 +63,7 @@ func TestThrowStatusWebhook(t *testing.T) {
 				Fields: []*slack.Field{
 					{"Repo", "jessishank/ocyocyocyocy", false},
 					{"Branch", "banana", true},
-					{"Commit", "testhash", true},
+					{"Commit", "testhas", true},
 				},
 			},
 		},
@@ -123,7 +123,7 @@ func TestThrowStatusWebhook_pass(t *testing.T) {
 				Fields: []*slack.Field{
 					{"Repo", "jessishank/ocyocyocyocy", false},
 					{"Branch", "banana", true},
-					{"Commit", "testhash", true},
+					{"Commit", "testhas", true},
 				},
 			},
 		},
