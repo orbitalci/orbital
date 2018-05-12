@@ -18,6 +18,7 @@ func GetOcelotValidator() *OcelotValidator {
 
 //validates config, takes in an optional cli out
 func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) error {
+	var err error
 	if config.Image == "" && config.MachineTag == "" {
 		return errors.New("uh-oh, there is no image AND no machineTag listed inside of your ocelot yaml file... one of these is required")
 	}
@@ -31,17 +32,19 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 	if len(config.Stages) == 0 {
 		return errors.New("there must be at least one stage listed")
 	}
-	
-	if UI != nil {
-		UI.Info("Connecting to docker to check for image validity...")
-	}
-	out, err := dockrhelper.RobustImagePull(config.Image)
-	defer func(){if out != nil {out.Close()}}()
-	if UI != nil {
-		if err != nil {
-			UI.Error(config.Image + " does not exist or credentials cannot be found")
-		} else {
-			UI.Info(config.Image + " exists " + models.CHECKMARK)
+	// todo: add in checking if any machines match machinetag 
+	if config.Image != "" {
+		if UI != nil {
+			UI.Info("Connecting to docker to check for image validity...")
+		}
+		out, err := dockrhelper.RobustImagePull(config.Image)
+		defer func(){if out != nil {out.Close()}}()
+		if UI != nil {
+			if err != nil {
+				UI.Error(config.Image + " does not exist or credentials cannot be found")
+			} else {
+				UI.Info(config.Image + " exists " + models.CHECKMARK)
+			}
 		}
 	}
 	return err
