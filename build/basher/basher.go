@@ -107,7 +107,7 @@ func (b *Basher) DownloadTemplateFiles(werkerPort string) []string {
 //SleeplessDownloadTemplateFiles will download the template files to
 func (b *Basher) SleeplessDownloadTemplateFiles(werkerIp string, werkerPort string) string {
 	downloadLink := fmt.Sprintf("http://%s:%s/do_things.tar", werkerIp, werkerPort)
-	command := fmt.Sprintf("mkdir -p %s && wget %s && echo 'untarring' && tar -xf do_things.tar -C %s && echo 'removing' && rm do_things.tar && echo 'cding' && cd %s  && echo 'chmodding' && chmod +x * && echo \"Ocelot has finished with downloading templates\"", b.OcelotDir(), downloadLink, b.OcelotDir(), b.OcelotDir())
+	command := fmt.Sprintf("mkdir -p %s && wget %s && tar -xf do_things.tar -C %s && rm do_things.tar && cd %s  && chmod +x * && echo \"Ocelot has finished with downloading templates\"", b.OcelotDir(), downloadLink, b.OcelotDir(), b.OcelotDir())
 	return command
 }
 

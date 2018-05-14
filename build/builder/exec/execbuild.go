@@ -81,14 +81,15 @@ func (e *Exec) GetContainerId() string {
 
 func (e *Exec) writeToInfo(reader io.ReadCloser, infoChan chan []byte, wg *sync.WaitGroup, readerTypeDesc string) {
 	defer wg.Done()
+	defer reader.Close()
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
-		fmt.Println(string(scanner.Bytes()))
 		infoChan <- append([]byte(e.stage.GetStageLabel()), scanner.Bytes()...)
 	}
 	log.Log().Debugf("finished writing to channel of %s for stage %s", readerTypeDesc, e.stage.Stage)
 	if err := scanner.Err(); err != nil {
-		if err != os.ErrClosed {
+		// errClosed err just means the exec process closed the pipe when the command finished
+		if !strings.Contains(err.Error(), os.ErrClosed.Error()) {
 			log.IncludeErrField(err).Error("error outputting to info channel!")
 			infoChan <- []byte(fmt.Sprintf("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING %s STAGE INPUT FOR %s", readerTypeDesc, e.stage.Stage))
 		}
@@ -117,6 +118,7 @@ func (e *Exec) execute(ctx context.Context, stage *build.StageUtil, env []string
 	messages := []string{"starting stage " + stage.GetStage()}
 	preppedCmds := prepCmds(cmds)
 	command := exec.CommandContext(ctx, preppedCmds[0], preppedCmds[1:]...)
+	command.Dir = "/tmp"
 	setEnvs := append(env, e.globalEnvs...)
 	// todo: should we append to the environment? with exec package, if you set the environment it overwrites _all_ other ones. do we want this behavior? or do we want to keep stuff like $HOME
 	fullEnv := append(os.Environ(), setEnvs...)
