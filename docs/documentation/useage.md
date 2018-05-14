@@ -1,5 +1,7 @@
 # Ocelot 
 Ocelot is a distributed CI tool. 
+It works using docker containers. or not.
+If you build ios, see [non-docker builds](machinetagging.md). 
 
 ## Initial configuration
 ### VCS Credentials 
@@ -87,7 +89,8 @@ stages:
 ### `ocelot.yml` top level fields
 |  key	| significance | required |
 |--- |--- |--- |
-| `image` | Image to run the build on. Can be a custom built image in a private repo or one on dockerhub.  |  Yes  |
+| `image` | Image to run the build on. Can be a custom built image in a private repo or one on dockerhub.  |  If machineTag not present  |
+| `machineTag` | **For builds that can't run in docker containers!** What type of werker node this build can run on, ie *ios*  see [here](machinetagging.md)|  If image not present  |
 | `buildTool` | Flag that drives integration. If buildTool is maven, then a `settings.xml` will be generated with repository credentials  |  Yes |
 | `notify` | Configuration for notifying on the status of builds  |  No |
 | `branches` |  A list of branches to build. If the branch pushed does not match a value in this list, it wil not be built.  | Yes  |
