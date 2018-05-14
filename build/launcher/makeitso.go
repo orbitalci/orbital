@@ -131,6 +131,7 @@ func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) 
 		fmt.Sprintf("BUILD_ID=%d", werk.Id),
 		fmt.Sprintf("GIT_HASH_SHORT=%s", werk.CheckoutHash[:7]),
 		fmt.Sprintf("GIT_BRANCH=%s", werk.Branch),
+		fmt.Sprintf("WORKSPACE=%s", w.Basher.CloneDir(werk.CheckoutHash)),
 	}
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 	builder.SetGlobalEnv(paddedEnvs)
