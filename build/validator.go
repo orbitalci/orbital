@@ -22,7 +22,9 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 	if config.Image == "" && config.MachineTag == "" {
 		return errors.New("uh-oh, there is no image AND no machineTag listed inside of your ocelot yaml file... one of these is required")
 	}
-
+	if config.Image != "" && config.MachineTag != "" {
+		return errors.New("you cannot have both image and machineTag. they are mutually exclusive")
+	}
 	if len(config.BuildTool) == 0 {
 		return errors.New("BuildTool must be specified")
 	}
