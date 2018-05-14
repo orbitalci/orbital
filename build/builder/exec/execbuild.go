@@ -83,6 +83,7 @@ func (e *Exec) writeToInfo(reader io.ReadCloser, infoChan chan []byte, wg *sync.
 	defer wg.Done()
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
+		fmt.Println(string(scanner.Bytes()))
 		infoChan <- append([]byte(e.stage.GetStageLabel()), scanner.Bytes()...)
 	}
 	log.Log().Debugf("finished writing to channel of %s for stage %s", readerTypeDesc, e.stage.Stage)
