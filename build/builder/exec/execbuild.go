@@ -121,6 +121,7 @@ func (e *Exec) execute(ctx context.Context, stage *build.StageUtil, env []string
 	fullEnv := append(os.Environ(), setEnvs...)
 	command.Env = fullEnv
 	log.Log().Debugf("full env is %s", strings.Join(fullEnv, " "))
+	log.Log().Debugf("cmd is %s", strings.Join(command.Args, " && "))
 	err = exechelper.RunAndStreamCmd(command, logout, e.writeToInfo)
 	if err != nil {
 		return &pb.Result{
