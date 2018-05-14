@@ -162,15 +162,23 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 			// return false, the block is empty and there is nothing to check
 			return
 		}
-		if !branchOk(branch, stage.Trigger.Branches) {
+		branchGood, err := build.BranchRegexOk(branch, stage.Trigger.Branches)
+		if err != nil {
+			result := &pb.Result{stage.Name, pb.StageResultVal_FAIL, err.Error(), []string{"failed to check if current branch fit the trigger criteria"}}
 			// not sure if we should store, but i think its good visibility especially for right now
-			result := &pb.Result{stage.Name, pb.StageResultVal_PASS, "", []string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", branch)}}
 			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
 				return
 			}
+		}
+		if !branchGood {
+			result := &pb.Result{stage.Name, pb.StageResultVal_PASS, "", []string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", branch)}}
 			// we could save to db, the branch running is not in the list of trigger branches, so we can flip the shouldSkip bool now.
 			shouldSkip = true
+			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
+				ocelog.IncludeErrField(err).Error("couldn't store build output")
+				return
+			}
 			return
 		}
 		ocelog.Log().Debugf("building from trigger stage with branch %s. triggerBranches are %s", branch, strings.Join(stage.Trigger.Branches, ", "))

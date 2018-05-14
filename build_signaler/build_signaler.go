@@ -192,20 +192,20 @@ func tellWerker(buildConf *pb.BuildConfig,
 //before we build pipeline config for werker, validate and make sure this is good candidate
 // - check if commit branch matches with ocelot.yaml branch and validate
 func validateBuild(buildConf *pb.BuildConfig, branch string, validator *build.OcelotValidator) error {
-	err := validator.ValidateConfig(buildConf, nil)
-
+	var err error
+	err = validator.ValidateConfig(buildConf, nil)
 	if err != nil {
 		log.IncludeErrField(err).Error("failed validation")
 		return err
 	}
-
-	for _, buildBranch := range buildConf.Branches {
-		if buildBranch == "ALL" || buildBranch == branch {
-			return nil
-		}
+	branchOk, err := build.BranchRegexOk(branch, buildConf.Branches)
+	if err != nil {
+		return err
 	}
-	log.Log().Errorf("build does not match any branches listed: %v", buildConf.Branches)
-	return errors.New(fmt.Sprintf("build does not match any branches listed: %v", buildConf.Branches))
+	if !branchOk {
+		err = errors.New(fmt.Sprintf("branch %s does not match any branches listed: %v", branch, buildConf.Branches))
+	}
+	return err
 }
 
 func PopulateStageResult(sr *models.StageResult, status int, lastMsg, errMsg string) {
