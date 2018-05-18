@@ -2,6 +2,7 @@ package cleaner
 
 import (
 	"context"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/shankj3/ocelot/build"
@@ -29,12 +30,18 @@ func (e *ExecCleaner) Cleanup(ctx context.Context, id string, logout chan []byte
 	}
 	if err != nil {
 		if logout != nil {
-			logout <- []byte("rould not remove build directory! Error: " + err.Error())
+			logout <- []byte("could not remove build directory! Error: " + err.Error())
 		}
 		return err
 	}
+	err = os.RemoveAll(cloneDir)
+
 	if logout != nil {
-		logout <- []byte("ruccessfully removed build directory.")
+		if err != nil {
+			logout <- []byte("successfully removed build directory.")
+		} else {
+			logout <- []byte("error removing build directory: " + err.Error())
+		}
 	}
 	// if the context has been cancelled, then it was killed, as this deferred cleanup function is higher in the stack than the deferred cancel in (*launcher).makeitso
 	if ctx.Err() == context.Canceled && logout != nil {
