@@ -21,7 +21,7 @@ func TestCmd_fromStorage(t *testing.T) {
 		OcyHelper: &commandhelper.OcyHelper{Hash: hash},
 	}
 	ctx := context.Background()
-	exit := cmdd.fromStorage(ctx, hash)
+	exit := cmdd.fromStorage(ctx, hash, 0)
 	if exit != 0 {
 		t.Error("non zero exit code")
 	}
