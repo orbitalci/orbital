@@ -64,6 +64,8 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Dir(filename)
 	path := filepath.Join(dir, "test-fixtures")
+	del := exec.Command("/bin/sh", "-c", "docker stop pgtest; docker rm pgtest")
+	del.Run()
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("docker run -p %d:5432  -v %s:/docker-entrypoint-initdb.d -e POSTGRES_PASSWORD=%s --name pgtest -d postgres", port, path, password))
 	//if err := createOrUpdateAuditFile(fmt.Sprintf("%s,create", t.Name())); err != nil {
 	//	t.Error(err)
