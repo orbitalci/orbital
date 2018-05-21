@@ -27,7 +27,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 		buildRtInfo, err = build.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 		if err != nil {
 			if _, ok := err.(*build.ErrBuildDone); !ok {
-				log.IncludeErrField(err)
+				log.IncludeErrField(err).Error("could not get build runtime")
 				return nil, status.Error(codes.Internal, "could not get build runtime, err: "+err.Error())
 			} else {
 				//we set error back to nil so that we can continue with the rest of the logic here
