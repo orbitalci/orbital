@@ -59,7 +59,7 @@ func (c *cmd) Run(args []string) int {
 	Header(c.UI)
 	for _, oneline := range msg.Keys {
 		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
-			c.UI.Output(Prettify(oneline))
+			c.UI.Output(c.prettify(oneline))
 			printed = true
 		}
 	}
@@ -85,12 +85,12 @@ func NoDataHeader(ui cli.Ui) {
 	ui.Warn("\n--- No SSH Key Credentials Found ---\n")
 }
 
-func Prettify(cred *models.SSHKeyWrapper) string {
+func (c *cmd) prettify(cred *models.SSHKeyWrapper) string {
 	pretty := `Acccount: %s
 Identifier: %s
-
+%s
 `
-	return fmt.Sprintf(pretty, cred.AcctName, cred.Identifier)
+	return fmt.Sprintf(pretty, cred.AcctName, cred.Identifier, c.GetConfig().Theme.Info.Sprint("[On File]"))
 }
 
 const synopsis = "List all credentials used for tracking repositories to build"

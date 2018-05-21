@@ -2,18 +2,23 @@ syntax = "proto3";
 option go_package = "pb";
 package models;
 
-import "guideocelot.proto";
+import "creds.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
+    // either image or machineTag is required
+    // image is the docker image to run the build in
     string image = 1;
-    Notifications notify = 8;
+    // machineTag is the
+    // @inject_tag: yaml:"machineTag"
+    string machineTag = 9;
     // @inject_tag: yaml:"buildTool"
     string buildTool = 2;
     repeated string packages = 3;
     repeated string branches = 4;
     repeated string env = 5;
     repeated Stage stages = 7;
+    Notifications notify = 8;
 }
 
 message Stage {

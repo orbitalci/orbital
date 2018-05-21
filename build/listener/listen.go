@@ -5,7 +5,9 @@ import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/basher"
-	bldr "github.com/shankj3/ocelot/build/builder"
+	"github.com/shankj3/ocelot/build/builder/docker"
+	"github.com/shankj3/ocelot/build/builder/exec"
+	"github.com/shankj3/ocelot/build/builder/ssh"
 	"github.com/shankj3/ocelot/build/launcher"
 	"github.com/shankj3/ocelot/build/valet"
 	"github.com/shankj3/ocelot/common/credentials"
@@ -20,7 +22,6 @@ import (
 type WorkerMsgHandler struct {
 	*models.WerkerFacts
 	Topic        string
-	Type         models.WerkType
 	infochan     chan []byte
 	StreamChan   chan *models.Transport
 	BuildCtxChan chan *models.BuildContext
@@ -50,13 +51,14 @@ func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Bash
 // or signal handling
 // The nsqpb will call msg.Finish() when it receives on this channel.
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
+	var err error
 	ocelog.Log().Debug("unmarshal-ing build obj and processing")
 	werkerTask := &pb.WerkerTask{}
-	if err := proto.Unmarshal(msg, werkerTask); err != nil {
+	if err = proto.Unmarshal(msg, werkerTask); err != nil {
 		ocelog.IncludeErrField(err).Warning("unmarshal error")
 		return err
 	}
-	if err := w.Store.StartBuild(werkerTask.Id); err != nil {
+	if err = w.Store.StartBuild(werkerTask.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't log start of build, returning")
 		return err
 	}
@@ -67,11 +69,21 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
 	//
 	var builder build.Builder
-	switch w.Type {
+	switch w.WerkerType {
 	case models.Docker:
-		builder = bldr.NewDockerBuilder(w.Basher)
+		builder = docker.NewDockerBuilder(w.Basher)
+	case models.SSH:
+		builder, err = ssh.NewSSHBuilder(w.Basher, w.WerkerFacts)
+		if err != nil {
+			return err
+		}
+	case models.Exec:
+		builder = exec.NewExecBuilder(w.Basher, w.WerkerFacts)
+		if err != nil {
+			return err
+		}
 	default:
-		builder = bldr.NewDockerBuilder(w.Basher)
+		builder = docker.NewDockerBuilder(w.Basher)
 	}
 	launch := launcher.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildValet)
 	launch.MakeItSo(werkerTask, builder, finish, done)

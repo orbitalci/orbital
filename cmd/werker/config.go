@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/namsral/flag"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
@@ -24,6 +26,10 @@ func strToWerkType(str string) models.WerkType {
 		return models.Kubernetes
 	case "docker":
 		return models.Docker
+	case "ssh":
+		return models.SSH
+	case "exec":
+		return models.Exec
 	default:
 		return -1
 	}
@@ -48,39 +54,48 @@ type WerkerConf struct {
 	//WerkerUuid		uuid.UUID
 	*models.WerkerFacts
 	WerkerName string
+	// list of tags for this build node
+	tags     []string
 	//werkerProcessor builder.Processor
-	LogLevel     string
-	RegisterIP   string
-	LoopBackIp   string
-	RemoteConfig cred.CVRemoteConfig
+	LogLevel        string
+	//LoopBackIp      string
+	RemoteConfig    cred.CVRemoteConfig
 }
 
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
 // alright because it only happens on startup of the application
 func GetConf() (*WerkerConf, error) {
-	werker := &WerkerConf{WerkerFacts: &models.WerkerFacts{}}
+	werker := &WerkerConf{WerkerFacts: models.NewFacts()}
 	werkerName, _ := os.Hostname()
 	var werkerTypeStr string
-	var storageTypeStr string
 	var consuladdr string
 	var consulport int
+	var tags string
+
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
-	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes or docker")
+	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes|docker|ssh")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
 	flrg.StringVar(&werker.ServicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
 	flrg.StringVar(&werker.GrpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
 	flrg.StringVar(&werker.LogLevel, "log-level", "info", "log level")
-	flrg.StringVar(&storageTypeStr, "storage-type", defaultStorage, "storage type to use for build info, available: [filesystem")
+	flrg.BoolVar(&werker.Dev, "dev", false, "run dev mode")
 	flrg.StringVar(&werker.RegisterIP, "register-ip", "localhost", "ip to register with consul when picking up builds")
-	flrg.StringVar(&werker.LoopBackIp, "loopback-ip", "172.17.0.1", "ip to use for spawned containers to successfully contact the host. "+
+	flrg.StringVar(&werker.LoopbackIp, "loopback-ip", "172.17.0.1", "ip to use for spawned containers to successfully contact the host. " +
 		"This may be different for different container systems / host machines. For example, when using docker for mac the loopback-ip would be docker.for.mac.localhost")
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
+	flrg.StringVar(&tags, "tags", "", "comma separated list of tags for this build node")
+	// ssh werker configuration
+	werker.Ssh.SetFlags(flrg)
 	flrg.Parse(os.Args[1:])
 	version.MaybePrintVersion(flrg.Args())
+	werker.tags = strings.Split(tags, ",")
 	werker.WerkerType = strToWerkType(werkerTypeStr)
 	if werker.WerkerType == -1 {
-		return nil, errors.New("werker type can only be: k8s, kubernetes, docker")
+		return nil, errors.New("werker type can only be: k8s, kubernetes, docker, ssh, exec")
+	}
+	if werker.WerkerType == models.SSH && !werker.Ssh.IsValid() {
+		return nil, errors.New("if werker type is ssh, then -ssh-port, -ssh-host, -ssh-user, and either -ssh-private-key or -ssh-password are required fields")
 	}
 	if werker.WerkerName == "" {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")

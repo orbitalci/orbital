@@ -57,10 +57,10 @@ func main() {
 	rc := configure()
 	supportedTopics := []string{"poll_please", "no_poll_please"}
 	store, err := rc.GetOcelotStorage()
-	defer store.Close()
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to get ocelot storage, bailing")
 	}
+	defer store.Close()
 	if err = loadFromDb(store); err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to load old cron files from db, bailing")
 	}

@@ -22,7 +22,7 @@ func (n *SSHKeyInt) SubType() pb.SubCredType {
 }
 
 func Create() integrations.StringIntegrator {
-	return &SSHKeyInt{strictHostKey: "echo \"StrictHostKeyChecking no\" >> ~/.ssh/config && chmod 400 ~/.ssh/config"}
+	return &SSHKeyInt{strictHostKey: "mkdir -p ~/.ssh && echo \"StrictHostKeyChecking no\" >> ~/.ssh/config && chmod 400 ~/.ssh/config"}
 }
 
 func (n *SSHKeyInt) GetEnv() []string {
@@ -46,8 +46,8 @@ func (n *SSHKeyInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, er
 
 func (n *SSHKeyInt) MakeBashable(str string) []string {
 	var cmds = []string{n.strictHostKey}
-	for identifier := range n.sshKeys {
-		cmd := fmt.Sprintf("echo \"${%s}\" > ~/.ssh/%s && chmod 600 ~/.ssh/%s", identifier, identifier, identifier)
+	for identifier, _ := range n.sshKeys {
+		cmd := fmt.Sprintf("mkdir -p ~/.ssh && echo \"${%s}\" > ~/.ssh/%s && chmod 600 ~/.ssh/%s", identifier, identifier, identifier)
 		cmds = append(cmds, cmd)
 	}
 	return []string{"/bin/sh", "-c", strings.Join(cmds, " && ")}

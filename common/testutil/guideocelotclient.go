@@ -46,6 +46,25 @@ func (f *fakeGuideOcelotClient) GetSSHCred(ctx context.Context, in *pb.SSHKeyWra
 	return nil, nil
 }
 
+func (f *fakeGuideOcelotClient) SetAppleCreds(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) GetAppleCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.AppleCredsWrapper, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) GetAppleCred(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*pb.AppleCreds, error) {
+	return nil, nil
+}
+
+func (f *fakeGuideOcelotClient) UpdateAppleCreds(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	return nil, nil
+}
+func (f *fakeGuideOcelotClient) AppleCredExists(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+	return nil, nil
+}
+
 func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.CredWrapper, error) {
 	return f.creds, nil
 }

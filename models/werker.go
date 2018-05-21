@@ -11,6 +11,8 @@ type WerkType int
 const (
 	Kubernetes WerkType = iota
 	Docker
+	SSH
+	Exec
 )
 
 
@@ -29,12 +31,52 @@ type BuildContext struct {
 	CancelFunc func()
 }
 
+func NewFacts() *WerkerFacts {
+	return &WerkerFacts{Ssh:&SSHFacts{}}
+}
+
 // WerkerFacts is a struct for the configurations in werker that affect actual builds.
 // Think of it like gather facts w/ ansible.
 type WerkerFacts struct {
-	Uuid 	    	uuid.UUID
-	WerkerType           WerkType
-	LoopbackIp  	string
+	Uuid 	       uuid.UUID
+	WerkerType     WerkType
+	LoopbackIp     string
+	RegisterIP     string
 	ServicePort    string
 	GrpcPort       string
+	// set dev mode
+	Dev			   bool
+	// this is only for SSH type werkers
+	Ssh            *SSHFacts
+}
+
+// When a werker starts up as an SSH werker, it will also need to be initialized with these fields so it knows
+//   what to connect to
+type SSHFacts struct {
+	User      string
+	Host      string
+	Port      int
+	KeyFP     string
+	Password  string
+	// KeepRepo; if true then the repositories will be left on machine and new commits will be checked out instead of re-cloned? idk. maybe not.
+	KeepRepo  bool
+}
+
+
+func (sf *SSHFacts) SetFlags(flg Flagger) {
+	flg.IntVar(&sf.Port, "ssh-port", 22, "port to ssh to for build exectuion | ONLY VALID FOR SSH TYPE WERKERS")
+	flg.StringVar(&sf.Host, "ssh-host", "", "host to ssh to for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flg.StringVar(&sf.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flg.StringVar(&sf.User, "ssh-user", "root", "ssh user for build execution | ONLY VALID FOR SSH TYPE WERKERS")
+	flg.StringVar(&sf.Password, "ssh-password", "", "password for ssh user if no key file | ONLY VALID FOR SSH TYPE WERKERS")
+}
+
+func (sf *SSHFacts) IsValid() bool {
+	if sf.User == "" || sf.Host == "" || sf.Port == 0 {
+		return false
+	}
+	if sf.Password == "" && sf.KeyFP == "" {
+		return false
+	}
+	return true
 }

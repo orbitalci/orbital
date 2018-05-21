@@ -82,6 +82,157 @@
         ]
       }
     },
+    "/v1/creds/apple": {
+      "get": {
+        "summary": "Retrieve all apple related credentials",
+        "operationId": "GetAppleCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsAppleCredsWrapper"
+            }
+          }
+        },
+        "tags": [
+          "creds",
+          "apple"
+        ]
+      },
+      "post": {
+        "summary": "Add new Apple Credential",
+        "description": "Add New Apple credential. Currently only a apple developer profile is supported \nRefer to modelsAppleCreds for the object fields",
+        "operationId": "SetAppleCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsAppleCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "apple"
+        ]
+      }
+    },
+    "/v1/creds/apple/{acctName}/{identifier}": {
+      "get": {
+        "summary": "return single apple cred",
+        "description": "Returns apple cred if it exists. subType is a required query param",
+        "operationId": "GetAppleCred",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsAppleCreds"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "appleSecrets",
+            "description": "appleSecrets is the zip contents of the apple developer profile that you export in XCode ??.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "appleSecretsPassword",
+            "description": "appleSecretsPassword is the password you set when you export the developer profile.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "@inject_tag: yaml:\"subType\".",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE"
+            ],
+            "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "creds",
+          "apple"
+        ]
+      },
+      "put": {
+        "summary": "Update an apple config in ocelot for xcode integration. \nRefer to modelsAppleCreds for the object fields",
+        "operationId": "UpdateAppleCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsAppleCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "apple"
+        ]
+      }
+    },
     "/v1/creds/k8s": {
       "get": {
         "summary": "Retrieve all kubernetes related credentials",
@@ -162,7 +313,7 @@
           },
           {
             "name": "subType",
-            "description": "there is currently only one subtype for k8SCreds, and it is KUBECONF\n@inject_tag: yaml:\"subType\".",
+            "description": "@inject_tag: yaml:\"subType\"\nthere is currently only one subtype for k8SCreds, and it is KUBECONF.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -175,7 +326,8 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
-              "SLACK"
+              "SLACK",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           }
@@ -310,7 +462,8 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
-              "SLACK"
+              "SLACK",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           },
@@ -474,7 +627,8 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
-              "SLACK"
+              "SLACK",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           }
@@ -618,7 +772,8 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
-              "SLACK"
+              "SLACK",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           }
@@ -783,7 +938,8 @@
               "DOCKER",
               "KUBECONF",
               "SSHKEY",
-              "SLACK"
+              "SLACK",
+              "DEVPROFILE"
             ],
             "default": "NIL_SCT"
           }
@@ -1200,6 +1356,43 @@
         }
       }
     },
+    "modelsAppleCreds": {
+      "type": "object",
+      "properties": {
+        "acctName": {
+          "type": "string",
+          "title": "account name to associate this credential with"
+        },
+        "identifier": {
+          "type": "string",
+          "title": "identifier in dev profile creds is currently irrelevant, as there can only be one per account"
+        },
+        "appleSecrets": {
+          "type": "string",
+          "format": "byte",
+          "title": "appleSecrets is the zip contents of the apple developer profile that you export in XCode ??"
+        },
+        "appleSecretsPassword": {
+          "type": "string",
+          "title": "appleSecretsPassword is the password you set when you export the developer profile"
+        },
+        "subType": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "@inject_tag: yaml:\"subType\""
+        }
+      }
+    },
+    "modelsAppleCredsWrapper": {
+      "type": "object",
+      "properties": {
+        "appleCreds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsAppleCreds"
+          }
+        }
+      }
+    },
     "modelsBuildReq": {
       "type": "object",
       "properties": {
@@ -1346,7 +1539,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "there is currently only one subtype for k8SCreds, and it is KUBECONF\n@inject_tag: yaml:\"subType\""
+          "title": "@inject_tag: yaml:\"subType\"\nthere is currently only one subtype for k8SCreds, and it is KUBECONF"
         }
       }
     },
@@ -1606,7 +1799,8 @@
         "DOCKER",
         "KUBECONF",
         "SSHKEY",
-        "SLACK"
+        "SLACK",
+        "DEVPROFILE"
       ],
       "default": "NIL_SCT"
     },

@@ -22,6 +22,10 @@ vault:
   secretName: vault-token
   # secretKey is the key to the secret map that will return the vault token
   secretKey: token
+# if consul is not configured on the host ip, set the values here
+#consul:
+#  host: consul-consul # or w/e
+#  port: 8500 # or w/e
 # nsq is the config that tells ocelot where nsq is located
 nsq:
   # nsqlookupd will be connected to by all services

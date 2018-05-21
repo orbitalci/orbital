@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
+	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
@@ -108,4 +109,22 @@ func TestSSHKeyInt_MakeBashable(t *testing.T) {
 		}
 	}
 
+}
+
+
+func TestSSHKeyInt_staticstuff(t *testing.T) {
+	ssh := Create()
+	if ssh.String() != "ssh keyfile integration" {
+		t.Error("string() of ssh should be 'ssh keyfile integration'")
+	}
+	if ssh.SubType() != pb.SubCredType_SSHKEY {
+		t.Error("subcredtype of ssh is SSHKEY")
+	}
+	ssher := ssh.(*SSHKeyInt)
+	if ssher.strictHostKey !=  "mkdir -p ~/.ssh && echo \"StrictHostKeyChecking no\" >> ~/.ssh/config && chmod 400 ~/.ssh/config" {
+		t.Error(test.StrFormatErrors("first hostkey script", "mkdir -p ~/.ssh && echo \"StrictHostKeyChecking no\" >> ~/.ssh/config && chmod 400 ~/.ssh/config", ssher.strictHostKey))
+	}
+	if !ssh.IsRelevant(&pb.BuildConfig{}) {
+		t.Error("ssh key integration is always relevant.")
+	}
 }

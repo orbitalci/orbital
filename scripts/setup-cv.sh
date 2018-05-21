@@ -6,12 +6,20 @@ if [ "${PATH_PREFIX}" != "" ]; then
 fi
 echo "prefix is ${prefix}"
 
+DBHOST=$1
+if [ "${DBHOST}" == "" ]; then
+    echo "using localhost as db host location"
+    DBHOST=localhost
+fi
+
+#exitcode=vault version | grep v10
+#if [ $(vault version  | grep ) ]
 
 locals() {
     echo "setting  up local"
     consul kv put ${prefix}config/ocelot/storagetype postgres
     consul kv put ${prefix}config/ocelot/postgres/db postgres
-    consul kv put ${prefix}config/ocelot/postgres/location localhost
+    consul kv put ${prefix}config/ocelot/postgres/location ${DBHOST}
     consul kv put ${prefix}config/ocelot/postgres/port 5432
     consul kv put ${prefix}config/ocelot/postgres/username postgres
     vault write secret/${prefix}config/ocelot/postgres clientsecret=mysecretpassword
@@ -20,6 +28,7 @@ locals() {
 }
 
 if [ "${DEV_K8S}" == "" ]; then
+    echo "setting up local"
     locals
 fi
 
@@ -39,5 +48,6 @@ dev_k8s() {
 }
 
 if [ "${DEV_K8S}" != "" ]; then
+    echo "setting up dev k8s in namespace pedev"
     dev_k8s
 fi

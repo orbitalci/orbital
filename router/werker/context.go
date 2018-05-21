@@ -8,16 +8,17 @@ import (
 	consulet "github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build/streamer"
+	"github.com/shankj3/ocelot/build/valet"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/storage"
 )
 
 type WerkerContext struct {
-	BuildContexts map[string]*models.BuildContext
 	*models.WerkerFacts
-	consul     *consulet.Consulet
-	store      storage.OcelotStorage
-	streamPack *streamer.StreamPack
+	consul        *consulet.Consulet
+	store         storage.OcelotStorage
+	streamPack    *streamer.StreamPack
+	killValet     *valet.ContextValet
 }
 
 //
@@ -39,15 +40,15 @@ type WerkerContext struct {
 //	wr.Write(bit)
 //}
 
-func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage) *WerkerContext {
+func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, contextValet *valet.ContextValet) *WerkerContext {
 	werkerConsul, err := consulet.Default()
 	if err != nil {
 		ocelog.IncludeErrField(err)
 	}
 	werkerCtx := &WerkerContext{
-		BuildContexts: make(map[string]*models.BuildContext),
 		WerkerFacts:   conf,
 		consul:        werkerConsul,
+		killValet:     contextValet,
 		store:         store,
 	}
 	return werkerCtx

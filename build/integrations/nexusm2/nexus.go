@@ -39,7 +39,9 @@ var settingsXml = `<?xml version="1.0" encoding="UTF-8"?>
   </profiles>
 </settings>`
 
-type NexusInt struct{}
+type NexusInt struct {
+	settingsXml string
+}
 
 func (n *NexusInt) String() string {
     return "nexus m2 settings.xml render"
@@ -54,24 +56,28 @@ func Create() integrations.StringIntegrator {
 }
 
 func (n *NexusInt) GetEnv() []string {
-    return []string{}
+	return []string{"M2XML=" + n.settingsXml}
 }
 
 func (n *NexusInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, error) {
-    var repoCreds []*pb.RepoCreds
-    for _, credi := range credz {
-        credx, ok := credi.(*pb.RepoCreds)
-        if !ok {
-            return "", errors.New("could not cast as repo creds")
-        }
-        repoCreds = append(repoCreds, credx)
-    }
-    wrap := &pb.RepoCredWrapper{Repo: repoCreds}
-    return executeTempl(wrap)
+	var repoCreds []*pb.RepoCreds
+	for _, credi := range credz {
+		credx, ok := credi.(*pb.RepoCreds)
+		if !ok {
+			return "", errors.New("could not cast as repo creds")
+		}
+		repoCreds = append(repoCreds, credx)
+	}
+	wrap := &pb.RepoCredWrapper{Repo:repoCreds}
+	rendered, err := executeTempl(wrap)
+	if err == nil {
+		n.settingsXml = rendered
+	}
+	return rendered, err
 }
 
 func (n *NexusInt) MakeBashable(xml string) []string {
-    return []string{"/bin/sh", "-c", "/.ocelot/render_mvn.sh " + "'" + xml + "'"}
+	return []string{"/bin/sh", "-c", "mkdir -p ~/.m2 && echo \"${M2XML}\" > ~/.m2/settings.xml"}
 }
 
 func (n *NexusInt) IsRelevant(wc *pb.BuildConfig) bool {

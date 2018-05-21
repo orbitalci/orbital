@@ -148,7 +148,7 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 		if err != nil {
 			return err
 		}
-		UI.Error("Succesfully update VCS Credential.")
+		UI.Error("Succesfully update Repo Credential.")
 		return nil
 	}
 	_, err = client.SetRepoCreds(ctx, cred)

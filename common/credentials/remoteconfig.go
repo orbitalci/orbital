@@ -8,7 +8,6 @@ import (
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 	ocevault "github.com/shankj3/go-til/vault"
-	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
@@ -305,7 +304,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	creds, err := store.RetrieveCredBySubTypeAndAcct(stype, accountName)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
-			return nil, integrations.NCErr(fmt.Sprintf("credentials not found for account %s and integration %s", accountName, stype.String()))
+			return nil, common.NCErr(fmt.Sprintf("credentials not found for account %s and integration %s", accountName, "kubeconf"))
 		}
 		return nil, err
 	}
@@ -402,7 +401,9 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	case storage.FileSystem:
 		return storage.NewFileBuildStorage(creds.Location), nil
 	case storage.Postgres:
-		return storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName), nil
+		store := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+		ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+		return store, store.Connect()
 	default:
 		return nil, errors.New("unknown type")
 	}
