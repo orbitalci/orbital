@@ -1,4 +1,4 @@
-package builder
+package docker
 
 import (
 	"bufio"
@@ -26,11 +26,24 @@ type Docker struct {
 	Log          io.ReadCloser
 	ContainerId  string
 	DockerClient *client.Client
+	globalEnvs []string
 	*basher.Basher
 }
 
 func NewDockerBuilder(b *basher.Basher) build.Builder {
-	return &Docker{nil, "", nil, b}
+	return &Docker{nil, "", nil, nil, b}
+}
+
+func (d *Docker) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Result {
+	// todo: maybe this could go in here??
+	//cli, err := client.NewEnvClient()
+	//d.DockerClient = cli
+	res := &pb.Result{
+		Status: pb.StageResultVal_PASS,
+		Stage: "INIT",
+		Messages: []string{"Initializing docker builder..."},
+	}
+	return res
 }
 
 func (d *Docker) GetContainerId() string {
@@ -72,20 +85,17 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 
 	logout <- []byte(su.GetStageLabel() + "Creating container...")
 
-	//add environment variables that will always be avilable on the machine - GIT_HASH, BUILD_ID, GIT_HASH_SHORT, GIT_BRANCH
-	paddedEnvs := []string{fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash), fmt.Sprintf("BUILD_ID=%d", werk.Id), fmt.Sprintf("GIT_HASH_SHORT=%s", werk.CheckoutHash[:7]), fmt.Sprintf("GIT_BRANCH=%s", werk.Branch)}
-	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 
 	//container configurations
 	containerConfig := &container.Config{
-		Image:        imageName,
-		User:         "root",
-		Env:          paddedEnvs,
-		Cmd:          d.DownloadTemplateFiles(werkerPort),
+		Image: imageName,
+		User: "root",
+		Env: d.globalEnvs,
+		Cmd: d.DownloadTemplateFiles(werkerPort),
 		AttachStderr: true,
 		AttachStdout: true,
-		AttachStdin:  true,
-		Tty:          true,
+		AttachStdin:true,
+		Tty:true,
 	}
 
 	//homeDirectory, _ := homedir.Expand("~/.ocelot")
@@ -164,21 +174,14 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		installed.Messages = append(setupMessages, installed.Messages...)
 		return installed, d.ContainerId
 	}
-	setupMessages = append(setupMessages, "attempting to download codebase...")
-	downloadCodebase := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{}, d.DownloadCodebase(werk), logout)
-	if len(downloadCodebase.Error) > 0 {
-		ocelog.Log().Error("an err happened trying to download codebase", downloadCodebase.Error)
-		downloadCodebase.Messages = append(setupMessages, downloadCodebase.Messages...)
-		return downloadCodebase, d.ContainerId
-	}
 
-	logout <- []byte(su.GetStageLabel() + "Retrieving SSH Key")
+	logout <- []byte(su.GetStageLabel()  + "Retrieving BARE Key")
 
 	acctName := strings.Split(werk.FullName, "/")[0]
 	vaultAddr := d.getVaultAddr(rc.GetVault())
 	ocelog.Log().Info("ADDRESS FOR VAULT IS: " + vaultAddr)
 
-	setupMessages = append(setupMessages, fmt.Sprintf("downloading SSH key for %s...", werk.FullName))
+	setupMessages = append(setupMessages, fmt.Sprintf("downloading BARE key for %s...", werk.FullName))
 	sctType := pb.SubCredType(werk.VcsType)
 	identifier, _ := pb.CreateVCSIdentifier(sctType, acctName)
 	ocelog.Log().Debug("identifier is ", identifier)
@@ -191,7 +194,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		return result, d.ContainerId
 	}
 
-	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded SSH key for %s  %s", werk.FullName, models.CHECKMARK), "completed setup stage \u2713")
+	setupMessages = append(setupMessages, fmt.Sprintf("successfully downloaded BARE key for %s  %s", werk.FullName, models.CHECKMARK), "completed setup stage " + models.CHECKMARK)
 	result.Messages = setupMessages
 	return result, d.ContainerId
 }
@@ -208,8 +211,12 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 	return registerdAddr
 }
 
+func (d *Docker) SetGlobalEnv(envs []string) {
+	d.globalEnvs = envs
+}
+
 // ExecuteIntegration will basically run Execute but without the cd and run cmds because we are generating the scripts in the code
-func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan []byte) *pb.Result {
+func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan[]byte) *pb.Result {
 	return d.Exec(ctx, stgUtil.GetStage(), stgUtil.GetStageLabel(), stage.Env, stage.Script, logout)
 }
 
@@ -285,6 +292,11 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 	}
 }
 
+func (d *Docker) Close() error {
+	// do nothing, this is for closing any connections that needed to be persisted for the build
+	return nil
+}
+
 func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byte) {
 	scanner := bufio.NewScanner(rd)
 	buf := make([]byte, 0, 64*1024)
@@ -304,3 +316,4 @@ func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byt
 		infochan <- []byte("OCELOT | BY THE WAY SOMETHING WENT WRONG SCANNING STAGE INPUT")
 	}
 }
+

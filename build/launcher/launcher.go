@@ -19,6 +19,7 @@ type launcher struct {
 	Basher       *basher.Basher
 	Store        storage.OcelotStorage
 	BuildValet   *valet.Valet
+	Remote 		 models.VCSHandler
 }
 
 func NewLauncher(facts *models.WerkerFacts,

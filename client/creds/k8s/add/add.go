@@ -68,7 +68,7 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 		if err != nil {
 			return err
 		}
-		UI.Error("Succesfully update VCS Credential.")
+		UI.Error("Succesfully update K8s Credential.")
 		return nil
 	}
 	_, err = client.SetK8SCreds(ctx, cred)

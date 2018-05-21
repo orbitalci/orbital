@@ -29,6 +29,7 @@ const (
 	WerkerIp       = werkerLocation + "/werker_ip"
 	WerkerGrpc     = werkerLocation + "/werker_grpc_port"
 	WerkerWs       = werkerLocation + "/werker_ws_port"
+	WerkerTags     = werkerLocation + "/tags"
 )
 
 
@@ -76,6 +77,9 @@ func MakeWerkerWsPath(werkerId string) string {
 	return GetPrefix() + fmt.Sprintf(WerkerWs, werkerId)
 }
 
+func MakeWerkerTagsPath(werkerId string) string {
+	return GetPrefix() + fmt.Sprintf(WerkerTags, werkerId)
+}
 
 
 // ParseGenericBuildPath will return the werkerId and hash out of a key related to the build path

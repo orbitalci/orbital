@@ -1,10 +1,10 @@
-package builder
+package k8s
 
 type K8 struct {
 }
 
 func NewK8Builder() *K8 {
-	return &K8{}
+	panic("not implemented!")
 }
 
 // just examples of what this can be, test

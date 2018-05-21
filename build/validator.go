@@ -18,10 +18,13 @@ func GetOcelotValidator() *OcelotValidator {
 
 //validates config, takes in an optional cli out
 func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) error {
-	if len(config.Image) == 0 {
-		return errors.New("uh-oh, there is no image listed inside of your ocelot yaml file")
+	var err error
+	if config.Image == "" && config.MachineTag == "" {
+		return errors.New("uh-oh, there is no image AND no machineTag listed inside of your ocelot yaml file... one of these is required")
 	}
-
+	if config.Image != "" && config.MachineTag != "" {
+		return errors.New("you cannot have both image and machineTag. they are mutually exclusive")
+	}
 	if len(config.BuildTool) == 0 {
 		return errors.New("BuildTool must be specified")
 	}
@@ -31,37 +34,20 @@ func (ocelotValidator OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI
 	if len(config.Stages) == 0 {
 		return errors.New("there must be at least one stage listed")
 	}
-
-	var ok bool
-	for _, stg := range config.Stages {
-		if len(stg.Name) == 0 {
-			return errors.New("double check your stages, name is a required field")
+	// todo: add in checking if any machines match machinetag 
+	if config.Image != "" {
+		if UI != nil {
+			UI.Info("Connecting to docker to check for image validity...")
 		}
-		if stg.Name == "build" {
-			ok = true
-		}
-	}
-
-	if !ok {
-		return errors.New("build is a required stage")
-	}
-
-	if UI != nil {
-		UI.Info("Required stage `build` exists " + models.FAILED)
-	}
-
-	if UI != nil {
-		UI.Info("Connecting to docker to check for image validity...")
-	}
-	out, err := dockrhelper.RobustImagePull(config.Image)
-	if UI != nil {
-		if err != nil {
-			UI.Error(config.Image + " does not exist or credentials cannot be found")
-		} else {
-			out.Close()
-			UI.Info(config.Image + " exists " + models.CHECKMARK)
+		out, err := dockrhelper.RobustImagePull(config.Image)
+		defer func(){if out != nil {out.Close()}}()
+		if UI != nil {
+			if err != nil {
+				UI.Error(config.Image + " does not exist or credentials cannot be found")
+			} else {
+				UI.Info(config.Image + " exists " + models.CHECKMARK)
+			}
 		}
 	}
-	out.Close()
 	return err
 }

@@ -2,8 +2,10 @@ package valet
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/common"
 	util "github.com/shankj3/ocelot/common/testutil"
@@ -14,9 +16,10 @@ func Test_Register(t *testing.T) {
 	ip := "10.1.1.0"
 	grpcPort := "1020"
 	wsPort := "4030"
+	tags := []string{"one", "two"}
 	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
-	uuId, err := Register(consu, ip, grpcPort, wsPort)
+	uuId, err := Register(consu, ip, grpcPort, wsPort, tags)
 	if err != nil {
 		t.Fatal("could not register with consul, err: ", err)
 	}
@@ -40,6 +43,11 @@ func Test_Register(t *testing.T) {
 	if registeredIP != ip {
 		t.Error(test.StrFormatErrors("registered ip", ip, registeredIP))
 	}
+	t.Log("gettin tags")
+	registeredTags := serv.GetKVString(t, fmt.Sprintf(common.WerkerTags, uuId.String()))
+	if diff := deep.Equal(strings.Split(registeredTags, ","), tags); diff != nil {
+		t.Error(diff)
+	}
 
 }
 
@@ -51,7 +59,7 @@ func Test_RegisterBuild(t *testing.T) {
 	dockerUuid := "1111-2222-3333-asdf"
 	consu, serv := util.InitServerAndConsulet(t)
 	defer serv.Stop()
-	uuId, err := Register(consu, ip, grpcPort, wsPort)
+	uuId, err := Register(consu, ip, grpcPort, wsPort, []string{})
 	if err != nil {
 		t.Fatal("could not register with consul, err: ", err)
 	}

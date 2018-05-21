@@ -44,16 +44,16 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 			}, handleStorageError(err)
 		}
 
-		for _, build := range dbResults {
-			if _, ok := buildRtInfo[build.Hash]; !ok {
-				buildRtInfo[build.Hash] = &pb.BuildRuntimeInfo{
-					Hash: build.Hash,
+		for _, bild := range dbResults {
+			if _, ok := buildRtInfo[bild.Hash]; !ok {
+				buildRtInfo[bild.Hash] = &pb.BuildRuntimeInfo{
+					Hash: bild.Hash,
 					// if a result was found in the database but not in GetBuildRuntime, the build is done
 					Done: true,
 				}
 			}
-			buildRtInfo[build.Hash].AcctName = build.Account
-			buildRtInfo[build.Hash].RepoName = build.Repo
+			buildRtInfo[bild.Hash].AcctName = bild.Account
+			buildRtInfo[bild.Hash].RepoName = bild.Repo
 		}
 	}
 

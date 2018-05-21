@@ -1,7 +1,7 @@
 package dockerconfig
 
 import (
-	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models/pb"
 
 	"encoding/json"
@@ -16,7 +16,9 @@ type dockerConfigJson struct {
 	HttpHeaders map[string]string `json:"HttpHeaders,omitempty"`
 }
 
-type DockrInt struct{}
+type DockrInt struct {
+	dConfig string
+}
 
 func (d *DockrInt) String() string {
 	return "docker login"
@@ -31,12 +33,13 @@ func (d *DockrInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, err
 	if err != nil {
 		return "", err
 	}
-	configEncoded := integrations.BitzToBase64(bitz)
+	configEncoded := common.BitzToBase64(bitz)
+	d.dConfig = configEncoded
 	return configEncoded, err
 }
 
 func (d *DockrInt) MakeBashable(encoded string) []string {
-	return []string{"/bin/sh", "-c", "/.ocelot/render_docker.sh " + "'" + encoded + "'"}
+	return []string{"/bin/sh", "-c", "mkdir -p ~/.docker && echo \"${DCONF}\" | base64 -d > ~/.docker/config.json"}
 }
 
 func (d *DockrInt) IsRelevant(wc *pb.BuildConfig) bool {
@@ -44,7 +47,7 @@ func (d *DockrInt) IsRelevant(wc *pb.BuildConfig) bool {
 }
 
 func (d *DockrInt) GetEnv() []string {
-	return []string{}
+	return []string{"DCONF=" + d.dConfig}
 }
 
 func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
@@ -55,7 +58,7 @@ func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
 			return nil, errors.New("unable to cast as repo creds")
 		}
 		authstring := fmt.Sprintf("%s:%s", credx.Username, credx.Password)
-		b64authstring := integrations.StrToBase64(authstring)
+		b64authstring := common.StrToBase64(authstring)
 		authz[credx.RepoUrl] = map[string]string{"auth": b64authstring}
 	}
 	config := &dockerConfigJson{
