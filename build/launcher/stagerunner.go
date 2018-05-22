@@ -79,7 +79,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 			// not sure if we should store, but i think its good visibility especially for right now
 			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
-				return
+				return shouldSkip, err
 			}
 		}
 		if !branchGood {
@@ -88,9 +88,9 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 			shouldSkip = true
 			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
-				return
+				return shouldSkip, err
 			}
-			return
+			return shouldSkip, err
 		}
 		ocelog.Log().Debugf("building from trigger stage with branch %s. triggerBranches are %s", branch, strings.Join(stage.Trigger.Branches, ", "))
 	}
