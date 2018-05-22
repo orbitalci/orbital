@@ -14,6 +14,8 @@ var branchTests = []struct{
 }{
 	{"lets-go-to-the-movies", []string{"lets-go", "movietime", "lets-go-torp-the-movies"}, false},
 	{"here/we/go", []string{"gotime", `here\/.*\/go`}, true},
+	{"feature_1", []string{"feature_1", "master"}, true},
+	{"feature.1", []string{"feature.1", "master"}, true},
 	{"v1.0.0", []string{`v[0-9]+\.[0-9]+\.[0-9a-zA-Z]+`}, true},
 	{"rc-v1.0.0", []string{`rc-v.*`}, true},
 	{"rc-v1.0.0", []string{`ALL`}, true},
