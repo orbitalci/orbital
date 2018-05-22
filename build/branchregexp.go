@@ -13,7 +13,7 @@ func BranchRegexOk(branch string, buildBranches []string) (bool, error) {
 		if goodBranchRe == "ALL" {
 			return true, nil
 		}
-		re, err := regexp.Compile(goodBranchRe)
+		re, err := regexp.Compile("^" + goodBranchRe + "$")
 		if err != nil {
 			return false, errors.New(fmt.Sprintf("unable to parse acceptable branch item (%s) into regex expression. error is: %s", goodBranchRe, err.Error()))
 		}
