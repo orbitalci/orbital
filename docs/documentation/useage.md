@@ -135,6 +135,29 @@ The ocelot client can be downloaded here:
 
 Then unzip, and move the ocelot binary to `/usr/local/bin`
 
+#### homebrew
+
+If you are on a mac and use `brew`, there is a tap for the ocelot client. 
+
+```bash
+ $ brew tap shankj3/ocelot
+ ==> Tapping shankj3/ocelot
+ Cloning into '/usr/local/Homebrew/Library/Taps/shankj3/homebrew-ocelot'...
+ remote: Counting objects: 4, done.
+ remote: Compressing objects: 100% (4/4), done.
+ remote: Total 4 (delta 0), reused 2 (delta 0), pack-reused 0
+ Unpacking objects: 100% (4/4), done.
+ Tapped 1 formula (29 files, 68.8KB)
+ $ brew install ocelot
+ ==> Installing ocelot from shankj3/ocelot
+ ==> Downloading https://s3-us-west-2.amazonaws.com/ocelotty/mac-ocelot-0.4.2.zip
+ Already downloaded: /Users/jesseshank/Library/Caches/Homebrew/ocelot-0.4.2.zip
+    /usr/local/Cellar/ocelot/0.4.2: 3 files, 26.2MB, built in 1 second
+```
+
+After the initial download, you can run update the ocelot client with `brew upgrade ocelot`
+
+
 ## Workflow
 ### Git Detection   
 Ocelot utilizes git commands under the hood for detecting fields without having to insert a flag. If any of `-acct-repo`, `-hash`, `-acct` are required, you can forgo the flags when you are running the command from the repository directory you wish to be acting on.   
@@ -242,7 +265,7 @@ $
 - `-repo`: Returns the status of all repositories starting with this repo string.    
 
 
-### Getting logs 
+# Getting logs 
 To get logs in your terminal, run `ocelot logs -hash=<hash>`. The hash flag allows for partial matching.   
 For example: 
 
