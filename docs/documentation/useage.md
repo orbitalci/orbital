@@ -1,5 +1,7 @@
 # Ocelot 
 Ocelot is a distributed CI tool. 
+It works using docker containers. or not.
+If you build ios, see [non-docker builds](machinetagging.md). 
 
 ## Initial configuration
 ### VCS Credentials 
@@ -87,7 +89,8 @@ stages:
 ### `ocelot.yml` top level fields
 |  key	| significance | required |
 |--- |--- |--- |
-| `image` | Image to run the build on. Can be a custom built image in a private repo or one on dockerhub.  |  Yes  |
+| `image` | Image to run the build on. Can be a custom built image in a private repo or one on dockerhub.  |  If machineTag not present  |
+| `machineTag` | **For builds that can't run in docker containers!** What type of werker node this build can run on, ie *ios*  see [here](machinetagging.md)|  If image not present  |
 | `buildTool` | Flag that drives integration. If buildTool is maven, then a `settings.xml` will be generated with repository credentials  |  Yes |
 | `notify` | Configuration for notifying on the status of builds  |  No |
 | `branches` |  A list of branches to build. If the branch pushed does not match a value in this list, it wil not be built.  | Yes  |
@@ -131,6 +134,29 @@ The ocelot client can be downloaded here:
 [**Mac**](https://s3-us-west-2.amazonaws.com/ocelotty/mac-ocelot.zip), [**Windows**](https://s3-us-west-2.amazonaws.com/ocelotty/windows-ocelot.zip), [**Linux**](https://s3-us-west-2.amazonaws.com/ocelotty/linux-ocelot.zip)
 
 Then unzip, and move the ocelot binary to `/usr/local/bin`
+
+#### homebrew
+
+If you are on a mac and use `brew`, there is a tap for the ocelot client. 
+
+```bash
+ $ brew tap shankj3/ocelot
+ ==> Tapping shankj3/ocelot
+ Cloning into '/usr/local/Homebrew/Library/Taps/shankj3/homebrew-ocelot'...
+ remote: Counting objects: 4, done.
+ remote: Compressing objects: 100% (4/4), done.
+ remote: Total 4 (delta 0), reused 2 (delta 0), pack-reused 0
+ Unpacking objects: 100% (4/4), done.
+ Tapped 1 formula (29 files, 68.8KB)
+ $ brew install ocelot
+ ==> Installing ocelot from shankj3/ocelot
+ ==> Downloading https://s3-us-west-2.amazonaws.com/ocelotty/mac-ocelot-0.4.2.zip
+ Already downloaded: /Users/jesseshank/Library/Caches/Homebrew/ocelot-0.4.2.zip
+    /usr/local/Cellar/ocelot/0.4.2: 3 files, 26.2MB, built in 1 second
+```
+
+After the initial download, you can run update the ocelot client with `brew upgrade ocelot`
+
 
 ## Workflow
 ### Git Detection   
@@ -239,7 +265,7 @@ $
 - `-repo`: Returns the status of all repositories starting with this repo string.    
 
 
-### Getting logs 
+# Getting logs 
 To get logs in your terminal, run `ocelot logs -hash=<hash>`. The hash flag allows for partial matching.   
 For example: 
 

@@ -1,4 +1,4 @@
-package builder
+package docker
 
 import (
 	"bytes"
@@ -24,10 +24,14 @@ import (
 
 func tarTemplates(t *testing.T) func(t *testing.T) {
 	//tar -cvf werker_files.tar *
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Dir(filename)
+	template := filepath.Join(filepath.Dir(filepath.Dir(dir)), "template")
+	werkertar := filepath.Join(filepath.Dir(dir), "werker_files.tar")
 	here, _ := ioutil.ReadDir(".")
 	fmt.Println(here)
-	cmd := exec.Command("/bin/sh", "-c", "tar -cvf ../builder/werker_files.tar *")
-	cmd.Dir = "../template/"
+	cmd := exec.Command("/bin/sh", "-c", "tar -cvf " + werkertar + " *")
+	cmd.Dir = template
 	var out, err bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &err
@@ -58,7 +62,7 @@ func createDoThingsWebServer() {
 	if !ok {
 		panic("no caller???? ")
 	}
-	filep := path.Dir(filename) + "/werker_files.tar"
+	filep := filepath.Dir(path.Dir(filename)) + "/werker_files.tar"
 	r.HandleFunc("/do_things.tar", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filep)
 	})

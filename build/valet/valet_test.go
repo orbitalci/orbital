@@ -61,7 +61,7 @@ func TestRecovery(t *testing.T) {
 	defer serv.Stop()
 	remoteConf := &recoveryCVRemoteConfig{consul: consu, storage: store}
 	uid := uuid.New()
-	rcvr := NewValet(remoteConf, uid, models.Docker, store)
+	rcvr := NewValet(remoteConf, uid, models.Docker, store, &models.SSHFacts{})
 	RegisterStartedBuild(consu, uid.String(), hash)
 	err = rcvr.Reset("START", hash)
 	if err != nil {
@@ -99,7 +99,7 @@ func TestRecovery(t *testing.T) {
 	}
 	serv.SetKVString(t, common.MakeDockerUuidPath(uid.String(), hash), hrt.DockerUuid)
 	serv.SetKVString(t, common.MakeWerkerIpPath(uid.String()), "localheist")
-	rcvr.Cleanup()
+	rcvr.RemoveAllTrace()
 	// check all paths have been removed
 	//
 	// ci/builds/<werkerId>/<hash>

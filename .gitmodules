@@ -1,0 +1,3 @@
+[submodule "docs/ocelot.wiki"]
+	path = docs/ocelot.wiki
+	url = git@github.com:shankj3/ocelot.wiki.git

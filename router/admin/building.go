@@ -27,7 +27,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 		buildRtInfo, err = build.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 		if err != nil {
 			if _, ok := err.(*build.ErrBuildDone); !ok {
-				log.IncludeErrField(err)
+				log.IncludeErrField(err).Error("could not get build runtime")
 				return nil, status.Error(codes.Internal, "could not get build runtime, err: "+err.Error())
 			} else {
 				//we set error back to nil so that we can continue with the rest of the logic here
@@ -44,16 +44,16 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 			}, handleStorageError(err)
 		}
 
-		for _, build := range dbResults {
-			if _, ok := buildRtInfo[build.Hash]; !ok {
-				buildRtInfo[build.Hash] = &pb.BuildRuntimeInfo{
-					Hash: build.Hash,
+		for _, bild := range dbResults {
+			if _, ok := buildRtInfo[bild.Hash]; !ok {
+				buildRtInfo[bild.Hash] = &pb.BuildRuntimeInfo{
+					Hash: bild.Hash,
 					// if a result was found in the database but not in GetBuildRuntime, the build is done
 					Done: true,
 				}
 			}
-			buildRtInfo[build.Hash].AcctName = build.Account
-			buildRtInfo[build.Hash].RepoName = build.Repo
+			buildRtInfo[bild.Hash].AcctName = bild.Account
+			buildRtInfo[bild.Hash].RepoName = bild.Repo
 		}
 	}
 
@@ -80,38 +80,51 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 	return builds, err
 }
 
+// scanLog will create a scanner out of the buildOutput byte data and send it over the GuideOcelot logs stream.
+//   will return a grpc error if something goes wrong
+func scanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageType string) error {
+	scanner := bufio.NewScanner(bytes.NewReader(out.Output))
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
+	for scanner.Scan() {
+		resp := &pb.LineResponse{OutputLine: scanner.Text()}
+		stream.Send(resp)
+	}
+	if err := scanner.Err(); err != nil {
+		log.IncludeErrField(err).Error("error encountered scanning from " + storageType)
+		return status.Error(codes.Internal, fmt.Sprintf("Error was encountered while sending data from %s. \nError: %s", storageType, err.Error()))
+	}
+	return nil
+}
+
+// Logs will stream logs from storage. If the build is not complete, an InvalidArgument gRPC error will be returned
+//   If the BuildQuery's BuildId is > 0, then logs will be retrieved from storage via the buildId. If this is not the case,
+//   then the latest log entry from the hash will be retrieved and streamed. 
 func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
 	if bq.Hash == "" && bq.BuildId == 0 {
 		return status.Error(codes.InvalidArgument, "must request with either a hash or a buildId")
 	}
+	var out models.BuildOutput
+	var err error
+	if bq.BuildId != 0 {
+		out, err = g.Storage.RetrieveOut(bq.BuildId)
+		if err != nil {
+			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrive from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
+		}
+		return scanLog(out, stream, g.Storage.StorageType())
+	}
+
 	if !build.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
 		errmsg := "build is not finished, use BuildRuntime method and stream from the werker registered"
 		stream.Send(&pb.LineResponse{OutputLine: errmsg})
-		return status.Error(codes.InvalidArgument,  errmsg)
+		return status.Error(codes.InvalidArgument, errmsg)
 	} else {
-		var out models.BuildOutput
-		var err error
-		if bq.BuildId != 0 {
-			out, err = g.Storage.RetrieveOut(bq.BuildId)
-		} else {
-			out, err = g.Storage.RetrieveLastOutByHash(bq.Hash)
-		}
+		out, err = g.Storage.RetrieveLastOutByHash(bq.Hash)
 		if err != nil {
 			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		scanner := bufio.NewScanner(bytes.NewReader(out.Output))
-		buf := make([]byte, 0, 64*1024)
-		scanner.Buffer(buf, 1024*1024)
-		for scanner.Scan() {
-			resp := &pb.LineResponse{OutputLine: scanner.Text()}
-			stream.Send(resp)
-		}
-		if err := scanner.Err(); err != nil {
-			log.IncludeErrField(err).Error("error encountered scanning from " + g.Storage.StorageType())
-			return status.Error(codes.Internal, fmt.Sprintf("Error was encountered while sending data from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
-		}
+		return scanLog(out, stream, g.Storage.StorageType())
 	}
-	return nil
 }
 
 func (g *guideOcelotServer) FindWerker(ctx context.Context, br *pb.BuildReq) (*pb.BuildRuntimeInfo, error) {

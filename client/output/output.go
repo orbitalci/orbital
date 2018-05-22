@@ -90,7 +90,7 @@ func (c *cmd) Run(args []string) int {
 		for _, build := range build.Builds {
 			if build.Done {
 				commandhelper.Debuggit(c.UI, "streaming from storage")
-				return c.fromStorage(ctx, build.Hash)
+				return c.fromStorage(ctx, build.Hash, int64(c.buildId))
 			} else {
 				commandhelper.Debuggit(c.UI, "streaming from werker")
 				return c.fromWerker(ctx, build)
@@ -111,8 +111,10 @@ func (c *cmd) Help() string {
 	return help
 }
 
-func (c *cmd) fromStorage(ctx context.Context, hash string) int {
-	stream, err := c.config.Client.Logs(ctx, &models.BuildQuery{Hash: hash})
+func (c *cmd) fromStorage(ctx context.Context, hash string, id int64) int {
+	var stream models.GuideOcelot_LogsClient
+	var err error
+	stream, err = c.config.Client.Logs(ctx, &models.BuildQuery{BuildId: id, Hash:hash})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, "Unable to get stream from admin.")
 		return 1

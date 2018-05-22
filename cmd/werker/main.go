@@ -23,6 +23,9 @@ package main
 import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/build"
+
+	"sync"
 
 	"github.com/shankj3/ocelot/build/basher"
 	"github.com/shankj3/ocelot/build/listener"
@@ -35,7 +38,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
+	//"strings"
 	"syscall"
 	"time"
 )
@@ -45,15 +48,19 @@ import (
 func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan chan *models.Transport, buildChan chan *models.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
-			ocelog.Log().Debug("i am about to sleep for 10s because i couldn't find the topic at ", p.Config.LookupDAddress())
+			ocelog.Log().Info("i am about to sleep for 10s because i couldn't find the topic " + topic + " at ", p.Config.LookupDAddress())
 			time.Sleep(10 * time.Second)
 		} else {
-			mode := os.Getenv("ENV")
+			//mode := os.Getenv("ENV")
 			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
-			bshr := &basher.Basher{LoopbackIp: conf.LoopBackIp}
-			if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
-				bshr.SetBbDownloadURL(conf.LoopBackIp + ":9090/dev")
+			bshr, err := basher.NewBasher("", "", conf.LoopbackIp, build.GetOcyPrefixFromWerkerType(conf.WerkerType))
+			// if couldn't make a new basher, just panic
+			if err != nil {
+				panic("couldnt' create instance of basher, bailing: " + err.Error())
 			}
+			//if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
+			//	bshr.SetBbDownloadURL(conf.LoopbackIp + ":9090/dev")
+			//}
 
 			handler := listener.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan)
 			p.Handler = handler
@@ -67,7 +74,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 func main() {
 	conf, err := GetConf()
 	if err != nil {
-		fmt.Errorf("cannot get configuration, exiting.... error: %s", err)
+		fmt.Printf("cannot get configuration, exiting.... error: %s\n", err)
 		return
 	}
 	ocelog.InitializeLog(conf.LogLevel)
@@ -81,24 +88,23 @@ func main() {
 		ocelog.IncludeErrField(err).Fatal("COULD NOT GET OCELOT STORAGE! BAILING!")
 	}
 	consulet := conf.RemoteConfig.GetConsul()
-	uuid, err := valet.Register(consulet, conf.RegisterIP, conf.GrpcPort, conf.ServicePort)
+	uuid, err := valet.Register(consulet, conf.RegisterIP, conf.GrpcPort, conf.ServicePort, conf.tags)
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to register werker with consul, this is vital. BAILING!")
 	}
 	conf.Uuid = uuid
 	// kick off ctl-c signal handling
-	buildValet := valet.NewValet(conf.RemoteConfig, conf.Uuid, conf.WerkerType, store)
+	buildValet := valet.NewValet(conf.RemoteConfig, conf.Uuid, conf.WerkerType, store, conf.Ssh)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
 		buildValet.SignalRecvDed()
 	}()
-
 	// start protoConsumers
 	var protoConsumers []*nsqpb.ProtoConsume
-	//you should know what channels to subscribe to
-	supportedTopics := []string{"build"}
+	supportedTopics := build.GetTopics(conf.tags)
+	ocelog.Log().Debug("topics!", supportedTopics)
 
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()
@@ -110,7 +116,8 @@ func main() {
 		protoConsumers = append(protoConsumers, protoConsume)
 	}
 	go nsqwatch.WatchAndPause(60, protoConsumers, conf.RemoteConfig, store) // todo: put interval in conf
-	go werker.ServeMe(streamingTunnel, buildCtxTunnel, conf.WerkerFacts, store)
+	go werker.ServeMe(streamingTunnel, conf.WerkerFacts, store, buildValet.ContextValet)
+	go buildValet.ListenBuilds(buildCtxTunnel, sync.Mutex{})
 	for _, consumer := range protoConsumers {
 		<-consumer.StopChan
 	}

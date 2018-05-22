@@ -1,4 +1,4 @@
-package basher
+package build
 
 import (
 	"github.com/shankj3/ocelot/models/pb"

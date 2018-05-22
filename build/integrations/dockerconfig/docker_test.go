@@ -1,6 +1,7 @@
 package dockerconfig
 
 import (
+	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
 
@@ -35,6 +36,42 @@ func Test_RCtoDockerConfig(t *testing.T) {
 	}
 	//fmt.Println(string(jsonbit))
 	//fmt.Println(base64.StdEncoding.EncodeToString(jsonbit))
+}
+
+
+func Test_RCtoDockerConfigFail(t *testing.T) {
+	vcss := []pb.OcyCredder{&pb.VCSCreds{}}
+	d := Create()
+	_, err := d.GenerateIntegrationString(vcss)
+	if err == nil {
+		t.Error("should fail, did not pass repo creds")
+	}
+	if err.Error() != "unable to cast as repo creds" {
+		t.Error("err msg", "unable to cast as repo creds", err.Error())
+	}
+}
+
+func TestDockrInt_staticsstuffs(t *testing.T) {
+	d := Create()
+	di := d.(*DockrInt)
+	if !d.IsRelevant(&pb.BuildConfig{}) {
+		t.Error("docker config integration should always be relevant")
+	}
+	di.dConfig = ";alksdfjalk;sdjfklajsdfkl;ajsdfl;ajsdfl;aksdjfkl;ajsdfkl;asjdfl;jadslafjk"
+	if diff := deep.Equal(d.GetEnv(), []string{"DCONF="+di.dConfig}); diff != nil {
+		t.Error("Envs not equal, diff is: \n", diff)
+	}
+	expectedBashable := []string{"/bin/sh", "-c", "mkdir -p ~/.docker && echo \"${DCONF}\" | base64 -d > ~/.docker/config.json"}
+	if diff := deep.Equal(d.MakeBashable("hummunu"), expectedBashable); diff != nil {
+		t.Error("rendered bash strings not what they should be, diff is: ", diff)
+	}
+	if di.SubType() != pb.SubCredType_DOCKER {
+		t.Error("subtype should be docker")
+	}
+	if di.String() != "docker login" {
+		t.Error("string() should return 'docker login'")
+	}
+
 }
 
 func TestDockrInt_GenerateIntegrationString(t *testing.T) {

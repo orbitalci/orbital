@@ -28,19 +28,22 @@ const (
 	Panic
 )
 
+// Valet is the overseer of builds. It handles registration of when the build is started, what stage it is actively on,
+// when to close the channel that signifies to nsqpb to stop refreshing the status of the message
 type Valet struct {
-	RemoteConfig cred.CVRemoteConfig
-	store        storage.OcelotStorage
-	WerkerUuid   uuid.UUID
-	doneChannels map[string]chan int
+	RemoteConfig    cred.CVRemoteConfig
+	store			storage.OcelotStorage
+	WerkerUuid		uuid.UUID
+	doneChannels    map[string]chan int
+	*ContextValet
 	sync.Mutex
 	c.Cleaner
 }
 
-func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage) *Valet {
+func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage, facts *models.SSHFacts) *Valet {
 	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store: store}
-	valet.Cleaner = c.GetNewCleaner(werkerType)
-
+	valet.Cleaner = c.GetNewCleaner(werkerType, facts)
+	valet.ContextValet = NewContextValet()
 	return valet
 }
 
@@ -115,9 +118,9 @@ func (v *Valet) StartBuild(consulet *consul.Consulet, hash string, id int64) err
 	return nil
 }
 
-// Cleanup gets all the docker uuids running according to this werker id and attempts to kill and remove the associated containers.
+// RemoveAllTrace gets all the docker uuids running according to this werker id and attempts to kill and remove the associated containers.
 //   It also looks up all active builds associated with the werker id and clears them out of consul before finally deregistering itself as a werker in consul.
-func (v *Valet) Cleanup() {
+func (v *Valet) RemoveAllTrace() {
 	consulet := v.RemoteConfig.GetConsul()
 	uuids, err := brt.GetDockerUuidsByWerkerId(consulet, v.WerkerUuid.String())
 	if err != nil {
@@ -126,7 +129,7 @@ func (v *Valet) Cleanup() {
 	}
 	ctx := context.Background()
 	for _, uid := range uuids {
-		v.Cleaner.Cleanup(ctx, uid, nil) //have to explicitly reference Cleaner here because valet also has a Cleanup function
+		v.Cleanup(ctx, uid, nil)
 	}
 	log.Log().Info("cleaned up docker remnants")
 	hashes, err := brt.GetWerkerActiveBuilds(consulet, v.WerkerUuid.String())
@@ -156,7 +159,7 @@ func (v *Valet) MakeItSoDed(finish chan int) {
 		fmt.Println(rec)
 		log.Log().WithField("stack", string(debug.Stack())).Error("recovering from panic")
 		v.StoreInterrupt(Panic)
-		v.Cleanup()
+		v.RemoveAllTrace()
 	}
 	finish <- 1
 	log.Log().Error("shutting down")
@@ -197,7 +200,7 @@ func (v *Valet) SignalRecvDed() {
 	log.Log().Info("received interrupt, cleaning up after myself...")
 	v.StoreInterrupt(Signal)
 	v.CallDoneForEverything()
-	v.Cleanup()
+	v.RemoveAllTrace()
 	os.Exit(1)
 }
 
