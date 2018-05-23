@@ -33,8 +33,8 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 		Stages:    []*pb.Stage{{Name: "one"}},
 	}
 	err = valid8r.ValidateConfig(badConfig, nil)
-	if err == nil {
-		t.Error("should not be nil, as there is no build stage")
+	if err != nil {
+		t.Error("should be nil, this conf is a-ok. error is: " + err.Error())
 	}
 	// todo: flag this as integration test
 	// privateRepo should be something that you have creds to
@@ -72,7 +72,7 @@ func TestOcelotValidator_ValidateWithBranch(t *testing.T) {
 	buildConf := &pb.BuildConfig{
 		Image: "busybox:latest",
 		BuildTool: "w/e",
-		Branches: []string{"rc_*"},
+		Branches: []string{"rc_.*"},
 		Stages: []*pb.Stage{
 			{Name: "hi", Script: []string{"echo sup"}},
 		},
@@ -86,7 +86,7 @@ func TestOcelotValidator_ValidateWithBranch(t *testing.T) {
 	if err == nil {
 		t.Error("should not pass validation")
 	}
-	errMsg := "branch r1_1234 does not match any branches listed: [rc_*]"
+	errMsg := "branch r1_1234 does not match any branches listed: [rc_.*]"
 	if err.Error() != errMsg {
 		t.Error(test.StrFormatErrors("err msg", errMsg, err.Error()))
 	}
