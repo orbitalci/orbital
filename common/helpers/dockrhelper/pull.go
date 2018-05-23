@@ -39,7 +39,7 @@ func RobustImagePull(imageName string) (closer io.ReadCloser, err error) {
 
 	pulledByApi = false
 	// if couldn't pull image through ui, try just calling docker
-	cmd := exec.Command("/bin/sh", "-c", "\"command -v docker\"")
+	cmd := exec.Command("/bin/sh", "-c", "command -v docker")
 	if err := cmd.Run(); err != nil {
 		return ioutil.NopCloser(&errb), errors.New("cannot check for docker pull because docker is not installed on the machine")
 	}

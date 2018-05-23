@@ -73,7 +73,7 @@ func Test_handleTriggers(t *testing.T) {
 		shouldError bool
 	}{
 		{"boogaloo", true, &dummyBuildStage{details: []*models.StageResult{}}, false},
-		{"alks;djf", false, &dummyBuildStage{details: []*models.StageResult{}, fail: true}, true},
+		{"alks;djf", true, &dummyBuildStage{details: []*models.StageResult{}, fail: true}, true},
 		{"vibranium", false, &dummyBuildStage{details: []*models.StageResult{}}, false},
 	}
 	triggers := &pb.Triggers{Branches: []string{"apple", "banana", "quartz", "vibranium"}}
@@ -85,7 +85,11 @@ func Test_handleTriggers(t *testing.T) {
 			if err != nil && !wd.shouldError {
 				t.Fatal(err)
 			}
+			if wd.shouldError && err == nil {
+				t.Error("handleTriggers should have errored, didn't")
+			}
 			if wd.shouldSkip != shouldSkip {
+				t.Logf("branch %s | shouldSkip %v | shouldError %v", wd.branch, wd.shouldSkip, wd.shouldError)
 				t.Error(test.GenericStrFormatErrors("should skip", wd.shouldSkip, shouldSkip))
 			}
 		})

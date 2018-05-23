@@ -9,8 +9,8 @@ import (
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/builder/docker"
-	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/integrations/dockerconfig"
+	"github.com/shankj3/ocelot/common"
 	cred "github.com/shankj3/ocelot/common/credentials"
 
 	//"github.com/shankj3/ocelot/models"
@@ -86,7 +86,7 @@ func (d *dummyCVRC) GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.S
 	case pb.SubCredType_SSHKEY:
 		return sshCreds, nil
 	}
-	return nil, integrations.NCErr("only did docker and kubeconf")
+	return nil, common.NCErr("only did docker and kubeconf")
 }
 
 func createKubectlEndpoint(t *testing.T) {

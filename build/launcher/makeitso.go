@@ -47,6 +47,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 		Context:    ctx,
 		CancelFunc: cancel,
 	}
+
 	defer cancel()
 
 	// start building with the Builder

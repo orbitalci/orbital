@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"io"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models"
 )
 
 func Test_splitEnvs(t *testing.T) {
@@ -32,12 +34,13 @@ func Test_splitEnvs(t *testing.T) {
 func TestContextConnection_CheckConnection(t *testing.T) {
 	cleanup, ctx := CreateSSHDockerContainer(t, "2222")
 	defer cleanup()
-	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "", "root", "localhost", 2222)
-	err := cnxn.Connect(ctx)
+	facts := &models.SSHFacts{User: "root", Host: "localhost", Port: 2222, KeyFP: "./test-fixtures/docker_id_rsa"}
+	cnxn, err := CreateSSHChannel(ctx, facts, "")
 	if err != nil {
 		t.Error(err)
 		return
 	}
+
 	if err := cnxn.CheckConnection(); err != nil {
 		t.Error(err)
 		return
@@ -48,8 +51,13 @@ func TestContextConnection_CheckConnection(t *testing.T) {
 func TestContextConnection_RunAndLog(t *testing.T) {
 	cleanup, ctx := CreateSSHDockerContainer(t, "2223")
 	defer cleanup()
-	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "","root", "localhost", 2223)
-	err := cnxn.Connect(ctx)
+	facts := &models.SSHFacts{
+		User: "root",
+		Host: "localhost",
+		Port: 2223,
+		KeyFP: "./test-fixtures/docker_id_rsa",
+	}
+	cnxn, err := CreateSSHChannel(ctx, facts, "")
 	if err != nil {
 		t.Error(err)
 		return
@@ -71,23 +79,27 @@ func TestContextConnection_RunAndLog(t *testing.T) {
 	}
 }
 
-func testPipeHandler(rc io.Reader, logout chan[]byte, donechan chan int) {
-	defer close(donechan)
+//type StreamingFunc func(r io.Reader, logout chan[]byte, wg *sync.WaitGroup)
+func testPipeHandler(rc io.Reader, logout chan[]byte, wg *sync.WaitGroup) {
+	defer wg.Done()
 	scanner := bufio.NewScanner(rc)
 	for scanner.Scan() {
 		//fmt.Println("bytes")
 		logout <- scanner.Bytes()
 	}
-	//fmt.Println("DOING PIPE WERK")
-	//fmt.Println("closing done chan")
 }
 
 
 func TestContextConnection_Setenvs(t *testing.T) {
 	cleanup, ctx := CreateSSHDockerContainer(t, "2224")
 	defer cleanup()
-	cnxn := InitContextConnect("./test-fixtures/docker_id_rsa", "","root", "localhost", 2224)
-	err := cnxn.Connect(ctx)
+	facts := &models.SSHFacts{
+		User: "root",
+		Host: "localhost",
+		Port: 2224,
+		KeyFP: "./test-fixtures/docker_id_rsa",
+	}
+	cnxn, err := CreateSSHChannel(ctx, facts, "")
 	if err != nil {
 		t.Error(err)
 		return

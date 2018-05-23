@@ -24,8 +24,8 @@ func TestBasher_DownloadCodebaseDefault(t *testing.T) {
 	if defaultResult[1] != "-c" {
 		t.Error(test.GenericStrFormatErrors("download second param", "-c", defaultResult[1]))
 	}
-	if defaultResult[2] != "/.ocelot/bb_download.sh something https://x-token-auth:something@bitbucket.org/marianne.git 123" {
-		t.Error(test.GenericStrFormatErrors("download third param", "/.ocelot/bb_download.sh something https://x-token-auth:something@bitbucket.org/marianne.git 123", defaultResult[2]))
+	if defaultResult[2] != "/.ocelot/bb_download.sh something https://x-token-auth:something@bitbucket.org/marianne.git 123 /.ocelot/123" {
+		t.Error(test.GenericStrFormatErrors("download third param", "/.ocelot/bb_download.sh something https://x-token-auth:something@bitbucket.org/marianne.git 123 /.ocelot/123", defaultResult[2]))
 	}
 }
 
@@ -48,7 +48,7 @@ func TestBasher_DownloadCodebaseNotDefault(t *testing.T) {
 	if defaultResult[1] != "-c" {
 		t.Error(test.GenericStrFormatErrors("download second param", "-c", defaultResult[1]))
 	}
-	if defaultResult[2] != "/.ocelot/bb_download.sh  https://localhost:9090/marianne/is/number/one 123" {
-		t.Error(test.GenericStrFormatErrors("download first param", "/.ocelot/bb_download.sh", defaultResult[2]))
+	if defaultResult[2] != "/.ocelot/bb_download.sh  https://localhost:9090/marianne/is/number/one 123 /.ocelot/123" {
+		t.Error(test.GenericStrFormatErrors("download first param", "/.ocelot/bb_download.sh  https://localhost:9090/marianne/is/number/one 123 /.ocelot/123", defaultResult[2]))
 	}
 }
