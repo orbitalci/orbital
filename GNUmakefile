@@ -61,6 +61,22 @@ upload-clients: versionexists all-clients ## install all clients and upload to s
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot_$(VERSION).zip s3://ocelotty/windows-ocelot-$(VERSION).zip
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/linux-ocelot-$(VERSION).zip
 
+all-binaries-rel: versionexists ## build all binaries in RELEASE MODE and save them to pkg
+	# darwin client
+	env GOOS=darwin GOARCH=amd64 go build  -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o pkg/darwin_amd64/ocelot  cmd/ocelot/main.go
+	cd pkg/darwin_amd64; zip -r darwin-ocelot-$(VERSION).zip ./ocelot; rm ocelot; cd -
+	# windows client
+	env GOOS=windows GOARCH=amd64 go build  -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o pkg/windows_amd64/ocelot  cmd/ocelot/main.go
+	cd pkg/windows_amd64; zip -r windows-ocelot-$(VERSION).zip ./ocelot; rm ocelot; cd -
+	# linux client
+	env GOOS=linux GOARCH=amd64 go build  -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o pkg/linux_amd64/ocelot  cmd/ocelot/main.go
+	cd pkg/linux_amd64; zip -r linux-ocelot-$(VERSION).zip ./ocelot; rm ocelot; cd -
+	# werker linux
+	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o werker .; zip -r ../../pkg/linux_amd64/linux-werker-$(VERSION).zip werker; rm werker; cd -
+	# werker darwin
+	cd cmd/werker/; env GOOS=darwin GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o werker .; zip -r ../../darwin-werker-$(VERSION).zip werker; rm werker; cd -
+
+
 upload-templates: ## tar up werker templates and upload to s3
 	cd build/template && tar -cvf werker_files.tar *
 	aws s3 cp --acl public-read-write --content-disposition attachment build/template/werker_files.tar s3://ocelotty/werker_files.tar
