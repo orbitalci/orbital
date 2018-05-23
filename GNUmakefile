@@ -74,7 +74,7 @@ all-binaries-rel: versionexists ## build all binaries in RELEASE MODE and save t
 	# werker linux
 	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o werker .; zip -r ../../pkg/linux_amd64/linux-werker-$(VERSION).zip werker; rm werker; cd -
 	# werker darwin
-	cd cmd/werker/; env GOOS=darwin GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o werker .; zip -r ../../darwin-werker-$(VERSION).zip werker; rm werker; cd -
+	cd cmd/werker/; env GOOS=darwin GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o werker .; zip -r ../../pkg/darwin_amd64/darwin-werker-$(VERSION).zip werker; rm werker; cd -
 
 
 upload-templates: ## tar up werker templates and upload to s3
