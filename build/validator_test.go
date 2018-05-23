@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
@@ -65,4 +66,28 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 		t.Error(err)
 	}
 
+}
+
+func TestOcelotValidator_ValidateWithBranch(t *testing.T) {
+	buildConf := &pb.BuildConfig{
+		Image: "busybox:latest",
+		BuildTool: "w/e",
+		Branches: []string{"rc_*"},
+		Stages: []*pb.Stage{
+			{Name: "hi", Script: []string{"echo sup"}},
+		},
+	}
+	validator := GetOcelotValidator()
+	err := validator.ValidateWithBranch(buildConf, "rc_1234", nil)
+	if err != nil {
+		t.Error("validation should pass, error is : " + err.Error())
+	}
+	err = validator.ValidateWithBranch(buildConf, "r1_1234", nil)
+	if err == nil {
+		t.Error("should not pass validation")
+	}
+	errMsg := "branch r1_1234 does not match any branches listed: [rc_*]"
+	if err.Error() != errMsg {
+		t.Error(test.StrFormatErrors("err msg", errMsg, err.Error()))
+	}
 }

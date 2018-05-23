@@ -148,7 +148,7 @@ func ValidateAndQueue(buildConf *pb.BuildConfig,
 	sr *models.StageResult,
 	buildId int64,
 	hash, fullAcctRepo, bbToken string) error {
-	if err := validateBuild(buildConf, branch, validator); err == nil {
+	if err := validator.ValidateWithBranch(buildConf, branch, nil); err == nil {
 		tellWerker(buildConf, vaulty, producer, hash, fullAcctRepo, bbToken, buildId, branch)
 		log.Log().Debug("told werker!")
 		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
@@ -186,25 +186,6 @@ func tellWerker(buildConf *pb.BuildConfig,
 	}
 
 	go producer.WriteProto(werkerTask, build.DetermineTopic(buildConf.MachineTag))
-}
-
-//before we build pipeline config for werker, validate and make sure this is good candidate
-// - check if commit branch matches with ocelot.yaml branch and validate
-func validateBuild(buildConf *pb.BuildConfig, branch string, validator *build.OcelotValidator) error {
-	var err error
-	err = validator.ValidateConfig(buildConf, nil)
-	if err != nil {
-		log.IncludeErrField(err).Error("failed validation")
-		return err
-	}
-	branchOk, err := build.BranchRegexOk(branch, buildConf.Branches)
-	if err != nil {
-		return err
-	}
-	if !branchOk {
-		err = errors.New(fmt.Sprintf("branch %s does not match any branches listed: %v", branch, buildConf.Branches))
-	}
-	return err
 }
 
 func PopulateStageResult(sr *models.StageResult, status int, lastMsg, errMsg string) {
