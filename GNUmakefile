@@ -34,8 +34,8 @@ local-release:
 windows-client: versionexists ## install zipped windows ocelot client to pkg/windows_amd64
 	mkdir -p pkg/windows_amd64/
 	@echo "building windows client"
-	env GOOS=windows GOARCH=amd64 go build  -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o pkg/windows_amd64/ocelot  cmd/ocelot/main.go
-	cd pkg/windows_amd64; zip -r ocelot_$(VERSION).zip ./ocelot; rm ocelot; cd -
+	env GOOS=windows GOARCH=amd64 go build  -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o pkg/windows_amd64/ocelot.exe  cmd/ocelot/main.go
+	cd pkg/windows_amd64; zip -r ocelot_$(VERSION).zip ./ocelot.exe; rm ocelot.exe; cd -
 
 mac-client: versionexists ## install zipped mac ocelot client to pkg/darwin_amd64
 	mkdir -p pkg/darwin_amd64/
