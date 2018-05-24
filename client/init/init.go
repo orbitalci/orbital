@@ -16,7 +16,7 @@ const help = `
 Usage: ocelot init
   Call init to create a skeleton ocelot.yml file. 
   If flag --render-tag is called, it will render the machineTag field instead of the image field, thus assuming a non-docker build.
-  If flag --notify is called, an empty block will be added to the ocelot.yml as well 
+  If flag --notify is called, a notify section with empty slack fields will be added to the ocelot.yml as well 
 `
 
 func New(ui cli.Ui) *cmd {
@@ -81,6 +81,11 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error("Unable to write file to ocelot.yml in this location, will print to stdout instead. For your edification, the error is: " + err.Error())
 		fmt.Println(rendered)
 	}
+	dir, _ := os.Getwd()
+	if dir != "" {
+		dir = fmt.Sprintf("\n%s%socelot.yml", dir, string(os.PathSeparator))
+	}
+	c.UI.Info("Successfully rendered an ocelot.yml file in the current directory" + dir)
 	return 0
 }
 
