@@ -67,8 +67,9 @@ func (bb *Bitbucket) Walk() error {
 // commitHash: string git hash for revision number
 func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	ocelog.Log().Debug("inside GetFile")
-	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
+	path := fmt.Sprintf("level11consulting/ad-admin-ui/refs/branches")
 	bytez, err = bb.Client.GetUrlRawData(fmt.Sprintf(bb.GetBaseURL(), path))
+	fmt.Println("\n\n\n" + string(bytez) + "\n\n\n")
 	if err != nil {
 		ocelog.IncludeErrField(err)
 		return
@@ -91,6 +92,29 @@ func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_Rep
 	}
 	return *repoVal, nil
 }
+
+func (bb *Bitbucket) GetBranchLastCommitData(acctRepo string) ([]*pb.BranchHistory, error) {
+	var branchHistory []*pb.BranchHistory
+	var nextUrl string
+	path := fmt.Sprintf("%s/refs/branches", acctRepo)
+	nextUrl = fmt.Sprintf(bb.GetBaseURL(), path)
+	for {
+		branches := &pbb.PaginatedRepoBranches{}
+		err := bb.Client.GetUrl(nextUrl, branches)
+		if err != nil {
+			return nil, err
+		}
+		for _, branch := range branches.GetValues() {
+			branchHistory = append(branchHistory, &pb.BranchHistory{Branch: branch.Name, Hash: branch.Target.GetHash(), LastCommitTime: branch.Target.GetDate()})
+		}
+		nextUrl = branches.GetNext()
+		if nextUrl == "" {
+			break
+		}
+	}
+	return branchHistory, nil
+}
+
 
 //CreateWebhook will create webhook at specified webhook url
 func (bb *Bitbucket) CreateWebhook(webhookURL string) error {

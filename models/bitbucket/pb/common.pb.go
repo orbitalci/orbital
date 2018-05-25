@@ -24,9 +24,12 @@ It has these top-level messages:
 	Commit
 	Commits
 	RepoSourceFile
+	Author
 	PaginatedRootDirs
 	PaginatedRepository
 	ChangeSetV1
+	PaginatedRepoBranches
+	Branch
 	RepoPush
 	PullRequest
 	PullRequestApproved

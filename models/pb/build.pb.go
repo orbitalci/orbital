@@ -8,6 +8,7 @@ It is generated from these files:
 	build.proto
 	creds.proto
 	guideocelot.proto
+	vcshandler.proto
 	werkerserver.proto
 
 It has these top-level messages:
@@ -47,6 +48,7 @@ It has these top-level messages:
 	Exists
 	AcctRepo
 	AcctRepos
+	BranchHistory
 	Request
 	Response
 */
