@@ -25,7 +25,7 @@ func (k *K8sInt) SubType() pb.SubCredType {
 }
 
 func (k *K8sInt) MakeBashable(encoded string) []string {
-	return []string{"/bin/sh", "-c", "mkdir -p ~/.kube && echo \"${KCONF}\" | base64 -d > ~/.kube/conf"}
+	return []string{"/bin/sh", "-c", "mkdir -p ~/.kube && echo \"${KCONF}\" | base64 -d > ~/.kube/config"}
 }
 
 func (k *K8sInt) IsRelevant(wc *pb.BuildConfig) bool {
