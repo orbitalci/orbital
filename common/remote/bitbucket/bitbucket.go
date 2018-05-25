@@ -1,9 +1,10 @@
 package bitbucket
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
-
+	"net/http"
 
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
@@ -67,11 +68,10 @@ func (bb *Bitbucket) Walk() error {
 // commitHash: string git hash for revision number
 func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	ocelog.Log().Debug("inside GetFile")
-	path := fmt.Sprintf("level11consulting/ad-admin-ui/refs/branches")
+	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
 	bytez, err = bb.Client.GetUrlRawData(fmt.Sprintf(bb.GetBaseURL(), path))
-	fmt.Println("\n\n\n" + string(bytez) + "\n\n\n")
 	if err != nil {
-		ocelog.IncludeErrField(err)
+		ocelog.IncludeErrField(err).Error()
 		return
 	}
 	return
@@ -93,7 +93,39 @@ func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_Rep
 	return *repoVal, nil
 }
 
-func (bb *Bitbucket) GetBranchLastCommitData(acctRepo string) ([]*pb.BranchHistory, error) {
+func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.BranchHistory, err error) {
+	path := fmt.Sprintf("%s/refs/branches/%s", acctRepo, branch)
+	url := fmt.Sprintf(bb.GetBaseURL(), path)
+	var resp *http.Response
+	resp, err = bb.Client.GetUrlResponse(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	// status code handling using bitbucket API spec
+    //   https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/refs/branches/%7Bname%7D
+	switch resp.StatusCode {
+	case http.StatusNotFound:
+		err = errors.New(fmt.Sprintf("Specified branch %s does not exist", branch))
+	case http.StatusForbidden:
+		err = errors.New(fmt.Sprintf("Repo %s (with branch %s) is private and these credentials are not authorized for access", acctRepo, branch))
+	case http.StatusOK:
+		bbBranch := &pbb.Branch{}
+		reader := bufio.NewReader(resp.Body)
+		unmarshaler := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaler.Unmarshal(reader, bbBranch); err != nil {
+			ocelog.IncludeErrField(err).Error("failed to parse response from ", url)
+			return
+		}
+		hist = &pb.BranchHistory{Branch: branch, Hash: bbBranch.GetTarget().GetHash(), LastCommitTime: bbBranch.GetTarget().GetDate()}
+		err = nil
+	}
+	return
+}
+
+func (bb *Bitbucket) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error) {
 	var branchHistory []*pb.BranchHistory
 	var nextUrl string
 	path := fmt.Sprintf("%s/refs/branches", acctRepo)

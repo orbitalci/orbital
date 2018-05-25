@@ -18,6 +18,10 @@ func (f *fakeCommitLister) GetAllCommits(string, string) (*pbb.Commits, error) {
 	return &pbb.Commits{Values: f.commits}, nil
 }
 
+func (f *fakeCommitLister) GetFile(string, string, string) ([]byte, error) {
+	return []byte{}, nil
+}
+
 // faked all this out and wrote an interface because i only wanted to test the logic of whether or not this should trigger a build
 type fakeWerkerTeller struct{}
 
@@ -36,13 +40,14 @@ var branchTests = []struct {
 	{"no last commit", "", "triggerMePlease", "triggerMePlease"},
 }
 
-func Test_searchBranchCommits(t *testing.T) {
+func TestChangeChecker_InspectCommits(t *testing.T) {
 	for _, testcase := range branchTests {
 		t.Run(testcase.name, func(t *testing.T) {
 			commitList := []*pbb.Commit{{Hash: testcase.commitListHash}}
 			commitListen := &fakeCommitLister{commits: commitList}
-			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{AcctRepo: "test/test"}}
-			newLastHash, err := searchBranchCommits(commitListen, "test", conf, testcase.oldhash, "", &fakeWerkerTeller{})
+			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{AcctRepo: "test/test"}, handler:commitListen, token: "TOLKEIN", teller: &fakeWerkerTeller{}}
+			//InspectCommits(branch string, lastHash string) (newLastHash string, err error) {
+			newLastHash, err := conf.InspectCommits("test", testcase.oldhash)
 			if err != nil {
 				t.Error(err)
 			}
