@@ -56,7 +56,7 @@ func TestK8sInt_staticstuffs(t *testing.T) {
 	if diff := deep.Equal(inte.GetEnv(), []string{"KCONF=" + inte.k8sContents}); diff != nil {
 		t.Error("getEnv not right, diff is: \n", diff)
 	}
-	expectedbash := []string{"/bin/sh", "-c", "mkdir -p ~/.kube && echo \"${KCONF}\" | base64 -d > ~/.kube/conf"}
+	expectedbash := []string{"/bin/sh", "-c", "mkdir -p ~/.kube && echo \"${KCONF}\" | base64 -d > ~/.kube/config"}
 	if diff := deep.Equal(expectedbash, inte.MakeBashable("a;lsdfjk")); diff != nil {
 		t.Error("bash strings not rendered correctly, diff is: \n", diff)
 	}
