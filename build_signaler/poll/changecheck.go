@@ -25,6 +25,7 @@ type ChangeChecker struct {
 	teller  signal.WerkerTeller
 }
 
+// SetAuth retrieves VCS credentials based on the account, then creates a VCS handler with it.
 func (w *ChangeChecker) SetAuth() error {
 	cfg, err := credentials.GetVcsCreds(w.Store, w.AcctRepo, w.RC)
 	if err != nil {
@@ -39,6 +40,13 @@ func (w *ChangeChecker) SetAuth() error {
 	return nil
 }
 
+// HandleAllBranches will get all branches associated with the repository along with their last commit information.
+//  If the branch is already in the map and the commit in the branch map is different than the one retrieved from bitbucket,
+//    then a build will be triggered ad teh branchLastHashes map will be updated with the newest commit
+//
+//  If the branch is not in the map, and if there is a new commit on the branch in the last week, a build will be triggered.
+//    If the branch is not in the map but there are no recent commits, then the map will be updated to include this branch,
+//    but a build will not be triggered.
 func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) error {
 	branchHistories, err := w.handler.GetAllBranchesLastCommitData(w.AcctRepo)
 	if err != nil {
@@ -73,16 +81,14 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 	return nil
 }
 
+// InspectCommits will retrieve the last commit data for a branch of a repository. If the value of lastHash is empty,
+//   then a build will be triggered for this branch. If lastHash is not empty, and the retrieved last commit hash is not
+//   equal to the lastHash passed, then a build will be triggered. If the hashes are equal, then no build will be triggered.
 func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastHash string, err error) {
-	commits, err := w.handler.GetAllCommits(w.AcctRepo, branch)
+	lastCommit, err := w.handler.GetBranchLastCommitData(w.AcctRepo, branch)
 	if err != nil {
 		return "", errors.New("could not get all commits, error: " + err.Error())
 	}
-	if len(commits.Values) == 0 {
-		return "", errors.New("no commits found; likely a branch misconfiguration")
-	}
-	lastCommit := commits.Values[0]
-	//lastCommitDt := time.Unix(lastCommit.Date.Seconds, int64(lastCommit.Date.Nanos))
 	// check for empty last hash now that you have the last commit info and can trigger a build
 	if lastHash == "" {
 		newLastHash = lastCommit.Hash
