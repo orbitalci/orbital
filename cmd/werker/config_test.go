@@ -16,12 +16,12 @@ func TestGetConf_fromEnv(t *testing.T) {
 		ServicePort: "9899",
 		GrpcPort:    defaultGrpcPort,
 		WerkerType:  models.Kubernetes,
+		RegisterIP:  "55.259.12.197",
 	}
 	testConf := &WerkerConf{
 		WerkerFacts: factz,
 		WerkerName:  "oh_YEEEAH",
 		LogLevel:    "error",
-		RegisterIP:  "55.259.12.197",
 	}
 	os.Setenv("WS_PORT", testConf.ServicePort)
 	os.Setenv("TYPE", "kubernetes")

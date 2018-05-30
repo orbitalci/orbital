@@ -115,7 +115,7 @@ func TestSSH_Setup(t *testing.T) {
 // failure scenario
 func TestSSH_Setup2(t *testing.T) {
 	task := &pb.WerkerTask{CheckoutHash:"TESTHASHAYYY"}
-	ssher, ctx, cancel, tarRm, cleaner := SetupSSHBuilder(t, 2222, "3833")
+	ssher, ctx, cancel, tarRm, cleaner := SetupSSHBuilder(t, 2228, "3833")
 	defer tarRm(t)
 	defer cleaner()
 	defer cancel()

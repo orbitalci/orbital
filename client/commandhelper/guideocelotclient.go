@@ -18,9 +18,9 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name use to verify the hostname returned by TLS handshake")
 )
 
-func GetClient(serverAddr string, useBlockingDial bool, tlsDns string) (client models.GuideOcelotClient, err error) {
+func GetClient(serverAddr string, noUseBlockingDial bool, tlsDns string) (client models.GuideOcelotClient, err error) {
 	var conn *grpc.ClientConn
-	if !useBlockingDial {
+	if noUseBlockingDial {
 		var opts []grpc.DialOption
 		opts = append(opts, grpc.WithInsecure())
 		conn, err = grpc.Dial(serverAddr, opts...)
