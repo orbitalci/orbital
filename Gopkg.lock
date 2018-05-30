@@ -167,7 +167,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -180,7 +179,7 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "e09c5db296004fbe3f74490e84dcd62c3c5ddb1b"
+  revision = "3a3da3a4e26776cc22a79ef46d5d58477532dede"
 
 [[projects]]
   branch = "master"
@@ -699,6 +698,7 @@
     "balancer",
     "balancer/base",
     "balancer/roundrobin",
+    "channelz",
     "codes",
     "connectivity",
     "credentials",
@@ -721,8 +721,7 @@
     "tap",
     "transport"
   ]
-  revision = "afc05b9e1d36f289ea16ba294894486a3e458246"
-  version = "v1.11.0"
+  revision = "9a54b9abadc29235e480ec8837c5d49747611694"
 
 [[projects]]
   name = "gopkg.in/inf.v0"
@@ -751,6 +750,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e2135d0836273280b97918e277e6c6646ee52dd79aa591fcdd4f75cf18ed7014"
+  inputs-digest = "5a89ad1fbc7ac6c3b90012931e887305d3f8ad56d44bea7796a89c42f65b5387"
   solver-name = "gps-cdcl"
   solver-version = 1

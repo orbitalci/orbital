@@ -60,18 +60,18 @@ func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Stat
 	}
 	postMsg := &slack.WebhookMsg{
 		Username: "ocelot",
-		IconUrl: ocelotIcon,
+		IconUrl:  ocelotIcon,
 		Attachments: []*slack.Attachment{
 			{
 				Fallback: fallback,
-				Color: color,
-				Pretext: "*Ocelot Status*",
-				Title: "Build " + status,
-				Text: combined,
+				Color:    color,
+				Pretext:  "*Ocelot Status*",
+				Title:    "Build " + status,
+				Text:     combined,
 				Fields: []*slack.Field{
-					{"Repo", fmt.Sprintf("%s/%s", results.BuildSum.Account, results.BuildSum.Repo), false},
-					{"Branch", results.BuildSum.Branch, true},
-					{"Commit", shortSha, true},
+					{Title: "Repo", Value: fmt.Sprintf("%s/%s", results.BuildSum.Account, results.BuildSum.Repo), Short: false},
+					{Title: "Branch", Value: results.BuildSum.Branch, Short: true},
+					{Title: "Commit", Value: shortSha, Short: true},
 				},
 			},
 		},
@@ -110,6 +110,6 @@ type WebhookRejectedErr struct {
 	msg string
 }
 
-func(r *WebhookRejectedErr) Error() string {
+func (r *WebhookRejectedErr) Error() string {
 	return r.msg
 }
