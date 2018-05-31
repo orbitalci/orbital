@@ -27,8 +27,8 @@
 #  version = "v1.13.1"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/golang/protobuf"
+  name = "google.golang.org/grpc"
+  revision = "9a54b9abadc29235e480ec8837c5d49747611694"
 
 [[constraint]]
   name = "github.com/gorilla/mux"
@@ -41,6 +41,10 @@
 [[constraint]]
   name = "github.com/hashicorp/consul"
   version = "1.0.1"
+
+[[constraint]]
+  name = "github.com/golang/protobuf"
+  revision = "3a3da3a4e26776cc22a79ef46d5d58477532dede"
 
 [[constraint]]
   name = "github.com/hashicorp/vault"

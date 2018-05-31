@@ -26,6 +26,7 @@ func CheckConnection(cmd GuideOcelotCmd, ctx context.Context) error {
 		if _, ok := status.FromError(err); !ok {
 			cmd.GetUI().Error(err.Error())
 		}
+		Debuggit(cmd.GetUI(), err.Error())
 		cmd.GetUI().Error(fmt.Sprintf("Could not connect to server! Admin location is %s", cmd.GetConfig().AdminLocation))
 	}
 	return err

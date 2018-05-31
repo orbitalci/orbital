@@ -75,7 +75,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 		}
 		branchGood, err := build.BranchRegexOk(branch, stage.Trigger.Branches)
 		if err != nil {
-			result := &pb.Result{stage.Name, pb.StageResultVal_FAIL, err.Error(), []string{"failed to check if current branch fit the trigger criteria"}}
+			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_FAIL, Error: err.Error(), Messages: []string{"failed to check if current branch fit the trigger criteria"}}
 			// not sure if we should store, but i think its good visibility especially for right now
 			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
@@ -83,7 +83,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 			}
 		}
 		if !branchGood {
-			result := &pb.Result{stage.Name, pb.StageResultVal_PASS, "", []string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", branch)}}
+			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_PASS, Error: "", Messages:[]string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", branch)}}
 			// we could save to db, the branch running is not in the list of trigger branches, so we can flip the shouldSkip bool now.
 			shouldSkip = true
 			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {

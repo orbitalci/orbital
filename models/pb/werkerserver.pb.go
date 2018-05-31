@@ -17,14 +17,42 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type Request struct {
-	Hash string `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	Hash                 string   `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Request) Reset()                    { *m = Request{} }
-func (m *Request) String() string            { return proto.CompactTextString(m) }
-func (*Request) ProtoMessage()               {}
-func (*Request) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+func (m *Request) Reset()         { *m = Request{} }
+func (m *Request) String() string { return proto.CompactTextString(m) }
+func (*Request) ProtoMessage()    {}
+func (*Request) Descriptor() ([]byte, []int) {
+	return fileDescriptor_werkerserver_239bca0387fac35e, []int{0}
+}
+func (m *Request) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Request.Unmarshal(m, b)
+}
+func (m *Request) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Request.Marshal(b, m, deterministic)
+}
+func (dst *Request) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Request.Merge(dst, src)
+}
+func (m *Request) XXX_Size() int {
+	return xxx_messageInfo_Request.Size(m)
+}
+func (m *Request) XXX_DiscardUnknown() {
+	xxx_messageInfo_Request.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Request proto.InternalMessageInfo
 
 func (m *Request) GetHash() string {
 	if m != nil {
@@ -34,13 +62,35 @@ func (m *Request) GetHash() string {
 }
 
 type Response struct {
-	OutputLine string `protobuf:"bytes,1,opt,name=outputLine" json:"outputLine,omitempty"`
+	OutputLine           string   `protobuf:"bytes,1,opt,name=outputLine" json:"outputLine,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Response) Reset()                    { *m = Response{} }
-func (m *Response) String() string            { return proto.CompactTextString(m) }
-func (*Response) ProtoMessage()               {}
-func (*Response) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{1} }
+func (m *Response) Reset()         { *m = Response{} }
+func (m *Response) String() string { return proto.CompactTextString(m) }
+func (*Response) ProtoMessage()    {}
+func (*Response) Descriptor() ([]byte, []int) {
+	return fileDescriptor_werkerserver_239bca0387fac35e, []int{1}
+}
+func (m *Response) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Response.Unmarshal(m, b)
+}
+func (m *Response) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Response.Marshal(b, m, deterministic)
+}
+func (dst *Response) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Response.Merge(dst, src)
+}
+func (m *Response) XXX_Size() int {
+	return xxx_messageInfo_Response.Size(m)
+}
+func (m *Response) XXX_DiscardUnknown() {
+	xxx_messageInfo_Response.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Response proto.InternalMessageInfo
 
 func (m *Response) GetOutputLine() string {
 	if m != nil {
@@ -62,8 +112,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for Build service
-
+// BuildClient is the client API for Build service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type BuildClient interface {
 	BuildInfo(ctx context.Context, in *Request, opts ...grpc.CallOption) (Build_BuildInfoClient, error)
 	KillHash(ctx context.Context, in *Request, opts ...grpc.CallOption) (Build_KillHashClient, error)
@@ -78,7 +129,7 @@ func NewBuildClient(cc *grpc.ClientConn) BuildClient {
 }
 
 func (c *buildClient) BuildInfo(ctx context.Context, in *Request, opts ...grpc.CallOption) (Build_BuildInfoClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_Build_serviceDesc.Streams[0], c.cc, "/models.Build/BuildInfo", opts...)
+	stream, err := c.cc.NewStream(ctx, &_Build_serviceDesc.Streams[0], "/models.Build/BuildInfo", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +161,7 @@ func (x *buildBuildInfoClient) Recv() (*Response, error) {
 }
 
 func (c *buildClient) KillHash(ctx context.Context, in *Request, opts ...grpc.CallOption) (Build_KillHashClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_Build_serviceDesc.Streams[1], c.cc, "/models.Build/KillHash", opts...)
+	stream, err := c.cc.NewStream(ctx, &_Build_serviceDesc.Streams[1], "/models.Build/KillHash", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +192,7 @@ func (x *buildKillHashClient) Recv() (*Response, error) {
 	return m, nil
 }
 
-// Server API for Build service
-
+// BuildServer is the server API for Build service.
 type BuildServer interface {
 	BuildInfo(*Request, Build_BuildInfoServer) error
 	KillHash(*Request, Build_KillHashServer) error
@@ -213,9 +263,9 @@ var _Build_serviceDesc = grpc.ServiceDesc{
 	Metadata: "werkerserver.proto",
 }
 
-func init() { proto.RegisterFile("werkerserver.proto", fileDescriptor3) }
+func init() { proto.RegisterFile("werkerserver.proto", fileDescriptor_werkerserver_239bca0387fac35e) }
 
-var fileDescriptor3 = []byte{
+var fileDescriptor_werkerserver_239bca0387fac35e = []byte{
 	// 172 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2a, 0x4f, 0x2d, 0xca,
 	0x4e, 0x2d, 0x2a, 0x4e, 0x2d, 0x2a, 0x4b, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62,

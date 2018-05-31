@@ -6,10 +6,10 @@ package pb
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_protobuf "github.com/golang/protobuf/ptypes/empty"
-import _ "google.golang.org/genproto/googleapis/api/annotations"
-import google_protobuf2 "github.com/golang/protobuf/ptypes/timestamp"
+import empty "github.com/golang/protobuf/ptypes/empty"
+import timestamp "github.com/golang/protobuf/ptypes/timestamp"
 import _ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
+import _ "google.golang.org/genproto/googleapis/api/annotations"
 
 import (
 	context "golang.org/x/net/context"
@@ -21,19 +21,47 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type BuildReq struct {
 	// acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo
 	AcctRepo string `protobuf:"bytes,1,opt,name=acctRepo" json:"acctRepo,omitempty"`
 	// hash is the git hash to trigger.
 	Hash string `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`
 	// branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required.
-	Branch string `protobuf:"bytes,3,opt,name=branch" json:"branch,omitempty"`
+	Branch               string   `protobuf:"bytes,3,opt,name=branch" json:"branch,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *BuildReq) Reset()                    { *m = BuildReq{} }
-func (m *BuildReq) String() string            { return proto.CompactTextString(m) }
-func (*BuildReq) ProtoMessage()               {}
-func (*BuildReq) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
+func (m *BuildReq) Reset()         { *m = BuildReq{} }
+func (m *BuildReq) String() string { return proto.CompactTextString(m) }
+func (*BuildReq) ProtoMessage()    {}
+func (*BuildReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{0}
+}
+func (m *BuildReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BuildReq.Unmarshal(m, b)
+}
+func (m *BuildReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BuildReq.Marshal(b, m, deterministic)
+}
+func (dst *BuildReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BuildReq.Merge(dst, src)
+}
+func (m *BuildReq) XXX_Size() int {
+	return xxx_messageInfo_BuildReq.Size(m)
+}
+func (m *BuildReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_BuildReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BuildReq proto.InternalMessageInfo
 
 func (m *BuildReq) GetAcctRepo() string {
 	if m != nil {
@@ -64,13 +92,35 @@ type StatusQuery struct {
 	// repoName is the corresponding repo name that the hash is attached to
 	RepoName string `protobuf:"bytes,3,opt,name=repoName" json:"repoName,omitempty"`
 	// partialRepo is just the first n letters of repo
-	PartialRepo string `protobuf:"bytes,4,opt,name=partialRepo" json:"partialRepo,omitempty"`
+	PartialRepo          string   `protobuf:"bytes,4,opt,name=partialRepo" json:"partialRepo,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StatusQuery) Reset()                    { *m = StatusQuery{} }
-func (m *StatusQuery) String() string            { return proto.CompactTextString(m) }
-func (*StatusQuery) ProtoMessage()               {}
-func (*StatusQuery) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{1} }
+func (m *StatusQuery) Reset()         { *m = StatusQuery{} }
+func (m *StatusQuery) String() string { return proto.CompactTextString(m) }
+func (*StatusQuery) ProtoMessage()    {}
+func (*StatusQuery) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{1}
+}
+func (m *StatusQuery) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StatusQuery.Unmarshal(m, b)
+}
+func (m *StatusQuery) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StatusQuery.Marshal(b, m, deterministic)
+}
+func (dst *StatusQuery) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StatusQuery.Merge(dst, src)
+}
+func (m *StatusQuery) XXX_Size() int {
+	return xxx_messageInfo_StatusQuery.Size(m)
+}
+func (m *StatusQuery) XXX_DiscardUnknown() {
+	xxx_messageInfo_StatusQuery.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StatusQuery proto.InternalMessageInfo
 
 func (m *StatusQuery) GetHash() string {
 	if m != nil {
@@ -107,13 +157,35 @@ type BuildQuery struct {
 	// hash is the git hash that corresponds to a commit you wish to get information on
 	Hash string `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
 	// build id is the build number given by ocelot that is associated with the commit
-	BuildId int64 `protobuf:"varint,2,opt,name=buildId" json:"buildId,omitempty"`
+	BuildId              int64    `protobuf:"varint,2,opt,name=buildId" json:"buildId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *BuildQuery) Reset()                    { *m = BuildQuery{} }
-func (m *BuildQuery) String() string            { return proto.CompactTextString(m) }
-func (*BuildQuery) ProtoMessage()               {}
-func (*BuildQuery) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{2} }
+func (m *BuildQuery) Reset()         { *m = BuildQuery{} }
+func (m *BuildQuery) String() string { return proto.CompactTextString(m) }
+func (*BuildQuery) ProtoMessage()    {}
+func (*BuildQuery) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{2}
+}
+func (m *BuildQuery) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BuildQuery.Unmarshal(m, b)
+}
+func (m *BuildQuery) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BuildQuery.Marshal(b, m, deterministic)
+}
+func (dst *BuildQuery) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BuildQuery.Merge(dst, src)
+}
+func (m *BuildQuery) XXX_Size() int {
+	return xxx_messageInfo_BuildQuery.Size(m)
+}
+func (m *BuildQuery) XXX_DiscardUnknown() {
+	xxx_messageInfo_BuildQuery.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BuildQuery proto.InternalMessageInfo
 
 func (m *BuildQuery) GetHash() string {
 	if m != nil {
@@ -130,13 +202,35 @@ func (m *BuildQuery) GetBuildId() int64 {
 }
 
 type Builds struct {
-	Builds map[string]*BuildRuntimeInfo `protobuf:"bytes,1,rep,name=builds" json:"builds,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Builds               map[string]*BuildRuntimeInfo `protobuf:"bytes,1,rep,name=builds" json:"builds,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
+	XXX_unrecognized     []byte                       `json:"-"`
+	XXX_sizecache        int32                        `json:"-"`
 }
 
-func (m *Builds) Reset()                    { *m = Builds{} }
-func (m *Builds) String() string            { return proto.CompactTextString(m) }
-func (*Builds) ProtoMessage()               {}
-func (*Builds) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{3} }
+func (m *Builds) Reset()         { *m = Builds{} }
+func (m *Builds) String() string { return proto.CompactTextString(m) }
+func (*Builds) ProtoMessage()    {}
+func (*Builds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{3}
+}
+func (m *Builds) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Builds.Unmarshal(m, b)
+}
+func (m *Builds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Builds.Marshal(b, m, deterministic)
+}
+func (dst *Builds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Builds.Merge(dst, src)
+}
+func (m *Builds) XXX_Size() int {
+	return xxx_messageInfo_Builds.Size(m)
+}
+func (m *Builds) XXX_DiscardUnknown() {
+	xxx_messageInfo_Builds.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Builds proto.InternalMessageInfo
 
 func (m *Builds) GetBuilds() map[string]*BuildRuntimeInfo {
 	if m != nil {
@@ -157,14 +251,36 @@ type BuildRuntimeInfo struct {
 	// acctName is the vcs account that this build is assocated with
 	AcctName string `protobuf:"bytes,5,opt,name=acctName" json:"acctName,omitempty"`
 	// repoName is the name of the git repository that is associated with this commit/build
-	RepoName string `protobuf:"bytes,6,opt,name=repoName" json:"repoName,omitempty"`
-	WsPort   string `protobuf:"bytes,7,opt,name=wsPort" json:"wsPort,omitempty"`
+	RepoName             string   `protobuf:"bytes,6,opt,name=repoName" json:"repoName,omitempty"`
+	WsPort               string   `protobuf:"bytes,7,opt,name=wsPort" json:"wsPort,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *BuildRuntimeInfo) Reset()                    { *m = BuildRuntimeInfo{} }
-func (m *BuildRuntimeInfo) String() string            { return proto.CompactTextString(m) }
-func (*BuildRuntimeInfo) ProtoMessage()               {}
-func (*BuildRuntimeInfo) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{4} }
+func (m *BuildRuntimeInfo) Reset()         { *m = BuildRuntimeInfo{} }
+func (m *BuildRuntimeInfo) String() string { return proto.CompactTextString(m) }
+func (*BuildRuntimeInfo) ProtoMessage()    {}
+func (*BuildRuntimeInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{4}
+}
+func (m *BuildRuntimeInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BuildRuntimeInfo.Unmarshal(m, b)
+}
+func (m *BuildRuntimeInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BuildRuntimeInfo.Marshal(b, m, deterministic)
+}
+func (dst *BuildRuntimeInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BuildRuntimeInfo.Merge(dst, src)
+}
+func (m *BuildRuntimeInfo) XXX_Size() int {
+	return xxx_messageInfo_BuildRuntimeInfo.Size(m)
+}
+func (m *BuildRuntimeInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_BuildRuntimeInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BuildRuntimeInfo proto.InternalMessageInfo
 
 func (m *BuildRuntimeInfo) GetDone() bool {
 	if m != nil {
@@ -216,13 +332,35 @@ func (m *BuildRuntimeInfo) GetWsPort() string {
 }
 
 type LineResponse struct {
-	OutputLine string `protobuf:"bytes,1,opt,name=outputLine" json:"outputLine,omitempty"`
+	OutputLine           string   `protobuf:"bytes,1,opt,name=outputLine" json:"outputLine,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *LineResponse) Reset()                    { *m = LineResponse{} }
-func (m *LineResponse) String() string            { return proto.CompactTextString(m) }
-func (*LineResponse) ProtoMessage()               {}
-func (*LineResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{5} }
+func (m *LineResponse) Reset()         { *m = LineResponse{} }
+func (m *LineResponse) String() string { return proto.CompactTextString(m) }
+func (*LineResponse) ProtoMessage()    {}
+func (*LineResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{5}
+}
+func (m *LineResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LineResponse.Unmarshal(m, b)
+}
+func (m *LineResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LineResponse.Marshal(b, m, deterministic)
+}
+func (dst *LineResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LineResponse.Merge(dst, src)
+}
+func (m *LineResponse) XXX_Size() int {
+	return xxx_messageInfo_LineResponse.Size(m)
+}
+func (m *LineResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_LineResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LineResponse proto.InternalMessageInfo
 
 func (m *LineResponse) GetOutputLine() string {
 	if m != nil {
@@ -237,13 +375,35 @@ type RepoAccount struct {
 	// account is the VCS account
 	Account string `protobuf:"bytes,2,opt,name=account" json:"account,omitempty"`
 	// limit is the number of summary records desired to be returned
-	Limit int32 `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
+	Limit                int32    `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *RepoAccount) Reset()                    { *m = RepoAccount{} }
-func (m *RepoAccount) String() string            { return proto.CompactTextString(m) }
-func (*RepoAccount) ProtoMessage()               {}
-func (*RepoAccount) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{6} }
+func (m *RepoAccount) Reset()         { *m = RepoAccount{} }
+func (m *RepoAccount) String() string { return proto.CompactTextString(m) }
+func (*RepoAccount) ProtoMessage()    {}
+func (*RepoAccount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{6}
+}
+func (m *RepoAccount) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RepoAccount.Unmarshal(m, b)
+}
+func (m *RepoAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RepoAccount.Marshal(b, m, deterministic)
+}
+func (dst *RepoAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RepoAccount.Merge(dst, src)
+}
+func (m *RepoAccount) XXX_Size() int {
+	return xxx_messageInfo_RepoAccount.Size(m)
+}
+func (m *RepoAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_RepoAccount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RepoAccount proto.InternalMessageInfo
 
 func (m *RepoAccount) GetRepo() string {
 	if m != nil {
@@ -272,13 +432,35 @@ type Status struct {
 	// stages is a all the StageStatus objects associated to the build in question
 	Stages []*StageStatus `protobuf:"bytes,2,rep,name=stages" json:"stages,omitempty"`
 	// isInConsul is a boolean that is used for determining if the build is "running" or not. if isInConsul=true, the build is still running
-	IsInConsul bool `protobuf:"varint,3,opt,name=isInConsul" json:"isInConsul,omitempty"`
+	IsInConsul           bool     `protobuf:"varint,3,opt,name=isInConsul" json:"isInConsul,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Status) Reset()                    { *m = Status{} }
-func (m *Status) String() string            { return proto.CompactTextString(m) }
-func (*Status) ProtoMessage()               {}
-func (*Status) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{7} }
+func (m *Status) Reset()         { *m = Status{} }
+func (m *Status) String() string { return proto.CompactTextString(m) }
+func (*Status) ProtoMessage()    {}
+func (*Status) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{7}
+}
+func (m *Status) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Status.Unmarshal(m, b)
+}
+func (m *Status) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Status.Marshal(b, m, deterministic)
+}
+func (dst *Status) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Status.Merge(dst, src)
+}
+func (m *Status) XXX_Size() int {
+	return xxx_messageInfo_Status.Size(m)
+}
+func (m *Status) XXX_DiscardUnknown() {
+	xxx_messageInfo_Status.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Status proto.InternalMessageInfo
 
 func (m *Status) GetBuildSum() *BuildSummary {
 	if m != nil {
@@ -311,15 +493,37 @@ type StageStatus struct {
 	// messages are some descriptions of each stage that are generated at runtime
 	Messages []string `protobuf:"bytes,4,rep,name=messages" json:"messages,omitempty"`
 	// startTime is when this stage began execution
-	StartTime *google_protobuf2.Timestamp `protobuf:"bytes,5,opt,name=startTime" json:"startTime,omitempty"`
+	StartTime *timestamp.Timestamp `protobuf:"bytes,5,opt,name=startTime" json:"startTime,omitempty"`
 	// stageDuration is how long the stage took to execute
-	StageDuration float64 `protobuf:"fixed64,6,opt,name=stageDuration" json:"stageDuration,omitempty"`
+	StageDuration        float64  `protobuf:"fixed64,6,opt,name=stageDuration" json:"stageDuration,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StageStatus) Reset()                    { *m = StageStatus{} }
-func (m *StageStatus) String() string            { return proto.CompactTextString(m) }
-func (*StageStatus) ProtoMessage()               {}
-func (*StageStatus) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{8} }
+func (m *StageStatus) Reset()         { *m = StageStatus{} }
+func (m *StageStatus) String() string { return proto.CompactTextString(m) }
+func (*StageStatus) ProtoMessage()    {}
+func (*StageStatus) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{8}
+}
+func (m *StageStatus) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StageStatus.Unmarshal(m, b)
+}
+func (m *StageStatus) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StageStatus.Marshal(b, m, deterministic)
+}
+func (dst *StageStatus) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StageStatus.Merge(dst, src)
+}
+func (m *StageStatus) XXX_Size() int {
+	return xxx_messageInfo_StageStatus.Size(m)
+}
+func (m *StageStatus) XXX_DiscardUnknown() {
+	xxx_messageInfo_StageStatus.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StageStatus proto.InternalMessageInfo
 
 func (m *StageStatus) GetStageStatus() string {
 	if m != nil {
@@ -349,7 +553,7 @@ func (m *StageStatus) GetMessages() []string {
 	return nil
 }
 
-func (m *StageStatus) GetStartTime() *google_protobuf2.Timestamp {
+func (m *StageStatus) GetStartTime() *timestamp.Timestamp {
 	if m != nil {
 		return m.StartTime
 	}
@@ -371,7 +575,7 @@ type BuildSummary struct {
 	// failed is whether or not the build failed
 	Failed bool `protobuf:"varint,2,opt,name=failed" json:"failed,omitempty"`
 	// buildTime is the datetime that the build was picked up off the queue by the werker
-	BuildTime *google_protobuf2.Timestamp `protobuf:"bytes,3,opt,name=buildTime" json:"buildTime,omitempty"`
+	BuildTime *timestamp.Timestamp `protobuf:"bytes,3,opt,name=buildTime" json:"buildTime,omitempty"`
 	// account is the VCS account associated with the repository / commit
 	Account string `protobuf:"bytes,4,opt,name=account" json:"account,omitempty"`
 	// buildDuration is the length of time the whole build took to execute
@@ -383,13 +587,35 @@ type BuildSummary struct {
 	// buildId is the id given to the build entry by postgres. it is unique
 	BuildId int64 `protobuf:"varint,8,opt,name=buildId" json:"buildId,omitempty"`
 	// queueTime is the datetime that either a tracking component or the admin put the build request on the queue to be processed by the werker node
-	QueueTime *google_protobuf2.Timestamp `protobuf:"bytes,9,opt,name=queueTime" json:"queueTime,omitempty"`
+	QueueTime            *timestamp.Timestamp `protobuf:"bytes,9,opt,name=queueTime" json:"queueTime,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *BuildSummary) Reset()                    { *m = BuildSummary{} }
-func (m *BuildSummary) String() string            { return proto.CompactTextString(m) }
-func (*BuildSummary) ProtoMessage()               {}
-func (*BuildSummary) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{9} }
+func (m *BuildSummary) Reset()         { *m = BuildSummary{} }
+func (m *BuildSummary) String() string { return proto.CompactTextString(m) }
+func (*BuildSummary) ProtoMessage()    {}
+func (*BuildSummary) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{9}
+}
+func (m *BuildSummary) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BuildSummary.Unmarshal(m, b)
+}
+func (m *BuildSummary) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BuildSummary.Marshal(b, m, deterministic)
+}
+func (dst *BuildSummary) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BuildSummary.Merge(dst, src)
+}
+func (m *BuildSummary) XXX_Size() int {
+	return xxx_messageInfo_BuildSummary.Size(m)
+}
+func (m *BuildSummary) XXX_DiscardUnknown() {
+	xxx_messageInfo_BuildSummary.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BuildSummary proto.InternalMessageInfo
 
 func (m *BuildSummary) GetHash() string {
 	if m != nil {
@@ -405,7 +631,7 @@ func (m *BuildSummary) GetFailed() bool {
 	return false
 }
 
-func (m *BuildSummary) GetBuildTime() *google_protobuf2.Timestamp {
+func (m *BuildSummary) GetBuildTime() *timestamp.Timestamp {
 	if m != nil {
 		return m.BuildTime
 	}
@@ -447,7 +673,7 @@ func (m *BuildSummary) GetBuildId() int64 {
 	return 0
 }
 
-func (m *BuildSummary) GetQueueTime() *google_protobuf2.Timestamp {
+func (m *BuildSummary) GetQueueTime() *timestamp.Timestamp {
 	if m != nil {
 		return m.QueueTime
 	}
@@ -456,13 +682,35 @@ func (m *BuildSummary) GetQueueTime() *google_protobuf2.Timestamp {
 
 // summaries is a wrapper for a list of BuildSummary objects because protobuf can be dumb
 type Summaries struct {
-	Sums []*BuildSummary `protobuf:"bytes,1,rep,name=sums" json:"sums,omitempty"`
+	Sums                 []*BuildSummary `protobuf:"bytes,1,rep,name=sums" json:"sums,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
 }
 
-func (m *Summaries) Reset()                    { *m = Summaries{} }
-func (m *Summaries) String() string            { return proto.CompactTextString(m) }
-func (*Summaries) ProtoMessage()               {}
-func (*Summaries) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{10} }
+func (m *Summaries) Reset()         { *m = Summaries{} }
+func (m *Summaries) String() string { return proto.CompactTextString(m) }
+func (*Summaries) ProtoMessage()    {}
+func (*Summaries) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{10}
+}
+func (m *Summaries) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Summaries.Unmarshal(m, b)
+}
+func (m *Summaries) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Summaries.Marshal(b, m, deterministic)
+}
+func (dst *Summaries) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Summaries.Merge(dst, src)
+}
+func (m *Summaries) XXX_Size() int {
+	return xxx_messageInfo_Summaries.Size(m)
+}
+func (m *Summaries) XXX_DiscardUnknown() {
+	xxx_messageInfo_Summaries.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Summaries proto.InternalMessageInfo
 
 func (m *Summaries) GetSums() []*BuildSummary {
 	if m != nil {
@@ -482,15 +730,37 @@ type PollRequest struct {
 	// branches tells ocelot which branches should be checked for changes
 	Branches string `protobuf:"bytes,5,opt,name=branches" json:"branches,omitempty"`
 	// internal use only
-	LastCronTime *google_protobuf2.Timestamp `protobuf:"bytes,6,opt,name=lastCronTime" json:"lastCronTime,omitempty"`
+	LastCronTime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=lastCronTime" json:"lastCronTime,omitempty"`
 	// internal use only
-	LastHashes map[string]string `protobuf:"bytes,7,rep,name=lastHashes" json:"lastHashes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	LastHashes           map[string]string `protobuf:"bytes,7,rep,name=lastHashes" json:"lastHashes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
-func (m *PollRequest) Reset()                    { *m = PollRequest{} }
-func (m *PollRequest) String() string            { return proto.CompactTextString(m) }
-func (*PollRequest) ProtoMessage()               {}
-func (*PollRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{11} }
+func (m *PollRequest) Reset()         { *m = PollRequest{} }
+func (m *PollRequest) String() string { return proto.CompactTextString(m) }
+func (*PollRequest) ProtoMessage()    {}
+func (*PollRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{11}
+}
+func (m *PollRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PollRequest.Unmarshal(m, b)
+}
+func (m *PollRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PollRequest.Marshal(b, m, deterministic)
+}
+func (dst *PollRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PollRequest.Merge(dst, src)
+}
+func (m *PollRequest) XXX_Size() int {
+	return xxx_messageInfo_PollRequest.Size(m)
+}
+func (m *PollRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PollRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PollRequest proto.InternalMessageInfo
 
 func (m *PollRequest) GetAccount() string {
 	if m != nil {
@@ -520,7 +790,7 @@ func (m *PollRequest) GetBranches() string {
 	return ""
 }
 
-func (m *PollRequest) GetLastCronTime() *google_protobuf2.Timestamp {
+func (m *PollRequest) GetLastCronTime() *timestamp.Timestamp {
 	if m != nil {
 		return m.LastCronTime
 	}
@@ -536,13 +806,35 @@ func (m *PollRequest) GetLastHashes() map[string]string {
 
 // polls is a wrapper for a PollRequest list because protobuf can be dumb
 type Polls struct {
-	Polls []*PollRequest `protobuf:"bytes,1,rep,name=polls" json:"polls,omitempty"`
+	Polls                []*PollRequest `protobuf:"bytes,1,rep,name=polls" json:"polls,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
 }
 
-func (m *Polls) Reset()                    { *m = Polls{} }
-func (m *Polls) String() string            { return proto.CompactTextString(m) }
-func (*Polls) ProtoMessage()               {}
-func (*Polls) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{12} }
+func (m *Polls) Reset()         { *m = Polls{} }
+func (m *Polls) String() string { return proto.CompactTextString(m) }
+func (*Polls) ProtoMessage()    {}
+func (*Polls) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{12}
+}
+func (m *Polls) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Polls.Unmarshal(m, b)
+}
+func (m *Polls) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Polls.Marshal(b, m, deterministic)
+}
+func (dst *Polls) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Polls.Merge(dst, src)
+}
+func (m *Polls) XXX_Size() int {
+	return xxx_messageInfo_Polls.Size(m)
+}
+func (m *Polls) XXX_DiscardUnknown() {
+	xxx_messageInfo_Polls.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Polls proto.InternalMessageInfo
 
 func (m *Polls) GetPolls() []*PollRequest {
 	if m != nil {
@@ -552,13 +844,35 @@ func (m *Polls) GetPolls() []*PollRequest {
 }
 
 type Exists struct {
-	Exists bool `protobuf:"varint,1,opt,name=exists" json:"exists,omitempty"`
+	Exists               bool     `protobuf:"varint,1,opt,name=exists" json:"exists,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Exists) Reset()                    { *m = Exists{} }
-func (m *Exists) String() string            { return proto.CompactTextString(m) }
-func (*Exists) ProtoMessage()               {}
-func (*Exists) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{13} }
+func (m *Exists) Reset()         { *m = Exists{} }
+func (m *Exists) String() string { return proto.CompactTextString(m) }
+func (*Exists) ProtoMessage()    {}
+func (*Exists) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{13}
+}
+func (m *Exists) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Exists.Unmarshal(m, b)
+}
+func (m *Exists) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Exists.Marshal(b, m, deterministic)
+}
+func (dst *Exists) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Exists.Merge(dst, src)
+}
+func (m *Exists) XXX_Size() int {
+	return xxx_messageInfo_Exists.Size(m)
+}
+func (m *Exists) XXX_DiscardUnknown() {
+	xxx_messageInfo_Exists.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Exists proto.InternalMessageInfo
 
 func (m *Exists) GetExists() bool {
 	if m != nil {
@@ -572,13 +886,35 @@ type AcctRepo struct {
 	// VCS Account
 	Account string `protobuf:"bytes,1,opt,name=account" json:"account,omitempty"`
 	// VCS Repository
-	Repo string `protobuf:"bytes,2,opt,name=repo" json:"repo,omitempty"`
+	Repo                 string   `protobuf:"bytes,2,opt,name=repo" json:"repo,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *AcctRepo) Reset()                    { *m = AcctRepo{} }
-func (m *AcctRepo) String() string            { return proto.CompactTextString(m) }
-func (*AcctRepo) ProtoMessage()               {}
-func (*AcctRepo) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{14} }
+func (m *AcctRepo) Reset()         { *m = AcctRepo{} }
+func (m *AcctRepo) String() string { return proto.CompactTextString(m) }
+func (*AcctRepo) ProtoMessage()    {}
+func (*AcctRepo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{14}
+}
+func (m *AcctRepo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AcctRepo.Unmarshal(m, b)
+}
+func (m *AcctRepo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AcctRepo.Marshal(b, m, deterministic)
+}
+func (dst *AcctRepo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AcctRepo.Merge(dst, src)
+}
+func (m *AcctRepo) XXX_Size() int {
+	return xxx_messageInfo_AcctRepo.Size(m)
+}
+func (m *AcctRepo) XXX_DiscardUnknown() {
+	xxx_messageInfo_AcctRepo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AcctRepo proto.InternalMessageInfo
 
 func (m *AcctRepo) GetAccount() string {
 	if m != nil {
@@ -596,13 +932,35 @@ func (m *AcctRepo) GetRepo() string {
 
 // AcctRepos is used in the response to /v1/tracked-repositories, it is an array of AcctRepo objects. have to wrap it cuz proto -_-
 type AcctRepos struct {
-	AcctRepos []*AcctRepo `protobuf:"bytes,1,rep,name=acctRepos" json:"acctRepos,omitempty"`
+	AcctRepos            []*AcctRepo `protobuf:"bytes,1,rep,name=acctRepos" json:"acctRepos,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *AcctRepos) Reset()                    { *m = AcctRepos{} }
-func (m *AcctRepos) String() string            { return proto.CompactTextString(m) }
-func (*AcctRepos) ProtoMessage()               {}
-func (*AcctRepos) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{15} }
+func (m *AcctRepos) Reset()         { *m = AcctRepos{} }
+func (m *AcctRepos) String() string { return proto.CompactTextString(m) }
+func (*AcctRepos) ProtoMessage()    {}
+func (*AcctRepos) Descriptor() ([]byte, []int) {
+	return fileDescriptor_guideocelot_de1b7426a2a3ff83, []int{15}
+}
+func (m *AcctRepos) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AcctRepos.Unmarshal(m, b)
+}
+func (m *AcctRepos) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AcctRepos.Marshal(b, m, deterministic)
+}
+func (dst *AcctRepos) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AcctRepos.Merge(dst, src)
+}
+func (m *AcctRepos) XXX_Size() int {
+	return xxx_messageInfo_AcctRepos.Size(m)
+}
+func (m *AcctRepos) XXX_DiscardUnknown() {
+	xxx_messageInfo_AcctRepos.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AcctRepos proto.InternalMessageInfo
 
 func (m *AcctRepos) GetAcctRepos() []*AcctRepo {
 	if m != nil {
@@ -616,6 +974,7 @@ func init() {
 	proto.RegisterType((*StatusQuery)(nil), "models.StatusQuery")
 	proto.RegisterType((*BuildQuery)(nil), "models.BuildQuery")
 	proto.RegisterType((*Builds)(nil), "models.Builds")
+	proto.RegisterMapType((map[string]*BuildRuntimeInfo)(nil), "models.Builds.BuildsEntry")
 	proto.RegisterType((*BuildRuntimeInfo)(nil), "models.BuildRuntimeInfo")
 	proto.RegisterType((*LineResponse)(nil), "models.LineResponse")
 	proto.RegisterType((*RepoAccount)(nil), "models.RepoAccount")
@@ -624,6 +983,7 @@ func init() {
 	proto.RegisterType((*BuildSummary)(nil), "models.BuildSummary")
 	proto.RegisterType((*Summaries)(nil), "models.Summaries")
 	proto.RegisterType((*PollRequest)(nil), "models.PollRequest")
+	proto.RegisterMapType((map[string]string)(nil), "models.PollRequest.LastHashesEntry")
 	proto.RegisterType((*Polls)(nil), "models.Polls")
 	proto.RegisterType((*Exists)(nil), "models.Exists")
 	proto.RegisterType((*AcctRepo)(nil), "models.AcctRepo")
@@ -638,54 +998,55 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for GuideOcelot service
-
+// GuideOcelotClient is the client API for GuideOcelot service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type GuideOcelotClient interface {
-	GetVCSCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*CredWrapper, error)
+	GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error)
 	GetVCSCred(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*VCSCreds, error)
-	SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
-	UpdateVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error)
+	UpdateVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error)
 	//    account,identifier,cred_sub_type
 	VCSCredExists(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*Exists, error)
-	CheckConn(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
-	SetVCSPrivateKey(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	CheckConn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
+	SetVCSPrivateKey(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetRepoCred(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*RepoCreds, error)
-	UpdateRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	UpdateRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error)
 	RepoCredExists(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*Exists, error)
 	GetK8SCred(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*K8SCreds, error)
-	UpdateK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	UpdateK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error)
 	K8SCredExists(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*Exists, error)
-	SetNotifyCreds(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	SetNotifyCreds(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetNotifyCred(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*NotifyCreds, error)
-	GetNotifyCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*NotifyWrap, error)
-	UpdateNotifyCreds(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	GetNotifyCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*NotifyWrap, error)
+	UpdateNotifyCreds(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error)
 	NotifyCredExists(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*Exists, error)
-	UpdateSSHCreds(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	UpdateSSHCreds(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetSSHCred(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*SSHKeyWrapper, error)
 	SSHCredExists(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*Exists, error)
-	SetSSHCreds(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
-	GetSSHCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*SSHWrap, error)
-	GetRepoCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*RepoCredWrapper, error)
-	SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
-	SetK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
-	GetK8SCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*K8SCredsWrapper, error)
-	SetAppleCreds(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
-	GetAppleCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*AppleCredsWrapper, error)
+	SetSSHCreds(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetSSHCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*SSHWrap, error)
+	GetRepoCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*RepoCredWrapper, error)
+	SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error)
+	SetK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetK8SCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*K8SCredsWrapper, error)
+	SetAppleCreds(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetAppleCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AppleCredsWrapper, error)
 	GetAppleCred(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*AppleCreds, error)
-	UpdateAppleCreds(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	UpdateAppleCreds(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error)
 	AppleCredExists(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*Exists, error)
-	GetAllCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error)
+	GetAllCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error)
 	BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*Builds, error)
 	Logs(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (GuideOcelot_LogsClient, error)
 	LastFewSummaries(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*Summaries, error)
 	GetStatus(ctx context.Context, in *StatusQuery, opts ...grpc.CallOption) (*Status, error)
-	WatchRepo(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
+	WatchRepo(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*empty.Empty, error)
 	BuildRepoAndHash(ctx context.Context, in *BuildReq, opts ...grpc.CallOption) (GuideOcelot_BuildRepoAndHashClient, error)
-	PollRepo(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
-	DeletePollRepo(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*google_protobuf.Empty, error)
-	ListPolledRepos(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*Polls, error)
+	PollRepo(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeletePollRepo(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	ListPolledRepos(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Polls, error)
 	FindWerker(ctx context.Context, in *BuildReq, opts ...grpc.CallOption) (*BuildRuntimeInfo, error)
-	GetTrackedRepos(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*AcctRepos, error)
+	GetTrackedRepos(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AcctRepos, error)
 }
 
 type guideOcelotClient struct {
@@ -696,9 +1057,9 @@ func NewGuideOcelotClient(cc *grpc.ClientConn) GuideOcelotClient {
 	return &guideOcelotClient{cc}
 }
 
-func (c *guideOcelotClient) GetVCSCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
+func (c *guideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CredWrapper, error) {
 	out := new(CredWrapper)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetVCSCreds", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetVCSCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -707,25 +1068,25 @@ func (c *guideOcelotClient) GetVCSCreds(ctx context.Context, in *google_protobuf
 
 func (c *guideOcelotClient) GetVCSCred(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*VCSCreds, error) {
 	out := new(VCSCreds)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetVCSCred", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetVCSCred", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetVCSCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) SetVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/SetVCSCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) UpdateVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/UpdateVCSCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) UpdateVCSCreds(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/UpdateVCSCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -734,25 +1095,25 @@ func (c *guideOcelotClient) UpdateVCSCreds(ctx context.Context, in *VCSCreds, op
 
 func (c *guideOcelotClient) VCSCredExists(ctx context.Context, in *VCSCreds, opts ...grpc.CallOption) (*Exists, error) {
 	out := new(Exists)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/VCSCredExists", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/VCSCredExists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) CheckConn(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/CheckConn", in, out, c.cc, opts...)
+func (c *guideOcelotClient) CheckConn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/CheckConn", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) SetVCSPrivateKey(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetVCSPrivateKey", in, out, c.cc, opts...)
+func (c *guideOcelotClient) SetVCSPrivateKey(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/SetVCSPrivateKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -761,16 +1122,16 @@ func (c *guideOcelotClient) SetVCSPrivateKey(ctx context.Context, in *SSHKeyWrap
 
 func (c *guideOcelotClient) GetRepoCred(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*RepoCreds, error) {
 	out := new(RepoCreds)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetRepoCred", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetRepoCred", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) UpdateRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/UpdateRepoCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) UpdateRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/UpdateRepoCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -779,7 +1140,7 @@ func (c *guideOcelotClient) UpdateRepoCreds(ctx context.Context, in *RepoCreds, 
 
 func (c *guideOcelotClient) RepoCredExists(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*Exists, error) {
 	out := new(Exists)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/RepoCredExists", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/RepoCredExists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -788,16 +1149,16 @@ func (c *guideOcelotClient) RepoCredExists(ctx context.Context, in *RepoCreds, o
 
 func (c *guideOcelotClient) GetK8SCred(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*K8SCreds, error) {
 	out := new(K8SCreds)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetK8SCred", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetK8SCred", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) UpdateK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/UpdateK8SCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) UpdateK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/UpdateK8SCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -806,16 +1167,16 @@ func (c *guideOcelotClient) UpdateK8SCreds(ctx context.Context, in *K8SCreds, op
 
 func (c *guideOcelotClient) K8SCredExists(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*Exists, error) {
 	out := new(Exists)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/K8SCredExists", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/K8SCredExists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) SetNotifyCreds(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetNotifyCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) SetNotifyCreds(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/SetNotifyCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -824,25 +1185,25 @@ func (c *guideOcelotClient) SetNotifyCreds(ctx context.Context, in *NotifyCreds,
 
 func (c *guideOcelotClient) GetNotifyCred(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*NotifyCreds, error) {
 	out := new(NotifyCreds)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetNotifyCred", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetNotifyCred", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) GetNotifyCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*NotifyWrap, error) {
+func (c *guideOcelotClient) GetNotifyCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*NotifyWrap, error) {
 	out := new(NotifyWrap)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetNotifyCreds", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetNotifyCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) UpdateNotifyCreds(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/UpdateNotifyCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) UpdateNotifyCreds(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/UpdateNotifyCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -851,16 +1212,16 @@ func (c *guideOcelotClient) UpdateNotifyCreds(ctx context.Context, in *NotifyCre
 
 func (c *guideOcelotClient) NotifyCredExists(ctx context.Context, in *NotifyCreds, opts ...grpc.CallOption) (*Exists, error) {
 	out := new(Exists)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/NotifyCredExists", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/NotifyCredExists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) UpdateSSHCreds(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/UpdateSSHCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) UpdateSSHCreds(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/UpdateSSHCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -869,7 +1230,7 @@ func (c *guideOcelotClient) UpdateSSHCreds(ctx context.Context, in *SSHKeyWrappe
 
 func (c *guideOcelotClient) GetSSHCred(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*SSHKeyWrapper, error) {
 	out := new(SSHKeyWrapper)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetSSHCred", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetSSHCred", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -878,79 +1239,79 @@ func (c *guideOcelotClient) GetSSHCred(ctx context.Context, in *SSHKeyWrapper, o
 
 func (c *guideOcelotClient) SSHCredExists(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*Exists, error) {
 	out := new(Exists)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SSHCredExists", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/SSHCredExists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) SetSSHCreds(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetSSHCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) SetSSHCreds(ctx context.Context, in *SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/SetSSHCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) GetSSHCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*SSHWrap, error) {
+func (c *guideOcelotClient) GetSSHCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*SSHWrap, error) {
 	out := new(SSHWrap)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetSSHCreds", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetSSHCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) GetRepoCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*RepoCredWrapper, error) {
+func (c *guideOcelotClient) GetRepoCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*RepoCredWrapper, error) {
 	out := new(RepoCredWrapper)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetRepoCreds", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetRepoCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetRepoCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) SetRepoCreds(ctx context.Context, in *RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/SetRepoCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) SetK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetK8SCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) SetK8SCreds(ctx context.Context, in *K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/SetK8SCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) GetK8SCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*K8SCredsWrapper, error) {
+func (c *guideOcelotClient) GetK8SCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*K8SCredsWrapper, error) {
 	out := new(K8SCredsWrapper)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetK8SCreds", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetK8SCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) SetAppleCreds(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/SetAppleCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) SetAppleCreds(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/SetAppleCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) GetAppleCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*AppleCredsWrapper, error) {
+func (c *guideOcelotClient) GetAppleCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AppleCredsWrapper, error) {
 	out := new(AppleCredsWrapper)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetAppleCreds", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetAppleCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -959,16 +1320,16 @@ func (c *guideOcelotClient) GetAppleCreds(ctx context.Context, in *google_protob
 
 func (c *guideOcelotClient) GetAppleCred(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*AppleCreds, error) {
 	out := new(AppleCreds)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetAppleCred", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetAppleCred", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) UpdateAppleCreds(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/UpdateAppleCreds", in, out, c.cc, opts...)
+func (c *guideOcelotClient) UpdateAppleCreds(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/UpdateAppleCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -977,16 +1338,16 @@ func (c *guideOcelotClient) UpdateAppleCreds(ctx context.Context, in *AppleCreds
 
 func (c *guideOcelotClient) AppleCredExists(ctx context.Context, in *AppleCreds, opts ...grpc.CallOption) (*Exists, error) {
 	out := new(Exists)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/AppleCredExists", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/AppleCredExists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) GetAllCreds(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error) {
+func (c *guideOcelotClient) GetAllCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AllCredsWrapper, error) {
 	out := new(AllCredsWrapper)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetAllCreds", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetAllCreds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -995,7 +1356,7 @@ func (c *guideOcelotClient) GetAllCreds(ctx context.Context, in *google_protobuf
 
 func (c *guideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (*Builds, error) {
 	out := new(Builds)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/BuildRuntime", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/BuildRuntime", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1003,7 +1364,7 @@ func (c *guideOcelotClient) BuildRuntime(ctx context.Context, in *BuildQuery, op
 }
 
 func (c *guideOcelotClient) Logs(ctx context.Context, in *BuildQuery, opts ...grpc.CallOption) (GuideOcelot_LogsClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_GuideOcelot_serviceDesc.Streams[0], c.cc, "/models.GuideOcelot/Logs", opts...)
+	stream, err := c.cc.NewStream(ctx, &_GuideOcelot_serviceDesc.Streams[0], "/models.GuideOcelot/Logs", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1036,7 +1397,7 @@ func (x *guideOcelotLogsClient) Recv() (*LineResponse, error) {
 
 func (c *guideOcelotClient) LastFewSummaries(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*Summaries, error) {
 	out := new(Summaries)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/LastFewSummaries", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/LastFewSummaries", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1045,16 +1406,16 @@ func (c *guideOcelotClient) LastFewSummaries(ctx context.Context, in *RepoAccoun
 
 func (c *guideOcelotClient) GetStatus(ctx context.Context, in *StatusQuery, opts ...grpc.CallOption) (*Status, error) {
 	out := new(Status)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetStatus", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) WatchRepo(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/WatchRepo", in, out, c.cc, opts...)
+func (c *guideOcelotClient) WatchRepo(ctx context.Context, in *RepoAccount, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/WatchRepo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1062,7 +1423,7 @@ func (c *guideOcelotClient) WatchRepo(ctx context.Context, in *RepoAccount, opts
 }
 
 func (c *guideOcelotClient) BuildRepoAndHash(ctx context.Context, in *BuildReq, opts ...grpc.CallOption) (GuideOcelot_BuildRepoAndHashClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_GuideOcelot_serviceDesc.Streams[1], c.cc, "/models.GuideOcelot/BuildRepoAndHash", opts...)
+	stream, err := c.cc.NewStream(ctx, &_GuideOcelot_serviceDesc.Streams[1], "/models.GuideOcelot/BuildRepoAndHash", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1093,27 +1454,27 @@ func (x *guideOcelotBuildRepoAndHashClient) Recv() (*LineResponse, error) {
 	return m, nil
 }
 
-func (c *guideOcelotClient) PollRepo(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/PollRepo", in, out, c.cc, opts...)
+func (c *guideOcelotClient) PollRepo(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/PollRepo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) DeletePollRepo(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/DeletePollRepo", in, out, c.cc, opts...)
+func (c *guideOcelotClient) DeletePollRepo(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/DeletePollRepo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) ListPolledRepos(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*Polls, error) {
+func (c *guideOcelotClient) ListPolledRepos(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Polls, error) {
 	out := new(Polls)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/ListPolledRepos", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/ListPolledRepos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1122,70 +1483,69 @@ func (c *guideOcelotClient) ListPolledRepos(ctx context.Context, in *google_prot
 
 func (c *guideOcelotClient) FindWerker(ctx context.Context, in *BuildReq, opts ...grpc.CallOption) (*BuildRuntimeInfo, error) {
 	out := new(BuildRuntimeInfo)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/FindWerker", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/FindWerker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *guideOcelotClient) GetTrackedRepos(ctx context.Context, in *google_protobuf.Empty, opts ...grpc.CallOption) (*AcctRepos, error) {
+func (c *guideOcelotClient) GetTrackedRepos(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AcctRepos, error) {
 	out := new(AcctRepos)
-	err := grpc.Invoke(ctx, "/models.GuideOcelot/GetTrackedRepos", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/models.GuideOcelot/GetTrackedRepos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for GuideOcelot service
-
+// GuideOcelotServer is the server API for GuideOcelot service.
 type GuideOcelotServer interface {
-	GetVCSCreds(context.Context, *google_protobuf.Empty) (*CredWrapper, error)
+	GetVCSCreds(context.Context, *empty.Empty) (*CredWrapper, error)
 	GetVCSCred(context.Context, *VCSCreds) (*VCSCreds, error)
-	SetVCSCreds(context.Context, *VCSCreds) (*google_protobuf.Empty, error)
-	UpdateVCSCreds(context.Context, *VCSCreds) (*google_protobuf.Empty, error)
+	SetVCSCreds(context.Context, *VCSCreds) (*empty.Empty, error)
+	UpdateVCSCreds(context.Context, *VCSCreds) (*empty.Empty, error)
 	//    account,identifier,cred_sub_type
 	VCSCredExists(context.Context, *VCSCreds) (*Exists, error)
-	CheckConn(context.Context, *google_protobuf.Empty) (*google_protobuf.Empty, error)
-	SetVCSPrivateKey(context.Context, *SSHKeyWrapper) (*google_protobuf.Empty, error)
+	CheckConn(context.Context, *empty.Empty) (*empty.Empty, error)
+	SetVCSPrivateKey(context.Context, *SSHKeyWrapper) (*empty.Empty, error)
 	GetRepoCred(context.Context, *RepoCreds) (*RepoCreds, error)
-	UpdateRepoCreds(context.Context, *RepoCreds) (*google_protobuf.Empty, error)
+	UpdateRepoCreds(context.Context, *RepoCreds) (*empty.Empty, error)
 	RepoCredExists(context.Context, *RepoCreds) (*Exists, error)
 	GetK8SCred(context.Context, *K8SCreds) (*K8SCreds, error)
-	UpdateK8SCreds(context.Context, *K8SCreds) (*google_protobuf.Empty, error)
+	UpdateK8SCreds(context.Context, *K8SCreds) (*empty.Empty, error)
 	K8SCredExists(context.Context, *K8SCreds) (*Exists, error)
-	SetNotifyCreds(context.Context, *NotifyCreds) (*google_protobuf.Empty, error)
+	SetNotifyCreds(context.Context, *NotifyCreds) (*empty.Empty, error)
 	GetNotifyCred(context.Context, *NotifyCreds) (*NotifyCreds, error)
-	GetNotifyCreds(context.Context, *google_protobuf.Empty) (*NotifyWrap, error)
-	UpdateNotifyCreds(context.Context, *NotifyCreds) (*google_protobuf.Empty, error)
+	GetNotifyCreds(context.Context, *empty.Empty) (*NotifyWrap, error)
+	UpdateNotifyCreds(context.Context, *NotifyCreds) (*empty.Empty, error)
 	NotifyCredExists(context.Context, *NotifyCreds) (*Exists, error)
-	UpdateSSHCreds(context.Context, *SSHKeyWrapper) (*google_protobuf.Empty, error)
+	UpdateSSHCreds(context.Context, *SSHKeyWrapper) (*empty.Empty, error)
 	GetSSHCred(context.Context, *SSHKeyWrapper) (*SSHKeyWrapper, error)
 	SSHCredExists(context.Context, *SSHKeyWrapper) (*Exists, error)
-	SetSSHCreds(context.Context, *SSHKeyWrapper) (*google_protobuf.Empty, error)
-	GetSSHCreds(context.Context, *google_protobuf.Empty) (*SSHWrap, error)
-	GetRepoCreds(context.Context, *google_protobuf.Empty) (*RepoCredWrapper, error)
-	SetRepoCreds(context.Context, *RepoCreds) (*google_protobuf.Empty, error)
-	SetK8SCreds(context.Context, *K8SCreds) (*google_protobuf.Empty, error)
-	GetK8SCreds(context.Context, *google_protobuf.Empty) (*K8SCredsWrapper, error)
-	SetAppleCreds(context.Context, *AppleCreds) (*google_protobuf.Empty, error)
-	GetAppleCreds(context.Context, *google_protobuf.Empty) (*AppleCredsWrapper, error)
+	SetSSHCreds(context.Context, *SSHKeyWrapper) (*empty.Empty, error)
+	GetSSHCreds(context.Context, *empty.Empty) (*SSHWrap, error)
+	GetRepoCreds(context.Context, *empty.Empty) (*RepoCredWrapper, error)
+	SetRepoCreds(context.Context, *RepoCreds) (*empty.Empty, error)
+	SetK8SCreds(context.Context, *K8SCreds) (*empty.Empty, error)
+	GetK8SCreds(context.Context, *empty.Empty) (*K8SCredsWrapper, error)
+	SetAppleCreds(context.Context, *AppleCreds) (*empty.Empty, error)
+	GetAppleCreds(context.Context, *empty.Empty) (*AppleCredsWrapper, error)
 	GetAppleCred(context.Context, *AppleCreds) (*AppleCreds, error)
-	UpdateAppleCreds(context.Context, *AppleCreds) (*google_protobuf.Empty, error)
+	UpdateAppleCreds(context.Context, *AppleCreds) (*empty.Empty, error)
 	AppleCredExists(context.Context, *AppleCreds) (*Exists, error)
-	GetAllCreds(context.Context, *google_protobuf.Empty) (*AllCredsWrapper, error)
+	GetAllCreds(context.Context, *empty.Empty) (*AllCredsWrapper, error)
 	BuildRuntime(context.Context, *BuildQuery) (*Builds, error)
 	Logs(*BuildQuery, GuideOcelot_LogsServer) error
 	LastFewSummaries(context.Context, *RepoAccount) (*Summaries, error)
 	GetStatus(context.Context, *StatusQuery) (*Status, error)
-	WatchRepo(context.Context, *RepoAccount) (*google_protobuf.Empty, error)
+	WatchRepo(context.Context, *RepoAccount) (*empty.Empty, error)
 	BuildRepoAndHash(*BuildReq, GuideOcelot_BuildRepoAndHashServer) error
-	PollRepo(context.Context, *PollRequest) (*google_protobuf.Empty, error)
-	DeletePollRepo(context.Context, *PollRequest) (*google_protobuf.Empty, error)
-	ListPolledRepos(context.Context, *google_protobuf.Empty) (*Polls, error)
+	PollRepo(context.Context, *PollRequest) (*empty.Empty, error)
+	DeletePollRepo(context.Context, *PollRequest) (*empty.Empty, error)
+	ListPolledRepos(context.Context, *empty.Empty) (*Polls, error)
 	FindWerker(context.Context, *BuildReq) (*BuildRuntimeInfo, error)
-	GetTrackedRepos(context.Context, *google_protobuf.Empty) (*AcctRepos, error)
+	GetTrackedRepos(context.Context, *empty.Empty) (*AcctRepos, error)
 }
 
 func RegisterGuideOcelotServer(s *grpc.Server, srv GuideOcelotServer) {
@@ -1193,7 +1553,7 @@ func RegisterGuideOcelotServer(s *grpc.Server, srv GuideOcelotServer) {
 }
 
 func _GuideOcelot_GetVCSCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1205,7 +1565,7 @@ func _GuideOcelot_GetVCSCreds_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/models.GuideOcelot/GetVCSCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetVCSCreds(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetVCSCreds(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1283,7 +1643,7 @@ func _GuideOcelot_VCSCredExists_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _GuideOcelot_CheckConn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1295,7 +1655,7 @@ func _GuideOcelot_CheckConn_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/models.GuideOcelot/CheckConn",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).CheckConn(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).CheckConn(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1463,7 +1823,7 @@ func _GuideOcelot_GetNotifyCred_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _GuideOcelot_GetNotifyCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1475,7 +1835,7 @@ func _GuideOcelot_GetNotifyCreds_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/models.GuideOcelot/GetNotifyCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetNotifyCreds(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetNotifyCreds(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1589,7 +1949,7 @@ func _GuideOcelot_SetSSHCreds_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _GuideOcelot_GetSSHCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1601,13 +1961,13 @@ func _GuideOcelot_GetSSHCreds_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/models.GuideOcelot/GetSSHCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetSSHCreds(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetSSHCreds(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _GuideOcelot_GetRepoCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1619,7 +1979,7 @@ func _GuideOcelot_GetRepoCreds_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/models.GuideOcelot/GetRepoCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetRepoCreds(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetRepoCreds(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1661,7 +2021,7 @@ func _GuideOcelot_SetK8SCreds_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _GuideOcelot_GetK8SCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1673,7 +2033,7 @@ func _GuideOcelot_GetK8SCreds_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/models.GuideOcelot/GetK8SCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetK8SCreds(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetK8SCreds(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1697,7 +2057,7 @@ func _GuideOcelot_SetAppleCreds_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _GuideOcelot_GetAppleCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1709,7 +2069,7 @@ func _GuideOcelot_GetAppleCreds_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/models.GuideOcelot/GetAppleCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetAppleCreds(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetAppleCreds(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1769,7 +2129,7 @@ func _GuideOcelot_AppleCredExists_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _GuideOcelot_GetAllCreds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1781,7 +2141,7 @@ func _GuideOcelot_GetAllCreds_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/models.GuideOcelot/GetAllCreds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetAllCreds(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetAllCreds(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1937,7 +2297,7 @@ func _GuideOcelot_DeletePollRepo_Handler(srv interface{}, ctx context.Context, d
 }
 
 func _GuideOcelot_ListPolledRepos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1949,7 +2309,7 @@ func _GuideOcelot_ListPolledRepos_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/models.GuideOcelot/ListPolledRepos",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).ListPolledRepos(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).ListPolledRepos(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1973,7 +2333,7 @@ func _GuideOcelot_FindWerker_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _GuideOcelot_GetTrackedRepos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1985,7 +2345,7 @@ func _GuideOcelot_GetTrackedRepos_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/models.GuideOcelot/GetTrackedRepos",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GuideOcelotServer).GetTrackedRepos(ctx, req.(*google_protobuf.Empty))
+		return srv.(GuideOcelotServer).GetTrackedRepos(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2178,9 +2538,9 @@ var _GuideOcelot_serviceDesc = grpc.ServiceDesc{
 	Metadata: "guideocelot.proto",
 }
 
-func init() { proto.RegisterFile("guideocelot.proto", fileDescriptor2) }
+func init() { proto.RegisterFile("guideocelot.proto", fileDescriptor_guideocelot_de1b7426a2a3ff83) }
 
-var fileDescriptor2 = []byte{
+var fileDescriptor_guideocelot_de1b7426a2a3ff83 = []byte{
 	// 4136 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x5a, 0x5d, 0x8c, 0x64, 0xc7,
 	0x55, 0xf6, 0xed, 0xf9, 0xf1, 0x4c, 0xcd, 0xfe, 0xcc, 0xde, 0xdd, 0xac, 0xc7, 0x9d, 0x38, 0x2e,
