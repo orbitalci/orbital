@@ -4,9 +4,15 @@ import (
 	"fmt"
 	models "github.com/shankj3/ocelot/models/pb"
 	"os"
+	"strconv"
+	"strings"
 )
 
-var Config = NewClientConfig()
+var Config *ClientConfig
+
+func init() {
+	Config = NewClientConfig()
+}
 
 type ClientConfig struct {
 	AdminLocation string
@@ -37,7 +43,14 @@ func NewClientConfig() *ClientConfig {
 	}
 	_, noTLS := os.LookupEnv("NO_USE_TLS")
 	if noTLS {
-		fmt.Println("not creating TLS config to make grpc client with ")
+		fmt.Println("not creating https config to make grpc client with")
+	}
+	// if the host is an ip address, and NO_USE_TLS was not explicitly set, then set NO_USE_TLS value (noTLS) and print an info screen. if they wan
+	if IsIPv4Address(adminHost) && !noTLS {
+		if _, yesTLS := os.LookupEnv("USE_TLS"); !yesTLS {
+			fmt.Println("Detected an IP address for the admin server host, therefore ocelot will not create https config. \nIf you really wish to try using an https config, then set USE_TLS=true as an environment variable. \nSet NO_USE_TLS=true as an environment variable to suppress this warning in the future. ")
+			noTLS = true
+		}
 	}
 	//_, insecure := os.LookupEnv("CLIENT_INSECURE")
 	//if insecure {
@@ -56,4 +69,21 @@ func NewClientConfig() *ClientConfig {
 		OcyDns:        ocyDns,
 		Theme:         Default(colorless),
 	}
+}
+
+
+func IsIPv4Address(host string) bool {
+	if host == "localhost" {
+		return true
+	}
+	split := strings.Split(host, ".")
+	if len(split) < 4 {
+		return false
+	}
+	for _, sub := range split {
+		if _, err := strconv.Atoi(sub); err != nil {
+			return false
+		}
+	}
+	return true
 }
