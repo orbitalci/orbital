@@ -99,3 +99,9 @@ message RepoSourceFile {
     string path = 2;
     string data = 3;
 }
+
+message Author {
+    string raw = 1;
+    string type = 2;
+    Owner user = 3;
+}

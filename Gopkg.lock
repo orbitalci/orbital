@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "bitbucket.org/level11consulting/go-til"
-  packages = ["log"]
-  revision = "a0abd530ad931f177d9f9c17c71328804045283a"
-  version = "0.2.2"
-
-[[projects]]
   name = "github.com/Jeffail/gabs"
   packages = ["."]
   revision = "2a3aa15961d5fee6047b8151b67ac2f08ba2c48c"
@@ -577,7 +571,7 @@
     "test",
     "vault"
   ]
-  revision = "34065da83cb6514ceac36e6f0f46be1b4cdeaddc"
+  revision = "c3f188983e3f487bfd9864f5f7a0cb3cb6d07ba1"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -750,6 +744,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5a89ad1fbc7ac6c3b90012931e887305d3f8ad56d44bea7796a89c42f65b5387"
+  inputs-digest = "625fa9f4efdcde2437d5daca6a66e9dfdec049cacc928c853ff9cb344360af52"
   solver-name = "gps-cdcl"
   solver-version = 1

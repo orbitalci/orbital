@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option go_package = "pb";
+package models;
+
+import "google/protobuf/timestamp.proto";
+
+message BranchHistory {
+    string branch = 1;
+    string hash = 2;
+    google.protobuf.Timestamp lastCommitTime = 3;
+}
+

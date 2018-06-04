@@ -11,11 +11,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/shankj3/go-til/log"
-	"github.com/shankj3/go-til/net"
 	signal "github.com/shankj3/ocelot/build_signaler"
 	"github.com/shankj3/ocelot/common"
 	cred "github.com/shankj3/ocelot/common/credentials"
-	bbh "github.com/shankj3/ocelot/common/remote/bitbucket"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
@@ -114,31 +112,26 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	if repoAcct.Repo == "" || repoAcct.Account == "" {
 		return nil, status.Error(codes.InvalidArgument, "repo and account are required fields")
 	}
-	var vcs *pb.VCSCreds
-	bb := pb.SubCredType_BITBUCKET
-	identifier, err := pb.CreateVCSIdentifier(bb, repoAcct.Account)
+	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account + "/" + repoAcct.Repo, g.RemoteConfig)
 	if err != nil {
-		return &empty.Empty{}, status.Error(codes.Internal, "couldn't create identifier")
-	}
-	bbCreds, err := g.RemoteConfig.GetCred(g.Storage, bb, identifier, repoAcct.Account, true)
-	if err != nil {
-		if _, ok := err.(*storage.ErrNotFound); ok {
-			return &empty.Empty{}, status.Error(codes.NotFound, "credentials not found")
+		log.IncludeErrField(err).Error()
+		if _, ok := err.(*common.FormatError); ok {
+			return nil, status.Error(codes.InvalidArgument, "Format error: "+err.Error())
 		}
-		return &empty.Empty{}, status.Error(codes.Internal, "could not get bitbucket creds")
+		return nil, status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 	}
-	vcs = bbCreds.(*pb.VCSCreds)
-	bbClient := &net.OAuthClient{}
-	bbClient.Setup(vcs)
-
-	bbHandler := bbh.GetBitbucketHandler(vcs, bbClient)
-	repoDetail, err := bbHandler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
+	handler, _, err := remote.GetHandler(cfg)
+	if err != nil {
+		log.IncludeErrField(err).Error()
+		return nil, status.Error(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s")
+	}
+	repoDetail, err := handler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
 	if repoDetail.Type == "error" || err != nil {
 		return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
 	}
 
 	webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
-	err = bbHandler.CreateWebhook(webhookURL)
+	err = handler.CreateWebhook(webhookURL)
 
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())

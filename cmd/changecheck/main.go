@@ -71,16 +71,15 @@ func main() {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")
 	}
 	defer store.Close()
-	checker := &poll.ChangeChecker{
-		Signaler: &signal.Signaler{
-			RC:           conf.RemoteConf,
-			Deserializer: conf.Deserializer,
-			Producer:     conf.Producer,
-			AcctRepo:     conf.AcctRepo,
-			OcyValidator: conf.OcyValidator,
-			Store:        store,
-		},
+	sig := &signal.Signaler{
+		RC:           conf.RemoteConf,
+		Deserializer: conf.Deserializer,
+		Producer:     conf.Producer,
+		AcctRepo:     conf.AcctRepo,
+		OcyValidator: conf.OcyValidator,
+		Store:        store,
 	}
+	checker := poll.NewChangeChecker(sig)
 
 	if err := checker.SetAuth(); err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("could not get auth")
@@ -88,7 +87,7 @@ func main() {
 
 	_, lastHashes, err := store.GetLastData(conf.AcctRepo)
 	if err != nil {
-		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Error("couldn't get last cron time, setting last cron to 5 minutes ago")
+		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get last hashes")
 	}
 	// no matter what, we are inside the cron job, so we should be updating the db
 	defer func() {
@@ -99,21 +98,27 @@ func main() {
 		ocelog.Log().Info("successfully set last cron time")
 		return
 	}()
-
-	for _, branch := range conf.Branches {
-		lastHash, ok := lastHashes[branch]
-		if !ok {
-			ocelog.Log().Infof("no last hash found for branch %s in lash Hash map, so this branch will build no matter what", branch)
-			lastHash = ""
-		}
-		newLastHash, err := checker.InspectCommits(branch, lastHash)
+	if len(conf.Branches) == 1 && conf.Branches[0] == "ALL" {
+		err = checker.HandleAllBranches(lastHashes)
 		if err != nil {
-			ocelog.IncludeErrField(err).Fatal("error searching branch commits, err: " + err.Error())
+			ocelog.IncludeErrField(err).Error("could not check through branches")
 		}
-		ocelog.Log().WithField("old last hash", lastHash).WithField("new last hash", newLastHash).Info("git hash data for poll")
-		lastHashes[branch] = newLastHash
-		if err != nil {
-			ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("something went wrong")
+	} else {
+		for _, branch := range conf.Branches {
+			lastHash, ok := lastHashes[branch]
+			if !ok {
+				ocelog.Log().Infof("no last hash found for branch %s in lash Hash map, so this branch will build no matter what", branch)
+				lastHash = ""
+			}
+			newLastHash, err := checker.InspectCommits(branch, lastHash)
+			if err != nil {
+				ocelog.IncludeErrField(err).Fatal("error searching branch commits, err: " + err.Error())
+			}
+			ocelog.Log().WithField("old last hash", lastHash).WithField("new last hash", newLastHash).Info("git hash data for poll")
+			lastHashes[branch] = newLastHash
+			if err != nil {
+				ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Error("something went wrong")
+			}
 		}
 	}
 

@@ -1,6 +1,7 @@
 package models
 
 import (
+	pb "github.com/shankj3/ocelot/models/pb"
 	// ugh stuck 4 now
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 )
@@ -36,4 +37,10 @@ type VCSHandler interface {
 
 	//GetAllCommits returns a paginated list of commits corresponding with branch
 	GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error)
+
+	//GetAllBranchesLastCommitData returns a list of all active branches, their last hash, and the last commit datetime
+	GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error)
+
+	//GetBranchLastCommitData should return the last hash and commit datetime of a specific branch
+	GetBranchLastCommitData(acctRepo, branch string) (*pb.BranchHistory, error)
 }

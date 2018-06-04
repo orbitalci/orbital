@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "common.proto";
+import "commonevententities.proto";
 
 package protos;
 
@@ -70,4 +71,23 @@ message ChangeSetV1 {
     string author = 3;
     string raw_node = 4;
     string branch = 5;
+}
+
+message PaginatedRepoBranches {
+    double pagelen = 1;
+    double page = 2;
+    string next = 3;
+    repeated Branch values = 4;
+}
+
+message Branch {
+    string name = 1;
+    message Target {
+        string hash = 1;
+        Author author = 2;
+        google.protobuf.Timestamp date = 3;
+        string message = 4;
+        string type = 5;
+    }
+    Target target = 2;
 }
