@@ -73,7 +73,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			branchLastHashes[branchHist.Branch] = branchHist.Hash
 			// this has never been built/tracked before... so if anything has been committed in the last week, build it and add it to the map
 			lastCommitTime := time.Unix(branchHist.LastCommitTime.Seconds, int64(branchHist.LastCommitTime.Nanos))
-			lastWeek := time.Now().Add(-time.Hour*24*7)
+			lastWeek := time.Now().AddDate(0,0,-7)
 			if lastWeek.After(lastCommitTime) {
 				ocelog.Log().Info("it is! it has been active at least in the past week, it will be built then added to ocelot tracking")
 				if err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token); err != nil {

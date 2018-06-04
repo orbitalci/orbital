@@ -6,24 +6,52 @@ package protos
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
+import timestamp "github.com/golang/protobuf/ptypes/timestamp"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_userOwner
 type Owner struct {
-	Type     string `protobuf:"bytes,1,opt,name=type" json:"type,omitempty"`
-	Username string `protobuf:"bytes,2,opt,name=username" json:"username,omitempty"`
-	Links    *Links `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
+	Type                 string   `protobuf:"bytes,1,opt,name=type" json:"type,omitempty"`
+	Username             string   `protobuf:"bytes,2,opt,name=username" json:"username,omitempty"`
+	Links                *Links   `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Owner) Reset()                    { *m = Owner{} }
-func (m *Owner) String() string            { return proto.CompactTextString(m) }
-func (*Owner) ProtoMessage()               {}
-func (*Owner) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
+func (m *Owner) Reset()         { *m = Owner{} }
+func (m *Owner) String() string { return proto.CompactTextString(m) }
+func (*Owner) ProtoMessage()    {}
+func (*Owner) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{0}
+}
+func (m *Owner) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Owner.Unmarshal(m, b)
+}
+func (m *Owner) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Owner.Marshal(b, m, deterministic)
+}
+func (dst *Owner) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Owner.Merge(dst, src)
+}
+func (m *Owner) XXX_Size() int {
+	return xxx_messageInfo_Owner.Size(m)
+}
+func (m *Owner) XXX_DiscardUnknown() {
+	xxx_messageInfo_Owner.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Owner proto.InternalMessageInfo
 
 func (m *Owner) GetType() string {
 	if m != nil {
@@ -48,17 +76,39 @@ func (m *Owner) GetLinks() *Links {
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_repositoryRepository
 type Repository struct {
-	Links    *Links   `protobuf:"bytes,1,opt,name=links" json:"links,omitempty"`
-	Project  *Project `protobuf:"bytes,2,opt,name=project" json:"project,omitempty"`
-	FullName string   `protobuf:"bytes,3,opt,name=fullName,json=full_name" json:"fullName,omitempty"`
-	Website  string   `protobuf:"bytes,4,opt,name=website" json:"website,omitempty"`
-	Owner    *Owner   `protobuf:"bytes,5,opt,name=owner" json:"owner,omitempty"`
+	Links                *Links   `protobuf:"bytes,1,opt,name=links" json:"links,omitempty"`
+	Project              *Project `protobuf:"bytes,2,opt,name=project" json:"project,omitempty"`
+	FullName             string   `protobuf:"bytes,3,opt,name=fullName,json=full_name" json:"fullName,omitempty"`
+	Website              string   `protobuf:"bytes,4,opt,name=website" json:"website,omitempty"`
+	Owner                *Owner   `protobuf:"bytes,5,opt,name=owner" json:"owner,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Repository) Reset()                    { *m = Repository{} }
-func (m *Repository) String() string            { return proto.CompactTextString(m) }
-func (*Repository) ProtoMessage()               {}
-func (*Repository) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (m *Repository) Reset()         { *m = Repository{} }
+func (m *Repository) String() string { return proto.CompactTextString(m) }
+func (*Repository) ProtoMessage()    {}
+func (*Repository) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{1}
+}
+func (m *Repository) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Repository.Unmarshal(m, b)
+}
+func (m *Repository) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Repository.Marshal(b, m, deterministic)
+}
+func (dst *Repository) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Repository.Merge(dst, src)
+}
+func (m *Repository) XXX_Size() int {
+	return xxx_messageInfo_Repository.Size(m)
+}
+func (m *Repository) XXX_DiscardUnknown() {
+	xxx_messageInfo_Repository.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Repository proto.InternalMessageInfo
 
 func (m *Repository) GetLinks() *Links {
 	if m != nil {
@@ -97,28 +147,50 @@ func (m *Repository) GetOwner() *Owner {
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Pullrequestevents
 type PullRequestEntity struct {
-	Id                int64                      `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
-	Title             string                     `protobuf:"bytes,2,opt,name=title" json:"title,omitempty"`
-	Description       string                     `protobuf:"bytes,3,opt,name=description" json:"description,omitempty"`
-	State             string                     `protobuf:"bytes,4,opt,name=state" json:"state,omitempty"`
-	Author            *Owner                     `protobuf:"bytes,5,opt,name=author" json:"author,omitempty"`
-	Source            *PRInfo                    `protobuf:"bytes,6,opt,name=source" json:"source,omitempty"`
-	Destination       *PRInfo                    `protobuf:"bytes,7,opt,name=destination" json:"destination,omitempty"`
-	MergeCommit       *Commit                    `protobuf:"bytes,8,opt,name=mergeCommit,json=merge_commit" json:"mergeCommit,omitempty"`
-	Participants      []*Owner                   `protobuf:"bytes,9,rep,name=participants" json:"participants,omitempty"`
-	Reviewers         []*Owner                   `protobuf:"bytes,10,rep,name=reviewers" json:"reviewers,omitempty"`
-	CloseSourceBranch bool                       `protobuf:"varint,11,opt,name=closeSourceBranch,json=close_source_branch" json:"closeSourceBranch,omitempty"`
-	ClosedBy          *Owner                     `protobuf:"bytes,12,opt,name=closedBy,json=closed_by" json:"closedBy,omitempty"`
-	Reason            string                     `protobuf:"bytes,13,opt,name=reason" json:"reason,omitempty"`
-	CreatedAt         *google_protobuf.Timestamp `protobuf:"bytes,14,opt,name=createdAt,json=created_at" json:"createdAt,omitempty"`
-	UpdatedOn         *google_protobuf.Timestamp `protobuf:"bytes,15,opt,name=updatedOn,json=updated_on" json:"updatedOn,omitempty"`
-	Links             *Links                     `protobuf:"bytes,16,opt,name=links" json:"links,omitempty"`
+	Id                   int64                `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
+	Title                string               `protobuf:"bytes,2,opt,name=title" json:"title,omitempty"`
+	Description          string               `protobuf:"bytes,3,opt,name=description" json:"description,omitempty"`
+	State                string               `protobuf:"bytes,4,opt,name=state" json:"state,omitempty"`
+	Author               *Owner               `protobuf:"bytes,5,opt,name=author" json:"author,omitempty"`
+	Source               *PRInfo              `protobuf:"bytes,6,opt,name=source" json:"source,omitempty"`
+	Destination          *PRInfo              `protobuf:"bytes,7,opt,name=destination" json:"destination,omitempty"`
+	MergeCommit          *Commit              `protobuf:"bytes,8,opt,name=mergeCommit,json=merge_commit" json:"mergeCommit,omitempty"`
+	Participants         []*Owner             `protobuf:"bytes,9,rep,name=participants" json:"participants,omitempty"`
+	Reviewers            []*Owner             `protobuf:"bytes,10,rep,name=reviewers" json:"reviewers,omitempty"`
+	CloseSourceBranch    bool                 `protobuf:"varint,11,opt,name=closeSourceBranch,json=close_source_branch" json:"closeSourceBranch,omitempty"`
+	ClosedBy             *Owner               `protobuf:"bytes,12,opt,name=closedBy,json=closed_by" json:"closedBy,omitempty"`
+	Reason               string               `protobuf:"bytes,13,opt,name=reason" json:"reason,omitempty"`
+	CreatedAt            *timestamp.Timestamp `protobuf:"bytes,14,opt,name=createdAt,json=created_at" json:"createdAt,omitempty"`
+	UpdatedOn            *timestamp.Timestamp `protobuf:"bytes,15,opt,name=updatedOn,json=updated_on" json:"updatedOn,omitempty"`
+	Links                *Links               `protobuf:"bytes,16,opt,name=links" json:"links,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *PullRequestEntity) Reset()                    { *m = PullRequestEntity{} }
-func (m *PullRequestEntity) String() string            { return proto.CompactTextString(m) }
-func (*PullRequestEntity) ProtoMessage()               {}
-func (*PullRequestEntity) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
+func (m *PullRequestEntity) Reset()         { *m = PullRequestEntity{} }
+func (m *PullRequestEntity) String() string { return proto.CompactTextString(m) }
+func (*PullRequestEntity) ProtoMessage()    {}
+func (*PullRequestEntity) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{2}
+}
+func (m *PullRequestEntity) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PullRequestEntity.Unmarshal(m, b)
+}
+func (m *PullRequestEntity) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PullRequestEntity.Marshal(b, m, deterministic)
+}
+func (dst *PullRequestEntity) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullRequestEntity.Merge(dst, src)
+}
+func (m *PullRequestEntity) XXX_Size() int {
+	return xxx_messageInfo_PullRequestEntity.Size(m)
+}
+func (m *PullRequestEntity) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullRequestEntity.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullRequestEntity proto.InternalMessageInfo
 
 func (m *PullRequestEntity) GetId() int64 {
 	if m != nil {
@@ -211,14 +283,14 @@ func (m *PullRequestEntity) GetReason() string {
 	return ""
 }
 
-func (m *PullRequestEntity) GetCreatedAt() *google_protobuf.Timestamp {
+func (m *PullRequestEntity) GetCreatedAt() *timestamp.Timestamp {
 	if m != nil {
 		return m.CreatedAt
 	}
 	return nil
 }
 
-func (m *PullRequestEntity) GetUpdatedOn() *google_protobuf.Timestamp {
+func (m *PullRequestEntity) GetUpdatedOn() *timestamp.Timestamp {
 	if m != nil {
 		return m.UpdatedOn
 	}
@@ -233,15 +305,37 @@ func (m *PullRequestEntity) GetLinks() *Links {
 }
 
 type PRInfo struct {
-	Branch     *PRInfoBr   `protobuf:"bytes,1,opt,name=branch" json:"branch,omitempty"`
-	Commit     *Commit     `protobuf:"bytes,2,opt,name=commit" json:"commit,omitempty"`
-	Repository *Repository `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
+	Branch               *PRInfoBr   `protobuf:"bytes,1,opt,name=branch" json:"branch,omitempty"`
+	Commit               *Commit     `protobuf:"bytes,2,opt,name=commit" json:"commit,omitempty"`
+	Repository           *Repository `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *PRInfo) Reset()                    { *m = PRInfo{} }
-func (m *PRInfo) String() string            { return proto.CompactTextString(m) }
-func (*PRInfo) ProtoMessage()               {}
-func (*PRInfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
+func (m *PRInfo) Reset()         { *m = PRInfo{} }
+func (m *PRInfo) String() string { return proto.CompactTextString(m) }
+func (*PRInfo) ProtoMessage()    {}
+func (*PRInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{3}
+}
+func (m *PRInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PRInfo.Unmarshal(m, b)
+}
+func (m *PRInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PRInfo.Marshal(b, m, deterministic)
+}
+func (dst *PRInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PRInfo.Merge(dst, src)
+}
+func (m *PRInfo) XXX_Size() int {
+	return xxx_messageInfo_PRInfo.Size(m)
+}
+func (m *PRInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_PRInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PRInfo proto.InternalMessageInfo
 
 func (m *PRInfo) GetBranch() *PRInfoBr {
 	if m != nil {
@@ -265,13 +359,35 @@ func (m *PRInfo) GetRepository() *Repository {
 }
 
 type PRInfoBr struct {
-	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PRInfoBr) Reset()                    { *m = PRInfoBr{} }
-func (m *PRInfoBr) String() string            { return proto.CompactTextString(m) }
-func (*PRInfoBr) ProtoMessage()               {}
-func (*PRInfoBr) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3, 0} }
+func (m *PRInfoBr) Reset()         { *m = PRInfoBr{} }
+func (m *PRInfoBr) String() string { return proto.CompactTextString(m) }
+func (*PRInfoBr) ProtoMessage()    {}
+func (*PRInfoBr) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{3, 0}
+}
+func (m *PRInfoBr) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PRInfoBr.Unmarshal(m, b)
+}
+func (m *PRInfoBr) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PRInfoBr.Marshal(b, m, deterministic)
+}
+func (dst *PRInfoBr) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PRInfoBr.Merge(dst, src)
+}
+func (m *PRInfoBr) XXX_Size() int {
+	return xxx_messageInfo_PRInfoBr.Size(m)
+}
+func (m *PRInfoBr) XXX_DiscardUnknown() {
+	xxx_messageInfo_PRInfoBr.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PRInfoBr proto.InternalMessageInfo
 
 func (m *PRInfoBr) GetName() string {
 	if m != nil {
@@ -282,15 +398,37 @@ func (m *PRInfoBr) GetName() string {
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_projectProject
 type Project struct {
-	Name  string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Uuid  string `protobuf:"bytes,2,opt,name=uuid" json:"uuid,omitempty"`
-	Links *Links `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Uuid                 string   `protobuf:"bytes,2,opt,name=uuid" json:"uuid,omitempty"`
+	Links                *Links   `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Project) Reset()                    { *m = Project{} }
-func (m *Project) String() string            { return proto.CompactTextString(m) }
-func (*Project) ProtoMessage()               {}
-func (*Project) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
+func (m *Project) Reset()         { *m = Project{} }
+func (m *Project) String() string { return proto.CompactTextString(m) }
+func (*Project) ProtoMessage()    {}
+func (*Project) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{4}
+}
+func (m *Project) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Project.Unmarshal(m, b)
+}
+func (m *Project) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Project.Marshal(b, m, deterministic)
+}
+func (dst *Project) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Project.Merge(dst, src)
+}
+func (m *Project) XXX_Size() int {
+	return xxx_messageInfo_Project.Size(m)
+}
+func (m *Project) XXX_DiscardUnknown() {
+	xxx_messageInfo_Project.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Project proto.InternalMessageInfo
 
 func (m *Project) GetName() string {
 	if m != nil {
@@ -314,19 +452,41 @@ func (m *Project) GetLinks() *Links {
 }
 
 type Changeset struct {
-	New     *Changeset_Head `protobuf:"bytes,1,opt,name=new" json:"new,omitempty"`
-	Old     *Changeset_Head `protobuf:"bytes,2,opt,name=old" json:"old,omitempty"`
-	Links   *Links          `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
-	Closed  bool            `protobuf:"varint,4,opt,name=closed" json:"closed,omitempty"`
-	Created bool            `protobuf:"varint,5,opt,name=created" json:"created,omitempty"`
-	Forced  bool            `protobuf:"varint,6,opt,name=forced" json:"forced,omitempty"`
-	Commits []*Commit       `protobuf:"bytes,7,rep,name=commits" json:"commits,omitempty"`
+	New                  *Changeset_Head `protobuf:"bytes,1,opt,name=new" json:"new,omitempty"`
+	Old                  *Changeset_Head `protobuf:"bytes,2,opt,name=old" json:"old,omitempty"`
+	Links                *Links          `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
+	Closed               bool            `protobuf:"varint,4,opt,name=closed" json:"closed,omitempty"`
+	Created              bool            `protobuf:"varint,5,opt,name=created" json:"created,omitempty"`
+	Forced               bool            `protobuf:"varint,6,opt,name=forced" json:"forced,omitempty"`
+	Commits              []*Commit       `protobuf:"bytes,7,rep,name=commits" json:"commits,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
 }
 
-func (m *Changeset) Reset()                    { *m = Changeset{} }
-func (m *Changeset) String() string            { return proto.CompactTextString(m) }
-func (*Changeset) ProtoMessage()               {}
-func (*Changeset) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
+func (m *Changeset) Reset()         { *m = Changeset{} }
+func (m *Changeset) String() string { return proto.CompactTextString(m) }
+func (*Changeset) ProtoMessage()    {}
+func (*Changeset) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{5}
+}
+func (m *Changeset) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Changeset.Unmarshal(m, b)
+}
+func (m *Changeset) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Changeset.Marshal(b, m, deterministic)
+}
+func (dst *Changeset) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Changeset.Merge(dst, src)
+}
+func (m *Changeset) XXX_Size() int {
+	return xxx_messageInfo_Changeset.Size(m)
+}
+func (m *Changeset) XXX_DiscardUnknown() {
+	xxx_messageInfo_Changeset.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Changeset proto.InternalMessageInfo
 
 func (m *Changeset) GetNew() *Changeset_Head {
 	if m != nil {
@@ -378,15 +538,37 @@ func (m *Changeset) GetCommits() []*Commit {
 }
 
 type Changeset_Head struct {
-	Type   string  `protobuf:"bytes,1,opt,name=type" json:"type,omitempty"`
-	Name   string  `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
-	Target *Commit `protobuf:"bytes,3,opt,name=target" json:"target,omitempty"`
+	Type                 string   `protobuf:"bytes,1,opt,name=type" json:"type,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
+	Target               *Commit  `protobuf:"bytes,3,opt,name=target" json:"target,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Changeset_Head) Reset()                    { *m = Changeset_Head{} }
-func (m *Changeset_Head) String() string            { return proto.CompactTextString(m) }
-func (*Changeset_Head) ProtoMessage()               {}
-func (*Changeset_Head) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5, 0} }
+func (m *Changeset_Head) Reset()         { *m = Changeset_Head{} }
+func (m *Changeset_Head) String() string { return proto.CompactTextString(m) }
+func (*Changeset_Head) ProtoMessage()    {}
+func (*Changeset_Head) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{5, 0}
+}
+func (m *Changeset_Head) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Changeset_Head.Unmarshal(m, b)
+}
+func (m *Changeset_Head) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Changeset_Head.Marshal(b, m, deterministic)
+}
+func (dst *Changeset_Head) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Changeset_Head.Merge(dst, src)
+}
+func (m *Changeset_Head) XXX_Size() int {
+	return xxx_messageInfo_Changeset_Head.Size(m)
+}
+func (m *Changeset_Head) XXX_DiscardUnknown() {
+	xxx_messageInfo_Changeset_Head.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Changeset_Head proto.InternalMessageInfo
 
 func (m *Changeset_Head) GetType() string {
 	if m != nil {
@@ -410,19 +592,41 @@ func (m *Changeset_Head) GetTarget() *Commit {
 }
 
 type Commit struct {
-	Hash    string                     `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
-	Author  *Owner                     `protobuf:"bytes,2,opt,name=author" json:"author,omitempty"`
-	Message string                     `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
-	Date    *google_protobuf.Timestamp `protobuf:"bytes,4,opt,name=date" json:"date,omitempty"`
+	Hash    string               `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	Author  *Owner               `protobuf:"bytes,2,opt,name=author" json:"author,omitempty"`
+	Message string               `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Date    *timestamp.Timestamp `protobuf:"bytes,4,opt,name=date" json:"date,omitempty"`
 	// ignoring the "parents" field
-	Links      *Links      `protobuf:"bytes,5,opt,name=links" json:"links,omitempty"`
-	Repository *Repository `protobuf:"bytes,6,opt,name=repository" json:"repository,omitempty"`
+	Links                *Links      `protobuf:"bytes,5,opt,name=links" json:"links,omitempty"`
+	Repository           *Repository `protobuf:"bytes,6,opt,name=repository" json:"repository,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *Commit) Reset()                    { *m = Commit{} }
-func (m *Commit) String() string            { return proto.CompactTextString(m) }
-func (*Commit) ProtoMessage()               {}
-func (*Commit) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{6} }
+func (m *Commit) Reset()         { *m = Commit{} }
+func (m *Commit) String() string { return proto.CompactTextString(m) }
+func (*Commit) ProtoMessage()    {}
+func (*Commit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{6}
+}
+func (m *Commit) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Commit.Unmarshal(m, b)
+}
+func (m *Commit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Commit.Marshal(b, m, deterministic)
+}
+func (dst *Commit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Commit.Merge(dst, src)
+}
+func (m *Commit) XXX_Size() int {
+	return xxx_messageInfo_Commit.Size(m)
+}
+func (m *Commit) XXX_DiscardUnknown() {
+	xxx_messageInfo_Commit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Commit proto.InternalMessageInfo
 
 func (m *Commit) GetHash() string {
 	if m != nil {
@@ -445,7 +649,7 @@ func (m *Commit) GetMessage() string {
 	return ""
 }
 
-func (m *Commit) GetDate() *google_protobuf.Timestamp {
+func (m *Commit) GetDate() *timestamp.Timestamp {
 	if m != nil {
 		return m.Date
 	}
@@ -468,13 +672,35 @@ func (m *Commit) GetRepository() *Repository {
 
 // /2.0/repositories/{username}/{repo_slug}/commits
 type Commits struct {
-	Values []*Commit `protobuf:"bytes,1,rep,name=values" json:"values,omitempty"`
+	Values               []*Commit `protobuf:"bytes,1,rep,name=values" json:"values,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *Commits) Reset()                    { *m = Commits{} }
-func (m *Commits) String() string            { return proto.CompactTextString(m) }
-func (*Commits) ProtoMessage()               {}
-func (*Commits) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7} }
+func (m *Commits) Reset()         { *m = Commits{} }
+func (m *Commits) String() string { return proto.CompactTextString(m) }
+func (*Commits) ProtoMessage()    {}
+func (*Commits) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{7}
+}
+func (m *Commits) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Commits.Unmarshal(m, b)
+}
+func (m *Commits) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Commits.Marshal(b, m, deterministic)
+}
+func (dst *Commits) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Commits.Merge(dst, src)
+}
+func (m *Commits) XXX_Size() int {
+	return xxx_messageInfo_Commits.Size(m)
+}
+func (m *Commits) XXX_DiscardUnknown() {
+	xxx_messageInfo_Commits.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Commits proto.InternalMessageInfo
 
 func (m *Commits) GetValues() []*Commit {
 	if m != nil {
@@ -486,15 +712,37 @@ func (m *Commits) GetValues() []*Commit {
 // bitbucket api 1.0
 // https://confluence.atlassian.com/bitbucket/src-resources-296095214.html
 type RepoSourceFile struct {
-	Node string `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
-	Path string `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
-	Data string `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
+	Node                 string   `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
+	Path                 string   `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
+	Data                 string   `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *RepoSourceFile) Reset()                    { *m = RepoSourceFile{} }
-func (m *RepoSourceFile) String() string            { return proto.CompactTextString(m) }
-func (*RepoSourceFile) ProtoMessage()               {}
-func (*RepoSourceFile) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8} }
+func (m *RepoSourceFile) Reset()         { *m = RepoSourceFile{} }
+func (m *RepoSourceFile) String() string { return proto.CompactTextString(m) }
+func (*RepoSourceFile) ProtoMessage()    {}
+func (*RepoSourceFile) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{8}
+}
+func (m *RepoSourceFile) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RepoSourceFile.Unmarshal(m, b)
+}
+func (m *RepoSourceFile) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RepoSourceFile.Marshal(b, m, deterministic)
+}
+func (dst *RepoSourceFile) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RepoSourceFile.Merge(dst, src)
+}
+func (m *RepoSourceFile) XXX_Size() int {
+	return xxx_messageInfo_RepoSourceFile.Size(m)
+}
+func (m *RepoSourceFile) XXX_DiscardUnknown() {
+	xxx_messageInfo_RepoSourceFile.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RepoSourceFile proto.InternalMessageInfo
 
 func (m *RepoSourceFile) GetNode() string {
 	if m != nil {
@@ -518,15 +766,37 @@ func (m *RepoSourceFile) GetData() string {
 }
 
 type Author struct {
-	Raw  string `protobuf:"bytes,1,opt,name=raw" json:"raw,omitempty"`
-	Type string `protobuf:"bytes,2,opt,name=type" json:"type,omitempty"`
-	User *Owner `protobuf:"bytes,3,opt,name=user" json:"user,omitempty"`
+	Raw                  string   `protobuf:"bytes,1,opt,name=raw" json:"raw,omitempty"`
+	Type                 string   `protobuf:"bytes,2,opt,name=type" json:"type,omitempty"`
+	User                 *Owner   `protobuf:"bytes,3,opt,name=user" json:"user,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Author) Reset()                    { *m = Author{} }
-func (m *Author) String() string            { return proto.CompactTextString(m) }
-func (*Author) ProtoMessage()               {}
-func (*Author) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{9} }
+func (m *Author) Reset()         { *m = Author{} }
+func (m *Author) String() string { return proto.CompactTextString(m) }
+func (*Author) ProtoMessage()    {}
+func (*Author) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commonevententities_aa030c92829d4266, []int{9}
+}
+func (m *Author) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Author.Unmarshal(m, b)
+}
+func (m *Author) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Author.Marshal(b, m, deterministic)
+}
+func (dst *Author) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Author.Merge(dst, src)
+}
+func (m *Author) XXX_Size() int {
+	return xxx_messageInfo_Author.Size(m)
+}
+func (m *Author) XXX_DiscardUnknown() {
+	xxx_messageInfo_Author.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Author proto.InternalMessageInfo
 
 func (m *Author) GetRaw() string {
 	if m != nil {
@@ -564,9 +834,11 @@ func init() {
 	proto.RegisterType((*Author)(nil), "protos.Author")
 }
 
-func init() { proto.RegisterFile("commonevententities.proto", fileDescriptor1) }
+func init() {
+	proto.RegisterFile("commonevententities.proto", fileDescriptor_commonevententities_aa030c92829d4266)
+}
 
-var fileDescriptor1 = []byte{
+var fileDescriptor_commonevententities_aa030c92829d4266 = []byte{
 	// 856 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x55, 0xdd, 0x8e, 0x1b, 0x35,
 	0x14, 0x56, 0xfe, 0x26, 0xc9, 0xc9, 0x76, 0xdb, 0x35, 0xa8, 0x32, 0xe1, 0x82, 0x10, 0x44, 0x95,

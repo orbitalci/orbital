@@ -4,6 +4,7 @@ ARG SSH_PRIVATE_KEY
 
 RUN apk --update --no-cache add git protobuf-dev ca-certificates openssh python mercurial tini && \
     go get -v -u github.com/golang/dep/cmd/dep && \
+    go get -v -u github.com/golang/protobuf/proto && \
     go get -v -u github.com/golang/protobuf/protoc-gen-go && \
     go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway && \
     go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \

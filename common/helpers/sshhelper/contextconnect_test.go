@@ -49,12 +49,12 @@ func TestContextConnection_CheckConnection(t *testing.T) {
 
 
 func TestContextConnection_RunAndLog(t *testing.T) {
-	cleanup, ctx := CreateSSHDockerContainer(t, "2223")
+	cleanup, ctx := CreateSSHDockerContainer(t, "2227")
 	defer cleanup()
 	facts := &models.SSHFacts{
 		User: "root",
 		Host: "localhost",
-		Port: 2223,
+		Port: 2227,
 		KeyFP: "./test-fixtures/docker_id_rsa",
 	}
 	cnxn, err := CreateSSHChannel(ctx, facts, "")

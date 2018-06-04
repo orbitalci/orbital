@@ -12,6 +12,12 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type CredType int32
 
 const (
@@ -52,7 +58,9 @@ var CredType_value = map[string]int32{
 func (x CredType) String() string {
 	return proto.EnumName(CredType_name, int32(x))
 }
-func (CredType) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
+func (CredType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{0}
+}
 
 type SubCredType int32
 
@@ -97,7 +105,9 @@ var SubCredType_value = map[string]int32{
 func (x SubCredType) String() string {
 	return proto.EnumName(SubCredType_name, int32(x))
 }
-func (SubCredType) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (SubCredType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{1}
+}
 
 type AllCredsWrapper struct {
 	// All repository credentials for integrations
@@ -105,13 +115,35 @@ type AllCredsWrapper struct {
 	RepoCreds *RepoCredWrapper `protobuf:"bytes,1,opt,name=repoCreds" json:"repoCreds,omitempty" yaml:"repoCreds"`
 	// All VCS credentials for building
 	// @inject_tag: yaml:"vcsCreds"
-	VcsCreds *CredWrapper `protobuf:"bytes,3,opt,name=vcsCreds" json:"vcsCreds,omitempty" yaml:"vcsCreds"`
+	VcsCreds             *CredWrapper `protobuf:"bytes,3,opt,name=vcsCreds" json:"vcsCreds,omitempty" yaml:"vcsCreds"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
-func (m *AllCredsWrapper) Reset()                    { *m = AllCredsWrapper{} }
-func (m *AllCredsWrapper) String() string            { return proto.CompactTextString(m) }
-func (*AllCredsWrapper) ProtoMessage()               {}
-func (*AllCredsWrapper) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
+func (m *AllCredsWrapper) Reset()         { *m = AllCredsWrapper{} }
+func (m *AllCredsWrapper) String() string { return proto.CompactTextString(m) }
+func (*AllCredsWrapper) ProtoMessage()    {}
+func (*AllCredsWrapper) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{0}
+}
+func (m *AllCredsWrapper) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AllCredsWrapper.Unmarshal(m, b)
+}
+func (m *AllCredsWrapper) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AllCredsWrapper.Marshal(b, m, deterministic)
+}
+func (dst *AllCredsWrapper) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllCredsWrapper.Merge(dst, src)
+}
+func (m *AllCredsWrapper) XXX_Size() int {
+	return xxx_messageInfo_AllCredsWrapper.Size(m)
+}
+func (m *AllCredsWrapper) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllCredsWrapper.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllCredsWrapper proto.InternalMessageInfo
 
 func (m *AllCredsWrapper) GetRepoCreds() *RepoCredWrapper {
 	if m != nil {
@@ -129,13 +161,35 @@ func (m *AllCredsWrapper) GetVcsCreds() *CredWrapper {
 
 // just a container for a list of VCSCreds
 type CredWrapper struct {
-	Vcs []*VCSCreds `protobuf:"bytes,2,rep,name=vcs" json:"vcs,omitempty"`
+	Vcs                  []*VCSCreds `protobuf:"bytes,2,rep,name=vcs" json:"vcs,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *CredWrapper) Reset()                    { *m = CredWrapper{} }
-func (m *CredWrapper) String() string            { return proto.CompactTextString(m) }
-func (*CredWrapper) ProtoMessage()               {}
-func (*CredWrapper) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (m *CredWrapper) Reset()         { *m = CredWrapper{} }
+func (m *CredWrapper) String() string { return proto.CompactTextString(m) }
+func (*CredWrapper) ProtoMessage()    {}
+func (*CredWrapper) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{1}
+}
+func (m *CredWrapper) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CredWrapper.Unmarshal(m, b)
+}
+func (m *CredWrapper) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CredWrapper.Marshal(b, m, deterministic)
+}
+func (dst *CredWrapper) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CredWrapper.Merge(dst, src)
+}
+func (m *CredWrapper) XXX_Size() int {
+	return xxx_messageInfo_CredWrapper.Size(m)
+}
+func (m *CredWrapper) XXX_DiscardUnknown() {
+	xxx_messageInfo_CredWrapper.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CredWrapper proto.InternalMessageInfo
 
 func (m *CredWrapper) GetVcs() []*VCSCreds {
 	if m != nil {
@@ -152,13 +206,35 @@ type SSHKeyWrapper struct {
 	// There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY
 	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty"`
 	// identifier is the unique identifier for when an ssh key is not associated with a VCS account.
-	Identifier string `protobuf:"bytes,11,opt,name=identifier" json:"identifier,omitempty"`
+	Identifier           string   `protobuf:"bytes,11,opt,name=identifier" json:"identifier,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SSHKeyWrapper) Reset()                    { *m = SSHKeyWrapper{} }
-func (m *SSHKeyWrapper) String() string            { return proto.CompactTextString(m) }
-func (*SSHKeyWrapper) ProtoMessage()               {}
-func (*SSHKeyWrapper) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
+func (m *SSHKeyWrapper) Reset()         { *m = SSHKeyWrapper{} }
+func (m *SSHKeyWrapper) String() string { return proto.CompactTextString(m) }
+func (*SSHKeyWrapper) ProtoMessage()    {}
+func (*SSHKeyWrapper) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{2}
+}
+func (m *SSHKeyWrapper) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SSHKeyWrapper.Unmarshal(m, b)
+}
+func (m *SSHKeyWrapper) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SSHKeyWrapper.Marshal(b, m, deterministic)
+}
+func (dst *SSHKeyWrapper) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SSHKeyWrapper.Merge(dst, src)
+}
+func (m *SSHKeyWrapper) XXX_Size() int {
+	return xxx_messageInfo_SSHKeyWrapper.Size(m)
+}
+func (m *SSHKeyWrapper) XXX_DiscardUnknown() {
+	xxx_messageInfo_SSHKeyWrapper.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SSHKeyWrapper proto.InternalMessageInfo
 
 func (m *SSHKeyWrapper) GetAcctName() string {
 	if m != nil {
@@ -189,13 +265,35 @@ func (m *SSHKeyWrapper) GetIdentifier() string {
 }
 
 type SSHWrap struct {
-	Keys []*SSHKeyWrapper `protobuf:"bytes,1,rep,name=keys" json:"keys,omitempty"`
+	Keys                 []*SSHKeyWrapper `protobuf:"bytes,1,rep,name=keys" json:"keys,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
 }
 
-func (m *SSHWrap) Reset()                    { *m = SSHWrap{} }
-func (m *SSHWrap) String() string            { return proto.CompactTextString(m) }
-func (*SSHWrap) ProtoMessage()               {}
-func (*SSHWrap) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
+func (m *SSHWrap) Reset()         { *m = SSHWrap{} }
+func (m *SSHWrap) String() string { return proto.CompactTextString(m) }
+func (*SSHWrap) ProtoMessage()    {}
+func (*SSHWrap) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{3}
+}
+func (m *SSHWrap) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SSHWrap.Unmarshal(m, b)
+}
+func (m *SSHWrap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SSHWrap.Marshal(b, m, deterministic)
+}
+func (dst *SSHWrap) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SSHWrap.Merge(dst, src)
+}
+func (m *SSHWrap) XXX_Size() int {
+	return xxx_messageInfo_SSHWrap.Size(m)
+}
+func (m *SSHWrap) XXX_DiscardUnknown() {
+	xxx_messageInfo_SSHWrap.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SSHWrap proto.InternalMessageInfo
 
 func (m *SSHWrap) GetKeys() []*SSHKeyWrapper {
 	if m != nil {
@@ -224,13 +322,35 @@ type VCSCreds struct {
 	SshFileLoc string `protobuf:"bytes,6,opt,name=sshFileLoc" json:"sshFileLoc,omitempty" yaml:"sshFileLoc"`
 	// there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET
 	// @inject_tag: yaml:"subType"
-	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	SubType              SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *VCSCreds) Reset()                    { *m = VCSCreds{} }
-func (m *VCSCreds) String() string            { return proto.CompactTextString(m) }
-func (*VCSCreds) ProtoMessage()               {}
-func (*VCSCreds) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
+func (m *VCSCreds) Reset()         { *m = VCSCreds{} }
+func (m *VCSCreds) String() string { return proto.CompactTextString(m) }
+func (*VCSCreds) ProtoMessage()    {}
+func (*VCSCreds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{4}
+}
+func (m *VCSCreds) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_VCSCreds.Unmarshal(m, b)
+}
+func (m *VCSCreds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_VCSCreds.Marshal(b, m, deterministic)
+}
+func (dst *VCSCreds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VCSCreds.Merge(dst, src)
+}
+func (m *VCSCreds) XXX_Size() int {
+	return xxx_messageInfo_VCSCreds.Size(m)
+}
+func (m *VCSCreds) XXX_DiscardUnknown() {
+	xxx_messageInfo_VCSCreds.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VCSCreds proto.InternalMessageInfo
 
 func (m *VCSCreds) GetClientId() string {
 	if m != nil {
@@ -283,13 +403,35 @@ func (m *VCSCreds) GetSubType() SubCredType {
 
 // container for list of repo creds
 type RepoCredWrapper struct {
-	Repo []*RepoCreds `protobuf:"bytes,3,rep,name=repo" json:"repo,omitempty"`
+	Repo                 []*RepoCreds `protobuf:"bytes,3,rep,name=repo" json:"repo,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
-func (m *RepoCredWrapper) Reset()                    { *m = RepoCredWrapper{} }
-func (m *RepoCredWrapper) String() string            { return proto.CompactTextString(m) }
-func (*RepoCredWrapper) ProtoMessage()               {}
-func (*RepoCredWrapper) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
+func (m *RepoCredWrapper) Reset()         { *m = RepoCredWrapper{} }
+func (m *RepoCredWrapper) String() string { return proto.CompactTextString(m) }
+func (*RepoCredWrapper) ProtoMessage()    {}
+func (*RepoCredWrapper) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{5}
+}
+func (m *RepoCredWrapper) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RepoCredWrapper.Unmarshal(m, b)
+}
+func (m *RepoCredWrapper) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RepoCredWrapper.Marshal(b, m, deterministic)
+}
+func (dst *RepoCredWrapper) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RepoCredWrapper.Merge(dst, src)
+}
+func (m *RepoCredWrapper) XXX_Size() int {
+	return xxx_messageInfo_RepoCredWrapper.Size(m)
+}
+func (m *RepoCredWrapper) XXX_DiscardUnknown() {
+	xxx_messageInfo_RepoCredWrapper.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RepoCredWrapper proto.InternalMessageInfo
 
 func (m *RepoCredWrapper) GetRepo() []*RepoCreds {
 	if m != nil {
@@ -313,13 +455,35 @@ type RepoCreds struct {
 	AcctName string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty" yaml:"acctName"`
 	// @inject_tag: yaml:"subType"
 	// there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS
-	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	SubType              SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *RepoCreds) Reset()                    { *m = RepoCreds{} }
-func (m *RepoCreds) String() string            { return proto.CompactTextString(m) }
-func (*RepoCreds) ProtoMessage()               {}
-func (*RepoCreds) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{6} }
+func (m *RepoCreds) Reset()         { *m = RepoCreds{} }
+func (m *RepoCreds) String() string { return proto.CompactTextString(m) }
+func (*RepoCreds) ProtoMessage()    {}
+func (*RepoCreds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{6}
+}
+func (m *RepoCreds) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RepoCreds.Unmarshal(m, b)
+}
+func (m *RepoCreds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RepoCreds.Marshal(b, m, deterministic)
+}
+func (dst *RepoCreds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RepoCreds.Merge(dst, src)
+}
+func (m *RepoCreds) XXX_Size() int {
+	return xxx_messageInfo_RepoCreds.Size(m)
+}
+func (m *RepoCreds) XXX_DiscardUnknown() {
+	xxx_messageInfo_RepoCreds.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RepoCreds proto.InternalMessageInfo
 
 func (m *RepoCreds) GetUsername() string {
 	if m != nil {
@@ -372,13 +536,35 @@ type K8SCreds struct {
 	Identifier string `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
 	// @inject_tag: yaml:"subType"
 	// there is currently only one subtype for k8SCreds, and it is KUBECONF
-	SubType SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	SubType              SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *K8SCreds) Reset()                    { *m = K8SCreds{} }
-func (m *K8SCreds) String() string            { return proto.CompactTextString(m) }
-func (*K8SCreds) ProtoMessage()               {}
-func (*K8SCreds) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7} }
+func (m *K8SCreds) Reset()         { *m = K8SCreds{} }
+func (m *K8SCreds) String() string { return proto.CompactTextString(m) }
+func (*K8SCreds) ProtoMessage()    {}
+func (*K8SCreds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{7}
+}
+func (m *K8SCreds) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_K8SCreds.Unmarshal(m, b)
+}
+func (m *K8SCreds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_K8SCreds.Marshal(b, m, deterministic)
+}
+func (dst *K8SCreds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_K8SCreds.Merge(dst, src)
+}
+func (m *K8SCreds) XXX_Size() int {
+	return xxx_messageInfo_K8SCreds.Size(m)
+}
+func (m *K8SCreds) XXX_DiscardUnknown() {
+	xxx_messageInfo_K8SCreds.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_K8SCreds proto.InternalMessageInfo
 
 func (m *K8SCreds) GetAcctName() string {
 	if m != nil {
@@ -409,13 +595,35 @@ func (m *K8SCreds) GetSubType() SubCredType {
 }
 
 type K8SCredsWrapper struct {
-	K8SCreds []*K8SCreds `protobuf:"bytes,2,rep,name=K8SCreds" json:"K8SCreds,omitempty"`
+	K8SCreds             []*K8SCreds `protobuf:"bytes,2,rep,name=K8SCreds" json:"K8SCreds,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *K8SCredsWrapper) Reset()                    { *m = K8SCredsWrapper{} }
-func (m *K8SCredsWrapper) String() string            { return proto.CompactTextString(m) }
-func (*K8SCredsWrapper) ProtoMessage()               {}
-func (*K8SCredsWrapper) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8} }
+func (m *K8SCredsWrapper) Reset()         { *m = K8SCredsWrapper{} }
+func (m *K8SCredsWrapper) String() string { return proto.CompactTextString(m) }
+func (*K8SCredsWrapper) ProtoMessage()    {}
+func (*K8SCredsWrapper) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{8}
+}
+func (m *K8SCredsWrapper) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_K8SCredsWrapper.Unmarshal(m, b)
+}
+func (m *K8SCredsWrapper) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_K8SCredsWrapper.Marshal(b, m, deterministic)
+}
+func (dst *K8SCredsWrapper) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_K8SCredsWrapper.Merge(dst, src)
+}
+func (m *K8SCredsWrapper) XXX_Size() int {
+	return xxx_messageInfo_K8SCredsWrapper.Size(m)
+}
+func (m *K8SCredsWrapper) XXX_DiscardUnknown() {
+	xxx_messageInfo_K8SCredsWrapper.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_K8SCredsWrapper proto.InternalMessageInfo
 
 func (m *K8SCredsWrapper) GetK8SCreds() []*K8SCreds {
 	if m != nil {
@@ -434,13 +642,35 @@ type AppleCreds struct {
 	// appleSecretsPassword is the password you set when you export the developer profile
 	AppleSecretsPassword string `protobuf:"bytes,6,opt,name=appleSecretsPassword" json:"appleSecretsPassword,omitempty"`
 	// @inject_tag: yaml:"subType"
-	SubType SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	SubType              SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *AppleCreds) Reset()                    { *m = AppleCreds{} }
-func (m *AppleCreds) String() string            { return proto.CompactTextString(m) }
-func (*AppleCreds) ProtoMessage()               {}
-func (*AppleCreds) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{9} }
+func (m *AppleCreds) Reset()         { *m = AppleCreds{} }
+func (m *AppleCreds) String() string { return proto.CompactTextString(m) }
+func (*AppleCreds) ProtoMessage()    {}
+func (*AppleCreds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{9}
+}
+func (m *AppleCreds) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AppleCreds.Unmarshal(m, b)
+}
+func (m *AppleCreds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AppleCreds.Marshal(b, m, deterministic)
+}
+func (dst *AppleCreds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppleCreds.Merge(dst, src)
+}
+func (m *AppleCreds) XXX_Size() int {
+	return xxx_messageInfo_AppleCreds.Size(m)
+}
+func (m *AppleCreds) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppleCreds.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppleCreds proto.InternalMessageInfo
 
 func (m *AppleCreds) GetAcctName() string {
 	if m != nil {
@@ -478,13 +708,35 @@ func (m *AppleCreds) GetSubType() SubCredType {
 }
 
 type AppleCredsWrapper struct {
-	AppleCreds []*AppleCreds `protobuf:"bytes,1,rep,name=appleCreds" json:"appleCreds,omitempty"`
+	AppleCreds           []*AppleCreds `protobuf:"bytes,1,rep,name=appleCreds" json:"appleCreds,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
 }
 
-func (m *AppleCredsWrapper) Reset()                    { *m = AppleCredsWrapper{} }
-func (m *AppleCredsWrapper) String() string            { return proto.CompactTextString(m) }
-func (*AppleCredsWrapper) ProtoMessage()               {}
-func (*AppleCredsWrapper) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{10} }
+func (m *AppleCredsWrapper) Reset()         { *m = AppleCredsWrapper{} }
+func (m *AppleCredsWrapper) String() string { return proto.CompactTextString(m) }
+func (*AppleCredsWrapper) ProtoMessage()    {}
+func (*AppleCredsWrapper) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{10}
+}
+func (m *AppleCredsWrapper) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AppleCredsWrapper.Unmarshal(m, b)
+}
+func (m *AppleCredsWrapper) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AppleCredsWrapper.Marshal(b, m, deterministic)
+}
+func (dst *AppleCredsWrapper) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppleCredsWrapper.Merge(dst, src)
+}
+func (m *AppleCredsWrapper) XXX_Size() int {
+	return xxx_messageInfo_AppleCredsWrapper.Size(m)
+}
+func (m *AppleCredsWrapper) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppleCredsWrapper.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppleCredsWrapper proto.InternalMessageInfo
 
 func (m *AppleCredsWrapper) GetAppleCreds() []*AppleCreds {
 	if m != nil {
@@ -494,13 +746,35 @@ func (m *AppleCredsWrapper) GetAppleCreds() []*AppleCreds {
 }
 
 type NotifyWrap struct {
-	Creds []*NotifyCreds `protobuf:"bytes,1,rep,name=creds" json:"creds,omitempty"`
+	Creds                []*NotifyCreds `protobuf:"bytes,1,rep,name=creds" json:"creds,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
 }
 
-func (m *NotifyWrap) Reset()                    { *m = NotifyWrap{} }
-func (m *NotifyWrap) String() string            { return proto.CompactTextString(m) }
-func (*NotifyWrap) ProtoMessage()               {}
-func (*NotifyWrap) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{11} }
+func (m *NotifyWrap) Reset()         { *m = NotifyWrap{} }
+func (m *NotifyWrap) String() string { return proto.CompactTextString(m) }
+func (*NotifyWrap) ProtoMessage()    {}
+func (*NotifyWrap) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{11}
+}
+func (m *NotifyWrap) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_NotifyWrap.Unmarshal(m, b)
+}
+func (m *NotifyWrap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_NotifyWrap.Marshal(b, m, deterministic)
+}
+func (dst *NotifyWrap) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NotifyWrap.Merge(dst, src)
+}
+func (m *NotifyWrap) XXX_Size() int {
+	return xxx_messageInfo_NotifyWrap.Size(m)
+}
+func (m *NotifyWrap) XXX_DiscardUnknown() {
+	xxx_messageInfo_NotifyWrap.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_NotifyWrap proto.InternalMessageInfo
 
 func (m *NotifyWrap) GetCreds() []*NotifyCreds {
 	if m != nil {
@@ -517,13 +791,35 @@ type NotifyCreds struct {
 	// identifier is the unique identifier for the integration
 	Identifier string `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
 	// clientSecret is the secret associated with the integration cred
-	ClientSecret string `protobuf:"bytes,4,opt,name=clientSecret" json:"clientSecret,omitempty"`
+	ClientSecret         string   `protobuf:"bytes,4,opt,name=clientSecret" json:"clientSecret,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *NotifyCreds) Reset()                    { *m = NotifyCreds{} }
-func (m *NotifyCreds) String() string            { return proto.CompactTextString(m) }
-func (*NotifyCreds) ProtoMessage()               {}
-func (*NotifyCreds) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{12} }
+func (m *NotifyCreds) Reset()         { *m = NotifyCreds{} }
+func (m *NotifyCreds) String() string { return proto.CompactTextString(m) }
+func (*NotifyCreds) ProtoMessage()    {}
+func (*NotifyCreds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_creds_4af25941be456e6c, []int{12}
+}
+func (m *NotifyCreds) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_NotifyCreds.Unmarshal(m, b)
+}
+func (m *NotifyCreds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_NotifyCreds.Marshal(b, m, deterministic)
+}
+func (dst *NotifyCreds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NotifyCreds.Merge(dst, src)
+}
+func (m *NotifyCreds) XXX_Size() int {
+	return xxx_messageInfo_NotifyCreds.Size(m)
+}
+func (m *NotifyCreds) XXX_DiscardUnknown() {
+	xxx_messageInfo_NotifyCreds.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_NotifyCreds proto.InternalMessageInfo
 
 func (m *NotifyCreds) GetAcctName() string {
 	if m != nil {
@@ -571,9 +867,9 @@ func init() {
 	proto.RegisterEnum("models.SubCredType", SubCredType_name, SubCredType_value)
 }
 
-func init() { proto.RegisterFile("creds.proto", fileDescriptor1) }
+func init() { proto.RegisterFile("creds.proto", fileDescriptor_creds_4af25941be456e6c) }
 
-var fileDescriptor1 = []byte{
+var fileDescriptor_creds_4af25941be456e6c = []byte{
 	// 750 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xdd, 0x6e, 0xda, 0x4a,
 	0x10, 0x3e, 0xe6, 0xd7, 0x1e, 0x93, 0x64, 0xb3, 0xe7, 0x1c, 0x1d, 0xeb, 0x5c, 0x54, 0xc8, 0x52,

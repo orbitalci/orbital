@@ -6,23 +6,51 @@ package pb
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_protobuf2 "github.com/golang/protobuf/ptypes/timestamp"
+import timestamp "github.com/golang/protobuf/ptypes/timestamp"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type BranchHistory struct {
-	Branch         string                      `protobuf:"bytes,1,opt,name=branch" json:"branch,omitempty"`
-	Hash           string                      `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`
-	LastCommitTime *google_protobuf2.Timestamp `protobuf:"bytes,3,opt,name=lastCommitTime" json:"lastCommitTime,omitempty"`
+	Branch               string               `protobuf:"bytes,1,opt,name=branch" json:"branch,omitempty"`
+	Hash                 string               `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`
+	LastCommitTime       *timestamp.Timestamp `protobuf:"bytes,3,opt,name=lastCommitTime" json:"lastCommitTime,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *BranchHistory) Reset()                    { *m = BranchHistory{} }
-func (m *BranchHistory) String() string            { return proto.CompactTextString(m) }
-func (*BranchHistory) ProtoMessage()               {}
-func (*BranchHistory) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+func (m *BranchHistory) Reset()         { *m = BranchHistory{} }
+func (m *BranchHistory) String() string { return proto.CompactTextString(m) }
+func (*BranchHistory) ProtoMessage()    {}
+func (*BranchHistory) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vcshandler_85dd6ad51134a535, []int{0}
+}
+func (m *BranchHistory) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BranchHistory.Unmarshal(m, b)
+}
+func (m *BranchHistory) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BranchHistory.Marshal(b, m, deterministic)
+}
+func (dst *BranchHistory) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BranchHistory.Merge(dst, src)
+}
+func (m *BranchHistory) XXX_Size() int {
+	return xxx_messageInfo_BranchHistory.Size(m)
+}
+func (m *BranchHistory) XXX_DiscardUnknown() {
+	xxx_messageInfo_BranchHistory.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BranchHistory proto.InternalMessageInfo
 
 func (m *BranchHistory) GetBranch() string {
 	if m != nil {
@@ -38,7 +66,7 @@ func (m *BranchHistory) GetHash() string {
 	return ""
 }
 
-func (m *BranchHistory) GetLastCommitTime() *google_protobuf2.Timestamp {
+func (m *BranchHistory) GetLastCommitTime() *timestamp.Timestamp {
 	if m != nil {
 		return m.LastCommitTime
 	}
@@ -49,9 +77,9 @@ func init() {
 	proto.RegisterType((*BranchHistory)(nil), "models.BranchHistory")
 }
 
-func init() { proto.RegisterFile("vcshandler.proto", fileDescriptor3) }
+func init() { proto.RegisterFile("vcshandler.proto", fileDescriptor_vcshandler_85dd6ad51134a535) }
 
-var fileDescriptor3 = []byte{
+var fileDescriptor_vcshandler_85dd6ad51134a535 = []byte{
 	// 173 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x28, 0x4b, 0x2e, 0xce,
 	0x48, 0xcc, 0x4b, 0xc9, 0x49, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcb, 0xcd,

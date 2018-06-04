@@ -26,9 +26,9 @@ import (
 )
 
 var kubeconfs = []pb.OcyCredder{
-	&pb.K8SCreds{"acct1", `herearemyk8scontentshowsickisthat
+	&pb.K8SCreds{AcctName: "acct1", K8SContents:`herearemyk8scontentshowsickisthat
 wowowoowowowoowoowowowo
-herebeanotherlinebudshowniceisthaaat`, "THERECANONLYBEONE", pb.SubCredType_KUBECONF},
+herebeanotherlinebudshowniceisthaaat`, Identifier: "THERECANONLYBEONE", SubType: pb.SubCredType_KUBECONF},
 }
 
 
@@ -38,7 +38,7 @@ var dockerCreds = []pb.OcyCredder{
 }
 
 var sshCreds = []pb.OcyCredder{
-	&pb.SSHKeyWrapper{"account1", []byte(testSSHKey), pb.SubCredType_SSHKEY, "THISISANSSHKEY"},
+	&pb.SSHKeyWrapper{AcctName:"account1", PrivateKey:[]byte(testSSHKey), SubType:pb.SubCredType_SSHKEY, Identifier: "THISISANSSHKEY"},
 }
 var testSSHKey = `-----BEGIN RSA PRIVATE KEY-----
 wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
@@ -155,7 +155,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 
 	// this is going to be multiline, so we have to set up a new info channel
 	kubeLogout := make(chan []byte, 1000)
-	res = dckr.Exec(ctx, "test k8s config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/conf"}, kubeLogout)
+	res = dckr.Exec(ctx, "test k8s config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/config"}, kubeLogout)
 	close(kubeLogout)
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Log(res.Messages)

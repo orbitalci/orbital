@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/shankj3/go-til/test"
@@ -119,5 +120,6 @@ func SetupSSHBuilder(t *testing.T, sshPort int, servicePort string) (bldr build.
 		return
 	}
 	ctx, cancel = context.WithCancel(ctx)
+	time.Sleep(5)
 	return ssh, ctx, cancel, rmTar, cleanup
 }

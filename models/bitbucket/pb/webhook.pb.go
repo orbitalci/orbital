@@ -6,24 +6,52 @@ package protos
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
+import timestamp "github.com/golang/protobuf/ptypes/timestamp"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push
 type RepoPush struct {
-	Actor      *Owner               `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	Repository *Repository          `protobuf:"bytes,2,opt,name=repository" json:"repository,omitempty"`
-	Push       *RepoPush_PushDetail `protobuf:"bytes,3,opt,name=push" json:"push,omitempty"`
+	Actor                *Owner               `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	Repository           *Repository          `protobuf:"bytes,2,opt,name=repository" json:"repository,omitempty"`
+	Push                 *RepoPush_PushDetail `protobuf:"bytes,3,opt,name=push" json:"push,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *RepoPush) Reset()                    { *m = RepoPush{} }
-func (m *RepoPush) String() string            { return proto.CompactTextString(m) }
-func (*RepoPush) ProtoMessage()               {}
-func (*RepoPush) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
+func (m *RepoPush) Reset()         { *m = RepoPush{} }
+func (m *RepoPush) String() string { return proto.CompactTextString(m) }
+func (*RepoPush) ProtoMessage()    {}
+func (*RepoPush) Descriptor() ([]byte, []int) {
+	return fileDescriptor_webhook_1a8dfaaaa66838b4, []int{0}
+}
+func (m *RepoPush) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RepoPush.Unmarshal(m, b)
+}
+func (m *RepoPush) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RepoPush.Marshal(b, m, deterministic)
+}
+func (dst *RepoPush) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RepoPush.Merge(dst, src)
+}
+func (m *RepoPush) XXX_Size() int {
+	return xxx_messageInfo_RepoPush.Size(m)
+}
+func (m *RepoPush) XXX_DiscardUnknown() {
+	xxx_messageInfo_RepoPush.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RepoPush proto.InternalMessageInfo
 
 func (m *RepoPush) GetActor() *Owner {
 	if m != nil {
@@ -47,13 +75,35 @@ func (m *RepoPush) GetPush() *RepoPush_PushDetail {
 }
 
 type RepoPush_PushDetail struct {
-	Changes []*Changeset `protobuf:"bytes,1,rep,name=changes" json:"changes,omitempty"`
+	Changes              []*Changeset `protobuf:"bytes,1,rep,name=changes" json:"changes,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
-func (m *RepoPush_PushDetail) Reset()                    { *m = RepoPush_PushDetail{} }
-func (m *RepoPush_PushDetail) String() string            { return proto.CompactTextString(m) }
-func (*RepoPush_PushDetail) ProtoMessage()               {}
-func (*RepoPush_PushDetail) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0, 0} }
+func (m *RepoPush_PushDetail) Reset()         { *m = RepoPush_PushDetail{} }
+func (m *RepoPush_PushDetail) String() string { return proto.CompactTextString(m) }
+func (*RepoPush_PushDetail) ProtoMessage()    {}
+func (*RepoPush_PushDetail) Descriptor() ([]byte, []int) {
+	return fileDescriptor_webhook_1a8dfaaaa66838b4, []int{0, 0}
+}
+func (m *RepoPush_PushDetail) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RepoPush_PushDetail.Unmarshal(m, b)
+}
+func (m *RepoPush_PushDetail) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RepoPush_PushDetail.Marshal(b, m, deterministic)
+}
+func (dst *RepoPush_PushDetail) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RepoPush_PushDetail.Merge(dst, src)
+}
+func (m *RepoPush_PushDetail) XXX_Size() int {
+	return xxx_messageInfo_RepoPush_PushDetail.Size(m)
+}
+func (m *RepoPush_PushDetail) XXX_DiscardUnknown() {
+	xxx_messageInfo_RepoPush_PushDetail.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RepoPush_PushDetail proto.InternalMessageInfo
 
 func (m *RepoPush_PushDetail) GetChanges() []*Changeset {
 	if m != nil {
@@ -64,15 +114,37 @@ func (m *RepoPush_PushDetail) GetChanges() []*Changeset {
 
 // same for created and updated
 type PullRequest struct {
-	Actor       *Owner             `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	Pullrequest *PullRequestEntity `protobuf:"bytes,2,opt,name=pullrequest" json:"pullrequest,omitempty"`
-	Repository  *Repository        `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
+	Actor                *Owner             `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	Pullrequest          *PullRequestEntity `protobuf:"bytes,2,opt,name=pullrequest" json:"pullrequest,omitempty"`
+	Repository           *Repository        `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
+	XXX_unrecognized     []byte             `json:"-"`
+	XXX_sizecache        int32              `json:"-"`
 }
 
-func (m *PullRequest) Reset()                    { *m = PullRequest{} }
-func (m *PullRequest) String() string            { return proto.CompactTextString(m) }
-func (*PullRequest) ProtoMessage()               {}
-func (*PullRequest) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{1} }
+func (m *PullRequest) Reset()         { *m = PullRequest{} }
+func (m *PullRequest) String() string { return proto.CompactTextString(m) }
+func (*PullRequest) ProtoMessage()    {}
+func (*PullRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_webhook_1a8dfaaaa66838b4, []int{1}
+}
+func (m *PullRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PullRequest.Unmarshal(m, b)
+}
+func (m *PullRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PullRequest.Marshal(b, m, deterministic)
+}
+func (dst *PullRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullRequest.Merge(dst, src)
+}
+func (m *PullRequest) XXX_Size() int {
+	return xxx_messageInfo_PullRequest.Size(m)
+}
+func (m *PullRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullRequest proto.InternalMessageInfo
 
 func (m *PullRequest) GetActor() *Owner {
 	if m != nil {
@@ -97,16 +169,38 @@ func (m *PullRequest) GetRepository() *Repository {
 
 // approved adds timestamp and approving owner's info
 type PullRequestApproved struct {
-	Actor       *Owner                      `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	Pullrequest *PullRequestEntity          `protobuf:"bytes,2,opt,name=pullrequest" json:"pullrequest,omitempty"`
-	Repository  *Repository                 `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
-	Approval    *PullRequestApprovedApprove `protobuf:"bytes,4,opt,name=approval" json:"approval,omitempty"`
+	Actor                *Owner                      `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
+	Pullrequest          *PullRequestEntity          `protobuf:"bytes,2,opt,name=pullrequest" json:"pullrequest,omitempty"`
+	Repository           *Repository                 `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
+	Approval             *PullRequestApprovedApprove `protobuf:"bytes,4,opt,name=approval" json:"approval,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
 }
 
-func (m *PullRequestApproved) Reset()                    { *m = PullRequestApproved{} }
-func (m *PullRequestApproved) String() string            { return proto.CompactTextString(m) }
-func (*PullRequestApproved) ProtoMessage()               {}
-func (*PullRequestApproved) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{2} }
+func (m *PullRequestApproved) Reset()         { *m = PullRequestApproved{} }
+func (m *PullRequestApproved) String() string { return proto.CompactTextString(m) }
+func (*PullRequestApproved) ProtoMessage()    {}
+func (*PullRequestApproved) Descriptor() ([]byte, []int) {
+	return fileDescriptor_webhook_1a8dfaaaa66838b4, []int{2}
+}
+func (m *PullRequestApproved) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PullRequestApproved.Unmarshal(m, b)
+}
+func (m *PullRequestApproved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PullRequestApproved.Marshal(b, m, deterministic)
+}
+func (dst *PullRequestApproved) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullRequestApproved.Merge(dst, src)
+}
+func (m *PullRequestApproved) XXX_Size() int {
+	return xxx_messageInfo_PullRequestApproved.Size(m)
+}
+func (m *PullRequestApproved) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullRequestApproved.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullRequestApproved proto.InternalMessageInfo
 
 func (m *PullRequestApproved) GetActor() *Owner {
 	if m != nil {
@@ -137,16 +231,38 @@ func (m *PullRequestApproved) GetApproval() *PullRequestApprovedApprove {
 }
 
 type PullRequestApprovedApprove struct {
-	Date *google_protobuf.Timestamp `protobuf:"bytes,1,opt,name=date" json:"date,omitempty"`
-	User *Owner                     `protobuf:"bytes,2,opt,name=user" json:"user,omitempty"`
+	Date                 *timestamp.Timestamp `protobuf:"bytes,1,opt,name=date" json:"date,omitempty"`
+	User                 *Owner               `protobuf:"bytes,2,opt,name=user" json:"user,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *PullRequestApprovedApprove) Reset()                    { *m = PullRequestApprovedApprove{} }
-func (m *PullRequestApprovedApprove) String() string            { return proto.CompactTextString(m) }
-func (*PullRequestApprovedApprove) ProtoMessage()               {}
-func (*PullRequestApprovedApprove) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{2, 0} }
+func (m *PullRequestApprovedApprove) Reset()         { *m = PullRequestApprovedApprove{} }
+func (m *PullRequestApprovedApprove) String() string { return proto.CompactTextString(m) }
+func (*PullRequestApprovedApprove) ProtoMessage()    {}
+func (*PullRequestApprovedApprove) Descriptor() ([]byte, []int) {
+	return fileDescriptor_webhook_1a8dfaaaa66838b4, []int{2, 0}
+}
+func (m *PullRequestApprovedApprove) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PullRequestApprovedApprove.Unmarshal(m, b)
+}
+func (m *PullRequestApprovedApprove) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PullRequestApprovedApprove.Marshal(b, m, deterministic)
+}
+func (dst *PullRequestApprovedApprove) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullRequestApprovedApprove.Merge(dst, src)
+}
+func (m *PullRequestApprovedApprove) XXX_Size() int {
+	return xxx_messageInfo_PullRequestApprovedApprove.Size(m)
+}
+func (m *PullRequestApprovedApprove) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullRequestApprovedApprove.DiscardUnknown(m)
+}
 
-func (m *PullRequestApprovedApprove) GetDate() *google_protobuf.Timestamp {
+var xxx_messageInfo_PullRequestApprovedApprove proto.InternalMessageInfo
+
+func (m *PullRequestApprovedApprove) GetDate() *timestamp.Timestamp {
 	if m != nil {
 		return m.Date
 	}
@@ -161,16 +277,38 @@ func (m *PullRequestApprovedApprove) GetUser() *Owner {
 }
 
 type CreateWebhook struct {
-	Description string   `protobuf:"bytes,1,opt,name=description" json:"description,omitempty"`
-	Url         string   `protobuf:"bytes,2,opt,name=url" json:"url,omitempty"`
-	Active      bool     `protobuf:"varint,3,opt,name=active" json:"active,omitempty"`
-	Events      []string `protobuf:"bytes,4,rep,name=events" json:"events,omitempty"`
+	Description          string   `protobuf:"bytes,1,opt,name=description" json:"description,omitempty"`
+	Url                  string   `protobuf:"bytes,2,opt,name=url" json:"url,omitempty"`
+	Active               bool     `protobuf:"varint,3,opt,name=active" json:"active,omitempty"`
+	Events               []string `protobuf:"bytes,4,rep,name=events" json:"events,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *CreateWebhook) Reset()                    { *m = CreateWebhook{} }
-func (m *CreateWebhook) String() string            { return proto.CompactTextString(m) }
-func (*CreateWebhook) ProtoMessage()               {}
-func (*CreateWebhook) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{3} }
+func (m *CreateWebhook) Reset()         { *m = CreateWebhook{} }
+func (m *CreateWebhook) String() string { return proto.CompactTextString(m) }
+func (*CreateWebhook) ProtoMessage()    {}
+func (*CreateWebhook) Descriptor() ([]byte, []int) {
+	return fileDescriptor_webhook_1a8dfaaaa66838b4, []int{3}
+}
+func (m *CreateWebhook) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CreateWebhook.Unmarshal(m, b)
+}
+func (m *CreateWebhook) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CreateWebhook.Marshal(b, m, deterministic)
+}
+func (dst *CreateWebhook) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateWebhook.Merge(dst, src)
+}
+func (m *CreateWebhook) XXX_Size() int {
+	return xxx_messageInfo_CreateWebhook.Size(m)
+}
+func (m *CreateWebhook) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateWebhook.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateWebhook proto.InternalMessageInfo
 
 func (m *CreateWebhook) GetDescription() string {
 	if m != nil {
@@ -201,17 +339,39 @@ func (m *CreateWebhook) GetEvents() []string {
 }
 
 type GetWebhooks struct {
-	Pagelen float64     `protobuf:"fixed64,1,opt,name=pagelen" json:"pagelen,omitempty"`
-	Page    float64     `protobuf:"fixed64,2,opt,name=page" json:"page,omitempty"`
-	Size    float64     `protobuf:"fixed64,3,opt,name=size" json:"size,omitempty"`
-	Values  []*Webhooks `protobuf:"bytes,4,rep,name=values" json:"values,omitempty"`
-	Next    string      `protobuf:"bytes,5,opt,name=next" json:"next,omitempty"`
+	Pagelen              float64     `protobuf:"fixed64,1,opt,name=pagelen" json:"pagelen,omitempty"`
+	Page                 float64     `protobuf:"fixed64,2,opt,name=page" json:"page,omitempty"`
+	Size                 float64     `protobuf:"fixed64,3,opt,name=size" json:"size,omitempty"`
+	Values               []*Webhooks `protobuf:"bytes,4,rep,name=values" json:"values,omitempty"`
+	Next                 string      `protobuf:"bytes,5,opt,name=next" json:"next,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *GetWebhooks) Reset()                    { *m = GetWebhooks{} }
-func (m *GetWebhooks) String() string            { return proto.CompactTextString(m) }
-func (*GetWebhooks) ProtoMessage()               {}
-func (*GetWebhooks) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{4} }
+func (m *GetWebhooks) Reset()         { *m = GetWebhooks{} }
+func (m *GetWebhooks) String() string { return proto.CompactTextString(m) }
+func (*GetWebhooks) ProtoMessage()    {}
+func (*GetWebhooks) Descriptor() ([]byte, []int) {
+	return fileDescriptor_webhook_1a8dfaaaa66838b4, []int{4}
+}
+func (m *GetWebhooks) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetWebhooks.Unmarshal(m, b)
+}
+func (m *GetWebhooks) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetWebhooks.Marshal(b, m, deterministic)
+}
+func (dst *GetWebhooks) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetWebhooks.Merge(dst, src)
+}
+func (m *GetWebhooks) XXX_Size() int {
+	return xxx_messageInfo_GetWebhooks.Size(m)
+}
+func (m *GetWebhooks) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetWebhooks.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetWebhooks proto.InternalMessageInfo
 
 func (m *GetWebhooks) GetPagelen() float64 {
 	if m != nil {
@@ -249,17 +409,39 @@ func (m *GetWebhooks) GetNext() string {
 }
 
 type Webhooks struct {
-	Description string                     `protobuf:"bytes,1,opt,name=description" json:"description,omitempty"`
-	Links       *Links                     `protobuf:"bytes,2,opt,name=links" json:"links,omitempty"`
-	Url         string                     `protobuf:"bytes,3,opt,name=url" json:"url,omitempty"`
-	CreatedAt   *google_protobuf.Timestamp `protobuf:"bytes,4,opt,name=createdAt,json=created_at" json:"createdAt,omitempty"`
-	Active      bool                       `protobuf:"varint,5,opt,name=active" json:"active,omitempty"`
+	Description          string               `protobuf:"bytes,1,opt,name=description" json:"description,omitempty"`
+	Links                *Links               `protobuf:"bytes,2,opt,name=links" json:"links,omitempty"`
+	Url                  string               `protobuf:"bytes,3,opt,name=url" json:"url,omitempty"`
+	CreatedAt            *timestamp.Timestamp `protobuf:"bytes,4,opt,name=createdAt,json=created_at" json:"createdAt,omitempty"`
+	Active               bool                 `protobuf:"varint,5,opt,name=active" json:"active,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *Webhooks) Reset()                    { *m = Webhooks{} }
-func (m *Webhooks) String() string            { return proto.CompactTextString(m) }
-func (*Webhooks) ProtoMessage()               {}
-func (*Webhooks) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{5} }
+func (m *Webhooks) Reset()         { *m = Webhooks{} }
+func (m *Webhooks) String() string { return proto.CompactTextString(m) }
+func (*Webhooks) ProtoMessage()    {}
+func (*Webhooks) Descriptor() ([]byte, []int) {
+	return fileDescriptor_webhook_1a8dfaaaa66838b4, []int{5}
+}
+func (m *Webhooks) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Webhooks.Unmarshal(m, b)
+}
+func (m *Webhooks) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Webhooks.Marshal(b, m, deterministic)
+}
+func (dst *Webhooks) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Webhooks.Merge(dst, src)
+}
+func (m *Webhooks) XXX_Size() int {
+	return xxx_messageInfo_Webhooks.Size(m)
+}
+func (m *Webhooks) XXX_DiscardUnknown() {
+	xxx_messageInfo_Webhooks.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Webhooks proto.InternalMessageInfo
 
 func (m *Webhooks) GetDescription() string {
 	if m != nil {
@@ -282,7 +464,7 @@ func (m *Webhooks) GetUrl() string {
 	return ""
 }
 
-func (m *Webhooks) GetCreatedAt() *google_protobuf.Timestamp {
+func (m *Webhooks) GetCreatedAt() *timestamp.Timestamp {
 	if m != nil {
 		return m.CreatedAt
 	}
@@ -307,9 +489,9 @@ func init() {
 	proto.RegisterType((*Webhooks)(nil), "protos.Webhooks")
 }
 
-func init() { proto.RegisterFile("webhook.proto", fileDescriptor4) }
+func init() { proto.RegisterFile("webhook.proto", fileDescriptor_webhook_1a8dfaaaa66838b4) }
 
-var fileDescriptor4 = []byte{
+var fileDescriptor_webhook_1a8dfaaaa66838b4 = []byte{
 	// 538 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x54, 0xcd, 0x8a, 0x13, 0x41,
 	0x10, 0x66, 0x76, 0x26, 0x9b, 0xa4, 0xc6, 0xc0, 0xda, 0x82, 0xcc, 0xc6, 0x83, 0x71, 0x72, 0x09,
