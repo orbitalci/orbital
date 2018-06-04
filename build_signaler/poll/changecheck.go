@@ -58,7 +58,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 	for _, branchHist := range branchHistories {
 		lastHash, ok := branchLastHashes[branchHist.Branch]
 		if ok {
-			ocelog.Log().Info("this branch is already being tracked, checking if the built hash is the same as the one retrieved from bitbucket")
+			ocelog.Log().Info("this branch is already being tracked, checking if the built hash is the same as the one retrieved from VCS ")
 			if lastHash != branchHist.Hash {
 				ocelog.Log().Info("hashes are not the same, telling werker...")
 				err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token)
