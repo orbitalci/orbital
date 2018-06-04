@@ -10,6 +10,12 @@ import (
 
 var Config *ClientConfig
 
+var (
+	// inject with -X github.com/shankj3/ocelot/client/commandhelper.AdminHost=my.ocelotadmin.com -X github.com/shankj3/ocelot/client/commandhelper.AdminPort=443
+	AdminHost = "localhost"
+	AdminPort = "10000"
+)
+
 func init() {
 	Config = NewClientConfig()
 }
@@ -27,12 +33,12 @@ func NewClientConfig() *ClientConfig {
 	var adminHost string
 	var ocyDns string
 	if v := os.Getenv("ADMIN_PORT"); v == "" {
-		adminPort = "10000"
+		adminPort = AdminPort
 	} else {
 		adminPort = v
 	}
 	if v := os.Getenv("ADMIN_HOST"); v == "" {
-		adminHost = "localhost"
+		adminHost = AdminHost
 	} else {
 		adminHost = v
 	}
