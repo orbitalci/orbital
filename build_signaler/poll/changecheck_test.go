@@ -105,7 +105,7 @@ var allBranchesTests = []struct{
 	},
 	{
 		"untracked branch",
-		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Add(-time.Hour*500).Unix(), Nanos:0}},},
+		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().AddDate(0,0,6).Unix(), Nanos:0}},},
 		map[string]string{"abranch":"1234"},
 		map[string]string{"abranch":"1234", "bbranch": "1a34"},
 		1,
