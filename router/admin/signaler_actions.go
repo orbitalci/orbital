@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/common/remote"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -101,6 +102,10 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap(fmt.Sprintf("Storing build data for %s...", buildReq.AcctRepo)))
 	if err = signal.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
+		if _, ok := err.(*build.DoNotQueue); ok {
+			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
+			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Error is: " + err.Error())
+		}
 		log.IncludeErrField(err).Error("couldn't add to build queue or store in db")
 		return status.Error(codes.InvalidArgument, "Couldn't add to build queue or store in DB, err: "+err.Error())
 	}

@@ -44,6 +44,9 @@ func (w *BBWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, 
 		return errors.New("unable to get build configuration; err: " + err.Error())
 	}
 	if err = QueueAndStore(hash, branch, conf.AcctRepo, token, conf.RC, buildConf, conf.OcyValidator, conf.Producer, conf.Store); err != nil {
+		if _, ok := err.(*build.DoNotQueue); ok {
+			return errors.New("did not queue because it shouldn't be queued. explanation: " + err.Error())
+		}
 		return errors.New("unable to queue or store; err: " + err.Error())
 	}
 	return nil

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/common/helpers/dockrhelper"
@@ -51,22 +52,31 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	return err
 }
 
-// ValidateWithBranch runs the normal Build Config validation, and then also checks if the config is still valid in
-//   context with a specific branch. i.e. if a build is triggered on branch X but the build conf only allows Y and Z,
-//   then this function will return an error.
-func (ov *OcelotValidator) ValidateWithBranch(buildConf *pb.BuildConfig, branch string, ui cli.Ui) error {
-	err := ov.ValidateConfig(buildConf, ui)
-	if err != nil {
-		return err
-	}
+//CheckQueueability will check to see if the the branch given is in the BuildConfig's allowed branches list. This should be separate from the validate function, as the validate failure should be stored in the database. A queue validate failure should not be.
+func (ov *OcelotValidator) CheckQueueability(buildConf *pb.BuildConfig, branch string) error {
 	branchOk, err := BranchRegexOk(branch, buildConf.Branches)
 	if err != nil {
 		return err
 	}
 	if !branchOk {
-		err = errors.New(fmt.Sprintf("branch %s does not match any branches listed: %v", branch, buildConf.Branches))
+		return DontQueue(fmt.Sprintf("branch %s not in the acceptable branches list: %s", branch, strings.Join(buildConf.Branches, ", ")))
 	}
-	return err
+	return nil
+}
+
+// DoNotQueue is an error that means that the build config should not be queued for a build
+type DoNotQueue struct {
+	branch string
+	commits []string
+	msg string
+}
+
+func (dq *DoNotQueue) Error() string {
+	return dq.msg
+}
+
+func DontQueue(msg string) *DoNotQueue {
+	return &DoNotQueue{msg:msg}
 }
 
 
