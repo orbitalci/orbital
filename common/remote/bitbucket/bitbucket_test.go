@@ -1,12 +1,14 @@
 package bitbucket
 
 import (
+	"net/http"
+	"os"
+	"testing"
+
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
-	"os"
-	"testing"
 )
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
@@ -59,4 +61,8 @@ func (mhc MockHttpClient) GetUrlRawData(url string) ([]byte, error) {
 
 func (mhc MockHttpClient) PostUrl(url string, body string, unmarshalObj proto.Message) error {
 	return nil
+}
+
+func (mhc MockHttpClient) GetUrlResponse(url string) (*http.Response, error) {
+	return nil, nil
 }

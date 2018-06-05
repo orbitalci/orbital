@@ -91,21 +91,21 @@ var allBranchesTests = []struct{
 }{
 	{
 		"multiple branches should build",
-		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{time.Now().Unix(), 0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{time.Now().Unix(), 0}},},
+		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},},
 		map[string]string{"abranch": "abcd", "bbranch": "12er"},
 		map[string]string{"abranch": "1234", "bbranch": "1a34"},
 		2,
 	},
 	{
 		"no branches should build",
-		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{time.Now().Unix(), 0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{time.Now().Unix(), 0}},},
+		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},},
 		map[string]string{"abranch":"1234", "bbranch": "1a34"},
 		map[string]string{"abranch":"1234", "bbranch": "1a34"},
 		0,
 	},
 	{
 		"untracked branch",
-		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{time.Now().Unix(), 0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{time.Now().Add(-time.Hour*500).Unix(), 0}},},
+		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Add(-time.Hour*500).Unix(), Nanos:0}},},
 		map[string]string{"abranch":"1234"},
 		map[string]string{"abranch":"1234", "bbranch": "1a34"},
 		1,

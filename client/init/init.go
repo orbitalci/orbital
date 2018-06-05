@@ -79,7 +79,8 @@ func (c *cmd) Run(args []string) int {
 	err = ioutil.WriteFile(yml, []byte(rendered), 0600)
 	if err != nil {
 		c.UI.Error("Unable to write file to ocelot.yml in this location, will print to stdout instead. For your edification, the error is: " + err.Error())
-		fmt.Println(rendered)
+		c.UI.Info(rendered)
+		return 1
 	}
 	dir, _ := os.Getwd()
 	if dir != "" {
