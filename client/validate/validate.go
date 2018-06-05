@@ -144,20 +144,17 @@ Usage: ocelot validate /home/mariannef/git/MyProject/ocelot.yml
   If the file location is omitted, the client will attempt to find an ocelot.yml in the current directory and validate that. 
     Example:
       $ pwd
-	  /home/mariannef/git/MyProject
+        /home/mariannef/git/MyProject
       $ ocelot validate
-		BuildTool is specified ✓
-		Connecting to docker to check for image validity...
-		maven:3.5.3 exists ✓
-		/home/mariannef/git/MyProject/ocelot.yml is valid
+        BuildTool is specified ✓
+        Connecting to docker to check for image validity...
+        maven:3.5.3 exists ✓
+        /home/mariannef/git/MyProject/ocelot.yml is valid
   If you pass the -branch flag, then you can test to see if the given branch would result in a build
     Example:
       $ ocelot validate -branch testing ocelot.yml
-		Detected an IP address for the admin server host, therefore ocelot will not create https config.
-		If you really wish to try using an https config, then set USE_TLS=true as an environment variable.
-		Set NO_USE_TLS=true as an environment variable to suppress this warning in the future.
-		BuildTool is specified ✓
-		Connecting to docker to check for image validity...
-		maven:3.5.3 exists ✓
-		This branch would not build, the validation error was: branch testing not in the acceptable branches list: master, release\/.*
+        BuildTool is specified ✓
+        Connecting to docker to check for image validity...
+        maven:3.5.3 exists ✓
+        This branch would not build, the validation error was: branch testing not in the acceptable branches list: master, release\/.*
 `
