@@ -28,9 +28,9 @@ type WerkerTeller interface {
 	TellWerker(lastCommit string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error)
 }
 
-type BBWerkerTeller struct{}
+type VcsWerkerTeller struct{}
 
-func (w *BBWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error) {
+func (w *VcsWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error) {
 	ocelog.Log().WithField("hash", hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
 	if token == "" {
 		return errors.New("token cannot be empty")

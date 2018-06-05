@@ -14,7 +14,7 @@ import (
 func NewChangeChecker(signaler *signal.Signaler) *ChangeChecker {
 	return &ChangeChecker{
 		Signaler:signaler,
-		teller: &signal.BBWerkerTeller{},
+		teller: &signal.VcsWerkerTeller{},
 	}
 }
 
