@@ -101,9 +101,8 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap(fmt.Sprintf("Storing build data for %s...", buildReq.AcctRepo)))
-	// todo: change this to use VcsWorkerTeller in build_signaler package
-	if err = signal.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
-		if _, ok := err.(*build.DoNotQueue); ok {
+	if err = g.getSignaler().CheckViableThenQueueAndStore(buildReq.Hash, token,  branch, buildReq.AcctRepo, buildConf); err != nil {
+		if _, ok := err.(*build.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
 			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Error is: " + err.Error())
 		}
@@ -112,6 +111,10 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", fullHash, buildReq.AcctRepo, models.CHECKMARK)))
 	return nil
+}
+
+func (g *guideOcelotServer) getSignaler() *signal.Signaler {
+	return signal.NewSignaler(g.RemoteConfig, g.Deserializer, g.Producer, g.OcyValidator, g.Storage)
 }
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {

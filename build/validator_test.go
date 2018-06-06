@@ -180,16 +180,16 @@ func TestOcelotValidator_CheckQueueability(t *testing.T) {
 			},
 	}
 	validateor := GetOcelotValidator()
-	err := validateor.CheckQueueability(buildConf, "rc_1234")
+	err := validateor.CheckViability(buildConf, "rc_1234")
 	if err != nil {
 		t.Error("should be queuable, error is: " + err.Error())
 	}
-	err = validateor.CheckQueueability(buildConf, "r1_1234")
+	err = validateor.CheckViability(buildConf, "r1_1234")
 	if err == nil {
 		t.Error("should not be quueable, error is " + err.Error())
 	}
 	if err != nil {
-		if _, ok := err.(*DoNotQueue); !ok {
+		if _, ok := err.(*NotViable); !ok {
 			t.Error("should be a do not queue error, instead the error is: " + err.Error())
 		}
 	}

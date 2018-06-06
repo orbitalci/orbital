@@ -77,10 +77,41 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 	return
 }
 
-///2.0/repositories/{username}/{repo_slug}/commits
+//GetAllCommits /2.0/repositories/{username}/{repo_slug}/commits
 func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error) {
 	commits := &pbb.Commits{}
 	err := bb.Client.GetUrl(fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch, commits)
+	return commits, err
+}
+
+//GetCommitLog will return a list of Commits, starting with the most recent and ending at the lastHash value.
+// If the lastHash commit value is never found, will return an error.
+func (bb *Bitbucket) GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error) {
+	var commits []*pb.Commit
+	var foundLast bool
+	url := fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch
+	for {
+		if url == "" {
+			break
+		}
+		commitz := &pbb.Commits{}
+		err := bb.Client.GetUrl(url, commitz)
+		if err != nil {
+			return nil, err
+		}
+		for _, commit := range commitz.Values {
+			commits = append(commits, &pb.Commit{Hash:commit.Hash, Message:commit.Message, Date:commit.Date})
+			if commit.Hash == lastHash {
+				foundLast = true
+				break
+			}
+		}
+		url = commitz.GetNext()
+	}
+	var err error
+	if !foundLast {
+		err = models.Commit404(lastHash, acctRepo, branch)
+	}
 	return commits, err
 }
 

@@ -52,31 +52,42 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	return err
 }
 
-//CheckQueueability will check to see if the the branch given is in the BuildConfig's allowed branches list. This should be separate from the validate function, as the validate failure should be stored in the database. A queue validate failure should not be.
-func (ov *OcelotValidator) CheckQueueability(buildConf *pb.BuildConfig, branch string) error {
+
+//CheckViability will check to see if the the branch given is in the BuildConfig's allowed branches list. This should be separate from the validate function, as the validate failure should be stored in the database. A queue validate failure should not be.
+func (ov *OcelotValidator) CheckViability(buildConf *pb.BuildConfig, branch string) error {
 	branchOk, err := BranchRegexOk(branch, buildConf.Branches)
 	if err != nil {
 		return err
 	}
 	if !branchOk {
-		return DontQueue(fmt.Sprintf("branch %s not in the acceptable branches list: %s", branch, strings.Join(buildConf.Branches, ", ")))
+		return NoViability(fmt.Sprintf("branch %s not in the acceptable branches list: %s", branch, strings.Join(buildConf.Branches, ", ")))
 	}
 	return nil
 }
 
-// DoNotQueue is an error that means that the build config should not be queued for a build
-type DoNotQueue struct {
+// ViableCheckData is a holder for all necessary data to say whether or not to skip the build:
+//   - currentBranch and a list of the good branches from the build config
+//   - commitList: a list of commits to check if [skip] exists in the
+type ViableCheckData struct {
+	currentBranch string
+	goodBranches []string
+	commitList []*pb.Commit
+}
+
+// NotViable is an error that means that the build config should not be queued for a build
+type NotViable struct {
 	branch string
 	commits []string
 	msg string
 }
 
-func (dq *DoNotQueue) Error() string {
+func (dq *NotViable) Error() string {
 	return dq.msg
 }
 
-func DontQueue(msg string) *DoNotQueue {
-	return &DoNotQueue{msg:msg}
+// NoViability will return a NotViable error, signaling it won't be queued and shouldn't be stored
+func NoViability(msg string) *NotViable {
+	return &NotViable{msg:msg}
 }
 
 

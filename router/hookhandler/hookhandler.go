@@ -49,7 +49,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	branch := repopush.Push.Changes[0].New.Name
 	//acctName := repopush.Repository.Owner.Username
 
-	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, ""); err != nil {
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }
@@ -68,7 +68,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	//acctName := pr.Pullrequest.Source.Repository.Owner.Username
 	branch := pr.Pullrequest.Source.Branch.Name
 
-	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, ""); err != nil {
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }
