@@ -170,7 +170,7 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 
 }
 
-func TestOcelotValidator_CheckQueueability(t *testing.T) {
+func TestCheckViability(t *testing.T) {
 	buildConf := &pb.BuildConfig{
 			Image: "busybox:latest",
 			BuildTool: "w/e",
@@ -179,12 +179,11 @@ func TestOcelotValidator_CheckQueueability(t *testing.T) {
 				{Name: "hi", Script: []string{"echo sup"}},
 			},
 	}
-	validateor := GetOcelotValidator()
-	err := validateor.CheckViability(buildConf, "rc_1234")
+	err := ValidateBranchAgainstConf(buildConf, "rc_1234")
 	if err != nil {
 		t.Error("should be queuable, error is: " + err.Error())
 	}
-	err = validateor.CheckViability(buildConf, "r1_1234")
+	err = ValidateBranchAgainstConf(buildConf, "r1_1234")
 	if err == nil {
 		t.Error("should not be quueable, error is " + err.Error())
 	}

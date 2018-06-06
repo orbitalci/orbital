@@ -40,8 +40,8 @@ type Signaler struct {
 //  - if the above doesn't return an error....
 //  - store the initial summary in the database
 //  - validate that the configuration is good
-func (s *Signaler) CheckViableThenQueueAndStore(hash, authToken, branch, acctRepo string, buildConf *pb.BuildConfig) error {
-	if queueError := s.OcyValidator.CheckViability(buildConf, branch); queueError != nil {
+func (s *Signaler) CheckViableThenQueueAndStore(hash, authToken, branch, acctRepo string, buildConf *pb.BuildConfig, checkData *build.ViableCheckData) error {
+	if queueError := checkData.Validate(); queueError != nil {
 		log.IncludeErrField(queueError).Info("not queuing! this is fine, just doesn't fit requirements")
 		return queueError
 	}
@@ -54,10 +54,6 @@ func (s *Signaler) CheckViableThenQueueAndStore(hash, authToken, branch, acctRep
 //  - store the initial summary in the database
 //  - validate that the configuration is good and add to the queue. If the build configuration (ocelot.yml) is not good, then it will store in the database that it failed validation along with the reason why
 func (s *Signaler) queueAndStore(hash, authToken, branch, acctRepo string, buildConf *pb.BuildConfig) error {
-	if queueError := s.OcyValidator.CheckViability(buildConf, branch); queueError != nil {
-		log.IncludeErrField(queueError).Info("not queuing! this is fine, just doesn't fit requirements")
-		return queueError
-	}
 	log.Log().Debug("Storing initial results in db")
 	account, repo, err := common.GetAcctRepo(acctRepo)
 	if err != nil {
@@ -111,7 +107,7 @@ func (s *Signaler) validateAndQueue(buildConf *pb.BuildConfig, sr *models.StageR
 }
 
 
-//TellWerker is a private helper function for building a werker task and giving it to nsq
+//tellWerker is a private helper function for building a werker task and giving it to nsq
 func (s *Signaler) tellWerker(buildConf *pb.BuildConfig,
 	vaulty vault.Vaulty,
 	hash string,

@@ -5,17 +5,19 @@ import (
 	"time"
 
 	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/build"
 	signal "github.com/shankj3/ocelot/build_signaler"
 	"github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/common/remote"
 	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 func NewChangeChecker(signaler *signal.Signaler, acctRepo string) *ChangeChecker {
 	return &ChangeChecker{
 		Signaler: signaler,
 		AcctRepo: acctRepo,
-		teller:   &signal.VcsWerkerTeller{},
+		teller:   &CCWerkerTeller{},
 
 	}
 }
@@ -43,6 +45,18 @@ func (w *ChangeChecker) SetAuth() error {
 	return nil
 }
 
+// generateCheckViablityData just calls the handler function to get commit log then stufs it into a ViableCheckData struct.
+func (w *ChangeChecker) generateCheckViablityData(acctRepo string, branch string, goodBranches []string, lastHash string) (*build.ViableCheckData) {
+	var commits []*pb.Commit
+	var err error
+	commits, err = w.handler.GetCommitLog(acctRepo, branch, lastHash)
+	if err != nil {
+		commits = nil
+		ocelog.IncludeErrField(err).Error("unable to get commit list from VCS handler!! oh nuuu")
+	}
+	return build.NewViableCheckData(branch, goodBranches, commits, false)
+}
+
 
 // HandleAllBranches will get all branches associated with the repository along with their last commit information.
 //  If the branch is already in the map and the commit in the branch map is different than the one retrieved from bitbucket,
@@ -65,7 +79,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			ocelog.Log().WithField("branch", branchHist.Branch).Info("this branch is already being tracked, checking if the built hash is the same as the one retrieved from VCS ")
 			if lastHash != branchHist.Hash {
 				ocelog.Log().WithField("branch", branchHist.Branch).Info("hashes are not the same, telling werker...")
-				err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo)
+				err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo, w.generateCheckViablityData(w.AcctRepo, branchHist.Branch, nil, branchHist.Hash))
 				branchLastHashes[branchHist.Branch] = branchHist.Hash
 				if err != nil {
 					return err
@@ -81,7 +95,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			ocelog.Log().WithField("last commit time", lastCommitTime.Format("Jan 2 15:04:05 2006")).WithField("last week", lastWeek.Format("Jan 2 15:04:05 2006")).Info("times!")
 			if lastCommitTime.After(lastWeek) {
 				ocelog.Log().WithField("branch", branchHist.Branch).WithField("hash", branchHist.Hash).Info("it is! it has been active at least in the past week, it will be built then added to ocelot tracking")
-				if err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo); err != nil {
+				if err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo, w.generateCheckViablityData(w.AcctRepo, branchHist.Branch, nil, branchHist.Hash)); err != nil {
 					return err
 				}
 			} else {
@@ -101,10 +115,11 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if err != nil {
 		return "", errors.New("could not get all commits, error: " + err.Error())
 	}
+	checkData := w.generateCheckViablityData(w.AcctRepo, branch, nil, lastCommit.Hash)
 	// check for empty last hash now that you have the last commit info and can trigger a build
 	if lastHash == "" {
 		newLastHash = lastCommit.Hash
-		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo); err != nil {
+		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo, checkData); err != nil {
 			ocelog.IncludeErrField(err).Error("could not queue!")
 		}
 		return
@@ -113,7 +128,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if lastHash != lastCommit.Hash {
 		ocelog.Log().Infof("found a new hash %s, telling werker", lastCommit.Hash)
 		newLastHash = lastCommit.Hash
-		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo); err != nil {
+		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo, checkData); err != nil {
 			return
 		}
 	} else {

@@ -3,7 +3,6 @@ package build_signaler
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/shankj3/go-til/deserialize"
@@ -95,16 +94,4 @@ func getSignalerStageResult(id int64) *models.StageResult {
 		StartTime:     start,
 		StageDuration: -99.99,
 	}
-}
-
-// CommitListContainsSkipMessage will search a list of commit structs to see if it contains the string [ci skip] or [skip ci]
-func CommitListContainsSkipMessage(commits []*pb.Commit) bool {
-	for _, commit := range commits {
-		for _, skipmsg := range models.SkipMsg {
-			if strings.Contains(commit.Message, skipmsg) {
-				return true
-			}
-		}
-	}
-	return false
 }

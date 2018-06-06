@@ -9,6 +9,7 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build_signaler"
 	"github.com/shankj3/ocelot/models"
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
@@ -46,7 +47,7 @@ type fakeWerkerTeller struct{
 	told int
 }
 
-func (f *fakeWerkerTeller) TellWerker(lastCommit string, conf *build_signaler.Signaler, branch string, remote models.VCSHandler, token, acctRepo string) (err error) {
+func (f *fakeWerkerTeller) TellWerker(lastCommit string, conf *build_signaler.Signaler, branch string, handler models.VCSHandler, token, acctRepo string, checkData *build.ViableCheckData) (err error) {
 	f.told += 1
 	return nil
 }
