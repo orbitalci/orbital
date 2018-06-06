@@ -8,5 +8,5 @@ import (
 
 // made this interface for easy testing
 type WerkerTeller interface {
-	TellWerker(lastCommit string, conf *Signaler, branch string, handler models.VCSHandler, token, acctRepo string, viableData *build.ViableCheckData) (err error)
+	TellWerker(lastCommit string, conf *Signaler, branch string, handler models.VCSHandler, token, acctRepo string, viableData *build.Viable) (err error)
 }

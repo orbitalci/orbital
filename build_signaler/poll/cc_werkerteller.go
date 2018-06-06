@@ -14,7 +14,7 @@ import (
 
 type CCWerkerTeller struct{}
 
-func (w *CCWerkerTeller) TellWerker(hash string, conf *sig.Signaler, branch string, handler models.VCSHandler, token, acctRepo string, checkData *build.ViableCheckData) (err error) {
+func (w *CCWerkerTeller) TellWerker(hash string, conf *sig.Signaler, branch string, handler models.VCSHandler, token, acctRepo string, checkData *build.Viable) (err error) {
 	ocelog.Log().WithField("hash", hash).WithField("acctRepo", acctRepo).WithField("branch", branch).Info("found new commit")
 	if token == "" {
 		return errors.New("token cannot be empty")

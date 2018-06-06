@@ -65,9 +65,9 @@ func ValidateBranchAgainstConf(buildConf *pb.BuildConfig, branch string) error {
 	return nil
 }
 
-// NewViableCheckData will return an instantiated ViableCheckData struct
-func NewViableCheckData(currentBranch string, goodBranches []string, commits []*pb.Commit, force bool) *ViableCheckData {
-	return &ViableCheckData{
+// NewViable will return an instantiated Viable struct
+func NewViable(currentBranch string, goodBranches []string, commits []*pb.Commit, force bool) *Viable {
+	return &Viable{
 		currentBranch: currentBranch,
 		buildBranches: goodBranches,
 		commitList:    commits,
@@ -75,26 +75,26 @@ func NewViableCheckData(currentBranch string, goodBranches []string, commits []*
 	}
 }
 
-// ViableCheckData is a holder for all necessary data to say whether or not to skip the build:
+// Viable is a holder for all necessary data to say whether or not to skip the build, essentially a pre-queue validator:
 //   - currentBranch and a list of the good branches from the build config
 //   - commitList: a list of commits to check if skip msgs exist
 //   - force: whether to force a build
-type ViableCheckData struct {
+type Viable struct {
 	force 		  bool
 	currentBranch string
 	buildBranches []string
 	commitList    []*pb.Commit
 }
 
-func (vcd *ViableCheckData) SetBuildBranches(branches []string) {
+func (vcd *Viable) SetBuildBranches(branches []string) {
 	vcd.buildBranches = branches
 }
 
 // Validate will check that the current branch is in the list of buildable branches, and it will check to make sure
 //   that the commit list does not contain [skip ci] or [ci skip]. If either of these are true, then a NotViable error
 //   will be returned.
-//   if (*ViableCheckData).force == true then an error will not be returned, and the build should be queued.
-func (vcd *ViableCheckData) Validate() error {
+//   if (*Viable).force == true then an error will not be returned, and the build should be queued.
+func (vcd *Viable) Validate() error {
 	// first check if the force flag has been set, because can just return immediately if so
 	if vcd.force {
 		return nil

@@ -45,8 +45,8 @@ func (w *ChangeChecker) SetAuth() error {
 	return nil
 }
 
-// generateCheckViablityData just calls the handler function to get commit log then stufs it into a ViableCheckData struct.
-func (w *ChangeChecker) generateCheckViablityData(acctRepo string, branch string, goodBranches []string, lastHash string) (*build.ViableCheckData) {
+// generateCheckViablityData just calls the handler function to get commit log then stufs it into a Viable struct.
+func (w *ChangeChecker) generateCheckViablityData(acctRepo string, branch string, goodBranches []string, lastHash string) (*build.Viable) {
 	var commits []*pb.Commit
 	var err error
 	commits, err = w.handler.GetCommitLog(acctRepo, branch, lastHash)
@@ -54,7 +54,7 @@ func (w *ChangeChecker) generateCheckViablityData(acctRepo string, branch string
 		commits = nil
 		ocelog.IncludeErrField(err).Error("unable to get commit list from VCS handler!! oh nuuu")
 	}
-	return build.NewViableCheckData(branch, goodBranches, commits, false)
+	return build.NewViable(branch, goodBranches, commits, false)
 }
 
 

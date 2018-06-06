@@ -40,7 +40,7 @@ type Signaler struct {
 //  - if the above doesn't return an error....
 //  - store the initial summary in the database
 //  - validate that the configuration is good
-func (s *Signaler) CheckViableThenQueueAndStore(hash, authToken, branch, acctRepo string, buildConf *pb.BuildConfig, checkData *build.ViableCheckData) error {
+func (s *Signaler) CheckViableThenQueueAndStore(hash, authToken, branch, acctRepo string, buildConf *pb.BuildConfig, checkData *build.Viable) error {
 	if queueError := checkData.Validate(); queueError != nil {
 		log.IncludeErrField(queueError).Info("not queuing! this is fine, just doesn't fit requirements")
 		return queueError
