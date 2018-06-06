@@ -107,6 +107,9 @@ func (vcd *Viable) Validate() error {
 	if !branchOk {
 		return NoViability(fmt.Sprintf("branch %s not in the acceptable branches list: %s", vcd.currentBranch, strings.Join(vcd.buildBranches, ", ")))
 	}
+	if vcd.commitList == nil {
+		return nil
+	}
 	// then, see if the commit list contains any skip messages
 	for _, commit := range vcd.commitList {
 		for _, skipmsg := range models.SkipMsgs {

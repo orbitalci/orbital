@@ -170,7 +170,7 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 
 }
 
-func TestCheckViability(t *testing.T) {
+func TestValidateBranchAgainstConf(t *testing.T) {
 	buildConf := &pb.BuildConfig{
 			Image: "busybox:latest",
 			BuildTool: "w/e",

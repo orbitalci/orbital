@@ -8,8 +8,10 @@ import (
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/shankj3/ocelot/build"
 	signal "github.com/shankj3/ocelot/build_signaler"
+	"github.com/shankj3/ocelot/build_signaler/poll"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
+	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 
 	"net/http"
@@ -26,14 +28,16 @@ type HookHandler interface {
 	SetValidator(validator *build.OcelotValidator)
 	GetStorage() storage.OcelotStorage
 	SetStorage(storage.OcelotStorage)
-	GetTeller() *signal.VcsWerkerTeller
+	// todo: CHANGE THIS
+	GetTeller() *poll.CCWerkerTeller
 	GetSignaler() *signal.Signaler
 }
 
 //context contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*signal.Signaler
-	teller *signal.VcsWerkerTeller
+	// todo: CHANGE THIS
+	teller *poll.CCWerkerTeller
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -48,8 +52,12 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	hash := repopush.Push.Changes[0].New.Target.Hash
 	branch := repopush.Push.Changes[0].New.Name
 	//acctName := repopush.Repository.Owner.Username
-
-	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName); err != nil {
+	var commits []*pb.Commit
+	for _, commit := range repopush.Push.Changes[0].Commits {
+		commits = append(commits, &pb.Commit{Hash:commit.Hash, Date: commit.Date, Message:commit.Message})
+	}
+	checkData := build.NewViable(branch, nil, commits, false)
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName, checkData); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }
@@ -67,8 +75,12 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	hash := pr.Pullrequest.Source.Commit.Hash
 	//acctName := pr.Pullrequest.Source.Repository.Owner.Username
 	branch := pr.Pullrequest.Source.Branch.Name
-
-	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName); err != nil {
+	var commits []*pb.Commit
+	//for _, commit := range pr.Pullrequest.
+	// todo: hit an endpoint w/ vcs to get all commits of a pull request
+	// TODO-continued: bitbucket example: https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests/%7Bpull_request_id%7D/commits
+	checkData := build.NewViable(branch, nil, commits, false)
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName, checkData); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }
@@ -122,11 +134,11 @@ func (hhc *HookHandlerContext) GetStorage() storage.OcelotStorage {
 	return hhc.Store
 }
 
-func (hhc *HookHandlerContext) GetTeller() *signal.VcsWerkerTeller {
+func (hhc *HookHandlerContext) GetTeller() *poll.CCWerkerTeller {
 	return hhc.teller
 }
 
-func (hhc *HookHandlerContext) SetTeller(tell *signal.VcsWerkerTeller) {
+func (hhc *HookHandlerContext) SetTeller(tell *poll.CCWerkerTeller) {
 	hhc.teller = tell
 }
 

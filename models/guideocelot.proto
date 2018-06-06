@@ -455,6 +455,8 @@ message BuildReq {
     string hash = 2;
     // branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required.
     string branch = 3;
+    // force is a flag that says to build even if it doesn't match the acceptable branches list and even if there is a "skip" ci message
+    bool force = 4;
 }
 
 
