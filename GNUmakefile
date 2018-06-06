@@ -56,7 +56,9 @@ all-clients-latest: all-clients  ## upload all clients to s3 without a version. 
 	 @aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot_$(VERSION).zip s3://ocelotty/windows-ocelot.zip
      @aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/linux-ocelot.zip
 
-upload-clients: versionexists all-clients ## install all clients and upload to s3
+build-upload-clients: versionexists all-clients upload-clients ## install all clients and upload to s3
+
+upload-clients: versionexists ## upload already build clients in pkg/os_amd64/ocelot_<version>.zip to s3
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/darwin_amd64/ocelot_$(VERSION).zip s3://ocelotty/mac-ocelot-$(VERSION).zip
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/ocelot_$(VERSION).zip s3://ocelotty/windows-ocelot-$(VERSION).zip
 	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/ocelot_$(VERSION).zip s3://ocelotty/linux-ocelot-$(VERSION).zip
@@ -116,8 +118,8 @@ release: proto upload-clients upload-templates linux-werker docker-base docker-b
 proto: ## build all protos
 	@cd models; ./build-protos.sh;
 
-pushtags: ## tag built docker images with the short hash and push all to nexus
-	@scripts/tag_and_push.sh $(GIT_HASH)
+pushtags: versionexists ## tag built docker images with the VERSION and push all to nexus
+	@scripts/tag_and_push.sh $(VERSION)
 
 admintagpush: versionexists ## tag and push admin docker image
 	 docker tag ocelot-admin docker.metaverse.l11.com/ocelot-admin:$(VERSION)
