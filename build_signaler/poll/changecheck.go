@@ -14,7 +14,7 @@ import (
 func NewChangeChecker(signaler *signal.Signaler) *ChangeChecker {
 	return &ChangeChecker{
 		Signaler:signaler,
-		teller: &signal.BBWerkerTeller{},
+		teller: &signal.VcsWerkerTeller{},
 	}
 }
 
@@ -58,9 +58,9 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 	for _, branchHist := range branchHistories {
 		lastHash, ok := branchLastHashes[branchHist.Branch]
 		if ok {
-			ocelog.Log().Info("this branch is already being tracked, checking if the built hash is the same as the one retrieved from VCS ")
+			ocelog.Log().WithField("branch", branchHist.Branch).Info("this branch is already being tracked, checking if the built hash is the same as the one retrieved from VCS ")
 			if lastHash != branchHist.Hash {
-				ocelog.Log().Info("hashes are not the same, telling werker...")
+				ocelog.Log().WithField("branch", branchHist.Branch).Info("hashes are not the same, telling werker...")
 				err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token)
 				branchLastHashes[branchHist.Branch] = branchHist.Hash
 				if err != nil {
@@ -68,23 +68,24 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 				}
 			}
 		} else {
-			ocelog.Log().Info("branch was not previously tracked by ocelot, checking if its worthy of build")
+			ocelog.Log().WithField("branch", branchHist.Branch).Info("branch was not previously tracked by ocelot, checking if its worthy of build")
 			// add to map so we can track this branch
 			branchLastHashes[branchHist.Branch] = branchHist.Hash
 			// this has never been built/tracked before... so if anything has been committed in the last week, build it and add it to the map
 			lastCommitTime := time.Unix(branchHist.LastCommitTime.Seconds, int64(branchHist.LastCommitTime.Nanos))
 			lastWeek := time.Now().AddDate(0,0,-7)
-			if lastWeek.After(lastCommitTime) {
-				ocelog.Log().Info("it is! it has been active at least in the past week, it will be built then added to ocelot tracking")
+			ocelog.Log().WithField("last commit time", lastCommitTime.Format("Jan 2 15:04:05 2006")).WithField("last week", lastWeek.Format("Jan 2 15:04:05 2006")).Info("times!")
+			if lastCommitTime.After(lastWeek) {
+				ocelog.Log().WithField("branch", branchHist.Branch).WithField("hash", branchHist.Hash).Info("it is! it has been active at least in the past week, it will be built then added to ocelot tracking")
 				if err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token); err != nil {
 					return err
 				}
 			} else {
-				ocelog.Log().Info("it is not! adding branch to tracking list, but not telling werker")
+				ocelog.Log().WithField("branch", branchHist.Branch).Info("it is not! adding branch to tracking list, but not telling werker")
 			}
 		}
 	}
-	ocelog.Log().Info("finished checking all branches")
+	ocelog.Log().WithField("acctrepo", w.AcctRepo).Info("finished checking all branches")
 	return nil
 }
 

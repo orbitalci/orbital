@@ -28,9 +28,9 @@ type WerkerTeller interface {
 	TellWerker(lastCommit string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error)
 }
 
-type BBWerkerTeller struct{}
+type VcsWerkerTeller struct{}
 
-func (w *BBWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error) {
+func (w *VcsWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, handler models.VCSHandler, token string) (err error) {
 	ocelog.Log().WithField("hash", hash).WithField("acctRepo", conf.AcctRepo).WithField("branch", branch).Info("found new commit")
 	if token == "" {
 		return errors.New("token cannot be empty")
@@ -44,6 +44,9 @@ func (w *BBWerkerTeller) TellWerker(hash string, conf *Signaler, branch string, 
 		return errors.New("unable to get build configuration; err: " + err.Error())
 	}
 	if err = QueueAndStore(hash, branch, conf.AcctRepo, token, conf.RC, buildConf, conf.OcyValidator, conf.Producer, conf.Store); err != nil {
+		if _, ok := err.(*build.DoNotQueue); ok {
+			return errors.New("did not queue because it shouldn't be queued. explanation: " + err.Error())
+		}
 		return errors.New("unable to queue or store; err: " + err.Error())
 	}
 	return nil

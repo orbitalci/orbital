@@ -83,6 +83,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 			}
 		}
 		if !branchGood {
+			// todo: have a SKIPPED value? more descriptive
 			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_PASS, Error: "", Messages:[]string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", branch)}}
 			// we could save to db, the branch running is not in the list of trigger branches, so we can flip the shouldSkip bool now.
 			shouldSkip = true

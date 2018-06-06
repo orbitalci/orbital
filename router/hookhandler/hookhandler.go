@@ -26,14 +26,14 @@ type HookHandler interface {
 	SetValidator(validator *build.OcelotValidator)
 	GetStorage() storage.OcelotStorage
 	SetStorage(storage.OcelotStorage)
-	GetTeller() *signal.BBWerkerTeller
+	GetTeller() *signal.VcsWerkerTeller
 	GetSignaler() *signal.Signaler
 }
 
 //context contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*signal.Signaler
-	teller *signal.BBWerkerTeller
+	teller *signal.VcsWerkerTeller
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -122,11 +122,11 @@ func (hhc *HookHandlerContext) GetStorage() storage.OcelotStorage {
 	return hhc.Store
 }
 
-func (hhc *HookHandlerContext) GetTeller() *signal.BBWerkerTeller {
+func (hhc *HookHandlerContext) GetTeller() *signal.VcsWerkerTeller {
 	return hhc.teller
 }
 
-func (hhc *HookHandlerContext) SetTeller(tell *signal.BBWerkerTeller) {
+func (hhc *HookHandlerContext) SetTeller(tell *signal.VcsWerkerTeller) {
 	hhc.teller = tell
 }
 

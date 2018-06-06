@@ -19,13 +19,18 @@ import (
 )
 
 //QueueAndStore will create a werker task and put it on the queue, then update database
+// a *build.DoNotQueue error may be returned, which the caller should know to interpret as this was not stored, and it was not queued, because IT IS NOT WORTHY (ie random branch, commit says skip, w/e)
 func QueueAndStore(hash, branch, accountRepo, bbToken string,
 	remoteConfig cred.CVRemoteConfig,
 	buildConf *pb.BuildConfig,
 	validator *build.OcelotValidator,
 	producer *nsqpb.PbProduce,
 	store storage.OcelotStorage) error {
-
+	// before anything, check to see if this branch should be built at all. if it shouldn't wtf are we doing
+	if queueError := validator.CheckQueueability(buildConf, branch); queueError != nil {
+		log.IncludeErrField(queueError).Info("not queuing! this is fine, just doesn't fit requirements")
+		return queueError
+	}
 	log.Log().Debug("Storing initial results in db")
 	account, repo, err := common.GetAcctRepo(accountRepo)
 	if err != nil {
@@ -72,6 +77,7 @@ func storeStageToDb(store storage.BuildStage, stageResult *models.StageResult) e
 	}
 	return nil
 }
+
 func storeQueued(store storage.BuildSum, id int64) error {
 	err := store.SetQueueTime(id)
 	if err != nil {
@@ -148,7 +154,7 @@ func ValidateAndQueue(buildConf *pb.BuildConfig,
 	sr *models.StageResult,
 	buildId int64,
 	hash, fullAcctRepo, bbToken string) error {
-	if err := validator.ValidateWithBranch(buildConf, branch, nil); err == nil {
+	if err := validator.ValidateConfig(buildConf, nil); err == nil {
 		tellWerker(buildConf, vaulty, producer, hash, fullAcctRepo, bbToken, buildId, branch)
 		log.Log().Debug("told werker!")
 		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
