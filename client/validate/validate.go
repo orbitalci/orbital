@@ -74,7 +74,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context, ocelotFile string) int {
 		return 1
 	}
 	if c.branch != "" {
-		err := fileValidator.CheckViability(conf, c.branch)
+		err := build.ValidateBranchAgainstConf(conf, c.branch)
 		if err != nil {
 			c.UI.Error("This branch would not build, the validation error was: " + err.Error())
 			return 1
