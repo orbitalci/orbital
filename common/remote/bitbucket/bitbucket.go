@@ -86,8 +86,11 @@ func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) (*pbb.Commits
 
 //GetCommitLog will return a list of Commits, starting with the most recent and ending at the lastHash value.
 // If the lastHash commit value is never found, will return an error.
-func (bb *Bitbucket) GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error) {
+func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Commit, error) {
 	var commits []*pb.Commit
+	if lastHash == "" {
+		return commits, nil
+	}
 	var foundLast bool
 	url := fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch
 	for {
@@ -97,7 +100,7 @@ func (bb *Bitbucket) GetCommitLog(acctRepo string, branch string, lastHash strin
 		commitz := &pbb.Commits{}
 		err := bb.Client.GetUrl(url, commitz)
 		if err != nil {
-			return nil, err
+			return commits, err
 		}
 		for _, commit := range commitz.Values {
 			commits = append(commits, &pb.Commit{Hash:commit.Hash, Message:commit.Message, Date:commit.Date})
