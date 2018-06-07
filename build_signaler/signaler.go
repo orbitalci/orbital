@@ -58,7 +58,6 @@ func (s *Signaler) queueAndStore(hash, authToken, branch, acctRepo string, build
 	if err != nil {
 		return err
 	}
-	vaulty := s.RC.GetVault()
 	consul := s.RC.GetConsul()
 	alreadyBuilding, err := build.CheckBuildInConsul(consul, hash)
 	if alreadyBuilding {
@@ -72,7 +71,7 @@ func (s *Signaler) queueAndStore(hash, authToken, branch, acctRepo string, build
 	}
 
 	sr := getSignalerStageResult(id)
-	if err = s.validateAndQueue(buildConf, sr, vaulty, branch, hash, authToken, acctRepo, id); err != nil {
+	if err = s.validateAndQueue(buildConf, sr, branch, hash, authToken, acctRepo, id); err != nil {
 		// we do want to add a runtime here
 		err = s.Store.StoreFailedValidation(id)
 		if err != nil {
@@ -93,9 +92,9 @@ func (s *Signaler) queueAndStore(hash, authToken, branch, acctRepo string, build
 
 // validateAndQueue will use the OcyValidator to make sure that the config is up to spec, if it is then it will add it to the build queue.
 //  If it isn't, it will store a FAILED VALIDATION with the validation errors.
-func (s *Signaler) validateAndQueue(buildConf *pb.BuildConfig, sr *models.StageResult, vaulty vault.Vaulty, branch, hash, authToken, acctRepo string, buildId int64) error {
+func (s *Signaler) validateAndQueue(buildConf *pb.BuildConfig, sr *models.StageResult, branch, hash, authToken, acctRepo string, buildId int64) error {
 	if err := s.OcyValidator.ValidateConfig(buildConf, nil); err == nil {
-		s.tellWerker(buildConf, vaulty, hash, authToken, buildId, branch, acctRepo)
+		s.tellWerker(buildConf, hash, authToken, buildId, branch, acctRepo)
 		log.Log().Debug("told werker!")
 		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
 	} else {
@@ -108,14 +107,13 @@ func (s *Signaler) validateAndQueue(buildConf *pb.BuildConfig, sr *models.StageR
 
 //tellWerker is a private helper function for building a werker task and giving it to nsq
 func (s *Signaler) tellWerker(buildConf *pb.BuildConfig,
-	vaulty vault.Vaulty,
 	hash string,
 	authToken string,
 	dbid int64,
 	branch string,
 	acctRepo string) {
 	// get one-time token use for access to vault
-	token, err := vaulty.CreateThrowawayToken()
+	token, err := s.RC.GetVault().CreateThrowawayToken()
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to create one-time vault token")
 		return

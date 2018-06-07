@@ -1,7 +1,7 @@
 package build_signaler
 
 import (
-	//"testing"
+	"testing"
 
 	"github.com/golang/protobuf/proto"
 )
