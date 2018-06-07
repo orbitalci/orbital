@@ -125,7 +125,13 @@ func TestSignaler_queueAndStore_invalid(t *testing.T) {
 
 func TestSignaler_CheckViableThenQueueAndStore(t *testing.T) {
 	sig := getFakeSignaler(t, false)
-	sig.CheckViableThenQueueAndStore("1234", "token", "slurp", badConfig, &build.Viable{})
+	err := sig.CheckViableThenQueueAndStore("1234", "token", "slurp", "jessi/shank", badConfig, []*pb.Commit{}, false)
+	if err == nil {
+		t.Error("branches didn't match list of acceptable branches, this should have failed")
+	}
+	if _, ok := err.(*build.NotViable); !ok {
+		t.Error("branches not matching acceptable branches shuld result in a NotViable error")
+	}
 }
 
 func getFakeSignaler(t *testing.T, inConsul bool) *Signaler {

@@ -7,7 +7,6 @@ import (
 
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
-	ocenet "github.com/shankj3/go-til/net"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
@@ -61,16 +60,12 @@ func GetConfig(repoFullName string, checkoutCommit string, deserializer *deseria
 	return conf, err
 }
 
-//CheckForBuildFile will try to retrieve an ocelot.yaml file for a repository and return the protobuf message
+//CheckForBuildFile will try to convert an ocelot.yml's bytes for a repository to return the protobuf message
 func CheckForBuildFile(buildFile []byte, deserializer *deserialize.Deserializer) (*pb.BuildConfig, error) {
 	conf := &pb.BuildConfig{}
 	fmt.Println(string(buildFile))
 	if err := deserializer.YAMLToStruct(buildFile, conf); err != nil {
-		if err != ocenet.FileNotFound {
-			log.IncludeErrField(err).Error("unable to get build conf")
-			return conf, err
-		}
-		log.Log().Debugf("no ocelot yml found")
+		log.IncludeErrField(err).Error("unable to convert build file bytes to proto message, womp womp")
 		return conf, err
 	}
 	return conf, nil
