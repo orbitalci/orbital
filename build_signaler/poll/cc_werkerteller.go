@@ -14,7 +14,7 @@ import (
 
 type CCWerkerTeller struct{}
 
-func (w *CCWerkerTeller) TellWerker(hash string, conf *sig.Signaler, branch string, handler models.VCSHandler, token, acctRepo string, checkData *build.Viable) (err error) {
+func (w *CCWerkerTeller) TellWerker(hash string, conf *sig.Signaler, branch string, handler models.VCSHandler, token, acctRepo string, commits []*pb.Commit) (err error) {
 	ocelog.Log().WithField("hash", hash).WithField("acctRepo", acctRepo).WithField("branch", branch).Info("found new commit")
 	if token == "" {
 		return errors.New("token cannot be empty")
@@ -27,9 +27,8 @@ func (w *CCWerkerTeller) TellWerker(hash string, conf *sig.Signaler, branch stri
 		}
 		return errors.New("unable to get build configuration; err: " + err.Error())
 	}
-	// this feels hacky, basically we get all the other viablility data from the commit list back in changecheck (at list in the only use of this worker teller)
-	checkData.SetBuildBranches(buildConf.Branches)
-	if err = conf.CheckViableThenQueueAndStore(hash, token, branch, acctRepo, buildConf, checkData); err != nil {
+
+	if err = conf.CheckViableThenQueueAndStore(hash, token, branch, acctRepo, buildConf, commits, false); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			return errors.New("did not queue because it shouldn't be queued. explanation: " + err.Error())
 		}

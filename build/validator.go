@@ -52,9 +52,34 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	return err
 }
 
+func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []string, commits []*pb.Commit, force bool) error {
+	// first check if the force flag has been set, because can just return immediately if so
+	if force {
+		return nil
+	}
+	// next, check if branch has a regex match with any of the buildable branches
+	branchOk, err := BranchRegexOk(branch, buildBranches)
+	if err != nil {
+		return err
+	}
+	if !branchOk {
+		return NoViability(fmt.Sprintf("branch %s not in the acceptable branches list: %s", branch, strings.Join(buildBranches, ", ")))
+	}
+	if commits == nil {
+		return nil
+	}
+	// then, see if the commit list contains any skip messages
+	for _, commit := range commits {
+		for _, skipmsg := range models.SkipMsgs {
+			if strings.Contains(commit.Message, skipmsg) {
+				return NoViability(fmt.Sprintf("build will not be queued because one of %s was found in the commit with hash %s. the full commit message is %s", strings.Join(models.SkipMsgs, " | "), commit.Hash, commit.Message))
+			}
+		}
+	}
+	return nil
+}
 
-//ValidateBranchAgainstConf will check to see if the the branch given is in the BuildConfig's allowed branches list. This should be separate from the validate function, as the validate failure should be stored in the database. A queue validate failure should not be.
-func ValidateBranchAgainstConf(buildConf *pb.BuildConfig, branch string) error {
+func (ov *OcelotValidator) ValidateBranchAgainstConf(buildConf *pb.BuildConfig, branch string) error {
 	branchOk, err := BranchRegexOk(branch, buildConf.Branches)
 	if err != nil {
 		return err
@@ -65,61 +90,6 @@ func ValidateBranchAgainstConf(buildConf *pb.BuildConfig, branch string) error {
 	return nil
 }
 
-// NewViable will return an instantiated Viable struct
-func NewViable(currentBranch string, goodBranches []string, commits []*pb.Commit, force bool) *Viable {
-	return &Viable{
-		currentBranch: currentBranch,
-		buildBranches: goodBranches,
-		commitList:    commits,
-		force: 		   force,
-	}
-}
-
-// Viable is a holder for all necessary data to say whether or not to skip the build, essentially a pre-queue validator:
-//   - currentBranch and a list of the good branches from the build config
-//   - commitList: a list of commits to check if skip msgs exist
-//   - force: whether to force a build
-type Viable struct {
-	force 		  bool
-	currentBranch string
-	buildBranches []string
-	commitList    []*pb.Commit
-}
-
-func (vcd *Viable) SetBuildBranches(branches []string) {
-	vcd.buildBranches = branches
-}
-
-// Validate will check that the current branch is in the list of buildable branches, and it will check to make sure
-//   that the commit list does not contain [skip ci] or [ci skip]. If either of these are true, then a NotViable error
-//   will be returned.
-//   if (*Viable).force == true then an error will not be returned, and the build should be queued.
-func (vcd *Viable) Validate() error {
-	// first check if the force flag has been set, because can just return immediately if so
-	if vcd.force {
-		return nil
-	}
-	// next, check if branch has a regex match with any of the buildable branches
-	branchOk, err := BranchRegexOk(vcd.currentBranch, vcd.buildBranches)
-	if err != nil {
-		return err
-	}
-	if !branchOk {
-		return NoViability(fmt.Sprintf("branch %s not in the acceptable branches list: %s", vcd.currentBranch, strings.Join(vcd.buildBranches, ", ")))
-	}
-	if vcd.commitList == nil {
-		return nil
-	}
-	// then, see if the commit list contains any skip messages
-	for _, commit := range vcd.commitList {
-		for _, skipmsg := range models.SkipMsgs {
-			if strings.Contains(commit.Message, skipmsg) {
-				return NoViability(fmt.Sprintf("build will not be queued because one of %s was found in the commit with hash %s. the full commit message is %s", strings.Join(models.SkipMsgs, " | "), commit.Hash, commit.Message))
-			}
-		}
-	}
-	return nil
-}
 
 // NotViable is an error that means that this commit should not be queued for a build
 type NotViable struct {

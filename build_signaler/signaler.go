@@ -4,7 +4,6 @@ import (
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/shankj3/go-til/vault"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 
@@ -39,8 +38,8 @@ type Signaler struct {
 //  - if the above doesn't return an error....
 //  - store the initial summary in the database
 //  - validate that the configuration is good
-func (s *Signaler) CheckViableThenQueueAndStore(hash, authToken, branch, acctRepo string, buildConf *pb.BuildConfig, checkData *build.Viable) error {
-	if queueError := checkData.Validate(); queueError != nil {
+func (s *Signaler) CheckViableThenQueueAndStore(hash, authToken, branch, acctRepo string, buildConf *pb.BuildConfig, commits []*pb.Commit, force bool) error {
+	if queueError := s.OcyValidator.ValidateViability(branch, buildConf.Branches, commits, force); queueError != nil {
 		log.IncludeErrField(queueError).Info("not queuing! this is fine, just doesn't fit requirements")
 		return queueError
 	}
@@ -58,8 +57,7 @@ func (s *Signaler) queueAndStore(hash, authToken, branch, acctRepo string, build
 	if err != nil {
 		return err
 	}
-	consul := s.RC.GetConsul()
-	alreadyBuilding, err := build.CheckBuildInConsul(consul, hash)
+	alreadyBuilding, err := build.CheckBuildInConsul(s.RC.GetConsul(), hash)
 	if alreadyBuilding {
 		log.Log().Info("kindly refusing to add to queue because this hash is already building")
 		return build.NoViability("this hash is already building in ocelot, therefore not adding to queue")
