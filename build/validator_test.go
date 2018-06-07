@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
 )
@@ -191,5 +192,41 @@ func TestValidateBranchAgainstConf(t *testing.T) {
 		if _, ok := err.(*NotViable); !ok {
 			t.Error("should be a do not queue error, instead the error is: " + err.Error())
 		}
+	}
+}
+
+func TestViable_SetBuildBranches(t *testing.T) {
+	vi := NewViable("br", []string{}, []*pb.Commit{}, true)
+	vi.SetBuildBranches([]string{"one", "two"})
+	if diff := deep.Equal([]string{"one", "two"}, vi.buildBranches); diff != nil {
+		t.Error(diff)
+	}
+}
+
+func TestViable_Validate(t *testing.T) {
+	goodvi := NewViable("branch", []string{"bra.*h", "banana"}, []*pb.Commit{}, false)
+	if err := goodvi.Validate(); err != nil {
+		t.Error(err)
+	}
+	badbranch := NewViable("branch", []string{"branc", "banna"}, []*pb.Commit{}, false)
+	if err := badbranch.Validate(); err == nil {
+		t.Error("should have failed validation")
+	} else if err.Error() != "branch branch not in the acceptable branches list: branc, banna" {
+		t.Error(test.StrFormatErrors("error message", "branch branch not in the acceptable branches list: branc, banna", err.Error()))
+	}
+	expectedErr := "build will not be queued because one of [skip ci] | [ci skip] was found in the commit with hash abcd. the full commit message is its time to be skipped [ci skip]"
+	commitSkip := NewViable("branch", []string{"branch"}, []*pb.Commit{{Message: "its time to be skipped [ci skip]", Hash:"abcd"}}, false)
+	if err := commitSkip.Validate(); err == nil {
+		t.Error("should have failed commit validation - msg has [ci skip]")
+	} else if err.Error() != expectedErr {
+		t.Error(test.StrFormatErrors("error message", expectedErr, err.Error()))
+	}
+	forced := NewViable("bran", []string{"brain"}, []*pb.Commit{}, true)
+	if err := forced.Validate(); err != nil {
+		t.Error("build was forced, should not return error")
+	}
+	nilCommits := NewViable("bran", []string{"bran"}, nil, false)
+	if err := nilCommits.Validate(); err != nil {
+		t.Error("branch valid, commits list is nil. this should pass.")
 	}
 }
