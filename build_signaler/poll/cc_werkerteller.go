@@ -14,13 +14,13 @@ import (
 
 type CCWerkerTeller struct{}
 
-func (w *CCWerkerTeller) TellWerker(hash string, conf *sig.Signaler, branch string, handler models.VCSHandler, token, acctRepo string, commits []*pb.Commit) (err error) {
+func (w *CCWerkerTeller) TellWerker(hash string, signaler *sig.Signaler, branch string, handler models.VCSHandler, token, acctRepo string, commits []*pb.Commit, force bool) (err error) {
 	ocelog.Log().WithField("hash", hash).WithField("acctRepo", acctRepo).WithField("branch", branch).Info("found new commit")
 	if token == "" {
 		return errors.New("token cannot be empty")
 	}
 	var buildConf *pb.BuildConfig
-	buildConf, err = sig.GetConfig(acctRepo, hash, conf.Deserializer, handler)
+	buildConf, err = sig.GetConfig(acctRepo, hash, signaler.Deserializer, handler)
 	if err != nil {
 		if err == ocenet.FileNotFound {
 			return errors.New("no ocelot yaml found for repo " + acctRepo)
@@ -28,7 +28,7 @@ func (w *CCWerkerTeller) TellWerker(hash string, conf *sig.Signaler, branch stri
 		return errors.New("unable to get build configuration; err: " + err.Error())
 	}
 
-	if err = conf.CheckViableThenQueueAndStore(hash, token, branch, acctRepo, buildConf, commits, false); err != nil {
+	if err = signaler.CheckViableThenQueueAndStore(hash, token, branch, acctRepo, buildConf, commits, false); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			return errors.New("did not queue because it shouldn't be queued. explanation: " + err.Error())
 		}

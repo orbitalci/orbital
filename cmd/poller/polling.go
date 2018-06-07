@@ -69,7 +69,7 @@ func main() {
 	var consumers []*nsqpb.ProtoConsume
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()
-		go consume(protoConsume, topic, store)
+		go consume(protoConsume, topic)
 		consumers = append(consumers, protoConsume)
 	}
 	fmt.Println(consumers)
@@ -79,14 +79,14 @@ func main() {
 
 }
 
-func consume(p *nsqpb.ProtoConsume, topic string, store storage.PollTable) {
+func consume(p *nsqpb.ProtoConsume, topic string) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			ocelog.Log().Info("about to sleep for 10s because could not find topic ", topic)
 			time.Sleep(10 * time.Second)
 		} else {
 			ocelog.Log().Info("about to consume messages for topic ", topic)
-			handler := &poll.MsgHandler{Topic: topic, Store: store}
+			handler := poll.NewMsgHandler(topic)
 			p.Handler = handler
 			p.ConsumeMessages(topic, "poller")
 			ocelog.Log().Info("consuming messages for topic ", topic)

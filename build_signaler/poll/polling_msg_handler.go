@@ -10,14 +10,19 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
 )
 
-var cronDir = "/etc/cron.d"
+
+func NewMsgHandler(topic string) *MsgHandler {
+	return &MsgHandler{
+		Topic:topic,
+		cronDir: "/etc/cron.d",
+	}
+}
 
 type MsgHandler struct {
 	Topic string
-	Store storage.PollTable
+	cronDir string
 }
 
 func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
@@ -33,14 +38,14 @@ func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan 
 	var err error
 	switch m.Topic {
 	case "poll_please":
-		err = WriteCronFile(pollMsg)
+		err = WriteCronFile(pollMsg, m.cronDir)
 		if err != nil {
 			// even if we can't write cron tab, should register that it was requested
 			log.IncludeErrField(err).Error("UNABLE TO WRITE CRON TAB")
 		}
 	case "no_poll_please":
 		log.Log().Info("recieved a request for no_poll_please")
-		err = DeleteCronFile(pollMsg)
+		err = DeleteCronFile(pollMsg, m.cronDir)
 		if err != nil {
 			log.IncludeErrField(err).Error("UNABLE TO DELETE CRON TAB")
 		} else {
@@ -53,13 +58,13 @@ func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan 
 	return err
 }
 
-func DeleteCronFile(event *pb.PollRequest) error {
+func DeleteCronFile(event *pb.PollRequest, cronDir string) error {
 	fullPath := filepath.Join(cronDir, event.Account+"_"+event.Repo)
 	err := os.Remove(fullPath)
 	return err
 }
 
-func WriteCronFile(event *pb.PollRequest) error {
+func WriteCronFile(event *pb.PollRequest, cronDir string) error {
 	cron := fmt.Sprintf("%s root /bin/run_changecheck.sh %s/%s %s\n", event.Cron, event.Account, event.Repo, event.Branches)
 	fullPath := filepath.Join(cronDir, event.Account+"_"+event.Repo)
 	isfile, err := exists(fullPath)
