@@ -22,6 +22,13 @@ type fakeCommitLister struct {
 	allBranchData []*pb.BranchHistory
 }
 
+func (f *fakeCommitLister) GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error) {
+	var commits []*pb.Commit
+	for _, ci := range f.commits {
+		commits = append(commits, &pb.Commit{Hash:ci.Hash, Message:ci.Message, Date:ci.Date})
+	}
+	return commits, nil
+}
 
 func (f *fakeCommitLister) GetAllCommits(string, string) (*pbb.Commits, error) {
 	return &pbb.Commits{Values: f.commits}, nil

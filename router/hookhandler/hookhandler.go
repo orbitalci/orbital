@@ -20,8 +20,8 @@ import (
 type HookHandler interface {
 	GetRemoteConfig() cred.CVRemoteConfig
 	SetRemoteConfig(remoteConfig cred.CVRemoteConfig)
-	GetProducer() *nsqpb.PbProduce
-	SetProducer(producer *nsqpb.PbProduce)
+	GetProducer() nsqpb.Producer
+	SetProducer(producer nsqpb.Producer)
 	GetDeserializer() *deserialize.Deserializer
 	SetDeserializer(deserializer *deserialize.Deserializer)
 	GetValidator() *build.OcelotValidator
@@ -106,10 +106,10 @@ func (hhc *HookHandlerContext) GetRemoteConfig() cred.CVRemoteConfig {
 func (hhc *HookHandlerContext) SetRemoteConfig(remoteConfig cred.CVRemoteConfig) {
 	hhc.RC = remoteConfig
 }
-func (hhc *HookHandlerContext) GetProducer() *nsqpb.PbProduce {
+func (hhc *HookHandlerContext) GetProducer() nsqpb.Producer {
 	return hhc.Producer
 }
-func (hhc *HookHandlerContext) SetProducer(producer *nsqpb.PbProduce) {
+func (hhc *HookHandlerContext) SetProducer(producer nsqpb.Producer) {
 	hhc.Producer = producer
 }
 func (hhc *HookHandlerContext) GetDeserializer() *deserialize.Deserializer {

@@ -1,6 +1,5 @@
 package build_signaler
 
-
 import (
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
@@ -15,7 +14,7 @@ import (
 	"github.com/shankj3/ocelot/storage"
 )
 
-func NewSignaler(RC credentials.CVRemoteConfig, dese *deserialize.Deserializer, producer *nsqpb.PbProduce, ocyValidator *build.OcelotValidator, store storage.OcelotStorage) *Signaler {
+func NewSignaler(RC credentials.CVRemoteConfig, dese *deserialize.Deserializer, producer nsqpb.Producer, ocyValidator *build.OcelotValidator, store storage.OcelotStorage) *Signaler {
 	return &Signaler{
 		RC: RC,
 		Deserializer: dese,
@@ -28,7 +27,7 @@ func NewSignaler(RC credentials.CVRemoteConfig, dese *deserialize.Deserializer, 
 type Signaler struct {
 	RC credentials.CVRemoteConfig
 	*deserialize.Deserializer
-	Producer     *nsqpb.PbProduce
+	Producer     nsqpb.Producer
 	OcyValidator *build.OcelotValidator
 	Store        storage.OcelotStorage
 }

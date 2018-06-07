@@ -143,7 +143,7 @@ func TestCmd_Run_nopermissions(t *testing.T) {
 	if diff := deep.Equal(errorStr, "Unable to write file to ocelot.yml in this location, will print to stdout instead. For your edification, the error is: open ocelot.yml: permission denied\n"); diff != nil {
 		t.Error(diff)
 	}
-	expected := fmt.Sprintf(skeleton, "image", "")
+	expected := fmt.Sprintf(skeleton, "image", "") + "\n"
 	if diff := deep.Equal(expected, outStr); diff != nil {
 		t.Error(diff)
 	}

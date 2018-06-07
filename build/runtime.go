@@ -22,7 +22,7 @@ type HashRuntime struct {
 
 //GetBuildRuntime will return BuildRuntimeInfo about matching partial git hashes.
 //It does this by first asking consul for state of builds, and then db storage
-func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*pb.BuildRuntimeInfo, error) {
+func GetBuildRuntime(consulete consul.Consuletty, gitHash string) (map[string]*pb.BuildRuntimeInfo, error) {
 	mapPath := common.MakeBuildMapPath(gitHash)
 	pairs, err := consulete.GetKeyValues(mapPath)
 	if err != nil {
@@ -66,7 +66,7 @@ func GetBuildRuntime(consulete *consul.Consulet, gitHash string) (map[string]*pb
 
 // CheckIfBuildDone will check in consul to make sure there is nothing in runtime configuration anymore,
 // then it will makes sure it can find it in storage
-func CheckIfBuildDone(consulete *consul.Consulet, summary storage.BuildSum, gitHash string) bool {
+func CheckIfBuildDone(consulete consul.Consuletty, summary storage.BuildSum, gitHash string) bool {
 	kv, err := consulete.GetKeyValue(common.MakeBuildMapPath(gitHash))
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
@@ -89,7 +89,7 @@ func CheckIfBuildDone(consulete *consul.Consulet, summary storage.BuildSum, gitH
 	}
 }
 
-func GetWerkerActiveBuilds(consulete *consul.Consulet, werkerId string) (hashes []string, err error) {
+func GetWerkerActiveBuilds(consulete consul.Consuletty, werkerId string) (hashes []string, err error) {
 	// todo: allow for a different separator? will we ever be using a different one? probably not, but technically you can...
 	keys, err := consulete.GetKeys(common.MakeBuildWerkerIdPath(werkerId))
 	if err != nil {
@@ -111,7 +111,7 @@ func GetWerkerActiveBuilds(consulete *consul.Consulet, werkerId string) (hashes 
 	return
 }
 
-func CheckBuildInConsul(consulete *consul.Consulet, hash string) (exists bool, err error) {
+func CheckBuildInConsul(consulete consul.Consuletty, hash string) (exists bool, err error) {
 	pairPath := common.MakeBuildMapPath(hash)
 	kv, err := consulete.GetKeyValue(pairPath)
 	if err != nil {
@@ -123,7 +123,7 @@ func CheckBuildInConsul(consulete *consul.Consulet, hash string) (exists bool, e
 	return
 }
 
-func GetHashRuntimesByWerker(consulete *consul.Consulet, werkerId string) (hrts map[string]*HashRuntime, err error) {
+func GetHashRuntimesByWerker(consulete consul.Consuletty, werkerId string) (hrts map[string]*HashRuntime, err error) {
 	pairs, err := consulete.GetKeyValues(common.MakeBuildWerkerIdPath(werkerId))
 	hrts = make(map[string]*HashRuntime)
 	if err != nil {
@@ -156,7 +156,7 @@ func GetHashRuntimesByWerker(consulete *consul.Consulet, werkerId string) (hrts 
 	return
 }
 
-func GetDockerUuidsByWerkerId(consulete *consul.Consulet, werkerId string) (uuids []string, err error) {
+func GetDockerUuidsByWerkerId(consulete consul.Consuletty, werkerId string) (uuids []string, err error) {
 	pairs, err := consulete.GetKeyValues(common.MakeBuildWerkerIdPath(werkerId))
 	if err != nil {
 		return

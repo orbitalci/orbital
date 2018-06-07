@@ -24,7 +24,7 @@ type recoveryCVRemoteConfig struct {
 	storage storage.OcelotStorage
 }
 
-func (r *recoveryCVRemoteConfig) GetConsul() *consul.Consulet {
+func (r *recoveryCVRemoteConfig) GetConsul() consul.Consuletty {
 	return r.consul
 }
 
