@@ -12,6 +12,7 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
+const CronDir = "/etc/cron.d"
 
 func NewMsgHandler(topic string) *MsgHandler {
 	return &MsgHandler{

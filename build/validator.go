@@ -52,6 +52,11 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	return err
 }
 
+//ValidateViability will check:
+//  - the branch given is a regex match for one of the buildBranches
+//  - the commits in commits don't have any messages containing special skip commands ([skip ci]/[ci skip])
+// This can be overriden with force
+// If the validation fails, a NotViable error will be returned. This means that you should not queue the build or track it. its unworthy.
 func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []string, commits []*pb.Commit, force bool) error {
 	// first check if the force flag has been set, because can just return immediately if so
 	if force {

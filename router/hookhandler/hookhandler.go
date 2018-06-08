@@ -56,8 +56,7 @@ func RepoPush(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	for _, commit := range repopush.Push.Changes[0].Commits {
 		commits = append(commits, &pb.Commit{Hash:commit.Hash, Date: commit.Date, Message:commit.Message})
 	}
-	checkData := build.NewViable(branch, nil, commits, false)
-	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName, checkData); err != nil {
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName, commits, false); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }
@@ -79,8 +78,7 @@ func PullRequest(ctx HookHandler, w http.ResponseWriter, r *http.Request) {
 	//for _, commit := range pr.Pullrequest.
 	// todo: hit an endpoint w/ vcs to get all commits of a pull request
 	// TODO-continued: bitbucket example: https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests/%7Bpull_request_id%7D/commits
-	checkData := build.NewViable(branch, nil, commits, false)
-	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName, checkData); err != nil {
+	if err := ctx.GetTeller().TellWerker(hash, ctx.GetSignaler(), branch, nil, "", fullName, commits, false); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", hash).WithField("acctRepo", fullName).WithField("branch", branch).Error("unable to tell werker")
 	}
 }

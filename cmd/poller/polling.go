@@ -46,7 +46,7 @@ func loadFromDb(store storage.OcelotStorage) error {
 			Cron:     oldPoll.Cron,
 			Branches: oldPoll.Branches,
 		}
-		if err = poll.WriteCronFile(msg); err != nil {
+		if err = poll.WriteCronFile(msg, poll.CronDir); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't write old cron files")
 		}
 
