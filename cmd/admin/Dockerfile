@@ -7,6 +7,7 @@ COPY . .
 RUN cd cmd/${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .
 
 FROM alpine:3.7
+RUN apk --update --no-cache add docker
 ENV SERVICE_NAME admin
 COPY models/pb/*.swagger.json /swagger/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

@@ -3,6 +3,7 @@ services:
   # Copied directly from ./docs/docker-compose/vault-consul/docker-compose.yml, with volume paths slightly modified, and with logging
   consul:
     image: consul:1.0.0
+    container_name: consul
     hostname: consul
     command: agent -dev -client 0.0.0.0
     ports:
@@ -14,3 +15,7 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+networks:
+  default:
+    external:
+      name: ocelot
