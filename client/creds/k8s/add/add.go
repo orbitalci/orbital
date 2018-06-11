@@ -46,7 +46,7 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.account, "acct", "ERROR",
 		"Account name to file kubeconfig under")
 	c.flags.StringVar(&c.name, "name", "ERROR",
-		"Name for kubeconfig")
+		"Name for kubeconfig (Using your cluster name is recommended)")
 }
 
 // uploadCredential will check if credential already exists. if it does, it will ask if the user wishes to overwrite. if the user responds YES, the credential will be updated.
