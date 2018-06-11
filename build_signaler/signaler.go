@@ -33,26 +33,25 @@ type Signaler struct {
 
 // CheckViableThenQueueAndStore is a dumb name, but i can't think of a better one. it will first
 //- check if the build is "viable", ie if it is in the accepted branches list and none of the commits contain a skip message. if it isn't, it won't queue and will return a NotViable error
-//- will then run queueAndStore, which will:
+//- will then run QueueAndStore, which will:
 //  - check if build in consul, if it is it will not add to queue and return a NotViable error
 //  - if the above doesn't return an error....
 //  - store the initial summary in the database
 //  - validate that the configuration is good
-func (s *Signaler) CheckViableThenQueueAndStore(hash, authToken, branch, acctRepo string, buildConf *pb.BuildConfig, commits []*pb.Commit, force bool, sigType pb.SignaledBy, prData *pb.PullRequest) error {
-	if queueError := s.OcyValidator.ValidateViability(branch, buildConf.Branches, commits, force, prData); queueError != nil {
+func (s *Signaler) CheckViableThenQueueAndStore(task *pb.WerkerTask, force bool, commits []*pb.Commit) error {
+	if queueError := s.OcyValidator.ValidateViability(task.Branch, task.BuildConf.Branches, commits, force); queueError != nil {
 		log.IncludeErrField(queueError).Info("not queuing! this is fine, just doesn't fit requirements")
 		return queueError
 	}
-	task := buildInitialWerkerTask(buildConf, hash, authToken, branch, acctRepo, sigType, prData)
-	return s.queueAndStore(task)
+	return s.QueueAndStore(task)
 }
 
-// queueAndStore is the muscle; it will:
+// QueueAndStore is the muscle; it will:
 //  - check if build in consul, if it is it will not add to queue and return a NotViable error
 //  - if the above doesn't return an error....
 //  - store the initial summary in the database
 //  - validate that the configuration is good and add to the queue. If the build configuration (ocelot.yml) is not good, then it will store in the database that it failed validation along with the reason why
-func (s *Signaler) queueAndStore(task *pb.WerkerTask) error {
+func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 	log.Log().Debug("Storing initial results in db")
 	account, repo, err := common.GetAcctRepo(task.FullName)
 	if err != nil {
@@ -105,14 +104,14 @@ func (s *Signaler) validateAndQueue(task *pb.WerkerTask, sr *models.StageResult)
 	return nil
 }
 
-//buildInitialWerkerTask will create a WerkerTask object with all the fields taht are not reliant on a database transaction, basically everyhting we know right when we know we want to try and queue a build
-func buildInitialWerkerTask(buildConf *pb.BuildConfig,
+//BuildInitialWerkerTask will create a WerkerTask object with all the fields taht are not reliant on a database transaction, basically everyhting we know right when we know we want to try and queue a build
+func BuildInitialWerkerTask(buildConf *pb.BuildConfig,
 	hash string,
 	authToken string,
 	branch string,
 	acctRepo string,
 	sigType pb.SignaledBy,
-	prData *pb.PullRequest) *pb.WerkerTask {
+	prId string) *pb.WerkerTask {
 	return &pb.WerkerTask{
 		CheckoutHash:  hash,
 		Branch:        branch,
@@ -121,7 +120,7 @@ func buildInitialWerkerTask(buildConf *pb.BuildConfig,
 		VcsType:       pb.SubCredType_BITBUCKET,
 		FullName:      acctRepo,
 		SignaledBy:    sigType,
-		Pr:            prData,
+		PrId:          prId,
 	}
 }
 

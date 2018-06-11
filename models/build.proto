@@ -3,7 +3,6 @@ option go_package = "pb";
 package models;
 
 import "creds.proto";
-import "vcshandler.proto";
 
 //this is a direct translation of the ocelot.yaml file
 message BuildConfig {
@@ -79,7 +78,7 @@ message WerkerTask {
     string branch = 8;
     SignaledBy signaledBy = 10;
     // id from vcs to be able to access pull request later
-    PullRequest pr = 11;
+    string prId = 11;
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//

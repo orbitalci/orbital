@@ -64,7 +64,7 @@ func TestSignaler_validateAndQueue(t *testing.T) {
 
 func TestSignaler_queueAndStore(t *testing.T) {
 	sig := getFakeSignaler(t, true)
-	err := sig.queueAndStore("1234", "token", "dev", "jessi/shank", goodConfig)
+	err := sig.QueueAndStore("1234", "token", "dev", "jessi/shank", goodConfig)
 	if err == nil {
 		t.Error("build is already in consul, should return an error")
 	}
@@ -75,7 +75,7 @@ func TestSignaler_queueAndStore(t *testing.T) {
 
 func TestSignaler_queueAndStore_happypath(t *testing.T) {
 	sig := getFakeSignaler(t, false)
-	err := sig.queueAndStore("1234", "token", "dev", "jessi/shank", goodConfig)
+	err := sig.QueueAndStore("1234", "token", "dev", "jessi/shank", goodConfig)
 	if err != nil {
 		t.Error("should pass validation and store properly")
 	}
@@ -102,7 +102,7 @@ func TestSignaler_queueAndStore_happypath(t *testing.T) {
 
 func TestSignaler_queueAndStore_invalid(t *testing.T) {
 	sig := getFakeSignaler(t, false)
-	err := sig.queueAndStore("1234", "token", "dev", "jessi/shank", badConfig)
+	err := sig.QueueAndStore("1234", "token", "dev", "jessi/shank", badConfig)
 	if err != nil {
 		t.Error("should not pass validation, but should not return an error")
 	}
