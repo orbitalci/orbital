@@ -16,7 +16,7 @@ func NewChangeChecker(signaler *signal.Signaler, acctRepo string) *ChangeChecker
 	return &ChangeChecker{
 		Signaler: signaler,
 		AcctRepo: acctRepo,
-		teller:   &CCWerkerTeller{},
+		teller:   &signal.CCWerkerTeller{},
 
 	}
 }
@@ -78,7 +78,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			if lastHash != branchHist.Hash {
 				ocelog.Log().WithField("branch", branchHist.Branch).Info("hashes are not the same, telling werker...")
 				commitLis := w.generateCommitList(w.AcctRepo, branchHist.Branch, lastHash)
-				err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo, commitLis, false)
+				err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo, commitLis, false, pb.SignaledBy_POLL, nil)
 				branchLastHashes[branchHist.Branch] = branchHist.Hash
 				if err != nil {
 					return err
@@ -95,7 +95,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			if lastCommitTime.After(lastWeek) {
 				ocelog.Log().WithField("branch", branchHist.Branch).WithField("hash", branchHist.Hash).Info("it is! it has been active at least in the past week, it will be built then added to ocelot tracking")
 				// since this has never been built before, we aren't going to parse the commit list to check for CI SKIP, we wouldn't have anything to check against
-				if err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo, nil, false); err != nil {
+				if err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo, nil, false, pb.SignaledBy_POLL, nil); err != nil {
 					return err
 				}
 			} else {
@@ -119,7 +119,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if lastHash == "" {
 		newLastHash = lastCommit.Hash
 		// no last hash, therefore not going to check for ci skip
-		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo, nil, false); err != nil {
+		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo, nil, false, pb.SignaledBy_POLL, nil); err != nil {
 			ocelog.IncludeErrField(err).Error("could not queue!")
 		}
 		return
@@ -130,7 +130,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 		// this has been tracked before, and we have a last hash to get a commit list so we can check for ci skip
 		commitList := w.generateCommitList(w.AcctRepo, branch, lastHash)
 		newLastHash = lastCommit.Hash
-		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo, commitList, false); err != nil {
+		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo, commitList, false, pb.SignaledBy_POLL, nil); err != nil {
 			return
 		}
 	} else {

@@ -292,7 +292,72 @@ func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {
 }
 
 
-func (bb *Bitbucket) TranslatePush(reader io.Reader) (*pb.Push, error) {
+func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
+	var commits []*pb.Commit
+	for {
+		if url == "" {
+			break
+		}
+		commitz := &pbb.Commits{}
+		err := bb.Client.GetUrl(url, commitz)
+		if err != nil {
+			return commits, err
+		}
+		for _, commit := range commitz.Values {
+			commits = append(commits, &pb.Commit{Hash:commit.Hash, Message:commit.Message, Date:commit.Date, Author:&pb.User{UserName: commit.Author.Username}})
+		}
+		url = commitz.GetNext()
+	}
+	return commits, nil
+}
+
+func GetTranslator() *BBTranslate {
+	return &BBTranslate{Unmarshaler: jsonpb.Unmarshaler{AllowUnknownFields: true,},}
+}
+
+type BBTranslate struct {
+	Unmarshaler jsonpb.Unmarshaler
+}
+
+func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
+	pr := &pbb.PullRequest{}
+	err := bb.Unmarshaler.Unmarshal(reader, pr)
+	if err != nil {
+		return nil, err
+	}
+	prN := &pb.PullRequest{
+		Id: pr.Pullrequest.Id,
+		Description: pr.Pullrequest.Description,
+		Urls: &pb.PrUrls{
+			Commits: pr.Pullrequest.Links.Commits.Href,
+			Comments: pr.Pullrequest.Links.Comments.Href,
+			Statuses: pr.Pullrequest.Links.Statuses.Href,
+		},
+		Title: pr.Pullrequest.Title,
+		Source: &pb.HeadData{
+			Repo: &pb.Repo{
+				Name: pr.Pullrequest.Source.Repository.FullName,
+				AcctRepo: pr.Pullrequest.Source.Repository.FullName,
+				RepoLink: pr.Pullrequest.Source.Repository.Links.Html.Href,
+			},
+			Branch: pr.Pullrequest.Source.Branch.GetName(),
+			Hash: pr.Pullrequest.Source.Commit.Hash,
+		},
+		Destination: &pb.HeadData{
+			Repo: &pb.Repo{
+				Name: pr.Pullrequest.Destination.Repository.FullName,
+				AcctRepo: pr.Pullrequest.Destination.Repository.FullName,
+				RepoLink: pr.Pullrequest.Destination.Repository.Links.Html.Href,
+			},
+			Branch: pr.Pullrequest.Destination.Branch.GetName(),
+			Hash: pr.Pullrequest.Destination.Commit.Hash,
+		},
+	}
+	return prN, nil
+}
+
+
+func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	push := &pbb.RepoPush{}
 	err := bb.Unmarshaler.Unmarshal(reader, push)
 	if err != nil {
@@ -313,58 +378,17 @@ func (bb *Bitbucket) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	for _, commit := range changeset.Commits {
 		commits = append(commits, &pb.Commit{Hash:commit.Hash, Date:commit.Date, Message:commit.Message, Author:&pb.User{UserName:commit.Author.Username}})
 	}
+	if changeset.New.Type != "branch" {
+		ocelog.Log().Errorf("changeset type is not branch, it is %s. idk what to do!!!", changeset.New.Type)
+		ocelog.Log().Error(push)
+		return nil, errors.New("unexpected push type")
+	}
 	translPush := &pb.Push{
 		Repo: &pb.Repo{Name: push.Repository.FullName, AcctRepo:push.Repository.FullName, RepoLink: push.Repository.Links.Html.Href},
 		User: &pb.User{UserName: push.Actor.Username},
 		Commits: commits,
+		Branch: changeset.New.Name,
 		HeadCommit: &pb.Commit{Hash:changeset.New.Target.Hash, Message:changeset.New.Target.Hash, Date:changeset.New.Target.Date, Author:&pb.User{UserName:changeset.New.Target.Author.Username}},
 	}
 	return translPush, nil
-}
-
-func (bb *Bitbucket) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
-	pr := &pbb.PullRequest{}
-	err := bb.Unmarshaler.Unmarshal(reader, pr)
-	if err != nil {
-		return nil, err
-	}
-	prN := &pb.PullRequest{
-		Description: pr.Pullrequest.Description,
-		Urls: &pb.PrUrls{
-			Commits: pr.Pullrequest.Links.Commits.Href,
-			Comments: pr.Pullrequest.Links.Comments.Href,
-			Statuses: pr.Pullrequest.Links.Statuses.Href,
-		},
-		Title: pr.Pullrequest.Title,
-		Repo: &pb.Repo{
-				Name: pr.Pullrequest.Source.Repository.FullName,
-				AcctRepo: pr.Pullrequest.Source.Repository.FullName,
-				RepoLink: pr.Pullrequest.Source.Repository.Links.Html.Href,
-		},
-		DestRepo: &pb.Repo{
-			Name: pr.Pullrequest.Destination.Repository.FullName,
-			AcctRepo: pr.Pullrequest.Destination.Repository.FullName,
-			RepoLink: pr.Pullrequest.Destination.Repository.Links.Html.Href,
-		},
-	}
-	return prN, nil
-}
-
-func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
-	var commits []*pb.Commit
-	for {
-		if url == "" {
-			break
-		}
-		commitz := &pbb.Commits{}
-		err := bb.Client.GetUrl(url, commitz)
-		if err != nil {
-			return commits, err
-		}
-		for _, commit := range commitz.Values {
-			commits = append(commits, &pb.Commit{Hash:commit.Hash, Message:commit.Message, Date:commit.Date, Author:&pb.User{UserName: commit.Author.Username}})
-		}
-		url = commitz.GetNext()
-	}
-	return commits, nil
 }

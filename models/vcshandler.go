@@ -1,6 +1,7 @@
 package models
 
 import (
+	"io"
 	"fmt"
 
 	pb "github.com/shankj3/ocelot/models/pb"
@@ -50,6 +51,19 @@ type VCSHandler interface {
 	//GetCommitLog will return a list of Commits, starting with the most recent and ending at the lastHash value.
 	// If the lastHash commit value is never found, will return an error.
 	GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error)
+
+	// GetPRCommits will return a list of commits for the given url for commits. It'll call the url from (e.g. bb or github),
+	//   unmarshal into its vcs-specific model, then translate to the global model to return a list of generic commits
+	GetPRCommits(url string) ([]*pb.Commit, error)
+
+}
+
+type Translator interface {
+	//TranslatePush should take a reader body, unmarshal it to vcs-specific model, then translate it to the global Push object
+	TranslatePush(reader io.Reader) (*pb.Push, error)
+
+	//TranslatePush should take a reader body, unmarshal it to vcs-specific model, then translate it to the global PullRequest object
+	TranslatePR(reader io.Reader) (*pb.PullRequest, error)
 }
 
 type CommitNotFound struct {

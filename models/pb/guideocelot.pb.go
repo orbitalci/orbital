@@ -45,7 +45,7 @@ func (m *BuildReq) Reset()         { *m = BuildReq{} }
 func (m *BuildReq) String() string { return proto.CompactTextString(m) }
 func (*BuildReq) ProtoMessage()    {}
 func (*BuildReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{0}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{0}
 }
 func (m *BuildReq) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BuildReq.Unmarshal(m, b)
@@ -111,7 +111,7 @@ func (m *StatusQuery) Reset()         { *m = StatusQuery{} }
 func (m *StatusQuery) String() string { return proto.CompactTextString(m) }
 func (*StatusQuery) ProtoMessage()    {}
 func (*StatusQuery) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{1}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{1}
 }
 func (m *StatusQuery) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StatusQuery.Unmarshal(m, b)
@@ -176,7 +176,7 @@ func (m *BuildQuery) Reset()         { *m = BuildQuery{} }
 func (m *BuildQuery) String() string { return proto.CompactTextString(m) }
 func (*BuildQuery) ProtoMessage()    {}
 func (*BuildQuery) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{2}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{2}
 }
 func (m *BuildQuery) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BuildQuery.Unmarshal(m, b)
@@ -221,7 +221,7 @@ func (m *Builds) Reset()         { *m = Builds{} }
 func (m *Builds) String() string { return proto.CompactTextString(m) }
 func (*Builds) ProtoMessage()    {}
 func (*Builds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{3}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{3}
 }
 func (m *Builds) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Builds.Unmarshal(m, b)
@@ -271,7 +271,7 @@ func (m *BuildRuntimeInfo) Reset()         { *m = BuildRuntimeInfo{} }
 func (m *BuildRuntimeInfo) String() string { return proto.CompactTextString(m) }
 func (*BuildRuntimeInfo) ProtoMessage()    {}
 func (*BuildRuntimeInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{4}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{4}
 }
 func (m *BuildRuntimeInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BuildRuntimeInfo.Unmarshal(m, b)
@@ -351,7 +351,7 @@ func (m *LineResponse) Reset()         { *m = LineResponse{} }
 func (m *LineResponse) String() string { return proto.CompactTextString(m) }
 func (*LineResponse) ProtoMessage()    {}
 func (*LineResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{5}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{5}
 }
 func (m *LineResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_LineResponse.Unmarshal(m, b)
@@ -394,7 +394,7 @@ func (m *RepoAccount) Reset()         { *m = RepoAccount{} }
 func (m *RepoAccount) String() string { return proto.CompactTextString(m) }
 func (*RepoAccount) ProtoMessage()    {}
 func (*RepoAccount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{6}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{6}
 }
 func (m *RepoAccount) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RepoAccount.Unmarshal(m, b)
@@ -451,7 +451,7 @@ func (m *Status) Reset()         { *m = Status{} }
 func (m *Status) String() string { return proto.CompactTextString(m) }
 func (*Status) ProtoMessage()    {}
 func (*Status) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{7}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{7}
 }
 func (m *Status) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Status.Unmarshal(m, b)
@@ -514,7 +514,7 @@ func (m *StageStatus) Reset()         { *m = StageStatus{} }
 func (m *StageStatus) String() string { return proto.CompactTextString(m) }
 func (*StageStatus) ProtoMessage()    {}
 func (*StageStatus) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{8}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{8}
 }
 func (m *StageStatus) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StageStatus.Unmarshal(m, b)
@@ -606,7 +606,7 @@ func (m *BuildSummary) Reset()         { *m = BuildSummary{} }
 func (m *BuildSummary) String() string { return proto.CompactTextString(m) }
 func (*BuildSummary) ProtoMessage()    {}
 func (*BuildSummary) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{9}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{9}
 }
 func (m *BuildSummary) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BuildSummary.Unmarshal(m, b)
@@ -701,7 +701,7 @@ func (m *Summaries) Reset()         { *m = Summaries{} }
 func (m *Summaries) String() string { return proto.CompactTextString(m) }
 func (*Summaries) ProtoMessage()    {}
 func (*Summaries) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{10}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{10}
 }
 func (m *Summaries) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Summaries.Unmarshal(m, b)
@@ -751,7 +751,7 @@ func (m *PollRequest) Reset()         { *m = PollRequest{} }
 func (m *PollRequest) String() string { return proto.CompactTextString(m) }
 func (*PollRequest) ProtoMessage()    {}
 func (*PollRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{11}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{11}
 }
 func (m *PollRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PollRequest.Unmarshal(m, b)
@@ -825,7 +825,7 @@ func (m *Polls) Reset()         { *m = Polls{} }
 func (m *Polls) String() string { return proto.CompactTextString(m) }
 func (*Polls) ProtoMessage()    {}
 func (*Polls) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{12}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{12}
 }
 func (m *Polls) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Polls.Unmarshal(m, b)
@@ -863,7 +863,7 @@ func (m *Exists) Reset()         { *m = Exists{} }
 func (m *Exists) String() string { return proto.CompactTextString(m) }
 func (*Exists) ProtoMessage()    {}
 func (*Exists) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{13}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{13}
 }
 func (m *Exists) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Exists.Unmarshal(m, b)
@@ -905,7 +905,7 @@ func (m *AcctRepo) Reset()         { *m = AcctRepo{} }
 func (m *AcctRepo) String() string { return proto.CompactTextString(m) }
 func (*AcctRepo) ProtoMessage()    {}
 func (*AcctRepo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{14}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{14}
 }
 func (m *AcctRepo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AcctRepo.Unmarshal(m, b)
@@ -951,7 +951,7 @@ func (m *AcctRepos) Reset()         { *m = AcctRepos{} }
 func (m *AcctRepos) String() string { return proto.CompactTextString(m) }
 func (*AcctRepos) ProtoMessage()    {}
 func (*AcctRepos) Descriptor() ([]byte, []int) {
-	return fileDescriptor_guideocelot_e68d571e8462b0d7, []int{15}
+	return fileDescriptor_guideocelot_b3453e0fac6d76eb, []int{15}
 }
 func (m *AcctRepos) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AcctRepos.Unmarshal(m, b)
@@ -2547,9 +2547,9 @@ var _GuideOcelot_serviceDesc = grpc.ServiceDesc{
 	Metadata: "guideocelot.proto",
 }
 
-func init() { proto.RegisterFile("guideocelot.proto", fileDescriptor_guideocelot_e68d571e8462b0d7) }
+func init() { proto.RegisterFile("guideocelot.proto", fileDescriptor_guideocelot_b3453e0fac6d76eb) }
 
-var fileDescriptor_guideocelot_e68d571e8462b0d7 = []byte{
+var fileDescriptor_guideocelot_b3453e0fac6d76eb = []byte{
 	// 4150 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x5a, 0x5d, 0x8c, 0x64, 0xc7,
 	0x55, 0xf6, 0xed, 0xf9, 0xf1, 0x4c, 0xcd, 0xfe, 0xcc, 0xde, 0xdd, 0xac, 0xc7, 0x9d, 0x38, 0x2e,

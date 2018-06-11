@@ -57,18 +57,25 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 //  - the commits in commits don't have any messages containing special skip commands ([skip ci]/[ci skip])
 // This can be overriden with force
 // If the validation fails, a NotViable error will be returned. This means that you should not queue the build or track it. its unworthy.
-func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []string, commits []*pb.Commit, force bool) error {
+func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []string, commits []*pb.Commit, force bool, prData *pb.PullRequest) error {
 	// first check if the force flag has been set, because can just return immediately if so
 	if force {
 		return nil
 	}
+	var resetBranch string
+	// if this build configuration is for a PR, you have to validate the buildBranches against the _destination_ branch, even though the source branch is what will be built.
+	if prData != nil {
+		resetBranch = prData.Destination.Branch
+	} else {
+		resetBranch = branch
+	}
 	// next, check if branch has a regex match with any of the buildable branches
-	branchOk, err := BranchRegexOk(branch, buildBranches)
+	branchOk, err := BranchRegexOk(resetBranch, buildBranches)
 	if err != nil {
 		return err
 	}
 	if !branchOk {
-		return NoViability(fmt.Sprintf("branch %s not in the acceptable branches list: %s", branch, strings.Join(buildBranches, ", ")))
+		return NoViability(fmt.Sprintf("branch %s not in the acceptable branches list: %s", resetBranch, strings.Join(buildBranches, ", ")))
 	}
 	if commits == nil {
 		return nil

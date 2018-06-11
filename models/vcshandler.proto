@@ -35,6 +35,7 @@ message Push {
     User user = 2;
     Commit headCommit = 4;
     repeated Commit commits = 3;
+    string Branch = 5;
 }
 
 
@@ -42,8 +43,15 @@ message PullRequest {
     string description = 1;
     PrUrls urls = 2;
     string title = 3;
-    Repo repo = 4;
-    Repo destRepo = 5;
+    HeadData source = 4;
+    HeadData destination = 5;
+    int64 id = 6;
+}
+
+message HeadData {
+    string branch = 1;
+    string hash = 2;
+    Repo repo = 3;
 }
 
 message PrUrls {

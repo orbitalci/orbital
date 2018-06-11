@@ -42,7 +42,6 @@ func main() {
 		ocelog.Log().Fatal(err)
 	}
 
-	var hookHandlerContext hh.HookHandler
 
 	//mode := os.Getenv("ENV")
 	//if strings.EqualFold(mode, "dev") {
@@ -51,28 +50,23 @@ func main() {
 	//	ocelog.Log().Info("hookhandler running in dev mode")
 	//
 	//} else {
-	hookHandlerContext = &hh.HookHandlerContext{Signaler: &signal.Signaler{}}
-	hookHandlerContext.SetRemoteConfig(remoteConfig)
-	//}
-
-	hookHandlerContext.SetDeserializer(deserialize.New())
-	hookHandlerContext.SetProducer(nsqpb.GetInitProducer())
-	hookHandlerContext.SetValidator(build.GetOcelotValidator())
-	store, err := hookHandlerContext.GetRemoteConfig().GetOcelotStorage()
+	store, err := remoteConfig.GetOcelotStorage()
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("couldn't get storage!")
 	}
-	hookHandlerContext.SetStorage(store)
+	signaler := &signal.Signaler{RC: remoteConfig, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator(), Store: store}
+	teller := &signal.CCWerkerTeller{}
+	hookHandlerContext := hh.GetContext(signaler, teller)
 	defer store.Close()
 
 	startServer(hookHandlerContext, port)
 }
 
-func startServer(ctx interface{}, port string) {
+func startServer(ctx *hh.HookHandlerContext, port string) {
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e
-	muxi.Handle("/bitbucket", &ocenet.AppContextHandler{ctx, hh.HandleBBEvent}).Methods("POST")
+	muxi.HandleFunc("/bitbucket", ctx.HandleBBEvent).Methods("POST")
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)
 }
