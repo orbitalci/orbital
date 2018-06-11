@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -35,6 +36,7 @@ func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) mod
 	bb := &Bitbucket{
 		Client:        client,
 		Marshaler:     jsonpb.Marshaler{},
+		Unmarshaler:   jsonpb.Unmarshaler{AllowUnknownFields: true,},
 		credConfig:    adminConfig,
 		isInitialized: true,
 	}
@@ -48,6 +50,7 @@ type Bitbucket struct {
 	RepoBaseURL string
 	Client      ocenet.HttpClient
 	Marshaler   jsonpb.Marshaler
+	Unmarshaler jsonpb.Unmarshaler
 
 	credConfig    *pb.VCSCreds
 	isInitialized bool
@@ -112,10 +115,7 @@ func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.
 	case http.StatusOK:
 		bbBranch := &pbb.Branch{}
 		reader := bufio.NewReader(resp.Body)
-		unmarshaler := jsonpb.Unmarshaler{
-			AllowUnknownFields: true,
-		}
-		if err = unmarshaler.Unmarshal(reader, bbBranch); err != nil {
+		if err = bb.Unmarshaler.Unmarshal(reader, bbBranch); err != nil {
 			ocelog.IncludeErrField(err).Error("failed to parse response from ", url)
 			return
 		}
@@ -255,4 +255,82 @@ func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {
 	}
 
 	return bb.FindWebhooks(webhooks.GetNext())
+}
+
+
+func (bb *Bitbucket) TranslatePush(reader io.Reader) (*pb.Push, error) {
+	push := &pbb.RepoPush{}
+	err := bb.Unmarshaler.Unmarshal(reader, push)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(push.Push.Changes) < 1 {
+		ocelog.Log().Error("no commits found in push")
+		// todo: evaluate if this is actually what should happen, what about pushing tags?
+		return nil, errors.New("no commits found in push")
+	}
+	if len(push.Push.Changes) > 1 {
+		ocelog.Log().Errorf("length of push changes is > 1, changes are %#v", push.Push.Changes)
+		return nil, errors.New("too many changesets")
+	}
+	var commits []*pb.Commit
+	changeset := push.Push.Changes[0]
+	for _, commit := range changeset.Commits {
+		commits = append(commits, &pb.Commit{Hash:commit.Hash, Date:commit.Date, Message:commit.Message, Author:&pb.User{UserName:commit.Author.Username}})
+	}
+	translPush := &pb.Push{
+		Repo: &pb.Repo{Name: push.Repository.FullName, AcctRepo:push.Repository.FullName, RepoLink: push.Repository.Links.Html.Href},
+		User: &pb.User{UserName: push.Actor.Username},
+		Commits: commits,
+		HeadCommit: &pb.Commit{Hash:changeset.New.Target.Hash, Message:changeset.New.Target.Hash, Date:changeset.New.Target.Date, Author:&pb.User{UserName:changeset.New.Target.Author.Username}},
+	}
+	return translPush, nil
+}
+
+func (bb *Bitbucket) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
+	pr := &pbb.PullRequest{}
+	err := bb.Unmarshaler.Unmarshal(reader, pr)
+	if err != nil {
+		return nil, err
+	}
+	prN := &pb.PullRequest{
+		Description: pr.Pullrequest.Description,
+		Urls: &pb.PrUrls{
+			Commits: pr.Pullrequest.Links.Commits.Href,
+			Comments: pr.Pullrequest.Links.Comments.Href,
+			Statuses: pr.Pullrequest.Links.Statuses.Href,
+		},
+		Title: pr.Pullrequest.Title,
+		Repo: &pb.Repo{
+				Name: pr.Pullrequest.Source.Repository.FullName,
+				AcctRepo: pr.Pullrequest.Source.Repository.FullName,
+				RepoLink: pr.Pullrequest.Source.Repository.Links.Html.Href,
+		},
+		DestRepo: &pb.Repo{
+			Name: pr.Pullrequest.Destination.Repository.FullName,
+			AcctRepo: pr.Pullrequest.Destination.Repository.FullName,
+			RepoLink: pr.Pullrequest.Destination.Repository.Links.Html.Href,
+		},
+	}
+	return prN, nil
+}
+
+func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
+	var commits []*pb.Commit
+	for {
+		if url == "" {
+			break
+		}
+		commitz := &pbb.Commits{}
+		err := bb.Client.GetUrl(url, commitz)
+		if err != nil {
+			return commits, err
+		}
+		for _, commit := range commitz.Values {
+			commits = append(commits, &pb.Commit{Hash:commit.Hash, Message:commit.Message, Date:commit.Date, Author:&pb.User{UserName: commit.Author.Username}})
+		}
+		url = commitz.GetNext()
+	}
+	return commits, nil
 }

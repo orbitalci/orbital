@@ -60,6 +60,12 @@ enum StageResultVal {
     FAIL = 1;
 }
 
+enum SignaledBy {
+    PULL_REQUEST = 0;
+    PUSH = 1;
+    POLL = 2;
+}
+
 message WerkerTask {
     string vaultToken = 1;
     string checkoutHash = 2;
@@ -69,6 +75,7 @@ message WerkerTask {
     string fullName = 6;
     int64 id = 7; // database id
     string branch = 8;
+    SignaledBy signaledBy = 9;
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//

@@ -32,7 +32,7 @@ func (m *BranchHistory) Reset()         { *m = BranchHistory{} }
 func (m *BranchHistory) String() string { return proto.CompactTextString(m) }
 func (*BranchHistory) ProtoMessage()    {}
 func (*BranchHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vcshandler_85dd6ad51134a535, []int{0}
+	return fileDescriptor_vcshandler_9327952d5bab4236, []int{0}
 }
 func (m *BranchHistory) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BranchHistory.Unmarshal(m, b)
@@ -73,23 +73,395 @@ func (m *BranchHistory) GetLastCommitTime() *timestamp.Timestamp {
 	return nil
 }
 
-func init() {
-	proto.RegisterType((*BranchHistory)(nil), "models.BranchHistory")
+type Commit struct {
+	Hash                 string               `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	Message              string               `protobuf:"bytes,2,opt,name=message" json:"message,omitempty"`
+	Date                 *timestamp.Timestamp `protobuf:"bytes,3,opt,name=date" json:"date,omitempty"`
+	Author               *User                `protobuf:"bytes,4,opt,name=author" json:"author,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
-func init() { proto.RegisterFile("vcshandler.proto", fileDescriptor_vcshandler_85dd6ad51134a535) }
+func (m *Commit) Reset()         { *m = Commit{} }
+func (m *Commit) String() string { return proto.CompactTextString(m) }
+func (*Commit) ProtoMessage()    {}
+func (*Commit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vcshandler_9327952d5bab4236, []int{1}
+}
+func (m *Commit) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Commit.Unmarshal(m, b)
+}
+func (m *Commit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Commit.Marshal(b, m, deterministic)
+}
+func (dst *Commit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Commit.Merge(dst, src)
+}
+func (m *Commit) XXX_Size() int {
+	return xxx_messageInfo_Commit.Size(m)
+}
+func (m *Commit) XXX_DiscardUnknown() {
+	xxx_messageInfo_Commit.DiscardUnknown(m)
+}
 
-var fileDescriptor_vcshandler_85dd6ad51134a535 = []byte{
-	// 173 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x28, 0x4b, 0x2e, 0xce,
-	0x48, 0xcc, 0x4b, 0xc9, 0x49, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcb, 0xcd,
-	0x4f, 0x49, 0xcd, 0x29, 0x96, 0x92, 0x4f, 0xcf, 0xcf, 0x4f, 0xcf, 0x49, 0xd5, 0x07, 0x8b, 0x26,
-	0x95, 0xa6, 0xe9, 0x97, 0x64, 0xe6, 0xa6, 0x16, 0x97, 0x24, 0xe6, 0x16, 0x40, 0x14, 0x2a, 0xd5,
-	0x73, 0xf1, 0x3a, 0x15, 0x25, 0xe6, 0x25, 0x67, 0x78, 0x64, 0x16, 0x97, 0xe4, 0x17, 0x55, 0x0a,
-	0x89, 0x71, 0xb1, 0x25, 0x81, 0x05, 0x24, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0xa0, 0x3c, 0x21,
-	0x21, 0x2e, 0x96, 0x8c, 0xc4, 0xe2, 0x0c, 0x09, 0x26, 0xb0, 0x28, 0x98, 0x2d, 0xe4, 0xc4, 0xc5,
-	0x97, 0x93, 0x58, 0x5c, 0xe2, 0x9c, 0x9f, 0x9b, 0x9b, 0x59, 0x12, 0x92, 0x99, 0x9b, 0x2a, 0xc1,
-	0xac, 0xc0, 0xa8, 0xc1, 0x6d, 0x24, 0xa5, 0x07, 0xb1, 0x56, 0x0f, 0x66, 0xad, 0x5e, 0x08, 0xcc,
-	0xda, 0x20, 0x34, 0x1d, 0x4e, 0x2c, 0x51, 0x4c, 0x05, 0x49, 0x49, 0x6c, 0x60, 0x95, 0xc6, 0x80,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x8e, 0xb9, 0xef, 0x29, 0xca, 0x00, 0x00, 0x00,
+var xxx_messageInfo_Commit proto.InternalMessageInfo
+
+func (m *Commit) GetHash() string {
+	if m != nil {
+		return m.Hash
+	}
+	return ""
+}
+
+func (m *Commit) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *Commit) GetDate() *timestamp.Timestamp {
+	if m != nil {
+		return m.Date
+	}
+	return nil
+}
+
+func (m *Commit) GetAuthor() *User {
+	if m != nil {
+		return m.Author
+	}
+	return nil
+}
+
+type User struct {
+	UserName             string   `protobuf:"bytes,1,opt,name=userName" json:"userName,omitempty"`
+	DisplayName          string   `protobuf:"bytes,2,opt,name=displayName" json:"displayName,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *User) Reset()         { *m = User{} }
+func (m *User) String() string { return proto.CompactTextString(m) }
+func (*User) ProtoMessage()    {}
+func (*User) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vcshandler_9327952d5bab4236, []int{2}
+}
+func (m *User) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_User.Unmarshal(m, b)
+}
+func (m *User) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_User.Marshal(b, m, deterministic)
+}
+func (dst *User) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_User.Merge(dst, src)
+}
+func (m *User) XXX_Size() int {
+	return xxx_messageInfo_User.Size(m)
+}
+func (m *User) XXX_DiscardUnknown() {
+	xxx_messageInfo_User.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_User proto.InternalMessageInfo
+
+func (m *User) GetUserName() string {
+	if m != nil {
+		return m.UserName
+	}
+	return ""
+}
+
+func (m *User) GetDisplayName() string {
+	if m != nil {
+		return m.DisplayName
+	}
+	return ""
+}
+
+type Repo struct {
+	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	AcctRepo             string   `protobuf:"bytes,2,opt,name=acctRepo" json:"acctRepo,omitempty"`
+	RepoLink             string   `protobuf:"bytes,3,opt,name=repoLink" json:"repoLink,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Repo) Reset()         { *m = Repo{} }
+func (m *Repo) String() string { return proto.CompactTextString(m) }
+func (*Repo) ProtoMessage()    {}
+func (*Repo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vcshandler_9327952d5bab4236, []int{3}
+}
+func (m *Repo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Repo.Unmarshal(m, b)
+}
+func (m *Repo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Repo.Marshal(b, m, deterministic)
+}
+func (dst *Repo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Repo.Merge(dst, src)
+}
+func (m *Repo) XXX_Size() int {
+	return xxx_messageInfo_Repo.Size(m)
+}
+func (m *Repo) XXX_DiscardUnknown() {
+	xxx_messageInfo_Repo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Repo proto.InternalMessageInfo
+
+func (m *Repo) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Repo) GetAcctRepo() string {
+	if m != nil {
+		return m.AcctRepo
+	}
+	return ""
+}
+
+func (m *Repo) GetRepoLink() string {
+	if m != nil {
+		return m.RepoLink
+	}
+	return ""
+}
+
+type Push struct {
+	Repo                 *Repo     `protobuf:"bytes,1,opt,name=repo" json:"repo,omitempty"`
+	User                 *User     `protobuf:"bytes,2,opt,name=user" json:"user,omitempty"`
+	HeadCommit           *Commit   `protobuf:"bytes,4,opt,name=headCommit" json:"headCommit,omitempty"`
+	Commits              []*Commit `protobuf:"bytes,3,rep,name=commits" json:"commits,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *Push) Reset()         { *m = Push{} }
+func (m *Push) String() string { return proto.CompactTextString(m) }
+func (*Push) ProtoMessage()    {}
+func (*Push) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vcshandler_9327952d5bab4236, []int{4}
+}
+func (m *Push) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Push.Unmarshal(m, b)
+}
+func (m *Push) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Push.Marshal(b, m, deterministic)
+}
+func (dst *Push) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Push.Merge(dst, src)
+}
+func (m *Push) XXX_Size() int {
+	return xxx_messageInfo_Push.Size(m)
+}
+func (m *Push) XXX_DiscardUnknown() {
+	xxx_messageInfo_Push.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Push proto.InternalMessageInfo
+
+func (m *Push) GetRepo() *Repo {
+	if m != nil {
+		return m.Repo
+	}
+	return nil
+}
+
+func (m *Push) GetUser() *User {
+	if m != nil {
+		return m.User
+	}
+	return nil
+}
+
+func (m *Push) GetHeadCommit() *Commit {
+	if m != nil {
+		return m.HeadCommit
+	}
+	return nil
+}
+
+func (m *Push) GetCommits() []*Commit {
+	if m != nil {
+		return m.Commits
+	}
+	return nil
+}
+
+type PullRequest struct {
+	Description          string   `protobuf:"bytes,1,opt,name=description" json:"description,omitempty"`
+	Urls                 *PrUrls  `protobuf:"bytes,2,opt,name=urls" json:"urls,omitempty"`
+	Title                string   `protobuf:"bytes,3,opt,name=title" json:"title,omitempty"`
+	Repo                 *Repo    `protobuf:"bytes,4,opt,name=repo" json:"repo,omitempty"`
+	DestRepo             *Repo    `protobuf:"bytes,5,opt,name=destRepo" json:"destRepo,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PullRequest) Reset()         { *m = PullRequest{} }
+func (m *PullRequest) String() string { return proto.CompactTextString(m) }
+func (*PullRequest) ProtoMessage()    {}
+func (*PullRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vcshandler_9327952d5bab4236, []int{5}
+}
+func (m *PullRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PullRequest.Unmarshal(m, b)
+}
+func (m *PullRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PullRequest.Marshal(b, m, deterministic)
+}
+func (dst *PullRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullRequest.Merge(dst, src)
+}
+func (m *PullRequest) XXX_Size() int {
+	return xxx_messageInfo_PullRequest.Size(m)
+}
+func (m *PullRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullRequest proto.InternalMessageInfo
+
+func (m *PullRequest) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *PullRequest) GetUrls() *PrUrls {
+	if m != nil {
+		return m.Urls
+	}
+	return nil
+}
+
+func (m *PullRequest) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *PullRequest) GetRepo() *Repo {
+	if m != nil {
+		return m.Repo
+	}
+	return nil
+}
+
+func (m *PullRequest) GetDestRepo() *Repo {
+	if m != nil {
+		return m.DestRepo
+	}
+	return nil
+}
+
+type PrUrls struct {
+	Commits              string   `protobuf:"bytes,1,opt,name=commits" json:"commits,omitempty"`
+	Comments             string   `protobuf:"bytes,2,opt,name=comments" json:"comments,omitempty"`
+	Statuses             string   `protobuf:"bytes,3,opt,name=statuses" json:"statuses,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PrUrls) Reset()         { *m = PrUrls{} }
+func (m *PrUrls) String() string { return proto.CompactTextString(m) }
+func (*PrUrls) ProtoMessage()    {}
+func (*PrUrls) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vcshandler_9327952d5bab4236, []int{6}
+}
+func (m *PrUrls) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PrUrls.Unmarshal(m, b)
+}
+func (m *PrUrls) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PrUrls.Marshal(b, m, deterministic)
+}
+func (dst *PrUrls) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PrUrls.Merge(dst, src)
+}
+func (m *PrUrls) XXX_Size() int {
+	return xxx_messageInfo_PrUrls.Size(m)
+}
+func (m *PrUrls) XXX_DiscardUnknown() {
+	xxx_messageInfo_PrUrls.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PrUrls proto.InternalMessageInfo
+
+func (m *PrUrls) GetCommits() string {
+	if m != nil {
+		return m.Commits
+	}
+	return ""
+}
+
+func (m *PrUrls) GetComments() string {
+	if m != nil {
+		return m.Comments
+	}
+	return ""
+}
+
+func (m *PrUrls) GetStatuses() string {
+	if m != nil {
+		return m.Statuses
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*BranchHistory)(nil), "models.BranchHistory")
+	proto.RegisterType((*Commit)(nil), "models.Commit")
+	proto.RegisterType((*User)(nil), "models.User")
+	proto.RegisterType((*Repo)(nil), "models.Repo")
+	proto.RegisterType((*Push)(nil), "models.Push")
+	proto.RegisterType((*PullRequest)(nil), "models.PullRequest")
+	proto.RegisterType((*PrUrls)(nil), "models.PrUrls")
+}
+
+func init() { proto.RegisterFile("vcshandler.proto", fileDescriptor_vcshandler_9327952d5bab4236) }
+
+var fileDescriptor_vcshandler_9327952d5bab4236 = []byte{
+	// 462 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xcd, 0x6e, 0xd4, 0x30,
+	0x10, 0x56, 0xba, 0x6e, 0xda, 0xce, 0x42, 0x85, 0x2c, 0x84, 0xa2, 0xbd, 0xb0, 0x8a, 0x38, 0xec,
+	0x29, 0x95, 0xe0, 0x0d, 0x16, 0x0e, 0x1c, 0x10, 0x5a, 0x59, 0xed, 0xa5, 0x37, 0x6f, 0x32, 0x6c,
+	0x22, 0x9c, 0x38, 0x78, 0x1c, 0xa4, 0x9e, 0x78, 0x01, 0x1e, 0x83, 0x57, 0xe0, 0xfd, 0x90, 0xff,
+	0x42, 0x54, 0x15, 0x89, 0x9b, 0xbf, 0xf9, 0x3e, 0xcf, 0x37, 0xf3, 0xd9, 0xf0, 0xe2, 0x7b, 0x4d,
+	0xad, 0x1c, 0x1a, 0x85, 0xa6, 0x1a, 0x8d, 0xb6, 0x9a, 0xe7, 0xbd, 0x6e, 0x50, 0xd1, 0xe6, 0xf5,
+	0x49, 0xeb, 0x93, 0xc2, 0x1b, 0x5f, 0x3d, 0x4e, 0x5f, 0x6e, 0x6c, 0xd7, 0x23, 0x59, 0xd9, 0x8f,
+	0x41, 0x58, 0xfe, 0x80, 0xe7, 0x7b, 0x23, 0x87, 0xba, 0xfd, 0xd8, 0x91, 0xd5, 0xe6, 0x81, 0xbf,
+	0x82, 0xfc, 0xe8, 0x0b, 0x45, 0xb6, 0xcd, 0x76, 0x57, 0x22, 0x22, 0xce, 0x81, 0xb5, 0x92, 0xda,
+	0xe2, 0xcc, 0x57, 0xfd, 0x99, 0xef, 0xe1, 0x5a, 0x49, 0xb2, 0xef, 0x75, 0xdf, 0x77, 0xf6, 0xb6,
+	0xeb, 0xb1, 0x58, 0x6d, 0xb3, 0xdd, 0xfa, 0xed, 0xa6, 0x0a, 0xb6, 0x55, 0xb2, 0xad, 0x6e, 0x93,
+	0xad, 0x78, 0x74, 0xa3, 0xfc, 0x99, 0x41, 0x1e, 0xe0, 0x6c, 0x91, 0x2d, 0x2c, 0x0a, 0xb8, 0xe8,
+	0x91, 0x48, 0x9e, 0x30, 0x3a, 0x27, 0xc8, 0x2b, 0x60, 0x8d, 0xb4, 0xff, 0x63, 0xe9, 0x75, 0xfc,
+	0x0d, 0xe4, 0x72, 0xb2, 0xad, 0x36, 0x05, 0xf3, 0x37, 0x9e, 0x55, 0x21, 0xa3, 0xea, 0x8e, 0xd0,
+	0x88, 0xc8, 0x95, 0x1f, 0x80, 0x39, 0xcc, 0x37, 0x70, 0x39, 0x11, 0x9a, 0xcf, 0xb2, 0xc7, 0x38,
+	0xcf, 0x8c, 0xf9, 0x16, 0xd6, 0x4d, 0x47, 0xa3, 0x92, 0x0f, 0x9e, 0x0e, 0x73, 0x2d, 0x4b, 0xa5,
+	0x00, 0x26, 0x70, 0xd4, 0x6e, 0xa3, 0xe1, 0x6f, 0x07, 0x7f, 0x76, 0x9d, 0x65, 0x5d, 0x5b, 0xc7,
+	0xc7, 0xab, 0x33, 0x76, 0x9c, 0xc1, 0x51, 0x7f, 0xea, 0x86, 0xaf, 0x7e, 0xaf, 0x2b, 0x31, 0xe3,
+	0xf2, 0x57, 0x06, 0xec, 0x30, 0x51, 0xcb, 0xb7, 0xc0, 0x5c, 0xd1, 0x37, 0x5d, 0xac, 0xe1, 0x1a,
+	0x08, 0xcf, 0x38, 0x85, 0x1b, 0xd6, 0xb7, 0x7f, 0xbc, 0xa8, 0x67, 0x78, 0x05, 0xd0, 0xa2, 0x6c,
+	0x42, 0xf0, 0x31, 0x90, 0xeb, 0xa4, 0x0b, 0x55, 0xb1, 0x50, 0xf0, 0x1d, 0x5c, 0xd4, 0xfe, 0x44,
+	0xc5, 0x6a, 0xbb, 0x7a, 0x42, 0x9c, 0xe8, 0xf2, 0x77, 0x06, 0xeb, 0xc3, 0xa4, 0x94, 0xc0, 0x6f,
+	0x13, 0x92, 0xf5, 0x61, 0x21, 0xd5, 0xa6, 0x1b, 0x6d, 0xa7, 0x87, 0x98, 0xc4, 0xb2, 0xc4, 0x4b,
+	0x60, 0x93, 0x51, 0x14, 0xa7, 0x9d, 0x1b, 0x1f, 0xcc, 0x9d, 0x51, 0x24, 0x3c, 0xc7, 0x5f, 0xc2,
+	0xb9, 0xed, 0xac, 0xc2, 0x98, 0x4a, 0x00, 0x73, 0x12, 0xec, 0x9f, 0x49, 0xec, 0xe0, 0xb2, 0x41,
+	0x0a, 0x61, 0x9f, 0x3f, 0xa1, 0x9a, 0xd9, 0xf2, 0x1e, 0xf2, 0xe0, 0xe8, 0xbe, 0x5c, 0xda, 0x35,
+	0x4c, 0x9b, 0xa0, 0x7b, 0x1e, 0x77, 0xc4, 0xc1, 0x52, 0x7a, 0xba, 0x84, 0x1d, 0x47, 0x56, 0xda,
+	0x89, 0x90, 0xd2, 0xd3, 0x25, 0xbc, 0x67, 0xf7, 0x67, 0xe3, 0xf1, 0x98, 0xfb, 0xaf, 0xf9, 0xee,
+	0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfd, 0x7c, 0xf7, 0xf7, 0xae, 0x03, 0x00, 0x00,
 }

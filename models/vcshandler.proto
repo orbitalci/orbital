@@ -11,3 +11,43 @@ message BranchHistory {
     google.protobuf.Timestamp lastCommitTime = 3;
 }
 
+
+message Commit {
+    string hash = 1;
+    string message = 2;
+    google.protobuf.Timestamp date = 3;
+    User author = 4;
+}
+
+message User {
+    string userName = 1;
+    string displayName = 2;
+}
+
+message Repo {
+    string name = 1;
+    string acctRepo = 2;
+    string repoLink = 3;
+}
+
+message Push {
+    Repo repo = 1;
+    User user = 2;
+    Commit headCommit = 4;
+    repeated Commit commits = 3;
+}
+
+
+message PullRequest {
+    string description = 1;
+    PrUrls urls = 2;
+    string title = 3;
+    Repo repo = 4;
+    Repo destRepo = 5;
+}
+
+message PrUrls {
+    string commits = 1;
+    string comments = 2;
+    string statuses = 3;
+}
