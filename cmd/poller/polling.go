@@ -26,7 +26,8 @@ func configure() cred.CVRemoteConfig {
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
 	rc, err := cred.GetInstance(consuladdr, consulport, "")
-	ocelog.Log().Debug("consul address is ", rc.GetConsul().Config.Address)
+	// todo: add getaddress() to consuletty
+	//ocelog.Log().Debug("consul address is ", rc.GetConsul().Config.Address)
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to get instance of remote config, exiting")
 	}
@@ -45,7 +46,7 @@ func loadFromDb(store storage.OcelotStorage) error {
 			Cron:     oldPoll.Cron,
 			Branches: oldPoll.Branches,
 		}
-		if err = poll.WriteCronFile(msg); err != nil {
+		if err = poll.WriteCronFile(msg, poll.CronDir); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't write old cron files")
 		}
 
@@ -68,7 +69,7 @@ func main() {
 	var consumers []*nsqpb.ProtoConsume
 	for _, topic := range supportedTopics {
 		protoConsume := nsqpb.NewDefaultProtoConsume()
-		go consume(protoConsume, topic, store)
+		go consume(protoConsume, topic)
 		consumers = append(consumers, protoConsume)
 	}
 	fmt.Println(consumers)
@@ -78,14 +79,14 @@ func main() {
 
 }
 
-func consume(p *nsqpb.ProtoConsume, topic string, store storage.PollTable) {
+func consume(p *nsqpb.ProtoConsume, topic string) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			ocelog.Log().Info("about to sleep for 10s because could not find topic ", topic)
 			time.Sleep(10 * time.Second)
 		} else {
 			ocelog.Log().Info("about to consume messages for topic ", topic)
-			handler := &poll.MsgHandler{Topic: topic, Store: store}
+			handler := poll.NewMsgHandler(topic)
 			p.Handler = handler
 			p.ConsumeMessages(topic, "poller")
 			ocelog.Log().Info("consuming messages for topic ", topic)

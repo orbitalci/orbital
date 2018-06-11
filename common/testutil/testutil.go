@@ -16,7 +16,7 @@ func modifyServerConfig(c *testutil.TestServerConfig) {
 func InitServerAndConsulet(t *testing.T) (*consulet.Consulet, *testutil.TestServer) {
 	//todo: idk if we want to add the consul binary to our build image, but it is required
 	BuildServerHack(t)
-	testServer, err := testutil.NewTestServerConfig(modifyServerConfig)
+	testServer, err := testutil.NewTestServerConfigT(t, modifyServerConfig)
 	if err != nil {
 		t.Error("Couldn't create consul test server, error: ", err)
 	}

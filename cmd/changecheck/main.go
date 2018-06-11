@@ -75,11 +75,10 @@ func main() {
 		RC:           conf.RemoteConf,
 		Deserializer: conf.Deserializer,
 		Producer:     conf.Producer,
-		AcctRepo:     conf.AcctRepo,
 		OcyValidator: conf.OcyValidator,
 		Store:        store,
 	}
-	checker := poll.NewChangeChecker(sig)
+	checker := poll.NewChangeChecker(sig, conf.AcctRepo)
 
 	if err := checker.SetAuth(); err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("could not get auth")

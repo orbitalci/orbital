@@ -21,6 +21,10 @@ import (
 )
 
 func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot_BuildRepoAndHashServer) error {
+	acct, repo, err := common.GetAcctRepo(buildReq.AcctRepo)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, "Bad format of acctRepo, must be account/repo")
+	}
 	log.Log().Info(buildReq)
 	if buildReq == nil || len(buildReq.AcctRepo) == 0 || len(buildReq.Hash) == 0 {
 		return status.Error(codes.InvalidArgument, "please pass a valid account/repo_name and hash")
@@ -67,10 +71,6 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		fullHash = buildReq.Hash
 		branch = buildReq.Branch
 	} else {
-		acct, repo, err := common.GetAcctRepo(buildReq.AcctRepo)
-		if err != nil {
-			return status.Error(codes.InvalidArgument, "Bad format of acctRepo, must be account/repo")
-		}
 		if buildSum.Repo != repo || buildSum.Account != acct {
 			mismatchErr := errors.New(fmt.Sprintf("The account/repo passed (%s) doesn't match with the account/repo (%s) associated with build #%v", buildReq.AcctRepo, buildSum.Account+"/"+buildSum.Repo, buildSum.BuildId))
 			log.IncludeErrField(mismatchErr).Error()
@@ -100,18 +100,40 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		return err
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, models.CHECKMARK)))
-	stream.Send(RespWrap(fmt.Sprintf("Storing build data for %s...", buildReq.AcctRepo)))
-	// todo: change this to use VcsWorkerTeller in build_signaler package
-	if err = signal.QueueAndStore(fullHash, branch, buildReq.AcctRepo, token, g.RemoteConfig, buildConf, g.OcyValidator, g.Producer, g.Storage); err != nil {
-		if _, ok := err.(*build.DoNotQueue); ok {
+	stream.Send(RespWrap(fmt.Sprintf("Validating and queuing build data for %s...", buildReq.AcctRepo)))
+	// i was trying to make this work, but it ends up being really complicated considering that we're dealing with a DAG and (at least) bitbucket's api is not robust in this respect..
+	// 	might be worth revisiting, idk, but its not worth it right now.
+	//
+	//
+	// Attempt to get a list of commits from the requested hash back to the last hash that was built. If anything goes wrong here, that's fine we are just going to send an error over the stream then build it anyway.
+	//var commits []*pb.Commit
+	//sums, err := g.Storage.RetrieveLastFewSums(acct, repo, 1)
+	//if err != nil {
+	//	log.IncludeErrField(err).Error("could not retrieve last build for acct/repo " + buildReq.AcctRepo)
+	//	stream.Send(RespWrap(fmt.Sprintf("Could not retrive last build for acct/repo %s, therefore cannot search commit history for skip commit messages. Just FYI.", buildReq.AcctRepo)))
+	//} else {
+	//	if len(sums) != 1 {
+	//		log.Log().Errorf("length of retrieved summaries for build request %s %s is %d.. wtf?", buildReq.AcctRepo, buildReq.Hash, len(sums))
+	//		stream.Send(RespWrap(fmt.Sprintf("Error retrieving last build for acct/repo %s, therefore cannot search commit history for skip commit messages. Just FYI.", buildReq.AcctRepo)))
+	//	} else {
+	//
+	//		commits, err = handler.GetCommitLog(buildReq.AcctRepo, branch, sums[0].Hash)
+	//	}
+	//}
+	if err = g.getSignaler().CheckViableThenQueueAndStore(buildReq.Hash, token,  branch, buildReq.AcctRepo, buildConf, nil, buildReq.Force); err != nil {
+		if _, ok := err.(*build.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
-			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Error is: " + err.Error())
+			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Use Force if you want to override. Error is: " + err.Error())
 		}
 		log.IncludeErrField(err).Error("couldn't add to build queue or store in db")
 		return status.Error(codes.InvalidArgument, "Couldn't add to build queue or store in DB, err: "+err.Error())
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", fullHash, buildReq.AcctRepo, models.CHECKMARK)))
 	return nil
+}
+
+func (g *guideOcelotServer) getSignaler() *signal.Signaler {
+	return signal.NewSignaler(g.RemoteConfig, g.Deserializer, g.Producer, g.OcyValidator, g.Storage)
 }
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {

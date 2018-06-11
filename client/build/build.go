@@ -2,7 +2,7 @@ package build
 
 import (
 	"github.com/mitchellh/cli"
-	"github.com/shankj3/ocelot/client/commandhelper"
+	help "github.com/shankj3/ocelot/client/commandhelper"
 	models "github.com/shankj3/ocelot/models/pb"
 
 	"context"
@@ -10,7 +10,7 @@ import (
 )
 
 const synopsis = "build a project hash"
-const help = `
+const helpmsg = `
 Usage: ocelot build -acct-repo <acct>/<repo> -hash <git_hash> -branch <branch>
 	Triggers a build to happen for the specified account/repository and hash starting with <git_hash>
 	If you running this command from the directory of your cloned git repo, ocelot will run some git commands
@@ -21,7 +21,7 @@ Usage: ocelot build -acct-repo <acct>/<repo> -hash <git_hash> -branch <branch>
 `
 
 func New(ui cli.Ui) *cmd {
-	c := &cmd{UI: ui, config: commandhelper.Config, OcyHelper: &commandhelper.OcyHelper{}}
+	c := &cmd{UI: ui, config: help.Config, OcyHelper: &help.OcyHelper{}}
 	c.init()
 	return c
 }
@@ -29,9 +29,10 @@ func New(ui cli.Ui) *cmd {
 type cmd struct {
 	UI     cli.Ui
 	flags  *flag.FlagSet
-	config *commandhelper.ClientConfig
+	config *help.ClientConfig
 	Branch string
-	*commandhelper.OcyHelper
+	force  bool
+	*help.OcyHelper
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
@@ -42,7 +43,7 @@ func (c *cmd) GetUI() cli.Ui {
 	return c.UI
 }
 
-func (c *cmd) GetConfig() *commandhelper.ClientConfig {
+func (c *cmd) GetConfig() *help.ClientConfig {
 	return c.config
 }
 
@@ -51,7 +52,7 @@ func (c *cmd) Synopsis() string {
 }
 
 func (c *cmd) Help() string {
-	return help
+	return helpmsg
 }
 
 func (c *cmd) init() {
@@ -60,34 +61,36 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to build")
 	c.flags.StringVar(&c.Hash, "hash", "ERROR", "hash to build")
 	c.flags.StringVar(&c.Branch, "branch", "ERROR", "branch to build (only required if passing a previously un-built hash or overriding the branch associated with a previous build)")
+	c.flags.BoolVar(&c.force, "force", false, "force the build to be queued even if it is not one of the accepted branches")
 }
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
-		commandhelper.Debuggit(c.UI, err.Error())
+		help.Debuggit(c.UI, err.Error())
 		return 1
 	}
 	if err := c.DetectHash(c.UI); err != nil {
-		commandhelper.Debuggit(c.UI, err.Error())
+		help.Debuggit(c.UI, err.Error())
 		return 1
 	}
 
 	if err := c.DetectAcctRepo(c.UI); err != nil {
-		commandhelper.Debuggit(c.UI, err.Error())
+		help.Debuggit(c.UI, err.Error())
 		return 1
 	}
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
-		commandhelper.Debuggit(c.UI, err.Error())
+		help.Debuggit(c.UI, err.Error())
 	}
 
 	ctx := context.Background()
-	if err := commandhelper.CheckConnection(c, ctx); err != nil {
+	if err := help.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
 
 	buildRequest := &models.BuildReq{
 		AcctRepo: c.AcctRepo,
 		Hash:     c.Hash,
+		Force:    c.force,
 	}
 
 	if c.Branch != "ERROR" && len(c.Branch) > 0 {
@@ -97,13 +100,13 @@ func (c *cmd) Run(args []string) int {
 	stream, err := c.config.Client.BuildRepoAndHash(ctx, buildRequest)
 
 	if err != nil {
-		commandhelper.UIErrFromGrpc(err, c.UI, "Unable to get build results from admin")
+		help.UIErrFromGrpc(err, c.UI, "Unable to get build results from admin")
 		return 1
 	}
 
 	err = c.HandleStreaming(c.UI, stream)
 	if err != nil {
-		commandhelper.Debuggit(c.UI, err.Error())
+		help.Debuggit(c.UI, err.Error())
 		return 1
 	}
 

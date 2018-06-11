@@ -188,7 +188,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
-	querystr := `SELECT * FROM build_summary WHERE hash = $1`
+	querystr := `SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime FROM build_summary WHERE hash = $1`
 	stmt, err := p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
@@ -257,7 +257,7 @@ func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.Build
 	if err := p.Connect(); err != nil {
 		return sum, errors.New("could not connect to postgres: " + err.Error())
 	}
-	querystr := `SELECT * FROM build_summary WHERE hash ilike $1 ORDER BY id DESC LIMIT 1;`
+	querystr := `SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime FROM build_summary WHERE hash ilike $1 ORDER BY id DESC LIMIT 1;`
 	stmt, err := p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
@@ -278,7 +278,7 @@ func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSumma
 	if err := p.Connect(); err != nil {
 		return sum, errors.New("could not connect to postgres: " + err.Error())
 	}
-	querystr := `SELECT * FROM build_summary WHERE id = $1 ORDER BY id DESC LIMIT 1`
+	querystr := `SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime FROM build_summary WHERE id = $1`
 	stmt, err := p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
@@ -299,7 +299,7 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
-	querystr := fmt.Sprintf(`SELECT * FROM build_summary WHERE repo=$1 and account=$2 ORDER BY id DESC LIMIT %d`, limit)
+	querystr := fmt.Sprintf(`SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime FROM build_summary WHERE repo=$1 and account=$2 ORDER BY id DESC LIMIT %d`, limit)
 	stmt, err := p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")

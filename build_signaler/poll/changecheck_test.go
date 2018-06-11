@@ -21,6 +21,13 @@ type fakeCommitLister struct {
 	allBranchData []*pb.BranchHistory
 }
 
+func (f *fakeCommitLister) GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error) {
+	var commits []*pb.Commit
+	for _, ci := range f.commits {
+		commits = append(commits, &pb.Commit{Hash:ci.Hash, Message:ci.Message, Date:ci.Date})
+	}
+	return commits, nil
+}
 
 func (f *fakeCommitLister) GetAllCommits(string, string) (*pbb.Commits, error) {
 	return &pbb.Commits{Values: f.commits}, nil
@@ -46,7 +53,7 @@ type fakeWerkerTeller struct{
 	told int
 }
 
-func (f *fakeWerkerTeller) TellWerker(lastCommit string, conf *build_signaler.Signaler, branch string, remote models.VCSHandler, token string) (err error) {
+func (f *fakeWerkerTeller) TellWerker(lastCommit string, conf *build_signaler.Signaler, branch string, handler models.VCSHandler, token, acctRepo string, commits []*pb.Commit, force bool) (err error) {
 	f.told += 1
 	return nil
 }
@@ -68,7 +75,7 @@ func TestChangeChecker_InspectCommits(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			commitList := []*pbb.Commit{{Hash: testcase.commitListHash}}
 			commitListen := &fakeCommitLister{commits: commitList}
-			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{AcctRepo: "test/test"}, handler:commitListen, token: "TOLKEIN", teller: &fakeWerkerTeller{}}
+			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{}, AcctRepo: "test/test", handler:commitListen, token: "TOLKEIN", teller: &fakeWerkerTeller{}}
 			//InspectCommits(branch string, lastHash string) (newLastHash string, err error) {
 			newLastHash, err := conf.InspectCommits("test", testcase.oldhash)
 			if err != nil {
@@ -117,7 +124,7 @@ func TestChangeChecker_HandleAllBranches(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			commitListen := &fakeCommitLister{allBranchData: testcase.histories}
 			teller := &fakeWerkerTeller{}
-			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{AcctRepo: "test/test"}, handler:commitListen, token: "TOLKEIN", teller: teller}
+			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{}, AcctRepo: "test/test", handler:commitListen, token: "TOLKEIN", teller: teller}
 			//InspectCommits(branch string, lastHash string) (newLastHash string, err error) {
 			err := conf.HandleAllBranches(testcase.buildHashMap)
 			if err != nil {

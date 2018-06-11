@@ -104,7 +104,7 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 }
 
 // StartBuild will register the uuid, hash, and database id into consul, as well as update the werker_id:hash kv in consul.
-func (v *Valet) StartBuild(consulet *consul.Consulet, hash string, id int64) error {
+func (v *Valet) StartBuild(consulet consul.Consuletty, hash string, id int64) error {
 	var err error
 	if err = RegisterBuildSummaryId(consulet, v.WerkerUuid.String(), hash, id); err != nil {
 		log.IncludeErrField(err).Error("could not register build summary id into consul! huge deal!")
@@ -208,7 +208,7 @@ func (v *Valet) SignalRecvDed() {
 // will delete:
 // 		ci/werker_build_map/<hash>
 // 		ci/builds/<werkerId>/<hash>/*
-func Delete(consulete *consul.Consulet, gitHash string) (err error) {
+func Delete(consulete consul.Consuletty, gitHash string) (err error) {
 	//paths := &Identifiers{GitHash: gitHash}
 	pairPath := common.MakeBuildMapPath(gitHash)
 	kv, err := consulete.GetKeyValue(pairPath)

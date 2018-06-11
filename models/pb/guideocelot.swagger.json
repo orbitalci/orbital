@@ -1308,6 +1308,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "force",
+            "description": "force is a flag that says to build even if it doesn't match the acceptable branches list and even if there is a \"skip\" ci message.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1407,6 +1415,11 @@
         "branch": {
           "type": "string",
           "description": "branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required."
+        },
+        "force": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "force is a flag that says to build even if it doesn't match the acceptable branches list and even if there is a \"skip\" ci message"
         }
       }
     },

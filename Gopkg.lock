@@ -571,7 +571,7 @@
     "test",
     "vault"
   ]
-  revision = "c3f188983e3f487bfd9864f5f7a0cb3cb6d07ba1"
+  revision = "63d9c45696f364e934cc92b2f651044cebee18e1"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -744,6 +744,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "625fa9f4efdcde2437d5daca6a66e9dfdec049cacc928c853ff9cb344360af52"
+  inputs-digest = "6ee234ed4446f6e6e078b72274efcc0bbb37d901a75176dea7a27c64349bb75c"
   solver-name = "gps-cdcl"
   solver-version = 1
