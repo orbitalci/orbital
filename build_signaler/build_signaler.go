@@ -60,7 +60,7 @@ func GetConfig(repoFullName string, checkoutCommit string, deserializer *deseria
 	return conf, err
 }
 
-//CheckForBuildFile will try to convert an ocelot.yml's bytes for a repository to return the protobuf message
+//CheckForBuildFile will try to convert an ocelot.yml's bytes for a repository to return the protobuf Message
 func CheckForBuildFile(buildFile []byte, deserializer *deserialize.Deserializer) (*pb.BuildConfig, error) {
 	conf := &pb.BuildConfig{}
 	fmt.Println(string(buildFile))

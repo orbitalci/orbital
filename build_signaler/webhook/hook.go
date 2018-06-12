@@ -33,11 +33,11 @@ func (pr *PRWerkerTeller) TellWerker(hash string, signaler *signal.Signaler, bra
 	buildConf, err := signal.GetConfig(acctRepo, hash, signaler.Deserializer, handler)
 	if err != nil {
 		if err == ocenet.FileNotFound {
-			err := errors.New("no ocelot yml found for repo " + acctRepo)
+			err = errors.New("no ocelot yml found for repo " + acctRepo)
 			ocelog.IncludeErrField(err).Error("no ocelotyml")
 			return err
 		} else {
-			err := errors.New("unable to get build configuration; err: " + err.Error())
+			err = errors.New("unable to get build configuration; err: " + err.Error())
 			ocelog.IncludeErrField(err).Error("couldn't get ocelotyml")
 			return err
 		}

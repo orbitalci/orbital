@@ -32,7 +32,7 @@ type Signaler struct {
 }
 
 // CheckViableThenQueueAndStore is a dumb name, but i can't think of a better one. it will first
-//- check if the build is "viable", ie if it is in the accepted branches list and none of the commits contain a skip message. if it isn't, it won't queue and will return a NotViable error
+//- check if the build is "viable", ie if it is in the accepted branches list and none of the commits contain a skip Message. if it isn't, it won't queue and will return a NotViable error
 //- will then run QueueAndStore, which will:
 //  - check if build in consul, if it is it will not add to queue and return a NotViable error
 //  - if the above doesn't return an error....
@@ -105,6 +105,7 @@ func (s *Signaler) validateAndQueue(task *pb.WerkerTask, sr *models.StageResult)
 }
 
 //BuildInitialWerkerTask will create a WerkerTask object with all the fields taht are not reliant on a database transaction, basically everyhting we know right when we know we want to try and queue a build
+//todo: take out the hard coded VcsType of bitbucket
 func BuildInitialWerkerTask(buildConf *pb.BuildConfig,
 	hash string,
 	authToken string,
