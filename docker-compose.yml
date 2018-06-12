@@ -17,8 +17,6 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
-        #    volumes:
-        #      - "/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem:/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem"
     ports:
       - "10000:10000"
     environment:
@@ -27,11 +25,6 @@ services:
       CONSUL_HOST: http://consul
       NSQLOOKUPD_IP: nsqlookupd
       NSQD_IP: nsqd
-#      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-#      VAULT_ADDR: http://172.18.0.1:8200
-#      CONSUL_HOST: http://172.17.0.1
-#      NSQLOOKUPD_IP: 172.18.0.1
-#      NSQD_IP: 172.18.0.1
 
   hookhandler:
     image: ocelot-hookhandler
@@ -54,18 +47,10 @@ services:
     environment:
       VAULT_TOKEN: ${VAULT_TOKEN}
       VAULT_ADDR: http://vault:8200
-#      CONSUL_HTTP_ADDR: http://172.18.0.1:8500
       CONSUL_HOST: http://consul
       LOG_LEVEL: debug
       NSQD_IP: nsqd
       NSQLOOKUPD_IP: nsqlookupd
-#      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-#      VAULT_ADDR: http://172.18.0.1:8200
-##      CONSUL_HTTP_ADDR: http://172.18.0.1:8500
-#      CONSUL_HOST: http://172.17.0.1
-#      LOG_LEVEL: debug
-#      NSQD_IP: 172.17.0.1
-#      NSQLOOKUPD_IP: 172.17.0.1
 
   werker:
     image: ocelot-werker
@@ -89,13 +74,6 @@ services:
       NSQD_IP: nsdq
       NSQLOOKUPD_IP: nsqlookupd
       REGISTER_IP: 10.1.62.38
-#      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-#      VAULT_ADDR: http://172.18.0.1:8200
-#      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
-#      CONSUL_HOST: 172.18.0.1
-#      NSQD_IP: 172.17.0.1
-#      NSQLOOKUPD_IP: 172.17.0.1
-#      REGISTER_IP: ec2-34-212-13-136.us-west-2.compute.amazonaws.com
     logging:
       driver: "json-file"
       options:
@@ -119,12 +97,6 @@ services:
       CONSUL_HOST: consul
       NSQD_IP: nsqd
       NSQLOOKUPD_IP: nsqlookupd
-#      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-#      VAULT_ADDR: http://172.18.0.1:8200
-#      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
-#      CONSUL_HOST: 172.18.0.1
-#      NSQD_IP: 172.17.0.1
-#      NSQLOOKUPD_IP: 172.17.0.1
     logging:
       driver: "json-file"
       options:
