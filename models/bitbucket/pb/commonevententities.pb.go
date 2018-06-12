@@ -21,9 +21,9 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_userOwner
 type Owner struct {
-	Type                 string   `protobuf:"bytes,1,opt,name=type" json:"type,omitempty"`
-	Username             string   `protobuf:"bytes,2,opt,name=username" json:"username,omitempty"`
-	Links                *Links   `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
+	Type                 string   `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Username             string   `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Links                *Links   `protobuf:"bytes,3,opt,name=links,proto3" json:"links,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -76,11 +76,11 @@ func (m *Owner) GetLinks() *Links {
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_repositoryRepository
 type Repository struct {
-	Links                *Links   `protobuf:"bytes,1,opt,name=links" json:"links,omitempty"`
-	Project              *Project `protobuf:"bytes,2,opt,name=project" json:"project,omitempty"`
-	FullName             string   `protobuf:"bytes,3,opt,name=fullName,json=full_name" json:"fullName,omitempty"`
-	Website              string   `protobuf:"bytes,4,opt,name=website" json:"website,omitempty"`
-	Owner                *Owner   `protobuf:"bytes,5,opt,name=owner" json:"owner,omitempty"`
+	Links                *Links   `protobuf:"bytes,1,opt,name=links,proto3" json:"links,omitempty"`
+	Project              *Project `protobuf:"bytes,2,opt,name=project,proto3" json:"project,omitempty"`
+	FullName             string   `protobuf:"bytes,3,opt,name=fullName,json=full_name,proto3" json:"fullName,omitempty"`
+	Website              string   `protobuf:"bytes,4,opt,name=website,proto3" json:"website,omitempty"`
+	Owner                *Owner   `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -147,22 +147,22 @@ func (m *Repository) GetOwner() *Owner {
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Pullrequestevents
 type PullRequestEntity struct {
-	Id                   int64                `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
-	Title                string               `protobuf:"bytes,2,opt,name=title" json:"title,omitempty"`
-	Description          string               `protobuf:"bytes,3,opt,name=description" json:"description,omitempty"`
-	State                string               `protobuf:"bytes,4,opt,name=state" json:"state,omitempty"`
-	Author               *Owner               `protobuf:"bytes,5,opt,name=author" json:"author,omitempty"`
-	Source               *PRInfo              `protobuf:"bytes,6,opt,name=source" json:"source,omitempty"`
-	Destination          *PRInfo              `protobuf:"bytes,7,opt,name=destination" json:"destination,omitempty"`
-	MergeCommit          *Commit              `protobuf:"bytes,8,opt,name=mergeCommit,json=merge_commit" json:"mergeCommit,omitempty"`
-	Participants         []*Owner             `protobuf:"bytes,9,rep,name=participants" json:"participants,omitempty"`
-	Reviewers            []*Owner             `protobuf:"bytes,10,rep,name=reviewers" json:"reviewers,omitempty"`
-	CloseSourceBranch    bool                 `protobuf:"varint,11,opt,name=closeSourceBranch,json=close_source_branch" json:"closeSourceBranch,omitempty"`
-	ClosedBy             *Owner               `protobuf:"bytes,12,opt,name=closedBy,json=closed_by" json:"closedBy,omitempty"`
-	Reason               string               `protobuf:"bytes,13,opt,name=reason" json:"reason,omitempty"`
-	CreatedAt            *timestamp.Timestamp `protobuf:"bytes,14,opt,name=createdAt,json=created_at" json:"createdAt,omitempty"`
-	UpdatedOn            *timestamp.Timestamp `protobuf:"bytes,15,opt,name=updatedOn,json=updated_on" json:"updatedOn,omitempty"`
-	Links                *Links               `protobuf:"bytes,16,opt,name=links" json:"links,omitempty"`
+	Id                   int64                `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title                string               `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Description          string               `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	State                string               `protobuf:"bytes,4,opt,name=state,proto3" json:"state,omitempty"`
+	Author               *Owner               `protobuf:"bytes,5,opt,name=author,proto3" json:"author,omitempty"`
+	Source               *PRInfo              `protobuf:"bytes,6,opt,name=source,proto3" json:"source,omitempty"`
+	Destination          *PRInfo              `protobuf:"bytes,7,opt,name=destination,proto3" json:"destination,omitempty"`
+	MergeCommit          *Commit              `protobuf:"bytes,8,opt,name=mergeCommit,json=merge_commit,proto3" json:"mergeCommit,omitempty"`
+	Participants         []*Owner             `protobuf:"bytes,9,rep,name=participants,proto3" json:"participants,omitempty"`
+	Reviewers            []*Owner             `protobuf:"bytes,10,rep,name=reviewers,proto3" json:"reviewers,omitempty"`
+	CloseSourceBranch    bool                 `protobuf:"varint,11,opt,name=closeSourceBranch,json=close_source_branch,proto3" json:"closeSourceBranch,omitempty"`
+	ClosedBy             *Owner               `protobuf:"bytes,12,opt,name=closedBy,json=closed_by,proto3" json:"closedBy,omitempty"`
+	Reason               string               `protobuf:"bytes,13,opt,name=reason,proto3" json:"reason,omitempty"`
+	CreatedAt            *timestamp.Timestamp `protobuf:"bytes,14,opt,name=createdAt,json=created_at,proto3" json:"createdAt,omitempty"`
+	UpdatedOn            *timestamp.Timestamp `protobuf:"bytes,15,opt,name=updatedOn,json=updated_on,proto3" json:"updatedOn,omitempty"`
+	Links                *Links               `protobuf:"bytes,16,opt,name=links,proto3" json:"links,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -305,9 +305,9 @@ func (m *PullRequestEntity) GetLinks() *Links {
 }
 
 type PRInfo struct {
-	Branch               *PRInfoBr   `protobuf:"bytes,1,opt,name=branch" json:"branch,omitempty"`
-	Commit               *Commit     `protobuf:"bytes,2,opt,name=commit" json:"commit,omitempty"`
-	Repository           *Repository `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
+	Branch               *PRInfoBr   `protobuf:"bytes,1,opt,name=branch,proto3" json:"branch,omitempty"`
+	Commit               *Commit     `protobuf:"bytes,2,opt,name=commit,proto3" json:"commit,omitempty"`
+	Repository           *Repository `protobuf:"bytes,3,opt,name=repository,proto3" json:"repository,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -359,7 +359,7 @@ func (m *PRInfo) GetRepository() *Repository {
 }
 
 type PRInfoBr struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -398,9 +398,9 @@ func (m *PRInfoBr) GetName() string {
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_projectProject
 type Project struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Uuid                 string   `protobuf:"bytes,2,opt,name=uuid" json:"uuid,omitempty"`
-	Links                *Links   `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Uuid                 string   `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	Links                *Links   `protobuf:"bytes,3,opt,name=links,proto3" json:"links,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -452,13 +452,13 @@ func (m *Project) GetLinks() *Links {
 }
 
 type Changeset struct {
-	New                  *Changeset_Head `protobuf:"bytes,1,opt,name=new" json:"new,omitempty"`
-	Old                  *Changeset_Head `protobuf:"bytes,2,opt,name=old" json:"old,omitempty"`
-	Links                *Links          `protobuf:"bytes,3,opt,name=links" json:"links,omitempty"`
-	Closed               bool            `protobuf:"varint,4,opt,name=closed" json:"closed,omitempty"`
-	Created              bool            `protobuf:"varint,5,opt,name=created" json:"created,omitempty"`
-	Forced               bool            `protobuf:"varint,6,opt,name=forced" json:"forced,omitempty"`
-	Commits              []*Commit       `protobuf:"bytes,7,rep,name=commits" json:"commits,omitempty"`
+	New                  *Changeset_Head `protobuf:"bytes,1,opt,name=new,proto3" json:"new,omitempty"`
+	Old                  *Changeset_Head `protobuf:"bytes,2,opt,name=old,proto3" json:"old,omitempty"`
+	Links                *Links          `protobuf:"bytes,3,opt,name=links,proto3" json:"links,omitempty"`
+	Closed               bool            `protobuf:"varint,4,opt,name=closed,proto3" json:"closed,omitempty"`
+	Created              bool            `protobuf:"varint,5,opt,name=created,proto3" json:"created,omitempty"`
+	Forced               bool            `protobuf:"varint,6,opt,name=forced,proto3" json:"forced,omitempty"`
+	Commits              []*Commit       `protobuf:"bytes,7,rep,name=commits,proto3" json:"commits,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -538,9 +538,9 @@ func (m *Changeset) GetCommits() []*Commit {
 }
 
 type Changeset_Head struct {
-	Type                 string   `protobuf:"bytes,1,opt,name=type" json:"type,omitempty"`
-	Name                 string   `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
-	Target               *Commit  `protobuf:"bytes,3,opt,name=target" json:"target,omitempty"`
+	Type                 string   `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Target               *Commit  `protobuf:"bytes,3,opt,name=target,proto3" json:"target,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -592,13 +592,13 @@ func (m *Changeset_Head) GetTarget() *Commit {
 }
 
 type Commit struct {
-	Hash    string               `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
-	Author  *Owner               `protobuf:"bytes,2,opt,name=author" json:"author,omitempty"`
-	Message string               `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
-	Date    *timestamp.Timestamp `protobuf:"bytes,4,opt,name=date" json:"date,omitempty"`
+	Hash    string               `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
+	Author  *Owner               `protobuf:"bytes,2,opt,name=author,proto3" json:"author,omitempty"`
+	Message string               `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	Date    *timestamp.Timestamp `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
 	// ignoring the "parents" field
-	Links                *Links      `protobuf:"bytes,5,opt,name=links" json:"links,omitempty"`
-	Repository           *Repository `protobuf:"bytes,6,opt,name=repository" json:"repository,omitempty"`
+	Links                *Links      `protobuf:"bytes,5,opt,name=links,proto3" json:"links,omitempty"`
+	Repository           *Repository `protobuf:"bytes,6,opt,name=repository,proto3" json:"repository,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -672,7 +672,7 @@ func (m *Commit) GetRepository() *Repository {
 
 // /2.0/repositories/{username}/{repo_slug}/commits
 type Commits struct {
-	Values               []*Commit `protobuf:"bytes,1,rep,name=values" json:"values,omitempty"`
+	Values               []*Commit `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
 	XXX_unrecognized     []byte    `json:"-"`
 	XXX_sizecache        int32     `json:"-"`
@@ -712,9 +712,9 @@ func (m *Commits) GetValues() []*Commit {
 // bitbucket api 1.0
 // https://confluence.atlassian.com/bitbucket/src-resources-296095214.html
 type RepoSourceFile struct {
-	Node                 string   `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
-	Path                 string   `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
-	Data                 string   `protobuf:"bytes,3,opt,name=data" json:"data,omitempty"`
+	Node                 string   `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
+	Path                 string   `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Data                 string   `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -766,9 +766,9 @@ func (m *RepoSourceFile) GetData() string {
 }
 
 type Author struct {
-	Raw                  string   `protobuf:"bytes,1,opt,name=raw" json:"raw,omitempty"`
-	Type                 string   `protobuf:"bytes,2,opt,name=type" json:"type,omitempty"`
-	User                 *Owner   `protobuf:"bytes,3,opt,name=user" json:"user,omitempty"`
+	Raw                  string   `protobuf:"bytes,1,opt,name=raw,proto3" json:"raw,omitempty"`
+	Type                 string   `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	User                 *Owner   `protobuf:"bytes,3,opt,name=user,proto3" json:"user,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
