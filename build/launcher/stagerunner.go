@@ -51,16 +51,6 @@ func (w *launcher) runStages(ctx context.Context, werk *pb.WerkerTask, builder b
 }
 
 
-// branchOk is an "if elem in list" check.
-func branchOk(branch string, buildBranches []string) bool {
-	for _, goodBranch := range buildBranches {
-		if goodBranch == branch {
-			return true
-		}
-	}
-	return false
-}
-
 // handleTriggers deals with the triggers section of the of the stage. Right now we only support a list of branches that should "trigger" this stage to run.
 //  if the trigger block exists, and current branch is in the list of trigger branches, the funciton will return a shouldSkip of false, signifying that the stage should execute.
 //  If the current branch is not in the list of trigger branches, shouldSkip of true will be returned and the stage should not be executed.

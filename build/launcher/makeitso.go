@@ -111,7 +111,10 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	if err != nil {
 		return
 	}
-
+	if err := w.postFlight(ctx, werk, fail); err != nil {
+		ocelog.IncludeErrField(err).Error("could not execute post flight")
+		// don't return here, we still want to update the build_summary table
+	}
 	//update build_summary table
 	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
@@ -126,6 +129,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 //	- `BUILD_ID`
 //	- `GIT_HASH_SHORT`
 //	- `GIT_BRANCH`
+//	- `WORKSPACE`
 func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) {
 	paddedEnvs := []string{
 		fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash),

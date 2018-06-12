@@ -120,7 +120,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	//		commits, err = handler.GetCommitLog(buildReq.AcctRepo, branch, sums[0].Hash)
 	//	}
 	//}
-	task := signal.BuildInitialWerkerTask(buildConf, buildReq.Hash, token, branch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, "")
+	task := signal.BuildInitialWerkerTask(buildConf, buildReq.Hash, token, branch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil)
 	if err = g.getSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())

@@ -58,4 +58,12 @@ message PrUrls {
     string commits = 1;
     string comments = 2;
     string statuses = 3;
+    string decline = 4;
+    string approve = 5;
+    string merge = 6;
+}
+
+message PrWerkerData {
+    PrUrls urls = 1;
+    string prId = 2;
 }

@@ -26,7 +26,7 @@ func (w *CCWerkerTeller) TellWerker(hash string, signaler *Signaler, branch stri
 		}
 		return errors.New("unable to get build configuration; err: " + err.Error())
 	}
-	task := BuildInitialWerkerTask(buildConf, hash, token, branch, acctRepo, sigType, "")
+	task := BuildInitialWerkerTask(buildConf, hash, token, branch, acctRepo, sigType, nil)
 	if err = signaler.CheckViableThenQueueAndStore(task, force, commits); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			return errors.New("did not queue because it shouldn't be queued. explanation: " + err.Error())

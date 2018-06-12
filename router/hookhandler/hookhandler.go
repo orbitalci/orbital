@@ -87,7 +87,18 @@ func (hhc *HookHandlerContext)  PullRequest(w http.ResponseWriter, r *http.Reque
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not commits for PR, err: ", err)
 		return
 	}
-	pwt := webhook.GetPrWerkerTeller(fmt.Sprintf("%d", pr.Id), pr.Destination.Branch)
+	prData := &pb.PrWerkerData{
+		Urls: &pb.PrUrls{
+			Approve:  pr.Urls.Approve,
+			Decline:  pr.Urls.Decline,
+			Comments: pr.Urls.Comments,
+			Commits:  pr.Urls.Commits,
+			Statuses: pr.Urls.Statuses,
+			Merge:    pr.Urls.Merge,
+		},
+		PrId: fmt.Sprintf("%d", pr.Id),
+	}
+	pwt := webhook.GetPrWerkerTeller(prData, pr.Destination.Branch)
 	err = pwt.TellWerker(pr.Source.Hash, hhc.Signaler, pr.Source.Branch, handler, token, pr.Source.Repo.AcctRepo, commits, false, pb.SignaledBy_PULL_REQUEST)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get commits for PR ")

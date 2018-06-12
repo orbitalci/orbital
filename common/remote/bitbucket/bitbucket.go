@@ -2,10 +2,12 @@ package bitbucket
 
 import (
 	"bufio"
+	//"encoding/json"
 	"errors"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
@@ -18,6 +20,7 @@ import (
 
 const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
+const V1RepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
 func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
@@ -54,6 +57,10 @@ type Bitbucket struct {
 
 	credConfig    *pb.VCSCreds
 	isInitialized bool
+}
+
+func (bb *Bitbucket) GetClient() ocenet.HttpClient {
+	return bb.Client
 }
 
 //Walk iterates over all repositories and creates webhook if one doesn't
@@ -95,13 +102,13 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 		return commits, nil
 	}
 	var foundLast bool
-	url := fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch
+	urrl := fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch
 	for {
-		if url == "" {
+		if urrl == "" {
 			break
 		}
 		commitz := &pbb.Commits{}
-		err := bb.Client.GetUrl(url, commitz)
+		err := bb.Client.GetUrl(urrl, commitz)
 		if err != nil {
 			return commits, err
 		}
@@ -112,7 +119,7 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 				break
 			}
 		}
-		url = commitz.GetNext()
+		urrl = commitz.GetNext()
 	}
 	var err error
 	if !foundLast {
@@ -132,9 +139,9 @@ func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_Rep
 
 func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.BranchHistory, err error) {
 	path := fmt.Sprintf("%s/refs/branches/%s", acctRepo, branch)
-	url := fmt.Sprintf(bb.GetBaseURL(), path)
+	urrl := fmt.Sprintf(bb.GetBaseURL(), path)
 	var resp *http.Response
-	resp, err = bb.Client.GetUrlResponse(url)
+	resp, err = bb.Client.GetUrlResponse(urrl)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +157,7 @@ func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.
 		bbBranch := &pbb.Branch{}
 		reader := bufio.NewReader(resp.Body)
 		if err = bb.Unmarshaler.Unmarshal(reader, bbBranch); err != nil {
-			ocelog.IncludeErrField(err).Error("failed to parse response from ", url)
+			ocelog.IncludeErrField(err).Error("failed to parse response from ", urrl)
 			return
 		}
 		hist = &pb.BranchHistory{Branch: branch, Hash: bbBranch.GetTarget().GetHash(), LastCommitTime: bbBranch.GetTarget().GetDate()}
@@ -311,84 +318,30 @@ func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
 	return commits, nil
 }
 
-func GetTranslator() *BBTranslate {
-	return &BBTranslate{Unmarshaler: jsonpb.Unmarshaler{AllowUnknownFields: true,},}
-}
 
-type BBTranslate struct {
-	Unmarshaler jsonpb.Unmarshaler
-}
-
-func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
-	pr := &pbb.PullRequest{}
-	err := bb.Unmarshaler.Unmarshal(reader, pr)
+func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, buildId int64) error {
+	//	https://api.bitbucket.org/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments --data "content=string"
+	// ** need to use v1 url because atlassian is annoying: **
+	// https://community.atlassian.com/t5/Answers-Developer-Questions/Are-you-planning-on-offering-an-update-pull-request-comment-API/qaq-p/526892
+	path := fmt.Sprintf("%s/pullrequests/%s/comments", acctRepo, prId)
+    urll := fmt.Sprintf(V1RepoBaseURL, path)
+	var status string
+	switch fail {
+	case true:
+		status = "FAILED"
+	case false:
+		status = "PASSED"
+	}
+    content := fmt.Sprintf("Ocelot build has **%s** for commit **%s**.\n\nRun `ocelot status -build-id %d` for detailed stage status, and `ocelot run -build-id %d` for complete build logs.", status, hash, buildId, buildId)
+	resp, err := bb.Client.PostUrlForm(urll, url.Values{"content":{content}})
+	defer resp.Body.Close()
 	if err != nil {
-		return nil, err
+    	return err
 	}
-	prN := &pb.PullRequest{
-		Id: pr.Pullrequest.Id,
-		Description: pr.Pullrequest.Description,
-		Urls: &pb.PrUrls{
-			Commits: pr.Pullrequest.Links.Commits.Href,
-			Comments: pr.Pullrequest.Links.Comments.Href,
-			Statuses: pr.Pullrequest.Links.Statuses.Href,
-		},
-		Title: pr.Pullrequest.Title,
-		Source: &pb.HeadData{
-			Repo: &pb.Repo{
-				Name: pr.Pullrequest.Source.Repository.FullName,
-				AcctRepo: pr.Pullrequest.Source.Repository.FullName,
-				RepoLink: pr.Pullrequest.Source.Repository.Links.Html.Href,
-			},
-			Branch: pr.Pullrequest.Source.Branch.GetName(),
-			Hash: pr.Pullrequest.Source.Commit.Hash,
-		},
-		Destination: &pb.HeadData{
-			Repo: &pb.Repo{
-				Name: pr.Pullrequest.Destination.Repository.FullName,
-				AcctRepo: pr.Pullrequest.Destination.Repository.FullName,
-				RepoLink: pr.Pullrequest.Destination.Repository.Links.Html.Href,
-			},
-			Branch: pr.Pullrequest.Destination.Branch.GetName(),
-			Hash: pr.Pullrequest.Destination.Commit.Hash,
-		},
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		err = errors.New(fmt.Sprintf("got a non-ok exit code of %d, body is: %s", resp.StatusCode, string(body)))
+		return err
 	}
-	return prN, nil
-}
-
-
-func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
-	push := &pbb.RepoPush{}
-	err := bb.Unmarshaler.Unmarshal(reader, push)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(push.Push.Changes) < 1 {
-		ocelog.Log().Error("no commits found in push")
-		// todo: evaluate if this is actually what should happen, what about pushing tags?
-		return nil, errors.New("no commits found in push")
-	}
-	if len(push.Push.Changes) > 1 {
-		ocelog.Log().Errorf("length of push changes is > 1, changes are %#v", push.Push.Changes)
-		return nil, errors.New("too many changesets")
-	}
-	var commits []*pb.Commit
-	changeset := push.Push.Changes[0]
-	for _, commit := range changeset.Commits {
-		commits = append(commits, &pb.Commit{Hash:commit.Hash, Date:commit.Date, Message:commit.Message, Author:&pb.User{UserName:commit.Author.Username}})
-	}
-	if changeset.New.Type != "branch" {
-		ocelog.Log().Errorf("changeset type is not branch, it is %s. idk what to do!!!", changeset.New.Type)
-		ocelog.Log().Error(push)
-		return nil, errors.New("unexpected push type")
-	}
-	translPush := &pb.Push{
-		Repo: &pb.Repo{Name: push.Repository.FullName, AcctRepo:push.Repository.FullName, RepoLink: push.Repository.Links.Html.Href},
-		User: &pb.User{UserName: push.Actor.Username},
-		Commits: commits,
-		Branch: changeset.New.Name,
-		HeadCommit: &pb.Commit{Hash:changeset.New.Target.Hash, Message:changeset.New.Target.Hash, Date:changeset.New.Target.Date, Author:&pb.User{UserName:changeset.New.Target.Author.Username}},
-	}
-	return translPush, nil
+	return err
 }

@@ -13,9 +13,9 @@ import (
 )
 
 //GetPrWerkerTeller will return a new PRWerkerTeller object with the private fields prId and destBranch instantiated
-func GetPrWerkerTeller(prId string, destBranch string) *PRWerkerTeller {
+func GetPrWerkerTeller(prdata *pb.PrWerkerData, destBranch string) *PRWerkerTeller {
 	return &PRWerkerTeller{
-		prId: prId,
+		prData: prdata,
 		destBranch: destBranch,
 	}
 }
@@ -24,8 +24,8 @@ func GetPrWerkerTeller(prId string, destBranch string) *PRWerkerTeller {
 // the build is viable by the *destination* branch, but everything else be queued off the *source* details,
 // there needs to be some special finegaling.
 type PRWerkerTeller struct {
-	prId string
 	destBranch string
+	prData *pb.PrWerkerData
 }
 
 //TellWerker will get the ocelot.yml configuration, build the werker task, validate viablilty off of the (*PRWerkerTeller).destBranch field instead off the normal branch passed , then will queue the build using the normal passed branch.
@@ -42,7 +42,7 @@ func (pr *PRWerkerTeller) TellWerker(hash string, signaler *signal.Signaler, bra
 			return err
 		}
 	}
-	task := signal.BuildInitialWerkerTask(buildConf, hash, token, branch, acctRepo, pb.SignaledBy_PULL_REQUEST, pr.prId)
+	task := signal.BuildInitialWerkerTask(buildConf, hash, token, branch, acctRepo, pb.SignaledBy_PULL_REQUEST, pr.prData)
 	err = signaler.OcyValidator.ValidateViability(pr.destBranch, buildConf.Branches, commits, false)
 	if err != nil {
 		ocelog.IncludeErrField(err).Warn("fyi, this pull request is not valid for a build!! it will not be queued!!")
@@ -54,6 +54,7 @@ func (pr *PRWerkerTeller) TellWerker(hash string, signaler *signal.Signaler, bra
 			return err
 		}
 		ocelog.IncludeErrField(err).Warn("something went awry trying to queue and store")
+		return err
 	}
 	return nil
 }
