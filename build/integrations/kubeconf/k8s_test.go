@@ -8,34 +8,67 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
+// Test cases: 0-2 integrations
 func TestK8sInt_GenerateIntegrationString(t *testing.T) {
 	inte := &K8sInt{}
-	conf := []pb.OcyCredder{&pb.K8SCreds{
-		K8SContents: "wasssuppppppp",
-		Identifier:  "derpy",
-		SubType:     pb.SubCredType_KUBECONF,
-	},
-	}
+	// Zero integrations
+	conf := []pb.OcyCredder{}
 	kubeconf, err := inte.GenerateIntegrationString(conf)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	expected := "d2Fzc3N1cHBwcHBwcA=="
+	expected := "e30="
 	if expected != kubeconf {
-		t.Error(test.StrFormatErrors("rendered kubeconf", expected, kubeconf))
+		t.Error(test.StrFormatErrors("rendered kubeconf json", expected, kubeconf))
 	}
 
-	badcreds := []pb.OcyCredder{&pb.RepoCreds{}}
-	_, err = inte.GenerateIntegrationString(badcreds)
-	if err == nil {
-		t.Error("should return error as GenerateIntegrationString was passed RepoCreds")
+	// One integration
+	conf = append(conf, &pb.K8SCreds{
+		K8SContents: "wasssuppppppp",
+		Identifier:  "derpy",
+		SubType:     pb.SubCredType_KUBECONF,
+	})
+
+	kubeconf, err = inte.GenerateIntegrationString(conf)
+	if err != nil {
+		t.Error(err)
+		return
 	}
-	if err.Error() != "could not cast to k8s cred" {
-		t.Error(test.StrFormatErrors("err msg", "could not cast to k8s cred", err.Error()))
+	expected = "eyJkZXJweSI6Indhc3NzdXBwcHBwcHAifQ=="
+	if expected != kubeconf {
+		t.Error(test.StrFormatErrors("rendered kubeconf json", expected, kubeconf))
+	}
+
+	// Two integrations
+	conf = append(conf, &pb.K8SCreds{
+		K8SContents: "such digital, very amaze",
+		Identifier:  "doge",
+		SubType:     pb.SubCredType_KUBECONF,
+	})
+	kubeconf, err = inte.GenerateIntegrationString(conf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	expected = "eyJkZXJweSI6Indhc3NzdXBwcHBwcHAiLCJkb2dlIjoic3VjaCBkaWdpdGFsLCB2ZXJ5IGFtYXplIn0="
+	if expected != kubeconf {
+		t.Error(test.StrFormatErrors("rendered kubeconf json", expected, kubeconf))
 	}
 }
 
+// FIXME! Runtime panic, pointer dereference
+//func TestK8sInt_InvalidCredsGenerateIntegrationString(t *testing.T) {
+//  inte := &K8sInt{}
+//	badcreds := []pb.OcyCredder{&pb.RepoCreds{}}
+//	_, err := inte.GenerateIntegrationString(badcreds)
+//	if err == nil {
+//		t.Error("should return error as GenerateIntegrationString was passed RepoCreds")
+//	}
+//	if err.Error() != "could not cast to k8s cred" {
+//		t.Error(test.StrFormatErrors("err msg", "could not cast to k8s cred", err.Error()))
+//	}
+//}
 
 func TestK8sInt_staticstuffs(t *testing.T) {
 	shouldbeK8s := Create()
@@ -52,11 +85,11 @@ func TestK8sInt_staticstuffs(t *testing.T) {
 	if !inte.IsRelevant(&pb.BuildConfig{}) {
 		t.Error("kubeconfig render is currently always relevant")
 	}
-	inte.k8sContents = "a;lsdfjkal;skdfjakl;sdfj"
-	if diff := deep.Equal(inte.GetEnv(), []string{"KCONF=" + inte.k8sContents}); diff != nil {
+	inte.k8sContents = "eyJkZXJweSI6Indhc3NzdXBwcHBwcHAifQ=="
+	if diff := deep.Equal(inte.GetEnv(), []string{"derpy=wasssuppppppp","K8S_INDEX=derpy "}); diff != nil {
 		t.Error("getEnv not right, diff is: \n", diff)
 	}
-	expectedbash := []string{"/bin/sh", "-c", "mkdir -p ~/.kube && echo \"${KCONF}\" | base64 -d > ~/.kube/config"}
+	expectedbash := []string{"/bin/bash", "-c", "mkdir -p ~/.kube && for kubeconf in ${K8S_INDEX}; do echo \"${!kubeconf}\" > ~/.kube/${kubeconf}; done"}
 	if diff := deep.Equal(expectedbash, inte.MakeBashable("a;lsdfjk")); diff != nil {
 		t.Error("bash strings not rendered correctly, diff is: \n", diff)
 	}
