@@ -22,7 +22,7 @@ type cmd struct {
 	flags   *flag.FlagSet
 	fileloc string
 	account string
-	name 		string
+	name    string
 	config  *commandhelper.ClientConfig
 }
 
