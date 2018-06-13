@@ -7,7 +7,6 @@ import (
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models/pb"
-	ocelog "github.com/shankj3/go-til/log"
 )
 
 func Create() integrations.StringIntegrator {
