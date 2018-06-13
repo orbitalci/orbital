@@ -33,6 +33,17 @@ func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 	return bb, token, nil
 }
 
+func GetBitbucketFromHttpClient(cli *http.Client) models.VCSHandler {
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields:true}
+	bb := &Bitbucket{
+		Client: &ocenet.OAuthClient{AuthClient:*cli, Unmarshaler: unmarshaler},
+		Unmarshaler:unmarshaler,
+		Marshaler: jsonpb.Marshaler{},
+		isInitialized: true,
+	}
+	return bb
+}
+
 //TODO: callback url is set as env. variable on admin, or passed in via command line
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
 func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) models.VCSHandler {

@@ -2,6 +2,7 @@ package launcher
 
 import (
 	"github.com/shankj3/ocelot/build/basher"
+	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/valet"
 	"github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
@@ -19,7 +20,8 @@ type launcher struct {
 	Basher       *basher.Basher
 	Store        storage.OcelotStorage
 	BuildValet   *valet.Valet
-	Remote 		 models.VCSHandler
+	handler      models.VCSHandler
+	integrations []integrations.StringIntegrator
 }
 
 func NewLauncher(facts *models.WerkerFacts,
@@ -38,5 +40,6 @@ func NewLauncher(facts *models.WerkerFacts,
 		Store:        store,
 		BuildValet:   bv,
 		infochan:     make(chan []byte),
+		integrations: getIntegrationList(),
 	}
 }

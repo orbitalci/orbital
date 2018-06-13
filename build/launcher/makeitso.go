@@ -183,4 +183,3 @@ func handleFailure(result *pb.Result, store storage.OcelotStorage, stageName str
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
 	}
 }
-

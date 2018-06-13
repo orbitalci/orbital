@@ -1,6 +1,7 @@
 package bitbucket
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
+	"golang.org/x/oauth2"
 )
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
@@ -49,14 +51,23 @@ func TestBitbucket_PostPRComment(t *testing.T) {
 		SubType: pb.SubCredType_BITBUCKET,
 		Identifier: pb.SubCredType_BITBUCKET.String() + "_level11consulting",
 	}
-	client, _, err := GetBitbucketClient(vcsConf)
+	client, token, err := GetBitbucketClient(vcsConf)
 	if err != nil {
 		t.Error(err)
 	}
-	err = client.PostPRComment("level11consulting/go-til", "2", "1234", pb.StageResultVal_FAIL, 1234)
+	err = client.PostPRComment("level11consulting/go-til", "2", "1234", true, 1234)
 	if err != nil {
 		t.Error(err)
 	}
+	ctx := context.Background()
+	otoken := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	authCli := oauth2.NewClient(ctx, otoken)
+	handler := GetBitbucketFromHttpClient(authCli)
+	err = handler.PostPRComment("level11consulting/go-til", "2", "1234", false, 1234)
+	if err != nil {
+		t.Error(err)
+	}
+
 }
 
 type MockHttpClient struct {
