@@ -45,17 +45,17 @@ func (StageResultVal) EnumDescriptor() ([]byte, []int) {
 type BuildConfig struct {
 	// either image or machineTag is required
 	// image is the docker image to run the build in
-	Image string `protobuf:"bytes,1,opt,name=image" json:"image,omitempty"`
+	Image string `protobuf:"bytes,1,opt,name=image,proto3" json:"image,omitempty"`
 	// machineTag is the
 	// @inject_tag: yaml:"machineTag"
-	MachineTag string `protobuf:"bytes,9,opt,name=machineTag" json:"machineTag,omitempty" yaml:"machineTag"`
+	MachineTag string `protobuf:"bytes,9,opt,name=machineTag,proto3" json:"machineTag,omitempty" yaml:"machineTag"`
 	// @inject_tag: yaml:"buildTool"
-	BuildTool            string         `protobuf:"bytes,2,opt,name=buildTool" json:"buildTool,omitempty" yaml:"buildTool"`
-	Packages             []string       `protobuf:"bytes,3,rep,name=packages" json:"packages,omitempty"`
-	Branches             []string       `protobuf:"bytes,4,rep,name=branches" json:"branches,omitempty"`
-	Env                  []string       `protobuf:"bytes,5,rep,name=env" json:"env,omitempty"`
-	Stages               []*Stage       `protobuf:"bytes,7,rep,name=stages" json:"stages,omitempty"`
-	Notify               *Notifications `protobuf:"bytes,8,opt,name=notify" json:"notify,omitempty"`
+	BuildTool            string         `protobuf:"bytes,2,opt,name=buildTool,proto3" json:"buildTool,omitempty" yaml:"buildTool"`
+	Packages             []string       `protobuf:"bytes,3,rep,name=packages,proto3" json:"packages,omitempty"`
+	Branches             []string       `protobuf:"bytes,4,rep,name=branches,proto3" json:"branches,omitempty"`
+	Env                  []string       `protobuf:"bytes,5,rep,name=env,proto3" json:"env,omitempty"`
+	Stages               []*Stage       `protobuf:"bytes,7,rep,name=stages,proto3" json:"stages,omitempty"`
+	Notify               *Notifications `protobuf:"bytes,8,opt,name=notify,proto3" json:"notify,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -142,11 +142,11 @@ func (m *BuildConfig) GetNotify() *Notifications {
 }
 
 type Stage struct {
-	Env    []string `protobuf:"bytes,1,rep,name=env" json:"env,omitempty"`
-	Script []string `protobuf:"bytes,2,rep,name=script" json:"script,omitempty"`
-	Name   string   `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
+	Env    []string `protobuf:"bytes,1,rep,name=env,proto3" json:"env,omitempty"`
+	Script []string `protobuf:"bytes,2,rep,name=script,proto3" json:"script,omitempty"`
+	Name   string   `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	// @inject_tag: yaml:"trigger"
-	Trigger              *Triggers `protobuf:"bytes,4,opt,name=trigger" json:"trigger,omitempty" yaml:"trigger"`
+	Trigger              *Triggers `protobuf:"bytes,4,opt,name=trigger,proto3" json:"trigger,omitempty" yaml:"trigger"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
 	XXX_unrecognized     []byte    `json:"-"`
 	XXX_sizecache        int32     `json:"-"`
@@ -206,7 +206,7 @@ func (m *Stage) GetTrigger() *Triggers {
 
 // todo: move to a new notifications.proto?
 type Notifications struct {
-	Slack                *Slack   `protobuf:"bytes,1,opt,name=slack" json:"slack,omitempty"`
+	Slack                *Slack   `protobuf:"bytes,1,opt,name=slack,proto3" json:"slack,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -246,11 +246,11 @@ func (m *Notifications) GetSlack() *Slack {
 // todo: move to a new notifications.proto?
 type Slack struct {
 	// channel is which channel to post to. if empty, will be default channel set up by person who created url
-	Channel string `protobuf:"bytes,1,opt,name=channel" json:"channel,omitempty"`
+	Channel string `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
 	//  identifier attached to url uploaded via `ocelot creds slack add`
-	Identifier string `protobuf:"bytes,2,opt,name=identifier" json:"identifier,omitempty"`
+	Identifier string `protobuf:"bytes,2,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	// on is what type of event to trigger a webhook on can be both PASS and FAIL
-	On                   []StageResultVal `protobuf:"varint,3,rep,packed,name=on,enum=models.StageResultVal" json:"on,omitempty"`
+	On                   []StageResultVal `protobuf:"varint,3,rep,packed,name=on,proto3,enum=models.StageResultVal" json:"on,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
 	XXX_sizecache        int32            `json:"-"`
@@ -302,10 +302,10 @@ func (m *Slack) GetOn() []StageResultVal {
 }
 
 type Result struct {
-	Stage                string         `protobuf:"bytes,1,opt,name=stage" json:"stage,omitempty"`
-	Status               StageResultVal `protobuf:"varint,2,opt,name=status,enum=models.StageResultVal" json:"status,omitempty"`
-	Error                string         `protobuf:"bytes,3,opt,name=error" json:"error,omitempty"`
-	Messages             []string       `protobuf:"bytes,4,rep,name=messages" json:"messages,omitempty"`
+	Stage                string         `protobuf:"bytes,1,opt,name=stage,proto3" json:"stage,omitempty"`
+	Status               StageResultVal `protobuf:"varint,2,opt,name=status,proto3,enum=models.StageResultVal" json:"status,omitempty"`
+	Error                string         `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	Messages             []string       `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -364,7 +364,7 @@ func (m *Result) GetMessages() []string {
 }
 
 type Triggers struct {
-	Branches             []string `protobuf:"bytes,1,rep,name=branches" json:"branches,omitempty"`
+	Branches             []string `protobuf:"bytes,1,rep,name=branches,proto3" json:"branches,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -402,14 +402,14 @@ func (m *Triggers) GetBranches() []string {
 }
 
 type WerkerTask struct {
-	VaultToken           string       `protobuf:"bytes,1,opt,name=vaultToken" json:"vaultToken,omitempty"`
-	CheckoutHash         string       `protobuf:"bytes,2,opt,name=checkoutHash" json:"checkoutHash,omitempty"`
-	BuildConf            *BuildConfig `protobuf:"bytes,3,opt,name=buildConf" json:"buildConf,omitempty"`
-	VcsToken             string       `protobuf:"bytes,4,opt,name=vcsToken" json:"vcsToken,omitempty"`
-	VcsType              SubCredType  `protobuf:"varint,9,opt,name=vcsType,enum=models.SubCredType" json:"vcsType,omitempty"`
-	FullName             string       `protobuf:"bytes,6,opt,name=fullName" json:"fullName,omitempty"`
-	Id                   int64        `protobuf:"varint,7,opt,name=id" json:"id,omitempty"`
-	Branch               string       `protobuf:"bytes,8,opt,name=branch" json:"branch,omitempty"`
+	VaultToken           string       `protobuf:"bytes,1,opt,name=vaultToken,proto3" json:"vaultToken,omitempty"`
+	CheckoutHash         string       `protobuf:"bytes,2,opt,name=checkoutHash,proto3" json:"checkoutHash,omitempty"`
+	BuildConf            *BuildConfig `protobuf:"bytes,3,opt,name=buildConf,proto3" json:"buildConf,omitempty"`
+	VcsToken             string       `protobuf:"bytes,4,opt,name=vcsToken,proto3" json:"vcsToken,omitempty"`
+	VcsType              SubCredType  `protobuf:"varint,9,opt,name=vcsType,proto3,enum=models.SubCredType" json:"vcsType,omitempty"`
+	FullName             string       `protobuf:"bytes,6,opt,name=fullName,proto3" json:"fullName,omitempty"`
+	Id                   int64        `protobuf:"varint,7,opt,name=id,proto3" json:"id,omitempty"`
+	Branch               string       `protobuf:"bytes,8,opt,name=branch,proto3" json:"branch,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
 	XXX_unrecognized     []byte       `json:"-"`
 	XXX_sizecache        int32        `json:"-"`

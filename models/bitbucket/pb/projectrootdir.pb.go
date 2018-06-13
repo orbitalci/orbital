@@ -19,11 +19,11 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type PaginatedRootDirs struct {
-	Pagelen              float64                           `protobuf:"fixed64,1,opt,name=pagelen" json:"pagelen,omitempty"`
-	Size                 float64                           `protobuf:"fixed64,2,opt,name=size" json:"size,omitempty"`
-	Values               []*PaginatedRootDirs_SourceValues `protobuf:"bytes,3,rep,name=values" json:"values,omitempty"`
-	Page                 float64                           `protobuf:"fixed64,4,opt,name=page" json:"page,omitempty"`
-	Next                 string                            `protobuf:"bytes,5,opt,name=next" json:"next,omitempty"`
+	Pagelen              float64                           `protobuf:"fixed64,1,opt,name=pagelen,proto3" json:"pagelen,omitempty"`
+	Size                 float64                           `protobuf:"fixed64,2,opt,name=size,proto3" json:"size,omitempty"`
+	Values               []*PaginatedRootDirs_SourceValues `protobuf:"bytes,3,rep,name=values,proto3" json:"values,omitempty"`
+	Page                 float64                           `protobuf:"fixed64,4,opt,name=page,proto3" json:"page,omitempty"`
+	Next                 string                            `protobuf:"bytes,5,opt,name=next,proto3" json:"next,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                          `json:"-"`
 	XXX_unrecognized     []byte                            `json:"-"`
 	XXX_sizecache        int32                             `json:"-"`
@@ -89,10 +89,10 @@ func (m *PaginatedRootDirs) GetNext() string {
 }
 
 type PaginatedRootDirs_SourceValues struct {
-	Path                 string                                      `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
-	Type                 string                                      `protobuf:"bytes,2,opt,name=type" json:"type,omitempty"`
-	Attributes           []string                                    `protobuf:"bytes,3,rep,name=attributes" json:"attributes,omitempty"`
-	Links                *PaginatedRootDirs_SourceValues_SourceLinks `protobuf:"bytes,4,opt,name=links" json:"links,omitempty"`
+	Path                 string                                      `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Type                 string                                      `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Attributes           []string                                    `protobuf:"bytes,3,rep,name=attributes,proto3" json:"attributes,omitempty"`
+	Links                *PaginatedRootDirs_SourceValues_SourceLinks `protobuf:"bytes,4,opt,name=links,proto3" json:"links,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                                    `json:"-"`
 	XXX_unrecognized     []byte                                      `json:"-"`
 	XXX_sizecache        int32                                       `json:"-"`
@@ -151,8 +151,8 @@ func (m *PaginatedRootDirs_SourceValues) GetLinks() *PaginatedRootDirs_SourceVal
 }
 
 type PaginatedRootDirs_SourceValues_SourceLinks struct {
-	Self                 *LinkUrl `protobuf:"bytes,1,opt,name=self" json:"self,omitempty"`
-	Meta                 *LinkUrl `protobuf:"bytes,2,opt,name=meta" json:"meta,omitempty"`
+	Self                 *LinkUrl `protobuf:"bytes,1,opt,name=self,proto3" json:"self,omitempty"`
+	Meta                 *LinkUrl `protobuf:"bytes,2,opt,name=meta,proto3" json:"meta,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

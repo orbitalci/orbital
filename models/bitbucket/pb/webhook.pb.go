@@ -21,9 +21,9 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push
 type RepoPush struct {
-	Actor                *Owner               `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	Repository           *Repository          `protobuf:"bytes,2,opt,name=repository" json:"repository,omitempty"`
-	Push                 *RepoPush_PushDetail `protobuf:"bytes,3,opt,name=push" json:"push,omitempty"`
+	Actor                *Owner               `protobuf:"bytes,1,opt,name=actor,proto3" json:"actor,omitempty"`
+	Repository           *Repository          `protobuf:"bytes,2,opt,name=repository,proto3" json:"repository,omitempty"`
+	Push                 *RepoPush_PushDetail `protobuf:"bytes,3,opt,name=push,proto3" json:"push,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -75,7 +75,7 @@ func (m *RepoPush) GetPush() *RepoPush_PushDetail {
 }
 
 type RepoPush_PushDetail struct {
-	Changes              []*Changeset `protobuf:"bytes,1,rep,name=changes" json:"changes,omitempty"`
+	Changes              []*Changeset `protobuf:"bytes,1,rep,name=changes,proto3" json:"changes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
 	XXX_unrecognized     []byte       `json:"-"`
 	XXX_sizecache        int32        `json:"-"`
@@ -114,9 +114,9 @@ func (m *RepoPush_PushDetail) GetChanges() []*Changeset {
 
 // same for created and updated
 type PullRequest struct {
-	Actor                *Owner             `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	Pullrequest          *PullRequestEntity `protobuf:"bytes,2,opt,name=pullrequest" json:"pullrequest,omitempty"`
-	Repository           *Repository        `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
+	Actor                *Owner             `protobuf:"bytes,1,opt,name=actor,proto3" json:"actor,omitempty"`
+	Pullrequest          *PullRequestEntity `protobuf:"bytes,2,opt,name=pullrequest,proto3" json:"pullrequest,omitempty"`
+	Repository           *Repository        `protobuf:"bytes,3,opt,name=repository,proto3" json:"repository,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`
 	XXX_sizecache        int32              `json:"-"`
@@ -169,10 +169,10 @@ func (m *PullRequest) GetRepository() *Repository {
 
 // approved adds timestamp and approving owner's info
 type PullRequestApproved struct {
-	Actor                *Owner                      `protobuf:"bytes,1,opt,name=actor" json:"actor,omitempty"`
-	Pullrequest          *PullRequestEntity          `protobuf:"bytes,2,opt,name=pullrequest" json:"pullrequest,omitempty"`
-	Repository           *Repository                 `protobuf:"bytes,3,opt,name=repository" json:"repository,omitempty"`
-	Approval             *PullRequestApprovedApprove `protobuf:"bytes,4,opt,name=approval" json:"approval,omitempty"`
+	Actor                *Owner                      `protobuf:"bytes,1,opt,name=actor,proto3" json:"actor,omitempty"`
+	Pullrequest          *PullRequestEntity          `protobuf:"bytes,2,opt,name=pullrequest,proto3" json:"pullrequest,omitempty"`
+	Repository           *Repository                 `protobuf:"bytes,3,opt,name=repository,proto3" json:"repository,omitempty"`
+	Approval             *PullRequestApprovedApprove `protobuf:"bytes,4,opt,name=approval,proto3" json:"approval,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
 	XXX_sizecache        int32                       `json:"-"`
@@ -231,8 +231,8 @@ func (m *PullRequestApproved) GetApproval() *PullRequestApprovedApprove {
 }
 
 type PullRequestApprovedApprove struct {
-	Date                 *timestamp.Timestamp `protobuf:"bytes,1,opt,name=date" json:"date,omitempty"`
-	User                 *Owner               `protobuf:"bytes,2,opt,name=user" json:"user,omitempty"`
+	Date                 *timestamp.Timestamp `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	User                 *Owner               `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -277,10 +277,10 @@ func (m *PullRequestApprovedApprove) GetUser() *Owner {
 }
 
 type CreateWebhook struct {
-	Description          string   `protobuf:"bytes,1,opt,name=description" json:"description,omitempty"`
-	Url                  string   `protobuf:"bytes,2,opt,name=url" json:"url,omitempty"`
-	Active               bool     `protobuf:"varint,3,opt,name=active" json:"active,omitempty"`
-	Events               []string `protobuf:"bytes,4,rep,name=events" json:"events,omitempty"`
+	Description          string   `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
+	Url                  string   `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	Active               bool     `protobuf:"varint,3,opt,name=active,proto3" json:"active,omitempty"`
+	Events               []string `protobuf:"bytes,4,rep,name=events,proto3" json:"events,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -339,11 +339,11 @@ func (m *CreateWebhook) GetEvents() []string {
 }
 
 type GetWebhooks struct {
-	Pagelen              float64     `protobuf:"fixed64,1,opt,name=pagelen" json:"pagelen,omitempty"`
-	Page                 float64     `protobuf:"fixed64,2,opt,name=page" json:"page,omitempty"`
-	Size                 float64     `protobuf:"fixed64,3,opt,name=size" json:"size,omitempty"`
-	Values               []*Webhooks `protobuf:"bytes,4,rep,name=values" json:"values,omitempty"`
-	Next                 string      `protobuf:"bytes,5,opt,name=next" json:"next,omitempty"`
+	Pagelen              float64     `protobuf:"fixed64,1,opt,name=pagelen,proto3" json:"pagelen,omitempty"`
+	Page                 float64     `protobuf:"fixed64,2,opt,name=page,proto3" json:"page,omitempty"`
+	Size                 float64     `protobuf:"fixed64,3,opt,name=size,proto3" json:"size,omitempty"`
+	Values               []*Webhooks `protobuf:"bytes,4,rep,name=values,proto3" json:"values,omitempty"`
+	Next                 string      `protobuf:"bytes,5,opt,name=next,proto3" json:"next,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -409,11 +409,11 @@ func (m *GetWebhooks) GetNext() string {
 }
 
 type Webhooks struct {
-	Description          string               `protobuf:"bytes,1,opt,name=description" json:"description,omitempty"`
-	Links                *Links               `protobuf:"bytes,2,opt,name=links" json:"links,omitempty"`
-	Url                  string               `protobuf:"bytes,3,opt,name=url" json:"url,omitempty"`
-	CreatedAt            *timestamp.Timestamp `protobuf:"bytes,4,opt,name=createdAt,json=created_at" json:"createdAt,omitempty"`
-	Active               bool                 `protobuf:"varint,5,opt,name=active" json:"active,omitempty"`
+	Description          string               `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
+	Links                *Links               `protobuf:"bytes,2,opt,name=links,proto3" json:"links,omitempty"`
+	Url                  string               `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
+	CreatedAt            *timestamp.Timestamp `protobuf:"bytes,4,opt,name=createdAt,json=created_at,proto3" json:"createdAt,omitempty"`
+	Active               bool                 `protobuf:"varint,5,opt,name=active,proto3" json:"active,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`

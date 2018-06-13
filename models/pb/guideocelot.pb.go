@@ -29,11 +29,11 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type BuildReq struct {
 	// acctRepo is the ocelot account to which the creds are uploaded and the repository you wish to operate on, in the form account/repo
-	AcctRepo string `protobuf:"bytes,1,opt,name=acctRepo" json:"acctRepo,omitempty"`
+	AcctRepo string `protobuf:"bytes,1,opt,name=acctRepo,proto3" json:"acctRepo,omitempty"`
 	// hash is the git hash to trigger.
-	Hash string `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`
+	Hash string `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
 	// branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required.
-	Branch               string   `protobuf:"bytes,3,opt,name=branch" json:"branch,omitempty"`
+	Branch               string   `protobuf:"bytes,3,opt,name=branch,proto3" json:"branch,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -86,13 +86,13 @@ func (m *BuildReq) GetBranch() string {
 
 type StatusQuery struct {
 	// hash is the git hash to get status of
-	Hash string `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	Hash string `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
 	// acctName is the corresponding account that the hash is attached to
-	AcctName string `protobuf:"bytes,2,opt,name=acctName" json:"acctName,omitempty"`
+	AcctName string `protobuf:"bytes,2,opt,name=acctName,proto3" json:"acctName,omitempty"`
 	// repoName is the corresponding repo name that the hash is attached to
-	RepoName string `protobuf:"bytes,3,opt,name=repoName" json:"repoName,omitempty"`
+	RepoName string `protobuf:"bytes,3,opt,name=repoName,proto3" json:"repoName,omitempty"`
 	// partialRepo is just the first n letters of repo
-	PartialRepo          string   `protobuf:"bytes,4,opt,name=partialRepo" json:"partialRepo,omitempty"`
+	PartialRepo          string   `protobuf:"bytes,4,opt,name=partialRepo,proto3" json:"partialRepo,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -155,9 +155,9 @@ func (m *StatusQuery) GetPartialRepo() string {
 // or you can query by build-id which in the case of log retrieval is only allowed if the build is completed.
 type BuildQuery struct {
 	// hash is the git hash that corresponds to a commit you wish to get information on
-	Hash string `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	Hash string `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
 	// build id is the build number given by ocelot that is associated with the commit
-	BuildId              int64    `protobuf:"varint,2,opt,name=buildId" json:"buildId,omitempty"`
+	BuildId              int64    `protobuf:"varint,2,opt,name=buildId,proto3" json:"buildId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -202,7 +202,7 @@ func (m *BuildQuery) GetBuildId() int64 {
 }
 
 type Builds struct {
-	Builds               map[string]*BuildRuntimeInfo `protobuf:"bytes,1,rep,name=builds" json:"builds,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Builds               map[string]*BuildRuntimeInfo `protobuf:"bytes,1,rep,name=builds,proto3" json:"builds,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
 	XXX_unrecognized     []byte                       `json:"-"`
 	XXX_sizecache        int32                        `json:"-"`
@@ -241,18 +241,18 @@ func (m *Builds) GetBuilds() map[string]*BuildRuntimeInfo {
 
 type BuildRuntimeInfo struct {
 	// done says whether or not the build has completed
-	Done bool `protobuf:"varint,1,opt,name=done" json:"done,omitempty"`
+	Done bool `protobuf:"varint,1,opt,name=done,proto3" json:"done,omitempty"`
 	// ip is the ip of the werker node that is running the build
-	Ip string `protobuf:"bytes,2,opt,name=ip" json:"ip,omitempty"`
+	Ip string `protobuf:"bytes,2,opt,name=ip,proto3" json:"ip,omitempty"`
 	// grpcPort is the grpc port of the werker running the build
-	GrpcPort string `protobuf:"bytes,3,opt,name=grpcPort" json:"grpcPort,omitempty"`
+	GrpcPort string `protobuf:"bytes,3,opt,name=grpcPort,proto3" json:"grpcPort,omitempty"`
 	// hash is the git hash that is currently being built
-	Hash string `protobuf:"bytes,4,opt,name=hash" json:"hash,omitempty"`
+	Hash string `protobuf:"bytes,4,opt,name=hash,proto3" json:"hash,omitempty"`
 	// acctName is the vcs account that this build is assocated with
-	AcctName string `protobuf:"bytes,5,opt,name=acctName" json:"acctName,omitempty"`
+	AcctName string `protobuf:"bytes,5,opt,name=acctName,proto3" json:"acctName,omitempty"`
 	// repoName is the name of the git repository that is associated with this commit/build
-	RepoName             string   `protobuf:"bytes,6,opt,name=repoName" json:"repoName,omitempty"`
-	WsPort               string   `protobuf:"bytes,7,opt,name=wsPort" json:"wsPort,omitempty"`
+	RepoName             string   `protobuf:"bytes,6,opt,name=repoName,proto3" json:"repoName,omitempty"`
+	WsPort               string   `protobuf:"bytes,7,opt,name=wsPort,proto3" json:"wsPort,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -332,7 +332,7 @@ func (m *BuildRuntimeInfo) GetWsPort() string {
 }
 
 type LineResponse struct {
-	OutputLine           string   `protobuf:"bytes,1,opt,name=outputLine" json:"outputLine,omitempty"`
+	OutputLine           string   `protobuf:"bytes,1,opt,name=outputLine,proto3" json:"outputLine,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -371,11 +371,11 @@ func (m *LineResponse) GetOutputLine() string {
 
 type RepoAccount struct {
 	// repo is the VCS repository
-	Repo string `protobuf:"bytes,1,opt,name=repo" json:"repo,omitempty"`
+	Repo string `protobuf:"bytes,1,opt,name=repo,proto3" json:"repo,omitempty"`
 	// account is the VCS account
-	Account string `protobuf:"bytes,2,opt,name=account" json:"account,omitempty"`
+	Account string `protobuf:"bytes,2,opt,name=account,proto3" json:"account,omitempty"`
 	// limit is the number of summary records desired to be returned
-	Limit                int32    `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
+	Limit                int32    `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -428,11 +428,11 @@ func (m *RepoAccount) GetLimit() int32 {
 
 type Status struct {
 	// buildSum is the BuildSummary object that correlates to the build in question
-	BuildSum *BuildSummary `protobuf:"bytes,1,opt,name=buildSum" json:"buildSum,omitempty"`
+	BuildSum *BuildSummary `protobuf:"bytes,1,opt,name=buildSum,proto3" json:"buildSum,omitempty"`
 	// stages is a all the StageStatus objects associated to the build in question
-	Stages []*StageStatus `protobuf:"bytes,2,rep,name=stages" json:"stages,omitempty"`
+	Stages []*StageStatus `protobuf:"bytes,2,rep,name=stages,proto3" json:"stages,omitempty"`
 	// isInConsul is a boolean that is used for determining if the build is "running" or not. if isInConsul=true, the build is still running
-	IsInConsul           bool     `protobuf:"varint,3,opt,name=isInConsul" json:"isInConsul,omitempty"`
+	IsInConsul           bool     `protobuf:"varint,3,opt,name=isInConsul,proto3" json:"isInConsul,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -485,17 +485,17 @@ func (m *Status) GetIsInConsul() bool {
 
 // StageStatus is the detailed information about a specific stage that was executed during the build
 type StageStatus struct {
-	StageStatus string `protobuf:"bytes,1,opt,name=StageStatus" json:"StageStatus,omitempty"`
+	StageStatus string `protobuf:"bytes,1,opt,name=StageStatus,proto3" json:"StageStatus,omitempty"`
 	// error is the error message; will either be populated by a stage not returning exit code 0 or an error handled in the code during the build
-	Error string `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
+	Error string `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 	// status is whether or not hte build failed; 0 for pass; 1 for failed
-	Status int32 `protobuf:"varint,3,opt,name=status" json:"status,omitempty"`
+	Status int32 `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
 	// messages are some descriptions of each stage that are generated at runtime
-	Messages []string `protobuf:"bytes,4,rep,name=messages" json:"messages,omitempty"`
+	Messages []string `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
 	// startTime is when this stage began execution
-	StartTime *timestamp.Timestamp `protobuf:"bytes,5,opt,name=startTime" json:"startTime,omitempty"`
+	StartTime *timestamp.Timestamp `protobuf:"bytes,5,opt,name=startTime,proto3" json:"startTime,omitempty"`
 	// stageDuration is how long the stage took to execute
-	StageDuration        float64  `protobuf:"fixed64,6,opt,name=stageDuration" json:"stageDuration,omitempty"`
+	StageDuration        float64  `protobuf:"fixed64,6,opt,name=stageDuration,proto3" json:"stageDuration,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -571,23 +571,23 @@ func (m *StageStatus) GetStageDuration() float64 {
 // it is a top level view of how a repository is "doing" in ocelot, ie build times, fail status..
 type BuildSummary struct {
 	// hash is the git commit hash that corresponds with this build information
-	Hash string `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	Hash string `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
 	// failed is whether or not the build failed
-	Failed bool `protobuf:"varint,2,opt,name=failed" json:"failed,omitempty"`
+	Failed bool `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"`
 	// buildTime is the datetime that the build was picked up off the queue by the werker
-	BuildTime *timestamp.Timestamp `protobuf:"bytes,3,opt,name=buildTime" json:"buildTime,omitempty"`
+	BuildTime *timestamp.Timestamp `protobuf:"bytes,3,opt,name=buildTime,proto3" json:"buildTime,omitempty"`
 	// account is the VCS account associated with the repository / commit
-	Account string `protobuf:"bytes,4,opt,name=account" json:"account,omitempty"`
+	Account string `protobuf:"bytes,4,opt,name=account,proto3" json:"account,omitempty"`
 	// buildDuration is the length of time the whole build took to execute
-	BuildDuration float64 `protobuf:"fixed64,5,opt,name=buildDuration" json:"buildDuration,omitempty"`
+	BuildDuration float64 `protobuf:"fixed64,5,opt,name=buildDuration,proto3" json:"buildDuration,omitempty"`
 	// repo is the repository associated with the account / commit
-	Repo string `protobuf:"bytes,6,opt,name=repo" json:"repo,omitempty"`
+	Repo string `protobuf:"bytes,6,opt,name=repo,proto3" json:"repo,omitempty"`
 	// branch is the branch associated with the commit when it was pushed
-	Branch string `protobuf:"bytes,7,opt,name=branch" json:"branch,omitempty"`
+	Branch string `protobuf:"bytes,7,opt,name=branch,proto3" json:"branch,omitempty"`
 	// buildId is the id given to the build entry by postgres. it is unique
-	BuildId int64 `protobuf:"varint,8,opt,name=buildId" json:"buildId,omitempty"`
+	BuildId int64 `protobuf:"varint,8,opt,name=buildId,proto3" json:"buildId,omitempty"`
 	// queueTime is the datetime that either a tracking component or the admin put the build request on the queue to be processed by the werker node
-	QueueTime            *timestamp.Timestamp `protobuf:"bytes,9,opt,name=queueTime" json:"queueTime,omitempty"`
+	QueueTime            *timestamp.Timestamp `protobuf:"bytes,9,opt,name=queueTime,proto3" json:"queueTime,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -682,7 +682,7 @@ func (m *BuildSummary) GetQueueTime() *timestamp.Timestamp {
 
 // summaries is a wrapper for a list of BuildSummary objects because protobuf can be dumb
 type Summaries struct {
-	Sums                 []*BuildSummary `protobuf:"bytes,1,rep,name=sums" json:"sums,omitempty"`
+	Sums                 []*BuildSummary `protobuf:"bytes,1,rep,name=sums,proto3" json:"sums,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -722,17 +722,17 @@ func (m *Summaries) GetSums() []*BuildSummary {
 // PollRequest encompasses all the data necessary to set up poll tracking in ocelot.
 type PollRequest struct {
 	// account is the VCS account
-	Account string `protobuf:"bytes,1,opt,name=account" json:"account,omitempty"`
+	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 	// repo is the VCS repository name
-	Repo string `protobuf:"bytes,2,opt,name=repo" json:"repo,omitempty"`
+	Repo string `protobuf:"bytes,2,opt,name=repo,proto3" json:"repo,omitempty"`
 	// cron is the cron string that will determine how often a check for changes should occur
-	Cron string `protobuf:"bytes,4,opt,name=cron" json:"cron,omitempty"`
+	Cron string `protobuf:"bytes,4,opt,name=cron,proto3" json:"cron,omitempty"`
 	// branches tells ocelot which branches should be checked for changes
-	Branches string `protobuf:"bytes,5,opt,name=branches" json:"branches,omitempty"`
+	Branches string `protobuf:"bytes,5,opt,name=branches,proto3" json:"branches,omitempty"`
 	// internal use only
-	LastCronTime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=lastCronTime" json:"lastCronTime,omitempty"`
+	LastCronTime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=lastCronTime,proto3" json:"lastCronTime,omitempty"`
 	// internal use only
-	LastHashes           map[string]string `protobuf:"bytes,7,rep,name=lastHashes" json:"lastHashes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	LastHashes           map[string]string `protobuf:"bytes,7,rep,name=lastHashes,proto3" json:"lastHashes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -806,7 +806,7 @@ func (m *PollRequest) GetLastHashes() map[string]string {
 
 // polls is a wrapper for a PollRequest list because protobuf can be dumb
 type Polls struct {
-	Polls                []*PollRequest `protobuf:"bytes,1,rep,name=polls" json:"polls,omitempty"`
+	Polls                []*PollRequest `protobuf:"bytes,1,rep,name=polls,proto3" json:"polls,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -844,7 +844,7 @@ func (m *Polls) GetPolls() []*PollRequest {
 }
 
 type Exists struct {
-	Exists               bool     `protobuf:"varint,1,opt,name=exists" json:"exists,omitempty"`
+	Exists               bool     `protobuf:"varint,1,opt,name=exists,proto3" json:"exists,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -884,9 +884,9 @@ func (m *Exists) GetExists() bool {
 // Used in displaying all repos that are tracked by ocelot
 type AcctRepo struct {
 	// VCS Account
-	Account string `protobuf:"bytes,1,opt,name=account" json:"account,omitempty"`
+	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 	// VCS Repository
-	Repo                 string   `protobuf:"bytes,2,opt,name=repo" json:"repo,omitempty"`
+	Repo                 string   `protobuf:"bytes,2,opt,name=repo,proto3" json:"repo,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -932,7 +932,7 @@ func (m *AcctRepo) GetRepo() string {
 
 // AcctRepos is used in the response to /v1/tracked-repositories, it is an array of AcctRepo objects. have to wrap it cuz proto -_-
 type AcctRepos struct {
-	AcctRepos            []*AcctRepo `protobuf:"bytes,1,rep,name=acctRepos" json:"acctRepos,omitempty"`
+	AcctRepos            []*AcctRepo `protobuf:"bytes,1,rep,name=acctRepos,proto3" json:"acctRepos,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`

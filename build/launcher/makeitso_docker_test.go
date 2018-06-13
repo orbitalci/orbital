@@ -29,6 +29,10 @@ var kubeconfs = []pb.OcyCredder{
 	&pb.K8SCreds{AcctName: "acct1", K8SContents:`herearemyk8scontentshowsickisthat
 wowowoowowowoowoowowowo
 herebeanotherlinebudshowniceisthaaat`, Identifier: "THERECANONLYBEONE", SubType: pb.SubCredType_KUBECONF},
+&pb.K8SCreds{AcctName: "acct1", K8SContents:`Worst case Ontario`, Identifier: "ricky", SubType: pb.SubCredType_KUBECONF},
+&pb.K8SCreds{AcctName: "acct1", K8SContents:`Propane
+	and propane accessories
+	I tell you hwhat`, Identifier: "HankHill", SubType: pb.SubCredType_KUBECONF},
 }
 
 
@@ -107,6 +111,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	defer cleanupFunc(t)
 	launch.infochan = make(chan []byte, 1000)
+	_ = dckr.Exec(ctx, "Install bash", "", []string{}, []string{"/bin/sh", "-c", "apk -U --no-cache add bash"}, launch.infochan) // For the k8s test
 	result, _, _ := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, dckr)
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Log(result.Messages)
@@ -154,21 +159,58 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	// check that kubeconfig was properly rendered
 
 	// this is going to be multiline, so we have to set up a new info channel
-	kubeLogout := make(chan []byte, 1000)
-	res = dckr.Exec(ctx, "test k8s config", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/config"}, kubeLogout)
-	close(kubeLogout)
+	// kubeconf[0]'s identifier is THERECANONLYBEONE, which we expect to be written to ~/.kube/config
+	kubeLogOne := make(chan []byte, 1000)
+	res = dckr.Exec(ctx, "test k8s config, identifier 'THERECANONLYBEONE'", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/config"}, kubeLogOne)
+	close(kubeLogOne)
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Log(res.Messages)
 		t.Error(result.Error)
 	}
-	var kubelines []string
-	for kubeline := range kubeLogout {
-		kubelines = append(kubelines, string(kubeline))
+	var kubelinesOne []string
+	for kubeline := range kubeLogOne {
+		kubelinesOne = append(kubelinesOne, string(kubeline))
 	}
-	kube := strings.Join(kubelines, "\n")
-	if kube != kubeconfs[0].GetClientSecret() {
-		t.Error(test.StrFormatErrors("kubeconfig contents", kubeconfs[0].GetClientSecret(), kube))
+	kubeOne := strings.Join(kubelinesOne, "\n")
+	if kubeOne != kubeconfs[0].GetClientSecret() {
+		t.Error(test.StrFormatErrors("kubeconfig contents", kubeconfs[0].GetClientSecret(), kubeOne))
 	}
+
+	// Testing that a new, named k8s creds renders with a user provided identifier
+	// kubeconf[1]'s identifier is ricky, which we expect to be written to ~/.kube/ricky
+	kubeLogTwo := make(chan []byte, 1000)
+	res = dckr.Exec(ctx, "test k8s config, identifier 'ricky'", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/ricky"}, kubeLogTwo)
+	close(kubeLogTwo)
+	if res.Status == pb.StageResultVal_FAIL {
+		t.Log(res.Messages)
+		t.Error(result.Error)
+	}
+	var kubelinesTwo []string
+	for kubeline := range kubeLogTwo {
+		kubelinesTwo = append(kubelinesTwo, string(kubeline))
+	}
+	kubeTwo := strings.Join(kubelinesTwo, "\n")
+	if kubeTwo != kubeconfs[1].GetClientSecret() {
+		t.Error(test.StrFormatErrors("kubeconfig contents", kubeconfs[1].GetClientSecret(), kubeTwo))
+	}
+
+	// kubeconf[2]'s identifier is HankHill, which we expect to be written to ~/.kube/HankHill
+	kubeLogThree := make(chan []byte, 1000)
+	res = dckr.Exec(ctx, "test k8s config, identifier 'HankHill'", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.kube/HankHill"}, kubeLogThree)
+	close(kubeLogThree)
+	if res.Status == pb.StageResultVal_FAIL {
+		t.Log(res.Messages)
+		t.Error(result.Error)
+	}
+	var kubelinesThree []string
+	for kubeline := range kubeLogThree {
+		kubelinesThree = append(kubelinesThree, string(kubeline))
+	}
+	kubeThree := strings.Join(kubelinesThree, "\n")
+	if kubeThree != kubeconfs[2].GetClientSecret() {
+		t.Error(test.StrFormatErrors("kubeconfig contents", kubeconfs[2].GetClientSecret(), kubeThree))
+	}
+
 	// finally, check that ssh key properly rendered
 	sshLogout := make(chan []byte, 1000)
 	res = dckr.Exec(ctx, "test ssh file render", "", []string{}, []string{"/bin/sh", "-c", "cat ~/.ssh/THISISANSSHKEY"}, sshLogout)

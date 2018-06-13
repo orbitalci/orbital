@@ -59,7 +59,7 @@ func (x CredType) String() string {
 	return proto.EnumName(CredType_name, int32(x))
 }
 func (CredType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{0}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{0}
 }
 
 type SubCredType int32
@@ -106,16 +106,16 @@ func (x SubCredType) String() string {
 	return proto.EnumName(SubCredType_name, int32(x))
 }
 func (SubCredType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{1}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{1}
 }
 
 type AllCredsWrapper struct {
 	// All repository credentials for integrations
 	// @inject_tag: yaml:"repoCreds"
-	RepoCreds *RepoCredWrapper `protobuf:"bytes,1,opt,name=repoCreds" json:"repoCreds,omitempty" yaml:"repoCreds"`
+	RepoCreds *RepoCredWrapper `protobuf:"bytes,1,opt,name=repoCreds,proto3" json:"repoCreds,omitempty" yaml:"repoCreds"`
 	// All VCS credentials for building
 	// @inject_tag: yaml:"vcsCreds"
-	VcsCreds             *CredWrapper `protobuf:"bytes,3,opt,name=vcsCreds" json:"vcsCreds,omitempty" yaml:"vcsCreds"`
+	VcsCreds             *CredWrapper `protobuf:"bytes,3,opt,name=vcsCreds,proto3" json:"vcsCreds,omitempty" yaml:"vcsCreds"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
 	XXX_unrecognized     []byte       `json:"-"`
 	XXX_sizecache        int32        `json:"-"`
@@ -125,7 +125,7 @@ func (m *AllCredsWrapper) Reset()         { *m = AllCredsWrapper{} }
 func (m *AllCredsWrapper) String() string { return proto.CompactTextString(m) }
 func (*AllCredsWrapper) ProtoMessage()    {}
 func (*AllCredsWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{0}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{0}
 }
 func (m *AllCredsWrapper) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AllCredsWrapper.Unmarshal(m, b)
@@ -161,7 +161,7 @@ func (m *AllCredsWrapper) GetVcsCreds() *CredWrapper {
 
 // just a container for a list of VCSCreds
 type CredWrapper struct {
-	Vcs                  []*VCSCreds `protobuf:"bytes,2,rep,name=vcs" json:"vcs,omitempty"`
+	Vcs                  []*VCSCreds `protobuf:"bytes,2,rep,name=vcs,proto3" json:"vcs,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -171,7 +171,7 @@ func (m *CredWrapper) Reset()         { *m = CredWrapper{} }
 func (m *CredWrapper) String() string { return proto.CompactTextString(m) }
 func (*CredWrapper) ProtoMessage()    {}
 func (*CredWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{1}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{1}
 }
 func (m *CredWrapper) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CredWrapper.Unmarshal(m, b)
@@ -200,13 +200,13 @@ func (m *CredWrapper) GetVcs() []*VCSCreds {
 
 type SSHKeyWrapper struct {
 	// account name to associate ssh key with
-	AcctName string `protobuf:"bytes,1,opt,name=acctName" json:"acctName,omitempty"`
+	AcctName string `protobuf:"bytes,1,opt,name=acctName,proto3" json:"acctName,omitempty"`
 	// the contents of the private key
 	PrivateKey []byte `protobuf:"bytes,2,opt,name=privateKey,proto3" json:"privateKey,omitempty"`
 	// There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY
-	SubType SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty"`
+	SubType SubCredType `protobuf:"varint,10,opt,name=subType,proto3,enum=models.SubCredType" json:"subType,omitempty"`
 	// identifier is the unique identifier for when an ssh key is not associated with a VCS account.
-	Identifier           string   `protobuf:"bytes,11,opt,name=identifier" json:"identifier,omitempty"`
+	Identifier           string   `protobuf:"bytes,11,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -216,7 +216,7 @@ func (m *SSHKeyWrapper) Reset()         { *m = SSHKeyWrapper{} }
 func (m *SSHKeyWrapper) String() string { return proto.CompactTextString(m) }
 func (*SSHKeyWrapper) ProtoMessage()    {}
 func (*SSHKeyWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{2}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{2}
 }
 func (m *SSHKeyWrapper) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SSHKeyWrapper.Unmarshal(m, b)
@@ -265,7 +265,7 @@ func (m *SSHKeyWrapper) GetIdentifier() string {
 }
 
 type SSHWrap struct {
-	Keys                 []*SSHKeyWrapper `protobuf:"bytes,1,rep,name=keys" json:"keys,omitempty"`
+	Keys                 []*SSHKeyWrapper `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
 	XXX_sizecache        int32            `json:"-"`
@@ -275,7 +275,7 @@ func (m *SSHWrap) Reset()         { *m = SSHWrap{} }
 func (m *SSHWrap) String() string { return proto.CompactTextString(m) }
 func (*SSHWrap) ProtoMessage()    {}
 func (*SSHWrap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{3}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{3}
 }
 func (m *SSHWrap) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SSHWrap.Unmarshal(m, b)
@@ -305,24 +305,24 @@ func (m *SSHWrap) GetKeys() []*SSHKeyWrapper {
 type VCSCreds struct {
 	// clientId is generated by creating an oAuth consumer in bitbucket. it is required to generate tokens.
 	// @inject_tag: yaml:"clientId"
-	ClientId string `protobuf:"bytes,1,opt,name=clientId" json:"clientId,omitempty" yaml:"clientId"`
+	ClientId string `protobuf:"bytes,1,opt,name=clientId,proto3" json:"clientId,omitempty" yaml:"clientId"`
 	// clientSecret is generated by creating an oAuth consumer in bitbucket. it is required to generate tokens.
 	// @inject_tag: yaml:"clientSecret"
-	ClientSecret string `protobuf:"bytes,2,opt,name=clientSecret" json:"clientSecret,omitempty" yaml:"clientSecret"`
+	ClientSecret string `protobuf:"bytes,2,opt,name=clientSecret,proto3" json:"clientSecret,omitempty" yaml:"clientSecret"`
 	// identifier is the name the user calls teh credential set
-	Identifier string `protobuf:"bytes,8,opt,name=identifier" json:"identifier,omitempty"`
+	Identifier string `protobuf:"bytes,8,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	// tokenUrl is the url at which to retrieve the token
 	// @inject_tag: yaml:"tokenURL"
-	TokenURL string `protobuf:"bytes,3,opt,name=tokenURL" json:"tokenURL,omitempty" yaml:"tokenURL"`
+	TokenURL string `protobuf:"bytes,3,opt,name=tokenURL,proto3" json:"tokenURL,omitempty" yaml:"tokenURL"`
 	// @inject_tag: yaml:"acctName"
 	// acctName is the account to associate the VCSCred with. Must be the account name of the owner of the repository they wish to track (ie level11consulting)
-	AcctName string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty" yaml:"acctName"`
+	AcctName string `protobuf:"bytes,4,opt,name=acctName,proto3" json:"acctName,omitempty" yaml:"acctName"`
 	// just a string that says whether or not there is an ssh key on file
 	// @inject_tag: yaml:"sshFileLoc"
-	SshFileLoc string `protobuf:"bytes,6,opt,name=sshFileLoc" json:"sshFileLoc,omitempty" yaml:"sshFileLoc"`
+	SshFileLoc string `protobuf:"bytes,6,opt,name=sshFileLoc,proto3" json:"sshFileLoc,omitempty" yaml:"sshFileLoc"`
 	// there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET
 	// @inject_tag: yaml:"subType"
-	SubType              SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	SubType              SubCredType `protobuf:"varint,10,opt,name=subType,proto3,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -332,7 +332,7 @@ func (m *VCSCreds) Reset()         { *m = VCSCreds{} }
 func (m *VCSCreds) String() string { return proto.CompactTextString(m) }
 func (*VCSCreds) ProtoMessage()    {}
 func (*VCSCreds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{4}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{4}
 }
 func (m *VCSCreds) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VCSCreds.Unmarshal(m, b)
@@ -403,7 +403,7 @@ func (m *VCSCreds) GetSubType() SubCredType {
 
 // container for list of repo creds
 type RepoCredWrapper struct {
-	Repo                 []*RepoCreds `protobuf:"bytes,3,rep,name=repo" json:"repo,omitempty"`
+	Repo                 []*RepoCreds `protobuf:"bytes,3,rep,name=repo,proto3" json:"repo,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
 	XXX_unrecognized     []byte       `json:"-"`
 	XXX_sizecache        int32        `json:"-"`
@@ -413,7 +413,7 @@ func (m *RepoCredWrapper) Reset()         { *m = RepoCredWrapper{} }
 func (m *RepoCredWrapper) String() string { return proto.CompactTextString(m) }
 func (*RepoCredWrapper) ProtoMessage()    {}
 func (*RepoCredWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{5}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{5}
 }
 func (m *RepoCredWrapper) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RepoCredWrapper.Unmarshal(m, b)
@@ -442,20 +442,20 @@ func (m *RepoCredWrapper) GetRepo() []*RepoCreds {
 
 type RepoCreds struct {
 	// username of repository
-	Username string `protobuf:"bytes,1,opt,name=username" json:"username,omitempty"`
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
 	// password of repository
-	Password string `protobuf:"bytes,2,opt,name=password" json:"password,omitempty"`
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	// @inject_tag: yaml:"repoUrl"
 	// repoUrl is the url that is associated with that repository, for example hub.docker.io
-	RepoUrl string `protobuf:"bytes,6,opt,name=repoUrl" json:"repoUrl,omitempty" yaml:"repoUrl"`
+	RepoUrl string `protobuf:"bytes,6,opt,name=repoUrl,proto3" json:"repoUrl,omitempty" yaml:"repoUrl"`
 	// identifier is the unique identifier that is associated with this acctName
-	Identifier string `protobuf:"bytes,8,opt,name=identifier" json:"identifier,omitempty"`
+	Identifier string `protobuf:"bytes,8,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	// @inject_tag: yaml:"acctName"
 	// account name (same as from vcs)
-	AcctName string `protobuf:"bytes,4,opt,name=acctName" json:"acctName,omitempty" yaml:"acctName"`
+	AcctName string `protobuf:"bytes,4,opt,name=acctName,proto3" json:"acctName,omitempty" yaml:"acctName"`
 	// @inject_tag: yaml:"subType"
 	// there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS
-	SubType              SubCredType `protobuf:"varint,10,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	SubType              SubCredType `protobuf:"varint,10,opt,name=subType,proto3,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -465,7 +465,7 @@ func (m *RepoCreds) Reset()         { *m = RepoCreds{} }
 func (m *RepoCreds) String() string { return proto.CompactTextString(m) }
 func (*RepoCreds) ProtoMessage()    {}
 func (*RepoCreds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{6}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{6}
 }
 func (m *RepoCreds) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RepoCreds.Unmarshal(m, b)
@@ -529,14 +529,14 @@ func (m *RepoCreds) GetSubType() SubCredType {
 
 type K8SCreds struct {
 	// account name to associate this credential with
-	AcctName string `protobuf:"bytes,1,opt,name=acctName" json:"acctName,omitempty"`
+	AcctName string `protobuf:"bytes,1,opt,name=acctName,proto3" json:"acctName,omitempty"`
 	// k8scontents is the contents of the kubeconfig file
-	K8SContents string `protobuf:"bytes,2,opt,name=k8sContents" json:"k8sContents,omitempty"`
-	// identifier in K8s creds is currently irrelevant, as there can only be one per account
-	Identifier string `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
+	K8SContents string `protobuf:"bytes,2,opt,name=k8sContents,proto3" json:"k8sContents,omitempty"`
+	// identifier in K8s creds, typically the name of the cluster, as expected use case is one config per cluster
+	Identifier string `protobuf:"bytes,3,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	// @inject_tag: yaml:"subType"
 	// there is currently only one subtype for k8SCreds, and it is KUBECONF
-	SubType              SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	SubType              SubCredType `protobuf:"varint,6,opt,name=subType,proto3,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -546,7 +546,7 @@ func (m *K8SCreds) Reset()         { *m = K8SCreds{} }
 func (m *K8SCreds) String() string { return proto.CompactTextString(m) }
 func (*K8SCreds) ProtoMessage()    {}
 func (*K8SCreds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{7}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{7}
 }
 func (m *K8SCreds) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_K8SCreds.Unmarshal(m, b)
@@ -595,7 +595,7 @@ func (m *K8SCreds) GetSubType() SubCredType {
 }
 
 type K8SCredsWrapper struct {
-	K8SCreds             []*K8SCreds `protobuf:"bytes,2,rep,name=K8SCreds" json:"K8SCreds,omitempty"`
+	K8SCreds             []*K8SCreds `protobuf:"bytes,2,rep,name=K8SCreds,proto3" json:"K8SCreds,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -605,7 +605,7 @@ func (m *K8SCredsWrapper) Reset()         { *m = K8SCredsWrapper{} }
 func (m *K8SCredsWrapper) String() string { return proto.CompactTextString(m) }
 func (*K8SCredsWrapper) ProtoMessage()    {}
 func (*K8SCredsWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{8}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{8}
 }
 func (m *K8SCredsWrapper) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_K8SCredsWrapper.Unmarshal(m, b)
@@ -634,15 +634,15 @@ func (m *K8SCredsWrapper) GetK8SCreds() []*K8SCreds {
 
 type AppleCreds struct {
 	// account name to associate this credential with
-	AcctName string `protobuf:"bytes,1,opt,name=acctName" json:"acctName,omitempty"`
+	AcctName string `protobuf:"bytes,1,opt,name=acctName,proto3" json:"acctName,omitempty"`
 	// identifier in dev profile creds is currently irrelevant, as there can only be one per account
-	Identifier string `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
+	Identifier string `protobuf:"bytes,3,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	// appleSecrets is the zip contents of the apple developer profile that you export in XCode ??
 	AppleSecrets []byte `protobuf:"bytes,2,opt,name=appleSecrets,proto3" json:"appleSecrets,omitempty"`
 	// appleSecretsPassword is the password you set when you export the developer profile
-	AppleSecretsPassword string `protobuf:"bytes,6,opt,name=appleSecretsPassword" json:"appleSecretsPassword,omitempty"`
+	AppleSecretsPassword string `protobuf:"bytes,6,opt,name=appleSecretsPassword,proto3" json:"appleSecretsPassword,omitempty"`
 	// @inject_tag: yaml:"subType"
-	SubType              SubCredType `protobuf:"varint,5,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
+	SubType              SubCredType `protobuf:"varint,5,opt,name=subType,proto3,enum=models.SubCredType" json:"subType,omitempty" yaml:"subType"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -652,7 +652,7 @@ func (m *AppleCreds) Reset()         { *m = AppleCreds{} }
 func (m *AppleCreds) String() string { return proto.CompactTextString(m) }
 func (*AppleCreds) ProtoMessage()    {}
 func (*AppleCreds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{9}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{9}
 }
 func (m *AppleCreds) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AppleCreds.Unmarshal(m, b)
@@ -708,7 +708,7 @@ func (m *AppleCreds) GetSubType() SubCredType {
 }
 
 type AppleCredsWrapper struct {
-	AppleCreds           []*AppleCreds `protobuf:"bytes,1,rep,name=appleCreds" json:"appleCreds,omitempty"`
+	AppleCreds           []*AppleCreds `protobuf:"bytes,1,rep,name=appleCreds,proto3" json:"appleCreds,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
 	XXX_sizecache        int32         `json:"-"`
@@ -718,7 +718,7 @@ func (m *AppleCredsWrapper) Reset()         { *m = AppleCredsWrapper{} }
 func (m *AppleCredsWrapper) String() string { return proto.CompactTextString(m) }
 func (*AppleCredsWrapper) ProtoMessage()    {}
 func (*AppleCredsWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{10}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{10}
 }
 func (m *AppleCredsWrapper) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AppleCredsWrapper.Unmarshal(m, b)
@@ -746,7 +746,7 @@ func (m *AppleCredsWrapper) GetAppleCreds() []*AppleCreds {
 }
 
 type NotifyWrap struct {
-	Creds                []*NotifyCreds `protobuf:"bytes,1,rep,name=creds" json:"creds,omitempty"`
+	Creds                []*NotifyCreds `protobuf:"bytes,1,rep,name=creds,proto3" json:"creds,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -756,7 +756,7 @@ func (m *NotifyWrap) Reset()         { *m = NotifyWrap{} }
 func (m *NotifyWrap) String() string { return proto.CompactTextString(m) }
 func (*NotifyWrap) ProtoMessage()    {}
 func (*NotifyWrap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{11}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{11}
 }
 func (m *NotifyWrap) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_NotifyWrap.Unmarshal(m, b)
@@ -785,13 +785,13 @@ func (m *NotifyWrap) GetCreds() []*NotifyCreds {
 
 type NotifyCreds struct {
 	// account name to associate integration cred with
-	AcctName string `protobuf:"bytes,1,opt,name=acctName" json:"acctName,omitempty"`
+	AcctName string `protobuf:"bytes,1,opt,name=acctName,proto3" json:"acctName,omitempty"`
 	// There is currently only one subType that is valid for Integrations, and it is SLACK
-	SubType SubCredType `protobuf:"varint,2,opt,name=subType,enum=models.SubCredType" json:"subType,omitempty"`
+	SubType SubCredType `protobuf:"varint,2,opt,name=subType,proto3,enum=models.SubCredType" json:"subType,omitempty"`
 	// identifier is the unique identifier for the integration
-	Identifier string `protobuf:"bytes,3,opt,name=identifier" json:"identifier,omitempty"`
+	Identifier string `protobuf:"bytes,3,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	// clientSecret is the secret associated with the integration cred
-	ClientSecret         string   `protobuf:"bytes,4,opt,name=clientSecret" json:"clientSecret,omitempty"`
+	ClientSecret         string   `protobuf:"bytes,4,opt,name=clientSecret,proto3" json:"clientSecret,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -801,7 +801,7 @@ func (m *NotifyCreds) Reset()         { *m = NotifyCreds{} }
 func (m *NotifyCreds) String() string { return proto.CompactTextString(m) }
 func (*NotifyCreds) ProtoMessage()    {}
 func (*NotifyCreds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_creds_4af25941be456e6c, []int{12}
+	return fileDescriptor_creds_69d9d3ee77321fcd, []int{12}
 }
 func (m *NotifyCreds) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_NotifyCreds.Unmarshal(m, b)
@@ -867,55 +867,55 @@ func init() {
 	proto.RegisterEnum("models.SubCredType", SubCredType_name, SubCredType_value)
 }
 
-func init() { proto.RegisterFile("creds.proto", fileDescriptor_creds_4af25941be456e6c) }
+func init() { proto.RegisterFile("creds.proto", fileDescriptor_creds_69d9d3ee77321fcd) }
 
-var fileDescriptor_creds_4af25941be456e6c = []byte{
-	// 750 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xdd, 0x6e, 0xda, 0x4a,
-	0x10, 0x3e, 0xe6, 0xd7, 0x1e, 0x93, 0x64, 0xb3, 0xe7, 0x1c, 0x1d, 0xeb, 0x5c, 0x54, 0xc8, 0x52,
-	0x25, 0x1a, 0xb5, 0xa9, 0x4a, 0x5b, 0x95, 0xbb, 0x0a, 0x1c, 0x13, 0x90, 0x29, 0xa0, 0x35, 0xd0,
-	0x9f, 0x9b, 0x0a, 0xcc, 0x46, 0x45, 0x21, 0xd8, 0xb2, 0x9d, 0x54, 0xbc, 0x43, 0xef, 0x2b, 0x55,
-	0x7d, 0xa0, 0xde, 0xf5, 0x59, 0xfa, 0x06, 0xd5, 0xda, 0x5e, 0x7b, 0x21, 0x49, 0x13, 0xee, 0x98,
-	0x6f, 0xbe, 0x99, 0xfd, 0xe6, 0x9b, 0xf5, 0x02, 0xaa, 0xe3, 0xd3, 0x79, 0x70, 0xec, 0xf9, 0x6e,
-	0xe8, 0xe2, 0xd2, 0x85, 0x3b, 0xa7, 0xcb, 0x40, 0x5f, 0xc3, 0x41, 0x73, 0xb9, 0x34, 0x58, 0xe6,
-	0xad, 0x3f, 0xf5, 0x3c, 0xea, 0xe3, 0x97, 0xa0, 0xf8, 0xd4, 0x73, 0x23, 0x4c, 0x93, 0xaa, 0x52,
-	0x4d, 0xad, 0xff, 0x77, 0x1c, 0xd3, 0x8f, 0x49, 0x92, 0x48, 0xb8, 0x24, 0x63, 0xe2, 0xa7, 0x20,
-	0x5f, 0x39, 0x41, 0x5c, 0x95, 0x8f, 0xaa, 0xfe, 0xe6, 0x55, 0x62, 0x45, 0x4a, 0xd2, 0x9f, 0x81,
-	0x2a, 0x24, 0xb0, 0x0e, 0xf9, 0x2b, 0x27, 0xd0, 0x72, 0xd5, 0x7c, 0x4d, 0xad, 0x23, 0x5e, 0x3a,
-	0x31, 0xec, 0x88, 0x4d, 0x58, 0x52, 0xff, 0x26, 0xc1, 0x9e, 0x6d, 0x77, 0x2c, 0xba, 0xe6, 0x55,
-	0xff, 0x83, 0x3c, 0x75, 0x9c, 0xb0, 0x3f, 0xbd, 0xa0, 0x91, 0x56, 0x85, 0xa4, 0x31, 0x7e, 0x00,
-	0xe0, 0xf9, 0x8b, 0xab, 0x69, 0x48, 0x2d, 0xba, 0xd6, 0x72, 0x55, 0xa9, 0x56, 0x21, 0x02, 0x82,
-	0x9f, 0x40, 0x39, 0xb8, 0x9c, 0x8d, 0xd6, 0x1e, 0xd5, 0xa0, 0x2a, 0xd5, 0xf6, 0x33, 0xc1, 0xf6,
-	0xe5, 0x8c, 0x9d, 0xca, 0x52, 0x84, 0x73, 0x58, 0xbb, 0xc5, 0x9c, 0xae, 0xc2, 0xc5, 0xd9, 0x82,
-	0xfa, 0x9a, 0x1a, 0x1d, 0x26, 0x20, 0xfa, 0x0b, 0x28, 0xdb, 0x76, 0x87, 0x09, 0xc3, 0x8f, 0xa0,
-	0x70, 0x4e, 0xd7, 0xcc, 0x3d, 0x36, 0xcc, 0xbf, 0x69, 0x5b, 0x51, 0x3a, 0x89, 0x28, 0xfa, 0x2f,
-	0x09, 0x64, 0x3e, 0x24, 0x9b, 0xc6, 0x59, 0x2e, 0xe8, 0x2a, 0xec, 0xce, 0xf9, 0x34, 0x3c, 0xc6,
-	0x3a, 0x54, 0xe2, 0xdf, 0x36, 0x75, 0x7c, 0x1a, 0x46, 0xf3, 0x28, 0x64, 0x03, 0xdb, 0x92, 0x28,
-	0x6f, 0x4b, 0x64, 0xfd, 0x43, 0xf7, 0x9c, 0xae, 0xc6, 0xa4, 0x17, 0xed, 0x48, 0x21, 0x69, 0xbc,
-	0xe1, 0x64, 0xe1, 0xba, 0x93, 0x41, 0xf0, 0xa9, 0xbd, 0x58, 0xd2, 0x9e, 0xeb, 0x68, 0xa5, 0xb8,
-	0x6f, 0x86, 0xec, 0xe8, 0xa4, 0xde, 0x80, 0x83, 0xad, 0x8b, 0x84, 0x1f, 0x42, 0x81, 0x5d, 0x25,
-	0x2d, 0x1f, 0x39, 0x76, 0xb8, 0x7d, 0xdf, 0x02, 0x12, 0xa5, 0xf5, 0x1f, 0x12, 0x28, 0x29, 0xc6,
-	0x24, 0x5f, 0x06, 0xd4, 0x5f, 0x09, 0xcb, 0xe7, 0x31, 0xcb, 0x79, 0xd3, 0x20, 0xf8, 0xec, 0xfa,
-	0xf3, 0xc4, 0xaa, 0x34, 0xc6, 0x1a, 0x94, 0x59, 0xb7, 0xb1, 0xbf, 0x4c, 0x66, 0xe1, 0xe1, 0x7d,
-	0x0c, 0xbc, 0xd5, 0xa4, 0x1d, 0x4d, 0xf8, 0x2a, 0x81, 0x6c, 0x35, 0xb2, 0xc5, 0xdf, 0x7a, 0x8d,
-	0xab, 0xa0, 0x9e, 0x37, 0x02, 0xc3, 0x5d, 0x85, 0x74, 0x15, 0x06, 0xc9, 0x30, 0x22, 0xb4, 0xa5,
-	0x3a, 0x7f, 0x4d, 0xb5, 0xa0, 0xac, 0x78, 0x0f, 0x65, 0xaf, 0xe1, 0x80, 0x0b, 0xe3, 0xeb, 0x79,
-	0x9c, 0x69, 0xdd, 0xfe, 0x42, 0x39, 0x4e, 0x52, 0x86, 0xfe, 0x53, 0x02, 0x68, 0x7a, 0xde, 0x92,
-	0xde, 0x3d, 0xdc, 0x5d, 0xd2, 0x75, 0xa8, 0x4c, 0x59, 0xa7, 0xf8, 0x82, 0x07, 0xc9, 0x57, 0xbc,
-	0x81, 0xe1, 0x3a, 0xfc, 0x23, 0xc6, 0x43, 0xbe, 0xf6, 0x78, 0xb7, 0x37, 0xe6, 0x76, 0xb5, 0xe4,
-	0x14, 0x0e, 0xb3, 0x81, 0xb8, 0x29, 0x75, 0x80, 0x69, 0x0a, 0x26, 0xdf, 0x3a, 0xe6, 0x6d, 0x32,
-	0x3a, 0x11, 0x58, 0xfa, 0x2b, 0x80, 0xbe, 0x1b, 0x2e, 0xce, 0xd6, 0xc9, 0x3b, 0x51, 0x74, 0x84,
-	0xe2, 0x54, 0x43, 0x4c, 0x89, 0xab, 0x63, 0x86, 0xfe, 0x5d, 0x02, 0x55, 0x80, 0xff, 0x68, 0xaa,
-	0x30, 0x5c, 0x6e, 0xe7, 0x87, 0xed, 0xc6, 0x1d, 0x6c, 0xbc, 0x3c, 0x85, 0xeb, 0x2f, 0xcf, 0xd1,
-	0x08, 0x64, 0xde, 0x18, 0x03, 0x94, 0xfa, 0xdd, 0xde, 0x47, 0x63, 0x84, 0xfe, 0xc2, 0x65, 0xc8,
-	0x4f, 0x0c, 0x1b, 0x49, 0x58, 0x86, 0x02, 0x31, 0x87, 0x03, 0x94, 0x63, 0x90, 0xd5, 0xb0, 0x51,
-	0x9e, 0xfd, 0xb0, 0xed, 0x0e, 0x2a, 0xe2, 0x0a, 0xc8, 0xfd, 0xc1, 0xa8, 0xdb, 0xee, 0x9a, 0x04,
-	0x95, 0xb0, 0x02, 0xc5, 0xe6, 0x70, 0xd8, 0x33, 0x51, 0xf9, 0xe8, 0x8b, 0x04, 0xaa, 0x20, 0x19,
-	0xab, 0x50, 0x66, 0x9d, 0xed, 0xa8, 0xf5, 0x1e, 0x28, 0xad, 0xee, 0xa8, 0x35, 0x36, 0x2c, 0x73,
-	0x84, 0x24, 0x76, 0xea, 0x69, 0x77, 0xd4, 0x19, 0xb7, 0x50, 0x8e, 0xb5, 0xe8, 0x9b, 0xef, 0xc6,
-	0xec, 0x10, 0x05, 0x8a, 0x6f, 0x9a, 0x13, 0xb3, 0x8f, 0x0a, 0x8c, 0x71, 0x32, 0x30, 0x2c, 0x93,
-	0xc4, 0x47, 0x5a, 0xe3, 0x96, 0x69, 0x0c, 0xfa, 0x6d, 0x54, 0x62, 0x19, 0xf6, 0x36, 0x9b, 0xef,
-	0x91, 0xcc, 0x0a, 0xec, 0x5e, 0xd3, 0xb0, 0x90, 0x82, 0xf7, 0x01, 0x4e, 0xcc, 0xc9, 0x90, 0x0c,
-	0xda, 0xdd, 0x9e, 0x89, 0xa0, 0x55, 0xf8, 0x90, 0xf3, 0x66, 0xb3, 0x52, 0xf4, 0x0f, 0xfa, 0xfc,
-	0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0x1f, 0x94, 0x75, 0x29, 0x50, 0x07, 0x00, 0x00,
+var fileDescriptor_creds_69d9d3ee77321fcd = []byte{
+	// 751 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xdd, 0x6e, 0xd3, 0x4c,
+	0x10, 0xfd, 0x9c, 0x5f, 0x7b, 0x9c, 0xb6, 0xdb, 0xfd, 0x40, 0x58, 0x5c, 0xa0, 0xc8, 0x12, 0x52,
+	0xa8, 0xa0, 0x88, 0x00, 0x22, 0x77, 0x28, 0x71, 0x9d, 0x26, 0x72, 0x48, 0xa2, 0x75, 0x12, 0x7e,
+	0x6e, 0x50, 0xe2, 0x6c, 0x45, 0xd4, 0x34, 0xb6, 0x6c, 0xb7, 0x28, 0xef, 0xc0, 0x3d, 0x12, 0xe2,
+	0x81, 0xb8, 0xe3, 0x59, 0x78, 0x03, 0xb4, 0xb6, 0xd7, 0xde, 0xa4, 0x2d, 0x6d, 0xef, 0x32, 0x67,
+	0xce, 0xcc, 0x9e, 0x39, 0xb3, 0xde, 0x80, 0xea, 0xf8, 0x74, 0x1e, 0x1c, 0x7a, 0xbe, 0x1b, 0xba,
+	0xb8, 0x74, 0xe6, 0xce, 0xe9, 0x32, 0xd0, 0xd7, 0xb0, 0xd7, 0x5c, 0x2e, 0x0d, 0x96, 0x79, 0xef,
+	0x4f, 0x3d, 0x8f, 0xfa, 0xf8, 0x35, 0x28, 0x3e, 0xf5, 0xdc, 0x08, 0xd3, 0xa4, 0xaa, 0x54, 0x53,
+	0xeb, 0x0f, 0x0e, 0x63, 0xfa, 0x21, 0x49, 0x12, 0x09, 0x97, 0x64, 0x4c, 0xfc, 0x1c, 0xe4, 0x0b,
+	0x27, 0x88, 0xab, 0xf2, 0x51, 0xd5, 0xff, 0xbc, 0x4a, 0xac, 0x48, 0x49, 0xfa, 0x0b, 0x50, 0x85,
+	0x04, 0xd6, 0x21, 0x7f, 0xe1, 0x04, 0x5a, 0xae, 0x9a, 0xaf, 0xa9, 0x75, 0xc4, 0x4b, 0x27, 0x86,
+	0x1d, 0xb1, 0x09, 0x4b, 0xea, 0x3f, 0x24, 0xd8, 0xb1, 0xed, 0x8e, 0x45, 0xd7, 0xbc, 0xea, 0x21,
+	0xc8, 0x53, 0xc7, 0x09, 0xfb, 0xd3, 0x33, 0x1a, 0x69, 0x55, 0x48, 0x1a, 0xe3, 0x47, 0x00, 0x9e,
+	0xbf, 0xb8, 0x98, 0x86, 0xd4, 0xa2, 0x6b, 0x2d, 0x57, 0x95, 0x6a, 0x15, 0x22, 0x20, 0xf8, 0x19,
+	0x94, 0x83, 0xf3, 0xd9, 0x68, 0xed, 0x51, 0x0d, 0xaa, 0x52, 0x6d, 0x37, 0x13, 0x6c, 0x9f, 0xcf,
+	0xd8, 0xa9, 0x2c, 0x45, 0x38, 0x87, 0xb5, 0x5b, 0xcc, 0xe9, 0x2a, 0x5c, 0x9c, 0x2c, 0xa8, 0xaf,
+	0xa9, 0xd1, 0x61, 0x02, 0xa2, 0xbf, 0x82, 0xb2, 0x6d, 0x77, 0x98, 0x30, 0xfc, 0x04, 0x0a, 0xa7,
+	0x74, 0xcd, 0xdc, 0x63, 0xc3, 0xdc, 0x4f, 0xdb, 0x8a, 0xd2, 0x49, 0x44, 0xd1, 0xff, 0x48, 0x20,
+	0xf3, 0x21, 0xd9, 0x34, 0xce, 0x72, 0x41, 0x57, 0x61, 0x77, 0xce, 0xa7, 0xe1, 0x31, 0xd6, 0xa1,
+	0x12, 0xff, 0xb6, 0xa9, 0xe3, 0xd3, 0x30, 0x9a, 0x47, 0x21, 0x1b, 0xd8, 0x96, 0x44, 0x79, 0x5b,
+	0x22, 0xeb, 0x1f, 0xba, 0xa7, 0x74, 0x35, 0x26, 0xbd, 0x68, 0x47, 0x0a, 0x49, 0xe3, 0x0d, 0x27,
+	0x0b, 0x97, 0x9d, 0x0c, 0x82, 0x2f, 0xed, 0xc5, 0x92, 0xf6, 0x5c, 0x47, 0x2b, 0xc5, 0x7d, 0x33,
+	0xe4, 0x8e, 0x4e, 0xea, 0x0d, 0xd8, 0xdb, 0xba, 0x48, 0xf8, 0x31, 0x14, 0xd8, 0x55, 0xd2, 0xf2,
+	0x91, 0x63, 0xfb, 0xdb, 0xf7, 0x2d, 0x20, 0x51, 0x5a, 0xff, 0x25, 0x81, 0x92, 0x62, 0x4c, 0xf2,
+	0x79, 0x40, 0xfd, 0x95, 0xb0, 0x7c, 0x1e, 0xb3, 0x9c, 0x37, 0x0d, 0x82, 0xaf, 0xae, 0x3f, 0x4f,
+	0xac, 0x4a, 0x63, 0xac, 0x41, 0x99, 0x75, 0x1b, 0xfb, 0xcb, 0x64, 0x16, 0x1e, 0xde, 0xc6, 0xc0,
+	0x6b, 0x4d, 0xba, 0xa3, 0x09, 0xdf, 0x25, 0x90, 0xad, 0x46, 0xb6, 0xf8, 0x6b, 0xaf, 0x71, 0x15,
+	0xd4, 0xd3, 0x46, 0x60, 0xb8, 0xab, 0x90, 0xae, 0xc2, 0x20, 0x19, 0x46, 0x84, 0xb6, 0x54, 0xe7,
+	0x2f, 0xa9, 0x16, 0x94, 0x95, 0x6e, 0xa1, 0xec, 0x2d, 0xec, 0x71, 0x61, 0x7c, 0x3d, 0x4f, 0x33,
+	0xad, 0xdb, 0x5f, 0x28, 0xc7, 0x49, 0xca, 0xd0, 0x7f, 0x4b, 0x00, 0x4d, 0xcf, 0x5b, 0xd2, 0x9b,
+	0x87, 0xbb, 0x49, 0xba, 0x0e, 0x95, 0x29, 0xeb, 0x14, 0x5f, 0xf0, 0x20, 0xf9, 0x8a, 0x37, 0x30,
+	0x5c, 0x87, 0x7b, 0x62, 0x3c, 0xe4, 0x6b, 0x8f, 0x77, 0x7b, 0x65, 0x4e, 0xb4, 0xa4, 0x78, 0x0b,
+	0x4b, 0x8e, 0x61, 0x3f, 0x1b, 0x88, 0x9b, 0x52, 0x07, 0x98, 0xa6, 0x60, 0xf2, 0xad, 0x63, 0xde,
+	0x26, 0xa3, 0x13, 0x81, 0xa5, 0xbf, 0x01, 0xe8, 0xbb, 0xe1, 0xe2, 0x64, 0x9d, 0xbc, 0x13, 0x45,
+	0x47, 0x28, 0x4e, 0x35, 0xc4, 0x94, 0xb8, 0x3a, 0x66, 0xe8, 0x3f, 0x25, 0x50, 0x05, 0xf8, 0x9f,
+	0xa6, 0x0a, 0xc3, 0xe5, 0xee, 0xfc, 0xb0, 0x5d, 0xb9, 0x83, 0x8d, 0x97, 0xa7, 0x70, 0xf9, 0xe5,
+	0x39, 0x18, 0x81, 0xcc, 0x1b, 0x63, 0x80, 0x52, 0xbf, 0xdb, 0xfb, 0x6c, 0x8c, 0xd0, 0x7f, 0xb8,
+	0x0c, 0xf9, 0x89, 0x61, 0x23, 0x09, 0xcb, 0x50, 0x20, 0xe6, 0x70, 0x80, 0x72, 0x0c, 0xb2, 0x1a,
+	0x36, 0xca, 0xb3, 0x1f, 0xb6, 0xdd, 0x41, 0x45, 0x5c, 0x01, 0xb9, 0x3f, 0x18, 0x75, 0xdb, 0x5d,
+	0x93, 0xa0, 0x12, 0x56, 0xa0, 0xd8, 0x1c, 0x0e, 0x7b, 0x26, 0x2a, 0x1f, 0x7c, 0x93, 0x40, 0x15,
+	0x24, 0x63, 0x15, 0xca, 0xac, 0xb3, 0x1d, 0xb5, 0xde, 0x01, 0xa5, 0xd5, 0x1d, 0xb5, 0xc6, 0x86,
+	0x65, 0x8e, 0x90, 0xc4, 0x4e, 0x3d, 0xee, 0x8e, 0x3a, 0xe3, 0x16, 0xca, 0xb1, 0x16, 0x7d, 0xf3,
+	0xc3, 0x98, 0x1d, 0xa2, 0x40, 0xf1, 0x5d, 0x73, 0x62, 0xf6, 0x51, 0x81, 0x31, 0x8e, 0x06, 0x86,
+	0x65, 0x92, 0xf8, 0x48, 0x6b, 0xdc, 0x32, 0x8d, 0x41, 0xbf, 0x8d, 0x4a, 0x2c, 0xc3, 0xde, 0x66,
+	0xf3, 0x23, 0x92, 0x59, 0x81, 0xdd, 0x6b, 0x1a, 0x16, 0x52, 0xf0, 0x2e, 0xc0, 0x91, 0x39, 0x19,
+	0x92, 0x41, 0xbb, 0xdb, 0x33, 0x11, 0xb4, 0x0a, 0x9f, 0x72, 0xde, 0x6c, 0x56, 0x8a, 0xfe, 0x41,
+	0x5f, 0xfe, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x0d, 0x0c, 0x04, 0x0b, 0x50, 0x07, 0x00, 0x00,
 }
