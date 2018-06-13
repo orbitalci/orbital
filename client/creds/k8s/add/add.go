@@ -22,6 +22,7 @@ type cmd struct {
 	flags   *flag.FlagSet
 	fileloc string
 	account string
+	name    string
 	config  *commandhelper.ClientConfig
 }
 
@@ -43,7 +44,9 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.fileloc, "kubeconfig", "ERROR",
 		"Location of kubeconfig file to upload")
 	c.flags.StringVar(&c.account, "acct", "ERROR",
-		"Account name to file kubeconfig under.")
+		"Account name to file kubeconfig under")
+	c.flags.StringVar(&c.name, "name", "ERROR",
+		"Name for kubeconfig (Using your cluster name is recommended)")
 }
 
 // uploadCredential will check if credential already exists. if it does, it will ask if the user wishes to overwrite. if the user responds YES, the credential will be updated.
@@ -55,8 +58,8 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 	}
 
 	if exists.Exists {
-		update, err := UI.Ask(fmt.Sprintf("Entry with Account Name %s and Repo Type %s already exists. Do you want to overwrite? "+
-			"Only a YES will continue with update, otherwise the client will exit. ", cred.AcctName, strings.ToLower(cred.SubType.String())))
+		update, err := UI.Ask(fmt.Sprintf("Account Name %s already has a Repo Type %s config with the name %s. Do you want to overwrite? "+
+			"Only a YES will continue with update, otherwise the client will exit. ", cred.AcctName, strings.ToLower(cred.SubType.String()), cred.Identifier))
 		if err != nil {
 			return err
 		}
@@ -93,14 +96,17 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error("-kubeconfig required")
 		return 1
 	}
+	k8cred.Identifier = c.name
+	if c.name == "ERROR" {
+		c.UI.Error("-name required")
+		return 1
+	}
 	kubeconf, err := ioutil.ReadFile(c.fileloc)
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Could not read file at %s \nError: %s", c.fileloc, err.Error()))
 		return 1
 	}
 	k8cred.K8SContents = string(kubeconf)
-	// right now, only support one kubeconfig per account
-	k8cred.Identifier = "THERECANONLYBEONE"
 
 	if err = uploadCredential(ctx, c.config.Client, c.UI, k8cred); err != nil {
 		if _, ok := err.(*commandhelper.DontOverwrite); ok {
@@ -124,6 +130,6 @@ func (c *cmd) Help() string {
 
 const synopsis = "Add a kubeconfig for connection with kubernetes to ocelot"
 const help = `
-Usage: ocelot creds k8s add -acct my_kewl_acct -kubeconfig=/home/user/kubeconfig.yaml
+Usage: ocelot creds k8s add -acct my_kewl_acct -name cluster_name -kubeconfig=/home/user/.kube/cluster-config.yaml
 
 `

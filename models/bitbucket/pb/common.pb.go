@@ -19,7 +19,7 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type LinkUrl struct {
-	Href                 string   `protobuf:"bytes,1,opt,name=href" json:"href,omitempty"`
+	Href                 string   `protobuf:"bytes,1,opt,name=href,proto3" json:"href,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -57,8 +57,8 @@ func (m *LinkUrl) GetHref() string {
 }
 
 type LinkAndName struct {
-	Href                 string   `protobuf:"bytes,1,opt,name=href" json:"href,omitempty"`
-	Name                 string   `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
+	Href                 string   `protobuf:"bytes,1,opt,name=href,proto3" json:"href,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -103,9 +103,9 @@ func (m *LinkAndName) GetName() string {
 }
 
 type Links struct {
-	Self                 *LinkUrl `protobuf:"bytes,1,opt,name=self" json:"self,omitempty"`
-	Html                 *LinkUrl `protobuf:"bytes,2,opt,name=html" json:"html,omitempty"`
-	Avatar               *LinkUrl `protobuf:"bytes,3,opt,name=avatar" json:"avatar,omitempty"`
+	Self                 *LinkUrl `protobuf:"bytes,1,opt,name=self,proto3" json:"self,omitempty"`
+	Html                 *LinkUrl `protobuf:"bytes,2,opt,name=html,proto3" json:"html,omitempty"`
+	Avatar               *LinkUrl `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

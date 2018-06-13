@@ -86,9 +86,10 @@ func NoDataHeader(ui cli.Ui) {
 }
 
 func Prettify(cred *models.K8SCreds) string {
-	str := `AcctName: %s
+	str := `Account: %s
+ConfigName: %s
 `
-	return fmt.Sprintf(str, cred.AcctName)
+	return fmt.Sprintf(str, cred.AcctName, cred.Identifier)
 }
 
 const synopsis = "List all credentials used for artifact repositories"

@@ -20,9 +20,9 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type BranchHistory struct {
-	Branch               string               `protobuf:"bytes,1,opt,name=branch" json:"branch,omitempty"`
-	Hash                 string               `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`
-	LastCommitTime       *timestamp.Timestamp `protobuf:"bytes,3,opt,name=lastCommitTime" json:"lastCommitTime,omitempty"`
+	Branch               string               `protobuf:"bytes,1,opt,name=branch,proto3" json:"branch,omitempty"`
+	Hash                 string               `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
+	LastCommitTime       *timestamp.Timestamp `protobuf:"bytes,3,opt,name=lastCommitTime,proto3" json:"lastCommitTime,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
