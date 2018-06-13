@@ -1134,28 +1134,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "cron",
-            "description": "cron is the cron string that will determine how often a check for changes should occur.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "branches",
-            "description": "branches tells ocelot which branches should be checked for changes.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "lastCronTime",
-            "description": "internal use only.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
           }
         ],
         "tags": [

@@ -20,11 +20,11 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type PaginatedRepository struct {
-	Pagelen              float64                                 `protobuf:"fixed64,1,opt,name=pagelen,proto3" json:"pagelen,omitempty"`
-	Size                 float64                                 `protobuf:"fixed64,2,opt,name=size,proto3" json:"size,omitempty"`
-	Values               []*PaginatedRepository_RepositoryValues `protobuf:"bytes,3,rep,name=values,proto3" json:"values,omitempty"`
-	Page                 float64                                 `protobuf:"fixed64,4,opt,name=page,proto3" json:"page,omitempty"`
-	Next                 string                                  `protobuf:"bytes,5,opt,name=next,proto3" json:"next,omitempty"`
+	Pagelen              float64                                 `protobuf:"fixed64,1,opt,name=pagelen" json:"pagelen,omitempty"`
+	Size                 float64                                 `protobuf:"fixed64,2,opt,name=size" json:"size,omitempty"`
+	Values               []*PaginatedRepository_RepositoryValues `protobuf:"bytes,3,rep,name=values" json:"values,omitempty"`
+	Page                 float64                                 `protobuf:"fixed64,4,opt,name=page" json:"page,omitempty"`
+	Next                 string                                  `protobuf:"bytes,5,opt,name=next" json:"next,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                                `json:"-"`
 	XXX_unrecognized     []byte                                  `json:"-"`
 	XXX_sizecache        int32                                   `json:"-"`
@@ -90,18 +90,18 @@ func (m *PaginatedRepository) GetNext() string {
 }
 
 type PaginatedRepository_RepositoryValues struct {
-	Name                 string                                                `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Links                *PaginatedRepository_RepositoryValues_RepositoryLinks `protobuf:"bytes,2,opt,name=links,proto3" json:"links,omitempty"`
-	Project              *PaginatedRepository_RepositoryValues_Project         `protobuf:"bytes,3,opt,name=project,proto3" json:"project,omitempty"`
-	CreatedOn            *timestamp.Timestamp                                  `protobuf:"bytes,4,opt,name=created_on,json=createdOn,proto3" json:"created_on,omitempty"`
-	Mainbranch           *PaginatedRepository_RepositoryValues_MainBranch      `protobuf:"bytes,5,opt,name=mainbranch,proto3" json:"mainbranch,omitempty"`
-	FullName             string                                                `protobuf:"bytes,6,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
-	UpdatedOn            *timestamp.Timestamp                                  `protobuf:"bytes,7,opt,name=updated_on,json=updatedOn,proto3" json:"updated_on,omitempty"`
-	Size                 float64                                               `protobuf:"fixed64,8,opt,name=size,proto3" json:"size,omitempty"`
-	Type                 string                                                `protobuf:"bytes,9,opt,name=type,proto3" json:"type,omitempty"`
-	Slug                 string                                                `protobuf:"bytes,10,opt,name=slug,proto3" json:"slug,omitempty"`
-	IsPrivate            bool                                                  `protobuf:"varint,11,opt,name=is_private,json=isPrivate,proto3" json:"is_private,omitempty"`
-	Description          string                                                `protobuf:"bytes,12,opt,name=description,proto3" json:"description,omitempty"`
+	Name                 string                                                `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Links                *PaginatedRepository_RepositoryValues_RepositoryLinks `protobuf:"bytes,2,opt,name=links" json:"links,omitempty"`
+	Project              *PaginatedRepository_RepositoryValues_Project         `protobuf:"bytes,3,opt,name=project" json:"project,omitempty"`
+	CreatedOn            *timestamp.Timestamp                                  `protobuf:"bytes,4,opt,name=created_on,json=createdOn" json:"created_on,omitempty"`
+	Mainbranch           *PaginatedRepository_RepositoryValues_MainBranch      `protobuf:"bytes,5,opt,name=mainbranch" json:"mainbranch,omitempty"`
+	FullName             string                                                `protobuf:"bytes,6,opt,name=full_name,json=fullName" json:"full_name,omitempty"`
+	UpdatedOn            *timestamp.Timestamp                                  `protobuf:"bytes,7,opt,name=updated_on,json=updatedOn" json:"updated_on,omitempty"`
+	Size                 float64                                               `protobuf:"fixed64,8,opt,name=size" json:"size,omitempty"`
+	Type                 string                                                `protobuf:"bytes,9,opt,name=type" json:"type,omitempty"`
+	Slug                 string                                                `protobuf:"bytes,10,opt,name=slug" json:"slug,omitempty"`
+	IsPrivate            bool                                                  `protobuf:"varint,11,opt,name=is_private,json=isPrivate" json:"is_private,omitempty"`
+	Description          string                                                `protobuf:"bytes,12,opt,name=description" json:"description,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                                              `json:"-"`
 	XXX_unrecognized     []byte                                                `json:"-"`
 	XXX_sizecache        int32                                                 `json:"-"`
@@ -216,17 +216,17 @@ func (m *PaginatedRepository_RepositoryValues) GetDescription() string {
 }
 
 type PaginatedRepository_RepositoryValues_RepositoryLinks struct {
-	Watchers             *LinkUrl       `protobuf:"bytes,1,opt,name=watchers,proto3" json:"watchers,omitempty"`
-	Branches             *LinkUrl       `protobuf:"bytes,2,opt,name=branches,proto3" json:"branches,omitempty"`
-	Tags                 *LinkUrl       `protobuf:"bytes,3,opt,name=tags,proto3" json:"tags,omitempty"`
-	Commits              *LinkUrl       `protobuf:"bytes,4,opt,name=commits,proto3" json:"commits,omitempty"`
-	Clone                []*LinkAndName `protobuf:"bytes,5,rep,name=clone,proto3" json:"clone,omitempty"`
-	Self                 *LinkUrl       `protobuf:"bytes,6,opt,name=self,proto3" json:"self,omitempty"`
-	Source               *LinkUrl       `protobuf:"bytes,7,opt,name=source,proto3" json:"source,omitempty"`
-	Hooks                *LinkUrl       `protobuf:"bytes,8,opt,name=hooks,proto3" json:"hooks,omitempty"`
-	Forks                *LinkUrl       `protobuf:"bytes,9,opt,name=forks,proto3" json:"forks,omitempty"`
-	Downloads            *LinkUrl       `protobuf:"bytes,10,opt,name=downloads,proto3" json:"downloads,omitempty"`
-	Pullrequests         *LinkUrl       `protobuf:"bytes,11,opt,name=pullrequests,proto3" json:"pullrequests,omitempty"`
+	Watchers             *LinkUrl       `protobuf:"bytes,1,opt,name=watchers" json:"watchers,omitempty"`
+	Branches             *LinkUrl       `protobuf:"bytes,2,opt,name=branches" json:"branches,omitempty"`
+	Tags                 *LinkUrl       `protobuf:"bytes,3,opt,name=tags" json:"tags,omitempty"`
+	Commits              *LinkUrl       `protobuf:"bytes,4,opt,name=commits" json:"commits,omitempty"`
+	Clone                []*LinkAndName `protobuf:"bytes,5,rep,name=clone" json:"clone,omitempty"`
+	Self                 *LinkUrl       `protobuf:"bytes,6,opt,name=self" json:"self,omitempty"`
+	Source               *LinkUrl       `protobuf:"bytes,7,opt,name=source" json:"source,omitempty"`
+	Hooks                *LinkUrl       `protobuf:"bytes,8,opt,name=hooks" json:"hooks,omitempty"`
+	Forks                *LinkUrl       `protobuf:"bytes,9,opt,name=forks" json:"forks,omitempty"`
+	Downloads            *LinkUrl       `protobuf:"bytes,10,opt,name=downloads" json:"downloads,omitempty"`
+	Pullrequests         *LinkUrl       `protobuf:"bytes,11,opt,name=pullrequests" json:"pullrequests,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -338,11 +338,11 @@ func (m *PaginatedRepository_RepositoryValues_RepositoryLinks) GetPullrequests()
 }
 
 type PaginatedRepository_RepositoryValues_Project struct {
-	Key                  string                                                `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Type                 string                                                `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	Uuid                 string                                                `protobuf:"bytes,3,opt,name=uuid,proto3" json:"uuid,omitempty"`
-	Links                *PaginatedRepository_RepositoryValues_RepositoryLinks `protobuf:"bytes,4,opt,name=links,proto3" json:"links,omitempty"`
-	Name                 string                                                `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	Key                  string                                                `protobuf:"bytes,1,opt,name=key" json:"key,omitempty"`
+	Type                 string                                                `protobuf:"bytes,2,opt,name=type" json:"type,omitempty"`
+	Uuid                 string                                                `protobuf:"bytes,3,opt,name=uuid" json:"uuid,omitempty"`
+	Links                *PaginatedRepository_RepositoryValues_RepositoryLinks `protobuf:"bytes,4,opt,name=links" json:"links,omitempty"`
+	Name                 string                                                `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                                              `json:"-"`
 	XXX_unrecognized     []byte                                                `json:"-"`
 	XXX_sizecache        int32                                                 `json:"-"`
@@ -412,8 +412,8 @@ func (m *PaginatedRepository_RepositoryValues_Project) GetName() string {
 }
 
 type PaginatedRepository_RepositoryValues_MainBranch struct {
-	Type                 string   `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
-	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Type                 string   `protobuf:"bytes,1,opt,name=type" json:"type,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -465,11 +465,11 @@ func (m *PaginatedRepository_RepositoryValues_MainBranch) GetName() string {
 // see https://confluence.atlassian.com/bitbucket/changesets-resource-296095208.html#changesetsResource-GETanindividualchangeset
 // for a list of avilable data on changesets
 type ChangeSetV1 struct {
-	Node                 string   `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
-	RawAuthor            string   `protobuf:"bytes,2,opt,name=raw_author,json=rawAuthor,proto3" json:"raw_author,omitempty"`
-	Author               string   `protobuf:"bytes,3,opt,name=author,proto3" json:"author,omitempty"`
-	RawNode              string   `protobuf:"bytes,4,opt,name=raw_node,json=rawNode,proto3" json:"raw_node,omitempty"`
-	Branch               string   `protobuf:"bytes,5,opt,name=branch,proto3" json:"branch,omitempty"`
+	Node                 string   `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
+	RawAuthor            string   `protobuf:"bytes,2,opt,name=raw_author,json=rawAuthor" json:"raw_author,omitempty"`
+	Author               string   `protobuf:"bytes,3,opt,name=author" json:"author,omitempty"`
+	RawNode              string   `protobuf:"bytes,4,opt,name=raw_node,json=rawNode" json:"raw_node,omitempty"`
+	Branch               string   `protobuf:"bytes,5,opt,name=branch" json:"branch,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -535,10 +535,10 @@ func (m *ChangeSetV1) GetBranch() string {
 }
 
 type PaginatedRepoBranches struct {
-	Pagelen              float64   `protobuf:"fixed64,1,opt,name=pagelen,proto3" json:"pagelen,omitempty"`
-	Page                 float64   `protobuf:"fixed64,2,opt,name=page,proto3" json:"page,omitempty"`
-	Next                 string    `protobuf:"bytes,3,opt,name=next,proto3" json:"next,omitempty"`
-	Values               []*Branch `protobuf:"bytes,4,rep,name=values,proto3" json:"values,omitempty"`
+	Pagelen              float64   `protobuf:"fixed64,1,opt,name=pagelen" json:"pagelen,omitempty"`
+	Page                 float64   `protobuf:"fixed64,2,opt,name=page" json:"page,omitempty"`
+	Next                 string    `protobuf:"bytes,3,opt,name=next" json:"next,omitempty"`
+	Values               []*Branch `protobuf:"bytes,4,rep,name=values" json:"values,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
 	XXX_unrecognized     []byte    `json:"-"`
 	XXX_sizecache        int32     `json:"-"`
@@ -597,8 +597,8 @@ func (m *PaginatedRepoBranches) GetValues() []*Branch {
 }
 
 type Branch struct {
-	Name                 string         `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Target               *Branch_Target `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
+	Name                 string         `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	Target               *Branch_Target `protobuf:"bytes,2,opt,name=target" json:"target,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -643,11 +643,11 @@ func (m *Branch) GetTarget() *Branch_Target {
 }
 
 type Branch_Target struct {
-	Hash                 string               `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
-	Author               *Author              `protobuf:"bytes,2,opt,name=author,proto3" json:"author,omitempty"`
-	Date                 *timestamp.Timestamp `protobuf:"bytes,3,opt,name=date,proto3" json:"date,omitempty"`
-	Message              string               `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
-	Type                 string               `protobuf:"bytes,5,opt,name=type,proto3" json:"type,omitempty"`
+	Hash                 string               `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	Author               *Author              `protobuf:"bytes,2,opt,name=author" json:"author,omitempty"`
+	Date                 *timestamp.Timestamp `protobuf:"bytes,3,opt,name=date" json:"date,omitempty"`
+	Message              string               `protobuf:"bytes,4,opt,name=message" json:"message,omitempty"`
+	Type                 string               `protobuf:"bytes,5,opt,name=type" json:"type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
