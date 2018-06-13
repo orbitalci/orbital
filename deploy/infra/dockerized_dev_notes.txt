@@ -1,0 +1,20 @@
+If you're reading this, you want to run the ocelot infra with the docker-compose files. This process is not completely automated, but these are the minimal manual steps:
+
+TODO: The ocelot containers rely on docker for macOS specific dns functionality. Need to generalize this more
+
+* Create an external network named 'ocelot'
+* Start the following services: nsq (all of them), postgres, consul, vault (docker-compose -f <compose file> up -d)
+* Init and unseal vault, check in consul that everyone reports healthy
+* Then run the scripts/setup-cv.sh file -- Make sure your DB password is set correctly!
+
+* Go to the project root
+* Build the ocelot-builder image (make docker-base)
+* Build the docker containers (make docker-build)
+* Build and install the ocelot client (make local)
+* Start the ocelot cluster (docker-compose up -d)
+
+* Set your ADMIN_HOST=localhost, and ADMIN_PORT=10000 environment vars to point at your local ocelot instance
+
+You should be up and running. To get started, you should add creds for your vcs, and anything else you need to test with.
+
+When you start builds, you should see the docker containers started on your host docker-engine (since you mount the docker socket into all the ocelot containers)

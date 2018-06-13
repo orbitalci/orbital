@@ -10,14 +10,14 @@ import (
 )
 
 func TestGetPrWerkerTeller(t *testing.T) {
-	prwt := GetPrWerkerTeller("1", "branch")
-	if prwt.prId != "1" || prwt.destBranch != "branch" {
+	prwt := GetPrWerkerTeller(&pb.PrWerkerData{PrId:"1"}, "branch")
+	if  prwt.destBranch != "branch" {
 		t.Error("not prwt not rendered properly")
 	}
 }
 
 func TestPRWerkerTeller_TellWerker(t *testing.T) {
-	prwt := GetPrWerkerTeller("1", "master")
+	prwt := GetPrWerkerTeller(&pb.PrWerkerData{PrId:"1"}, "master")
 	sig := build_signaler.GetFakeSignaler(t, false)
 	handler := &build_signaler.DummyVcsHandler{NotFound:true}
 	err := prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)

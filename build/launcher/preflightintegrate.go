@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shankj3/go-til/log"
+	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/integrations/dockerconfig"
@@ -80,6 +80,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	return
 }
 
+// TODO: This should handle more than just kubectl. Helm, for example.
 func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder) (result *pb.Result, duration time.Duration, start time.Time) {
 	start = time.Now()
 	defer func(){duration = time.Now().Sub(start)}()
@@ -100,7 +101,7 @@ func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bl
 func handleIntegrationErr(err error, integrationName string, stage *build.StageUtil, msgs []string) *pb.Result {
 	_, ok := err.(*common.NoCreds)
 	if !ok {
-		log.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
+		ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
 		return &pb.Result{
 			Stage: stage.GetStage(),
 			Status: pb.StageResultVal_FAIL,

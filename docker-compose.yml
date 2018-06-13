@@ -3,29 +3,32 @@ services:
   # Ocelot services
   admin:
     image: ocelot-admin
+    container_name: admin
     command: /admin -log-level=debug
     build:
       context: .
       dockerfile: cmd/admin/Dockerfile
       cache_from:
         - golang:1.9-alpine
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
     logging:
       driver: "json-file"
       options:
         max-size: "200k"
         max-file: "10"
-    volumes:
-      - "/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem:/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem"
     ports:
       - "10000:10000"
     environment:
-      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-      VAULT_ADDR: http://172.18.0.1:8200
-      CONSUL_HOST: http://172.17.0.1
-      NSQLOOKUPD_IP: 172.18.0.1
-      NSQD_IP: 172.18.0.1
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_ADDR: http://vault:8200
+      CONSUL_HOST: http://consul
+      NSQLOOKUPD_IP: nsqlookupd
+      NSQD_IP: nsqd
+
   hookhandler:
     image: ocelot-hookhandler
+    container_name: hookhandler
     command: /hookhandler 
     build:
       context: .
@@ -42,41 +45,44 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
-      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-      VAULT_ADDR: http://172.18.0.1:8200
-#      CONSUL_HTTP_ADDR: http://172.18.0.1:8500
-      CONSUL_HOST: http://172.17.0.1
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_ADDR: http://vault:8200
+      CONSUL_HOST: http://consul
       LOG_LEVEL: debug
-      NSQD_IP: 172.17.0.1
-      NSQLOOKUPD_IP: 172.17.0.1
-#  werker:
-#    image: ocelot-werker
-#    command: /werker -log-level debug
-#    build:
-#      context: .
-#      dockerfile: werker/Dockerfile
-#      cache_from:
-#        - golang:1.9-alpine
-#    ports:
-#      - "9090:9090"
-#      - "9099:9099"
-#    volumes:
-#      - "/var/run/docker.sock:/var/run/docker.sock"
-#    environment:
-#      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-#      VAULT_ADDR: http://172.18.0.1:8200
-#      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
-#      CONSUL_HOST: 172.18.0.1
-#      NSQD_IP: 172.17.0.1
-#      NSQLOOKUPD_IP: 172.17.0.1
-#      REGISTER_IP: ec2-34-212-13-136.us-west-2.compute.amazonaws.com
-#    logging:
-#      driver: "json-file"
-#      options:
-#        max-size: "200k"
-#        max-file: "10"
+      NSQD_IP: nsqd
+      NSQLOOKUPD_IP: nsqlookupd
+
+  werker:
+    image: ocelot-werker
+    container_name: werker
+    command: /werker -log-level debug
+    build:
+      context: .
+      dockerfile: cmd/werker/Dockerfile
+      cache_from:
+        - golang:1.9-alpine
+    ports:
+      - "9090:9090"
+      - "9099:9099"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_ADDR: http://vault:8200
+      CONSUL_HTTP_ADDR: http://consul:8500
+      CONSUL_HOST: consul
+      NSQD_IP: nsdq
+      NSQLOOKUPD_IP: nsqlookupd
+      REGISTER_IP: 10.1.62.38
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
   poller:
     image: ocelot-poller
+    container_name: poller
     build:
       context: .
       dockerfile: cmd/poller/Dockerfile
@@ -85,15 +91,19 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
-      VAULT_TOKEN: 60fa5ed4-2e0c-cf78-b5db-1e6f495f947b
-      VAULT_ADDR: http://172.18.0.1:8200
-      CONSUL_HTTP_ADDR: http://172.17.0.1:8500
-      CONSUL_HOST: 172.18.0.1
-      NSQD_IP: 172.17.0.1
-      NSQLOOKUPD_IP: 172.17.0.1
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_ADDR: http://vault:8200
+      CONSUL_HTTP_ADDR: http://consul:8500
+      CONSUL_HOST: consul
+      NSQD_IP: nsqd
+      NSQLOOKUPD_IP: nsqlookupd
     logging:
       driver: "json-file"
       options:
         max-size: "200k"
         max-file: "10"
 
+networks:
+  default:
+    external:
+      name: ocelot

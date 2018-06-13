@@ -1,6 +1,6 @@
 backend "consul" {
-  address = "http://172.18.0.1:8500"
-  advertise_addr = "http://127.0.0.1:8200"
+  address = "http://consul:8500"
+  advertise_addr = "http://consul:8200"
   path = "vault"
   scheme = "http"
 }

@@ -120,11 +120,11 @@ message K8SCreds {
     string acctName = 1;
     // k8scontents is the contents of the kubeconfig file
     string k8sContents = 2;
-    // identifier in K8s creds is currently irrelevant, as there can only be one per account
+    // identifier in K8s creds, typically the name of the cluster, as expected use case is one config per cluster
     string identifier = 3;
     // @inject_tag: yaml:"subType"
     // there is currently only one subtype for k8SCreds, and it is KUBECONF
-    SubCredType subType = 5;
+    SubCredType subType = 6;
 
 }
 

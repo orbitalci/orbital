@@ -1548,7 +1548,7 @@
         },
         "identifier": {
           "type": "string",
-          "title": "identifier in K8s creds is currently irrelevant, as there can only be one per account"
+          "title": "identifier in K8s creds, typically the name of the cluster, as expected use case is one config per cluster"
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
