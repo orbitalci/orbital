@@ -21,7 +21,7 @@ type guideOcelotServer struct {
 	RepoValidator  *cred.RepoValidator
 	OcyValidator   *build.OcelotValidator
 	Storage        storage.OcelotStorage
-	Producer       *nsqpb.PbProduce
+	Producer       nsqpb.Producer
 }
 
 // for checking if the server is reachable
