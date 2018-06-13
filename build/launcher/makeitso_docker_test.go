@@ -107,6 +107,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	defer cleanupFunc(t)
 	launch.infochan = make(chan []byte, 1000)
+	launch.integrations = getIntegrationList()
 	result, _, _ := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, dckr)
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Log(result.Messages)
