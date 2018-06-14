@@ -11,64 +11,11 @@ import (
 	"github.com/shankj3/go-til/nsqpb"
 	ocevault "github.com/shankj3/go-til/vault"
 	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common"
-	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 )
 
-//QueueAndStore will create a werker task and put it on the queue, then update database
-// a *build.DoNotQueue error may be returned, which the caller should know to interpret as this was not stored, and it was not queued, because IT IS NOT WORTHY (ie random branch, commit says skip, w/e)
-func QueueAndStore(hash, branch, accountRepo, bbToken string,
-	remoteConfig cred.CVRemoteConfig,
-	buildConf *pb.BuildConfig,
-	validator *build.OcelotValidator,
-	producer *nsqpb.PbProduce,
-	store storage.OcelotStorage) error {
-	// before anything, check to see if this branch should be built at all. if it shouldn't wtf are we doing
-	if queueError := validator.CheckQueueability(buildConf, branch); queueError != nil {
-		log.IncludeErrField(queueError).Info("not queuing! this is fine, just doesn't fit requirements")
-		return queueError
-	}
-	log.Log().Debug("Storing initial results in db")
-	account, repo, err := common.GetAcctRepo(accountRepo)
-	if err != nil {
-		return err
-	}
-	vaulty := remoteConfig.GetVault()
-	consul := remoteConfig.GetConsul()
-	alreadyBuilding, err := build.CheckBuildInConsul(consul, hash)
-	if alreadyBuilding {
-		log.Log().Info("kindly refusing to add to queue because this hash is already building")
-		return errors.New("this hash is already building in ocelot, therefore not adding to queue")
-	}
-
-	id, err := storeSummaryToDb(store, hash, repo, branch, account)
-	if err != nil {
-		return err
-	}
-
-	sr := getSignalerStageResult(id)
-	// stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
-	if err = ValidateAndQueue(buildConf, branch, validator, vaulty, producer, sr, id, hash, accountRepo, bbToken); err != nil {
-		// we do want to add a runtime here
-		err = store.StoreFailedValidation(id)
-		if err != nil {
-			log.IncludeErrField(err).Error("unable to update summary!")
-		}
-		// we dont' want to return here, cuz then it doesn't store
-		// unless its supposed to be saving somewhere else?
-		// return err
-	} else {
-		storeQueued(store, id)
-	}
-	if err := storeStageToDb(store, sr); err != nil {
-		log.IncludeErrField(err).Error("unable to add hookhandler stage details")
-		return err
-	}
-	return nil
-}
 
 func storeStageToDb(store storage.BuildStage, stageResult *models.StageResult) error {
 	if err := store.AddStageDetail(stageResult); err != nil {
