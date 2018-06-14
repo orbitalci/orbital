@@ -22,7 +22,7 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
-
+	activeBuilds.Inc()
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
 	defer w.BuildValet.MakeItSoDed(finish)
@@ -30,6 +30,8 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	defer func() {
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
+		ocelog.Log().Info("decrementing active builds")
+		activeBuilds.Dec()
 	}()
 	// set up notifications to be executed on build completion
 	defer func(){
