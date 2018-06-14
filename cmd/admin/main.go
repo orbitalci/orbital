@@ -46,6 +46,9 @@ func main() {
 	} else {
 		security = secure_grpc.NewLeSecure()
 	}
-	admin.Start(configInstance, security, serverRunsAt, port, gatewayPort)
-
+	grpcServer, listener, err := admin.GetGrpcServer(configInstance, security, serverRunsAt, port, gatewayPort)
+	if err != nil {
+		ocelog.IncludeErrField(err).Fatal("fatal")
+	}
+	admin.Start(grpcServer, listener)
 }
