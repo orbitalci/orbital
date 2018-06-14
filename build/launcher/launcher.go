@@ -59,4 +59,16 @@ var (
 			Help: "Number of builds currently in progress",
 		},
 	)
+	buildDurationHist = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "build_duration_seconds",
+			Help:    "Build Duration distribution",
+			Buckets: []float64{1, 10, 30, 60, 120, 200},
+		},
+		[]string{"werker_type"},
+	)
 )
+
+func init(){
+	prometheus.MustRegister(activeBuilds, buildDurationHist)
+}

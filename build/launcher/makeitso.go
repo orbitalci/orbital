@@ -22,6 +22,7 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
+	processStart := time.Now()
 	activeBuilds.Inc()
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
@@ -32,6 +33,8 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 		done <- 1
 		ocelog.Log().Info("decrementing active builds")
 		activeBuilds.Dec()
+		// add duration to histogram
+		buildDurationHist.WithLabelValues(w.WerkerType.String()).Observe(time.Since(processStart).Seconds())
 	}()
 	// set up notifications to be executed on build completion
 	defer func(){
