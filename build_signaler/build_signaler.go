@@ -105,17 +105,6 @@ func GetConfig(repoFullName string, checkoutCommit string, deserializer *deseria
 	//var token string
 
 	if vcsHandler == nil {
-		//cfg, err1 := cred.GetVcsCreds(store, repoFullName, remoteConfig)
-		//if err1 != nil {
-		//	log.IncludeErrField(err1).Error()
-		//	return nil, "", err1
-		//}
-		//var err error
-		//log.Log().WithField("identifier", cfg.GetIdentifier()).Infof("trying bitbucket config")
-		//bbHandler, token, err = bitbucket.GetBitbucketClient(cfg)
-		//if err != nil {
-		//	log.IncludeErrField(err).Error()
-		//	return nil, "", err
 		return nil, errors.New("vcs handler cannot be nul")
 	}
 
