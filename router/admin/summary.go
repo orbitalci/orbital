@@ -2,7 +2,6 @@ package admin
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
@@ -44,7 +43,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *pb.Re
 		}
 		summaries.Sums = append(summaries.Sums, summary)
 	}
-	fmt.Println(summaries)
+	//fmt.Println(summaries)
 	return summaries, nil
 
 }

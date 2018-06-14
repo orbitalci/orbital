@@ -52,31 +52,64 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	return err
 }
 
-//CheckQueueability will check to see if the the branch given is in the BuildConfig's allowed branches list. This should be separate from the validate function, as the validate failure should be stored in the database. A queue validate failure should not be.
-func (ov *OcelotValidator) CheckQueueability(buildConf *pb.BuildConfig, branch string) error {
+//ValidateViability will check:
+//  - the branch given is a regex match for one of the buildBranches
+//  - the commits in commits don't have any messages containing special skip commands ([skip ci]/[ci skip])
+// This can be overriden with force
+// If the validation fails, a NotViable error will be returned. This means that you should not queue the build or track it. its unworthy.
+func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []string, commits []*pb.Commit, force bool) error {
+	// first check if the force flag has been set, because can just return immediately if so
+	if force {
+		return nil
+	}
+	// next, check if branch has a regex match with any of the buildable branches
+	branchOk, err := BranchRegexOk(branch, buildBranches)
+	if err != nil {
+		return err
+	}
+	if !branchOk {
+		return NoViability(fmt.Sprintf("branch %s not in the acceptable branches list: %s", branch, strings.Join(buildBranches, ", ")))
+	}
+	if commits == nil {
+		return nil
+	}
+	// then, see if the commit list contains any skip messages
+	for _, commit := range commits {
+		for _, skipmsg := range models.SkipMsgs {
+			if strings.Contains(commit.Message, skipmsg) {
+				return NoViability(fmt.Sprintf("build will not be queued because one of %s was found in the commit with hash %s. the full commit message is %s", strings.Join(models.SkipMsgs, " | "), commit.Hash, commit.Message))
+			}
+		}
+	}
+	return nil
+}
+
+func (ov *OcelotValidator) ValidateBranchAgainstConf(buildConf *pb.BuildConfig, branch string) error {
 	branchOk, err := BranchRegexOk(branch, buildConf.Branches)
 	if err != nil {
 		return err
 	}
 	if !branchOk {
-		return DontQueue(fmt.Sprintf("branch %s not in the acceptable branches list: %s", branch, strings.Join(buildConf.Branches, ", ")))
+		return NoViability(fmt.Sprintf("branch %s not in the acceptable branches list: %s", branch, strings.Join(buildConf.Branches, ", ")))
 	}
 	return nil
 }
 
-// DoNotQueue is an error that means that the build config should not be queued for a build
-type DoNotQueue struct {
+
+// NotViable is an error that means that this commit should not be queued for a build
+type NotViable struct {
 	branch string
 	commits []string
 	msg string
 }
 
-func (dq *DoNotQueue) Error() string {
+func (dq *NotViable) Error() string {
 	return dq.msg
 }
 
-func DontQueue(msg string) *DoNotQueue {
-	return &DoNotQueue{msg:msg}
+// NoViability will return a NotViable error, signaling it won't be queued and shouldn't be stored
+func NoViability(msg string) *NotViable {
+	return &NotViable{msg:msg}
 }
 
 

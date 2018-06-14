@@ -24,7 +24,7 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type Request struct {
-	Hash                 string   `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
+	Hash                 string   `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -62,7 +62,7 @@ func (m *Request) GetHash() string {
 }
 
 type Response struct {
-	OutputLine           string   `protobuf:"bytes,1,opt,name=outputLine,proto3" json:"outputLine,omitempty"`
+	OutputLine           string   `protobuf:"bytes,1,opt,name=outputLine" json:"outputLine,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

@@ -90,6 +90,7 @@ message Commit {
 // /2.0/repositories/{username}/{repo_slug}/commits
 message Commits {
     repeated Commit values = 1;
+    string next = 2;
 }
 
 // bitbucket api 1.0 

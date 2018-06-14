@@ -11,3 +11,9 @@ message BranchHistory {
     google.protobuf.Timestamp lastCommitTime = 3;
 }
 
+
+message Commit {
+    string hash = 1;
+    string message = 2;
+    google.protobuf.Timestamp date = 3;
+}

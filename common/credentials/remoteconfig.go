@@ -74,8 +74,8 @@ type HealthyMaintainer interface {
 //CVRemoteConfig is an abstraction for retrieving/setting creds for ocelot
 //currently uses consul + vault
 type CVRemoteConfig interface {
-	GetConsul() *consul.Consulet
-	SetConsul(consul *consul.Consulet)
+	GetConsul() consul.Consuletty
+	SetConsul(consul consul.Consuletty)
 	GetVault() ocevault.Vaulty
 	SetVault(vault ocevault.Vaulty)
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
@@ -103,16 +103,16 @@ type InsecureCredStorage interface {
 //}
 
 type RemoteConfig struct {
-	Consul *consul.Consulet
+	Consul consul.Consuletty
 	Vault  ocevault.Vaulty
 }
 
-func (rc *RemoteConfig) GetConsul() *consul.Consulet {
+func (rc *RemoteConfig) GetConsul() consul.Consuletty {
 	return rc.Consul
 }
 
-func (rc *RemoteConfig) SetConsul(consul *consul.Consulet) {
-	rc.Consul = consul
+func (rc *RemoteConfig) SetConsul(consl consul.Consuletty) {
+	rc.Consul = consl
 }
 
 func (rc *RemoteConfig) GetVault() ocevault.Vaulty {
@@ -133,7 +133,7 @@ func (rc *RemoteConfig) Healthy() bool {
 		}
 	}
 	rc.Consul.GetKeyValue("here")
-	if !vaultConnected || !rc.Consul.Connected {
+	if !vaultConnected || !rc.Consul.IsConnected() {
 		ocelog.Log().Error("remoteConfig is not healthy")
 		return false
 	}
@@ -149,7 +149,7 @@ func (rc *RemoteConfig) Reconnect() error {
 		}
 	}
 	_, err = rc.Consul.GetKeyValue("here")
-	if !rc.Consul.Connected {
+	if !rc.Consul.IsConnected() {
 		return err
 	}
 	return nil
@@ -402,7 +402,7 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 		return storage.NewFileBuildStorage(creds.Location), nil
 	case storage.Postgres:
 		store := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
-		ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+		//ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
 		return store, store.Connect()
 	default:
 		return nil, errors.New("unknown type")

@@ -170,7 +170,8 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 
 }
 
-func TestOcelotValidator_CheckQueueability(t *testing.T) {
+func TestValidateBranchAgainstConf(t *testing.T) {
+	ocyv := &OcelotValidator{}
 	buildConf := &pb.BuildConfig{
 			Image: "busybox:latest",
 			BuildTool: "w/e",
@@ -179,18 +180,43 @@ func TestOcelotValidator_CheckQueueability(t *testing.T) {
 				{Name: "hi", Script: []string{"echo sup"}},
 			},
 	}
-	validateor := GetOcelotValidator()
-	err := validateor.CheckQueueability(buildConf, "rc_1234")
+	err := ocyv.ValidateBranchAgainstConf(buildConf, "rc_1234")
 	if err != nil {
 		t.Error("should be queuable, error is: " + err.Error())
 	}
-	err = validateor.CheckQueueability(buildConf, "r1_1234")
+	err = ocyv.ValidateBranchAgainstConf(buildConf, "r1_1234")
 	if err == nil {
 		t.Error("should not be quueable, error is " + err.Error())
 	}
 	if err != nil {
-		if _, ok := err.(*DoNotQueue); !ok {
+		if _, ok := err.(*NotViable); !ok {
 			t.Error("should be a do not queue error, instead the error is: " + err.Error())
 		}
+	}
+}
+
+
+func TestOcelotValidator_ValidateViability(t *testing.T) {
+	valid8r := GetOcelotValidator()
+	if err := valid8r.ValidateViability("branch", []string{"bra.*h", "banana"}, []*pb.Commit{}, false); err != nil {
+		t.Error(err)
+	}
+	if err := valid8r.ValidateViability("branch", []string{"branc", "banna"}, []*pb.Commit{}, false); err == nil {
+		t.Error("should have failed validation")
+	} else if err.Error() != "branch branch not in the acceptable branches list: branc, banna" {
+		t.Error(test.StrFormatErrors("error message", "branch branch not in the acceptable branches list: branc, banna", err.Error()))
+	}
+
+	expectedErr := "build will not be queued because one of [skip ci] | [ci skip] was found in the commit with hash abcd. the full commit message is its time to be skipped [ci skip]"
+	if err := valid8r.ValidateViability("branch", []string{"branch"}, []*pb.Commit{{Message: "its time to be skipped [ci skip]", Hash:"abcd"}}, false); err == nil {
+		t.Error("should have failed commit validation - msg has [ci skip]")
+	} else if err.Error() != expectedErr {
+		t.Error(test.StrFormatErrors("error message", expectedErr, err.Error()))
+	}
+	if err := valid8r.ValidateViability("bran", []string{"brain"}, []*pb.Commit{}, true); err != nil {
+		t.Error("build was forced, should not return error")
+	}
+	if err := valid8r.ValidateViability("bran", []string{"bran"}, nil, false); err != nil {
+		t.Error("branch valid, commits list is nil. this should pass.")
 	}
 }

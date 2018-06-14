@@ -1134,28 +1134,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "cron",
-            "description": "cron is the cron string that will determine how often a check for changes should occur.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "branches",
-            "description": "branches tells ocelot which branches should be checked for changes.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "lastCronTime",
-            "description": "internal use only.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
           }
         ],
         "tags": [
@@ -1330,6 +1308,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "force",
+            "description": "force is a flag that says to build even if it doesn't match the acceptable branches list and even if there is a \"skip\" ci message.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1429,6 +1415,11 @@
         "branch": {
           "type": "string",
           "description": "branch is the branch that corresponds to the git hash. if the git hash has never been built by ocelot, this field is required."
+        },
+        "force": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "force is a flag that says to build even if it doesn't match the acceptable branches list and even if there is a \"skip\" ci message"
         }
       }
     },
