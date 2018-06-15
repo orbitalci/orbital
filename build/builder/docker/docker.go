@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/vault"
 	"github.com/shankj3/ocelot/models"
@@ -21,6 +22,17 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
+
+var (
+	dockerErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "docker_api_errors_total",
+		Help: "errors returned from attempting to build with the api",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(dockerErrors)
+}
 
 type Docker struct {
 	Log          io.ReadCloser
@@ -60,6 +72,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	d.DockerClient = cli
 
 	if err != nil {
+		dockerErrors.Inc()
 		ocelog.Log().Debug("returning failed stage because could not create docker env client")
 		return &pb.Result{
 			Stage:  su.GetStage(),
@@ -71,6 +84,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 
 	out, err := dockrhelper.RobustImagePull(imageName)
 	if err != nil {
+		dockerErrors.Inc()
 		return &pb.Result{
 			Stage:    su.GetStage(),
 			Status:   pb.StageResultVal_FAIL,
@@ -110,6 +124,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	resp, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
 
 	if err != nil {
+		dockerErrors.Inc()
 		ocelog.IncludeErrField(err).Error("returning failed because could not create container")
 		return &pb.Result{
 			Stage:    su.GetStage(),
@@ -135,6 +150,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	d.ContainerId = resp.ID
 	ocelog.Log().Debug("starting up container")
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		dockerErrors.Inc()
 		ocelog.IncludeErrField(err).Error("returning failed because could not start container")
 		return &pb.Result{
 			Stage:    su.GetStage(),
@@ -154,6 +170,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	})
 
 	if err != nil {
+		dockerErrors.Inc()
 		ocelog.IncludeErrField(err).Error("returning failed setup because could not get logs of container")
 		return &pb.Result{
 			Stage:    su.GetStage(),
@@ -244,6 +261,7 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 		Cmd:          cmds,
 	})
 	if err != nil {
+		dockerErrors.Inc()
 		return &pb.Result{
 			Stage:    currStage,
 			Status:   pb.StageResultVal_FAIL,
@@ -273,6 +291,7 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 		if err == nil {
 			errStr = "exit code was not 0"
 		} else {
+			dockerErrors.Inc()
 			errStr = err.Error()
 		}
 

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"github.com/namsral/flag"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shankj3/go-til/deserialize"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
@@ -67,6 +68,7 @@ func startServer(ctx *hh.HookHandlerContext, port string) {
 
 	// handleBBevent can take push/pull/ w/e
 	muxi.HandleFunc("/bitbucket", ctx.HandleBBEvent).Methods("POST")
+	muxi.Handle("/metrics", promhttp.Handler())
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)
 }

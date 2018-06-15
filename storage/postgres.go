@@ -10,12 +10,41 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
+
+var (
+	activeRequests = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "db_active_requests",
+		Help: "number of current db requests",
+	})
+	dbDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "db_transaction_duration",
+		Help: "database execution times",
+		Buckets: prometheus.LinearBuckets(0, 0.25, 15),
+		// table: build_summary, etc
+		// interaction_type: create | read | update | delete
+	}, []string{"table", "interaction_type"})
+)
+
+func init() {
+	prometheus.MustRegister(activeRequests, dbDuration)
+}
+
+func startTransaction() time.Time {
+	activeRequests.Inc()
+	return time.Now()
+}
+
+func finishTransaction(start time.Time, table, crud string) {
+	activeRequests.Dec()
+	dbDuration.WithLabelValues(table, crud).Observe(time.Since(start).Seconds())
+}
 
 func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc string) *PostgresStorage {
 	pg := &PostgresStorage{
@@ -97,6 +126,8 @@ branch    | character varying
 // AddSumStart updates the build_summary table with the initial information that you get from a webhook
 // returning the build id that postgres generates
 func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "create")
 	if err := p.Connect(); err != nil {
 		return 0, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -116,6 +147,8 @@ func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, 
 
 // SetQueueTime will update the QueueTime in the database to the current time
 func (p *PostgresStorage) SetQueueTime(id int64) error {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "update")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -161,11 +194,15 @@ func (p *PostgresStorage) setStartTime(id int64, stime time.Time) error {
 }
 
 func (p *PostgresStorage) StartBuild(id int64) error {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "update")
 	return p.setStartTime(id, time.Now())
 }
 
 // UpdateSum updates the remaining fields in the build_summary table
 func (p *PostgresStorage) UpdateSum(failed bool, duration float64, id int64) error {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "update")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -184,6 +221,8 @@ func (p *PostgresStorage) UpdateSum(failed bool, duration float64, id int64) err
 }
 
 func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "read")
 	var sums []models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
@@ -220,6 +259,8 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 //RetrieveHashStartsWith will return a list of all hashes starting with the partial string in db
 //** THIS WILL ONLY RETURN HASH, ACCOUNT, AND REPO **
 func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "read")
 	var hashes []models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return hashes, errors.New("could not connect to postgres: " + err.Error())
@@ -253,6 +294,8 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]model
 
 // RetrieveLatestSum will return the latest entry of build_summary where hash starts with `gitHash`
 func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.BuildSummary, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "read")
 	var sum models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sum, errors.New("could not connect to postgres: " + err.Error())
@@ -274,6 +317,8 @@ func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.Build
 
 // RetrieveSumByBuildId will return a build summary based on build id
 func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "read")
 	var sum models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sum, errors.New("could not connect to postgres: " + err.Error())
@@ -295,6 +340,8 @@ func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSumma
 
 // RetrieveLastFewSums will return <limit> number of summaries that correlate with a repo and account.
 func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "read")
 	var sums []models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
@@ -327,6 +374,8 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 
 // RetrieveAcctRepo will return to you a list of accountname + repositories that matches starting with partialRepo
 func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "read")
 	var sums []models.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
@@ -369,6 +418,8 @@ func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSu
 
 //AddOut adds build output text to build_output table
 func (p *PostgresStorage) AddOut(output *models.BuildOutput) error {
+	start := startTransaction()
+	defer finishTransaction(start, "build_output", "create")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -391,6 +442,8 @@ func (p *PostgresStorage) AddOut(output *models.BuildOutput) error {
 }
 
 func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_output", "read")
 	out := models.BuildOutput{}
 	if err := p.Connect(); err != nil {
 		return out, errors.New("could not connect to postgres: " + err.Error())
@@ -411,6 +464,8 @@ func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error)
 
 // RetrieveLastOutByHash will return the last output text that correlates with the gitHash
 func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOutput, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_output", "read")
 	queryStr := "select build_id, output, build_output.id from build_output " +
 		"join build_summary on build_output.build_id = build_summary.id and build_summary.hash = $1 " +
 		"order by build_summary.queuetime desc limit 1;"
@@ -433,6 +488,8 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 // 		stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
 
 func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error {
+	start := startTransaction()
+	defer finishTransaction(start, "build_stage_details", "create")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -463,6 +520,8 @@ func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error 
 
 // Retrieve StageDetail will return all stages matching build id
 func (p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_stage_details", "read")
 	var stages []models.StageResult
 	queryStr := "select id, build_id, error, starttime, runtime, status, messages, stage from build_stage_details where build_id = $1 order by build_id asc;"
 	if err := p.Connect(); err != nil {
@@ -498,6 +557,8 @@ func (p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResu
 }
 
 func (p *PostgresStorage) InsertPoll(account string, repo string, cronString string, branches string) (err error) {
+	start := startTransaction()
+	defer finishTransaction(start, "poll_table", "create")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -516,6 +577,8 @@ func (p *PostgresStorage) InsertPoll(account string, repo string, cronString str
 }
 
 func (p *PostgresStorage) UpdatePoll(account string, repo string, cronString string, branches string) (err error) {
+	start := startTransaction()
+	defer finishTransaction(start, "poll_table", "update")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -534,6 +597,8 @@ func (p *PostgresStorage) UpdatePoll(account string, repo string, cronString str
 }
 
 func (p *PostgresStorage) SetLastData(account string, repo string, lasthashes map[string]string) (err error) {
+	start := startTransaction()
+	defer finishTransaction(start, "poll_table", "update")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -557,6 +622,8 @@ func (p *PostgresStorage) SetLastData(account string, repo string, lasthashes ma
 }
 
 func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error) {
+	start := startTransaction()
+	defer finishTransaction(start, "poll_table", "read")
 	if err := p.Connect(); err != nil {
 
 		return time.Now(), nil, errors.New("could not connect to postgres: " + err.Error())
@@ -594,6 +661,8 @@ func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, 
 }
 
 func (p *PostgresStorage) PollExists(account string, repo string) (bool, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "poll_table", "read")
 	if err := p.Connect(); err != nil {
 		return false, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -617,6 +686,8 @@ func (p *PostgresStorage) PollExists(account string, repo string) (bool, error) 
 }
 
 func (p *PostgresStorage) DeletePoll(account string, repo string) error {
+	start := startTransaction()
+	defer finishTransaction(start, "poll_table", "delete")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -635,6 +706,8 @@ func (p *PostgresStorage) DeletePoll(account string, repo string) error {
 }
 
 func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "poll_table", "read")
 	var polls []*models.PollRequest
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
@@ -682,6 +755,8 @@ func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
 //InsertCred will insert an ocyCredder object into the credentials table after calling its ValidateForInsert method.
 // if the OcyCredder fails validation, it will return a *models.ValidationErr
 func (p *PostgresStorage) InsertCred(credder pb.OcyCredder, overwriteOk bool) error {
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "create")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -705,6 +780,8 @@ func (p *PostgresStorage) InsertCred(credder pb.OcyCredder, overwriteOk bool) er
 }
 
 func (p *PostgresStorage) UpdateCred(credder pb.OcyCredder) error {
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "update")
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -727,6 +804,8 @@ func (p *PostgresStorage) UpdateCred(credder pb.OcyCredder) error {
 }
 
 func (p *PostgresStorage) CredExists(credder pb.OcyCredder) (bool, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "read")
 	if err := p.Connect(); err != nil {
 		return false, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -750,6 +829,8 @@ func (p *PostgresStorage) CredExists(credder pb.OcyCredder) (bool, error) {
 }
 
 func (p *PostgresStorage) RetrieveAllCreds() ([]pb.OcyCredder, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "read")
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -791,6 +872,8 @@ func (p *PostgresStorage) RetrieveAllCreds() ([]pb.OcyCredder, error) {
 }
 
 func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "read")
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -836,6 +919,8 @@ func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, 
 }
 
 func (p *PostgresStorage) RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "read")
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -864,6 +949,8 @@ func (p *PostgresStorage) RetrieveCred(subCredType pb.SubCredType, identifier, a
 }
 
 func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "read")
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -906,6 +993,8 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 }
 
 func (p *PostgresStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "read")
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}

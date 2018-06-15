@@ -5,12 +5,26 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/shankj3/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"strconv"
 	"time"
 )
+
+var (
+	streamErrors = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "werker_stream_errors_total",
+			Help: "streaming errors from werker streaming build logs",
+		},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(streamErrors)
+}
 
 type StreamCancelled struct {
 	message string
@@ -43,6 +57,7 @@ func StreamFromArray(array StreamArray, stream Streamable, log Loggy) (err error
 			continue
 		}
 		if index > numLines {
+			streamErrors.Inc()
 			log.Error(fmt.Sprintf("WOAH THERE. SOMETHING IS STUPID WRONG. Index: %d, numLines: %d", index, numLines))
 			continue
 		}
@@ -51,6 +66,7 @@ func StreamFromArray(array StreamArray, stream Streamable, log Loggy) (err error
 		index, err = iterateOverByteArray(array, stream, index)
 		if err != nil {
 			if _, ok := err.(*StreamCancelled); !ok {
+				streamErrors.Inc()
 				log.Error("Error! ", err.Error(), " arraylength: ", strconv.Itoa(len(array.GetData())))
 			} else {
 				// if the stream was cancelled by the client, that's alright. we don't care about that.
