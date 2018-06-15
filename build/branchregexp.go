@@ -10,7 +10,7 @@ import (
 
 var (
 	regexFailure = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "regex_failures",
+		Name: "ocelot_regex_failures",
 		Help: "failures by regex parser in validating branches",
 	})
 )

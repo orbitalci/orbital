@@ -17,13 +17,13 @@ import (
 var (
 	activeBuilds = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "active_builds",
+			Name: "ocelot_active_builds",
 			Help: "Number of builds currently in progress",
 		},
 	)
 	buildDurationHist = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "build_duration_seconds",
+			Name:    "ocelot_build_duration_seconds",
 			Help:    "Build Duration distribution",
 			Buckets: []float64{1, 10, 30, 60, 120, 200},
 		},

@@ -25,7 +25,7 @@ import (
 
 var (
 	dockerErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "docker_api_errors_total",
+		Name: "ocelot_docker_api_errors_total",
 		Help: "errors returned from attempting to build with the api",
 	})
 )

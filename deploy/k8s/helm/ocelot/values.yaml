@@ -64,6 +64,16 @@ admin:
      - secretName: metaverse-secret
        hosts:
          - ocelot-admin.metaverse.l11.com
+  grpcIngress:
+    enabled: false
+    host: ocelot-admin-grpc.metaverse.l11.com
+    tlsSecret: metaverse-secret
+
+
+
+#  enabled: false
+#    host: ocelot-admin-grpc.metaverse.l11.com
+#    tlsSecret: metaverse-secret
 
 
   resources: {}

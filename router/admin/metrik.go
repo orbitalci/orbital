@@ -8,12 +8,12 @@ import (
 
 var (
 	requestProcessTime = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "admin_request_proc_time",
+		Name: "ocelot_admin_request_proc_time",
 		Help: "duration of requests send to admin",
 		Buckets: prometheus.LinearBuckets(0, 0.25, 15),
 	})
 	activeRequests = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "admin_active_requests",
+		Name: "ocelot_admin_active_requests",
 		Help: "number of active requests admin is serving",
 	})
 )

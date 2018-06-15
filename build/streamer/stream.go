@@ -16,7 +16,7 @@ import (
 var (
 	streamErrors = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: "werker_stream_errors_total",
+			Name: "ocelot_werker_stream_errors_total",
 			Help: "streaming errors from werker streaming build logs",
 		},
 	)

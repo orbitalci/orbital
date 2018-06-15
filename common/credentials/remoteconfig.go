@@ -17,7 +17,7 @@ import (
 var (
 	failedCredRetrieval = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name:"failed_cred",
+			Name:"ocelot_failed_cred",
 			Help: "number of times ocelot is unable to interact with cred store",
 		},
 		// interaction_type: create | read | update | delete

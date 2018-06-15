@@ -20,11 +20,11 @@ const TimeFormat = "2006-01-02 15:04:05"
 
 var (
 	activeRequests = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "db_active_requests",
+		Name: "ocelot_db_active_requests",
 		Help: "number of current db requests",
 	})
 	dbDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "db_transaction_duration",
+		Name: "ocelot_db_transaction_duration",
 		Help: "database execution times",
 		Buckets: prometheus.LinearBuckets(0, 0.25, 15),
 		// table: build_summary, etc

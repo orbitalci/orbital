@@ -22,7 +22,7 @@ import (
 
 var (
 	recievedMsgs = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "received_messages",
+		Name: "ocelot_received_messages",
 		Help: "number of messages received by node",
 	})
 )

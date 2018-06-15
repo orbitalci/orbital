@@ -18,7 +18,7 @@ import (
 
 var (
 	hookRecieves = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "recieved_hooks",
+		Name: "ocelot_recieved_hooks",
 		Help: "hooks recieved and processed by hookhandler",
 		// vcs_type: bitbucket | github | etc
 		// event_type: pullrequest | push

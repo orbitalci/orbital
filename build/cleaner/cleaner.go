@@ -33,7 +33,7 @@ func GetNewCleaner(werkerType models.WerkType, facts *models.SSHFacts) Cleaner {
 
 var (
 	failedCleaning = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "build_clean_failed",
+		Name: "ocelot_build_clean_failed",
 		Help: "post build clean failures",
 	}, []string{"type"})
 )
