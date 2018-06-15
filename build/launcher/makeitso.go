@@ -29,10 +29,28 @@ var (
 		},
 		[]string{"werker_type"},
 	)
+	buildCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "ocelot_build_count_total",
+			Help: "number of ocelot builds executed",
+		},
+	)
 )
 
 func init(){
-	prometheus.MustRegister(activeBuilds, buildDurationHist)
+	prometheus.MustRegister(activeBuilds, buildDurationHist, buildCount)
+}
+
+func startBuild() time.Time {
+	time.Now()
+	buildCount.Inc()
+	activeBuilds.Inc()
+	return time.Now()
+}
+
+func endBuild(werkType string, start time.Time) {
+	activeBuilds.Dec()
+	buildDurationHist.WithLabelValues(werkType).Observe(time.Since(start).Seconds())
 }
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
@@ -44,8 +62,7 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
-	processStart := time.Now()
-	activeBuilds.Inc()
+	start := time.Now()
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
 	defer w.BuildValet.MakeItSoDed(finish)
@@ -53,10 +70,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	defer func() {
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
-		ocelog.Log().Info("decrementing active builds")
-		activeBuilds.Dec()
-		// add duration to histogram
-		buildDurationHist.WithLabelValues(w.WerkerType.String()).Observe(time.Since(processStart).Seconds())
+		endBuild(w.WerkerType.String(), start)
 	}()
 	// set up notifications to be executed on build completion
 	defer func(){
