@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/valet"
@@ -12,6 +13,27 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 )
+
+var (
+	activeBuilds = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "active_builds",
+			Help: "Number of builds currently in progress",
+		},
+	)
+	buildDurationHist = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "build_duration_seconds",
+			Help:    "Build Duration distribution",
+			Buckets: []float64{1, 10, 30, 60, 120, 200},
+		},
+		[]string{"werker_type"},
+	)
+)
+
+func init(){
+	prometheus.MustRegister(activeBuilds, buildDurationHist)
+}
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
 func (w *launcher) WatchForResults(hash string, dbId int64) {

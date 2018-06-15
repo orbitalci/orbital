@@ -31,6 +31,7 @@ func (d *DockerCleaner) Cleanup(ctx context.Context, id string, logout chan []by
 	log.Log().WithField("dockerId", id).Info("removing")
 	if err := cli.ContainerRemove(ctx, id, types.ContainerRemoveOptions{}); err != nil {
 		log.IncludeErrField(err).WithField("dockerId", id).Error("could not rm container")
+		failedCleaning.WithLabelValues("docker").Inc()
 		return err
 	} else {
 		log.Log().WithField("dockerId", id).Info("removed container")

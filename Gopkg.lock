@@ -221,6 +221,12 @@
   version = "v1.2.0"
 
 [[projects]]
+  name = "github.com/grpc-ecosystem/go-grpc-prometheus"
+  packages = ["."]
+  revision = "c225b8c3b01faf2899099b768856a9e916e5087b"
+  version = "v1.2.0"
+
+[[projects]]
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
     "protoc-gen-swagger/options",
@@ -791,6 +797,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "270ecdd9a0e74b212ceb8efc86765ca19a4f618a0236bbfa82b3bc888af21c07"
+  inputs-digest = "cc4e3ce5a931eba592b2f139f6fa23ba7b04803ea08c9c415aa1322f437c702a"
   solver-name = "gps-cdcl"
   solver-version = 1

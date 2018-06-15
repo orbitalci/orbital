@@ -1,7 +1,6 @@
 package launcher
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/shankj3/ocelot/build/basher"
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/valet"
@@ -43,32 +42,4 @@ func NewLauncher(facts *models.WerkerFacts,
 		infochan:     make(chan []byte),
 		integrations: getIntegrationList(),
 	}
-}
-
-/// metrics
-//var jobsInQueue = prometheus.NewGauge(
-//	prometheus.GaugeOpts{
-//		Name: "jobs_in_queue",
-//		Help: "Current number of jobs in the queue",
-//	},
-//)
-var (
-	activeBuilds = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "active_builds",
-			Help: "Number of builds currently in progress",
-		},
-	)
-	buildDurationHist = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "build_duration_seconds",
-			Help:    "Build Duration distribution",
-			Buckets: []float64{1, 10, 30, 60, 120, 200},
-		},
-		[]string{"werker_type"},
-	)
-)
-
-func init(){
-	prometheus.MustRegister(activeBuilds, buildDurationHist)
 }

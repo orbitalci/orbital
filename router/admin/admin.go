@@ -1,11 +1,18 @@
 package admin
 
 import (
+	"context"
+	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	rt "runtime"
+	"strings"
 
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
@@ -15,13 +22,8 @@ import (
 
 	//"github.com/shankj3/ocelot/util/handler"
 	//"github.com/shankj3/ocelot/util/secure_grpc"
-	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"net"
-	"net/http"
-	"strings"
 )
 
 //TODO: floe integration? putting this note here so we remember
@@ -50,6 +52,20 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	if err != nil {
 		log.IncludeErrField(err).Fatal("could not register endpoints")
 	}
+
+	//grpc server
+	con, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		log.Log().Fatal("listen: ", err)
+	}
+	grpcServer := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+	)
+	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
+	grpc_prometheus.Register(grpcServer)
+	// now that grpc_prometheus is registered, serve it up on the http/1 endpoint
+	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/", gw)
 	if _, ok := os.LookupEnv("SWAGGERITUP"); ok {
 		go http.ListenAndServe(":"+httpPort, allowCORS(mux))
@@ -57,13 +73,6 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 		go http.ListenAndServe(":"+httpPort, mux)
 	}
 
-	//grpc server
-	con, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		log.Log().Fatal("listen: ", err)
-	}
-	grpcServer := grpc.NewServer()
-	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
 	err = grpcServer.Serve(con)
 	if err != nil {
 		log.Log().Fatal("serve: ", err)

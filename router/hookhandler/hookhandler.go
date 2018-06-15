@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 	signal "github.com/shankj3/ocelot/build_signaler"
@@ -14,6 +15,19 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 
 )
+
+var (
+	hookRecieves = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "recieved_hooks",
+		Help: "hooks recieved and processed by hookhandler",
+		// vcs_type: bitbucket | github | etc
+		// event_type: pullrequest | push
+	}, []string{"vcs_type", "event_type"})
+)
+
+func init() {
+	prometheus.MustRegister(hookRecieves)
+}
 
 func GetContext(sig *signal.Signaler, teller *signal.CCWerkerTeller) *HookHandlerContext {
 	return &HookHandlerContext{Signaler:sig, teller:teller}
@@ -29,6 +43,7 @@ type HookHandlerContext struct {
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
+	hookRecieves.WithLabelValues(vcsType.String(), "push").Inc()
 	translator, err := remote.GetRemoteTranslator(vcsType)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not get translator, err: ", err)
@@ -59,6 +74,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 //TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext)  PullRequest(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
+	hookRecieves.WithLabelValues(vcsType.String(), "pullrequest").Inc()
 	translator, err := remote.GetRemoteTranslator(vcsType)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not get translator, err: ", err)

@@ -4,6 +4,8 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 	"github.com/shankj3/ocelot/build/streamer"
@@ -29,8 +31,6 @@ func ServeMe(transportChan chan *models.Transport, conf *models.WerkerFacts, sto
 	ocelog.Log().Info("serving websocket on port: ", conf.ServicePort)
 	muxi := mux.NewRouter()
 	addHandlers(muxi, werkStream)
-	n := ocenet.InitNegroni("werker", muxi)
-	go n.Run(":" + conf.ServicePort)
 
 	//start grpc server
 	ocelog.Log().Info("serving grpc streams of build data on port: ", conf.GrpcPort)
@@ -39,9 +39,18 @@ func ServeMe(transportChan chan *models.Transport, conf *models.WerkerFacts, sto
 		ocelog.Log().Fatal("womp womp")
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+	)
 	werkerServer := NewWerkerServer(werkStream)
 	pb.RegisterBuildServer(grpcServer, werkerServer)
+	grpc_prometheus.Register(grpcServer)
+	// now that grpc_prometheus is registered, can run the http1 server
+	muxi.Handle("/metrics", promhttp.Handler())
+	n := ocenet.InitNegroni("werker", muxi)
+	go n.Run(":" + conf.ServicePort)
+	// now run the grpc server
 	go grpcServer.Serve(con)
 	go func() {
 		ocelog.Log().Info(http.ListenAndServe(":6060", nil))

@@ -28,18 +28,13 @@ func (e *ExecCleaner) Cleanup(ctx context.Context, id string, logout chan []byte
 	if logout != nil {
 		logout <- []byte("removing build directory " + cloneDir)
 	}
-	if err != nil {
-		if logout != nil {
-			logout <- []byte("could not remove build directory! Error: " + err.Error())
-		}
-		return err
-	}
 	err = os.RemoveAll(cloneDir)
 
 	if logout != nil {
 		if err != nil {
 			logout <- []byte("successfully removed build directory.")
 		} else {
+			failedCleaning.WithLabelValues("exec").Inc()
 			logout <- []byte("error removing build directory: " + err.Error())
 		}
 	}
