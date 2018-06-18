@@ -111,6 +111,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	defer cleanupFunc(t)
 	launch.infochan = make(chan []byte, 1000)
+	launch.integrations = getIntegrationList()
 	_ = dckr.Exec(ctx, "Install bash", "", []string{}, []string{"/bin/sh", "-c", "apk -U --no-cache add bash"}, launch.infochan) // For the k8s test
 	result, _, _ := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, dckr)
 	if result.Status == pb.StageResultVal_FAIL {

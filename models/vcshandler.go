@@ -2,7 +2,9 @@ package models
 
 import (
 	"fmt"
+	"io"
 
+	ocenet "github.com/shankj3/go-til/net"
 	pb "github.com/shankj3/ocelot/models/pb"
 	// ugh stuck 4 now
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
@@ -50,6 +52,24 @@ type VCSHandler interface {
 	//GetCommitLog will return a list of Commits, starting with the most recent and ending at the lastHash value.
 	// If the lastHash commit value is never found, will return an error.
 	GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error)
+
+	// GetPRCommits will return a list of commits for the given url for commits. It'll call the url from (e.g. bb or github),
+	//   unmarshal into its vcs-specific model, then translate to the global model to return a list of generic commits
+	GetPRCommits(url string) ([]*pb.Commit, error)
+
+	// PostPRComment will add a comment to a pr belonging to acct/repo acctRepo and id prId with a comment that is along the lines of
+	// Ocelot build has <status>.
+	PostPRComment(acctRepo, prId, hash string, failed bool, buildId int64) error
+
+	GetClient() ocenet.HttpClient
+}
+
+type Translator interface {
+	//TranslatePush should take a reader body, unmarshal it to vcs-specific model, then translate it to the global Push object
+	TranslatePush(reader io.Reader) (*pb.Push, error)
+
+	//TranslatePush should take a reader body, unmarshal it to vcs-specific model, then translate it to the global PullRequest object
+	TranslatePR(reader io.Reader) (*pb.PullRequest, error)
 }
 
 type CommitNotFound struct {

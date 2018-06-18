@@ -16,4 +16,10 @@ message Links {
     LinkUrl self = 1;
     LinkUrl html = 2;
     LinkUrl avatar = 3;
+    LinkUrl commits = 4;
+    LinkUrl comments = 5;
+    LinkUrl statuses = 6;
+    LinkUrl approve = 7;
+    LinkUrl decline = 8;
+    LinkUrl merge = 9;
 }

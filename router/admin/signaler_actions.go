@@ -120,7 +120,8 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	//		commits, err = handler.GetCommitLog(buildReq.AcctRepo, branch, sums[0].Hash)
 	//	}
 	//}
-	if err = g.getSignaler().CheckViableThenQueueAndStore(buildReq.Hash, token,  branch, buildReq.AcctRepo, buildConf, nil, buildReq.Force); err != nil {
+	task := signal.BuildInitialWerkerTask(buildConf, buildReq.Hash, token, branch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil)
+	if err = g.getSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
 			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Use Force if you want to override. Error is: " + err.Error())
