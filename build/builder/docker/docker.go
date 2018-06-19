@@ -245,7 +245,7 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 		AttachStdin:  true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env:          env,
+		Env:          append(env, d.extraGlobalEnvs...),
 		Cmd:          cmds,
 	})
 	if err != nil {
@@ -262,7 +262,7 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 		AttachStdin:  true,
 		AttachStderr: true,
 		AttachStdout: true,
-		Env:          env,
+		Env:          append(env, d.extraGlobalEnvs...),
 		Cmd:          cmds,
 	})
 
