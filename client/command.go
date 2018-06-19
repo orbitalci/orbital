@@ -6,6 +6,7 @@ import (
 	"github.com/shankj3/ocelot/client/creds/apple"
 	"github.com/shankj3/ocelot/client/creds/apple/applelist"
 	"github.com/shankj3/ocelot/client/creds/env/add"
+	"github.com/shankj3/ocelot/client/creds/env/list"
 	"github.com/shankj3/ocelot/client/creds/k8s"
 	"github.com/shankj3/ocelot/client/creds/ssh"
 	"github.com/shankj3/ocelot/client/init"
@@ -73,6 +74,7 @@ func init() {
 		"creds notify add":  func() (cli.Command, error) { return notifyadd.New(ui), nil},
 		"creds notify list": func() (cli.Command, error) { return notifylist.New(ui), nil},
 		"creds env add":     func() (cli.Command, error) { return envadd.New(ui), nil},
+		"creds env list":    func() (cli.Command, error) { return envlist.New(ui), nil},
 		"init":			     func() (cli.Command, error) { return ocyinit.New(ui), nil },
 		"logs":              func() (cli.Command, error) { return output.New(ui), nil },
 		"summary":           func() (cli.Command, error) { return summary.New(ui), nil },

@@ -1,9 +1,11 @@
-package kubelist
+package envlist
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/commandhelper"
@@ -50,23 +52,55 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 	var protoReq empty.Empty
-	msg, err := c.config.Client.GetK8SCreds(ctx, &protoReq)
+	msg, err := c.config.Client.GetGenericCreds(ctx, &protoReq)
 	if err != nil {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 		return 1
 	}
-	printed := false
 	Header(c.UI)
-	for _, oneline := range msg.K8SCreds {
-		if c.accountFilter == "" || oneline.AcctName == c.accountFilter {
-			c.UI.Output(Prettify(oneline))
-			printed = true
-		}
+	organized := organize(msg)
+	var creds2list = make(map[string]*[]*models.GenericCreds)
+	if c.accountFilter != "" {
+		creds2list[c.accountFilter] = organized[c.accountFilter]
+	} else {
+		creds2list = organized
 	}
-	if printed == false {
+	if creds2list == nil {
 		NoDataHeader(c.UI)
+		return 0
+	}
+	for acct, credsList := range creds2list {
+		c.UI.Info(prettify(acct, credsList))
 	}
 	return 0
+}
+
+func organize(cred *models.GenericWrap) map[string]*[]*models.GenericCreds{
+	organizedCreds := make(map[string]*[]*models.GenericCreds)
+	for _, cred := range cred.Creds {
+		acctCreds := organizedCreds[cred.AcctName]
+		if acctCreds == nil {
+			acctCreds = &[]*models.GenericCreds{cred}
+			organizedCreds[cred.AcctName] = acctCreds
+			continue
+		}
+		*acctCreds = append(*acctCreds, cred)
+	}
+	return organizedCreds
+}
+
+func prettify(acctName string, envs *[]*models.GenericCreds) string {
+	str := `Account: %s
+Env Vars:
+%s
+---
+`
+	var vars bytes.Buffer
+	vars.WriteString("  ")
+	for _, cred := range *envs {
+		vars.WriteString(cred.Identifier+"="+cred.ClientSecret+"\n  ")
+	}
+	return fmt.Sprintf(str, acctName, vars.String())
 }
 
 func (c *cmd) Synopsis() string {
@@ -78,18 +112,11 @@ func (c *cmd) Help() string {
 }
 
 func Header(ui cli.Ui) {
-	ui.Output("\n--- Kubernetes Credentials ---\n")
+	ui.Output("\n--- Env Credentials ---\n")
 }
 
 func NoDataHeader(ui cli.Ui) {
-	ui.Warn("\n--- No Kubernetes Credentials Found! ---")
-}
-
-func Prettify(cred *models.K8SCreds) string {
-	str := `Account: %s
-ConfigName: %s
-`
-	return fmt.Sprintf(str, cred.AcctName, cred.Identifier)
+	ui.Warn("\n--- No Env Credentials Found! ---")
 }
 
 const synopsis = "List all credentials used for artifact repositories"
