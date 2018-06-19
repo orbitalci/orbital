@@ -1,4 +1,4 @@
-package k8s
+package env
 
 import (
 	"github.com/hashicorp/consul/command/flags"
@@ -23,12 +23,12 @@ func (c *cmd) Help() string {
 	return flags.Usage(help, nil)
 }
 
-const synopsis = "kubernetes kubeconfig credentials"
+const synopsis = "environment variable secrets"
 const help = `
-Usage: ocelot creds k8s <subcommand> [options] [args]
+Usage: ocelot creds env <subcommand> [options] [args]
 
-  This command has subcommands for interacting with Ocelot's kubernetes cred store.
-  Ocelot securely stores your kubeconfig for deployment into a kubernetes cluster. 
+  This command has subcommands for interacting with Ocelot's environment variable cred store.
+  Ocelot securely stores environment variables for use during builds. All builds under an account will have access to that account's environment variables.
 
   For more examples, ask for subcommand help or view the documentation.
 `
