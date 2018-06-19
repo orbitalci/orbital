@@ -82,6 +82,7 @@ type fakeBuilder struct {
 	stagesRan []*pb.Stage
 	taskGiven *pb.WerkerTask
 	setEnvs []string
+	addedEnvs []string
 	uid uuid.UUID
 	*basher.Basher
 }
@@ -98,7 +99,7 @@ func (f *fakeBuilder) SetGlobalEnv(envs []string) {
 }
 
 func (f *fakeBuilder) AddGlobalEnvs(envs []string) {
-	f.setEnvs = append(f.setEnvs, envs...)
+	f.addedEnvs = append(f.addedEnvs, envs...)
 }
 
 func (f *fakeBuilder) Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc credentials.CVRemoteConfig, werkerPort string) (res *pb.Result, uid string) {

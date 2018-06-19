@@ -81,7 +81,7 @@ func (w *launcher) handleEnvSecrets(ctx context.Context, builder build.Builder, 
 	}
 	var allenvs []string
 	for _, envVar := range creds {
-		allenvs = append(allenvs, fmt.Sprintf("%s_%s=%s", envVar.GetAcctName(), envVar.GetIdentifier(), envVar.GetClientSecret()))
+		allenvs = append(allenvs, fmt.Sprintf("%s=%s", envVar.GetIdentifier(), envVar.GetClientSecret()))
 	}
 	builder.AddGlobalEnvs(allenvs)
 	return &pb.Result{Status:pb.StageResultVal_PASS, Messages:[]string{"successfully set env secrets " + models.CHECKMARK}, Stage: stage.GetStage()}

@@ -5,11 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-test/deep"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/integrations/sshkey"
+	"github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
@@ -97,7 +99,56 @@ func TestLauncher_preFlight(t *testing.T) {
 }
 
 func TestLauncher_handleEnvSecrets(t *testing.T) {
+	creds := []pb.OcyCredder{
+		&pb.GenericCreds{
+			AcctName: "oooooops",
+			Identifier: "noicenoice",
+			ClientSecret: "thisissecret",
+			SubType: pb.SubCredType_ENV,
+		},
+		&pb.GenericCreds{
+			AcctName: "oooooops",
+			Identifier: "GIT_SECRET",
+			ClientSecret: "mewmew",
+			SubType: pb.SubCredType_ENV,
+		},
+		&pb.GenericCreds{
+			AcctName: "oooooops",
+			Identifier: "ddd",
+			ClientSecret: "showme==",
+			SubType: pb.SubCredType_ENV,
+		},
+	}
+	rc := &remoteConf{creds:creds}
+	lnchr := &launcher{RemoteConf:rc}
+	bilder := &fakeBuilder{
+		setEnvs: []string{},
+		addedEnvs: []string{},
+		Basher: getTestBasher(t),
+	}
+	res := lnchr.handleEnvSecrets(context.Background(), bilder, "oooooops", build.InitStageUtil("PREFLIGHT"))
+	if res.Status == pb.StageResultVal_FAIL {
+		t.Error(res.Error)
+	}
+	expectedEnvs := []string{
+		"noicenoice=thisissecret",
+		"GIT_SECRET=mewmew",
+		"ddd=showme==",
+	}
+	if diff := deep.Equal(expectedEnvs, bilder.addedEnvs); diff != nil {
+		t.Error(diff)
+	}
 
+
+}
+
+type remoteConf struct {
+	creds []pb.OcyCredder
+	credentials.CVRemoteConfig
+}
+
+func (rc *remoteConf) GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error) {
+	return rc.creds, nil
 }
 
 type fakeStore struct {

@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+const ENV_SAFE = "^[a-zA-Z_]+$"
 
 //OcyCredder is an interface for interacting with credentials in Ocelot
 type OcyCredder interface {
@@ -258,6 +261,13 @@ func (m *GenericCreds) ValidateForInsert() *ValidationErr {
 	errr := validateCommonFieldsForInsert(m)
 	if len(errr) != 0 {
 		return Invalidate(strings.Join(errr, "\n"))
+	}
+	re, err := regexp.Compile(ENV_SAFE)
+	if err != nil {
+		return Invalidate("Unable to compile regex, error is: " + err.Error())
+	}
+	if !re.MatchString(m.GetIdentifier()) {
+		return Invalidate(fmt.Sprintf("Identifier for credential must be environment variable safe, ie it must match the regex pattern %s. Your credential Identifier, %s, does not.", ENV_SAFE, m.GetIdentifier()))
 	}
 	return nil
 }
