@@ -61,11 +61,13 @@ func (c *cmd) Run(args []string) int {
 	organized := organize(msg)
 	var creds2list = make(map[string]*[]*models.GenericCreds)
 	if c.accountFilter != "" {
-		creds2list[c.accountFilter] = organized[c.accountFilter]
+		if filtered := organized[c.accountFilter]; filtered != nil {
+			creds2list[c.accountFilter] = organized[c.accountFilter]
+		}
 	} else {
 		creds2list = organized
 	}
-	if creds2list == nil {
+	if len(creds2list) == 0 {
 		NoDataHeader(c.UI)
 		return 0
 	}
