@@ -1,7 +1,9 @@
 package bitbucket
 
 import (
+	"context"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
+	"golang.org/x/oauth2"
 )
 
 func TestBitbucket_FindWebhooksExists(t *testing.T) {
@@ -40,6 +43,34 @@ func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
 	}
 }
 
+func TestBitbucket_PostPRComment(t *testing.T) {
+	vcsConf := &pb.VCSCreds{
+		ClientId: "VEhMhdw6uprevzh8Du",
+		ClientSecret: "JtxmvZy3QR2dJQwbnwmVktCJa4jaVsJS",
+		TokenURL: "https://bitbucket.org/site/oauth2/access_token",
+		AcctName: "level11consulting",
+		SubType: pb.SubCredType_BITBUCKET,
+		Identifier: pb.SubCredType_BITBUCKET.String() + "_level11consulting",
+	}
+	client, token, err := GetBitbucketClient(vcsConf)
+	if err != nil {
+		t.Error(err)
+	}
+	err = client.PostPRComment("level11consulting/go-til", "2", "1234", true, 1234)
+	if err != nil {
+		t.Error(err)
+	}
+	ctx := context.Background()
+	otoken := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	authCli := oauth2.NewClient(ctx, otoken)
+	handler := GetBitbucketFromHttpClient(authCli)
+	err = handler.PostPRComment("level11consulting/go-til", "2", "1234", false, 1234)
+	if err != nil {
+		t.Error(err)
+	}
+
+}
+
 type MockHttpClient struct {
 	Unmarshaler *jsonpb.Unmarshaler
 	net.HttpClient
@@ -66,5 +97,9 @@ func (mhc MockHttpClient) PostUrl(url string, body string, unmarshalObj proto.Me
 }
 
 func (mhc MockHttpClient) GetUrlResponse(url string) (*http.Response, error) {
+	return nil, nil
+}
+
+func (mhc MockHttpClient)  PostUrlForm(url string, form url.Values) (*http.Response, error) {
 	return nil, nil
 }

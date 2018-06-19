@@ -65,7 +65,7 @@
 
 [[constraint]]
 #  version = "0.2.1"
-  revision = "63d9c45696f364e934cc92b2f651044cebee18e1"
+  revision = "e9fbe501d779fa9550a4617821763aad5bd56113"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]

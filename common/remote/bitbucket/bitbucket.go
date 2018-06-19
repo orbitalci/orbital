@@ -2,9 +2,12 @@ package bitbucket
 
 import (
 	"bufio"
+	//"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
@@ -17,6 +20,7 @@ import (
 
 const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
+const V1RepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
 func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
@@ -29,12 +33,24 @@ func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 	return bb, token, nil
 }
 
+func GetBitbucketFromHttpClient(cli *http.Client) models.VCSHandler {
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields:true}
+	bb := &Bitbucket{
+		Client: &ocenet.OAuthClient{AuthClient:*cli, Unmarshaler: unmarshaler},
+		Unmarshaler:unmarshaler,
+		Marshaler: jsonpb.Marshaler{},
+		isInitialized: true,
+	}
+	return bb
+}
+
 //TODO: callback url is set as env. variable on admin, or passed in via command line
 //GetBitbucketHandler returns a Bitbucket handler referenced by VCSHandler interface
 func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) models.VCSHandler {
 	bb := &Bitbucket{
 		Client:        client,
 		Marshaler:     jsonpb.Marshaler{},
+		Unmarshaler:   jsonpb.Unmarshaler{AllowUnknownFields: true,},
 		credConfig:    adminConfig,
 		isInitialized: true,
 	}
@@ -48,9 +64,14 @@ type Bitbucket struct {
 	RepoBaseURL string
 	Client      ocenet.HttpClient
 	Marshaler   jsonpb.Marshaler
+	Unmarshaler jsonpb.Unmarshaler
 
 	credConfig    *pb.VCSCreds
 	isInitialized bool
+}
+
+func (bb *Bitbucket) GetClient() ocenet.HttpClient {
+	return bb.Client
 }
 
 //Walk iterates over all repositories and creates webhook if one doesn't
@@ -92,13 +113,13 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 		return commits, nil
 	}
 	var foundLast bool
-	url := fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch
+	urrl := fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch
 	for {
-		if url == "" {
+		if urrl == "" {
 			break
 		}
 		commitz := &pbb.Commits{}
-		err := bb.Client.GetUrl(url, commitz)
+		err := bb.Client.GetUrl(urrl, commitz)
 		if err != nil {
 			return commits, err
 		}
@@ -109,7 +130,7 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 				break
 			}
 		}
-		url = commitz.GetNext()
+		urrl = commitz.GetNext()
 	}
 	var err error
 	if !foundLast {
@@ -129,9 +150,9 @@ func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_Rep
 
 func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.BranchHistory, err error) {
 	path := fmt.Sprintf("%s/refs/branches/%s", acctRepo, branch)
-	url := fmt.Sprintf(bb.GetBaseURL(), path)
+	urrl := fmt.Sprintf(bb.GetBaseURL(), path)
 	var resp *http.Response
-	resp, err = bb.Client.GetUrlResponse(url)
+	resp, err = bb.Client.GetUrlResponse(urrl)
 	if err != nil {
 		return nil, err
 	}
@@ -146,11 +167,8 @@ func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.
 	case http.StatusOK:
 		bbBranch := &pbb.Branch{}
 		reader := bufio.NewReader(resp.Body)
-		unmarshaler := jsonpb.Unmarshaler{
-			AllowUnknownFields: true,
-		}
-		if err = unmarshaler.Unmarshal(reader, bbBranch); err != nil {
-			ocelog.IncludeErrField(err).Error("failed to parse response from ", url)
+		if err = bb.Unmarshaler.Unmarshal(reader, bbBranch); err != nil {
+			ocelog.IncludeErrField(err).Error("failed to parse response from ", urrl)
 			return
 		}
 		hist = &pb.BranchHistory{Branch: branch, Hash: bbBranch.GetTarget().GetHash(), LastCommitTime: bbBranch.GetTarget().GetDate()}
@@ -289,4 +307,52 @@ func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {
 	}
 
 	return bb.FindWebhooks(webhooks.GetNext())
+}
+
+
+func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
+	var commits []*pb.Commit
+	for {
+		if url == "" {
+			break
+		}
+		commitz := &pbb.Commits{}
+		err := bb.Client.GetUrl(url, commitz)
+		if err != nil {
+			return commits, err
+		}
+		for _, commit := range commitz.Values {
+			commits = append(commits, &pb.Commit{Hash:commit.Hash, Message:commit.Message, Date:commit.Date, Author:&pb.User{UserName: commit.Author.Username}})
+		}
+		url = commitz.GetNext()
+	}
+	return commits, nil
+}
+
+
+func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, buildId int64) error {
+	//	https://api.bitbucket.org/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments --data "content=string"
+	// ** need to use v1 url because atlassian is annoying: **
+	// https://community.atlassian.com/t5/Answers-Developer-Questions/Are-you-planning-on-offering-an-update-pull-request-comment-API/qaq-p/526892
+	path := fmt.Sprintf("%s/pullrequests/%s/comments", acctRepo, prId)
+    urll := fmt.Sprintf(V1RepoBaseURL, path)
+	var status string
+	switch fail {
+	case true:
+		status = "FAILED"
+	case false:
+		status = "PASSED"
+	}
+    content := fmt.Sprintf("Ocelot build has **%s** for commit **%s**.\n\nRun `ocelot status -build-id %d` for detailed stage status, and `ocelot run -build-id %d` for complete build logs.", status, hash, buildId, buildId)
+	resp, err := bb.Client.PostUrlForm(urll, url.Values{"content":{content}})
+	defer resp.Body.Close()
+	if err != nil {
+    	return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		err = errors.New(fmt.Sprintf("got a non-ok exit code of %d, body is: %s", resp.StatusCode, string(body)))
+		return err
+	}
+	return err
 }

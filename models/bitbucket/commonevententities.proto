@@ -106,3 +106,9 @@ message Author {
     string type = 2;
     Owner user = 3;
 }
+
+message PRComment {
+    string content = 1;
+    // @inject_tag: yaml:"rendered_content"
+    string rendered_content=2;
+}

@@ -38,8 +38,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	var integMessages []string
 	stage := build.InitStageUtil("INTEGRATION_UTIL")
 
-	var integral = getIntegrationList()
-	for _, integ := range integral {
+	for _, integ := range w.integrations {
 		if !integ.IsRelevant(werk.BuildConf) {
 			continue
 		}

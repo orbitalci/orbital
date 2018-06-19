@@ -159,10 +159,7 @@
 
 [[projects]]
   name = "github.com/gogo/protobuf"
-  packages = [
-    "proto",
-    "protoc-gen-gogo/descriptor"
-  ]
+  packages = ["proto"]
   revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
   version = "v1.0.0"
 
@@ -496,12 +493,6 @@
   revision = "63d60e9d0dbc60cf9164e6510889b0db6683d98c"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mwitkow/go-proto-validators"
-  packages = ["."]
-  revision = "0950a79900071e9f3f5979b78078c599376422fd"
-
-[[projects]]
   name = "github.com/namsral/flag"
   packages = ["."]
   revision = "71ceffbeb0ba60fccc853971bb3ed4d7d90bfd04"
@@ -577,7 +568,7 @@
     "test",
     "vault"
   ]
-  revision = "63d9c45696f364e934cc92b2f651044cebee18e1"
+  revision = "e9fbe501d779fa9550a4617821763aad5bd56113"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -752,6 +743,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7104cd066e55a02b789c13c948dc7816d09652d2ed7cd87a99d3db92f5c00bd1"
+  inputs-digest = "14259e81cf72008c81c58630d454b97c7819dda614c688fd9de62100d5b012bb"
   solver-name = "gps-cdcl"
   solver-version = 1

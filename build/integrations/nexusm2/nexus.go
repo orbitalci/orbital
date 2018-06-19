@@ -81,7 +81,7 @@ func (n *NexusInt) MakeBashable(xml string) []string {
 }
 
 func (n *NexusInt) IsRelevant(wc *pb.BuildConfig) bool {
-    if wc.BuildTool == "maven" {
+    if wc.GetBuildTool() == "maven" {
         return true
     }
     return false

@@ -16,4 +16,54 @@ message Commit {
     string hash = 1;
     string message = 2;
     google.protobuf.Timestamp date = 3;
+    User author = 4;
+}
+
+message User {
+    string userName = 1;
+    string displayName = 2;
+}
+
+message Repo {
+    string name = 1;
+    string acctRepo = 2;
+    string repoLink = 3;
+}
+
+message Push {
+    Repo repo = 1;
+    User user = 2;
+    Commit headCommit = 4;
+    repeated Commit commits = 3;
+    string Branch = 5;
+}
+
+
+message PullRequest {
+    string description = 1;
+    PrUrls urls = 2;
+    string title = 3;
+    HeadData source = 4;
+    HeadData destination = 5;
+    int64 id = 6;
+}
+
+message HeadData {
+    string branch = 1;
+    string hash = 2;
+    Repo repo = 3;
+}
+
+message PrUrls {
+    string commits = 1;
+    string comments = 2;
+    string statuses = 3;
+    string decline = 4;
+    string approve = 5;
+    string merge = 6;
+}
+
+message PrWerkerData {
+    PrUrls urls = 1;
+    string prId = 2;
 }
