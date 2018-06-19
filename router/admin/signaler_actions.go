@@ -2,10 +2,10 @@ package admin
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/pkg/errors"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/common/remote"
 	"google.golang.org/grpc/codes"
@@ -133,6 +133,18 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	return nil
 }
 
+func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, error){
+	if g.handler != nil {
+		return g.handler, nil
+	}
+	handler, _, err := remote.GetHandler(cfg)
+	if err != nil {
+		log.IncludeErrField(err).Error()
+		return nil, status.Error(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s")
+	}
+	return handler, nil
+}
+
 func (g *guideOcelotServer) getSignaler() *signal.Signaler {
 	return signal.NewSignaler(g.RemoteConfig, g.Deserializer, g.Producer, g.OcyValidator, g.Storage)
 }
@@ -149,10 +161,9 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 		}
 		return nil, status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 	}
-	handler, _, err := remote.GetHandler(cfg)
-	if err != nil {
-		log.IncludeErrField(err).Error()
-		return nil, status.Error(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s")
+	handler, grpcErr := g.getHandler(cfg)
+	if grpcErr != nil {
+		return nil, grpcErr
 	}
 	repoDetail, err := handler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
 	if repoDetail.Type == "error" || err != nil {
@@ -163,7 +174,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	err = handler.CreateWebhook(webhookURL)
 
 	if err != nil {
-		return &empty.Empty{}, status.Error(codes.Unavailable, err.Error())
+		return &empty.Empty{}, status.Error(codes.Unavailable, errors.WithMessage(err, "Unable to create webhook").Error())
 	}
 	return &empty.Empty{}, nil
 }
@@ -174,9 +185,6 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) 
 	}
 	log.Log().Info("recieved poll request for ", poll.Account, poll.Repo, poll.Cron)
 	empti := &empty.Empty{}
-	if poll.Repo == "" || poll.Account == "" || poll.Branches == "" || poll.Cron == "" {
-		return empti, status.Error(codes.InvalidArgument, "account, poll, repo, and cron are all required fields")
-	}
 	exists, err := g.Storage.PollExists(poll.Account, poll.Repo)
 	if err != nil {
 		return empti, status.Error(codes.Unavailable, "unable to retrieve poll table from storage. err: "+err.Error())

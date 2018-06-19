@@ -1,39 +1,44 @@
 package admin
 
 import (
+	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	rt "runtime"
+	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
-	ocenet "github.com/shankj3/go-til/net"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/common/secure_grpc"
 	models "github.com/shankj3/ocelot/models/pb"
 
-	//"github.com/shankj3/ocelot/util/handler"
-	//"github.com/shankj3/ocelot/util/secure_grpc"
-	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"net"
-	"net/http"
-	"strings"
 )
 
 //TODO: floe integration? putting this note here so we remember
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
-func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) {
+func Start(grpcServer *grpc.Server, listener net.Listener) {
+	err := grpcServer.Serve(listener)
+	if err != nil {
+		log.Log().Error("serve: ", err)
+	}
+}
+
+
+func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) (*grpc.Server, net.Listener, error) {
 	//initializes our "context" - guideOcelotServer
 	//store := cred.GetOcelotStorage()
 	store, err := configInstance.GetOcelotStorage()
 	if err != nil {
-		fmt.Println("couldn't get storage instance. error: ", err.Error())
-		return
+		return nil, nil, errors.WithMessage(err, "could not get ocelot storage")
 	}
 	defer store.Close()
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), cred.GetValidator(), cred.GetRepoValidator(), store)
@@ -48,7 +53,7 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gw, serverRunsAt, opts)
 	if err != nil {
-		log.IncludeErrField(err).Fatal("could not register endpoints")
+		return nil, nil, errors.WithMessage(err, "could not register endpoints")
 	}
 	mux.Handle("/", gw)
 	if _, ok := os.LookupEnv("SWAGGERITUP"); ok {
@@ -60,15 +65,13 @@ func Start(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, se
 	//grpc server
 	con, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Log().Fatal("listen: ", err)
+		return nil, nil, errors.WithMessage(err, "could not create listener")
 	}
 	grpcServer := grpc.NewServer()
 	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
-	err = grpcServer.Serve(con)
-	if err != nil {
-		log.Log().Fatal("serve: ", err)
-	}
+	return grpcServer, con, nil
 }
+
 
 func preflightHandler(w http.ResponseWriter, r *http.Request) {
 	headers := []string{"Content-Type", "Accept"}
@@ -117,10 +120,10 @@ func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	p = path.Join(dir, p)
 	http.ServeFile(w, r, p)
 }
-
-//TODO: how to propagate error codes up????
-//TODO: cast this back to MY error type and set status
-func CustomErrorHandler(ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
-	// see example here: https://github.com/mycodesmells/golang-examples/blob/master/grpc/cmd/server/main.go
-	ocenet.JSONApiError(w, runtime.HTTPStatusFromCode(grpc.Code(err)), "", err)
-}
+//
+////TODO: how to propagate error codes up????
+////TODO: cast this back to MY error type and set status
+//func CustomErrorHandler(ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
+//	// see example here: https://github.com/mycodesmells/golang-examples/blob/master/grpc/cmd/server/main.go
+//	ocenet.JSONApiError(w, runtime.HTTPStatusFromCode(grpc.Code(err)), "", err)
+//}

@@ -14,7 +14,7 @@ import (
 )
 
 func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
-	if poll.Account == "" && poll.Repo == "" {
+	if poll.Account == "" || poll.Repo == "" {
 		return nil, status.Error(codes.InvalidArgument, "account and repo are required fields")
 	}
 	log.Log().Info("received delete poll request for ", poll.Account, " ", poll.Repo)
@@ -36,9 +36,9 @@ func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*pb.
 	polls, err := g.Storage.GetAllPolls()
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
-			return nil, status.Error(codes.NotFound, err.Error())
+			return nil, status.Error(codes.Unavailable, err.Error())
 		}
-		return nil, status.Error(codes.Unavailable, err.Error())
+		return nil, status.Error(codes.NotFound, err.Error())
 	}
 	pollz := &pb.Polls{}
 	for _, pll := range polls {
