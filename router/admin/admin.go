@@ -16,6 +16,7 @@ import (
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/common/secure_grpc"
 	models "github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
@@ -33,19 +34,17 @@ func Start(grpcServer *grpc.Server, listener net.Listener) {
 }
 
 
-func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) (*grpc.Server, net.Listener, error) {
+func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
 	//initializes our "context" - guideOcelotServer
 	//store := cred.GetOcelotStorage()
 	store, err := configInstance.GetOcelotStorage()
 	if err != nil {
-		return nil, nil, errors.WithMessage(err, "could not get ocelot storage")
+		return nil, nil, nil, nil, errors.WithMessage(err, "could not get ocelot storage")
 	}
-	defer store.Close()
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), cred.GetValidator(), cred.GetRepoValidator(), store)
 	//gateway
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/swagger/", serveSwagger)
 
@@ -53,7 +52,7 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	err = models.RegisterGuideOcelotHandlerFromEndpoint(ctx, gw, serverRunsAt, opts)
 	if err != nil {
-		return nil, nil, errors.WithMessage(err, "could not register endpoints")
+		return nil, nil, nil, nil, errors.WithMessage(err, "could not register endpoints")
 	}
 	mux.Handle("/", gw)
 	if _, ok := os.LookupEnv("SWAGGERITUP"); ok {
@@ -65,11 +64,11 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 	//grpc server
 	con, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		return nil, nil, errors.WithMessage(err, "could not create listener")
+		return nil, nil, nil, nil, errors.WithMessage(err, "could not create listener")
 	}
 	grpcServer := grpc.NewServer()
 	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
-	return grpcServer, con, nil
+	return grpcServer, con, store, cancel, nil
 }
 
 
