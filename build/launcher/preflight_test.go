@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/integrations/sshkey"
 	"github.com/shankj3/ocelot/models"
@@ -27,7 +28,8 @@ func Test_downloadCodebase(t *testing.T) {
 		FullName: "shankj3/ocelot",
 	}
 	logout := make(chan []byte, 100)
-	result, _, _ := downloadCodebase(ctx, task, bilder, logout)
+	stage := build.InitStageUtil("test")
+	result := downloadCodebase(ctx, task, bilder, stage,  logout)
 	close(logout)
 	var output string
 	for i:= range logout {
@@ -38,7 +40,7 @@ func Test_downloadCodebase(t *testing.T) {
 	}
 	bilder.failExecuteIntegration = true
 	logout = make(chan []byte, 100)
-	result, _, _ = downloadCodebase(ctx, task, bilder, logout)
+	result = downloadCodebase(ctx, task, bilder, stage,  logout)
 	if result.Status != pb.StageResultVal_FAIL {
 		t.Error("builder returned a failure, this should also fail.")
 	}
@@ -66,32 +68,26 @@ func TestLauncher_preFlight(t *testing.T) {
 		Branch: "branch",
 		Id: id,
 	}
-	err = lnchr.preFlight(ctx, task, bilder)
+	_, err = lnchr.preFlight(ctx, task, bilder)
 	if err != nil {
 		t.Error(err)
 	}
+	var bailOut bool
 	bilder.failExecuteIntegration = true
-	err = lnchr.preFlight(ctx, task, bilder)
-	if err == nil {
-		t.Error("builder failed, this should too")
-	}
-	t.Log(err.Error())
 	// add ssh key creds so integrations block will run
 	err = lnchr.RemoteConf.AddCreds(lnchr.Store, &pb.SSHKeyWrapper{AcctName: "shankj3", Identifier: "identity", SubType: pb.SubCredType_SSHKEY, PrivateKey: []byte("so private")}, true)
 	if err != nil {
 		t.Error(err)
 	}
 	lnchr.integrations = []integrations.StringIntegrator{sshkey.Create()}
-	err = lnchr.preFlight(ctx, task, bilder)
-	if err == nil {
-		t.Error("builder failed, this should too")
+	bailOut, _ = lnchr.preFlight(ctx, task, bilder)
+	if !bailOut {
+		t.Error("builder failed, preFlight should be tellingi ts caller its time to give up")
 	}
-	if err.Error() != "integration stage failed" {
-		t.Error("there are integrations, and the builder will fail at executeIntegration, so this should return the integration error. the error is instead: " + err.Error())
-	}
+
 	lnchr.integrations = []integrations.StringIntegrator{}
 	lnchr.Store = &fakeStore{fail: true}
-	err = lnchr.preFlight(ctx, task, bilder)
+	_, err = lnchr.preFlight(ctx, task, bilder)
 	if err == nil {
 		t.Error("storage returned a faileure, this should fail")
 	}
@@ -114,4 +110,8 @@ func (f *fakeStore) AddStageDetail(stageResult *models.StageResult) error {
 		return errors.New("i fail now, ok?")
 	}
 	return nil
+}
+
+func (f *fakeStore) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error) {
+	return nil, nil
 }

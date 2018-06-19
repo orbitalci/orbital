@@ -28,17 +28,17 @@ func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder b
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
-	result, _, _ = w.doIntegrations(ctx, werk, builder, prefly)
+	result = w.doIntegrations(ctx, werk, builder, prefly)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
 
-	result, _, _ = w.downloadBinaries(ctx, prefly, builder)
+	result = w.downloadBinaries(ctx, prefly, builder)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
 	// download codebase to werker node
-	result, _, _ = downloadCodebase(ctx, werk, builder, prefly, w.infochan)
+	result = downloadCodebase(ctx, werk, builder, prefly, w.infochan)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
@@ -88,8 +88,7 @@ func (w *launcher) handleEnvSecrets(ctx context.Context, builder build.Builder, 
 }
 
 //downloadCodebase will download the code that will be built
-func downloadCodebase(ctx context.Context, task *pb.WerkerTask, builder build.Builder, su *build.StageUtil, logChan chan []byte) (*pb.Result, time.Duration, time.Time) {
-	start := time.Now()
+func downloadCodebase(ctx context.Context, task *pb.WerkerTask, builder build.Builder, su *build.StageUtil, logChan chan []byte) (*pb.Result) {
 	var setupMessages []string
 	setupMessages = append(setupMessages, "attempting to download codebase...")
 	stage := &pb.Stage{
@@ -102,5 +101,5 @@ func downloadCodebase(ctx context.Context, task *pb.WerkerTask, builder build.Bu
 	if len(codebaseDownload.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download codebase", codebaseDownload.Error)
 	}
-	return codebaseDownload, time.Now().Sub(start), start
+	return codebaseDownload
 }

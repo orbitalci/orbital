@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
@@ -31,9 +30,7 @@ func getIntegrationList() []integrations.StringIntegrator {
 }
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
-func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder, baseStage *build.StageUtil) (result *pb.Result, duration time.Duration, start time.Time) {
-	start = time.Now()
-	defer func(){duration = time.Now().Sub(start)}()
+func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder, baseStage *build.StageUtil) (result *pb.Result) {
 	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
 	var integMessages []string
@@ -81,9 +78,7 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 }
 
 // TODO: This should handle more than just kubectl. Helm, for example.
-func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder) (result *pb.Result, duration time.Duration, start time.Time) {
-	start = time.Now()
-	defer func(){duration = time.Now().Sub(start)}()
+func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder) (result *pb.Result) {
 	// todo: there wil likely be more binaries to download in the future, should probably use the same pattern
 	// as StringIntegrator.. maybe a DownloadIntegrator?
 	subStage := build.CreateSubstage(su, "kubectl download")
