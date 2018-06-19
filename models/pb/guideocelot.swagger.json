@@ -184,7 +184,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -327,7 +328,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -463,7 +465,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           },
@@ -628,7 +631,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -773,7 +777,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -939,7 +944,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -1813,7 +1819,8 @@
         "KUBECONF",
         "SSHKEY",
         "SLACK",
-        "DEVPROFILE"
+        "DEVPROFILE",
+        "ENV"
       ],
       "default": "NIL_SCT"
     },

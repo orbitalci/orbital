@@ -97,6 +97,10 @@ func (f *fakeBuilder) SetGlobalEnv(envs []string) {
 	f.setEnvs = envs
 }
 
+func (f *fakeBuilder) AddGlobalEnvs(envs []string) {
+	f.setEnvs = append(f.setEnvs, envs...)
+}
+
 func (f *fakeBuilder) Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc credentials.CVRemoteConfig, werkerPort string) (res *pb.Result, uid string) {
 	dockerId <- "smurf"
 	close(dockerId)

@@ -23,15 +23,16 @@ import (
 )
 
 type Docker struct {
-	Log          io.ReadCloser
-	ContainerId  string
-	DockerClient *client.Client
-	globalEnvs []string
+	Log          	io.ReadCloser
+	ContainerId  	string
+	DockerClient 	*client.Client
+	globalEnvs 		[]string
+	extraGlobalEnvs []string
 	*basher.Basher
 }
 
 func NewDockerBuilder(b *basher.Basher) build.Builder {
-	return &Docker{nil, "", nil, nil, b}
+	return &Docker{Log:nil, ContainerId:"", globalEnvs:nil, extraGlobalEnvs:nil, DockerClient:nil, Basher: b}
 }
 
 func (d *Docker) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Result {
@@ -213,6 +214,10 @@ func (d *Docker) getVaultAddr(vaulty vault.Vaulty) string {
 
 func (d *Docker) SetGlobalEnv(envs []string) {
 	d.globalEnvs = envs
+}
+
+func (d *Docker) AddGlobalEnvs(envs []string) {
+	d.extraGlobalEnvs = append(d.extraGlobalEnvs, envs...)
 }
 
 // ExecuteIntegration will basically run Execute but without the cd and run cmds because we are generating the scripts in the code

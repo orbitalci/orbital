@@ -2,6 +2,7 @@ package launcher
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -30,14 +31,13 @@ func getIntegrationList() []integrations.StringIntegrator {
 }
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
-func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder) (result *pb.Result, duration time.Duration, start time.Time) {
+func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder, baseStage *build.StageUtil) (result *pb.Result, duration time.Duration, start time.Time) {
 	start = time.Now()
 	defer func(){duration = time.Now().Sub(start)}()
 	accountName := strings.Split(werk.FullName, "/")[0]
 	result = &pb.Result{}
 	var integMessages []string
-	stage := build.InitStageUtil("INTEGRATION_UTIL")
-
+	stage := build.CreateSubstage(baseStage, "INTEG")
 	for _, integ := range w.integrations {
 		if !integ.IsRelevant(werk.BuildConf) {
 			continue
@@ -93,7 +93,6 @@ func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bl
 		result.Messages = append(result.Messages, "failed to download kubectl, continuing anyway as it may not be used...")
 		result.Status = pb.StageResultVal_PASS
 	}
-	result.Messages = append(result.Messages, "finished " + subStage.Stage)
 	return
 }
 
@@ -106,9 +105,10 @@ func handleIntegrationErr(err error, integrationName string, stage *build.StageU
 			Stage: stage.GetStage(),
 			Status: pb.StageResultVal_FAIL,
 			Error: err.Error(),
+			Messages: append(msgs, fmt.Sprintf("integration failed for %s %s", integrationName, models.FAILED)),
 		}
 	} else {
-		msgs = append(msgs, "no integration data found for " + integrationName + " so assuming integration not necessary")
+		msgs = append(msgs, fmt.Sprintf("no integration data for %s %s", integrationName, models.CHECKMARK))
 		return &pb.Result{
 			Stage: stage.GetStage(),
 			Status: pb.StageResultVal_PASS,

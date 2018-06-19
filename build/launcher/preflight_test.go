@@ -100,6 +100,10 @@ func TestLauncher_preFlight(t *testing.T) {
 	}
 }
 
+func TestLauncher_handleEnvSecrets(t *testing.T) {
+
+}
+
 type fakeStore struct {
 	fail bool
 	storage.OcelotStorage

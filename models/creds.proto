@@ -17,6 +17,8 @@ enum CredType {
     NOTIFIER = 6;
     // APPLE has 1 SubCredType: DEVPROFILE
     APPLE = 7;
+    // GENERIC has 1 SubCredType: ENV
+    GENERIC = 8;
 
 }
 
@@ -34,6 +36,7 @@ enum SubCredType {
     SSHKEY = 8;
     SLACK = 9;
     DEVPROFILE = 10;
+    ENV = 11;
 }
 
 message AllCredsWrapper {
@@ -157,6 +160,17 @@ message NotifyCreds {
     // account name to associate integration cred with
     string acctName = 1;
     // There is currently only one subType that is valid for Integrations, and it is SLACK
+    SubCredType subType = 2;
+    // identifier is the unique identifier for the integration
+    string identifier = 3;
+    // clientSecret is the secret associated with the integration cred
+    string clientSecret = 4;
+}
+
+message GenericCreds {
+    // account name to associate integration cred with
+    string acctName = 1;
+    // There is currently only one subType that is valid for GenericCreds, and it is ENV
     SubCredType subType = 2;
     // identifier is the unique identifier for the integration
     string identifier = 3;
