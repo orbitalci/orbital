@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
 	"golang.org/x/oauth2"
@@ -72,6 +73,7 @@ func TestBitbucket_PostPRComment(t *testing.T) {
 
 type MockHttpClient struct {
 	Unmarshaler *jsonpb.Unmarshaler
+	net.HttpClient
 }
 
 func (mhc MockHttpClient) GetUrl(url string, unmarshalObj proto.Message) error {

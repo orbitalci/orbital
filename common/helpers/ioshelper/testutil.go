@@ -33,3 +33,12 @@ func GetAndEncodeDevFolder(t *testing.T) map[string]string {
 	return profiles
 }
 
+func GetZipAndPw(t *testing.T) (zipdata []byte, pw string) {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(filename)
+	zipdata, err := ioutil.ReadFile(filepath.Join(dir,"test-fixtures/test.zip"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return zipdata, "pw"
+}

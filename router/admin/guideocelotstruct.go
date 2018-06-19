@@ -5,6 +5,7 @@ import (
 
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/models"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/shankj3/ocelot/build"
@@ -21,7 +22,8 @@ type guideOcelotServer struct {
 	RepoValidator  *cred.RepoValidator
 	OcyValidator   *build.OcelotValidator
 	Storage        storage.OcelotStorage
-	Producer       *nsqpb.PbProduce
+	Producer       nsqpb.Producer
+	handler        models.VCSHandler
 }
 
 // for checking if the server is reachable

@@ -150,7 +150,7 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCred
 	}
 	err = SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
 	if _, ok := err.(*pb.ValidationErr); ok {
-		return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Repo Creds failed validation. Errors are: "+err.Error())
+		return &empty.Empty{}, status.Error(codes.InvalidArgument, "Repo Creds failed validation. Errors are: "+err.Error())
 	}
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
@@ -187,6 +187,7 @@ func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty)
 	credWrapper := &pb.K8SCredsWrapper{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_K8S, true)
 	if err != nil {
+		// todo: this needs to check for a not found error from storage as well
 		return credWrapper, status.Errorf(codes.Internal, "unable to get k8s creds! error: %s", err.Error())
 	}
 	for _, v := range creds {
@@ -261,7 +262,7 @@ func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (
 func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *pb.SSHKeyWrapper) (*empty.Empty, error) {
 	identifier, err := pb.CreateVCSIdentifier(sshKeyWrapper.SubType, sshKeyWrapper.AcctName)
 	if err != nil {
-		return &empty.Empty{}, status.Error(codes.FailedPrecondition, err.Error())
+		return &empty.Empty{}, status.Error(codes.InvalidArgument, err.Error())
 	}
 	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.SubType, sshKeyWrapper.AcctName, sshKeyWrapper.SubType.Parent(), identifier)
 	err = g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
@@ -378,10 +379,7 @@ func (g *guideOcelotServer) GetAppleCreds(ctx context.Context, empty2 *empty.Emp
 func (g *guideOcelotServer) GetAppleCred(ctx context.Context, creds *pb.AppleCreds) (*pb.AppleCreds, error){
 	creddy, err := g.getAnyCred(creds)
 	if err != nil {
-		if _, ok := err.(*storage.ErrNotFound); ok {
-			return nil, status.Error(codes.NotFound, "apple cred not found " + err.Error())
-		}
-		return nil, status.Error(codes.Internal, "unexpected error occured, apple creds could not be retrieved. error is: " + err.Error())
+		return nil, err
 	}
 	apple, ok := creddy.(*pb.AppleCreds)
 	if !ok {
@@ -402,11 +400,6 @@ func (g *guideOcelotServer) UpdateAppleCreds(ctx context.Context, creds *pb.Appl
 func (g *guideOcelotServer) AppleCredExists(ctx context.Context, creds *pb.AppleCreds) (*pb.Exists, error) {
 	return g.checkAnyCredExists(ctx, creds)
 }
-/*SetNotifyCreds(context.Context, *NotifyCreds) (*google_protobuf.Empty, error)
-	GetNotifyCred(context.Context, *NotifyCreds) (*NotifyCreds, error)
-	UpdateNotifyCreds(context.Context, *NotifyCreds) (*google_protobuf.Empty, error)
-	NotifyCredExists(context.Context, *NotifyCreds) (*Exists, error)
-*/
 
 func (g *guideOcelotServer) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_NOTIFIER {
