@@ -19,6 +19,7 @@ func NewFakeGuideOcelotClient(logLines []string) *fakeGuideOcelotClient {
 }
 
 type fakeGuideOcelotClient struct {
+	pb.GuideOcelotClient
 	creds     *pb.CredWrapper
 	repoCreds *pb.RepoCredWrapper
 	k8sCreds  *pb.K8SCredsWrapper

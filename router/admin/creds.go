@@ -474,7 +474,7 @@ func (g *guideOcelotServer) GetGenericCreds(ctx context.Context, empty *empty.Em
 func (g *guideOcelotServer) SetGenericCreds(ctx context.Context, wrap *pb.GenericWrap) (*empty.Empty, error) {
 	for _, creds := range wrap.Creds {
 		if creds.SubType.Parent() != pb.CredType_GENERIC {
-			return nil, status.Error(codes.InvalidArgument, "Subtype must be of generic type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))s
+			return nil, status.Error(codes.InvalidArgument, "Subtype must be of generic type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 		}
 		err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
 		if err != nil {

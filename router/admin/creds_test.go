@@ -959,6 +959,108 @@ func TestGuideOcelotServer_GetNotifyCreds(t *testing.T) {
 	}
 }
 
+func TestGuideOcelotServer_SetGenericCreds(t *testing.T) {
+	rc := &vcsRemoteConf{}
+	stor := &store{exists:true}
+	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	cred := &pb.GenericCreds{
+		AcctName:"shankj3",
+		SubType: pb.SubCredType_ENV,
+		ClientSecret: "http://seceret.post",
+		Identifier: "derp",
+	}
+	ctx := context.Background()
+	genericCred :=  &pb.GenericWrap{Creds:[]*pb.GenericCreds{cred}}
+	_, err := gos.SetGenericCreds(ctx, genericCred)
+	if err != nil {
+		t.Error(err)
+	}
+	cred.SubType = pb.SubCredType_BITBUCKET
+	_, err = gos.SetGenericCreds(ctx, genericCred)
+	if err == nil {
+		t.Error("wrong subtype, this should return a validation error.")
+	}
+	cred.SubType = pb.SubCredType_ENV
+	cred.Identifier = "derp"
+	rc.validationErr = true
+	_, err = gos.SetGenericCreds(ctx, genericCred)
+	if err == nil {
+		t.Error("remote conf returned a validation error, this should bubble up")
+	}
+	rc.validationErr = false
+	rc.returnErr = true
+	_, err = gos.SetGenericCreds(ctx, genericCred)
+	if err == nil {
+		t.Error("remote conf returned an unknown error, this should bubble up")
+	}
+}
+
+
+func TestGuideOcelotServer_GetGenericCreds(t *testing.T) {
+	rc := &vcsRemoteConf{}
+	stor := &store{exists:true}
+	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	ctx := context.Background()
+	creds, err := gos.GetGenericCreds(ctx, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(creds.Creds) != 3 {
+		t.Error("wrong cred length")
+	}
+	rc.notFound = true
+	_, err = gos.GetGenericCreds(ctx, nil)
+	if err == nil {
+		t.Error("should return not found., er")
+	}
+	rc.notFound = false
+	rc.empty = true
+	_, err = gos.GetGenericCreds(ctx, nil)
+	if err == nil {
+		t.Error("should return not found as cred list is empty")
+	}
+	rc.empty = false
+	rc.returnErr = true
+	_, err = gos.GetGenericCreds(ctx, nil)
+	if err == nil {
+		t.Error("should return error")
+	}
+}
+
+
+func TestGuideOcelotServer_GenericCredExists(t *testing.T) {
+	// tested extensively in checkAnyCredExists
+	rc := &vcsRemoteConf{}
+	stor := &store{exists:true}
+	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	exists, err := gos.GenericCredExists(context.Background(), &pb.GenericCreds{})
+	if err != nil {
+		t.Error("should pass")
+	}
+	if !exists.Exists {
+		t.Error("should return  existing")
+	}
+}
+
+
+func TestGuideOcelotServer_UpdateGenericCreds(t *testing.T) {
+	// tested extensively in updateAnyCred
+	cred := &pb.GenericCreds{
+		AcctName:"shankj3",
+		SubType: pb.SubCredType_ENV,
+		ClientSecret: "http://seceret.post",
+		Identifier: "derp",
+	}
+	rc := &vcsRemoteConf{}
+	gos := &guideOcelotServer{RemoteConfig:rc}
+	ctx := context.Background()
+
+	_, err := gos.UpdateGenericCreds(ctx, cred)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 type vcsRemoteConf struct {
 	credentials.CVRemoteConfig
 	sshExists bool
@@ -1016,6 +1118,13 @@ var notifycred = &pb.NotifyCreds{
 	ClientSecret: "secretive.",
 }
 
+var genericCred = &pb.GenericCreds{
+	AcctName: "shankj3",
+	Identifier: "thisbemycreeeedence",
+	SubType: pb.SubCredType_ENV,
+	ClientSecret: "secretsecret",
+}
+
 func (r *vcsRemoteConf) GetCredsByType(store storage.CredTable, ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error) {
 	if r.empty {
 		return []pb.OcyCredder{}, nil
@@ -1039,6 +1148,8 @@ func (r *vcsRemoteConf) GetCredsByType(store storage.CredTable, ctype pb.CredTyp
 		return []pb.OcyCredder{appleCred, appleCred, appleCred}, nil
 	case pb.CredType_NOTIFIER:
 		return []pb.OcyCredder{notifycred, notifycred, notifycred}, nil
+	case pb.CredType_GENERIC:
+		return []pb.OcyCredder{genericCred, genericCred, genericCred}, nil
 	}
 	return nil, errors.New("nope!!!")
 }
@@ -1117,6 +1228,11 @@ func (r *vcsRemoteConf) GetCred(store storage.CredTable, subCredType pb.SubCredT
 			return appleCred, nil
 		}
 		return &pb.NotifyCreds{AcctName:accountName, Identifier:identifier, SubType:subCredType, ClientSecret: "http://slackurl.go"}, nil
+	case pb.CredType_GENERIC:
+		if r.returnWrong {
+			return appleCred, nil
+		}
+		return &pb.GenericCreds{AcctName:accountName, Identifier:identifier, SubType:subCredType, ClientSecret: "mewmewmewmew"}, nil
 	}
 	return nil, errors.New("hehe not supported yet")
 
