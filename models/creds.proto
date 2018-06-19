@@ -167,6 +167,10 @@ message NotifyCreds {
     string clientSecret = 4;
 }
 
+message GenericWrap {
+    repeated GenericCreds creds = 1;
+}
+
 message GenericCreds {
     // account name to associate integration cred with
     string acctName = 1;
