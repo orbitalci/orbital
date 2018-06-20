@@ -288,6 +288,7 @@ func (f *FakeGuideOcelotClient) UpdateGenericCreds(ctx context.Context, in *pb.G
 	if f.ReturnError {
 		return nil, errors.New("returning an erro")
 	}
+	f.Generics.Creds = append(f.Generics.Creds, in)
 	return nil, nil
 }
 
@@ -302,6 +303,7 @@ func (f *FakeGuideOcelotClient) SetGenericCreds(ctx context.Context, in *pb.Gene
 	if f.ReturnError {
 		return nil, errors.New("returning an erro on set")
 	}
+	f.Generics.Creds = append(f.Generics.Creds, in.Creds...)
 	return nil, nil
 }
 

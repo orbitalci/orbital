@@ -11,16 +11,22 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/commandhelper"
 	models "github.com/shankj3/ocelot/models/pb"
+	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v2"
 )
 
 const (
 	credExists = `The environment variable with the name %s already exists under the account %s. Do you wish to overwrite? Only a YES will continue and update the environment variable value, otherwise this entry will be skipped.`
-	synopsis = "Add a kubeconfig for connection with kubernetes to ocelot"
+	synopsis = "Add vault-secured environment variables for use in builds"
 	// fixme: change help msg
 	help = `
-Usage: ocelot creds k8s add -acct my_kewl_acct -name cluster_name -kubeconfig=/home/user/.kube/cluster-config.yaml
-
+Usage: ocelot creds env add -acct my_kewl_acct FLAVORTOWN='X72BXHsdjk723!>E>>' DEPLOY_KEY=ad8231AND
+  Credentials can also be uploaded using a yaml file. For example, the variables above can also be added by uploading a yaml file with contents:
+  $ cat env_creds.yml
+    FLAVORTOWN: "X72BXHsdjk723!>E>>"
+    DEPLOY_KEY: "ad8231AND"
+  By running: 
+    ocelot creds env add -acct my_kewl_acct -envfile=./env_creds.yml
 `)
 
 func New(ui cli.Ui) *cmd {
@@ -92,7 +98,7 @@ func (c *cmd) Run(args []string) int {
 
 func (c *cmd) fileUpload() int {
 	if c.fileloc == "" {
-		c.UI.Error("-envfile is required is no environment credentials are passed on the command line")
+		c.UI.Error("-envfile is required if no environment credentials are passed on the command line")
 		return 1
 	}
 	envs := make(map[string]string)
@@ -125,6 +131,17 @@ func (c *cmd) argUpload() int {
 	return c.upload(envs)
 }
 
+func getErrMsg(err error) (msg string) {
+	statErr, ok := status.FromError(err)
+	if !ok {
+		msg = err.Error()
+	} else {
+		msg = statErr.Message()
+	}
+	return
+
+}
+
 func (c *cmd) upload(envs map[string]string) int {
 	var env *models.GenericCreds
 	var ctx context.Context
@@ -134,21 +151,18 @@ func (c *cmd) upload(envs map[string]string) int {
 		env = &models.GenericCreds{AcctName:c.account, Identifier: identifier, SubType: models.SubCredType_ENV, ClientSecret: envvalue}
 		exists, err := c.config.Client.GenericCredExists(ctx, env)
 		if err != nil {
-			// fixme: make this a clearer error
-			c.UI.Error(err.Error())
+			c.UI.Error("Unable to check if credential exists, error is: " + getErrMsg(err))
 			return 1
 		}
 		if exists.Exists {
 			answer, err := c.UI.Ask(fmt.Sprintf(credExists, identifier, c.account))
 			if err != nil {
-				// fixme: make this a clearer error
-				c.UI.Error(err.Error())
+				c.UI.Error("exiting from input ask, error is " + err.Error())
 				return 1
 			}
 			if answer == "YES" {
 				if _, err = c.config.Client.UpdateGenericCreds(ctx, env); err != nil {
-					// fixme: make this a clearer error
-					c.UI.Error(err.Error())
+					c.UI.Error("unable to update credential, error is: " + getErrMsg(err))
 					return 1
 				}
 
@@ -159,8 +173,7 @@ func (c *cmd) upload(envs map[string]string) int {
 	}
 	if len(credWrap.Creds) > 0 {
 		if _, err := c.config.Client.SetGenericCreds(ctx, credWrap); err != nil {
-			// fixme: make this a clearer error
-			c.UI.Error(err.Error())
+			c.UI.Error("Unable to set credential, error is: " + getErrMsg(err))
 			return 1
 		}
 		c.UI.Info("Successfully uploaded Environment Variables for use in Builds.")
