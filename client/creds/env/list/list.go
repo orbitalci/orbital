@@ -57,7 +57,6 @@ func (c *cmd) Run(args []string) int {
 		c.UI.Error(fmt.Sprint("Could not get list of credentials!\n Error: ", err.Error()))
 		return 1
 	}
-	Header(c.UI)
 	organized := organize(msg)
 	var creds2list = make(map[string]*[]*models.GenericCreds)
 	if c.accountFilter != "" {
@@ -70,6 +69,8 @@ func (c *cmd) Run(args []string) int {
 	if len(creds2list) == 0 {
 		NoDataHeader(c.UI)
 		return 0
+	} else {
+		Header(c.UI)
 	}
 	for acct, credsList := range creds2list {
 		c.UI.Info(prettify(acct, credsList))
@@ -114,16 +115,17 @@ func (c *cmd) Help() string {
 }
 
 func Header(ui cli.Ui) {
-	ui.Output("\n--- Env Credentials ---\n")
+	ui.Output("--- Env Credentials ---\n")
 }
 
 func NoDataHeader(ui cli.Ui) {
-	ui.Warn("\n--- No Env Credentials Found! ---")
+	ui.Warn("--- No Env Credentials Found! ---")
 }
 
-const synopsis = "List all credentials used for artifact repositories"
+const synopsis = "List all environment variables held by ocelot"
 const help = `
-Usage: ocelot creds repo list
+Usage: ocelot creds env list <options>
 
-  Retrieves all credentials that ocelot uses to auth into artifact repositories
+  Retrieves all environment variables associated by each account. If you wish to filter the account variables to see, run: 
+    ocelot creds env list -account <ACCT_NAME>
 `
