@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/consul/api"
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/ocelot/common"
@@ -258,35 +259,35 @@ type buildruntimestorage struct {
 }
 
 
-func (b *buildruntimestorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+func (b *buildruntimestorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.BuildSummary, error) {
 	if b.notFound {
 		return nil, storage.BuildSumNotFound(partialGitHash)
 	}
 	if b.fail {
 		return nil, errors.New("failing storage at RetrieveHashStartsWith")
 	}
-	return []models.BuildSummary{{Hash: partialGitHash, Failed:b.buildFailed, QueueTime: time.Now().Add(-time.Hour), BuildTime:time.Now().Add(-time.Hour), Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: 1}}, nil
+	return []*pb.BuildSummary{{Hash: partialGitHash, Failed:b.buildFailed, QueueTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, BuildTime:&timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: 1}}, nil
 
 }
 
-func (b *buildruntimestorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
+func (b *buildruntimestorage) RetrieveLatestSum(gitHash string) (*pb.BuildSummary, error) {
 	if b.notFound {
-		return models.BuildSummary{}, storage.BuildSumNotFound(gitHash)
+		return nil, storage.BuildSumNotFound(gitHash)
 	}
 	if b.fail {
-		return models.BuildSummary{}, errors.New("failing storage at RetrieveLatestSum")
+		return nil, errors.New("failing storage at RetrieveLatestSum")
 	}
-	return models.BuildSummary{Hash:gitHash, Failed: b.buildFailed, QueueTime: time.Now().Add(-time.Hour), BuildTime:time.Now().Add(-time.Hour), Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: 12}, nil
+	return &pb.BuildSummary{Hash:gitHash, Failed: b.buildFailed, QueueTime:&timestamp.Timestamp{Seconds:  time.Now().Add(-time.Hour).Unix()}, BuildTime:&timestamp.Timestamp{Seconds:time.Now().Add(-time.Hour).Unix()}, Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: 12}, nil
 }
 
-func (b *buildruntimestorage) RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error) {
+func (b *buildruntimestorage) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
 	if b.notFound {
-		return models.BuildSummary{}, storage.BuildSumNotFound(fmt.Sprintf("%d", buildId))
+		return nil, storage.BuildSumNotFound(fmt.Sprintf("%d", buildId))
 	}
 	if b.fail {
-		return models.BuildSummary{}, errors.New("failing storage at RetrieveSumByBuildId")
+		return nil, errors.New("failing storage at RetrieveSumByBuildId")
 	}
-	return models.BuildSummary{Hash: "1234", Failed: b.buildFailed, QueueTime: time.Now().Add(-time.Hour), BuildTime:time.Now().Add(-time.Hour), Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: buildId}, nil
+	return &pb.BuildSummary{Hash: "1234", Failed: b.buildFailed, QueueTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, BuildTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: buildId}, nil
 }
 
 var output = `ON an exceptionally hot evening early in July a young man came out of the garret in which he lodged in S. Place and walked slowly, as though in hesitation, towards K. bridge.	   1

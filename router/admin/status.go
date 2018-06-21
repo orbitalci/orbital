@@ -17,7 +17,7 @@ import (
 
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
 func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery) (result *pb.Status, err error) {
-	var buildSum models.BuildSummary
+	var buildSum *pb.BuildSummary
 	switch {
 	case len(query.Hash) > 0:
 		partialHash := query.Hash

@@ -119,14 +119,14 @@ func (p *PostgresStorage) SetQueueTime(id int64) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	queryStr := `UPDATE build_summary SET queuetime=$1 WHERE id=$2`
+	queryStr := `UPDATE build_summary SET queuetime=$1, status=$2 WHERE id=$3`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(time.Now().Format(TimeFormat), id); err != nil {
+	if _, err := stmt.Exec(time.Now().Format(TimeFormat), pb.BuildStatus_QUEUED, id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
@@ -138,7 +138,17 @@ func (p *PostgresStorage) StoreFailedValidation(id int64) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	err := p.UpdateSum(true, 0, id)
+	querystr := `UPDATE build_summary SET failed=$1, buildtime=$2, status=$3 WHERE id=$4`
+	stmt, err := p.db.Prepare(querystr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return err
+	}
+	defer stmt.Close()
+	if _, err := stmt.Exec(true, 0, pb.BuildStatus_FAILED_PRESTART, id); err != nil {
+		ocelog.IncludeErrField(err).Error()
+		return err
+	}
 	return err
 }
 
@@ -146,14 +156,14 @@ func (p *PostgresStorage) setStartTime(id int64, stime time.Time) error {
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	queryStr := `UPDATE build_summary SET starttime=$1 WHERE id=$2`
+	queryStr := `UPDATE build_summary SET starttime=$1, status=$2 WHERE id=$3`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(stime.Format(TimeFormat), id); err != nil {
+	if _, err := stmt.Exec(stime.Format(TimeFormat), pb.BuildStatus_RUNNING, id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
@@ -169,22 +179,26 @@ func (p *PostgresStorage) UpdateSum(failed bool, duration float64, id int64) err
 	if err := p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	querystr := `UPDATE build_summary SET failed=$1, buildtime=$2 WHERE id=$3`
+	buildstat := pb.BuildStatus_PASSED
+	if failed {
+		buildstat = pb.BuildStatus_FAILED
+	}
+	querystr := `UPDATE build_summary SET failed=$1, buildtime=$2, status=$3 WHERE id=$4`
 	stmt, err := p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(failed, duration, id); err != nil {
+	if _, err := stmt.Exec(failed, duration, buildstat, id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
 	return nil
 }
 
-func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, error) {
-	var sums []models.BuildSummary
+func (p *PostgresStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error) {
+	var sums []*pb.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -202,7 +216,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 	}
 	defer rows.Close()
 	for rows.Next() {
-		sum := models.BuildSummary{}
+		sum := &pb.BuildSummary{}
 		//fmt.Println(hi)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -219,8 +233,8 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, er
 
 //RetrieveHashStartsWith will return a list of all hashes starting with the partial string in db
 //** THIS WILL ONLY RETURN HASH, ACCOUNT, AND REPO **
-func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
-	var hashes []models.BuildSummary
+func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.BuildSummary, error) {
+	var hashes []*pb.BuildSummary
 	if err := p.Connect(); err != nil {
 		return hashes, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -238,7 +252,7 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]model
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var result models.BuildSummary
+		var result *pb.BuildSummary
 		err = rows.Scan(&result.Hash, &result.Account, &result.Repo)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -252,8 +266,8 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]model
 }
 
 // RetrieveLatestSum will return the latest entry of build_summary where hash starts with `gitHash`
-func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.BuildSummary, error) {
-	var sum models.BuildSummary
+func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (*pb.BuildSummary, error) {
+	var sum *pb.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sum, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -273,8 +287,8 @@ func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (models.Build
 }
 
 // RetrieveSumByBuildId will return a build summary based on build id
-func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error) {
-	var sum models.BuildSummary
+func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
+	var sum *pb.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sum, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -294,8 +308,8 @@ func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSumma
 }
 
 // RetrieveLastFewSums will return <limit> number of summaries that correlate with a repo and account.
-func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
-	var sums []models.BuildSummary
+func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]*pb.BuildSummary, error) {
+	var sums []*pb.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -313,7 +327,7 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 	}
 	defer rows.Close()
 	for rows.Next() {
-		sum := models.BuildSummary{}
+		sum := &pb.BuildSummary{}
 		if err = rows.Scan(&sum.Hash, &sum.Failed, &sum.BuildTime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &sum.QueueTime); err != nil {
 			if err == sql.ErrNoRows {
 				return sums, BuildSumNotFound("account: " + account + "and repo: " + repo)
@@ -326,8 +340,8 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 }
 
 // RetrieveAcctRepo will return to you a list of accountname + repositories that matches starting with partialRepo
-func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
-	var sums []models.BuildSummary
+func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]*pb.BuildSummary, error) {
+	var sums []*pb.BuildSummary
 	if err := p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -346,7 +360,7 @@ func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSu
 	}
 	defer rows.Close()
 	for rows.Next() {
-		sum := models.BuildSummary{}
+		sum := &pb.BuildSummary{}
 		if err = rows.Scan(&sum.Account, &sum.Repo); err != nil {
 			if err == sql.ErrNoRows {
 				return sums, BuildSumNotFound("repository starting with" + partialRepo)

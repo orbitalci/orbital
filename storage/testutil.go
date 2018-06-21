@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/shankj3/ocelot/models"
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/shankj3/ocelot/models/pb"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,10 +24,10 @@ func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing
 	cleanup, pw, port := CreateTestPgDatabase(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	hash := "123"
-	model := &models.BuildSummary{
+	model := &pb.BuildSummary{
 		Hash:          hash,
 		Failed:        false,
-		BuildTime:     time.Now(),
+		BuildTime:     &timestamp.Timestamp{Seconds:time.Now().Unix()},
 		Account:       "testAccount",
 		BuildDuration: 23.232,
 		Repo:          "testRepo",

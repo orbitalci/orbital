@@ -3,7 +3,7 @@ option go_package = "pb";
 package models;
 
 import "creds.proto";
-
+import "build.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
@@ -559,6 +559,8 @@ message BuildSummary {
     int64 buildId = 8;
     // queueTime is the datetime that either a tracking component or the admin put the build request on the queue to be processed by the werker node
     google.protobuf.Timestamp queueTime = 9;
+    // status is the current status of the build as known by the database
+    BuildStatus status = 10;
 }
 
 // summaries is a wrapper for a list of BuildSummary objects because protobuf can be dumb
