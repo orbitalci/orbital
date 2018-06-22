@@ -127,29 +127,29 @@ func generateTableRow(summary *models.BuildSummary, theme *commandhelper.ColorDe
 	var row []string
 	var color *commandhelper.Color
 	var status string
-	failedValidation := summary.QueueTime.Seconds == 0
-	isQueued := summary.BuildDuration < 0 && summary.BuildTime.Seconds == 0
-	isRunning := summary.BuildDuration < 0
-	//we color line output based on success/failure
-	if isRunning || isQueued {
+	switch summary.Status {
+	case models.BuildStatus_RUNNING, models.BuildStatus_QUEUED:
 		status = "N/A"
 		color = theme.Running
-	} else if failedValidation {
+	case models.BuildStatus_FAILED_PRESTART:
 		status = "FAILED PRESTART"
 		color = theme.Failed
-	} else if summary.Failed {
+	case models.BuildStatus_FAILED:
 		status = "FAIL"
 		color = theme.Failed
-	} else {
+	case models.BuildStatus_PASSED:
 		status = "PASS"
 		color = theme.Passed
+	default:
+		status = "ERROR"
+		color = theme.Failed
 	}
 	start, end := writeFirstAndLastColumns(summary, color)
 
 	row = append(row,
 		start,
 		summary.Repo,
-		commandhelper.PrettifyTime(summary.BuildDuration, isQueued),
+		commandhelper.PrettifyTime(summary.BuildDuration, summary.Status == models.BuildStatus_QUEUED),
 		tym.Format("Mon Jan 2 15:04:05"),
 		status,
 		summary.Branch,

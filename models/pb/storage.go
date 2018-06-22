@@ -3,7 +3,6 @@ package pb
 import (
 	"database/sql/driver"
 	"errors"
-	"fmt"
 )
 
 func (x *BuildStatus) Value() (driver.Value, error) {
@@ -12,12 +11,10 @@ func (x *BuildStatus) Value() (driver.Value, error) {
 }
 
 func (x *BuildStatus) Scan(src interface{}) error {
-	fmt.Println("TRYING TO SCAN")
-	fmt.Print(src)
-	st, ok := src.(*BuildStatus)
+	inty, ok := src.(int64)
 	if !ok {
-		return errors.New("unable to cast source to BuildStatus")
+		return errors.New("can't cast to int64")
 	}
-	x = st
+	*x = BuildStatus(inty)
 	return nil
 }
