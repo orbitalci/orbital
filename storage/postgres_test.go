@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/test"
 	util "github.com/shankj3/ocelot/common/testutil"
 	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"bytes"
 	"testing"
@@ -22,10 +24,10 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	model := &models.BuildSummary{
+	model := &pb.BuildSummary{
 		Hash:          "123",
 		Failed:        false,
-		BuildTime:     buildTime,
+		BuildTime:     &timestamp.Timestamp{Seconds: buildTime.Unix()},
 		Account:       "testAccount",
 		BuildDuration: 23.232,
 		Repo:          "testRepo",
@@ -39,6 +41,7 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	sumaries, err := pg.RetrieveSum("123")
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	sum := sumaries[0]
 	if sum.Hash != "123" {
