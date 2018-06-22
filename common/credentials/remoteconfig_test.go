@@ -4,7 +4,6 @@ import (
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/go-til/vault"
-	util "github.com/shankj3/ocelot/common/testutil"
 	pb "github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 
@@ -173,12 +172,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	if shnak.GetRepoUrl() != repoCreds.GetRepoUrl() {
 		t.Error(test.StrFormatErrors("repo url", repoCreds.GetRepoUrl(), shnak.GetRepoUrl()))
 	}
-}
-
-func TestRemoteConfig_GetStorageType(t *testing.T) {
-	util.BuildServerHack(t)
-	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
-	defer TeardownVaultAndConsul(vaultListener, consulServer)
+	// test storage type
 	// check that default will be file
 	storeType, err := testRemoteConfig.GetStorageType()
 	if err != nil {
@@ -203,8 +197,8 @@ func TestRemoteConfig_GetStorageType(t *testing.T) {
 	if storeType != storage.Postgres {
 		t.Error(test.GenericStrFormatErrors("store type enum", storage.Postgres, storeType))
 	}
-
 }
+
 
 func Test_BuildCredPath(t *testing.T) {
 	expected := "creds/vcs/banana/bitbucket/derp"

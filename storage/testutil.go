@@ -20,9 +20,7 @@ func CreateTestFileSystemStorage(t *testing.T) BuildSum {
 
 // create a test postgres database on port 5555 using the official docker image, create the tables, and insert some
 // seed data
-func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing.T)) {
-	cleanup, pw, port := CreateTestPgDatabase(t)
-	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+func insertDependentData(t *testing.T, pg *PostgresStorage) (int64) {
 	hash := "123"
 	model := &pb.BuildSummary{
 		Hash:          hash,
@@ -35,10 +33,9 @@ func insertDependentData(t *testing.T) (*PostgresStorage, int64, func(t *testing
 	}
 	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch)
 	if err != nil {
-		cleanup(t)
 		t.Error(err)
 	}
-	return pg, id, cleanup
+	return id
 }
 
 func createOrUpdateAuditFile(msg string) error {
@@ -101,26 +98,23 @@ func CreateTestPgDatabase(t *testing.T) (cleanup func(t *testing.T), password st
 				t.Fatal(err)
 			}
 		}
-		t.Log(out.String())
-		t.Log(errr.String())
 		cmd = exec.Command("/bin/sh", "-c", "docker kill pgtest")
 		if err := cmd.Run(); err != nil {
 			t.Log("could not kill db, err: ", err.Error())
 		}
-		cmd = exec.Command("/bin/sh", "-c", "docker rm pgtest")
-		if err := cmd.Run(); err != nil {
-			t.Log("could not rm db image, err: ", err.Error())
-		}
+		//cmd = exec.Command("/bin/sh", "-c", "docker rm pgtest")
+		//if err := cmd.Run(); err != nil {
+		//	t.Log("could not rm db image, err: ", err.Error())
+		//}
 	}
 	// this has to happen for postgres to be able to actually start up
 	t.Log("waiting 4 seconds for postgres container to start up proper")
-	time.Sleep(4 * time.Second)
+	time.Sleep(6 * time.Second)
 	return
 
 }
 
 func PostgresTeardown(t *testing.T, db *sql.DB) {
-	t.Log(db.Stats())
 	open := db.Stats().OpenConnections
 	if open > 0 {
 		t.Fatalf("failed to close %d connections", open)

@@ -110,13 +110,13 @@ func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, 
 		return 0, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var id int64
-	query := `INSERT INTO build_summary(hash, account, repo, branch) values ($1,$2,$3,$4) RETURNING id`
+	query := `INSERT INTO build_summary(hash, account, repo, branch, status) values ($1,$2,$3,$4,$5) RETURNING id`
 	stmt, err := p.db.Prepare(query)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
-	if err := stmt.QueryRow(hash, account, repo, branch).Scan(&id); err != nil {
+	if err := stmt.QueryRow(hash, account, repo, branch, pb.BuildStatus_NIL).Scan(&id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return id, err
 	}
@@ -227,6 +227,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error
 	defer rows.Close()
 	for rows.Next() {
 		sum := &pb.BuildSummary{}
+		err = rows.Scan(&sum.Hash, &sum.Failed, &starttime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &queuetime, &sum.Status)
 		//fmt.Println(hi)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -235,7 +236,6 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error
 			ocelog.IncludeErrField(err)
 			return sums, err
 		}
-		err = rows.Scan(&sum.Hash, &sum.Failed, &starttime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &queuetime, &sum.Status)
 		sum.QueueTime = convertTimeToTimestamp(queuetime)
 		sum.BuildTime = convertTimeToTimestamp(starttime)
 		sums = append(sums, sum)
