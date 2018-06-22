@@ -38,6 +38,29 @@ spec:
   {{- end }}
 {{- end }}
 ---
+{{- if .Values.admin.grpcIngress.enabled -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/grpc-backend: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  name: admin-{{ template "ocelot.fullname" . }}-grpc
+spec:
+  rules:
+  - host: {{ .Values.admin.grpcIngress.host }}
+    http:
+      paths:
+      - backend:
+          serviceName: admin-{{ template "ocelot.fullname" . }}-internal
+          servicePort: grpc
+  tls:
+  - hosts:
+    - {{ .Values.admin.grpcIngress.host }}
+    secretName: {{ .Values.admin.grpcIngress.tlsSecret }}
+{{- end }}
+---
 {{- if .Values.hookhandler.ingress.enabled -}}
 {{- $fullName := include "ocelot.fullname" . -}}
 {{- $servicePort := .Values.hookhandler.service.port -}}

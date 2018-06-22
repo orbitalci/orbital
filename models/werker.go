@@ -15,6 +15,20 @@ const (
 	Exec
 )
 
+func (w WerkType) String() string {
+	switch w {
+	case Kubernetes:
+		return "Kubernetes"
+	case Docker:
+		return "Docker"
+	case SSH:
+		return "SSH"
+	case Exec:
+		return "Exec"
+	default:
+		panic("inconceivable!!")
+	}
+}
 
 // Transport struct is for the Transport channel that will interact with the streaming side of the service
 // to stream results back to the admin. It sends just enough to be unique, the hash that triggered the build

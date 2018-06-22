@@ -3,6 +3,13 @@
 {{- range .Values.admin.ingress.hosts }}
   http{{ if $.Values.admin.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.admin.ingress.path }}
 {{- end }}
+{{- if .Values.admin.grpcIngress.enabled }}
+The grpc endpoint is at https://{{ .Values.admin.grpcIngress.host }}
+With the ocelot client set
+  ADMIN_HOST={{ .Values.admin.grpcIngress.host }}
+  ADMIN_PORT=443
+to connect to this instance.
+{{- end }}
 {{- else if contains "NodePort" .Values.admin.service.type }}
   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ template "ocelot.fullname" . }})
   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")

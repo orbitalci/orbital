@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/common/remote"
 	"google.golang.org/grpc/codes"
@@ -19,6 +20,17 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 )
+
+var (
+	triggeredBuilds = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "admin_triggered_builds",
+		Help: "builds triggered by a call to admin",
+	}, []string{"account", "repository"})
+)
+
+func init() {
+	prometheus.MustRegister(triggeredBuilds)
+}
 
 func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot_BuildRepoAndHashServer) error {
 	acct, repo, err := common.GetAcctRepo(buildReq.AcctRepo)

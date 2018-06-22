@@ -65,7 +65,7 @@
 
 [[constraint]]
 #  version = "0.2.1"
-  revision = "e9fbe501d779fa9550a4617821763aad5bd56113"
+  revision = "37e340f8974be00e281b727a918cc1f6073fc6b4"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]
@@ -81,3 +81,10 @@
   name = "github.com/SAP/go-hdb"
   revision = "c80549df883e955dff808b1258c26f32b3ed10a4"
 #  version = "v0.9.5"
+[[constraint]]
+  name = "github.com/prometheus/client_golang"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/grpc-ecosystem/go-grpc-prometheus"
+  version = "1.2.0"

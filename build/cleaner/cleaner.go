@@ -3,6 +3,7 @@ package cleaner
 import (
 	"context"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/shankj3/ocelot/models"
 )
 
@@ -28,4 +29,15 @@ func GetNewCleaner(werkerType models.WerkType, facts *models.SSHFacts) Cleaner {
 		return &DockerCleaner{}
 	}
 	return nil
+}
+
+var (
+	failedCleaning = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "ocelot_build_clean_failed",
+		Help: "post build clean failures",
+	}, []string{"type"})
+)
+
+func init() {
+	prometheus.MustRegister(failedCleaning)
 }

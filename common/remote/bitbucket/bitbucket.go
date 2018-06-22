@@ -92,6 +92,7 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 	path := fmt.Sprintf("%s/src/%s/%s", fullRepoName, commitHash, filePath)
 	bytez, err = bb.Client.GetUrlRawData(fmt.Sprintf(bb.GetBaseURL(), path))
 	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("GetFile").Inc()
 		ocelog.IncludeErrField(err).Error()
 		return
 	}
@@ -102,6 +103,9 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error) {
 	commits := &pbb.Commits{}
 	err := bb.Client.GetUrl(fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch, commits)
+	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("GetAllCommits").Inc()
+	}
 	return commits, err
 }
 
@@ -121,6 +125,7 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 		commitz := &pbb.Commits{}
 		err := bb.Client.GetUrl(urrl, commitz)
 		if err != nil {
+			failedBBRemoteCalls.WithLabelValues("GetCommitLog").Inc()
 			return commits, err
 		}
 		for _, commit := range commitz.Values {
@@ -143,6 +148,7 @@ func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_Rep
 	repoVal := &pbb.PaginatedRepository_RepositoryValues{}
 	err := bb.Client.GetUrl(fmt.Sprintf(DefaultRepoBaseURL, acctRepo), repoVal)
 	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("GetRepoDetail").Inc()
 		return *repoVal, err
 	}
 	return *repoVal, nil
@@ -154,6 +160,7 @@ func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.
 	var resp *http.Response
 	resp, err = bb.Client.GetUrlResponse(urrl)
 	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("GetBranchLastCommitData").Inc()
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -186,6 +193,7 @@ func (bb *Bitbucket) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.Branch
 		branches := &pbb.PaginatedRepoBranches{}
 		err := bb.Client.GetUrl(nextUrl, branches)
 		if err != nil {
+			failedBBRemoteCalls.WithLabelValues("GetAllBranchesLastCommitData").Inc()
 			return nil, err
 		}
 		for _, branch := range branches.GetValues() {
@@ -217,6 +225,7 @@ func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
 		}
 		err = bb.Client.PostUrl(webhookURL, webhookStr, nil)
 		if err != nil {
+			failedBBRemoteCalls.WithLabelValues("CreateWebhook").Inc()
 			return err
 		}
 		ocelog.Log().Debug("subscribed to webhook for ", webhookURL)
@@ -257,6 +266,7 @@ func (bb *Bitbucket) recurseOverRepos(repoUrl string) error {
 	//todo: error pages from bitbucket??? these need to bubble up to client
 	err := bb.Client.GetUrl(repoUrl, repositories)
 	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("recurseOverRepos").Inc()
 		return err
 	}
 
@@ -278,6 +288,7 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) er
 	repositories := &pbb.PaginatedRootDirs{}
 	err := bb.Client.GetUrl(sourceFileUrl, repositories)
 	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("recurseOverFiles").Inc()
 		return err
 	}
 	for _, v := range repositories.GetValues() {
@@ -298,7 +309,10 @@ func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {
 		return false
 	}
 	webhooks := &pbb.GetWebhooks{}
-	bb.Client.GetUrl(getWebhookURL, webhooks)
+	err := bb.Client.GetUrl(getWebhookURL, webhooks)
+	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("FindWebhooks").Inc()
+	}
 
 	for _, wh := range webhooks.GetValues() {
 		if wh.GetUrl() == bb.GetCallbackURL() {
@@ -319,6 +333,7 @@ func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
 		commitz := &pbb.Commits{}
 		err := bb.Client.GetUrl(url, commitz)
 		if err != nil {
+			failedBBRemoteCalls.WithLabelValues("GetPRCommits").Inc()
 			return commits, err
 		}
 		for _, commit := range commitz.Values {
@@ -347,6 +362,7 @@ func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, build
 	resp, err := bb.Client.PostUrlForm(urll, url.Values{"content":{content}})
 	defer resp.Body.Close()
 	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("PostPRComment").Inc()
     	return err
 	}
 	if resp.StatusCode != http.StatusOK {

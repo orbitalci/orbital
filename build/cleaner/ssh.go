@@ -31,6 +31,7 @@ func (d *SSHCleaner) Cleanup(ctx context.Context, id string, logout chan []byte)
 	}
 	err = ssh.RunAndLog("rm -rf " + cloneDir, []string{}, logout, sshhelper.BasicPipeHandler)
 	if err != nil {
+		failedCleaning.WithLabelValues("ssh").Inc()
 		if logout != nil {
 			logout <- []byte("rould not remove build directory! Error: " + err.Error())
 		}

@@ -2,6 +2,7 @@ package listener
 
 import (
 	"github.com/golang/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/basher"
@@ -18,6 +19,17 @@ import (
 	//"runtime/debug"
 	"fmt"
 )
+
+var (
+	recievedMsgs = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "ocelot_received_messages",
+		Help: "number of messages received by node",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(recievedMsgs)
+}
 
 type WorkerMsgHandler struct {
 	*models.WerkerFacts
@@ -51,6 +63,7 @@ func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Bash
 // or signal handling
 // The nsqpb will call msg.Finish() when it receives on this channel.
 func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error {
+	recievedMsgs.Inc()
 	var err error
 	ocelog.Log().Debug("unmarshal-ing build obj and processing")
 	werkerTask := &pb.WerkerTask{}

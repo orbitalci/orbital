@@ -1,9 +1,9 @@
 package docker
 
 import (
+	"context"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/models/pb"
-	"golang.org/x/net/context"
 
 	"testing"
 )
