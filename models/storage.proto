@@ -1,0 +1,56 @@
+syntax = "proto3";
+option go_package = "pb";
+package models;
+
+import "google/protobuf/timestamp.proto";
+
+//BuildSummary represents the build_summary table in postgres
+// it is a top level view of how a repository is "doing" in ocelot, ie build times, fail status..
+message BuildSummary {
+    // hash is the git commit hash that corresponds with this build information
+    string hash = 1;
+    // failed is whether or not the build failed
+    bool failed = 2;
+    // buildTime is the datetime that the build was picked up off the queue by the werker
+    google.protobuf.Timestamp buildTime = 3;
+    // account is the VCS account associated with the repository / commit
+    string account = 4;
+    // buildDuration is the length of time the whole build took to execute
+    double buildDuration = 5;
+    // repo is the repository associated with the account / commit
+    string repo = 6;
+    // branch is the branch associated with the commit when it was pushed
+    string branch = 7;
+    // buildId is the id given to the build entry by postgres. it is unique
+    int64 buildId = 8;
+    // queueTime is the datetime that either a tracking component or the admin put the build request on the queue to be processed by the werker node
+    google.protobuf.Timestamp queueTime = 9;
+    // status is the current status of the build as known by the database
+    BuildStatus status = 10;
+}
+
+
+enum BuildStatus {
+    NIL = 0;
+    QUEUED = 1;
+    RUNNING = 2;
+    FAILED = 3;
+    PASSED = 4;
+    FAILED_PRESTART = 5;
+}
+
+// PollRequest encompasses all the data necessary to set up poll tracking in ocelot.
+message PollRequest {
+    // account is the VCS account
+    string account = 1;
+    // repo is the VCS repository name
+    string repo = 2;
+    // cron is the cron string that will determine how often a check for changes should occur
+    string cron = 4;
+    // branches tells ocelot which branches should be checked for changes
+    string branches = 5;
+    // internal use only
+    google.protobuf.Timestamp lastCronTime = 6;
+    // internal use only
+    map<string, string> lastHashes = 7;
+}

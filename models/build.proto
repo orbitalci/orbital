@@ -56,14 +56,6 @@ message Triggers {
     repeated string branches = 1;
 }
 
-enum BuildStatus {
-    NIL = 0;
-    QUEUED = 1;
-    RUNNING = 2;
-    FAILED = 3;
-    PASSED = 4;
-    FAILED_PRESTART = 5;
-}
 
 enum StageResultVal {
     PASS = 0;
