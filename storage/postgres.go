@@ -264,7 +264,7 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.B
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var result *pb.BuildSummary
+		var result pb.BuildSummary
 		err = rows.Scan(&result.Hash, &result.Account, &result.Repo)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -272,7 +272,7 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.B
 			}
 			return hashes, err
 		}
-		hashes = append(hashes, result)
+		hashes = append(hashes, &result)
 	}
 	return hashes, nil
 }
