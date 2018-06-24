@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+const ENV_SAFE = "^[a-zA-Z_]+$"
 
 //OcyCredder is an interface for interacting with credentials in Ocelot
 type OcyCredder interface {
@@ -242,6 +245,33 @@ func (m *NotifyCreds) SetSecret(secret string) {
 	m.ClientSecret = secret
 }
 
+func (m *GenericCreds) SetSecret(str string) {
+	m.ClientSecret = str
+}
+
+func (m *GenericCreds) UnmarshalAdditionalFields(fields []byte) error {
+	return nil
+}
+
+func (m *GenericCreds) CreateAdditionalFields() ([]byte, error) {
+	return []byte("{}"), nil
+}
+
+func (m *GenericCreds) ValidateForInsert() *ValidationErr {
+	errr := validateCommonFieldsForInsert(m)
+	if len(errr) != 0 {
+		return Invalidate(strings.Join(errr, "\n"))
+	}
+	re, err := regexp.Compile(ENV_SAFE)
+	if err != nil {
+		return Invalidate("Unable to compile regex, error is: " + err.Error())
+	}
+	if !re.MatchString(m.GetIdentifier()) {
+		return Invalidate(fmt.Sprintf("Identifier for credential must be environment variable safe, ie it must match the regex pattern %s. Your credential Identifier, %s, does not.", ENV_SAFE, m.GetIdentifier()))
+	}
+	return nil
+}
+
 
 func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
 	if credder.GetIdentifier() == "" {
@@ -282,6 +312,7 @@ var (
 	sshSubTypes   = []SubCredType{SubCredType_SSHKEY}
 	appleSubTypes = []SubCredType{SubCredType_DEVPROFILE}
 	notifySubTypes = []SubCredType{SubCredType_SLACK}
+	genericSubTypes = []SubCredType{SubCredType_ENV}
 )
 
 // Subtypes will return all the SubCredTypes that are associated with that CredType. Will return nil if it is unknown
@@ -299,6 +330,8 @@ func (x CredType) Subtypes() []SubCredType {
 		return appleSubTypes
 	case CredType_NOTIFIER:
 		return notifySubTypes
+	case CredType_GENERIC:
+		return genericSubTypes
 	}
 	// this shouldn't happen, unless a new CredType is added and not updated here.
 	return nil
@@ -327,6 +360,8 @@ func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCre
 		return &AppleCreds{AcctName: account, Identifier: identifier, SubType:subCredType}
 	case CredType_NOTIFIER:
 		return &NotifyCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
+	case CredType_GENERIC:
+		return &GenericCreds{AcctName:account, Identifier:identifier, SubType:subCredType}
 	default:
 		return nil
 	}
@@ -346,6 +381,8 @@ func (x SubCredType) Parent() CredType {
 		return CredType_NOTIFIER
 	case Contains(x, appleSubTypes):
 		return CredType_APPLE
+	case Contains(x, genericSubTypes):
+		return CredType_GENERIC
 	}
 	return -1
 }

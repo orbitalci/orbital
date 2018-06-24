@@ -110,30 +110,31 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	dckr, cleanupFunc := docker.CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
 	time.Sleep(2 * time.Second)
 	defer cleanupFunc(t)
+	baseStage := build.InitStageUtil("PREFLIGHT")
 	launch.infochan = make(chan []byte, 1000)
 	launch.integrations = getIntegrationList()
 	_ = dckr.Exec(ctx, "Install bash", "", []string{}, []string{"/bin/sh", "-c", "apk -U --no-cache add bash"}, launch.infochan) // For the k8s test
-	result, _, _ := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, dckr)
+	result := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, dckr, baseStage)
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Log(result.Messages)
 		t.Error(result.Error)
 	}
 	expectedMsgs := []string{
-		"completed integration_util | ssh keyfile integration stage ✓",
-		"completed integration_util | docker login stage ✓",
-		"completed integration_util | kubeconfig render stage ✓",
-		"no integration data found for nexus m2 settings.xml render so assuming integration not necessary",
+		"completed preflight | integ | ssh keyfile integration stage ✓",
+		"completed preflight | integ | docker login stage ✓",
+		"completed preflight | integ | kubeconfig render stage ✓",
+		"no integration data for nexus m2 settings.xml render ✓",
 		"completed integration util setup stage ✓",
 	}
 	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {
 		t.Error(diff)
 	}
-	result, _, _ = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf:&pb.BuildConfig{BuildTool:"gala"}}, dckr)
+	result = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf:&pb.BuildConfig{BuildTool:"gala"}}, dckr, baseStage)
 	close(launch.infochan)
 	expectedMsgs = []string{
-		"completed integration_util | ssh keyfile integration stage ✓",
-		"completed integration_util | docker login stage ✓",
-		"completed integration_util | kubeconfig render stage ✓",
+		"completed preflight | integ | ssh keyfile integration stage ✓",
+		"completed preflight | integ | docker login stage ✓",
+		"completed preflight | integ | kubeconfig render stage ✓",
 		"completed integration util setup stage ✓",
 	}
 	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {

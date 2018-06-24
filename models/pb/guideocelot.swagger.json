@@ -184,7 +184,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -230,6 +231,184 @@
         "tags": [
           "creds",
           "apple"
+        ]
+      }
+    },
+    "/v1/creds/env": {
+      "get": {
+        "summary": "Get all known generic credentials (env).",
+        "description": "Get all known generic credentials (env).",
+        "operationId": "GetGenericCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsGenericWrap"
+            }
+          }
+        },
+        "tags": [
+          "creds",
+          "env",
+          "generic"
+        ]
+      },
+      "post": {
+        "summary": "Add new generic credentials",
+        "description": "Add new generic credentials.",
+        "operationId": "SetGenericCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsGenericWrap"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "env",
+          "generic"
+        ]
+      }
+    },
+    "/v1/creds/env/{acctName}/{identifier}": {
+      "put": {
+        "summary": "Update a Generic Credential",
+        "description": "Endpoint for updating a Generic credential in ocelot (ie ENV var). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields",
+        "operationId": "UpdateGenericCreds2",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsGenericCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "vcs"
+        ]
+      }
+    },
+    "/v1/creds/generic": {
+      "get": {
+        "summary": "Get all known generic credentials (env).",
+        "description": "Get all known generic credentials (env).",
+        "operationId": "GetGenericCreds2",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/modelsGenericWrap"
+            }
+          }
+        },
+        "tags": [
+          "creds",
+          "env",
+          "generic"
+        ]
+      },
+      "post": {
+        "summary": "Add new generic credentials",
+        "description": "Add new generic credentials.",
+        "operationId": "SetGenericCreds2",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsGenericWrap"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "env",
+          "generic"
+        ]
+      }
+    },
+    "/v1/creds/generic/{acctName}/{identifier}": {
+      "put": {
+        "summary": "Update a Generic Credential",
+        "description": "Endpoint for updating a Generic credential in ocelot (ie ENV var). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields",
+        "operationId": "UpdateGenericCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/modelsGenericCreds"
+            }
+          }
+        ],
+        "tags": [
+          "creds",
+          "vcs"
         ]
       }
     },
@@ -327,7 +506,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -463,7 +643,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           },
@@ -628,7 +809,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -773,7 +955,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -939,7 +1122,8 @@
               "KUBECONF",
               "SSHKEY",
               "SLACK",
-              "DEVPROFILE"
+              "DEVPROFILE",
+              "ENV"
             ],
             "default": "NIL_SCT"
           }
@@ -1535,6 +1719,38 @@
         }
       }
     },
+    "modelsGenericCreds": {
+      "type": "object",
+      "properties": {
+        "acctName": {
+          "type": "string",
+          "title": "account name to associate integration cred with"
+        },
+        "subType": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "There is currently only one subType that is valid for GenericCreds, and it is ENV"
+        },
+        "identifier": {
+          "type": "string",
+          "title": "identifier is the unique identifier for the integration"
+        },
+        "clientSecret": {
+          "type": "string",
+          "title": "clientSecret is the secret associated with the integration cred"
+        }
+      }
+    },
+    "modelsGenericWrap": {
+      "type": "object",
+      "properties": {
+        "creds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modelsGenericCreds"
+          }
+        }
+      }
+    },
     "modelsK8SCreds": {
       "type": "object",
       "properties": {
@@ -1813,7 +2029,8 @@
         "KUBECONF",
         "SSHKEY",
         "SLACK",
-        "DEVPROFILE"
+        "DEVPROFILE",
+        "ENV"
       ],
       "default": "NIL_SCT"
     },
