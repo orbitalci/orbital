@@ -330,6 +330,56 @@ service GuideOcelot {
     }
     rpc AppleCredExists (AppleCreds) returns (Exists) {}
 
+    rpc GetGenericCreds (google.protobuf.Empty) returns (GenericWrap) {
+        option (google.api.http) = {
+            get: "/v1/creds/env"
+            additional_bindings {
+                get: "/v1/creds/generic"
+            }
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Get all known generic credentials (env)."
+            description: "Get all known generic credentials (env)."
+            tags: "creds"
+            tags: "env"
+            tags: "generic"
+        };
+    }
+    rpc SetGenericCreds (GenericWrap) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/v1/creds/env"
+            body: "*"
+            additional_bindings {
+                post: "/v1/creds/generic"
+                body: "*"
+            }
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Add new generic credentials"
+            description: "Add new generic credentials."
+            tags: "creds"
+            tags: "env"
+            tags: "generic"
+        };
+    }
+    rpc UpdateGenericCreds (GenericCreds) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+			put: "/v1/creds/generic/{acctName}/{identifier}"
+			body: "*"
+			additional_bindings {
+			    put: "/v1/creds/env/{acctName}/{identifier}"
+			    body: "*"
+			}
+		};
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Update a Generic Credential"
+            description: "Endpoint for updating a Generic credential in ocelot (ie ENV var). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields"
+            tags: "creds"
+            tags: "vcs"
+        };
+    }
+    rpc GenericCredExists (GenericCreds) returns (Exists) {}
+
     rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
     rpc BuildRuntime (BuildQuery) returns (Builds) {
         option (google.api.http) = {

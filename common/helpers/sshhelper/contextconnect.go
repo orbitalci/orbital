@@ -69,8 +69,11 @@ type Channel struct {
 
 
 func (c *Channel) SetGlobals(envs []string) {
-	splitUp := splitEnvs(envs)
-	c.globalEnvVars = splitUp
+	c.globalEnvVars = splitEnvs(envs)
+}
+
+func (c *Channel) AppendGlobals(envs []string) {
+	c.globalEnvVars = append(c.globalEnvVars, splitEnvs(envs)...)
 }
 
 func splitEnvs(envs []string) (split [][2]string) {

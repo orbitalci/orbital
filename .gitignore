@@ -27,3 +27,4 @@ k8s/helm/charts/*.tgz
 werker_files.tar
 ocelot*.tgz
 *.pb.go
+*.pb.gw.go

@@ -37,7 +37,6 @@ func Start(grpcServer *grpc.Server, listener net.Listener) {
 	}
 }
 
-
 func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
 	//initializes our "context" - guideOcelotServer
 	//store := cred.GetOcelotStorage()
@@ -88,7 +87,6 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 	return grpcServer, con, store, cancel, nil
 }
 
-
 func preflightHandler(w http.ResponseWriter, r *http.Request) {
 	headers := []string{"Content-Type", "Accept"}
 	w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
@@ -136,6 +134,7 @@ func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	p = path.Join(dir, p)
 	http.ServeFile(w, r, p)
 }
+
 //
 ////TODO: how to propagate error codes up????
 ////TODO: cast this back to MY error type and set status

@@ -21,10 +21,9 @@ import (
 
 type SSH struct {
 	*basher.Basher
-	killer *valet.ContextValet
-	cnxn   *sshhelper.Channel
-	stage  *build.StageUtil
-	envs   []string
+	killer  *valet.ContextValet
+	cnxn    *sshhelper.Channel
+	stage   *build.StageUtil
 	*models.WerkerFacts
 }
 
@@ -41,6 +40,9 @@ func (h *SSH) SetGlobalEnv(envs []string) {
 	h.cnxn.SetGlobals(envs)
 }
 
+func (h *SSH) AddGlobalEnvs(envs []string) {
+	h.cnxn.AppendGlobals(envs)
+}
 
 func (h *SSH) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Result {
 	res := &pb.Result{
@@ -121,6 +123,7 @@ func (h *SSH) execute(ctx context.Context, stage *build.StageUtil, env []string,
 	sshcmd := strings.Join(cmds, " ")
 	h.stage = stage
 	//defer func(){h.stage = nil}()
+
 	err := h.cnxn.RunAndLog(sshcmd, env, logout, h.writeToInfo)
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to complete %s stage %s", stage.Stage, models.FAILED)

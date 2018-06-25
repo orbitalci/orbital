@@ -48,9 +48,9 @@ func NewClientConfig() *ClientConfig {
 		ocyDns = v
 	}
 	_, noTLS := os.LookupEnv("NO_USE_TLS")
-	if noTLS {
-		fmt.Println("not creating https config to make grpc client with")
-	}
+	//if noTLS {
+	//	fmt.Println("not creating https config to make grpc client with")
+	//}
 	// if the host is an ip address, and NO_USE_TLS was not explicitly set, then set NO_USE_TLS value (noTLS) and print an info screen. if they wan
 	if IsIPv4Address(adminHost) && !noTLS {
 		if _, yesTLS := os.LookupEnv("USE_TLS"); !yesTLS {
