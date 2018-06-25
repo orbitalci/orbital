@@ -4,8 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/pkg/errors"
 	"github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"io"
 )
 
@@ -14,68 +18,73 @@ import (
 //	SetVCSCreds(ctx context.Context, in *Credentials, opts ...grpc.CallOption) (*empty.Empty, error)
 //}
 
-func NewFakeGuideOcelotClient(logLines []string) *fakeGuideOcelotClient {
-	return &fakeGuideOcelotClient{creds: &pb.CredWrapper{}, repoCreds: &pb.RepoCredWrapper{}, logLines: logLines}
+func NewFakeGuideOcelotClient(logLines []string) *FakeGuideOcelotClient {
+	return &FakeGuideOcelotClient{creds: &pb.CredWrapper{}, repoCreds: &pb.RepoCredWrapper{}, logLines: logLines}
 }
 
-type fakeGuideOcelotClient struct {
-	creds     *pb.CredWrapper
-	repoCreds *pb.RepoCredWrapper
-	k8sCreds  *pb.K8SCredsWrapper
-	brInfo    *pb.Builds
-	logLines  []string
+type FakeGuideOcelotClient struct {
+	pb.GuideOcelotClient
+	creds        *pb.CredWrapper
+	repoCreds    *pb.RepoCredWrapper
+	k8sCreds     *pb.K8SCredsWrapper
+	Generics     *pb.GenericWrap
+	ReturnError  bool
+	brInfo       *pb.Builds
+	Exists       bool
+	logLines     []string
+	NotConnected bool
 }
 
-func (f *fakeGuideOcelotClient) GetTrackedRepos(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.AcctRepos, error) {
+func (f *FakeGuideOcelotClient) GetTrackedRepos(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.AcctRepos, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) GetVCSCred(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*pb.VCSCreds, error) {
+func (f *FakeGuideOcelotClient) GetVCSCred(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*pb.VCSCreds, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) GetRepoCred(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*pb.RepoCreds, error) {
+func (f *FakeGuideOcelotClient) GetRepoCred(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*pb.RepoCreds, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) GetK8SCred(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*pb.K8SCreds, error) {
+func (f *FakeGuideOcelotClient) GetK8SCred(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*pb.K8SCreds, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) GetSSHCred(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*pb.SSHKeyWrapper, error) {
+func (f *FakeGuideOcelotClient) GetSSHCred(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*pb.SSHKeyWrapper, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) SetAppleCreds(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) SetAppleCreds(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) GetAppleCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.AppleCredsWrapper, error) {
+func (f *FakeGuideOcelotClient) GetAppleCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.AppleCredsWrapper, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) GetAppleCred(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*pb.AppleCreds, error) {
+func (f *FakeGuideOcelotClient) GetAppleCred(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*pb.AppleCreds, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) UpdateAppleCreds(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) UpdateAppleCreds(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return nil, nil
 }
-func (f *fakeGuideOcelotClient) AppleCredExists(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+func (f *FakeGuideOcelotClient) AppleCredExists(ctx context.Context, in *pb.AppleCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.CredWrapper, error) {
+func (f *FakeGuideOcelotClient) GetVCSCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.CredWrapper, error) {
 	return f.creds, nil
 }
 
-func (f *fakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) SetVCSCreds(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	in.SshFileLoc = "THIS IS A TEST"
 	f.creds.Vcs = append(f.creds.Vcs, in)
 	return &empty.Empty{}, nil
 }
 
-func (f *fakeGuideOcelotClient) UpdateVCSCreds(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) UpdateVCSCreds(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	for _, cred := range f.creds.Vcs {
 		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
 			fmt.Println("setting cred")
@@ -85,7 +94,7 @@ func (f *fakeGuideOcelotClient) UpdateVCSCreds(ctx context.Context, in *pb.VCSCr
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) VCSCredExists(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+func (f *FakeGuideOcelotClient) VCSCredExists(ctx context.Context, in *pb.VCSCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
 	for _, cred := range f.creds.Vcs {
 		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
 			return &pb.Exists{Exists: true}, nil
@@ -94,12 +103,12 @@ func (f *fakeGuideOcelotClient) VCSCredExists(ctx context.Context, in *pb.VCSCre
 	return &pb.Exists{Exists: false}, nil
 }
 
-func (f *fakeGuideOcelotClient) SetK8SCreds(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) SetK8SCreds(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	f.k8sCreds.K8SCreds = append(f.k8sCreds.K8SCreds, in)
 	return &empty.Empty{}, nil
 }
 
-func (f *fakeGuideOcelotClient) UpdateK8SCreds(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) UpdateK8SCreds(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	for _, cred := range f.k8sCreds.K8SCreds {
 		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
 			fmt.Println("setting cred")
@@ -109,7 +118,7 @@ func (f *fakeGuideOcelotClient) UpdateK8SCreds(ctx context.Context, in *pb.K8SCr
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) K8SCredExists(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+func (f *FakeGuideOcelotClient) K8SCredExists(ctx context.Context, in *pb.K8SCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
 	for _, cred := range f.k8sCreds.K8SCreds {
 		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
 			return &pb.Exists{Exists: true}, nil
@@ -118,16 +127,16 @@ func (f *fakeGuideOcelotClient) K8SCredExists(ctx context.Context, in *pb.K8SCre
 	return &pb.Exists{Exists: false}, nil
 }
 
-func (f *fakeGuideOcelotClient) GetK8SCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.K8SCredsWrapper, error) {
+func (f *FakeGuideOcelotClient) GetK8SCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.K8SCredsWrapper, error) {
 	return f.k8sCreds, nil
 }
 
-func (f *fakeGuideOcelotClient) SetSSHCreds(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) SetSSHCreds(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
 	//f.k8sCreds.K8SCreds = append(f.k8sCreds.K8SCreds, in)
 	return &empty.Empty{}, nil
 }
 
-func (f *fakeGuideOcelotClient) UpdateSSHCreds(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) UpdateSSHCreds(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
 	//for _, cred := range f.k8sCreds.K8SCreds {
 	//if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
 	//	fmt.Println("setting cred")
@@ -137,7 +146,7 @@ func (f *fakeGuideOcelotClient) UpdateSSHCreds(ctx context.Context, in *pb.SSHKe
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) SSHCredExists(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*pb.Exists, error) {
+func (f *FakeGuideOcelotClient) SSHCredExists(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*pb.Exists, error) {
 	//for _, cred := range f.k8sCreds.K8SCreds {
 	//	if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
 	//		return &pb.Exists{Exists:true}, nil
@@ -146,44 +155,44 @@ func (f *fakeGuideOcelotClient) SSHCredExists(ctx context.Context, in *pb.SSHKey
 	return &pb.Exists{Exists: false}, nil
 }
 
-func (f *fakeGuideOcelotClient) GetSSHCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.SSHWrap, error) {
+func (f *FakeGuideOcelotClient) GetSSHCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.SSHWrap, error) {
 	return nil, nil
 }
-func (f *fakeGuideOcelotClient) SetNotifyCreds(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
-	return nil, nil
-}
-
-func (f *fakeGuideOcelotClient) GetNotifyCred(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*pb.NotifyCreds, error) {
+func (f *FakeGuideOcelotClient) SetNotifyCreds(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) GetNotifyCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.NotifyWrap, error) {
+func (f *FakeGuideOcelotClient) GetNotifyCred(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*pb.NotifyCreds, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) UpdateNotifyCreds(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error){
+func (f *FakeGuideOcelotClient) GetNotifyCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.NotifyWrap, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) NotifyCredExists(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+func (f *FakeGuideOcelotClient) UpdateNotifyCreds(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error){
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) WatchRepo(ctx context.Context, in *pb.RepoAccount, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) NotifyCredExists(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+	return nil, nil
+}
+
+func (f *FakeGuideOcelotClient) WatchRepo(ctx context.Context, in *pb.RepoAccount, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
-func (f *fakeGuideOcelotClient) GetRepoCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.RepoCredWrapper, error) {
+func (f *FakeGuideOcelotClient) GetRepoCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.RepoCredWrapper, error) {
 	return f.repoCreds, nil
 }
 
-func (f *fakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) SetRepoCreds(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	f.repoCreds.Repo = append(f.repoCreds.Repo, in)
 	in.SubType = pb.SubCredType_NEXUS
 	return &empty.Empty{}, nil
 }
 
-func (f *fakeGuideOcelotClient) UpdateRepoCreds(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) UpdateRepoCreds(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	for _, cred := range f.repoCreds.Repo {
 		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
 			fmt.Println("setting cred")
@@ -193,7 +202,7 @@ func (f *fakeGuideOcelotClient) UpdateRepoCreds(ctx context.Context, in *pb.Repo
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) RepoCredExists(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+func (f *FakeGuideOcelotClient) RepoCredExists(ctx context.Context, in *pb.RepoCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
 	for _, cred := range f.repoCreds.Repo {
 		if cred.Identifier == in.Identifier && cred.AcctName == in.AcctName && cred.SubType == in.SubType {
 			return &pb.Exists{Exists: true}, nil
@@ -202,31 +211,34 @@ func (f *fakeGuideOcelotClient) RepoCredExists(ctx context.Context, in *pb.RepoC
 	return &pb.Exists{Exists: false}, nil
 }
 
-func (f *fakeGuideOcelotClient) CheckConn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) CheckConn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	if f.NotConnected {
+		return nil, status.Error(codes.Internal, "connection failed :( ")
+	}
 	return &empty.Empty{}, nil
 }
 
-func (f *fakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empty, opts ...grpc.CallOption) (*pb.AllCredsWrapper, error) {
+func (f *FakeGuideOcelotClient) GetAllCreds(ctx context.Context, msg *empty.Empty, opts ...grpc.CallOption) (*pb.AllCredsWrapper, error) {
 	return &pb.AllCredsWrapper{
 		RepoCreds: f.repoCreds,
 		VcsCreds:  f.creds,
 	}, nil
 }
 
-func (g *fakeGuideOcelotClient) GetStatus(ctx context.Context, query *pb.StatusQuery, opts ...grpc.CallOption) (*pb.Status, error) {
+func (g *FakeGuideOcelotClient) GetStatus(ctx context.Context, query *pb.StatusQuery, opts ...grpc.CallOption) (*pb.Status, error) {
 	return &pb.Status{}, nil
 }
 
-func (f *fakeGuideOcelotClient) SetVCSPrivateKey(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) SetVCSPrivateKey(ctx context.Context, in *pb.SSHKeyWrapper, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
 //todo: implement for testing
-func (f *fakeGuideOcelotClient) LastFewSummaries(ctx context.Context, in *pb.RepoAccount, opts ...grpc.CallOption) (*pb.Summaries, error) {
+func (f *FakeGuideOcelotClient) LastFewSummaries(ctx context.Context, in *pb.RepoAccount, opts ...grpc.CallOption) (*pb.Summaries, error) {
 	return &pb.Summaries{}, nil
 }
 
-func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *pb.BuildQuery, opts ...grpc.CallOption) (*pb.Builds, error) {
+func (f *FakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *pb.BuildQuery, opts ...grpc.CallOption) (*pb.Builds, error) {
 	builds := &pb.Builds{
 		Builds: map[string]*pb.BuildRuntimeInfo{},
 	}
@@ -244,7 +256,7 @@ func (f *fakeGuideOcelotClient) BuildRuntime(ctx context.Context, in *pb.BuildQu
 	return builds, nil
 }
 
-func (f *fakeGuideOcelotClient) FindWerker(ctx context.Context, in *pb.BuildReq, opts ...grpc.CallOption) (*pb.BuildRuntimeInfo, error) {
+func (f *FakeGuideOcelotClient) FindWerker(ctx context.Context, in *pb.BuildReq, opts ...grpc.CallOption) (*pb.BuildRuntimeInfo, error) {
 	var build = &pb.BuildRuntimeInfo{
 		Hash: "abc",
 	}
@@ -252,25 +264,56 @@ func (f *fakeGuideOcelotClient) FindWerker(ctx context.Context, in *pb.BuildReq,
 }
 
 // todo: make this useful
-func (f *fakeGuideOcelotClient) Logs(ctx context.Context, in *pb.BuildQuery, opts ...grpc.CallOption) (pb.GuideOcelot_LogsClient, error) {
+func (f *FakeGuideOcelotClient) Logs(ctx context.Context, in *pb.BuildQuery, opts ...grpc.CallOption) (pb.GuideOcelot_LogsClient, error) {
 	return NewFakeGuideOcelotLogsCli(f.logLines), nil
 }
 
-func (f *fakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *pb.BuildReq, opts ...grpc.CallOption) (pb.GuideOcelot_BuildRepoAndHashClient, error) {
+func (f *FakeGuideOcelotClient) BuildRepoAndHash(ctx context.Context, in *pb.BuildReq, opts ...grpc.CallOption) (pb.GuideOcelot_BuildRepoAndHashClient, error) {
 	return nil, nil
 }
 
-func (f *fakeGuideOcelotClient) PollRepo(ctx context.Context, poll *pb.PollRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) PollRepo(ctx context.Context, poll *pb.PollRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
-func (f *fakeGuideOcelotClient) DeletePollRepo(ctx context.Context, poll *pb.PollRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) DeletePollRepo(ctx context.Context, poll *pb.PollRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
-func (f *fakeGuideOcelotClient) ListPolledRepos(ctx context.Context, empti *empty.Empty, opts ...grpc.CallOption) (*pb.Polls, error) {
+func (f *FakeGuideOcelotClient) ListPolledRepos(ctx context.Context, empti *empty.Empty, opts ...grpc.CallOption) (*pb.Polls, error) {
 	return &pb.Polls{}, nil
 }
+
+func (f *FakeGuideOcelotClient) UpdateGenericCreds(ctx context.Context, in *pb.GenericCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
+	if f.ReturnError {
+		return nil, errors.New("returning an erro")
+	}
+	f.Generics.Creds = append(f.Generics.Creds, in)
+	return nil, nil
+}
+
+func (f *FakeGuideOcelotClient) GetGenericCreds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*pb.GenericWrap, error) {
+	if f.ReturnError {
+		return nil, errors.New("returning an erro get ")
+	}
+	return f.Generics, nil
+}
+
+func (f *FakeGuideOcelotClient) SetGenericCreds(ctx context.Context, in *pb.GenericWrap, opts ...grpc.CallOption) (*empty.Empty, error) {
+	if f.ReturnError {
+		return nil, errors.New("returning an erro on set")
+	}
+	f.Generics.Creds = append(f.Generics.Creds, in.Creds...)
+	return nil, nil
+}
+
+func (f *FakeGuideOcelotClient) GenericCredExists(ctx context.Context, in *pb.GenericCreds, opts ...grpc.CallOption) (*pb.Exists, error) {
+	if f.ReturnError {
+		return nil, errors.New("returning an erro on set")
+	}
+	return &pb.Exists{Exists:f.Exists}, nil
+}
+
 
 func NewFakeGuideOcelotLogsCli(lines []string) *fakeGuideOcelotLogsClient {
 	return &fakeGuideOcelotLogsClient{outputLines: lines}

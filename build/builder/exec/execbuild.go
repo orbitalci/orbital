@@ -37,6 +37,9 @@ func (e *Exec) SetGlobalEnv(envs []string) {
 	e.globalEnvs = envs
 }
 
+func (e *Exec) AddGlobalEnvs(envs []string) {
+	e.globalEnvs = append(e.globalEnvs, envs...)
+}
 
 func (e *Exec) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Result {
 	res := &pb.Result{

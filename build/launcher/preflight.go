@@ -2,11 +2,14 @@ package launcher
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/common"
+	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
@@ -15,51 +18,79 @@ import (
 //		- all the integrations (kubeconfig render, etc...)
 //		- download binaries (kubectl, etc...)
 //		- download codebase for building
-func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder build.Builder) (err error){
-	// do integration setup stage
-	integrationResult, dura, start := w.doIntegrations(ctx, werk, builder)
-	if err = storeStageToDb(w.Store, werk.Id, integrationResult, start, dura.Seconds()); err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't store build output")
+//   all the substages above will be rolled into one stage for storage: PREFLIGHT
+func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder build.Builder) (bailOut bool, err error) {
+	start := time.Now()
+	prefly := build.InitStageUtil("PREFLIGHT")
+	preflightResult := &pb.Result{Stage: prefly.GetStage(), Status: pb.StageResultVal_PASS}
+	var result *pb.Result
+	result = w.handleEnvSecrets(ctx, builder, strings.Split(werk.FullName, "/")[0], prefly)
+	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
-	if integrationResult.Status == pb.StageResultVal_FAIL {
-		handleFailure(integrationResult, w.Store, "integration setup", dura, werk.Id)
-		err = errors.New("integration stage failed")
-		return
-	}
-
-	//// download necessary binaries (ie kubectl, w/e)
-	downloadResult, duration, starttime := w.downloadBinaries(ctx, build.InitStageUtil("download binaries"), builder)
-	if err = storeStageToDb(w.Store, werk.Id, downloadResult, starttime, duration.Seconds()); err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't store build output")
-		return
-	}
-	if downloadResult.Status == pb.StageResultVal_FAIL {
-		handleFailure(downloadResult, w.Store, "download binaries", duration, werk.Id)
-		err = errors.New("extra binaries download failed")
+	result = w.doIntegrations(ctx, werk, builder, prefly)
+	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
 
+	result = w.downloadBinaries(ctx, prefly, builder)
+	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
+		return
+	}
 	// download codebase to werker node
-	codeResult, duration, starttime := downloadCodebase(ctx, werk, builder, w.infochan)
-	if err = storeStageToDb(w.Store, werk.Id, codeResult, starttime, duration.Seconds()); err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't store build stage details")
+	result = downloadCodebase(ctx, werk, builder, prefly, w.infochan)
+	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
-	if codeResult.Status == pb.StageResultVal_FAIL {
-		handleFailure(codeResult, w.Store, "download codebase", duration, werk.Id)
-		err = errors.New("failed to download codebase for build")
+	if err = storeStageToDb(w.Store, werk.Id, preflightResult, start, time.Since(start).Seconds()); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't store build stage details for preflight")
 		return
 	}
 	return
 }
 
+
+// mapOrStoreStageResults will map the subStageResult's messages to the parentResult. if the substageresult fails,
+//   the newly mapped parentResult will be stored in OcelotStorage and bailOut will be returned as true.
+//   if the storage fails, an error will be returned
+func (w *launcher) mapOrStoreStageResults(subStageResult *pb.Result, parentResult *pb.Result, id int64, start time.Time) (bailOut bool, err error) {
+	bailOut = subStageResult.Status == pb.StageResultVal_FAIL
+	var preppedmessages []string
+	for _, msg := range subStageResult.Messages {
+		preppedmessages = append(preppedmessages, build.InitStageUtil(subStageResult.Stage).GetStageLabel() + msg)
+	}
+	parentResult.Messages = append(parentResult.Messages, subStageResult.Messages...)
+	if bailOut {
+		parentResult.Status = subStageResult.Status
+		parentResult.Error = subStageResult.Error
+		if err = storeStageToDb(w.Store, id, parentResult, start, time.Since(start).Seconds()); err != nil {
+			ocelog.IncludeErrField(err).Errorf("failed to store for parent stage %s at substage %s", parentResult.Stage, subStageResult.Stage)
+			return
+		}
+	}
+	return
+}
+
+func (w *launcher) handleEnvSecrets(ctx context.Context, builder build.Builder, accountName string, stage *build.StageUtil) (*pb.Result) {
+	creds, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, pb.SubCredType_ENV, accountName, false)
+	if err != nil {
+		if _, ok := err.(*common.NoCreds); ok {
+			return &pb.Result{Status: pb.StageResultVal_PASS, Messages: []string{fmt.Sprintf("no env vars for %s %s", accountName, models.CHECKMARK)}, Stage: stage.GetStage()}
+		}
+		return &pb.Result{Error: err.Error(), Status: pb.StageResultVal_FAIL, Messages: []string{"could not get env secrets " + models.FAILED}, Stage: stage.GetStage()}
+	}
+	var allenvs []string
+	for _, envVar := range creds {
+		allenvs = append(allenvs, fmt.Sprintf("%s=%s", envVar.GetIdentifier(), envVar.GetClientSecret()))
+	}
+	builder.AddGlobalEnvs(allenvs)
+	return &pb.Result{Status:pb.StageResultVal_PASS, Messages:[]string{"successfully set env secrets " + models.CHECKMARK}, Stage: stage.GetStage()}
+}
+
 //downloadCodebase will download the code that will be built
-func downloadCodebase(ctx context.Context, task *pb.WerkerTask, builder build.Builder, logChan chan []byte) (*pb.Result, time.Duration, time.Time) {
-	start := time.Now()
+func downloadCodebase(ctx context.Context, task *pb.WerkerTask, builder build.Builder, su *build.StageUtil, logChan chan []byte) (*pb.Result) {
 	var setupMessages []string
 	setupMessages = append(setupMessages, "attempting to download codebase...")
-	su := build.InitStageUtil("code download")
 	stage := &pb.Stage{
 		Env: []string{},
 		Script: builder.DownloadCodebase(task),
@@ -70,5 +101,5 @@ func downloadCodebase(ctx context.Context, task *pb.WerkerTask, builder build.Bu
 	if len(codebaseDownload.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download codebase", codebaseDownload.Error)
 	}
-	return codebaseDownload, time.Now().Sub(start), start
+	return codebaseDownload
 }

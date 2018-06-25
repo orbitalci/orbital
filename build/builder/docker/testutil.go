@@ -85,6 +85,9 @@ func (c *Cleanup) Clean(t *testing.T) {
 //   - return a cleanup function to defer in your tests
 // *assumes you have an internet connection and are running docker on linux or mac*
 func CreateLivingDockerContainer(t *testing.T, ctx context.Context, imageName string) (d *Docker, clean func(t *testing.T)) {
+	if testing.Short() {
+		t.Skip("skipping docker container create due to -short being set")
+	}
 	var loopback string
 	switch runtime.GOOS {
 	case "darwin":

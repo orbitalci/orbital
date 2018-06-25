@@ -145,7 +145,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	}
 
 	// run integrations, executable download, codebase download
-	if err := w.preFlight(ctx, werk, builder); err != nil { return }
+	if bailOut, err := w.preFlight(ctx, werk, builder); err != nil || bailOut { return }
 
 	// run the actual stages outlined in the ocelot.yml
 	fail, dura, err := w.runStages(ctx, werk, builder)
