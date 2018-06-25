@@ -48,7 +48,7 @@ func addHashRuntimeData(t *testing.T, serv *testutil.TestServer, werkerId string
 
 func TestRecovery(t *testing.T) {
 	// for now
-	t.Skip("fix the stupid postgres bullshit")
+	//t.Skip("fix the stupid postgres bullshit")
 	hash := "hahsyhashahs"
 	cleanup, pw, port := storage.CreateTestPgDatabase(t)
 	defer cleanup(t)

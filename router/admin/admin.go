@@ -44,7 +44,6 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 	if err != nil {
 		return nil, nil, nil, nil, errors.WithMessage(err, "could not get ocelot storage")
 	}
-	defer store.Close()
 	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), cred.GetValidator(), cred.GetRepoValidator(), store)
 	//gateway
 	ctx := context.Background()

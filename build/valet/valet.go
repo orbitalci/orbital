@@ -95,7 +95,7 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 			log.IncludeErrField(err).Error("could not retrieve summary for update")
 		}
 		buildTime := time.Unix(sum.BuildTime.Seconds, int64(sum.BuildTime.Nanos))
-		fullDuration := time.Now().Sub(buildTime).Seconds()
+		fullDuration := time.Since(buildTime).Seconds()
 		if err := v.store.UpdateSum(true, fullDuration, hrt.BuildId); err != nil {
 			log.IncludeErrField(err).Error("couldn't update summary in database")
 		} else {

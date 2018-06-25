@@ -265,7 +265,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error
 	}
 	defer rows.Close()
 	for rows.Next() {
-		sum := &pb.BuildSummary{}
+		sum := pb.BuildSummary{}
 		err = rows.Scan(&sum.Hash, &sum.Failed, &starttime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &queuetime, &sum.Status)
 		//fmt.Println(hi)
 		if err != nil {
@@ -277,7 +277,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error
 		}
 		sum.QueueTime = convertTimeToTimestamp(queuetime)
 		sum.BuildTime = convertTimeToTimestamp(starttime)
-		sums = append(sums, sum)
+		sums = append(sums, &sum)
 	}
 	return sums, nil
 }
@@ -348,31 +348,31 @@ func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (*pb.BuildSum
 
 // RetrieveSumByBuildId will return a build summary based on build id
 func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
-	var sum *pb.BuildSummary
+	var sum pb.BuildSummary
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
 	if err := p.Connect(); err != nil {
-		return sum, errors.New("could not connect to postgres: " + err.Error())
+		return &sum, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var queuetime, starttime time.Time
 	querystr := `SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime, status FROM build_summary WHERE id = $1`
 	stmt, err := p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
-		return sum, err
+		return &sum, err
 	}
 	defer stmt.Close()
 	err = stmt.QueryRow(buildId).Scan(&sum.Hash, &sum.Failed, &starttime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &queuetime, &sum.Status)
 	if err == sql.ErrNoRows {
 		ocelog.IncludeErrField(err)
-		return sum, BuildSumNotFound(string(buildId))
+		return &sum, BuildSumNotFound(string(buildId))
 	}
 	sum.BuildTime = &timestamp.Timestamp{Seconds: starttime.Unix()}
 	sum.QueueTime = &timestamp.Timestamp{Seconds: queuetime.Unix()}
-	return sum, err
+	return &sum, err
 }
 
-// RetrieveLastFewSums will return <limit> number of summaries that correlate with a repo and account.
+// RetrieveLastFewSums will return < limit> number of summaries that correlate with a repo and account.
 func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]*pb.BuildSummary, error) {
 	var sums []*pb.BuildSummary
 	start := startTransaction()
@@ -396,7 +396,7 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 	}
 	defer rows.Close()
 	for rows.Next() {
-		sum := &pb.BuildSummary{}
+		sum := pb.BuildSummary{}
 		if err = rows.Scan(&sum.Hash, &sum.Failed, &starttime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &queuetime, &sum.Status); err != nil {
 			if err == sql.ErrNoRows {
 				return sums, BuildSumNotFound("account: " + account + "and repo: " + repo)
@@ -405,7 +405,7 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 		}
 		sum.BuildTime = &timestamp.Timestamp{Seconds: starttime.Unix()}
 		sum.QueueTime = &timestamp.Timestamp{Seconds: queuetime.Unix()}
-		sums = append(sums, sum)
+		sums = append(sums, &sum)
 	}
 	return sums, nil
 }
