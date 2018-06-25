@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -10,6 +11,8 @@ import (
 	rt "runtime"
 	"strings"
 
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
@@ -18,8 +21,9 @@ import (
 	models "github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 
+	//"github.com/shankj3/ocelot/util/handler"
+	//"github.com/shankj3/ocelot/util/secure_grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
@@ -54,6 +58,20 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 	if err != nil {
 		return nil, nil, nil, nil, errors.WithMessage(err, "could not register endpoints")
 	}
+
+	//grpc server
+	con, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		return nil, nil, nil, nil, errors.WithMessage(err, "could not create listener")
+	}
+	grpcServer := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+	)
+	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
+	grpc_prometheus.Register(grpcServer)
+	// now that grpc_prometheus is registered, serve it up on the http/1 endpoint
+	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/", gw)
 	if _, ok := os.LookupEnv("SWAGGERITUP"); ok {
 		go http.ListenAndServe(":"+httpPort, allowCORS(mux))
@@ -61,13 +79,10 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 		go http.ListenAndServe(":"+httpPort, mux)
 	}
 
-	//grpc server
-	con, err := net.Listen("tcp", ":"+port)
+	err = grpcServer.Serve(con)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WithMessage(err, "could not create listener")
+		log.Log().Fatal("serve: ", err)
 	}
-	grpcServer := grpc.NewServer()
-	models.RegisterGuideOcelotServer(grpcServer, guideOcelotServer)
 	return grpcServer, con, store, cancel, nil
 }
 

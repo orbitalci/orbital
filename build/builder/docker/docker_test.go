@@ -1,12 +1,12 @@
 package docker
 
 import (
+	"context"
+	"testing"
+
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/models/pb"
-	"golang.org/x/net/context"
-
-	"testing"
 )
 
 // test that in docker, can run the InstallPackageDeps to multiple image types

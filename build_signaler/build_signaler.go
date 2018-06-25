@@ -8,9 +8,6 @@ import (
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/shankj3/go-til/nsqpb"
-	ocevault "github.com/shankj3/go-til/vault"
-	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
@@ -78,56 +75,6 @@ func CheckForBuildFile(buildFile []byte, deserializer *deserialize.Deserializer)
 		return conf, err
 	}
 	return conf, nil
-}
-
-//Validate is a util class that will validate your ocelot.yml + build config, queue the message to werker if
-//it passes
-func ValidateAndQueue(buildConf *pb.BuildConfig,
-	branch string,
-	validator *build.OcelotValidator,
-	vaulty ocevault.Vaulty,
-	producer *nsqpb.PbProduce,
-	sr *models.StageResult,
-	buildId int64,
-	hash, fullAcctRepo, bbToken string) error {
-	if err := validator.ValidateConfig(buildConf, nil); err == nil {
-		tellWerker(buildConf, vaulty, producer, hash, fullAcctRepo, bbToken, buildId, branch)
-		log.Log().Debug("told werker!")
-		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
-	} else {
-		PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
-		return err
-	}
-	return nil
-}
-
-//TellWerker is a private helper function for building a werker task and giving it to nsq
-func tellWerker(buildConf *pb.BuildConfig,
-	vaulty ocevault.Vaulty,
-	producer *nsqpb.PbProduce,
-	hash string,
-	fullName string,
-	bbToken string,
-	dbid int64,
-	branch string) {
-	// get one-time token use for access to vault
-	token, err := vaulty.CreateThrowawayToken()
-	if err != nil {
-		log.IncludeErrField(err).Error("unable to create one-time vault token")
-		return
-	}
-	werkerTask := &pb.WerkerTask{
-		VaultToken:   token,
-		CheckoutHash: hash,
-		Branch:       branch,
-		BuildConf:    buildConf,
-		VcsToken:     bbToken,
-		VcsType:      pb.SubCredType_BITBUCKET,
-		FullName:     fullName,
-		Id:           dbid,
-	}
-
-	go producer.WriteProto(werkerTask, build.DetermineTopic(buildConf.MachineTag))
 }
 
 func PopulateStageResult(sr *models.StageResult, status int, lastMsg, errMsg string) {

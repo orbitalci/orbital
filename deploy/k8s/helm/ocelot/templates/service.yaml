@@ -21,9 +21,31 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: admin-{{ template "ocelot.fullname" . }}-internal
+spec:
+  ports:
+  - name: grpc
+    port: 10000
+    protocol: TCP
+    targetPort: 10000
+#  - name: http
+#    port: 11000
+#    protocol: TCP
+#    targetPort: 11000
+  selector:
+    app: admin-{{ template "ocelot.name" . }}
+    release: {{ .Release.Name }}
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: ocelot-admin
-  # annotations:
-  #   prometheus.io/scrape: "true"
+  annotations:
+    prometheus.io/scrape: "true"
 spec:
   ports:
     - port: 11000
@@ -37,6 +59,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    prometheus.io/scrape: "true"
   name: hookhandler-{{ template "ocelot.fullname" . }}
   labels:
     app: hookhandler-{{ template "ocelot.name" . }}

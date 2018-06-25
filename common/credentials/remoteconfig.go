@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 	ocevault "github.com/shankj3/go-til/vault"
@@ -12,6 +13,23 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 )
+
+var (
+	failedCredRetrieval = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name:"ocelot_failed_cred",
+			Help: "number of times ocelot is unable to interact with cred store",
+		},
+		// interaction_type: create | read | update | delete
+		// cred_type: subcredType.String()
+		// is_secret: bool , whether or not interacting with secret store or insecure cred store
+		[]string{"cred_type", "interaction_type", "is_secret"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(failedCredRetrieval)
+}
 
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
@@ -123,7 +141,7 @@ func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 	rc.Vault = vault
 }
 
-// todo: write a test for thiiiiis!
+
 func (rc *RemoteConfig) Healthy() bool {
 	vaultConnected := true
 	_, err := rc.Vault.GetVaultData("here")
@@ -140,7 +158,7 @@ func (rc *RemoteConfig) Healthy() bool {
 	return true
 }
 
-//todo: write a test for this!!!
+
 func (rc *RemoteConfig) Reconnect() error {
 	_, err := rc.Vault.GetVaultData("here")
 	if err != nil {
@@ -195,6 +213,7 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 	ocelog.Log().Debug("CREDPATH=", credPath)
 	authData, err := rc.Vault.GetUserAuthData(credPath)
 	if err != nil {
+		failedCredRetrieval.WithLabelValues(scType.String(), "read", "true")
 		return "", err
 	}
 	secretData := authData["data"]
@@ -213,12 +232,14 @@ func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder,
 
 		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
+			failedCredRetrieval.WithLabelValues(anyCred.GetSubType().String(), "create", "true")
 			return
 		}
 	} else {
 		return errors.New("remote config not properly initialized, cannot add creds")
 	}
 	if err := store.InsertCred(anyCred, overwriteOk); err != nil {
+		failedCredRetrieval.WithLabelValues(anyCred.GetSubType().String(), "create", "false")
 		return err
 	}
 	return
@@ -230,12 +251,16 @@ func (rc *RemoteConfig) UpdateCreds(store storage.CredTable, anyCred pb.OcyCredd
 
 		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
+			failedCredRetrieval.WithLabelValues(anyCred.GetSubType().String(), "update", "true")
 			return
 		}
 	} else {
 		return errors.New("remote config not properly initialized, cannot add creds")
 	}
 	err = store.UpdateCred(anyCred)
+	if err != nil {
+		failedCredRetrieval.WithLabelValues(anyCred.GetSubType().String(), "update", "false")
+	}
 	return
 }
 
@@ -252,6 +277,7 @@ func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName
 	if !hideSecret {
 		passcode, passErr := rc.GetPassword(subCredType, accountName, subCredType.Parent(), identifier)
 		if passErr != nil {
+			failedCredRetrieval.WithLabelValues(subCredType.String(), "read", "true")
 			ocelog.IncludeErrField(passErr).Error()
 			secret = "ERROR: COULD NOT RETRIEVE PASSWORD FROM VAULT"
 		} else {
@@ -266,6 +292,7 @@ func (rc *RemoteConfig) maybeGetPassword(subCredType pb.SubCredType, accountName
 func (rc *RemoteConfig) GetCred(store storage.CredTable, subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error) {
 	cred, err := store.RetrieveCred(subCredType, identifier, accountName)
 	if err != nil {
+		failedCredRetrieval.WithLabelValues(subCredType.String(), "read", "false")
 		return nil, err
 	}
 	cred.SetSecret(rc.maybeGetPassword(subCredType, accountName, hideSecret, identifier))
@@ -275,6 +302,7 @@ func (rc *RemoteConfig) GetCred(store storage.CredTable, subCredType pb.SubCredT
 func (rc *RemoteConfig) GetAllCreds(store storage.CredTable, hideSecret bool) ([]pb.OcyCredder, error) {
 	creds, err := store.RetrieveAllCreds()
 	if err != nil {
+		failedCredRetrieval.WithLabelValues("ALL", "read", "false")
 		return creds, err
 	}
 	var allcreds []pb.OcyCredder
@@ -306,6 +334,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, common.NCErr(fmt.Sprintf("credentials not found for account %s and integration %s", accountName, "kubeconf"))
 		}
+		failedCredRetrieval.WithLabelValues(stype.String(), "read", "false")
 		return nil, err
 	}
 	var credsForType []pb.OcyCredder

@@ -1,6 +1,8 @@
 package credentials
 
 import (
+	"sync"
+
 	"github.com/hashicorp/consul/testutil"
 	"github.com/hashicorp/vault/http"
 	hashiVault "github.com/hashicorp/vault/vault"
@@ -99,36 +101,19 @@ func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, store storage.CredTable
 	}
 }
 
-//
-//func AddMvnRepoCreds(t *testing.T, rc CVRemoteConfig, repourl, password, username, acctName, projectName string) {
-//	creds := &RepoConfig{
-//		Password: password,
-//		Username: username,
-//		RepoUrl: map[string]string{"registry":repourl},
-//		Type: "maven",
-//		AcctName: acctName,
-//		ProjectName: projectName,
-//	}
-//	if err := rc.AddCreds(BuildCredPath("maven", acctName, Repo), creds); err != nil {
-//		t.Fatal("couldnt' add maven creds, error: ", err.Error())
-//	}
-//}
-
-//type HealthyMaintainer interface {
-//	Reconnect() error
-//	Healthy() bool
-//}
-
 func NewHealthyMaintain() *HealthyMaintain {
-	return &HealthyMaintain{true, true}
+	return &HealthyMaintain{SuccessfulReconnect:true, IsHealthy: true}
 }
 
 type HealthyMaintain struct {
+	sync.Mutex
 	SuccessfulReconnect bool
 	IsHealthy           bool
 }
 
 func (h *HealthyMaintain) Reconnect() error {
+	h.Lock()
+	defer h.Unlock()
 	if h.SuccessfulReconnect {
 		return nil
 	}
@@ -136,5 +121,32 @@ func (h *HealthyMaintain) Reconnect() error {
 }
 
 func (h *HealthyMaintain) Healthy() bool {
+	h.Lock()
+	defer h.Unlock()
 	return h.IsHealthy
+}
+
+func (h *HealthyMaintain) SetSuccessfulReconnect() {
+	h.Lock()
+	defer h.Unlock()
+	h.SuccessfulReconnect = true
+}
+
+func (h *HealthyMaintain) SetUnSuccessfulReconnect() {
+	h.Lock()
+	defer h.Unlock()
+	h.SuccessfulReconnect = false
+}
+
+func (h *HealthyMaintain) SetUnHealthy() {
+	h.Lock()
+	defer h.Unlock()
+	h.IsHealthy = false
+}
+
+
+func (h *HealthyMaintain) SetHealthy() {
+	h.Lock()
+	defer h.Unlock()
+	h.IsHealthy = true
 }

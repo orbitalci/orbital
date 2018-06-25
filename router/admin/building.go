@@ -16,6 +16,8 @@ import (
 )
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Builds, error) {
+	start := startRequest()
+	defer finishRequest(start)
 	if bq.Hash == "" && bq.BuildId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "either hash or build id is required")
 	}
@@ -101,6 +103,8 @@ func scanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageTy
 //   If the BuildQuery's BuildId is > 0, then logs will be retrieved from storage via the buildId. If this is not the case,
 //   then the latest log entry from the hash will be retrieved and streamed. 
 func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
+	start := startRequest()
+	defer finishRequest(start)
 	if bq.Hash == "" && bq.BuildId == 0 {
 		return status.Error(codes.InvalidArgument, "must request with either a hash or a buildId")
 	}
@@ -128,6 +132,8 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 }
 
 func (g *guideOcelotServer) FindWerker(ctx context.Context, br *pb.BuildReq) (*pb.BuildRuntimeInfo, error) {
+	start := startRequest()
+	defer finishRequest(start)
 	if len(br.Hash) > 0 {
 		//find matching hashes in consul by git hash
 		buildRtInfo, err := build.GetBuildRuntime(g.RemoteConfig.GetConsul(), br.Hash)

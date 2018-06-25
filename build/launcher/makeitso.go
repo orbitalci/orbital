@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/valet"
@@ -12,6 +13,45 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 )
+
+var (
+	activeBuilds = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "ocelot_active_builds",
+			Help: "Number of builds currently in progress",
+		},
+	)
+	buildDurationHist = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "ocelot_build_duration_seconds",
+			Help:    "Build Duration distribution",
+			Buckets: []float64{1, 10, 30, 60, 120, 200},
+		},
+		[]string{"werker_type"},
+	)
+	buildCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "ocelot_build_count_total",
+			Help: "number of ocelot builds executed",
+		},
+	)
+)
+
+func init(){
+	prometheus.MustRegister(activeBuilds, buildDurationHist, buildCount)
+}
+
+func startBuild() time.Time {
+	time.Now()
+	buildCount.Inc()
+	activeBuilds.Inc()
+	return time.Now()
+}
+
+func endBuild(werkType string, start time.Time) {
+	activeBuilds.Dec()
+	buildDurationHist.WithLabelValues(werkType).Observe(time.Since(start).Seconds())
+}
 
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
 func (w *launcher) WatchForResults(hash string, dbId int64) {
@@ -22,7 +62,7 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
-
+	start := time.Now()
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
 	defer w.BuildValet.MakeItSoDed(finish)
@@ -30,6 +70,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	defer func() {
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
+		endBuild(w.WerkerType.String(), start)
 	}()
 	// set up notifications to be executed on build completion
 	defer func(){
