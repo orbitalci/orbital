@@ -127,11 +127,18 @@ func generateTableRow(summary *models.BuildSummary, theme *commandhelper.ColorDe
 	var row []string
 	var color *commandhelper.Color
 	var status string
+	var formatted string
+	formatted = tym.Format("Mon Jan 2 15:04:05")
 	switch summary.Status {
-	case models.BuildStatus_RUNNING, models.BuildStatus_QUEUED:
+	case models.BuildStatus_RUNNING:
 		status = "N/A"
 		color = theme.Running
+	case models.BuildStatus_QUEUED:
+		status = "N/A"
+		color = theme.Running
+		formatted = "N/A"
 	case models.BuildStatus_FAILED_PRESTART:
+		formatted = "N/A"
 		status = "FAILED PRESTART"
 		color = theme.Failed
 	case models.BuildStatus_FAILED:
@@ -145,12 +152,11 @@ func generateTableRow(summary *models.BuildSummary, theme *commandhelper.ColorDe
 		color = theme.Failed
 	}
 	start, end := writeFirstAndLastColumns(summary, color)
-
 	row = append(row,
 		start,
 		summary.Repo,
 		commandhelper.PrettifyTime(summary.BuildDuration, summary.Status == models.BuildStatus_QUEUED),
-		tym.Format("Mon Jan 2 15:04:05"),
+		formatted,
 		status,
 		summary.Branch,
 		end,

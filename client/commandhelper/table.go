@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	models "github.com/shankj3/ocelot/models/pb"
+	"os"
 	"strings"
 )
 
@@ -85,6 +86,10 @@ func PrintStatusStages(statuses *models.Status, wide bool, theme *ColorDefs) (st
 	case models.BuildStatus_PASSED:
 		status = "PASS"
 		color = theme.Passed
+	default:
+		theme.Error.Println("Status is nil, this should not happen.")
+		os.Exit(1)
+	    color = theme.Normal
 	}
 
 	if statuses != nil && len(statuses.Stages) > 0 {
@@ -109,6 +114,7 @@ func PrintStatusStages(statuses *models.Status, wide bool, theme *ColorDefs) (st
 }
 
 func PrintStatusOverview(color *Color, acctName, repoName, hash, status string, theme *ColorDefs) string {
+	fmt.Println(color)
 	buildStatus := color.Sprintf("\nstatus: %s ", status) + theme.Warning.Sprintf("\nhash: %s", hash) + fmt.Sprintf("\naccount: %s \nrepo: %s\n", acctName, repoName)
 	return buildStatus
 }

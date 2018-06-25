@@ -272,7 +272,7 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error
 			if err == sql.ErrNoRows {
 				return sums, BuildSumNotFound(gitHash)
 			}
-			ocelog.IncludeErrField(err)
+			ocelog.IncludeErrField(err).Error("failed to retrieve build summary")
 			return sums, err
 		}
 		sum.QueueTime = convertTimeToTimestamp(queuetime)

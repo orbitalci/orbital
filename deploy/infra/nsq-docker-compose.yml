@@ -1,11 +1,10 @@
 version: "3.3"
 services:
-  # Copied directly from ./util/nsqpb/docker-compose.yml, modified with logging
   nsqlookupd:
     image: nsqio/nsq
-    container_name: nsqlookupd
     command: >
       /nsqlookupd
+      -broadcast-address localhost:4160
     ports:
       - 4160:4160
       - 4161:4161
@@ -16,12 +15,10 @@ services:
         max-file: "10"
   nsqd:
     image: nsqio/nsq
-    container_name: nsqd
-    depends_on:
-      - nsqlookupd
     command: >
       /nsqd
-      -lookupd-tcp-address docker.for.mac.host.internal:4160
+      -broadcast-address localhost
+      -lookupd-tcp-address nsqlookupd:4160
     ports:
       - 4150:4150
       - 4151:4151
@@ -30,22 +27,3 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
-  nsqadmin:
-    image: nsqio/nsq
-    container_name: nsqadmin
-    depends_on:
-      - nsqlookupd
-    command: >
-      /nsqadmin
-      -lookupd-http-address docker.for.mac.host.internal:4161
-    ports:
-      - 4171:4171
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
-networks:
-  default:
-    external:
-      name: ocelot
