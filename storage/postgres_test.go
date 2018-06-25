@@ -20,12 +20,12 @@ func Test_PostgresStorage(t *testing.T) {
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	pg.Connect()
 	defer PostgresTeardown(t, pg.db)
-	postgresStorage_AddSumStart(t, pg)
+	t.Run("add sum start", func(t *testing.T){postgresStorage_AddSumStart(t, pg)})
 	id := insertDependentData(t, pg)
-	postgresStorage_GetLastData(t, pg)
-	postgresStorage_AddOut(t, pg, id)
-	postgresStorage_AddStageDetail(t, pg, id)
-	postgresStorage_Healthy(t, pg, cleanup)
+	t.Run("get last data", func(t *testing.T){postgresStorage_GetLastData(t, pg)})
+	t.Run("add out", func(t *testing.T){postgresStorage_AddOut(t, pg, id)})
+	t.Run("add stage detail", func(t *testing.T){postgresStorage_AddStageDetail(t, pg, id)})
+	t.Run("healthy check", func(t *testing.T){postgresStorage_Healthy(t, pg, cleanup)})
 }
 
 func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {

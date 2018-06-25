@@ -73,9 +73,32 @@ func TestSSH_GetContainerId(t *testing.T) {
 	}
 }
 
-func TestSSH_Setup(t *testing.T) {
+// runs all the tests using one ssh container
+func TestSSH(t *testing.T) {
 	task := &pb.WerkerTask{CheckoutHash:"TESTHASHAYYY"}
 	ssher, ctx, cancel, tarRm, cleaner := SetupSSHBuilder(t, 2222, "3833")
+	defer tarRm(t)
+	defer cleaner()
+	defer cancel()
+	defer ssher.Close()
+	t.Run("SSH_setup", func(t *testing.T) {
+		testSSH_Setup(t, ssher, ctx, task)
+	})
+	t.Run("SSH_setup2", func(t *testing.T) {
+		testSSH_Setup2(t, ssher, ctx, task)
+	})
+	t.Run("execute", func(t *testing.T){
+		testSSH_execute(t, ssher, ctx)
+	})
+	t.Run("execute integration", func(t *testing.T) {
+		testSSH_ExecuteIntegration(t, ssher, ctx)
+	})
+	t.Run("execute 2", func(t *testing.T){
+		testSSH_Execute(t, ssher, ctx, task.CheckoutHash)
+	})
+}
+
+func testSSH_Setup(t *testing.T, ssher build.Builder, ctx context.Context, task *pb.WerkerTask) {
 	logt := make(chan[]byte, 100)
 	logdone := make(chan int)
 	var output string
@@ -85,13 +108,9 @@ func TestSSH_Setup(t *testing.T) {
 		}
 		close(logdone)
 	}()
-	defer tarRm(t)
-	defer cleaner()
-	defer cancel()
 	res := ssher.Init(ctx, task.CheckoutHash, logt)
 	close(logt)
 	<-logdone
-	defer ssher.Close()
 	if res.Status != pb.StageResultVal_PASS {
 		t.Log(output)
 		t.Error("should pass, error is :" + res.Error)
@@ -113,12 +132,7 @@ func TestSSH_Setup(t *testing.T) {
 }
 
 // failure scenario
-func TestSSH_Setup2(t *testing.T) {
-	task := &pb.WerkerTask{CheckoutHash:"TESTHASHAYYY"}
-	ssher, ctx, cancel, tarRm, cleaner := SetupSSHBuilder(t, 2228, "3833")
-	defer tarRm(t)
-	defer cleaner()
-	defer cancel()
+func testSSH_Setup2(t *testing.T, ssher build.Builder, ctx context.Context, task *pb.WerkerTask) {
 	logt := make(chan[]byte)
 	logdone := make(chan int)
 	var output string
@@ -131,7 +145,6 @@ func TestSSH_Setup2(t *testing.T) {
 	res := ssher.Init(ctx, task.CheckoutHash, logt)
 	close(logt)
 	<-logdone
-	defer ssher.Close()
 	if res.Status != pb.StageResultVal_PASS {
 		t.Log(res.Messages)
 		t.Log(output)
@@ -157,11 +170,8 @@ func TestSSH_Setup2(t *testing.T) {
 	}
 }
 
-func TestSSH_execute(t *testing.T) {
-	task := &pb.WerkerTask{CheckoutHash:"TESTHASHAYYY"}
-	ctx, ssher, clean := SetupSSHBuilderNoTempl(t, 2223, task.CheckoutHash, "/tmp")
-	defer clean()
-	defer ssher.Close()
+func testSSH_execute(t *testing.T, sher build.Builder, ctx context.Context) {
+	ssher := sher.(*SSH)
 	ssher.SetGlobalEnv([]string{"GLOBALENV=1234567"})
 	logout := make(chan []byte)
 	logdone := make(chan bool, 1)
@@ -185,11 +195,7 @@ func TestSSH_execute(t *testing.T) {
 	}
 }
 
-func TestSSH_ExecuteIntegration(t *testing.T) {
-	task := &pb.WerkerTask{CheckoutHash:"TESTHASHAYYY"}
-	ctx, ssher, clean := SetupSSHBuilderNoTempl(t, 2223, task.CheckoutHash, "/tmp")
-	defer clean()
-	defer ssher.Close()
+func testSSH_ExecuteIntegration(t *testing.T, ssher build.Builder, ctx context.Context) {
 	ssher.SetGlobalEnv([]string{"GLOBALENV=1234567"})
 	logout := make(chan []byte)
 	logdone := make(chan bool, 1)
@@ -214,12 +220,9 @@ func TestSSH_ExecuteIntegration(t *testing.T) {
 	}
 }
 
-func TestSSH_Execute(t *testing.T) {
-	hash := "execbuild123"
-	ctx, ssher, clean := SetupSSHBuilderNoTempl(t, 2223, hash, "/tmp")
-	defer clean()
-	defer ssher.Close()
+func testSSH_Execute(t *testing.T, sher build.Builder, ctx context.Context, hash string) {
 	logout := make(chan[]byte, 1000)
+	ssher := sher.(*SSH)
 	res := ssher.execute(ctx, build.InitStageUtil("execute"), []string{}, []string{"mkdir -p /tmp/.ocelot/" + hash, fmt.Sprintf("touch /tmp/.ocelot/%s/README.md", hash)}, logout)
 	close(logout)
 	if res.Status == pb.StageResultVal_FAIL {
