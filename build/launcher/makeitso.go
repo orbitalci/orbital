@@ -62,6 +62,7 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 
 // MakeItSo will call appropriate builder functions
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
+	startBuild()
 	start := time.Now()
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
 	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
