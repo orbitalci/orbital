@@ -101,7 +101,7 @@ func PrintStatusStages(statuses *models.Status, wide bool, theme *ColorDefs) (st
 				stageStatusStr = "FAIL"
 			}
 			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.StageStatus, PrettifyTime(stage.StageDuration, statuses.BuildSum.Status==models.BuildStatus_QUEUED), stageStatusStr)
-			if statuses.BuildSum.Failed || wide {
+			if statuses.BuildSum.Status == models.BuildStatus_FAILED || wide {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {
 					stageStatus += theme.Normal.Sprintf(": %s", stage.Error)

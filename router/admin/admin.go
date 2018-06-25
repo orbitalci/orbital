@@ -80,10 +80,6 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 		go http.ListenAndServe(":"+httpPort, mux)
 	}
 
-	err = grpcServer.Serve(con)
-	if err != nil {
-		log.Log().Fatal("serve: ", err)
-	}
 	return grpcServer, con, store, cancel, nil
 }
 

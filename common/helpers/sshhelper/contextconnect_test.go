@@ -32,7 +32,7 @@ func Test_splitEnvs(t *testing.T) {
 	}
 }
 
-// testing multiple facets of code with same docker container 
+// testing multiple facets of code with same docker container
 func TestContextConnection(t *testing.T) {
 	cleanup, ctx := CreateSSHDockerContainer(t, "2222")
 	defer cleanup()

@@ -20,7 +20,7 @@ const ocelotIcon = "https://78.media.tumblr.com/avatar_06e2167f3e45_128.pnj"
 func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Status) error {
 	var status string
 	var color string
-	if results.BuildSum.Failed {
+	if results.BuildSum.Status == pb.BuildStatus_FAILED {
 		status = "failed"
 		color = "danger"
 	} else {
@@ -40,7 +40,7 @@ func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Stat
 				stageStatusStr = "Failed"
 			}
 			stageStatus += fmt.Sprintf("\n[%s] %s", stage.StageStatus, stageStatusStr)
-			if results.BuildSum.Failed {
+			if results.BuildSum.Status == pb.BuildStatus_FAILED {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {
 					stageStatus += fmt.Sprintf(": %s", stage.Error)

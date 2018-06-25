@@ -37,6 +37,7 @@ func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {
 	model := &pb.BuildSummary{
 		Hash:          "123",
 		Failed:        false,
+		Status:        pb.BuildStatus_QUEUED,
 		BuildTime:     &timestamp.Timestamp{Seconds: buildTime.Unix()},
 		Account:       "testAccount",
 		BuildDuration: 23.232,
@@ -77,6 +78,7 @@ func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {
 	if err != nil {
 		t.Error("could not update build summary: ", err)
 	}
+	model.Status = pb.BuildStatus_PASSED
 	//cleanup
 	//_ = pg.db.QueryRow(`delete from build_summary where hash = 123`)
 	sumaz, err := pg.RetrieveSum("123")
@@ -88,7 +90,10 @@ func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {
 		t.Error(test.GenericStrFormatErrors("build duration", model.BuildDuration, suum.BuildDuration))
 	}
 	if suum.Failed != false {
-		t.Error(test.GenericStrFormatErrors("failed", false, sum.Failed))
+		t.Error(test.GenericStrFormatErrors("failed", false, suum.Failed))
+	}
+	if suum.Status != pb.BuildStatus_PASSED {
+		t.Error(test.GenericStrFormatErrors("status", pb.BuildStatus_PASSED, suum.Status))
 	}
 }
 
