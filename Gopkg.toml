@@ -65,7 +65,7 @@
 
 [[constraint]]
 #  version = "0.2.1"
-  revision = "37e340f8974be00e281b727a918cc1f6073fc6b4"
+  revision = "1589bf202859320cd9b374ac44ff6edfdba9f6cc"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]
@@ -88,3 +88,7 @@
 [[constraint]]
   name = "github.com/grpc-ecosystem/go-grpc-prometheus"
   version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/golang/mock"
+  version = "1.1.1"
