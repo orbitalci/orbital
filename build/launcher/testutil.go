@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/basher"
@@ -47,7 +48,8 @@ func getTestBasher(t *testing.T) *basher.Basher {
 
 func getTestingLauncher(t *testing.T) (*launcher, func(t *testing.T)) {
 	remoteConf, listener, testserver := credentials.TestSetupVaultAndConsul(t)
-	cleanup, pw, port := storage.CreateTestPgDatabase(t)
+	port := 5496
+	cleanup, pw := storage.CreateTestPgDatabase(t, port)
 	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	uid := uuid.New()
 	valet := valet2.NewValet(remoteConf, uid, models.Docker, pg, nil)
@@ -69,8 +71,49 @@ func getTestingLauncher(t *testing.T) (*launcher, func(t *testing.T)) {
 		credentials.TeardownVaultAndConsul(listener, testserver)
 	}
 	return launcher, cleanitall
-
 }
+
+
+type testStore struct {
+	storage.OcelotStorage
+	addedSum *pb.BuildSummary
+	stageDetails []models.StageResult
+}
+
+func (t *testStore) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
+	t.addedSum =&pb.BuildSummary{Hash:hash, Account:account, Repo:repo, Branch:branch, Status: pb.BuildStatus_QUEUED, BuildTime: &timestamp.Timestamp{Seconds: 0, Nanos: 0}}
+	return 1, nil
+}
+
+func (t *testStore) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
+	return t.stageDetails, nil
+}
+
+func (t *testStore) AddStageDetail(stageResult *models.StageResult) error {
+	t.stageDetails = append(t.stageDetails, *stageResult)
+	return nil
+}
+
+func (t *testStore) UpdateSum(failed bool, duration float64, id int64) error {
+	t.addedSum.Failed = failed
+	if failed {
+		t.addedSum.Status = pb.BuildStatus_FAILED
+	} else {
+		t.addedSum.Status = pb.BuildStatus_PASSED
+	}
+	t.addedSum.BuildId = id
+	return nil
+}
+
+func (t *testStore) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
+	return t.addedSum, nil
+}
+
+
+func (t *testStore) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error) {
+	return nil, nil
+}
+
 
 type fakeBuilder struct {
 	failInit bool

@@ -31,7 +31,8 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 
 	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
 	defer TeardownVaultAndConsul(vaultListener, consulServer)
-	cleanup, pw, port := storage.CreateTestPgDatabase(t)
+	port := 5439
+	cleanup, pw := storage.CreateTestPgDatabase(t, port)
 	defer cleanup(t)
 	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	adminConfig := &pb.VCSCreds{

@@ -238,7 +238,8 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	if !ok {
 		t.Skip("skipping because $NEXUS_ADMIN_PW not set")
 	}
-	cleanup, pw, port := storage.CreateTestPgDatabase(t)
+	port := 5445
+	cleanup, pw := storage.CreateTestPgDatabase(t, port)
 	defer cleanup(t)
 	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 

@@ -15,7 +15,8 @@ import (
 // run all the tests, so we don't have to start up a bunch of postgress's
 func Test_PostgresStorage(t *testing.T) {
 	util.BuildServerHack(t)
-	cleanup, pw, port := CreateTestPgDatabase(t)
+	port := 5455
+	cleanup, pw  := CreateTestPgDatabase(t, port)
 	defer cleanup(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	pg.Connect()
