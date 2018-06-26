@@ -85,3 +85,16 @@ func (cnf *CommitNotFound) Error() string {
 func Commit404(hash, acctRepo, branch string) *CommitNotFound {
 	return &CommitNotFound{hash: hash, acctRepo: acctRepo, branch:branch}
 }
+
+type BranchNotFound struct {
+	branch string
+	acctRepo string
+}
+
+func (bnf *BranchNotFound) Error() string {
+	return fmt.Sprintf("Branch %s not found for acct/repo %s", bnf.branch, bnf.acctRepo)
+}
+
+func Branch404(branch, acctRepo string) *BranchNotFound {
+	return &BranchNotFound{acctRepo:acctRepo, branch:branch}
+}
