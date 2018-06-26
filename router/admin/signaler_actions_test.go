@@ -236,7 +236,8 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 	consl := consul.NewMockConsuletty(ctl)
 	vlt := vault.NewMockVaulty(ctl)
 	cred := &pb.VCSCreds{ClientSecret:"1", ClientId: "2", Identifier: "BITBUCKET_shankj3", AcctName:"shankj3", SubType: pb.SubCredType_BITBUCKET, TokenURL: "http://token"}
-	// first, test when there is no hash
+	// test when there is no hash. should look up last commit data for a branch to get the hash to build
+	// this should successfully produce a nsq message
 	t.Run("no hash build test", func(t *testing.T){
 		// set up expected mock data
 		mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
@@ -269,7 +270,8 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		}
 	})
 
-	// now, test when there is hash
+	// test scenario where hash and branch are both sent in the build request. an old build summary should be attempted to be retrieved to
+	// validate build info against, and even if it isn't there a build message should be put on the queue
 	t.Run("test building with a branch and a hash", func(t *testing.T){
 		request2 := &pb.BuildReq{AcctRepo: "shankj3/ocelot", Branch: "banana", Hash: "123"}
 		mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
@@ -279,6 +281,7 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "123").Return(ocelot, nil)
 		consl.EXPECT().GetKeyValue("ci/werker_build_map/123").Return(nil, nil)
 		vlt.EXPECT().CreateThrowawayToken().Return("sup", nil)
+		// if this producer expect passes, it means that a message was produced 
 		mockz.producer.EXPECT().WriteProto(gomock.Any(), "build").Times(1)
 		storageSuccessfulBuild(mockz.store, "123", "shankj3", "ocelot", "banana")
 		streamer := &buildserv{}
