@@ -131,6 +131,49 @@ func TestCmd_Run_force(t *testing.T) {
 	}
 }
 
+func TestCmd_Run_acctReop(t *testing.T) {
+	stream := &fakeStream{countBeforeEOF:5}
+	clie := &fakeCli{stream:stream}
+	ui := cli.NewMockUi()
+	config := &commandhelper.ClientConfig{Client: clie, Theme: commandhelper.Default(true)}
+	cmd2 := &cmd{UI: ui, config: config, OcyHelper: &commandhelper.OcyHelper{}}
+	cmd2.init()
+	code := cmd2.Run([]string{"-acct-repo=1/2", "-latest"})
+	if code != 0 {
+		t.Error("should return 0")
+		t.Log(string(ui.ErrorWriter.Bytes()))
+		t.Log(string(ui.OutputWriter.Bytes()))
+	}
+	expected := &pb.BuildReq{
+		AcctRepo:"1/2",
+	}
+	if diff := deep.Equal(expected, clie.buildReq); diff != nil {
+		t.Error(diff)
+	}
+}
+
+//this is detecting the current account/repo through git commands, it may break? like if we move repos or something
+func TestCmd_Run_latest(t *testing.T) {
+	stream := &fakeStream{countBeforeEOF:5}
+	clie := &fakeCli{stream:stream}
+	ui := cli.NewMockUi()
+	config := &commandhelper.ClientConfig{Client: clie, Theme: commandhelper.Default(true)}
+	cmd2 := &cmd{UI: ui, config: config, OcyHelper: &commandhelper.OcyHelper{}}
+	cmd2.init()
+	code := cmd2.Run([]string{"-latest"})
+	if code != 0 {
+		t.Error("should return 0")
+		t.Log(string(ui.ErrorWriter.Bytes()))
+		t.Log(string(ui.OutputWriter.Bytes()))
+	}
+	expected := &pb.BuildReq{
+		AcctRepo:"shankj3/ocelot",
+	}
+	if diff := deep.Equal(expected, clie.buildReq); diff != nil {
+		t.Error(diff)
+	}
+}
+
 func TestNew(t *testing.T) {
 	cm := New(cli.NewMockUi())
 	if cm.flags == nil {

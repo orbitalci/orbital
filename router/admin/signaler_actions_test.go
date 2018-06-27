@@ -224,6 +224,18 @@ stages:
         - mvn clean install
 `)
 
+var ocelotInvalid = []byte(`buildTool: maven
+branches:
+- master
+- banana
+env:
+  - "MARIANNE=1"
+stages:
+   - name: inst
+     script:
+        - mvn clean install
+`)
+
 func storageSuccessfulBuild(ocelotStorage *storage.MockOcelotStorage, hash, acct, repo, branch string) {
 	ocelotStorage.EXPECT().AddSumStart(hash, acct, repo, branch).Return(int64(1), nil).Times(1)
 	ocelotStorage.EXPECT().SetQueueTime(int64(1)).Return(nil).Times(1)
@@ -273,7 +285,7 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 	// test scenario where hash and branch are both sent in the build request. an old build summary should be attempted to be retrieved to
 	// validate build info against, and even if it isn't there a build message should be put on the queue
 	t.Run("test building with a branch and a hash", func(t *testing.T){
-		request2 := &pb.BuildReq{AcctRepo: "shankj3/ocelot", Branch: "banana", Hash: "123"}
+		request := &pb.BuildReq{AcctRepo: "shankj3/ocelot", Branch: "banana", Hash: "123"}
 		mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
 		mockz.rc.EXPECT().GetVault().Return(vlt).Times(1)
 		mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
@@ -285,7 +297,22 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		mockz.producer.EXPECT().WriteProto(gomock.Any(), "build").Times(1)
 		storageSuccessfulBuild(mockz.store, "123", "shankj3", "ocelot", "banana")
 		streamer := &buildserv{}
-		gos.BuildRepoAndHash(request2, streamer)
+		gos.BuildRepoAndHash(request, streamer)
+	})
+
+	// test scenario where build conf isn't valid
+	t.Run("invalid ocelot yml", func(t *testing.T) {
+		mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
+		consl.EXPECT().GetKeyValue("ci/werker_build_map/123").Return(nil, nil)
+		request := &pb.BuildReq{AcctRepo:"shankj3/ocelot", Branch:"master", Hash: "123"}
+		mockz.store.EXPECT().RetrieveLatestSum("123").Return(models.BuildSummary{}, storage.BuildSumNotFound("123"))
+		mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
+		mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "123").Return(ocelotInvalid, nil)
+		mockz.store.EXPECT().AddSumStart("123", "shankj3", "ocelot", "master").Return(int64(1), nil).Times(1)
+		mockz.store.EXPECT().StoreFailedValidation(int64(1)).Times(1)
+		mockz.store.EXPECT().AddStageDetail(gomock.Any()).Return(nil).Times(1)
+		streamer := &buildserv{}
+		gos.BuildRepoAndHash(request, streamer)
 	})
 }
 
