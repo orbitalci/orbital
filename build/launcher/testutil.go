@@ -46,8 +46,8 @@ func getTestBasher(t *testing.T) *basher.Basher {
 }
 
 func getTestingLauncher(t *testing.T) (*launcher, func(t *testing.T)) {
-	remoteConf, listener, testserver := credentials.TestSetupVaultAndConsul(t)
 	cleanup, pw, port := storage.CreateTestPgDatabase(t)
+	remoteConf, listener, testserver := credentials.TestSetupVaultAndConsul(t)
 	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	uid := uuid.New()
 	valet := valet2.NewValet(remoteConf, uid, models.Docker, pg, nil)
