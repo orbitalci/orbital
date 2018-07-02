@@ -1,29 +1,14 @@
 package nsqwatch
 
 import (
-	"github.com/hashicorp/consul/testutil"
 	"github.com/shankj3/go-til/nsqpb"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/storage"
-	"net"
 	"time"
 	//"github.com/nsqio/go-nsq"
 	"testing"
 )
 
-func getStructs(t *testing.T, store storage.OcelotStorage) (func(), net.Listener, *testutil.TestServer, *NsqWatch) {
-	testRemoteConfig, vaultListener, consulServer := cred.TestSetupVaultAndConsul(t)
-	consumer := nsqpb.NewDefaultProtoConsume()
-	// don't care about errors right now because i don't actually want to connect
-	consumer.ConsumeMessages("testtesttesttest", "test")
-	nsqw := &NsqWatch{
-		interval:   1,
-		pConsumers: []*nsqpb.ProtoConsume{consumer},
-		remoteConf: testRemoteConfig,
-		store:      store,
-	}
-	return func() { cred.TeardownVaultAndConsul(vaultListener, consulServer) }, vaultListener, consulServer, nsqw
-}
 
 func TestNsqWatch_MaintainHealths(t *testing.T) {
 	rcHelathy := cred.NewHealthyMaintain()
