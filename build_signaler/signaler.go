@@ -67,22 +67,23 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 	if err != nil {
 		return err
 	}
-
 	sr := getSignalerStageResult(id)
-	vaultToken, _ := s.RC.GetVault().CreateThrowawayToken()
-	updateWerkerTask(task, id, vaultToken)
-	if err = s.validateAndQueue(task, sr); err != nil {
-		// we do want to add a runtime here
+
+	// after storing that this build was recived, check to make sure the build config is even worthy of our time
+	if err := s.OcyValidator.ValidateConfig(task.BuildConf, nil); err != nil {
+		PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
 		err = s.Store.StoreFailedValidation(id)
 		if err != nil {
 			log.IncludeErrField(err).Error("unable to update summary!")
 		}
-		// we dont' want to return here, cuz then it doesn't store
-		// unless its supposed to be saving somewhere else?
-		// return err
 	} else {
+		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
+		vaultToken, _ := s.RC.GetVault().CreateThrowawayToken()
+		updateWerkerTask(task, id, vaultToken)
+		s.Producer.WriteProto(task, build.DetermineTopic(task.BuildConf.MachineTag))
 		storeQueued(s.Store, id)
 	}
+
 	if err := storeStageToDb(s.Store, sr); err != nil {
 		log.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err

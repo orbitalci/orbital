@@ -27,8 +27,7 @@ func Test_prep(t *testing.T) {
 }
 
 func Test_Start(t *testing.T) {
-	serv, listen, _, clean, err := GetGrpcServer(&rc{}, secure_grpc.NewFakeSecure(), "localhost", "9999", "9998")
-	defer clean()
+	serv, listen,_,_, err := GetGrpcServer(&rc{}, secure_grpc.NewFakeSecure(), "localhost", "9999", "9998")
 	if err != nil {
 		t.Error(err)
 	}

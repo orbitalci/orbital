@@ -37,11 +37,13 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	if err != nil {
 		return status.Error(codes.InvalidArgument, "Bad format of acctRepo, must be account/repo")
 	}
-	log.Log().Info(buildReq)
-	if buildReq == nil || len(buildReq.AcctRepo) == 0 || len(buildReq.Hash) == 0 {
+	triggeredBuilds.WithLabelValues(acct, repo).Inc()
+
+	if buildReq == nil || len(buildReq.AcctRepo) == 0 {
 		return status.Error(codes.InvalidArgument, "please pass a valid account/repo_name and hash")
 	}
 
+	// get credentials and appropriate VCS handler for the build request's account / repository
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
 	cfg, err := cred.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig)
 	if err != nil {
@@ -53,59 +55,81 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
-	handler, token, err := remote.GetHandler(cfg)
+	handler, token, err := g.getHandler(cfg)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve the bitbucket client config for %s. \n Error: %s", buildReq.AcctRepo, err.Error()))
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully used VCS Credentials to obtain a token %s", models.CHECKMARK)))
-
-	var branch string
-	var fullHash string
-	stream.Send(RespWrap(fmt.Sprintf("Looking in previous builds for %s...", buildReq.Hash)))
-	buildSum, err := g.Storage.RetrieveLatestSum(buildReq.Hash)
-	if err != nil {
-		if _, ok := err.(*storage.ErrNotFound); !ok {
-			log.IncludeErrField(err).Error("could not retrieve latest build summary")
-			return status.Error(codes.Internal, fmt.Sprintf("Unable to connect to the database, therefore this operation is not available at this time."))
+	// see if this request's hash has already been built before. if it has, then that means that we can validate the acct/repo in the db against the buildreq one.
+	// it also means we can do some partial hash matching, as well as selecting the branch that is associated with the commit if it isn't passed in as request param
+	var hashPreviouslyBuilt bool
+	var buildSum models.BuildSummary
+	if buildReq.Hash != "" {
+		buildSum, err = g.Storage.RetrieveLatestSum(buildReq.Hash)
+		if err != nil {
+			if _, ok := err.(*storage.ErrNotFound); !ok {
+				log.IncludeErrField(err).Error("could not retrieve latest build summary")
+				return status.Error(codes.Internal, fmt.Sprintf("Unable to connect to the database, therefore this operation is not available at this time."))
+			}
+			warnMsg := fmt.Sprintf("There are no previous builds starting with hash %s...", buildReq.Hash)
+			stream.Send(RespWrap(warnMsg))
 		}
-		//at this point error must be because we couldn't find hash starting with query
-		warnMsg := fmt.Sprintf("There are no previous builds starting with hash %s...", buildReq.Hash)
-		log.IncludeErrField(err).Warning(warnMsg)
-		stream.Send(RespWrap(warnMsg))
 
-		if len(buildReq.Branch) == 0 {
+		hashPreviouslyBuilt = err == nil
+	}
+	// validate that hte request acct/repo is the same as an entry in the db. if this happens, we want to know about it.
+	if hashPreviouslyBuilt && (buildSum.Repo != repo || buildSum.Account != acct) {
+		mismatchErr := errors.New(fmt.Sprintf("The account/repo passed (%s) doesn't match with the account/repo (%s) associated with build #%v", buildReq.AcctRepo, buildSum.Account+"/"+buildSum.Repo, buildSum.BuildId))
+		log.IncludeErrField(mismatchErr).Error()
+		return status.Error(codes.InvalidArgument, mismatchErr.Error())
+	}
+	var buildBranch, buildHash string
+	switch {
+	//	do the lookup of latest commit to get full hash
+	case buildReq.Hash == "":
+		if buildReq.Branch == "" {
+			return status.Error(codes.InvalidArgument, "If not sending a hash, then a lookup will be requested off of the Account/Repo and Branch to find the latest commit. Therefore, acctRepo and branch are required fields")
+		}
+		hist, err := handler.GetBranchLastCommitData(buildReq.AcctRepo, buildReq.Branch)
+		if err != nil {
+			if _, ok := err.(*models.BranchNotFound); !ok {
+				return status.Error(codes.Unavailable, "Unable to retrieve last commit data from bitbucket handler, error from api is: " + err.Error())
+			} else {
+				return status.Error(codes.InvalidArgument, fmt.Sprintf("Branch %s was not found for repository %s", buildReq.Branch, buildReq.AcctRepo))
+			}
+		}
+		buildBranch = buildReq.Branch
+		buildHash = hist.Hash
+		stream.Send(RespWrap(fmt.Sprintf("Building branch %s with the latest commit in VCS, which is %s", buildBranch, buildHash)))
+	// user passed hash and branch, if its been built before use the old build to get the full hash, set the request branch / hash
+	case buildReq.Hash != "" && buildReq.Branch != "":
+		if hashPreviouslyBuilt {
+			buildHash = buildSum.Hash
+		} else {
+			buildHash = buildReq.Hash
+		}
+		buildBranch = buildReq.Branch
+		stream.Send(RespWrap(fmt.Sprintf("Building with given hash %s and branch %s", buildHash, buildBranch)))
+	// use previously looked up build of this hash to get branch info for build
+	case buildReq.Hash != "" && buildReq.Branch == "":
+		if !hashPreviouslyBuilt {
 			noBranchErr := errors.New("Branch is a required field if a previous build starting with the specified hash cannot be found. Please pass the branch flag and try again!")
 			log.IncludeErrField(noBranchErr).Error("branch len is 0")
 			return status.Error(codes.InvalidArgument, noBranchErr.Error())
 		}
-
-		fullHash = buildReq.Hash
-		branch = buildReq.Branch
-	} else {
-		if buildSum.Repo != repo || buildSum.Account != acct {
-			mismatchErr := errors.New(fmt.Sprintf("The account/repo passed (%s) doesn't match with the account/repo (%s) associated with build #%v", buildReq.AcctRepo, buildSum.Account+"/"+buildSum.Repo, buildSum.BuildId))
-			log.IncludeErrField(mismatchErr).Error()
-			return status.Error(codes.InvalidArgument, mismatchErr.Error())
-		}
-
-		if len(buildReq.Branch) == 0 {
-			stream.Send(RespWrap(fmt.Sprintf("No branch was passed, using `%s` from build #%v instead...", buildSum.Branch, buildSum.BuildId)))
-			branch = buildSum.Branch
-		} else {
-			branch = buildReq.Branch
-		}
-
-		fullHash = buildSum.Hash
-		stream.Send(RespWrap(fmt.Sprintf("Found a previous build starting with hash %s, now building branch %s %s", buildReq.Hash, branch, models.CHECKMARK)))
+		stream.Send(RespWrap(fmt.Sprintf("No branch was passed, using `%s` from build #%v instead...", buildSum.Branch, buildSum.BuildId)))
+		buildHash = buildSum.Hash
+		buildBranch = buildSum.Branch
+		stream.Send(RespWrap(fmt.Sprintf("Found a previous build starting with hash %s, now building branch %s %s", buildReq.Hash, buildBranch, models.CHECKMARK)))
 	}
-
+	// get build config to do build validation, that this branch is appropriate,
 	stream.Send(RespWrap(fmt.Sprintf("Retrieving ocelot.yml for %s...", buildReq.AcctRepo)))
-	buildConf, err := signal.GetConfig(buildReq.AcctRepo, fullHash, g.Deserializer, handler)
+	buildConf, err := signal.GetConfig(buildReq.AcctRepo, buildHash, g.Deserializer, handler)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get bb config")
 		if err.Error() == "could not find raw data at url" {
-			err = status.Error(codes.NotFound, fmt.Sprintf("File not found at commit %s for Acct/Repo %s", fullHash, buildReq.AcctRepo))
+			err = status.Error(codes.NotFound, fmt.Sprintf("ocelot.yml not found at commit %s for Acct/Repo %s", buildHash, buildReq.AcctRepo))
 		} else {
 			err = status.Error(codes.InvalidArgument, "Could not get bitbucket ocelot.yml. Error: "+err.Error())
 		}
@@ -132,7 +156,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	//		commits, err = handler.GetCommitLog(buildReq.AcctRepo, branch, sums[0].Hash)
 	//	}
 	//}
-	task := signal.BuildInitialWerkerTask(buildConf, buildReq.Hash, token, branch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil)
+	task := signal.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil)
 	if err = g.getSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
@@ -141,20 +165,20 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		log.IncludeErrField(err).Error("couldn't add to build queue or store in db")
 		return status.Error(codes.InvalidArgument, "Couldn't add to build queue or store in DB, err: "+err.Error())
 	}
-	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", fullHash, buildReq.AcctRepo, models.CHECKMARK)))
+	stream.Send(RespWrap(fmt.Sprintf("Build started for %s belonging to %s %s", buildHash, buildReq.AcctRepo, models.CHECKMARK)))
 	return nil
 }
 
-func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, error){
+func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error){
 	if g.handler != nil {
-		return g.handler, nil
+		return g.handler, "token", nil
 	}
-	handler, _, err := remote.GetHandler(cfg)
+	handler, token, err := remote.GetHandler(cfg)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		return nil, status.Error(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s")
+		return nil, token, status.Error(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s")
 	}
-	return handler, nil
+	return handler, token, nil
 }
 
 func (g *guideOcelotServer) getSignaler() *signal.Signaler {
@@ -173,7 +197,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 		}
 		return nil, status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 	}
-	handler, grpcErr := g.getHandler(cfg)
+	handler, _, grpcErr := g.getHandler(cfg)
 	if grpcErr != nil {
 		return nil, grpcErr
 	}

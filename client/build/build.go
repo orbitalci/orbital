@@ -1,6 +1,8 @@
 package build
 
 import (
+	"fmt"
+
 	"github.com/mitchellh/cli"
 	help "github.com/shankj3/ocelot/client/commandhelper"
 	models "github.com/shankj3/ocelot/models/pb"
@@ -32,6 +34,7 @@ type cmd struct {
 	config *help.ClientConfig
 	Branch string
 	force  bool
+	latest bool
 	*help.OcyHelper
 }
 
@@ -62,6 +65,7 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.Hash, "hash", "ERROR", "hash to build")
 	c.flags.StringVar(&c.Branch, "branch", "ERROR", "branch to build (only required if passing a previously un-built hash or overriding the branch associated with a previous build)")
 	c.flags.BoolVar(&c.force, "force", false, "force the build to be queued even if it is not one of the accepted branches")
+	c.flags.BoolVar(&c.latest, "latest", false, "use -latest to find the latest commit of the acct/repo at the branch denoted by -branch")
 }
 
 func (c *cmd) Run(args []string) int {
@@ -69,15 +73,21 @@ func (c *cmd) Run(args []string) int {
 		help.Debuggit(c.UI, err.Error())
 		return 1
 	}
-	if err := c.DetectHash(c.UI); err != nil {
-		help.Debuggit(c.UI, err.Error())
-		return 1
+	if c.latest {
+		c.Hash = ""
+	} else {
+		if err := c.DetectHash(c.UI); err != nil {
+			help.Debuggit(c.UI, err.Error())
+			return 1
+		}
 	}
 
 	if err := c.DetectAcctRepo(c.UI); err != nil {
 		help.Debuggit(c.UI, err.Error())
 		return 1
 	}
+
+
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
 		help.Debuggit(c.UI, err.Error())
 	}
@@ -96,7 +106,7 @@ func (c *cmd) Run(args []string) int {
 	if c.Branch != "ERROR" && len(c.Branch) > 0 {
 		buildRequest.Branch = c.Branch
 	}
-
+	help.Debuggit(c.UI, fmt.Sprintf("%#v", buildRequest))
 	stream, err := c.config.Client.BuildRepoAndHash(ctx, buildRequest)
 
 	if err != nil {

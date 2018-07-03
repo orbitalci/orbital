@@ -168,7 +168,7 @@ func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.
     //   https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/refs/branches/%7Bname%7D
 	switch resp.StatusCode {
 	case http.StatusNotFound:
-		err = errors.New(fmt.Sprintf("Specified branch %s does not exist", branch))
+		err = models.Branch404(branch, acctRepo)
 	case http.StatusForbidden:
 		err = errors.New(fmt.Sprintf("Repo %s (with branch %s) is private and these credentials are not authorized for access", acctRepo, branch))
 	case http.StatusOK:
