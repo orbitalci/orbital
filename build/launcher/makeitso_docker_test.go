@@ -107,7 +107,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	launch := &launcher{RemoteConf: &dummyCVRC{}}
 	//go createKubectlEndpoint(t)
 	ctx := context.Background()
-	dckr, cleanupFunc := docker.CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
+	dckr, cleanupFunc := docker.CreateLivingDockerContainer(t, ctx, "docker:latest")
 	time.Sleep(2 * time.Second)
 	defer cleanupFunc(t)
 	baseStage := build.InitStageUtil("PREFLIGHT")

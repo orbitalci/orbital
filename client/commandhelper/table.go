@@ -114,7 +114,6 @@ func PrintStatusStages(statuses *models.Status, wide bool, theme *ColorDefs) (st
 }
 
 func PrintStatusOverview(color *Color, acctName, repoName, hash, status string, theme *ColorDefs) string {
-	fmt.Println(color)
 	buildStatus := color.Sprintf("\nstatus: %s ", status) + theme.Warning.Sprintf("\nhash: %s", hash) + fmt.Sprintf("\naccount: %s \nrepo: %s\n", acctName, repoName)
 	return buildStatus
 }
