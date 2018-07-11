@@ -157,9 +157,9 @@ func (mr *MockBuildSumMockRecorder) UpdateSum(failed, duration, id interface{}) 
 }
 
 // RetrieveSumByBuildId mocks base method
-func (m *MockBuildSum) RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error) {
+func (m *MockBuildSum) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveSumByBuildId", buildId)
-	ret0, _ := ret[0].(models.BuildSummary)
+	ret0, _ := ret[0].(*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -170,9 +170,9 @@ func (mr *MockBuildSumMockRecorder) RetrieveSumByBuildId(buildId interface{}) *g
 }
 
 // RetrieveSum mocks base method
-func (m *MockBuildSum) RetrieveSum(gitHash string) ([]models.BuildSummary, error) {
+func (m *MockBuildSum) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveSum", gitHash)
-	ret0, _ := ret[0].([]models.BuildSummary)
+	ret0, _ := ret[0].([]*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -183,9 +183,9 @@ func (mr *MockBuildSumMockRecorder) RetrieveSum(gitHash interface{}) *gomock.Cal
 }
 
 // RetrieveLatestSum mocks base method
-func (m *MockBuildSum) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
+func (m *MockBuildSum) RetrieveLatestSum(gitHash string) (*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveLatestSum", gitHash)
-	ret0, _ := ret[0].(models.BuildSummary)
+	ret0, _ := ret[0].(*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -196,9 +196,9 @@ func (mr *MockBuildSumMockRecorder) RetrieveLatestSum(gitHash interface{}) *gomo
 }
 
 // RetrieveHashStartsWith mocks base method
-func (m *MockBuildSum) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+func (m *MockBuildSum) RetrieveHashStartsWith(partialGitHash string) ([]*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveHashStartsWith", partialGitHash)
-	ret0, _ := ret[0].([]models.BuildSummary)
+	ret0, _ := ret[0].([]*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -209,9 +209,9 @@ func (mr *MockBuildSumMockRecorder) RetrieveHashStartsWith(partialGitHash interf
 }
 
 // RetrieveLastFewSums mocks base method
-func (m *MockBuildSum) RetrieveLastFewSums(repo, account string, limit int32) ([]models.BuildSummary, error) {
+func (m *MockBuildSum) RetrieveLastFewSums(repo, account string, limit int32) ([]*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveLastFewSums", repo, account, limit)
-	ret0, _ := ret[0].([]models.BuildSummary)
+	ret0, _ := ret[0].([]*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -222,9 +222,9 @@ func (mr *MockBuildSumMockRecorder) RetrieveLastFewSums(repo, account, limit int
 }
 
 // RetrieveAcctRepo mocks base method
-func (m *MockBuildSum) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
+func (m *MockBuildSum) RetrieveAcctRepo(partialRepo string) ([]*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveAcctRepo", partialRepo)
-	ret0, _ := ret[0].([]models.BuildSummary)
+	ret0, _ := ret[0].([]*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -676,9 +676,9 @@ func (mr *MockOcelotStorageMockRecorder) UpdateSum(failed, duration, id interfac
 }
 
 // RetrieveSumByBuildId mocks base method
-func (m *MockOcelotStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error) {
+func (m *MockOcelotStorage) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveSumByBuildId", buildId)
-	ret0, _ := ret[0].(models.BuildSummary)
+	ret0, _ := ret[0].(*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -689,9 +689,9 @@ func (mr *MockOcelotStorageMockRecorder) RetrieveSumByBuildId(buildId interface{
 }
 
 // RetrieveSum mocks base method
-func (m *MockOcelotStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, error) {
+func (m *MockOcelotStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveSum", gitHash)
-	ret0, _ := ret[0].([]models.BuildSummary)
+	ret0, _ := ret[0].([]*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -702,9 +702,9 @@ func (mr *MockOcelotStorageMockRecorder) RetrieveSum(gitHash interface{}) *gomoc
 }
 
 // RetrieveLatestSum mocks base method
-func (m *MockOcelotStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
+func (m *MockOcelotStorage) RetrieveLatestSum(gitHash string) (*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveLatestSum", gitHash)
-	ret0, _ := ret[0].(models.BuildSummary)
+	ret0, _ := ret[0].(*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -715,9 +715,9 @@ func (mr *MockOcelotStorageMockRecorder) RetrieveLatestSum(gitHash interface{}) 
 }
 
 // RetrieveHashStartsWith mocks base method
-func (m *MockOcelotStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+func (m *MockOcelotStorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveHashStartsWith", partialGitHash)
-	ret0, _ := ret[0].([]models.BuildSummary)
+	ret0, _ := ret[0].([]*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -728,9 +728,9 @@ func (mr *MockOcelotStorageMockRecorder) RetrieveHashStartsWith(partialGitHash i
 }
 
 // RetrieveLastFewSums mocks base method
-func (m *MockOcelotStorage) RetrieveLastFewSums(repo, account string, limit int32) ([]models.BuildSummary, error) {
+func (m *MockOcelotStorage) RetrieveLastFewSums(repo, account string, limit int32) ([]*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveLastFewSums", repo, account, limit)
-	ret0, _ := ret[0].([]models.BuildSummary)
+	ret0, _ := ret[0].([]*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -741,9 +741,9 @@ func (mr *MockOcelotStorageMockRecorder) RetrieveLastFewSums(repo, account, limi
 }
 
 // RetrieveAcctRepo mocks base method
-func (m *MockOcelotStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
+func (m *MockOcelotStorage) RetrieveAcctRepo(partialRepo string) ([]*pb.BuildSummary, error) {
 	ret := m.ctrl.Call(m, "RetrieveAcctRepo", partialRepo)
-	ret0, _ := ret[0].([]models.BuildSummary)
+	ret0, _ := ret[0].([]*pb.BuildSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
