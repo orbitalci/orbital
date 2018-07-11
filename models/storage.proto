@@ -29,7 +29,6 @@ message BuildSummary {
     BuildStatus status = 10;
 }
 
-
 enum BuildStatus {
     NIL = 0;
     QUEUED = 1;

@@ -18,6 +18,7 @@ func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *pb.Re
 	var summaries = &pb.Summaries{}
 	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
+		log.IncludeErrField(err).Error()
 		return nil, handleStorageError(err)
 	}
 	log.Log().Debug("successfully retrieved last few summaries")

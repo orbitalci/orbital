@@ -94,13 +94,8 @@ func PrintStatusStages(statuses *models.Status, wide bool, theme *ColorDefs) (st
 
 	if statuses != nil && len(statuses.Stages) > 0 {
 		for _, stage := range statuses.Stages {
-			var stageStatusStr string
-			if stage.Status == 0 {
-				stageStatusStr = "PASS"
-			} else {
-				stageStatusStr = "FAIL"
-			}
-			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.StageStatus, PrettifyTime(stage.StageDuration, statuses.BuildSum.Status==models.BuildStatus_QUEUED), stageStatusStr)
+			statusEnum := models.StageResultVal(stage.Status)
+			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.StageStatus, PrettifyTime(stage.StageDuration, statuses.BuildSum.Status==models.BuildStatus_QUEUED), statusEnum.String())
 			if statuses.BuildSum.Status == models.BuildStatus_FAILED || wide {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {
