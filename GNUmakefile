@@ -78,6 +78,14 @@ all-binaries-rel: versionexists ## build all binaries in RELEASE MODE and save t
 	# werker darwin
 	cd cmd/werker/; env GOOS=darwin GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o werker .; zip -r ../../pkg/darwin_amd64/darwin-werker-$(VERSION).zip werker; rm werker; cd -
 
+upload-binaries: versionexists ## upload all built binaries
+	# upload clients
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/darwin_amd64/darwin-ocelot-$(VERSION).zip s3://ocelotty/
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/windows_amd64/windows-ocelot-$(VERSION).zip s3://ocelotty/
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/linux-ocelot-$(VERSION).zip s3://ocelotty/
+	# upload werkers
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/linux_amd64/linux-werker-$(VERSION).zip s3://ocelotty/
+	@aws s3 cp --acl public-read-write --content-disposition attachment pkg/darwin_amd64/darwin-werker-$(VERSION).zip s3://ocelotty/
 
 upload-templates: ## tar up werker templates and upload to s3
 	cd build/template && tar -cvf werker_files.tar *
