@@ -16,6 +16,7 @@ def migrate(dumped_creds_loc, host_port):
     with open(dumped_creds_loc) as all_creddies:
         all_loaded = json.load(all_creddies)
     for cred_t, creds in all_loaded.items():
+        print("\n====================================\n")
         print("PROCESSING " + cred_t)
         print("\n====================================\n")
         for cred in creds: 
