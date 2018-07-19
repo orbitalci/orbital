@@ -397,7 +397,7 @@ func Contains(credType SubCredType, types []SubCredType) bool {
 }
 
 func (i *SubCredType) MarshalJSON() ([]byte, error) {
-	return []byte(strings.ToLower(i.String())), nil
+	return []byte(fmt.Sprintf(`"%s"`, i.String())), nil
 }
 
 func (i *SubCredType) UnmarshalJSON(b []byte) error {
