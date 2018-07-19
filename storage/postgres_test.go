@@ -1,31 +1,45 @@
 package storage
 
 import (
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/test"
 	util "github.com/shankj3/ocelot/common/testutil"
 	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"bytes"
 	"testing"
 	"time"
 )
 
-func TestPostgresStorage_AddSumStart(t *testing.T) {
+// run all the tests, so we don't have to start up a bunch of postgress's
+func Test_PostgresStorage(t *testing.T) {
 	util.BuildServerHack(t)
-	cleanup, pw, port := CreateTestPgDatabase(t)
+	port := 5455
+	cleanup, pw  := CreateTestPgDatabase(t, port)
 	defer cleanup(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	pg.Connect()
 	defer PostgresTeardown(t, pg.db)
+	t.Run("add sum start", func(t *testing.T){postgresStorage_AddSumStart(t, pg)})
+	id := insertDependentData(t, pg)
+	t.Run("get last data", func(t *testing.T){postgresStorage_GetLastData(t, pg)})
+	t.Run("add out", func(t *testing.T){postgresStorage_AddOut(t, pg, id)})
+	t.Run("add stage detail", func(t *testing.T){postgresStorage_AddStageDetail(t, pg, id)})
+	t.Run("healthy check", func(t *testing.T){postgresStorage_Healthy(t, pg, cleanup)})
+}
+
+func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {
 	const shortForm = "2006-01-02 15:04:05"
 	buildTime, err := time.Parse(shortForm, "2018-01-14 18:38:59")
 	if err != nil {
 		t.Error(err)
 	}
-	model := &models.BuildSummary{
+	model := &pb.BuildSummary{
 		Hash:          "123",
 		Failed:        false,
-		BuildTime:     buildTime,
+		Status:        pb.BuildStatus_QUEUED,
+		BuildTime:     &timestamp.Timestamp{Seconds: buildTime.Unix()},
 		Account:       "testAccount",
 		BuildDuration: 23.232,
 		Repo:          "testRepo",
@@ -39,6 +53,7 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	sumaries, err := pg.RetrieveSum("123")
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	sum := sumaries[0]
 	if sum.Hash != "123" {
@@ -64,6 +79,7 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 	if err != nil {
 		t.Error("could not update build summary: ", err)
 	}
+	model.Status = pb.BuildStatus_PASSED
 	//cleanup
 	//_ = pg.db.QueryRow(`delete from build_summary where hash = 123`)
 	sumaz, err := pg.RetrieveSum("123")
@@ -75,15 +91,14 @@ func TestPostgresStorage_AddSumStart(t *testing.T) {
 		t.Error(test.GenericStrFormatErrors("build duration", model.BuildDuration, suum.BuildDuration))
 	}
 	if suum.Failed != false {
-		t.Error(test.GenericStrFormatErrors("failed", false, sum.Failed))
+		t.Error(test.GenericStrFormatErrors("failed", false, suum.Failed))
+	}
+	if suum.Status != pb.BuildStatus_PASSED {
+		t.Error(test.GenericStrFormatErrors("status", pb.BuildStatus_PASSED, suum.Status))
 	}
 }
 
-func TestPostgresStorage_AddOut(t *testing.T) {
-	util.BuildServerHack(t)
-	pg, id, cleanup := insertDependentData(t)
-	defer cleanup(t)
-	defer PostgresTeardown(t, pg.db)
+func postgresStorage_AddOut(t *testing.T, pg *PostgresStorage, id int64) {
 	txt := []byte("a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf")
 	out := &models.BuildOutput{
 		BuildId: id,
@@ -103,15 +118,9 @@ func TestPostgresStorage_AddOut(t *testing.T) {
 	if bytes.Compare(retrieved.Output, txt) != 0 {
 		t.Error(test.GenericStrFormatErrors("output", txt, retrieved.Output))
 	}
-
 }
 
-func TestPostgresStorage_AddStageDetail(t *testing.T) {
-	util.BuildServerHack(t)
-	pg, id, cleanup := insertDependentData(t)
-	defer cleanup(t)
-	pg.Connect()
-	defer PostgresTeardown(t, pg.db)
+func postgresStorage_AddStageDetail(t *testing.T, pg *PostgresStorage, id int64) {
 	const shortForm = "2006-01-02 15:04:05"
 	startTime, _ := time.Parse(shortForm, "2018-01-14 18:38:59")
 	stageMessage := []string{"wow I am amazing"}
@@ -126,13 +135,11 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 		Stage:         "marianne",
 	}
 	err := pg.AddStageDetail(stageResult)
-	t.Log(pg.db.Stats().OpenConnections)
 	if err != nil {
 		t.Error("could not add stage details", err)
 	}
 
 	stageResults, err := pg.RetrieveStageDetail(id)
-	t.Log(pg.db.Stats().OpenConnections)
 	if err != nil {
 		t.Error("could not get stage details", err)
 	}
@@ -145,8 +152,8 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 		if stage.StageResultId != 1 {
 			t.Error(test.GenericStrFormatErrors("postgres assigned stage result id", 1, stage.StageResultId))
 		}
-		if stage.BuildId != 1 {
-			t.Error(test.GenericStrFormatErrors("test build id", 1, stage.BuildId))
+		if stage.BuildId != 2 {
+			t.Error(test.GenericStrFormatErrors("test build id", 2, stage.BuildId))
 		}
 		if len(stage.Error) != 0 {
 			t.Error(test.GenericStrFormatErrors("stage err length", 0, len(stage.Error)))
@@ -163,11 +170,7 @@ func TestPostgresStorage_AddStageDetail(t *testing.T) {
 	}
 }
 
-func TestPostgresStorage_Healthy(t *testing.T) {
-	cleanup, pw, port := CreateTestPgDatabase(t)
-	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
-	time.Sleep(4 * time.Second)
-	defer cleanup(t)
+func postgresStorage_Healthy(t *testing.T, pg *PostgresStorage, cleanup func(t2 *testing.T)) {
 	if !pg.Healthy() {
 		t.Error("postgres storage instance should return healthy, it isn't.")
 	}
@@ -176,14 +179,9 @@ func TestPostgresStorage_Healthy(t *testing.T) {
 	if pg.Healthy() {
 		t.Error("postgres storage instance has been shut down, should return not healthy")
 	}
-
 }
 
-func TestPostgresStorage_GetLastData(t *testing.T) {
-	cleanup, pw, port := CreateTestPgDatabase(t)
-	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
-	time.Sleep(4 * time.Second)
-	defer cleanup(t)
+func postgresStorage_GetLastData(t *testing.T, pg *PostgresStorage) {
 	_, hashes, err := pg.GetLastData("level11consulting/ocelot")
 	if err != nil {
 		t.Error(err)

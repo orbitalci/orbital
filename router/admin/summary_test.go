@@ -8,7 +8,6 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/pkg/errors"
-	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 	"google.golang.org/grpc/codes"
@@ -62,7 +61,7 @@ type summstorage struct {
 	storage.OcelotStorage
 }
 
-var summary = models.BuildSummary{
+var summary = &pb.BuildSummary{
 	Hash: "hash",
 	Failed: true,
 	Account: "shankj3",
@@ -70,8 +69,8 @@ var summary = models.BuildSummary{
 	Branch: "master",
 	BuildId: 12,
 	BuildDuration: 12.1234,
-	QueueTime: time.Unix(0,0),
-	BuildTime: time.Unix(0,0),
+	QueueTime: &timestamp.Timestamp{Seconds: time.Unix(0,0).Unix()},
+	BuildTime: &timestamp.Timestamp{Seconds: time.Unix(0,0).Unix()},
 }
 
 var pbsummary = &pb.BuildSummary{
@@ -86,7 +85,7 @@ var pbsummary = &pb.BuildSummary{
 	BuildTime: &timestamp.Timestamp{Seconds:0},
 }
 
-func (s *summstorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
+func (s *summstorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]*pb.BuildSummary, error) {
 	if s.returnErr {
 		return nil, errors.New("returing an error")
 	}
@@ -94,9 +93,9 @@ func (s *summstorage) RetrieveLastFewSums(repo string, account string, limit int
 		return nil, storage.BuildSumNotFound(repo)
 	}
 	if s.returnEmpty {
-		return []models.BuildSummary{}, nil
+		return []*pb.BuildSummary{}, nil
 	}
-	var sums []models.BuildSummary
+	var sums []*pb.BuildSummary
 	for i := 0; i < int(limit); i++ {
 		sums = append(sums, summary)
 	}

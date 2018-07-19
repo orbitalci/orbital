@@ -1640,6 +1640,18 @@
         }
       }
     },
+    "modelsBuildStatus": {
+      "type": "string",
+      "enum": [
+        "NIL",
+        "QUEUED",
+        "RUNNING",
+        "FAILED",
+        "PASSED",
+        "FAILED_PRESTART"
+      ],
+      "default": "NIL"
+    },
     "modelsBuildSummary": {
       "type": "object",
       "properties": {
@@ -1683,6 +1695,10 @@
           "type": "string",
           "format": "date-time",
           "title": "queueTime is the datetime that either a tracking component or the admin put the build request on the queue to be processed by the werker node"
+        },
+        "status": {
+          "$ref": "#/definitions/modelsBuildStatus",
+          "title": "status is the current status of the build as known by the database"
         }
       },
       "description": "BuildSummary represents the build_summary table in postgres\nit is a top level view of how a repository is \"doing\" in ocelot, ie build times, fail status.."

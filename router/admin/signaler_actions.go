@@ -64,7 +64,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	// see if this request's hash has already been built before. if it has, then that means that we can validate the acct/repo in the db against the buildreq one.
 	// it also means we can do some partial hash matching, as well as selecting the branch that is associated with the commit if it isn't passed in as request param
 	var hashPreviouslyBuilt bool
-	var buildSum models.BuildSummary
+	var buildSum *pb.BuildSummary
 	if buildReq.Hash != "" {
 		buildSum, err = g.Storage.RetrieveLatestSum(buildReq.Hash)
 		if err != nil {

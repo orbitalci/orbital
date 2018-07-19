@@ -28,12 +28,12 @@ type BuildSum interface {
 	// AddSumStart will
 	AddSumStart(hash string, account string, repo string, branch string) (int64, error)
 	UpdateSum(failed bool, duration float64, id int64) error
-	RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error)
-	RetrieveSum(gitHash string) ([]models.BuildSummary, error)
-	RetrieveLatestSum(gitHash string) (models.BuildSummary, error)
-	RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error)
-	RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error)
-	RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error)
+	RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error)
+	RetrieveSum(gitHash string) ([]*pb.BuildSummary, error)
+	RetrieveLatestSum(gitHash string) (*pb.BuildSummary, error)
+	RetrieveHashStartsWith(partialGitHash string) ([]*pb.BuildSummary, error)
+	RetrieveLastFewSums(repo string, account string, limit int32) ([]*pb.BuildSummary, error)
+	RetrieveAcctRepo(partialRepo string) ([]*pb.BuildSummary, error)
 	StartBuild(id int64) error
 	StoreFailedValidation(id int64) error
 	SetQueueTime(id int64) error

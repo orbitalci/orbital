@@ -153,6 +153,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	if err != nil {
 		return
 	}
+	// post pr comments if its relevant, send notifications
 	if err := w.postFlight(ctx, werk, fail); err != nil {
 		ocelog.IncludeErrField(err).Error("could not execute post flight")
 		// don't return here, we still want to update the build_summary table

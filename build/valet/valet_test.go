@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/consul/testutil"
@@ -50,9 +52,7 @@ func TestRecovery(t *testing.T) {
 	// for now
 	t.Skip("fix the stupid postgres bullshit")
 	hash := "hahsyhashahs"
-	cleanup, pw, port := storage.CreateTestPgDatabase(t)
-	defer cleanup(t)
-	store := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	store := &testStore{}
 	id, err := store.AddSumStart(hash, "test", "test", "test")
 	if err != nil {
 		t.Fatal(err)
@@ -127,6 +127,44 @@ func TestRecovery(t *testing.T) {
 		t.Error("everything under the build map should be deleted after cleanup")
 	}
 }
+
+type testStore struct {
+	storage.OcelotStorage
+	addedSum *pb.BuildSummary
+	stageDetails []models.StageResult
+}
+
+func (t *testStore) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
+	t.addedSum =&pb.BuildSummary{Hash:hash, Account:account, Repo:repo, Branch:branch, Status: pb.BuildStatus_QUEUED, BuildTime: &timestamp.Timestamp{Seconds: 0, Nanos: 0}}
+	return 1, nil
+}
+
+func (t *testStore) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
+	return t.stageDetails, nil
+}
+
+func (t *testStore) AddStageDetail(stageResult *models.StageResult) error {
+	t.stageDetails = append(t.stageDetails, *stageResult)
+	return nil
+}
+
+func (t *testStore) UpdateSum(failed bool, duration float64, id int64) error {
+	t.addedSum.Failed = failed
+	if failed {
+		t.addedSum.Status = pb.BuildStatus_FAILED
+	} else {
+		t.addedSum.Status = pb.BuildStatus_PASSED
+	}
+	t.addedSum.BuildId = id
+	return nil
+}
+
+func (t *testStore) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
+	return t.addedSum, nil
+}
+
+//RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error)
+
 
 func Test_Delete(t *testing.T) {
 	werkerId := "werkerId"

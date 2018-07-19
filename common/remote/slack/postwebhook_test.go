@@ -24,6 +24,7 @@ func TestThrowStatusWebhook(t *testing.T) {
 			Branch: "banana",
 			Account: "jessishank",
 			Repo: "ocyocyocyocy",
+			Status: pb.BuildStatus_FAILED,
 		},
 		Stages: []*pb.StageStatus{
 			{
