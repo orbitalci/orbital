@@ -17,7 +17,7 @@ import (
 
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
 func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery) (result *pb.Status, err error) {
-	var buildSum models.BuildSummary
+	var buildSum *pb.BuildSummary
 	switch {
 	case len(query.Hash) > 0:
 		partialHash := query.Hash
@@ -80,6 +80,7 @@ BUILD_FOUND:
 		return nil, handleStorageError(err)
 	}
 	result = models.ParseStagesByBuildId(buildSum, stageResults)
+	// idk if htis is necessary anymore
 	inConsul, err := build.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
 	if err != nil {
 		return nil, status.Error(codes.Unavailable, "An error occurred checking build status in consul. Cannot retrieve status at this time.\n\n"+err.Error())

@@ -7,7 +7,7 @@ import (
 )
 
 //ParseStagesByBuildId will combine the buildsummary + stages to a single object called "Status"
-func ParseStagesByBuildId(buildSum BuildSummary, stageResults []StageResult) *pb.Status {
+func ParseStagesByBuildId(buildSum *pb.BuildSummary, stageResults []StageResult) *pb.Status {
 	var parsedStages []*pb.StageStatus
 	for _, result := range stageResults {
 		stageDupe := &pb.StageStatus{
@@ -22,17 +22,7 @@ func ParseStagesByBuildId(buildSum BuildSummary, stageResults []StageResult) *pb
 	}
 
 	hashStatus := &pb.Status{
-		BuildSum: &pb.BuildSummary{
-			Hash:          buildSum.Hash,
-			Failed:        buildSum.Failed,
-			BuildTime:     &timestamp.Timestamp{Seconds: buildSum.BuildTime.UTC().Unix()},
-			Account:       buildSum.Account,
-			BuildDuration: buildSum.BuildDuration,
-			Repo:          buildSum.Repo,
-			Branch:        buildSum.Branch,
-			BuildId:       buildSum.BuildId,
-			QueueTime:     &timestamp.Timestamp{Seconds: buildSum.QueueTime.UTC().Unix()},
-		},
+		BuildSum: buildSum,
 		Stages: parsedStages,
 	}
 

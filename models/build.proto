@@ -56,9 +56,11 @@ message Triggers {
     repeated string branches = 1;
 }
 
+
 enum StageResultVal {
     PASS = 0;
     FAIL = 1;
+    SKIP = 2;
 }
 
 enum SignaledBy {

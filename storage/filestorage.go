@@ -21,11 +21,12 @@ save-direc/
 package storage
 
 import (
-	"encoding/json"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/pb"
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -86,7 +87,7 @@ func (f *FileBuildStorage) Clean() {
 }
 
 // AddSumStart will create an entry in the filesystem storage by generating a random number that
-// has not been used yet. that will be the buildId. Then it will dump the models.BuildSummary struct to JSON.
+// has not been used yet. that will be the buildId. Then it will dump the *pb.BuildSummary struct to JSON.
 func (f *FileBuildStorage) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
 	var id int64
 	id = getRandomStorage(f.saveDirec)
@@ -94,7 +95,7 @@ func (f *FileBuildStorage) AddSumStart(hash string, account string, repo string,
 	if err != nil {
 		return id, err
 	}
-	sum := &models.BuildSummary{
+	sum := &pb.BuildSummary{
 		Hash: hash,
 		//BuildTime: starttime,
 		Account: account,
@@ -124,7 +125,7 @@ func (f *FileBuildStorage) UpdateSum(failed bool, duration float64, id int64) er
 	if err != nil {
 		return err
 	}
-	var oldSum models.BuildSummary
+	var oldSum *pb.BuildSummary
 	if err := json.Unmarshal(bytez, &oldSum); err != nil {
 		return err
 	}
@@ -138,8 +139,8 @@ func (f *FileBuildStorage) UpdateSum(failed bool, duration float64, id int64) er
 	return err
 }
 
-func (f *FileBuildStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, error) {
-	var sums []models.BuildSummary
+func (f *FileBuildStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error) {
+	var sums []*pb.BuildSummary
 	cab := NewCabinet("sum.json")
 	err := filepath.Walk(filepath.Join(f.saveDirec, gitHash), cab.fileWalker)
 	if err != nil {
@@ -153,7 +154,7 @@ func (f *FileBuildStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, e
 		if err != nil {
 			return sums, err
 		}
-		var sum models.BuildSummary
+		var sum *pb.BuildSummary
 		if err := json.Unmarshal(file, &sum); err != nil {
 			return sums, err
 		}
@@ -170,22 +171,22 @@ func (f *FileBuildStorage) RetrieveSum(gitHash string) ([]models.BuildSummary, e
 }
 
 //todo: implement sometime in the future?
-func (f *FileBuildStorage) RetrieveHashStartsWith(partialGitHash string) ([]models.BuildSummary, error) {
+func (f *FileBuildStorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.BuildSummary, error) {
 	return nil, errors.New("nope")
 }
 
 //TODO: implement
-func (f *FileBuildStorage) RetrieveSumByBuildId(buildId int64) (models.BuildSummary, error) {
-	return models.BuildSummary{}, nil
+func (f *FileBuildStorage) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
+	return &pb.BuildSummary{}, nil
 }
 
 //TODO: implement
-func (f *FileBuildStorage) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
-	return []models.BuildSummary{}, nil
+func (f *FileBuildStorage) RetrieveAcctRepo(partialRepo string) ([]*pb.BuildSummary, error) {
+	return []*pb.BuildSummary{}, nil
 }
 
-func (f *FileBuildStorage) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
-	var summary models.BuildSummary
+func (f *FileBuildStorage) RetrieveLatestSum(gitHash string) (*pb.BuildSummary, error) {
+	var summary *pb.BuildSummary
 	cab := NewCabinet("sum.json")
 	err := filepath.Walk(filepath.Join(f.saveDirec, gitHash), cab.fileWalker)
 	if err != nil {
@@ -204,8 +205,8 @@ func (f *FileBuildStorage) RetrieveLatestSum(gitHash string) (models.BuildSummar
 }
 
 //stub
-func (f *FileBuildStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
-	var sums []models.BuildSummary
+func (f *FileBuildStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]*pb.BuildSummary, error) {
+	var sums []*pb.BuildSummary
 	return sums, nil
 }
 

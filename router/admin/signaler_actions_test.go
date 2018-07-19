@@ -289,7 +289,7 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
 		mockz.rc.EXPECT().GetVault().Return(vlt).Times(1)
 		mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
-		mockz.store.EXPECT().RetrieveLatestSum("123").Return(models.BuildSummary{}, storage.BuildSumNotFound("123"))
+		mockz.store.EXPECT().RetrieveLatestSum("123").Return(&pb.BuildSummary{}, storage.BuildSumNotFound("123"))
 		mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "123").Return(ocelot, nil)
 		consl.EXPECT().GetKeyValue("ci/werker_build_map/123").Return(nil, nil)
 		vlt.EXPECT().CreateThrowawayToken().Return("sup", nil)
@@ -305,7 +305,7 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
 		consl.EXPECT().GetKeyValue("ci/werker_build_map/123").Return(nil, nil)
 		request := &pb.BuildReq{AcctRepo:"shankj3/ocelot", Branch:"master", Hash: "123"}
-		mockz.store.EXPECT().RetrieveLatestSum("123").Return(models.BuildSummary{}, storage.BuildSumNotFound("123"))
+		mockz.store.EXPECT().RetrieveLatestSum("123").Return(&pb.BuildSummary{}, storage.BuildSumNotFound("123"))
 		mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
 		mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "123").Return(ocelotInvalid, nil)
 		mockz.store.EXPECT().AddSumStart("123", "shankj3", "ocelot", "master").Return(int64(1), nil).Times(1)
@@ -356,7 +356,7 @@ func TestGuideOcelotServer_BuildRepoAndHash_previouslybuilt(t *testing.T) {
 	mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
 	mockz.rc.EXPECT().GetVault().Return(vlt).Times(1)
 	mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
-	mockz.store.EXPECT().RetrieveLatestSum("ks72bas").Return(models.BuildSummary{Hash: "ks72basasdfasdf", Branch: "master", BuildId: 123, Repo: "ocelot", Account: "shankj3"}, nil)
+	mockz.store.EXPECT().RetrieveLatestSum("ks72bas").Return(&pb.BuildSummary{Hash: "ks72basasdfasdf", Branch: "master", BuildId: 123, Repo: "ocelot", Account: "shankj3"}, nil)
 	mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "ks72basasdfasdf").Return(ocelot, nil)
 	consl.EXPECT().GetKeyValue("ci/werker_build_map/ks72basasdfasdf").Return(nil, nil)
 	vlt.EXPECT().CreateThrowawayToken().Return("sup", nil)
@@ -380,7 +380,7 @@ func TestGuideOcelotServer_BuildRepoAndHash_previouslybuilt(t *testing.T) {
 	}
     // test scenario where hash not found
 	mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
-	mockz.store.EXPECT().RetrieveLatestSum("ks72bas").Return(models.BuildSummary{}, storage.BuildSumNotFound("ks72bas"))
+	mockz.store.EXPECT().RetrieveLatestSum("ks72bas").Return(&pb.BuildSummary{}, storage.BuildSumNotFound("ks72bas"))
 	request2 := &pb.BuildReq{AcctRepo: "shankj3/ocelot", Hash: "ks72bas"}
 	streamer = &buildserv{}
 	err := gos.BuildRepoAndHash(request2, streamer)

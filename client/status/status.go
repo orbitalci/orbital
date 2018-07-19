@@ -4,12 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/commandhelper"
 	models "github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc/codes"
 	grpcStatus "google.golang.org/grpc/status"
-	"time"
 )
 
 const synopsis = "show status of specific acctname/repo, repo or hash"
@@ -155,13 +155,10 @@ func (c *cmd) Run(args []string) int {
 	}
 	return 0
 STATUS_FOUND:
-	failed_validation := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0 && statuses.BuildSum.QueueTime.Seconds == 0
-	queued := statuses.BuildSum.BuildTime.Seconds == 0 && statuses.BuildSum.BuildTime.Nanos == 0 && statuses.BuildSum.QueueTime.Seconds > 0
-	buildStarted := statuses.BuildSum.BuildTime.Seconds > 0 && statuses.IsInConsul
-	finished := !statuses.IsInConsul && statuses.BuildSum.BuildTime.Seconds > 0
-	commandhelper.Debuggit(c.UI, fmt.Sprintf("finished is %v, buildStarted is %v, queued is %v, buildTime is %v", finished, buildStarted, queued, time.Unix(statuses.BuildSum.BuildTime.Seconds, 0)))
+	commandhelper.Debuggit(c.UI, fmt.Sprintf("status is %s", statuses.BuildSum.Status.String()))
+
 	//statuses.BuildSum.QueueTime time.Unix(0,0)
-	stageStatus, color, statuss := commandhelper.PrintStatusStages(commandhelper.GetStatus(queued, buildStarted, finished, failed_validation), statuses, c.wide, c.config.Theme)
+	stageStatus, color, statuss := commandhelper.PrintStatusStages(statuses, c.wide, c.config.Theme)
 	buildStatus := commandhelper.PrintStatusOverview(color, statuses.BuildSum.Account, statuses.BuildSum.Repo, statuses.BuildSum.Hash, statuss, c.config.Theme)
 	c.UI.Output(buildStatus + stageStatus)
 	return 0

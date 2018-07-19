@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	cred "github.com/shankj3/ocelot/common/credentials"
@@ -37,7 +37,6 @@ func Start(grpcServer *grpc.Server, listener net.Listener) {
 	}
 }
 
-
 func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
 	//initializes our "context" - guideOcelotServer
 	//store := cred.GetOcelotStorage()
@@ -49,6 +48,7 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 	//gateway
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/swagger/", serveSwagger)
 
@@ -78,9 +78,9 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 	} else {
 		go http.ListenAndServe(":"+httpPort, mux)
 	}
+
 	return grpcServer, con, store, cancel, nil
 }
-
 
 func preflightHandler(w http.ResponseWriter, r *http.Request) {
 	headers := []string{"Content-Type", "Accept"}
@@ -129,6 +129,7 @@ func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	p = path.Join(dir, p)
 	http.ServeFile(w, r, p)
 }
+
 //
 ////TODO: how to propagate error codes up????
 ////TODO: cast this back to MY error type and set status

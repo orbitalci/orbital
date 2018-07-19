@@ -9,7 +9,8 @@ CREATE TABLE build_summary (
   repo character varying(100),
   id SERIAL PRIMARY KEY,
   branch character varying(100),
-  queuetime timestamp without time zone DEFAULT '1970-01-01 00:00:00'
+  queuetime timestamp without time zone DEFAULT '1970-01-01 00:00:00',
+  status integer
 );
 
 CREATE TABLE build_output (

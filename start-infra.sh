@@ -6,6 +6,7 @@ follow=(" -d")
 CONSUL=1
 VAULT=1
 NSQ=1
+NSQTJ=0
 POSTGRES=1
 NEXUS=1
 while [[ $# -gt 0 ]]
@@ -37,6 +38,12 @@ case $key in
     echo "starting without NSQ"
     shift
     ;;
+    --tj)
+    NSQTJ=0
+    NSQTJ=1
+    echo "starting infra with docker network"
+    shift
+    ;;
     --no-nexus)
     NEXUS=0
     echo "starting without NEXUS"
@@ -63,6 +70,10 @@ fi
 
 if (( NSQ == 1 )); then
     args+=(" -f deploy/infra/nsq-docker-compose.yml")
+fi
+
+if (( NSQTJ == 1 )); then
+    args+=(" -f deploy/infra/nsq-docker-compose-tj.yml")
 fi
 
 if (( NEXUS == 1 )); then

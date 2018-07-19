@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/consul/api"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/consul"
@@ -146,11 +147,11 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	}
 }
 
-var testSummary = models.BuildSummary{
+var testSummary = &pb.BuildSummary{
 	Hash: "hashy",
 	Failed: true,
-	QueueTime: time.Now().Add(-time.Hour),
-	BuildTime: time.Now().Add(-time.Hour),
+	QueueTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()},
+	BuildTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()},
 	Account: "shankj3",
 	Repo: "ocelot",
 	Branch: "master",
@@ -226,35 +227,35 @@ type statusStore struct {
 	storage.OcelotStorage
 }
 
-func (s *statusStore) RetrieveLastFewSums(repo string, account string, limit int32) ([]models.BuildSummary, error) {
+func (s *statusStore) RetrieveLastFewSums(repo string, account string, limit int32) ([]*pb.BuildSummary, error) {
 	if s.returnNoSums {
-		return []models.BuildSummary{}, nil
+		return []*pb.BuildSummary{}, nil
 	}
 	if s.returnMany {
-		return []models.BuildSummary{testSummary, testSummary}, nil
+		return []*pb.BuildSummary{testSummary, testSummary}, nil
 	}
 	if s.failLastFew {
 		return nil, errors.New("failing last few sums")
 	}
-	return []models.BuildSummary{testSummary}, nil
+	return []*pb.BuildSummary{testSummary}, nil
 }
 
-func (s *statusStore) RetrieveAcctRepo(partialRepo string) ([]models.BuildSummary, error) {
+func (s *statusStore) RetrieveAcctRepo(partialRepo string) ([]*pb.BuildSummary, error) {
 	if s.failAcctRepo {
 		return nil, errors.New("failing acct repo")
 	}
 	if s.returnNoSums {
-		return []models.BuildSummary{}, nil
+		return []*pb.BuildSummary{}, nil
 	}
 	if s.returnMany {
-		return []models.BuildSummary{testSummary, testSummary}, nil
+		return []*pb.BuildSummary{testSummary, testSummary}, nil
 	}
-	return []models.BuildSummary{testSummary}, nil
+	return []*pb.BuildSummary{testSummary}, nil
 }
 
-func (s *statusStore) RetrieveLatestSum(gitHash string) (models.BuildSummary, error) {
+func (s *statusStore) RetrieveLatestSum(gitHash string) (*pb.BuildSummary, error) {
 	if s.failLatest {
-		return models.BuildSummary{}, errors.New("failing latest")
+		return nil, errors.New("failing latest")
 	}
 	return testSummary, nil
 }

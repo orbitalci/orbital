@@ -12,15 +12,17 @@ import (
 )
 
 func Test_prep(t *testing.T) {
-	_, _, _,_,err := GetGrpcServer(&rc{}, secure_grpc.NewFakeSecure(), "localhost", "9199", "9198")
+	_, _, _, _, err := GetGrpcServer(&rc{}, secure_grpc.NewFakeSecure(), "localhost", "9199", "9198")
 	if err != nil {
 		t.Error(err)
 	}
+	//cleanup()
 	//serv.GracefulStop()
-	_, _, _,_, err = GetGrpcServer(&rc{nostore:true}, secure_grpc.NewFakeSecure(), "localhost", "9099", "9098")
+	_, _, _, _, err = GetGrpcServer(&rc{nostore:true}, secure_grpc.NewFakeSecure(), "localhost", "9099", "9098")
 	if err == nil {
 		t.Error("should fail, as did not return storage")
 	}
+	//cleanup()
 	//serv.GracefulStop()
 }
 

@@ -28,3 +28,4 @@ werker_files.tar
 ocelot*.tgz
 *.pb.go
 *.pb.gw.go
+models/pb/storage.swagger.json

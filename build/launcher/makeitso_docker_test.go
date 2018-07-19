@@ -107,7 +107,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	launch := &launcher{RemoteConf: &dummyCVRC{}}
 	//go createKubectlEndpoint(t)
 	ctx := context.Background()
-	dckr, cleanupFunc := docker.CreateLivingDockerContainer(t, ctx, "docker:18.02.0-ce")
+	dckr, cleanupFunc := docker.CreateLivingDockerContainer(t, ctx, "docker:latest")
 	time.Sleep(2 * time.Second)
 	defer cleanupFunc(t)
 	baseStage := build.InitStageUtil("PREFLIGHT")
@@ -238,7 +238,8 @@ func TestDocker_RepoIntegrationSetup(t *testing.T) {
 	if !ok {
 		t.Skip("skipping because $NEXUS_ADMIN_PW not set")
 	}
-	cleanup, pw, port := storage.CreateTestPgDatabase(t)
+	port := 5445
+	cleanup, pw := storage.CreateTestPgDatabase(t, port)
 	defer cleanup(t)
 	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 
