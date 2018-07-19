@@ -48,7 +48,6 @@ func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.Secure
 	//gateway
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/swagger/", serveSwagger)
 
