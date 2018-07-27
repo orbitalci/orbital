@@ -41,7 +41,7 @@ func main() {
 
 	configInstance, err := cred.GetInstance(consulHost, consulPort, "")
 	if err != nil {
-		ocelog.Log().Fatal("could not talk to consul or vault, bailing")
+		ocelog.IncludeErrField(err).Fatal("could not talk to consul or vault, bailing")
 	}
 	var security secure_grpc.SecureGrpc
 	if insecure {

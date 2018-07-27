@@ -3,6 +3,8 @@
 fullnameOverride: ocelot
 nameOverride: ocelot
 loglevel: info
+# service account to attach to deployments
+serviceAccount: default
 # configuration for all services
 # optional: ocelot images in a private repo, set name of secret to retrive docker creds
 # ImagePullSecret: secret
@@ -161,3 +163,16 @@ poller:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+k8sToken:
+  vaultRole: ocelot
+  mountPath: /etc/vaulted
+  tokenFileName: token
+  enabled: true
+  increment: 10m
+  sidecar:
+    image: docker.metaverse.l11.com/token-renewer
+    tag: latest
+  init:
+    image: docker.metaverse.l11.com/token-grinch
+    tag: latest
