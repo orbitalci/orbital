@@ -15,7 +15,7 @@ var (
 	PostgresLocation = PostgresCredLoc + "/location"
 	PostgresPort = PostgresCredLoc + "/port"
 	PostgresUsername = PostgresCredLoc + "/username"
-	PostgresPasswordLoc = "secret/" + PostgresCredLoc
+	PostgresPasswordLoc = "secret/data/" + PostgresCredLoc
 	PostgresPasswordKey = "clientsecret"
 
 	FilesystemConfigLoc =  OcyConfigBase + "/filesystem"

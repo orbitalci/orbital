@@ -2,7 +2,10 @@ package credentials
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,6 +34,30 @@ func init() {
 	prometheus.MustRegister(failedCredRetrieval)
 }
 
+// GetToken will check for a vault token first in the environment variable VAULT_TOKEN. If not found at the env var,
+// either the path given or the default path of /etc/vaulted/token will be searched to see if it exists. If it exists,
+// its contents will be read and returned as the vault token. for kubernetes support
+func GetToken(path string) (string, error) {
+	defaultPath := "/etc/vaulted/token"
+	if path == "" {
+		path = defaultPath
+	}
+	var token string
+	if token = os.Getenv("VAULT_TOKEN"); token != "" {
+		return token, nil
+	} else {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			return "", errors.New("$VAULT_TOKEN not set and no token found at filepath " + path)
+		}
+		tokenB, err := ioutil.ReadFile(path)
+		if err != nil {
+			return "", errors.WithMessage(err, fmt.Sprintf("File exists at %s but could not be read", path))
+		}
+		return strings.TrimSpace(string(tokenB)), nil
+	}
+
+}
+
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
 //if token is an empty string, vault will be initialized with $VAULT_TOKEN
@@ -54,18 +81,20 @@ func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfi
 
 	//initialize vault
 	if token == "" {
-		vaultClient, err := ocevault.NewEnvAuthClient()
+		// right now, only search for token at default path
+		var err error
+		token, err = GetToken("")
+
 		if err != nil {
 			return nil, err
 		}
-		remoteConfig.Vault = vaultClient
-	} else {
-		vaultClient, err := ocevault.NewAuthedClient(token)
-		if err != nil {
-			return nil, err
-		}
-		remoteConfig.Vault = vaultClient
 	}
+	vaultClient, err := ocevault.NewAuthedClient(token)
+	if err != nil {
+		return nil, err
+	}
+	remoteConfig.Vault = vaultClient
+
 
 	return remoteConfig, nil
 }
@@ -144,7 +173,7 @@ func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 
 func (rc *RemoteConfig) Healthy() bool {
 	vaultConnected := true
-	_, err := rc.Vault.GetVaultData("here")
+	_, err := rc.Vault.GetVaultData("secret/data/config/ocelot/here")
 	if err != nil {
 		if _, ok := err.(*ocevault.ErrNotFound); !ok {
 			vaultConnected = false
