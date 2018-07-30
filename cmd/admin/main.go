@@ -1,17 +1,17 @@
 package main
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/common/secure_grpc"
-	"github.com/shankj3/ocelot/models/pb"
+	//"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/router/admin"
-	"github.com/shankj3/ocelot/storage"
+	//"github.com/shankj3/ocelot/storage"
 	"github.com/shankj3/ocelot/version"
-	"io/ioutil"
+	//"io/ioutil"
 	"os"
 )
 
@@ -53,15 +53,17 @@ func main() {
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("fatal")
 	}
-	if credDumpPath, ok := os.LookupEnv("CRED_DUMP_PATH"); ok {
-		fmt.Println("dumping everything")
-		dump_creds(store, configInstance, credDumpPath)
-	}
+	//if credDumpPath, ok := os.LookupEnv("CRED_DUMP_PATH"); ok {
+	//	fmt.Println("dumping everything")
+	//	dump_creds(store, configInstance, credDumpPath)
+	//}
 	defer cancel()
 	defer store.Close()
 	admin.Start(grpcServer, listener)
 }
 
+/*
+//fyi this function should be uncommented and used if you want to easily migrate credentials between dbs.
 func dump_creds(store storage.OcelotStorage, configInstance cred.CVRemoteConfig, dumpLoc string) {
 	allCreds, _ := configInstance.GetAllCreds(store, false)
 
@@ -79,4 +81,4 @@ func dump_creds(store storage.OcelotStorage, configInstance cred.CVRemoteConfig,
 		fmt.Println("couldnt dump")
 	}
 	ioutil.WriteFile(dumpLoc, allCredsBytes, 0644)
-}
+}*/
