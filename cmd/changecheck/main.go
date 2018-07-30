@@ -111,7 +111,8 @@ func main() {
 			}
 			newLastHash, err := checker.InspectCommits(branch, lastHash)
 			if err != nil {
-				ocelog.IncludeErrField(err).Fatal("error searching branch commits, err: " + err.Error())
+				ocelog.IncludeErrField(err).Error("error searching branch commits, err: " + err.Error())
+				return
 			}
 			ocelog.Log().WithField("old last hash", lastHash).WithField("new last hash", newLastHash).Info("git hash data for poll")
 			lastHashes[branch] = newLastHash
