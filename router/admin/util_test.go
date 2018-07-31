@@ -31,7 +31,7 @@ func TestSetupRCCCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := testRemoteConfig.GetVault().GetVaultData("secret/creds/k8s/test/kubeconf")
+	data, err := testRemoteConfig.GetVault().GetVaultData("secret/data/creds/k8s/test/kubeconf")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestSetupRCCCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err = testRemoteConfig.GetVault().GetVaultData("secret/creds/vcs/herebeanaccount/bitbucket")
+	data, err = testRemoteConfig.GetVault().GetVaultData("secret/data/creds/vcs/herebeanaccount/bitbucket")
 	if err != nil {
 		t.Fatal(err)
 	}

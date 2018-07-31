@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client"
+	"github.com/shankj3/ocelot/version"
+
 	"os"
 )
 
@@ -20,7 +22,7 @@ func mainDo() int {
 		Commands:     client.Commands,
 		Autocomplete: true,
 		Name:         "ocelot",
-		Version:      "0.1.0",
+		Version:      version.GetShort(),
 		HelpFunc:     cli.FilteredHelpFunc(cmds, cli.BasicHelpFunc("ocelot")),
 	}
 
