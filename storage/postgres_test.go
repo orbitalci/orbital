@@ -26,6 +26,9 @@ func Test_PostgresStorage(t *testing.T) {
 	t.Run("get last data", func(t *testing.T){postgresStorage_GetLastData(t, pg)})
 	t.Run("add out", func(t *testing.T){postgresStorage_AddOut(t, pg, id)})
 	t.Run("add stage detail", func(t *testing.T){postgresStorage_AddStageDetail(t, pg, id)})
+	t.Run("add queue time", func(t *testing.T){postgresStorage_SetQueueTime(t, pg)})
+	t.Run("store failed validation", func(t *testing.T){postgresStorage_StoreFailedValidation(t, pg)})
+	t.Run("retrieve hash partial", func(t *testing.T){postgresStorage_RetrieveHashStartsWith(t, pg)})
 	t.Run("healthy check", func(t *testing.T){postgresStorage_Healthy(t, pg, cleanup)})
 }
 
@@ -191,6 +194,69 @@ func postgresStorage_GetLastData(t *testing.T, pg *PostgresStorage) {
 		t.Log(hashes)
 	} else if last != "6363a8a4ef13227218dc5c6d40e78ddfeb21b623" {
 		t.Error(test.StrFormatErrors("master last hash", "6363a8a4ef13227218dc5c6d40e78ddfeb21b623", last))
+	}
+}
+
+func postgresStorage_SetQueueTime(t *testing.T, pg *PostgresStorage) {
+	id, err := pg.AddSumStart("123", "account", "repo", "master")
+	if err != nil {
+		t.Error(err)
+	}
+	err = pg.SetQueueTime(id)
+	if err != nil {
+		t.Error(err)
+	}
+	summ, err := pg.RetrieveSumByBuildId(id)
+	if err != nil {
+		t.Error(err)
+	}
+	if summ.Status != pb.BuildStatus_QUEUED {
+		t.Error(test.GenericStrFormatErrors("status", pb.BuildStatus_QUEUED, summ.Status))
+	}
+}
+
+func postgresStorage_StoreFailedValidation(t *testing.T, pg *PostgresStorage) {
+	id, err := pg.AddSumStart("123", "account", "repo", "master")
+	if err != nil {
+		t.Error(err)
+	}
+	err = pg.StoreFailedValidation(id)
+	if err != nil {
+		t.Error(err)
+	}
+	summ, err := pg.RetrieveSumByBuildId(id)
+	if err != nil {
+		t.Error(err)
+	}
+	if summ.Status != pb.BuildStatus_FAILED_PRESTART {
+		t.Error(test.GenericStrFormatErrors("status", pb.BuildStatus_FAILED_PRESTART, summ.Status))
+	}
+	if summ.Failed != true {
+		t.Error(test.GenericStrFormatErrors("failed", true, summ.Failed))
+	}
+
+}
+
+func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
+	_, err := pg.AddSumStart("abcbananahammock", "account", "repo", "master")
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = pg.AddSumStart("abcHonkeyTonkey", "account", "repo", "master")
+	if err != nil {
+		t.Error(err)
+	}
+	summs, err := pg.RetrieveHashStartsWith("abc")
+	if err != nil {
+		t.Error(err)
+	}
+	if len(summs) != 2 {
+		t.Errorf("should return both summaries, instead returned %d", len(summs))
+	}
+	for _, sum := range summs {
+		if sum.Hash != "abcbananahammock" && sum.Hash != "abcHonkeyTonkey" {
+			t.Error("unexpected build summary")
+		}
 	}
 }
 
