@@ -345,7 +345,7 @@ service GuideOcelot {
             tags: "generic"
         };
     }
-    rpc SetGenericCreds (GenericWrap) returns (google.protobuf.Empty) {
+    rpc SetGenericCreds (GenericCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             post: "/v1/creds/env"
             body: "*"

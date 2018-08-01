@@ -471,18 +471,16 @@ func (g *guideOcelotServer) GetGenericCreds(ctx context.Context, empty *empty.Em
 	return credz, nil
 }
 
-func (g *guideOcelotServer) SetGenericCreds(ctx context.Context, wrap *pb.GenericWrap) (*empty.Empty, error) {
-	for _, creds := range wrap.Creds {
-		if creds.SubType.Parent() != pb.CredType_GENERIC {
-			return nil, status.Error(codes.InvalidArgument, "Subtype must be of generic type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
+func (g *guideOcelotServer) SetGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
+	if creds.SubType.Parent() != pb.CredType_GENERIC {
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of generic type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
+	}
+	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	if err != nil {
+		if _, ok := err.(*pb.ValidationErr); ok {
+			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Generic Creds Upload failed validation. Errors are: "+err.Error())
 		}
-		err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
-		if err != nil {
-			if _, ok := err.(*pb.ValidationErr); ok {
-				return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Generic Creds Upload failed validation. Errors are: "+err.Error())
-			}
-			return &empty.Empty{}, status.Error(codes.Internal, err.Error())
-		}
+		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}
 	return &empty.Empty{}, nil
 }
