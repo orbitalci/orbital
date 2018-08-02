@@ -47,10 +47,6 @@
   revision = "3a3da3a4e26776cc22a79ef46d5d58477532dede"
 
 [[constraint]]
-  name = "github.com/hashicorp/vault"
-  version = "0.9.0"
-
-[[constraint]]
   branch = "master"
   name = "github.com/mitchellh/go-homedir"
 
@@ -65,7 +61,7 @@
 
 [[constraint]]
 #  version = "0.2.1"
-  revision = "0f7ac7438c4790b579a2d86f5bfe71c268bdffe5"
+  revision = "ae7333958b6eb09b4f03bfdbcd20bc570b243ca8"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]

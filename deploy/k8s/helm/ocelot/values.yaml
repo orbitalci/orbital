@@ -39,6 +39,7 @@ nsq:
     port: 4150
 
 admin:
+  swagger: false
   replicaCount: 3
 
   image:

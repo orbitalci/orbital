@@ -198,6 +198,21 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	if storeType != storage.Postgres {
 		t.Error(test.GenericStrFormatErrors("store type enum", storage.Postgres, storeType))
 	}
+	secondConfig.TokenURL = "bannananahammooooock"
+	err = testRemoteConfig.UpdateCreds(pg, secondConfig)
+	if err != nil {
+		t.Error(err)
+	}
+
+	cred, err = testRemoteConfig.GetCred(pg, secondConfig.SubType, secondConfig.Identifier, secondConfig.AcctName, true)
+	if err != nil {
+		t.Error(err)
+	}
+	crreddy  := cred.(*pb.VCSCreds)
+	if crreddy.TokenURL != "bannananahammooooock" {
+		t.Error(test.StrFormatErrors("identifier", "bannananahammooooock", crreddy.TokenURL))
+	}
+
 }
 
 
