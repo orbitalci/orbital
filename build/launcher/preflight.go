@@ -33,7 +33,7 @@ func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder b
 		return
 	}
 
-	result = w.downloadBinaries(ctx, prefly, builder)
+	result = w.downloadBinaries(ctx, prefly, builder, werk.BuildConf)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}

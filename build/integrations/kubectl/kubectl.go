@@ -2,9 +2,9 @@ package kubectl
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
@@ -23,14 +23,7 @@ func (k *kubectlInteg) GenerateDownloadBashables() []string {
 }
 
 func (k *kubectlInteg) IsRelevant(wc *pb.BuildConfig) bool {
-	for _, stage := range wc.Stages {
-		for _, script := range stage.Script {
-			if strings.Contains(script, "kubectl") {
-				return true
-			}
-		}
-	}
-	return false
+	return common.BuildScriptsContainString(wc, "kubectl")
 }
 
 func (k *kubectlInteg) String() string {

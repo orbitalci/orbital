@@ -2,6 +2,9 @@ package common
 
 import (
 	"encoding/base64"
+	"strings"
+
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 func NCErr(msg string) *NoCreds {
@@ -26,4 +29,16 @@ func StrToBase64(str string) string {
 
 func Base64ToBitz(b64string string) ([]byte, error) {
 	 return base64.StdEncoding.DecodeString(b64string)
+}
+
+// BuildScriptsContainString will check all stages' script lines for the existence of the specified desiredString
+func BuildScriptsContainString(wc *pb.BuildConfig, desiredString string) bool {
+	for _, stage := range wc.Stages {
+		for _, script := range stage.Script {
+			if strings.Contains(script, desiredString) {
+				return true
+			}
+		}
+	}
+	return false
 }

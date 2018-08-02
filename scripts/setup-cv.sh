@@ -22,7 +22,7 @@ locals() {
     consul kv put ${prefix}config/ocelot/postgres/location ${DBHOST}
     consul kv put ${prefix}config/ocelot/postgres/port 5432
     consul kv put ${prefix}config/ocelot/postgres/username postgres
-    vault write secret/${prefix}config/ocelot/postgres clientsecret=mysecretpassword
+    vault write secret/data/config/ocelot/postgres clientsecret=mysecretpassword
     #vault kv put secret/${prefix}config/ocelot/postgres clientsecret=mysecretpassword
 
 }

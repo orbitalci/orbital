@@ -307,7 +307,7 @@ type BuildRuntime interface {
 
 var (
 	vcsSubTypes   = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}
-	repoSubTypes  = []SubCredType{SubCredType_NEXUS, SubCredType_MAVEN, SubCredType_DOCKER}
+	repoSubTypes  = []SubCredType{SubCredType_NEXUS, SubCredType_MAVEN, SubCredType_DOCKER, SubCredType_MINIO}
 	k8sSubTypes   = []SubCredType{SubCredType_KUBECONF}
 	sshSubTypes   = []SubCredType{SubCredType_SSHKEY}
 	appleSubTypes = []SubCredType{SubCredType_DEVPROFILE}
