@@ -85,7 +85,7 @@ func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.RepoCreds, errorConcat st
 		return nil, err.Error()
 	}
 	var dummySubType string
-	if dummySubType, err = UI.Ask("Subtype (nexus|docker|k8s): "); err != nil {
+	if dummySubType, err = UI.Ask("Subtype (nexus|docker|minio): "); err != nil {
 		return nil, err.Error()
 	}
 	var ok bool

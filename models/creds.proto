@@ -25,17 +25,23 @@ enum CredType {
 enum SubCredType {
 
     NIL_SCT = 0;
+    /// VCS ///
     BITBUCKET = 1;
     GITHUB = 2;
-
+    /// REPO ///
     NEXUS = 3;
     MAVEN = 4;
     DOCKER = 5;
+    MINIO = 12;
+    /// K8S ///
     KUBECONF = 6;
-
+    /// SSH ///
     SSHKEY = 8;
+    /// NOTIFY ///
     SLACK = 9;
+    /// APPLE ///
     DEVPROFILE = 10;
+    /// GENERIC ///
     ENV = 11;
 }
 

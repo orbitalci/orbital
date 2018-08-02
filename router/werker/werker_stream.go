@@ -47,11 +47,19 @@ func addHandlers(muxi *mux.Router, werkData *WerkerContext) {
 			http.Redirect(w, r, "https://s3-us-west-2.amazonaws.com/ocelotty/werker_files_dev.tar", 301)
 		}
 	})
-	// this kubectl needs to figure out what type of machine is asking for the kubectl binary
-	// or maybe not, idk
+
+	// todo: THESE ARE ALL LINUX-SPECIFIC!
 	muxi.HandleFunc("/kubectl", func(w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debug("serving up kubectl binary from googleapis")
 		http.Redirect(w, r, "https://storage.googleapis.com/kubernetes-release/release/v1.9.6/bin/linux/amd64/kubectl", 301)
+	})
+	muxi.HandleFunc("/helm.tar.gz", func(w http.ResponseWriter, r *http.Request) {
+		ocelog.Log().Debug("serving up helm binary from googleapis")
+		http.Redirect(w, r, "https://storage.googleapis.com/kubernetes-helm/helm-v2.9.1-linux-amd64.tar.gz", 301)
+	})
+	muxi.HandleFunc("/mc", func(w http.ResponseWriter, r *http.Request) {
+		ocelog.Log().Debug("serving up mc binary")
+		http.Redirect(w, r, "https://dl.minio.io/client/mc/release/linux-amd64/mc", 301)
 	})
 }
 

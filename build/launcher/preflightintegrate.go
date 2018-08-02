@@ -9,7 +9,11 @@ import (
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/integrations/dockerconfig"
+	"github.com/shankj3/ocelot/build/integrations/helm"
 	"github.com/shankj3/ocelot/build/integrations/kubeconf"
+	"github.com/shankj3/ocelot/build/integrations/kubectl"
+	"github.com/shankj3/ocelot/build/integrations/minio"
+	"github.com/shankj3/ocelot/build/integrations/minioconfig"
 	"github.com/shankj3/ocelot/build/integrations/nexusm2"
 	"github.com/shankj3/ocelot/build/integrations/sshkey"
 	"github.com/shankj3/ocelot/build/integrations/xcode"
@@ -26,6 +30,15 @@ func getIntegrationList() []integrations.StringIntegrator {
 		kubeconf.Create(),
 		nexusm2.Create(),
 		xcode.Create(),
+		minioconfig.Create(),
+	}
+}
+
+func getBinaryIntegList(loopbackHost, loopbackPort string) []integrations.BinaryIntegrator {
+	return []integrations.BinaryIntegrator{
+		kubectl.Create(loopbackHost, loopbackPort),
+		helm.Create(loopbackHost, loopbackPort),
+		minio.Create(loopbackHost, loopbackPort),
 	}
 }
 
@@ -78,16 +91,27 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 }
 
 // TODO: This should handle more than just kubectl. Helm, for example.
-func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder) (result *pb.Result) {
-	// todo: there wil likely be more binaries to download in the future, should probably use the same pattern
-	// as StringIntegrator.. maybe a DownloadIntegrator?
-	subStage := build.CreateSubstage(su, "kubectl download")
-	kubectl := &pb.Stage{Env: []string{}, Script: bldr.DownloadKubectl(w.ServicePort), Name: subStage.Stage,}
-	result = bldr.ExecuteIntegration(ctx, kubectl, subStage, w.infochan)
-	if result.Status == pb.StageResultVal_FAIL {
-		result.Messages = append(result.Messages, "failed to download kubectl, continuing anyway as it may not be used...")
-		result.Status = pb.StageResultVal_PASS
+func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder, wc *pb.BuildConfig) (result *pb.Result) {
+	var integMessages []string
+	result = &pb.Result{}
+	for _, binaryI := range w.binaryIntegs {
+		subStage := build.CreateSubstage(su, binaryI.String())
+		if binaryI.IsRelevant(wc) {
+			stg := &pb.Stage{Name: subStage.Stage, Script: binaryI.GenerateDownloadBashables()}
+			result = bldr.ExecuteIntegration(ctx, stg, subStage, w.infochan)
+			integMessages = append(integMessages, result.Messages...)
+			if result.Status == pb.StageResultVal_FAIL {
+				result.Messages = integMessages
+				return
+			}
+			result.Messages = []string{}
+		} else {
+			integMessages = append(integMessages, fmt.Sprintf("%s not relevant", binaryI.String()))
+		}
 	}
+	// reset stage to download_binaries
+	result.Stage = su.GetStage()
+	result.Messages = append(integMessages, "completed download binaries setup stage " + models.CHECKMARK)
 	return
 }
 

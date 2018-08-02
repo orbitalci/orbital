@@ -22,6 +22,7 @@ type launcher struct {
 	BuildValet   *valet.Valet
 	handler      models.VCSHandler
 	integrations []integrations.StringIntegrator
+	binaryIntegs []integrations.BinaryIntegrator
 }
 
 func NewLauncher(facts *models.WerkerFacts,
@@ -41,5 +42,6 @@ func NewLauncher(facts *models.WerkerFacts,
 		BuildValet:   bv,
 		infochan:     make(chan []byte),
 		integrations: getIntegrationList(),
+		binaryIntegs: getBinaryIntegList(bshr.LoopbackIp, facts.ServicePort),
 	}
 }
