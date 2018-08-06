@@ -189,7 +189,7 @@ func (rc *RemoteConfig) Healthy() bool {
 
 
 func (rc *RemoteConfig) Reconnect() error {
-	_, err := rc.Vault.GetVaultData("here")
+	_, err := rc.Vault.GetVaultData("secret/data/config/ocelot/here")
 	if err != nil {
 		if _, ok := err.(*ocevault.ErrNotFound); !ok {
 			return err
