@@ -840,6 +840,24 @@ func (p *PostgresStorage) UpdateCred(credder pb.OcyCredder) error {
 	return err
 }
 
+func (p *PostgresStorage) DeleteCred(credder pb.OcyCredder) error {
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "delete")
+	if err := p.Connect(); err != nil {
+		return errors.New("could not connect to postgres: " + err.Error())
+	}
+	queryStr := `DELETE from credentials where (account,identifier,cred_sub_type)=($1,$2,$3)`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare statement")
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType())
+	return err
+
+}
+
 func (p *PostgresStorage) CredExists(credder pb.OcyCredder) (bool, error) {
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "read")

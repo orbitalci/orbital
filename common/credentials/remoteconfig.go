@@ -236,6 +236,25 @@ func (rc *RemoteConfig) CheckSSHKeyExists(path string) error {
 	return err
 }
 
+func (rc *RemoteConfig) deletePassword(scType pb.SubCredType, acctName, identifier string) error {
+	credPath := BuildCredPath(scType, acctName, scType.Parent(), identifier)
+	ocelog.Log().Debug("CREDPATH=", credPath)
+	if err := rc.Vault.DeletePath(credPath); err != nil {
+		return errors.WithMessage(err, "Unable to delete password for user " + acctName + " w/ identifier " + identifier)
+	}
+	return nil
+}
+
+func (rc *RemoteConfig) DeleteCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
+	if storeErr := store.DeleteCred(anyCred); storeErr != nil {
+		err = errors.WithMessage(storeErr, "unable to delete un-sensitive data")
+	}
+	if secureErr := rc.deletePassword(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetIdentifier()); secureErr != nil {
+		err = errors.WithMessage(err, "unable to delete sensitive data: " + secureErr.Error())
+	}
+	return err
+}
+
 //GetPassword will return to you the vault password at specified path
 func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error) {
 	credPath := BuildCredPath(scType, acctName, ocyCredType, identifier)
@@ -374,6 +393,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	}
 	return credsForType, nil
 }
+
 
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 	kv, err := rc.Consul.GetKeyValue(common.StorageType)
