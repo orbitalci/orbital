@@ -128,6 +128,7 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 }
 
 
+
 func (g *guideOcelotServer) GetRepoCred(ctx context.Context, credentials *pb.RepoCreds) (*pb.RepoCreds, error) {
 	creddy, err := g.getAnyCred(credentials)
 	if err != nil {
@@ -164,6 +165,13 @@ func (g *guideOcelotServer) UpdateRepoCreds(ctx context.Context, creds *pb.RepoC
 
 func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *pb.RepoCreds) (*pb.Exists, error) {
 	return g.checkAnyCredExists(ctx, creds)
+}
+
+
+func (g *guideOcelotServer) DeleteRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
+	empti := &empty.Empty{}
+	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
+	return empti, err
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
@@ -219,6 +227,14 @@ func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *pb.K8SCre
 func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *pb.K8SCreds) (*pb.Exists, error) {
 	return g.checkAnyCredExists(ctx, creds)
 }
+
+
+func (g *guideOcelotServer) DeleteK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
+	empti := &empty.Empty{}
+	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
+	return empti, err
+}
+
 
 func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds pb.OcyCredder) (*empty.Empty, error) {
 	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
@@ -324,6 +340,12 @@ func (g *guideOcelotServer) GetSSHCred(ctx context.Context, credentials *pb.SSHK
 		return nil, status.Error(codes.Internal, "Unable to cast as SSH Creds")
 	}
 	return ssh, nil
+}
+
+func (g *guideOcelotServer) DeleteSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+	empti := &empty.Empty{}
+	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
+	return empti, err
 }
 
 func appleNastiness(zipFile []byte, devProfilePassword string) (parsed []byte, err error) {
@@ -453,6 +475,12 @@ func (g *guideOcelotServer) GetNotifyCreds(ctx context.Context, empty2 *empty.Em
 	return credWrapper, nil
 }
 
+func (g *guideOcelotServer) DeleteNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+	empti := &empty.Empty{}
+	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
+	return empti, err
+}
+
 func (g *guideOcelotServer) GetGenericCreds(ctx context.Context, empty *empty.Empty) (*pb.GenericWrap, error) {
 	credz := &pb.GenericWrap{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_GENERIC, true)
@@ -485,6 +513,12 @@ func (g *guideOcelotServer) SetGenericCreds(ctx context.Context, wrap *pb.Generi
 		}
 	}
 	return &empty.Empty{}, nil
+}
+
+func (g *guideOcelotServer) DeleteGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
+	empti := &empty.Empty{}
+	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
+	return empti, err
 }
 
 func (g *guideOcelotServer) GenericCredExists(ctx context.Context, creds *pb.GenericCreds) (*pb.Exists, error) {

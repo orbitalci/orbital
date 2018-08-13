@@ -128,6 +128,7 @@ type CVRemoteConfig interface {
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
 	CheckSSHKeyExists(path string) error
 	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error)
+	DeleteCred(store storage.CredTable, anyCred pb.OcyCredder) (err error)
 	InsecureCredStorage
 	HealthyMaintainer
 
@@ -245,7 +246,7 @@ func (rc *RemoteConfig) deletePassword(scType pb.SubCredType, acctName, identifi
 	return nil
 }
 
-func (rc *RemoteConfig) DeleteCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
+func (rc *RemoteConfig) DeleteCred(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
 	if storeErr := store.DeleteCred(anyCred); storeErr != nil {
 		err = errors.WithMessage(storeErr, "unable to delete un-sensitive data")
 	}

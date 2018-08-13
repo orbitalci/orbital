@@ -187,6 +187,17 @@ service GuideOcelot {
     rpc NotifyCredExists (NotifyCreds) returns (Exists) {}
 
 
+    rpc DeleteNotifyCreds(NotifyCreds) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/v1/creds/notify/{acctName}/{identifier}"
+        };
+
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Delete Notify Credential"
+            tags: "creds"
+            tags: "integration"
+        };
+    }
     rpc UpdateSSHCreds (SSHKeyWrapper) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			put: "/v1/creds/ssh/{acctName}/{identifier}"
@@ -234,6 +245,18 @@ service GuideOcelot {
         };
     }
 
+    rpc DeleteSSHCreds(SSHKeyWrapper) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/v1/creds/ssh/{acctName}/{identifier}"
+        };
+
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Delete an SSH Credential"
+            tags: "creds"
+            tags: "ssh"
+        };
+    }
+
     rpc GetRepoCreds (google.protobuf.Empty) returns (RepoCredWrapper) {
         option (google.api.http) = {
 			get: "/v1/creds/repo"
@@ -258,6 +281,19 @@ service GuideOcelot {
         };
     }
 
+    rpc DeleteRepoCreds(RepoCreds) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+            delete: "/v1/creds/repo/{acctName}/{identifier}"
+        };
+
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Delete Repo Credential"
+            tags: "creds"
+            tags: "repo"
+        };
+    }
+
+
     rpc SetK8SCreds (K8SCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
 			post: "/v1/creds/k8s"
@@ -280,6 +316,19 @@ service GuideOcelot {
             tags: "kubernetes"
         };
     }
+
+    rpc DeleteK8SCreds(K8SCreds) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+            delete: "/v1/creds/k8s/{acctName}/{identifier}"
+    };
+
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Delete Kubernetes Credential"
+            tags: "creds"
+            tags: "kubernetes"
+        };
+    }
+
 
     rpc SetAppleCreds(AppleCreds) returns (google.protobuf.Empty) {
         option (google.api.http) = {
@@ -379,6 +428,21 @@ service GuideOcelot {
         };
     }
     rpc GenericCredExists (GenericCreds) returns (Exists) {}
+
+    rpc DeleteGenericCreds(GenericCreds) returns (google.protobuf.Empty)  {
+        option (google.api.http) = {
+            delete: "/v1/creds/generic/{acctName}/{identifier}"
+            additional_bindings {
+			    delete: "/v1/creds/env/{acctName}/{identifier}"
+			}
+        };
+
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "Delete Generic / Env Credential"
+            tags: "creds"
+            tags: "integration"
+        };
+    }
 
     rpc GetAllCreds (google.protobuf.Empty) returns (AllCredsWrapper) {}
     rpc BuildRuntime (BuildQuery) returns (Builds) {
