@@ -272,7 +272,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/modelsGenericWrap"
+              "$ref": "#/definitions/modelsGenericCreds"
             }
           }
         ],
@@ -391,7 +391,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/modelsGenericWrap"
+              "$ref": "#/definitions/modelsGenericCreds"
             }
           }
         ],

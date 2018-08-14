@@ -971,26 +971,25 @@ func TestGuideOcelotServer_SetGenericCreds(t *testing.T) {
 		Identifier: "derp",
 	}
 	ctx := context.Background()
-	genericCred :=  &pb.GenericWrap{Creds:[]*pb.GenericCreds{cred}}
-	_, err := gos.SetGenericCreds(ctx, genericCred)
+	_, err := gos.SetGenericCreds(ctx, cred)
 	if err != nil {
 		t.Error(err)
 	}
 	cred.SubType = pb.SubCredType_BITBUCKET
-	_, err = gos.SetGenericCreds(ctx, genericCred)
+	_, err = gos.SetGenericCreds(ctx, cred)
 	if err == nil {
 		t.Error("wrong subtype, this should return a validation error.")
 	}
 	cred.SubType = pb.SubCredType_ENV
 	cred.Identifier = "derp"
 	rc.validationErr = true
-	_, err = gos.SetGenericCreds(ctx, genericCred)
+	_, err = gos.SetGenericCreds(ctx, cred)
 	if err == nil {
 		t.Error("remote conf returned a validation error, this should bubble up")
 	}
 	rc.validationErr = false
 	rc.returnErr = true
-	_, err = gos.SetGenericCreds(ctx, genericCred)
+	_, err = gos.SetGenericCreds(ctx, cred)
 	if err == nil {
 		t.Error("remote conf returned an unknown error, this should bubble up")
 	}

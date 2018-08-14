@@ -299,11 +299,11 @@ func (f *FakeGuideOcelotClient) GetGenericCreds(ctx context.Context, in *empty.E
 	return f.Generics, nil
 }
 
-func (f *FakeGuideOcelotClient) SetGenericCreds(ctx context.Context, in *pb.GenericWrap, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (f *FakeGuideOcelotClient) SetGenericCreds(ctx context.Context, in *pb.GenericCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	if f.ReturnError {
 		return nil, errors.New("returning an erro on set")
 	}
-	f.Generics.Creds = append(f.Generics.Creds, in.Creds...)
+	f.Generics.Creds = append(f.Generics.Creds, in)
 	return nil, nil
 }
 
