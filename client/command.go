@@ -6,9 +6,11 @@ import (
 	"github.com/shankj3/ocelot/client/creds/apple"
 	"github.com/shankj3/ocelot/client/creds/apple/applelist"
 	"github.com/shankj3/ocelot/client/creds/delete"
+	"github.com/shankj3/ocelot/client/creds/env"
 	"github.com/shankj3/ocelot/client/creds/env/add"
 	"github.com/shankj3/ocelot/client/creds/env/list"
 	"github.com/shankj3/ocelot/client/creds/k8s"
+	"github.com/shankj3/ocelot/client/creds/notify"
 	"github.com/shankj3/ocelot/client/creds/ssh"
 	"github.com/shankj3/ocelot/client/init"
 	"github.com/shankj3/ocelot/models/pb"
@@ -76,9 +78,11 @@ func init() {
 		"creds apple": 	     func() (cli.Command, error) { return apple.New(), nil },
 		"creds apple add":   func() (cli.Command, error) { return appleadd.New(ui), nil},
 		"creds apple list":  func() (cli.Command, error) { return applelist.New(ui),nil },
+		"creds notify":	     func() (cli.Command, error) { return notify.New(), nil },
 		"creds notify add":  func() (cli.Command, error) { return notifyadd.New(ui), nil},
 		"creds notify list": func() (cli.Command, error) { return notifylist.New(ui), nil},
 		"creds notify delete":  func() (cli.Command, error) { return delete.New(ui, pb.CredType_NOTIFIER), nil},
+		"creds env":		 func() (cli.Command, error) { return env.New(), nil},
 		"creds env add":     func() (cli.Command, error) { return envadd.New(ui), nil},
 		"creds env list":    func() (cli.Command, error) { return envlist.New(ui), nil},
 		"creds env delete":  func() (cli.Command, error) { return delete.New(ui, pb.CredType_GENERIC), nil},

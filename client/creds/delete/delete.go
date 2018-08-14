@@ -88,6 +88,15 @@ func (c *cmd) Run(args []string) int {
 			return 1
 		}
 	}
+	yes, err := c.UI.Ask("Are you sure that you want to delete this credential? This action is irreversible! Type YES if you mean it.")
+	if err != nil {
+		c.UI.Error("Error occured, exiting.. \nError: " + err.Error())
+		return 1
+	}
+	if yes != "YES" {
+		c.UI.Info("YES not entered, not deleting credential... ")
+		return 0
+	}
 	return c.DeleteACredential(ctx, subType)
 }
 
