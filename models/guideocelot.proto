@@ -193,7 +193,7 @@ service GuideOcelot {
         };
 
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "Delete Notify Credential"
+            summary: "Delete Notify Credential. subType is a required query param"
             tags: "creds"
             tags: "integration"
         };
@@ -251,7 +251,7 @@ service GuideOcelot {
         };
 
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "Delete an SSH Credential"
+            summary: "Delete an SSH Credential, subType is a required query param"
             tags: "creds"
             tags: "ssh"
         };
@@ -287,7 +287,7 @@ service GuideOcelot {
         };
 
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "Delete Repo Credential"
+            summary: "Delete Repo Credential, subType is a required query param"
             tags: "creds"
             tags: "repo"
         };
@@ -323,7 +323,7 @@ service GuideOcelot {
     };
 
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "Delete Kubernetes Credential"
+            summary: "Delete Kubernetes Credential, subType is a required query param"
             tags: "creds"
             tags: "kubernetes"
         };
@@ -438,7 +438,7 @@ service GuideOcelot {
         };
 
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "Delete Generic / Env Credential"
+            summary: "Delete Generic / Env Credential, subType is a required query param"
             tags: "creds"
             tags: "integration"
         };

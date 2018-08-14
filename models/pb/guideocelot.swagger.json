@@ -285,7 +285,7 @@
     },
     "/v1/creds/env/{acctName}/{identifier}": {
       "delete": {
-        "summary": "Delete Generic / Env Credential",
+        "summary": "Delete Generic / Env Credential, subType is a required query param",
         "operationId": "DeleteGenericCreds2",
         "responses": {
           "200": {
@@ -404,7 +404,7 @@
     },
     "/v1/creds/generic/{acctName}/{identifier}": {
       "delete": {
-        "summary": "Delete Generic / Env Credential",
+        "summary": "Delete Generic / Env Credential, subType is a required query param",
         "operationId": "DeleteGenericCreds",
         "responses": {
           "200": {
@@ -580,7 +580,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete Kubernetes Credential",
+        "summary": "Delete Kubernetes Credential, subType is a required query param",
         "operationId": "DeleteK8SCreds",
         "responses": {
           "200": {
@@ -755,7 +755,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete Notify Credential",
+        "summary": "Delete Notify Credential. subType is a required query param",
         "operationId": "DeleteNotifyCreds",
         "responses": {
           "200": {
@@ -945,7 +945,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete Repo Credential",
+        "summary": "Delete Repo Credential, subType is a required query param",
         "operationId": "DeleteRepoCreds",
         "responses": {
           "200": {
@@ -1122,7 +1122,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete an SSH Credential",
+        "summary": "Delete an SSH Credential, subType is a required query param",
         "operationId": "DeleteSSHCreds",
         "responses": {
           "200": {

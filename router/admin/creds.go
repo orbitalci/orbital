@@ -169,9 +169,7 @@ func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *pb.RepoCr
 
 
 func (g *guideOcelotServer) DeleteRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
-	empti := &empty.Empty{}
-	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
-	return empti, err
+	return g.deleteAnyCred(ctx, creds, pb.CredType_REPO)
 }
 
 func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
@@ -230,9 +228,7 @@ func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *pb.K8SCred
 
 
 func (g *guideOcelotServer) DeleteK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
-	empti := &empty.Empty{}
-	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
-	return empti, err
+	return g.deleteAnyCred(ctx, creds, pb.CredType_K8S)
 }
 
 
@@ -343,9 +339,7 @@ func (g *guideOcelotServer) GetSSHCred(ctx context.Context, credentials *pb.SSHK
 }
 
 func (g *guideOcelotServer) DeleteSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
-	empti := &empty.Empty{}
-	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
-	return empti, err
+	return g.deleteAnyCred(ctx, creds, pb.CredType_SSH)
 }
 
 func appleNastiness(zipFile []byte, devProfilePassword string) (parsed []byte, err error) {
@@ -476,9 +470,7 @@ func (g *guideOcelotServer) GetNotifyCreds(ctx context.Context, empty2 *empty.Em
 }
 
 func (g *guideOcelotServer) DeleteNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
-	empti := &empty.Empty{}
-	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
-	return empti, err
+	return g.deleteAnyCred(ctx, creds, pb.CredType_NOTIFIER)
 }
 
 func (g *guideOcelotServer) GetGenericCreds(ctx context.Context, empty *empty.Empty) (*pb.GenericWrap, error) {
@@ -516,9 +508,7 @@ func (g *guideOcelotServer) SetGenericCreds(ctx context.Context, wrap *pb.Generi
 }
 
 func (g *guideOcelotServer) DeleteGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
-	empti := &empty.Empty{}
-	err := g.RemoteConfig.DeleteCred(g.Storage, creds)
-	return empti, err
+	return g.deleteAnyCred(ctx, creds, pb.CredType_GENERIC)
 }
 
 func (g *guideOcelotServer) GenericCredExists(ctx context.Context, creds *pb.GenericCreds) (*pb.Exists, error) {
@@ -527,4 +517,34 @@ func (g *guideOcelotServer) GenericCredExists(ctx context.Context, creds *pb.Gen
 
 func (g *guideOcelotServer) UpdateGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
 	return g.updateAnyCred(ctx, creds)
+}
+
+func (g *guideOcelotServer) deleteAnyCred(ctx context.Context, creds pb.OcyCredder, parentType pb.CredType) (*empty.Empty, error){
+	// make sure we have all the fields we need to be able to accurately delete the credential.
+	// try to intelligently deduce what subType teh cred is, but error out if that isn't possible
+	empti := &empty.Empty{}
+	var errmsg string
+	if creds.GetIdentifier() == "" || creds.GetAcctName() == "" {
+		errmsg += "identifier and acctName are required fields; "
+	}
+	if creds.GetSubType() == pb.SubCredType_NIL_SCT {
+		if len(parentType.Subtypes()) == 1 {
+			creds.SetSubType(parentType.Subtypes()[0])
+		} else {
+			errmsg += "subType must be set since there is more than one sub type to this parent type " + parentType.String() + ": "+ strings.Join(parentType.SubtypesString(), "|")
+		}
+	}
+	if errmsg != "" {
+		return empti, status.Error(codes.InvalidArgument, errmsg)
+	}
+
+	if exists, _ := g.Storage.CredExists(creds); !exists {
+		return empti, status.Error(codes.NotFound, "not found")
+	}
+
+	if err := g.RemoteConfig.DeleteCred(g.Storage, creds); err != nil {
+		return empti, status.Error(codes.Internal, err.Error())
+	}
+	return empti, nil
+
 }

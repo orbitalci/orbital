@@ -11,6 +11,7 @@ import (
 	pb "github.com/shankj3/ocelot/models/pb"
 	storage "github.com/shankj3/ocelot/storage"
 	reflect "reflect"
+	"github.com/shankj3/ocelot/common/credentials"
 )
 
 // MockStorageCred is a mock of StorageCred interface
@@ -37,9 +38,9 @@ func (m *MockStorageCred) EXPECT() *MockStorageCredMockRecorder {
 }
 
 // GetStorageCreds mocks base method
-func (m *MockStorageCred) GetStorageCreds(typ storage.Dest) (*StorageCreds, error) {
+func (m *MockStorageCred) GetStorageCreds(typ storage.Dest) (*credentials.StorageCreds, error) {
 	ret := m.ctrl.Call(m, "GetStorageCreds", typ)
-	ret0, _ := ret[0].(*StorageCreds)
+	ret0, _ := ret[0].(*credentials.StorageCreds)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -226,6 +227,18 @@ func (mr *MockCVRemoteConfigMockRecorder) GetPassword(scType, acctName, ocyCredT
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPassword", reflect.TypeOf((*MockCVRemoteConfig)(nil).GetPassword), scType, acctName, ocyCredType, identifier)
 }
 
+// DeleteCred mocks base method
+func (m *MockCVRemoteConfig) DeleteCred(store storage.CredTable, anyCred pb.OcyCredder) error {
+	ret := m.ctrl.Call(m, "DeleteCred", store, anyCred)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCred indicates an expected call of DeleteCred
+func (mr *MockCVRemoteConfigMockRecorder) DeleteCred(store, anyCred interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCred", reflect.TypeOf((*MockCVRemoteConfig)(nil).DeleteCred), store, anyCred)
+}
+
 // GetCredsByType mocks base method
 func (m *MockCVRemoteConfig) GetCredsByType(store storage.CredTable, ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error) {
 	ret := m.ctrl.Call(m, "GetCredsByType", store, ctype, hideSecret)
@@ -327,9 +340,9 @@ func (mr *MockCVRemoteConfigMockRecorder) Healthy() *gomock.Call {
 }
 
 // GetStorageCreds mocks base method
-func (m *MockCVRemoteConfig) GetStorageCreds(typ storage.Dest) (*StorageCreds, error) {
+func (m *MockCVRemoteConfig) GetStorageCreds(typ storage.Dest) (*credentials.StorageCreds, error) {
 	ret := m.ctrl.Call(m, "GetStorageCreds", typ)
-	ret0, _ := ret[0].(*StorageCreds)
+	ret0, _ := ret[0].(*credentials.StorageCreds)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
