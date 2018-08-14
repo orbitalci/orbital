@@ -30,10 +30,10 @@ protoc  --go_out=plugins=grpc:models/pb/ -I=models \
   --swagger_out=logtostderr=true:models/pb \
   models/*.proto
 
-protoc --proto_path=src -I$GOPATH/src \
-  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
-  --js_out=library=protos.js,binary:pb src/foo.proto src/bar/baz.proto
+#protoc --proto_path=src -I$GOPATH/src \
+#  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+#  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway \
+#  --js_out=library=protos.js,binary:pb src/foo.proto src/bar/baz.proto
 
 echo "injecting custom tags"
 # inject our custom tags into build protobuf
