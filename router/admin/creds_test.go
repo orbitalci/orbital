@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/common/helpers/ioshelper"
@@ -1058,6 +1059,73 @@ func TestGuideOcelotServer_UpdateGenericCreds(t *testing.T) {
 	_, err := gos.UpdateGenericCreds(ctx, cred)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestGuideOcelotServer_deleteAnyCred(t *testing.T) {
+	ctx := context.Background()
+	ctl := gomock.NewController(t)
+	rc := credentials.NewMockCVRemoteConfig(ctl)
+	store := storage.NewMockOcelotStorage(ctl)
+
+	// test fields are correct
+	tooFew := &pb.VCSCreds{
+		Identifier: "huzzah",
+		AcctName: "1",
+	}
+	gos := &guideOcelotServer{RemoteConfig:rc, Storage: store}
+	_, err := gos.deleteAnyCred(ctx, tooFew, pb.CredType_VCS)
+	if err == nil {
+		t.Error("should error as there is no subtype and vcs has more than one subtype")
+	}
+	if !strings.Contains(err.Error(), "subType must be set") {
+		t.Error("did not get the right error ", err.Error())
+	}
+	// cred not found
+	justRight := &pb.GenericCreds{
+		Identifier: "id",
+		AcctName: "2",
+		ClientSecret: "1",
+		SubType: pb.SubCredType_ENV,
+	}
+	store.EXPECT().CredExists(justRight).Return(false, nil).Times(1)
+	_, err = gos.deleteAnyCred(ctx, justRight, pb.CredType_GENERIC)
+	stat, _ := status.FromError(err)
+	if stat.Code() != codes.NotFound {
+		t.Error("did not return proper status code, returned: " + stat.Code().String())
+	}
+
+	store.EXPECT().CredExists(justRight).Return(true, nil).Times(1)
+	rc.EXPECT().DeleteCred(store, justRight).Return(nil).Times(1)
+	if _, err = gos.deleteAnyCred(ctx, justRight, pb.CredType_GENERIC); err != nil {
+		t.Error(err)
+	}
+
+	store.EXPECT().CredExists(justRight).Return(true, nil).Times(1)
+	rc.EXPECT().DeleteCred(store, justRight).Return(errors.New("damn")).Times(1)
+	_, err = gos.deleteAnyCred(ctx, justRight, pb.CredType_GENERIC)
+	if err == nil {
+		t.Error("delete action returned an error, this should fail")
+		return
+	}
+	stat, _ = status.FromError(err)
+	if stat.Code() != codes.Internal {
+		t.Error("wrong status code, expected Internal got ", stat.Code().String())
+	}
+	if stat.Message() != "damn" {
+		t.Error("expected passed along message from deletecred failure, got " + stat.Message())
+	}
+	// now check to make sure that detecting subtype is alright
+	justRightNoST :=  &pb.GenericCreds{
+		Identifier: "id",
+		AcctName: "2",
+		ClientSecret: "1",
+	}
+
+	store.EXPECT().CredExists(justRight).Return(true, nil).Times(1)
+	rc.EXPECT().DeleteCred(store, justRight).Return(nil).Times(1)
+	if _, err = gos.deleteAnyCred(ctx, justRightNoST, pb.CredType_GENERIC); err != nil {
+		t.Error("should know that sct is ENV since it is the only subtype of generic, instaed got error: " + err.Error())
 	}
 }
 

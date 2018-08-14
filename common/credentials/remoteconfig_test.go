@@ -1,6 +1,8 @@
 package credentials
 
 import (
+	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/go-til/vault"
@@ -302,5 +304,51 @@ func TestRemoteConfig_Reconnect(t *testing.T) {
 	if err := testRemoteConfig.Reconnect(); err != nil {
 		t.Error("should be able to 'reconnect' because consul has been stood back up. instead the error is ", err.Error())
 	}
+}
+
+func TestRemoteConfig_DeleteCred(t *testing.T) {
+	// happy path
+	testCred := &pb.RepoCreds{SubType: pb.SubCredType_DOCKER, Identifier: "shazam", AcctName: "jazzy"}
+	ctl   := gomock.NewController(t)
+	store := storage.NewMockOcelotStorage(ctl)
+	safe  := vault.NewMockVaulty(ctl)
+	rc := &RemoteConfig{Vault:safe}
+	store.EXPECT().DeleteCred(testCred).Return(nil).Times(1)
+	safe.EXPECT().DeletePath("creds/repo/jazzy/docker/shazam").Return(nil).Times(1)
+	err := rc.DeleteCred(store, testCred)
+	if err != nil {
+		t.Error(err)
+	}
+	// store fail
+	store.EXPECT().DeleteCred(testCred).Return(storage.CredNotFound("jazzy", "docker")).Times(1)
+	safe.EXPECT().DeletePath("creds/repo/jazzy/docker/shazam").Return(nil).Times(1)
+	err = rc.DeleteCred(store, testCred)
+	if err == nil {
+		t.Error("an error should be returned as the store failed")
+		return
+	}
+	if err.Error() != "unable to delete un-sensitive data: no credential found for jazzy docker" {
+		t.Error("did not get expected error, got: " + err.Error())
+	}
+	// vault fail
+	safe.EXPECT().DeletePath("creds/repo/jazzy/docker/shazam").Return(errors.New("oh jesus wtf happened ")).Times(1)
+	store.EXPECT().DeleteCred(testCred).Return(nil).Times(1)
+	err = rc.DeleteCred(store, testCred)
+	if err == nil {
+		t.Error("an error should be returned as the vault instance 'failed'")
+		return
+	}
+	if err.Error() != "unable to delete sensitive data : Unable to delete password for user jazzy w/ identifier shazam: oh jesus wtf happened " {
+		t.Error("did not get expected error, got: " + err.Error())
+	}
+
+	// vault & store fail
+	safe.EXPECT().DeletePath("creds/repo/jazzy/docker/shazam").Return(errors.New("oh jesus wtf happened ")).Times(1)
+	store.EXPECT().DeleteCred(testCred).Return(storage.CredNotFound("jazzy", "docker")).Times(1)
+	err = rc.DeleteCred(store, testCred)
+	if err.Error() != "unable to delete sensitive data : Unable to delete password for user jazzy w/ identifier shazam: oh jesus wtf happened : unable to delete un-sensitive data: no credential found for jazzy docker" {
+		t.Error("did not get expected errors, got " + err.Error())
+	}
+
 
 }

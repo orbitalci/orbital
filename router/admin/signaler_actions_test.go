@@ -14,7 +14,7 @@ import (
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/go-til/vault"
 	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common/credentials/mock"
+	mock_credentials "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 	"github.com/shankj3/ocelot/models/pb"

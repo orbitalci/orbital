@@ -251,7 +251,13 @@ func (rc *RemoteConfig) DeleteCred(store storage.CredTable, anyCred pb.OcyCredde
 		err = errors.WithMessage(storeErr, "unable to delete un-sensitive data")
 	}
 	if secureErr := rc.deletePassword(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetIdentifier()); secureErr != nil {
-		err = errors.WithMessage(err, "unable to delete sensitive data: " + secureErr.Error())
+
+		err2 := errors.WithMessage(secureErr, "unable to delete sensitive data ")
+		if err == nil {
+			err = err2
+		} else {
+			err = errors.Wrap(err, err2.Error())
+		}
 	}
 	return err
 }
