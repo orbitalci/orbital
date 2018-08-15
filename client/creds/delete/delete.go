@@ -130,7 +130,7 @@ func (c *cmd) DeleteACredential(ctx context.Context, subType models.SubCredType)
 		c.UI.Error("Credential not found")
 		return 1
 	}
-	c.UI.Error(fmt.Sprintf("An error (%d) has occured: %s", subType, statErr.Message()))
+	c.UI.Error(fmt.Sprintf("An error (%s) has occured: %s", subType.String(), statErr.Message()))
 	return 1
 }
 
