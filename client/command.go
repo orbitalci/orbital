@@ -5,11 +5,15 @@ import (
 	"github.com/shankj3/ocelot/client/build"
 	"github.com/shankj3/ocelot/client/creds/apple"
 	"github.com/shankj3/ocelot/client/creds/apple/applelist"
+	"github.com/shankj3/ocelot/client/creds/delete"
+	"github.com/shankj3/ocelot/client/creds/env"
 	"github.com/shankj3/ocelot/client/creds/env/add"
 	"github.com/shankj3/ocelot/client/creds/env/list"
 	"github.com/shankj3/ocelot/client/creds/k8s"
+	"github.com/shankj3/ocelot/client/creds/notify"
 	"github.com/shankj3/ocelot/client/creds/ssh"
 	"github.com/shankj3/ocelot/client/init"
+	"github.com/shankj3/ocelot/models/pb"
 
 	"github.com/shankj3/ocelot/client/creds"
 	"github.com/shankj3/ocelot/client/creds/notify/notifyadd"
@@ -62,19 +66,26 @@ func init() {
 		"creds ssh": 	     func() (cli.Command, error) { return ssh.New(), nil },
 		"creds ssh list":    func() (cli.Command, error) { return sshlist.New(ui), nil },
 		"creds ssh add":     func() (cli.Command, error) { return sshadd.New(ui), nil },
+		"creds ssh delete":  func() (cli.Command, error) { return delete.New(ui, pb.CredType_SSH), nil},
 		"creds repo":        func() (cli.Command, error) { return repocreds.New(), nil },
 		"creds repo add":    func() (cli.Command, error) { return repocredsadd.New(ui), nil },
 		"creds repo list":   func() (cli.Command, error) { return repocredslist.New(ui), nil },
+		"creds repo delete":  func() (cli.Command, error) { return delete.New(ui, pb.CredType_REPO), nil},
 		"creds k8s": 	     func() (cli.Command, error) { return k8s.New(), nil },
 		"creds k8s add":     func() (cli.Command, error) { return kubeadd.New(ui), nil },
 		"creds k8s list":    func() (cli.Command, error) { return kubelist.New(ui), nil },
+		"creds k8s delete":  func() (cli.Command, error) { return delete.New(ui, pb.CredType_K8S), nil},
 		"creds apple": 	     func() (cli.Command, error) { return apple.New(), nil },
 		"creds apple add":   func() (cli.Command, error) { return appleadd.New(ui), nil},
 		"creds apple list":  func() (cli.Command, error) { return applelist.New(ui),nil },
+		"creds notify":	     func() (cli.Command, error) { return notify.New(), nil },
 		"creds notify add":  func() (cli.Command, error) { return notifyadd.New(ui), nil},
 		"creds notify list": func() (cli.Command, error) { return notifylist.New(ui), nil},
+		"creds notify delete":  func() (cli.Command, error) { return delete.New(ui, pb.CredType_NOTIFIER), nil},
+		"creds env":		 func() (cli.Command, error) { return env.New(), nil},
 		"creds env add":     func() (cli.Command, error) { return envadd.New(ui), nil},
 		"creds env list":    func() (cli.Command, error) { return envlist.New(ui), nil},
+		"creds env delete":  func() (cli.Command, error) { return delete.New(ui, pb.CredType_GENERIC), nil},
 		"init":			     func() (cli.Command, error) { return ocyinit.New(ui), nil },
 		"logs":              func() (cli.Command, error) { return output.New(ui), nil },
 		"summary":           func() (cli.Command, error) { return summary.New(ui), nil },

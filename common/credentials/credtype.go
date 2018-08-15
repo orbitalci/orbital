@@ -29,7 +29,7 @@ func BuildCredPath(scType pb.SubCredType, AcctName string, ocyCredType pb.CredTy
 		pattern = "%s/generic/%s/%s/%s"
 	//this will not happen in real life because all the setcred methods for guideOcelotServer check for this specific issue
 	default:
-		panic("only repo|vcs|k8s|apple|ssh|notify|generic")
+		panic("only repo|vcs|k8s|apple|ssh|notify|generic, got " + ocyCredType.String())
 	}
 	path := fmt.Sprintf(pattern, common.ConfigPath, AcctName, strings.ToLower(scType.String()), identifier)
 	return path

@@ -19,6 +19,7 @@ type OcyCredder interface {
 	GetAcctName() string
 	GetIdentifier() string
 	GetSubType() SubCredType
+	SetSubType(sct SubCredType)
 	ValidateForInsert() *ValidationErr
 }
 
@@ -38,6 +39,9 @@ func NewRepoCreds() *RepoCreds {
 	return &RepoCreds{}
 }
 
+func (m *RepoCreds) SetSubType(sct SubCredType) {
+	m.SubType = sct
+}
 
 func (m *RepoCreds) SetSecret(secret string) {
 	m.Password = secret
@@ -114,6 +118,11 @@ func (m *VCSCreds) UnmarshalAdditionalFields(fields []byte) error {
 	return nil
 }
 
+
+func (m *VCSCreds) SetSubType(sct SubCredType) {
+	m.SubType = sct
+}
+
 func (m *VCSCreds) SetSecret(sec string) {
 	m.ClientSecret = sec
 }
@@ -148,6 +157,11 @@ func (m *K8SCreds) GetClientSecret() string {
 	return m.K8SContents
 }
 
+
+func (m *K8SCreds) SetSubType(sct SubCredType) {
+	m.SubType = sct
+}
+
 func (m *K8SCreds) SetAcctNameAndType(name, typ string) {
 	m.AcctName = name
 	// no type here! mua ha ha. GetType() returns a dummy
@@ -177,6 +191,11 @@ func (m *K8SCreds) ValidateForInsert() *ValidationErr {
 
 func (m *SSHKeyWrapper) GetClientSecret() string {
 	return string(m.PrivateKey)
+}
+
+
+func (m *SSHKeyWrapper) SetSubType(sct SubCredType) {
+	m.SubType = sct
 }
 
 func (m *SSHKeyWrapper) SetSecret(str string) {
@@ -213,6 +232,11 @@ func (m *AppleCreds) CreateAdditionalFields() ([]byte, error) {
 	return []byte("{}"), nil
 }
 
+
+func (m *AppleCreds) SetSubType(sct SubCredType) {
+	m.SubType = sct
+}
+
 func (m *AppleCreds) SetSecret(str string) {
 	m.AppleSecrets = []byte(str)
 }
@@ -245,6 +269,10 @@ func (m *NotifyCreds) SetSecret(secret string) {
 	m.ClientSecret = secret
 }
 
+func (m *NotifyCreds) SetSubType(sct SubCredType) {
+	m.SubType = sct
+}
+
 func (m *GenericCreds) SetSecret(str string) {
 	m.ClientSecret = str
 }
@@ -270,6 +298,10 @@ func (m *GenericCreds) ValidateForInsert() *ValidationErr {
 		return Invalidate(fmt.Sprintf("Identifier for credential must be environment variable safe, ie it must match the regex pattern %s. Your credential Identifier, %s, does not.", ENV_SAFE, m.GetIdentifier()))
 	}
 	return nil
+}
+
+func (m *GenericCreds) SetSubType(sct SubCredType) {
+	m.SubType = sct
 }
 
 
@@ -401,7 +433,7 @@ func (i *SubCredType) MarshalJSON() ([]byte, error) {
 }
 
 func (i *SubCredType) UnmarshalJSON(b []byte) error {
-	name := string(b)
+	name := strings.ToUpper(string(b))
 	typ, ok := SubCredType_value[name]
 	if !ok {
 		return errors.New("not in subcredtype map")
