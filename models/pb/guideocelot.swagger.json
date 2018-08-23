@@ -1372,6 +1372,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "buildId",
+            "description": "buildId is the database build id corresponding to the build you need status of.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [

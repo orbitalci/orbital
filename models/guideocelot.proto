@@ -519,6 +519,8 @@ message StatusQuery {
     string repoName = 3;
     //partialRepo is just the first n letters of repo
     string partialRepo = 4;
+    // buildId is the database build id corresponding to the build you need status of
+    int64 buildId = 5;
 }
 
 //BuildQuery is the message that is used for getting data on a specific build.

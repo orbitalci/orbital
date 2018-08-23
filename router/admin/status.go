@@ -19,6 +19,12 @@ import (
 func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery) (result *pb.Status, err error) {
 	var buildSum *pb.BuildSummary
 	switch {
+	case query.BuildId != 0:
+		buildSum, err = g.Storage.RetrieveSumByBuildId(query.BuildId)
+		if err != nil {
+			return nil, handleStorageError(err)
+		}
+		goto BUILD_FOUND
 	case len(query.Hash) > 0:
 		partialHash := query.Hash
 		buildSum, err = g.Storage.RetrieveLatestSum(partialHash)
