@@ -128,6 +128,7 @@ type CVRemoteConfig interface {
 	AddSSHKey(path string, sshKeyFile []byte) (err error)
 	CheckSSHKeyExists(path string) error
 	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error)
+	DeleteCred(store storage.CredTable, anyCred pb.OcyCredder) (err error)
 	InsecureCredStorage
 	HealthyMaintainer
 
@@ -233,6 +234,31 @@ func (rc *RemoteConfig) CheckSSHKeyExists(path string) error {
 		err = errors.New("no connection to vault, unable to add SSH Key")
 	}
 
+	return err
+}
+
+func (rc *RemoteConfig) deletePassword(scType pb.SubCredType, acctName, identifier string) error {
+	credPath := BuildCredPath(scType, acctName, scType.Parent(), identifier)
+	ocelog.Log().Debug("CREDPATH=", credPath)
+	if err := rc.Vault.DeletePath(credPath); err != nil {
+		return errors.WithMessage(err, "Unable to delete password for user " + acctName + " w/ identifier " + identifier)
+	}
+	return nil
+}
+
+func (rc *RemoteConfig) DeleteCred(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
+	if storeErr := store.DeleteCred(anyCred); storeErr != nil {
+		err = errors.WithMessage(storeErr, "unable to delete un-sensitive data")
+	}
+	if secureErr := rc.deletePassword(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetIdentifier()); secureErr != nil {
+
+		err2 := errors.WithMessage(secureErr, "unable to delete sensitive data ")
+		if err == nil {
+			err = err2
+		} else {
+			err = errors.Wrap(err, err2.Error())
+		}
+	}
 	return err
 }
 
@@ -374,6 +400,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	}
 	return credsForType, nil
 }
+
 
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 	kv, err := rc.Consul.GetKeyValue(common.StorageType)

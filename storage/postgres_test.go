@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/test"
 	util "github.com/shankj3/ocelot/common/testutil"
@@ -29,6 +30,8 @@ func Test_PostgresStorage(t *testing.T) {
 	t.Run("add queue time", func(t *testing.T){postgresStorage_SetQueueTime(t, pg)})
 	t.Run("store failed validation", func(t *testing.T){postgresStorage_StoreFailedValidation(t, pg)})
 	t.Run("retrieve hash partial", func(t *testing.T){postgresStorage_RetrieveHashStartsWith(t, pg)})
+	t.Run("cred add", func(t *testing.T){postgresStorage_InsertCred(t, pg)})
+	t.Run("cred delete", func(t *testing.T){postgresStorage_DeleteCred(t, pg)})
 	t.Run("healthy check", func(t *testing.T){postgresStorage_Healthy(t, pg, cleanup)})
 }
 
@@ -260,4 +263,54 @@ func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
 	}
 }
 
-//todo: add cred tests for postgres!!!! plzplzplz
+// TODO: add more cred tests here, checking validation etc
+func postgresStorage_InsertCred(t *testing.T, pg *PostgresStorage) {
+	testCred1 := &pb.GenericCreds{
+		Identifier: "THISBEDACRED",
+		SubType: pb.SubCredType_ENV,
+		AcctName: "OCELOTRULES",
+		ClientSecret: "thiswontgetinserted",
+	}
+	if err := pg.InsertCred(testCred1, true); err != nil {
+		t.Error(err)
+		return
+	}
+	retrieved, err := pg.RetrieveCred(pb.SubCredType_ENV, "THISBEDACRED", "OCELOTRULES")
+	if err != nil {
+		t.Error(err)
+	}
+	// retrieved isn't going to have the clientsecret since its stored in vault.
+	testCred1.ClientSecret = ""
+	if diff := deep.Equal(testCred1, retrieved); diff != nil {
+		t.Error(diff)
+	}
+}
+// this is expected to run after postgresStorage_insertCred
+func postgresStorage_DeleteCred(t *testing.T, pg *PostgresStorage) {
+	testCred1 := &pb.GenericCreds{
+		Identifier: "THISBEDACRED",
+		SubType: pb.SubCredType_ENV,
+		AcctName: "OCELOTRULES",
+		ClientSecret: "thisisthesecret",
+	}
+	// make sure it actually is there...
+	exists, err := pg.CredExists(testCred1)
+	if !exists {
+		t.Error("test credential has not been inserted.. someone is executing this incorrectly. ")
+	}
+	if err != nil {
+		t.Error("could not connect w/ database, error: " + err.Error())
+		return
+	}
+	if err := pg.DeleteCred(testCred1); err != nil {
+		t.Error(err)
+	}
+	_, err = pg.RetrieveCred(pb.SubCredType_ENV, "THISBEDACRED", "OCELOTRULES")
+	if err == nil {
+		t.Error("error should not be nil! this should be deleted!")
+		return
+	}
+	if _, ok := err.(*ErrNotFound); !ok {
+		t.Error("should be a not found error? wtf? instead its: ", err.Error())
+	}
+}

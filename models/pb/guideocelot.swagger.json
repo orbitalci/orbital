@@ -272,7 +272,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/modelsGenericWrap"
+              "$ref": "#/definitions/modelsGenericCreds"
             }
           }
         ],
@@ -284,6 +284,36 @@
       }
     },
     "/v1/creds/env/{acctName}/{identifier}": {
+      "delete": {
+        "summary": "Delete Generic / Env Credential, subType is a required query param",
+        "operationId": "DeleteGenericCreds2",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "creds",
+          "integration"
+        ]
+      },
       "put": {
         "summary": "Update a Generic Credential",
         "description": "Endpoint for updating a Generic credential in ocelot (ie ENV var). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields",
@@ -361,7 +391,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/modelsGenericWrap"
+              "$ref": "#/definitions/modelsGenericCreds"
             }
           }
         ],
@@ -373,6 +403,36 @@
       }
     },
     "/v1/creds/generic/{acctName}/{identifier}": {
+      "delete": {
+        "summary": "Delete Generic / Env Credential, subType is a required query param",
+        "operationId": "DeleteGenericCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "creds",
+          "integration"
+        ]
+      },
       "put": {
         "summary": "Update a Generic Credential",
         "description": "Endpoint for updating a Generic credential in ocelot (ie ENV var). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields",
@@ -512,6 +572,36 @@
               "ENV"
             ],
             "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "creds",
+          "kubernetes"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Kubernetes Credential, subType is a required query param",
+        "operationId": "DeleteK8SCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -662,6 +752,36 @@
         "tags": [
           "creds",
           "notify"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Notify Credential. subType is a required query param",
+        "operationId": "DeleteNotifyCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "creds",
+          "integration"
         ]
       },
       "put": {
@@ -824,6 +944,36 @@
           "repo"
         ]
       },
+      "delete": {
+        "summary": "Delete Repo Credential, subType is a required query param",
+        "operationId": "DeleteRepoCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "creds",
+          "repo"
+        ]
+      },
       "put": {
         "summary": "Update repo credential",
         "description": "update new credential configuration to ocelot for repository integration. \nRefer to modelsRepoCreds for the object fields",
@@ -964,6 +1114,36 @@
               "ENV"
             ],
             "default": "NIL_SCT"
+          }
+        ],
+        "tags": [
+          "creds",
+          "ssh"
+        ]
+      },
+      "delete": {
+        "summary": "Delete an SSH Credential, subType is a required query param",
+        "operationId": "DeleteSSHCreds",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "acctName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [

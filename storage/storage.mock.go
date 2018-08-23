@@ -554,6 +554,18 @@ func (mr *MockCredTableMockRecorder) UpdateCred(credder interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCred", reflect.TypeOf((*MockCredTable)(nil).UpdateCred), credder)
 }
 
+// DeleteCred mocks base method
+func (m *MockCredTable) DeleteCred(credder pb.OcyCredder) error {
+	ret := m.ctrl.Call(m, "DeleteCred", credder)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCred indicates an expected call of DeleteCred
+func (mr *MockCredTableMockRecorder) DeleteCred(credder interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCred", reflect.TypeOf((*MockCredTable)(nil).DeleteCred), credder)
+}
+
 // MockHealthyChkr is a mock of HealthyChkr interface
 type MockHealthyChkr struct {
 	ctrl     *gomock.Controller
@@ -1014,6 +1026,18 @@ func (m *MockOcelotStorage) UpdateCred(credder pb.OcyCredder) error {
 // UpdateCred indicates an expected call of UpdateCred
 func (mr *MockOcelotStorageMockRecorder) UpdateCred(credder interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCred", reflect.TypeOf((*MockOcelotStorage)(nil).UpdateCred), credder)
+}
+
+// DeleteCred mocks base method
+func (m *MockOcelotStorage) DeleteCred(credder pb.OcyCredder) error {
+	ret := m.ctrl.Call(m, "DeleteCred", credder)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCred indicates an expected call of DeleteCred
+func (mr *MockOcelotStorageMockRecorder) DeleteCred(credder interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCred", reflect.TypeOf((*MockOcelotStorage)(nil).DeleteCred), credder)
 }
 
 // Healthy mocks base method

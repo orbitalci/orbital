@@ -145,7 +145,7 @@ func getErrMsg(err error) (msg string) {
 func (c *cmd) upload(envs map[string]string) int {
 	var env *models.GenericCreds
 	var ctx context.Context
-	credWrap := &models.GenericWrap{}
+
 	ctx = context.Background()
 	for identifier, envvalue := range envs {
 		env = &models.GenericCreds{AcctName:c.account, Identifier: identifier, SubType: models.SubCredType_ENV, ClientSecret: envvalue}
@@ -168,15 +168,12 @@ func (c *cmd) upload(envs map[string]string) int {
 
 			}
 		} else {
-			credWrap.Creds = append(credWrap.Creds, env)
+			if _, err := c.config.Client.SetGenericCreds(ctx, env); err != nil {
+				c.UI.Error("Unable to set credential, error is: " + getErrMsg(err))
+				return 1
+			}
+			c.UI.Info(fmt.Sprintf("Uploaded %s", env.Identifier))
 		}
-	}
-	if len(credWrap.Creds) > 0 {
-		if _, err := c.config.Client.SetGenericCreds(ctx, credWrap); err != nil {
-			c.UI.Error("Unable to set credential, error is: " + getErrMsg(err))
-			return 1
-		}
-		c.UI.Info("Successfully uploaded Environment Variables for use in Builds.")
 	}
 	return 0
 }

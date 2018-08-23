@@ -23,7 +23,7 @@ func (c *cmd) Help() string {
 	return flags.Usage(help, nil)
 }
 
-const synopsis = "notify configuration"
+const synopsis = "notifications secrets configuration"
 const help = `
 Usage: ocelot creds notify <subcommand> [options] [args]
 
