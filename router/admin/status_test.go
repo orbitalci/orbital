@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/consul/api"
 	"github.com/pkg/errors"
@@ -16,14 +17,19 @@ import (
 	"github.com/shankj3/ocelot/storage"
 )
 
-func TestGuideOcelotServer_GetStatus(t *testing.T) {
+func TestGuideOcelotServer_GetStatus_hashPath(t *testing.T) {
 	consl := &statusConsl{}
 	rc := &credentials.RemoteConfig{Consul:consl}
-	store := &statusStore{}
-	gos := &guideOcelotServer{Storage:store, RemoteConfig:rc}
+	//store := &statusStore{}
+	ctl := gomock.NewController(t)
+	storey := storage.NewMockOcelotStorage(ctl)
+	gos := &guideOcelotServer{Storage:storey, RemoteConfig:rc}
 	ctx := context.Background()
 
+
 	consl.inConsul = true
+	storey.EXPECT().RetrieveLatestSum("1234").Return(testSummary, nil).Times(1)
+	storey.EXPECT().RetrieveStageDetail(testSummary.BuildId).Return(testResults, nil).Times(1)
 	// hash path first
 	status, err := gos.GetStatus(ctx, &pb.StatusQuery{Hash: "1234"})
 	if err != nil {
@@ -32,13 +38,14 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	if status.Stages[0].Messages[0] != "passed first stage, sweet" {
 		t.Errorf("wrong first stage returned, first stage is %#v, should have message of 'passed first stage, sweet", status.Stages[0])
 	}
-	store.failLatest = true
+
+	storey.EXPECT().RetrieveLatestSum("1234").Return(nil, errors.New("nope")).Times(1)
 	_, err = gos.GetStatus(ctx, &pb.StatusQuery{Hash: "1234"})
 	if err == nil {
 		t.Error("storage failed, should return error")
 	}
-	store.failLatest = false
-	store.failStageDet = true
+	storey.EXPECT().RetrieveLatestSum("1234").Return(testSummary, nil).Times(1)
+	storey.EXPECT().RetrieveStageDetail(testSummary.BuildId).Return(nil, errors.New("failing stage detail now"))
 	_, err = gos.GetStatus(ctx, &pb.StatusQuery{Hash: "1234"})
 	if err == nil {
 		t.Error("storage failed at stage detail retrieve, should return error")
@@ -46,7 +53,9 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	if !strings.Contains(err.Error(), "failing stage detail") {
 		t.Error("wrong error, expected to contain failing stage detail, instead error is: " + err.Error())
 	}
-	store.failStageDet = false
+
+	storey.EXPECT().RetrieveLatestSum("1234").Return(testSummary, nil).Times(1)
+	storey.EXPECT().RetrieveStageDetail(testSummary.BuildId).Return(testResults, nil).Times(1)
 	consl.returnErr = true
 	_, err = gos.GetStatus(ctx, &pb.StatusQuery{Hash: "1234"})
 	if err == nil {
@@ -55,10 +64,23 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	if !strings.Contains(err.Error(), "An error occurred checking build status in consul") {
 		t.Error("wrong error, expected to contain error checking build status, instead error is: " + err.Error())
 	}
+}
 
+func TestGuideOcelotServer_GetStatus_acctRepo(t *testing.T) {
+	consl := &statusConsl{}
+	rc := &credentials.RemoteConfig{Consul:consl}
+	//store := &statusStore{}
+	ctl := gomock.NewController(t)
+	storey := storage.NewMockOcelotStorage(ctl)
+	gos := &guideOcelotServer{Storage:storey, RemoteConfig:rc}
+	ctx := context.Background()
+	var status *pb.Status
+	var err error
 	// now check by acct name and repo
 	query := &pb.StatusQuery{AcctName: "shankj3", RepoName: "ocelot"}
 	consl.returnErr = false
+	storey.EXPECT().RetrieveLastFewSums("ocelot", "shankj3", gomock.Any()).Return([]*pb.BuildSummary{testSummary}, nil).Times(1)
+	storey.EXPECT().RetrieveStageDetail(testSummary.BuildId).Return(testResults, nil).Times(1)
 	status, err = gos.GetStatus(ctx, query)
 	if err != nil {
 		t.Error(err)
@@ -66,16 +88,17 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	if !status.BuildSum.Failed {
 		t.Error("processed storage build summary incorrectly")
 	}
-	store.failLastFew = true
+	storey.EXPECT().RetrieveLastFewSums("ocelot", "shankj3", gomock.Any()).Return(nil, errors.New("failing last few sums now")).Times(1)
+	//storey.EXPECT().RetrieveStageDetail(testSummary.BuildId).Return(testResults, nil).Times(1)
 	_, err = gos.GetStatus(ctx, query)
 	if err == nil {
 		t.Error("storage failed, should bubble up")
+		return
 	}
 	if !strings.Contains(err.Error(), "failing last few sums") {
 		t.Error("should have returned error of RetrieveLastFewSums, instead returned " + err.Error())
 	}
-	store.failLastFew = false
-	store.returnMany = true
+	storey.EXPECT().RetrieveLastFewSums("ocelot", "shankj3", gomock.Any()).Return([]*pb.BuildSummary{testSummary, testSummary}, nil).Times(1)
 	_, err = gos.GetStatus(ctx, query)
 	if err == nil {
 		t.Error("storage returned many summaries, fail")
@@ -83,8 +106,7 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	if !strings.Contains(err.Error(), "there is no ONE entry that matches the acctname") {
 		t.Error("shouldreturn error that there are multiple summaries, got " + err.Error())
 	}
-	store.returnMany = false
-	store.returnNoSums = true
+	storey.EXPECT().RetrieveLastFewSums("ocelot", "shankj3", gomock.Any()).Return([]*pb.BuildSummary{}, nil).Times(1)
 	_, err = gos.GetStatus(ctx, query)
 	if err == nil {
 		t.Error("storage returned no summaries, should fail")
@@ -92,26 +114,41 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	if !strings.Contains(err.Error(), "There are no entries that match the acctnam") {
 		t.Error("shouldreturn error that there are no summaries, got " + err.Error())
 	}
+}
+
+func TestGuideOcelotServer_GetStatus_partialRepo(t *testing.T) {
+	consl := &statusConsl{}
+	rc := &credentials.RemoteConfig{Consul:consl}
+	//store := &statusStore{}
+	ctl := gomock.NewController(t)
+	storey := storage.NewMockOcelotStorage(ctl)
+	gos := &guideOcelotServer{Storage:storey, RemoteConfig:rc}
+	ctx := context.Background()
+	var status *pb.Status
+	var err error
+
 	// partial repo now
-	 query = &pb.StatusQuery{PartialRepo: "ocel"}
-	 store.returnNoSums = false
-	 status, err = gos.GetStatus(ctx, query)
-	 if err != nil {
-	 	t.Error(err)
-	 }
-	 if status.Stages[2].StageDuration != 21.17 {
-	 	t.Error("got stages out of order")
-	 }
-	 store.returnMany = true
-	 _, err = gos.GetStatus(ctx, query)
-	 if err == nil {
-	 	t.Error("returned many summaries, should fail")
-	 }
-	 if !strings.Contains(err.Error(), "there are 2 repositories ") {
-	 	t.Error("should return many repos error, returned " + err.Error())
-	 }
-	 store.returnMany = false
-	 store.returnNoSums = true
+	query := &pb.StatusQuery{PartialRepo: "ocel"}
+	storey.EXPECT().RetrieveAcctRepo("ocel").Return([]*pb.BuildSummary{{Account: "shankj3", Repo: "ocelot"}}, nil)
+	storey.EXPECT().RetrieveLastFewSums("ocelot", "shankj3", gomock.Any()).Return([]*pb.BuildSummary{testSummary}, nil).Times(1)
+	storey.EXPECT().RetrieveStageDetail(testSummary.BuildId).Return(testResults, nil).Times(1)
+	status, err = gos.GetStatus(ctx, query)
+	if err != nil {
+		t.Error(err)
+	}
+	if status.Stages[2].StageDuration != 21.17 {
+		t.Error("got stages out of order")
+	}
+	storey.EXPECT().RetrieveAcctRepo("ocel").Return([]*pb.BuildSummary{{Account: "shankj3", Repo: "ocelot"}, {Account: "shankj3", Repo: "ocely"}}, nil)
+	_, err = gos.GetStatus(ctx, query)
+	if err == nil {
+		t.Error("returned many summaries, should fail")
+	}
+	if !strings.Contains(err.Error(), "there are 2 repositories ") {
+		t.Error("should return many repos error, returned " + err.Error())
+	}
+	storey.EXPECT().RetrieveAcctRepo("ocel").Return([]*pb.BuildSummary{}, nil)
+
 	_, err = gos.GetStatus(ctx, query)
 	if err == nil {
 		t.Error("returned no summaries, should fail")
@@ -119,19 +156,21 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	if !strings.Contains(err.Error(), "there are no repositories starting with ") {
 		t.Error("should return no repos error, returned " + err.Error())
 	}
-	store.returnNoSums = false
-	store.failAcctRepo = true
+
+	storey.EXPECT().RetrieveAcctRepo("ocel").Return([]*pb.BuildSummary{}, errors.New("nope"))
 	_, err = gos.GetStatus(ctx, query)
 	if err == nil {
 		t.Error("failed acct repo retrieval, should fail")
 	}
-	store.failAcctRepo = false
-	store.failLastFew = true
+	storey.EXPECT().RetrieveAcctRepo("ocel").Return([]*pb.BuildSummary{{Account: "shankj3", Repo: "ocelot"}}, nil)
+	storey.EXPECT().RetrieveLastFewSums("ocelot", "shankj3", gomock.Any()).Return(nil, errors.New("failing")).Times(1)
 	_, err = gos.GetStatus(ctx, query)
 	if err == nil {
 		t.Error("failed last few retrieval, should fail")
 	}
-	store.failLastFew = false
+	storey.EXPECT().RetrieveAcctRepo("ocel").Return([]*pb.BuildSummary{{Account: "shankj3", Repo: "ocelot"}}, nil)
+	storey.EXPECT().RetrieveLastFewSums("ocelot", "shankj3", gomock.Any()).Return([]*pb.BuildSummary{testSummary}, nil).Times(1)
+	storey.EXPECT().RetrieveStageDetail(testSummary.BuildId).Return(testResults, nil).Times(1)
 	_, err = gos.GetStatus(ctx, query)
 	if err != nil {
 		t.Error(err)
@@ -144,6 +183,32 @@ func TestGuideOcelotServer_GetStatus(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "either hash is required, acctName and repoName is required, or partialRepo is required") {
 		t.Error("should return validation error, instead returned: " + err.Error())
+	}
+	// check buildId
+}
+
+
+func TestGuideOcelotServer_GetStatus_build_id(t *testing.T) {
+	consl := &statusConsl{}
+	rc := &credentials.RemoteConfig{Consul: consl}
+	//store := &statusStore{}
+	ctl := gomock.NewController(t)
+	storey := storage.NewMockOcelotStorage(ctl)
+	gos := &guideOcelotServer{Storage: storey, RemoteConfig: rc}
+	ctx := context.Background()
+	var err error
+	query := &pb.StatusQuery{BuildId: testSummary.BuildId}
+	storey.EXPECT().RetrieveSumByBuildId(query.BuildId).Return(testSummary, nil).Times(1)
+	storey.EXPECT().RetrieveStageDetail(testSummary.BuildId).Return(testResults, nil).Times(1)
+	_, err = gos.GetStatus(ctx, query)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	storey.EXPECT().RetrieveSumByBuildId(query.BuildId).Return(nil, storage.BuildSumNotFound("12")).Times(1)
+	_, err = gos.GetStatus(ctx, query)
+	if err == nil {
+		t.Error("Error should bubble up from bad storage retrieval")
 	}
 }
 
@@ -265,4 +330,8 @@ func (s *statusStore) RetrieveStageDetail(buildId int64) ([]models.StageResult, 
 		return nil, errors.New("failing stage detail")
 	}
 	return testResults, nil
+}
+
+func (s *statusStore) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
+	return testSummary, nil
 }

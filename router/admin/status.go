@@ -74,7 +74,7 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery
 				}
 				uhOh = errors.New(fmt.Sprintf("there are %v repositories starting with %s: %s", len(buildSums), query.PartialRepo, strings.Join(matches, ",")))
 			}
-			log.IncludeErrField(uhOh)
+			log.IncludeErrField(uhOh).Error()
 			return nil, status.Error(codes.InvalidArgument, uhOh.Error())
 		}
 	default:
