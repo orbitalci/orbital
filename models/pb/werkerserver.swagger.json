@@ -1,12 +1,15 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "werkerserver.proto",
-    "version": "version not set"
+    "title": "Worker Node HTTP Server",
+    "version": "1.0",
+    "contact": {
+      "name": "jessi shank",
+      "email": "jessishank@level11.com"
+    }
   },
   "schemes": [
-    "http",
-    "https"
+    "http"
   ],
   "consumes": [
     "application/json"
@@ -14,7 +17,58 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
+  "paths": {
+    "/v1/{hash}": {
+      "get": {
+        "summary": "Stream build",
+        "description": "Streams build logs of hash",
+        "operationId": "BuildInfo",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/modelsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "build"
+        ]
+      },
+      "delete": {
+        "summary": "Kill active build",
+        "description": "Kill build that is actively running on this worker node",
+        "operationId": "KillHash",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/modelsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "build"
+        ]
+      }
+    }
+  },
   "definitions": {
     "modelsResponse": {
       "type": "object",
