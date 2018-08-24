@@ -58,7 +58,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 			buildRtInfo[bild.Hash].RepoName = bild.Repo
 		}
 	}
-
+	//fixme: this is no longer valid to assume that just because the buildId is passed that the build is done. builds are added to the db from the _start_ of the build.
 	//if a valid build id passed, go ask db for entries
 	if bq.BuildId > 0 {
 		buildSum, err := g.Storage.RetrieveSumByBuildId(bq.BuildId)
