@@ -55,7 +55,7 @@ func addHandlers(muxi *mux.Router, werkData *WerkerContext) {
 	})
 	muxi.HandleFunc("/helm.tar.gz", func(w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debug("serving up helm binary from googleapis")
-		http.Redirect(w, r, "https://storage.googleapis.com/kubernetes-helm/helm-v2.9.1-linux-amd64.tar.gz", 301)
+		http.Redirect(w, r, "https://storage.googleapis.com/kubernetes-helm/helm-v2.10.0-linux-amd64.tar.gz", 301)
 	})
 	muxi.HandleFunc("/mc", func(w http.ResponseWriter, r *http.Request) {
 		ocelog.Log().Debug("serving up mc binary")
