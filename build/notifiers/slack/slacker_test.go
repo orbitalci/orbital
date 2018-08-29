@@ -22,27 +22,50 @@ func TestSlacker_staticstuff(t *testing.T) {
 	}
 }
 
+func Test_determineRelevancy(t *testing.T) {
+	notifyList := []pb.StageResultVal{pb.StageResultVal_PASS, pb.StageResultVal_FAIL}
+	isWorthy := determineRelevancy(notifyList, pb.BuildStatus_PASSED)
+	if !isWorthy {
+		t.Error("should return that it is worthy")
+	}
+
+	notifyList = []pb.StageResultVal{pb.StageResultVal_FAIL}
+	isWorthy = determineRelevancy(notifyList, pb.BuildStatus_PASSED)
+	if isWorthy {
+		t.Error("should return that it is not worthy")
+	}
+
+	isWorthy = determineRelevancy(notifyList, pb.BuildStatus_FAILED)
+	if !isWorthy {
+		t.Error("should return that it is worthy")
+	}
+}
+
 func TestSlacker_IsRelevant(t *testing.T) {
 	slacker := Create()
 	noNotify := &pb.BuildConfig{
 		Image: "alpine",
 	}
-	if slacker.IsRelevant(noNotify) {
+	if slacker.IsRelevant(noNotify, pb.BuildStatus_FAILED) {
 		t.Error("should not be relevant if notify isn't instantiated")
 	}
 	nonotify2 := &pb.BuildConfig{
 		Notify: &pb.Notifications{},
 	}
-	if slacker.IsRelevant(nonotify2) {
+	if slacker.IsRelevant(nonotify2, pb.BuildStatus_FAILED) {
 		t.Error("should not be relevant because (*Notifications).Slack isnt' instantiated")
 	}
 	notify := &pb.BuildConfig{
 		Notify: &pb.Notifications{
-			Slack: &pb.Slack{Identifier: "here"},
+			Slack: &pb.Slack{Identifier: "here", On: []pb.StageResultVal{pb.StageResultVal_FAIL}},
 		},
 	}
-	if !slacker.IsRelevant(notify) {
+	if !slacker.IsRelevant(notify, pb.BuildStatus_FAILED) {
 		t.Error("slacker should be relevant because slack is instantiated")
+	}
+
+	if slacker.IsRelevant(notify, pb.BuildStatus_PASSED) {
+		t.Error("slacker should not be relevant because even though slack is instantiated, the build passed but the config says only notify on FAIL")
 	}
 }
 

@@ -10,6 +10,6 @@ type Notifier interface {
 	SubType() pb.SubCredType
 	String() string
 	// IsRelevant will check the build config and then return a true if this build requires this type of notification
-	IsRelevant(wc *pb.BuildConfig) bool
+	IsRelevant(wc *pb.BuildConfig, buildStatus pb.BuildStatus) bool
 }
 

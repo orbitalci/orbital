@@ -47,7 +47,7 @@ func TestThrowStatusWebhook(t *testing.T) {
 	fakeCli := &FakePoster{ResponseCode: http.StatusOK}
 	// uncomment below and set url to a real slack url to see what it looks like
 	//err := ThrowStatusWebhook(http.DefaultClient, url, channel, status)
-	err := ThrowStatusWebhook(fakeCli, url, channel, status)
+	err := ThrowStatusWebhook(fakeCli, url, channel, status, "https://ocelot.me")
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,11 +56,11 @@ func TestThrowStatusWebhook(t *testing.T) {
 		IconUrl: ocelotIcon,
 		Attachments: []*slack.Attachment{
 			{
-				Fallback: "Build for `jessishank/ocyocyocyocy` at commit `testhash` and branch `banana` has *failed*.\n Build Id is 1234. \nExecute `ocelot logs -build-id 1234` in a terminal for more information.",
+				Fallback: "Build for `jessishank/ocyocyocyocy` at commit `testhash` and branch `banana` has *failed*.\n Build Id is 1234. \nExecute `ocelot logs -build-id 1234` in a terminal for more information.\nYou can also visit https://ocelot.me/repos/jessishank/ocyocyocyocy/1234",
 				Color: "danger",
 				Pretext: "*Ocelot Status*",
 				Title: "Build failed",
-				Text: "Stage details: \n```\n[prebuild] Passed\n\t * YOU PASSED YOU RAMBUNCTIOUS FELLA: all good here\n[buildmeeee] Failed\n\t * it failed because you are a failure " + models.FAILED + ": this has failed!```\nExecute `ocelot logs -build-id 1234` in a terminal for more information.",
+				Text: "Stage details: \n```\n[prebuild] Passed\n\t * YOU PASSED YOU RAMBUNCTIOUS FELLA: all good here\n[buildmeeee] Failed\n\t * it failed because you are a failure " + models.FAILED + ": this has failed!```\nExecute `ocelot logs -build-id 1234` in a terminal for more information.\nYou can also visit https://ocelot.me/repos/jessishank/ocyocyocyocy/1234",
 				Fields: []*slack.Field{
 					{Title:"Repo", Value: "jessishank/ocyocyocyocy", Short: false},
 					{Title: "Branch", Value: "banana", Short: true},
@@ -109,7 +109,7 @@ func TestThrowStatusWebhook_pass(t *testing.T) {
 		},
 	}
 	channel := "@jessi-shank"
-	err := ThrowStatusWebhook(fakeCli, url, channel, status)
+	err := ThrowStatusWebhook(fakeCli, url, channel, status, "")
 	expected := &slack.WebhookMsg{
 		Username: "ocelot",
 		IconUrl: ocelotIcon,
@@ -168,7 +168,7 @@ func TestThrowStatusWebhook_handleError(t *testing.T) {
 			},
 		},
 	}
-	err := ThrowStatusWebhook(fakeCli, url, "", status)
+	err := ThrowStatusWebhook(fakeCli, url, "", status, "")
 	if err == nil {
 		t.Error("should be an error, return status of 400")
 		return
