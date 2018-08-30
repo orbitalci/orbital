@@ -269,7 +269,7 @@ func (m *NotifyCreds) UnmarshalAdditionalFields(fields []byte) error {
 	}
 	var ok bool
 	if m.DetailUrlBase, ok = unmarshaled["detailUrlBase"]; !ok {
-		return errors.New(fmt.Sprintf("detailUrlBase was not in field map, map is %v", unmarshaled))
+		// todo: log that this wasn't found
 	}
 	return nil
 }
