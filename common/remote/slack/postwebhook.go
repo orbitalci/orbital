@@ -17,7 +17,7 @@ const ocelotIcon = "https://78.media.tumblr.com/avatar_06e2167f3e45_128.pnj"
 // ThrowStatusWebhook will create a status string from the protobuf message Status as defined in guideocelot.proto and
 //   will post the data to the slack url provided. If the status code is not 200 OK, then a WebhookRejectedErr will be generated and the error
 // 	 body will contain the error returned from the slack api.
-func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Status) error {
+func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Status, baseUrl string) error {
 	var status string
 	var color string
 	if results.BuildSum.Status == pb.BuildStatus_FAILED {
@@ -50,6 +50,9 @@ func ThrowStatusWebhook(cli Poster, url string, channel string, results *pb.Stat
 		stageStatus += "```\n"
 	}
 	runCommand := fmt.Sprintf("Execute `ocelot logs -build-id %d` in a terminal for more information.", results.BuildSum.BuildId)
+	if baseUrl != "" {
+		runCommand += fmt.Sprintf("\nYou can also visit %s/repos/%s/%s/%d", baseUrl, results.BuildSum.Account, results.BuildSum.Repo, results.BuildSum.BuildId)
+	}
 	fallback := header + runCommand
 	combined := mid + stageStatus + runCommand
 	var shortSha string

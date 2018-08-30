@@ -53,8 +53,9 @@ func (s *Slacker) String() string {
 
 func (s *Slacker) RunIntegration(slackCreds []pb.OcyCredder, fullResult *pb.Status, notifications *pb.Notifications) error {
 	for _, slackCred := range slackCreds {
+		slacky := slackCred.(*pb.NotifyCreds)
 		if slackCred.GetIdentifier() == notifications.Slack.Identifier {
-			err := slack.ThrowStatusWebhook(s.client, slackCred.GetClientSecret(), notifications.Slack.Channel, fullResult)
+			err := slack.ThrowStatusWebhook(s.client, slackCred.GetClientSecret(), notifications.Slack.Channel, fullResult, slacky.DetailUrlBase)
 			if err != nil {
 				return err
 			}

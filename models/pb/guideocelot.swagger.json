@@ -747,6 +747,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "detailUrlBase",
+            "description": "detailUrlBase is the base url for an ocelot ui. when building the notification, will\n  add {{detailUrlBase}}/repos/{{account}}/{{repo}}/{{buildId}}.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2019,6 +2026,10 @@
         "clientSecret": {
           "type": "string",
           "title": "clientSecret is the secret associated with the integration cred"
+        },
+        "detailUrlBase": {
+          "type": "string",
+          "title": "detailUrlBase is the base url for an ocelot ui. when building the notification, will\n  add {{detailUrlBase}}/repos/{{account}}/{{repo}}/{{buildId}}"
         }
       }
     },

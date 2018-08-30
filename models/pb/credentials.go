@@ -258,10 +258,19 @@ func (m *NotifyCreds) ValidateForInsert() *ValidationErr {
 }
 
 func (m *NotifyCreds) CreateAdditionalFields() ([]byte, error) {
-	return []byte("{}"), nil
+	addtlFields := map[string]string{"detailUrlBase": m.DetailUrlBase}
+	return json.Marshal(addtlFields)
 }
 
 func (m *NotifyCreds) UnmarshalAdditionalFields(fields []byte) error {
+	unmarshaled := make(map[string]string)
+	if err := json.Unmarshal(fields, &unmarshaled); err != nil {
+		return err
+	}
+	var ok bool
+	if m.DetailUrlBase, ok = unmarshaled["detailUrlBase"]; !ok {
+		// todo: log that this wasn't found
+	}
 	return nil
 }
 

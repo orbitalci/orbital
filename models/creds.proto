@@ -171,6 +171,9 @@ message NotifyCreds {
     string identifier = 3;
     // clientSecret is the secret associated with the integration cred
     string clientSecret = 4;
+    // detailUrlBase is the base url for an ocelot ui. when building the notification, will
+    //   add {{detailUrlBase}}/repos/{{account}}/{{repo}}/{{buildId}}
+    string detailUrlBase = 5;
 }
 
 message GenericWrap {

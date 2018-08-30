@@ -87,11 +87,20 @@ func NoDataHeader(ui cli.Ui) {
 }
 
 func Prettify(cred *models.NotifyCreds) string {
-	str := `AcctName: %s
+	if cred.DetailUrlBase == "" {
+		str := `AcctName: %s
 Identifier: %s
 Type: %s
 `
-	return fmt.Sprintf(str, cred.AcctName, cred.Identifier, cred.SubType)
+		return fmt.Sprintf(str, cred.AcctName, cred.Identifier, cred.SubType)
+	} else {
+		str := `AcctName: %s
+Identifier: %s
+Type: %s
+Detail Url: %s
+`
+		return fmt.Sprintf(str, cred.AcctName, cred.Identifier, cred.SubType, cred.DetailUrlBase)
+	}
 }
 
 const synopsis = "List all credentials associated with notification integration"
