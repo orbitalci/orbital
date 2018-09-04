@@ -8,4 +8,3 @@ path "secret/data/creds/*"
 {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
-NewEnvAuthClient
