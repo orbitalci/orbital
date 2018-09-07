@@ -81,7 +81,7 @@ func (c *cmd) Run(args []string) int {
 func organize(cred *models.GenericWrap) map[string]*[]*models.GenericCreds{
 	organizedCreds := make(map[string]*[]*models.GenericCreds)
 	for _, cred := range cred.Creds {
-		if cred.SubType != models.SubCredType_ENV {
+		if cred.SubType != models.SubCredType_HELM_REPO {
 			continue
 		}
 		acctCreds := organizedCreds[cred.AcctName]
@@ -97,14 +97,14 @@ func organize(cred *models.GenericWrap) map[string]*[]*models.GenericCreds{
 
 func prettify(acctName string, envs *[]*models.GenericCreds) string {
 	str := `Account: %s
-Env Vars:
+Helm Repos:
 %s
 ---
 `
 	var vars bytes.Buffer
 	vars.WriteString("  ")
 	for _, cred := range *envs {
-		vars.WriteString(cred.Identifier+"="+cred.ClientSecret+"\n  ")
+		vars.WriteString(cred.Identifier+": "+cred.ClientSecret+"\n  ")
 	}
 	return fmt.Sprintf(str, acctName, vars.String())
 }
@@ -118,17 +118,17 @@ func (c *cmd) Help() string {
 }
 
 func Header(ui cli.Ui) {
-	ui.Output("--- Env Credentials ---\n")
+	ui.Output("--- Helm Repo Credentials ---\n")
 }
 
 func NoDataHeader(ui cli.Ui) {
-	ui.Warn("--- No Env Credentials Found! ---")
+	ui.Warn("--- No Helm Repo Credentials Found! ---")
 }
 
 const synopsis = "List all environment variables held by ocelot"
 const help = `
-Usage: ocelot creds env list <options>
+Usage: ocelot creds helmrepo list <options>
 
-  Retrieves all environment variables associated by each account. If you wish to filter the account variables to see, run: 
-    ocelot creds env list -account <ACCT_NAME>
+  Retrieves all helm repositories associated by each account. If you wish to filter the account variables to see, run: 
+    ocelot creds helmrepo list -account <ACCT_NAME>
 `

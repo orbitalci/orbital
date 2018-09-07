@@ -161,7 +161,7 @@ func TestCmd_Run(t *testing.T) {
 	}
 	c.init()
 	conf.Client.(*testutil.FakeGuideOcelotClient).Exists = true
-	conf.Client.(*testutil.FakeGuideOcelotClient).Generics = &pb.GenericWrap{Creds: []*pb.GenericCreds{{AcctName: "shankj3", Identifier: "ENVIRONMENT", ClientSecret: "********"}}}
+	conf.Client.(*testutil.FakeGuideOcelotClient).Generics = &pb.GenericWrap{Creds: []*pb.GenericCreds{{AcctName: "shankj3", Identifier: "ENVIRONMENT", ClientSecret: "********", SubType: pb.SubCredType_ENV,}}}
 	code := c.Run([]string{})
 	if code != 0 {
 		t.Error(code)
@@ -282,40 +282,48 @@ var moreCreds = []*pb.GenericCreds{
 		AcctName:     "shankj3",
 		Identifier:   "ENVIRONMENT",
 		ClientSecret: secret,
+		SubType:      pb.SubCredType_ENV,
 	},
 	{
 		AcctName:     "shankj3",
 		Identifier:   "EIINVIRONMENT",
 		ClientSecret: secret,
+		SubType:      pb.SubCredType_ENV,
 	},
 	{
 		AcctName:     "shankj3",
 		Identifier:   "whoopwhooOop",
 		ClientSecret: secret,
+		SubType:      pb.SubCredType_ENV,
 	},
 	{
 		AcctName:     "shankj3",
 		Identifier:   "yellowNotepad",
 		ClientSecret: secret,
+		SubType:      pb.SubCredType_ENV,
 	},
 	{
 		AcctName:     "other_account",
 		Identifier:   "superkilla",
 		ClientSecret: secret,
+		SubType:      pb.SubCredType_ENV,
 	},
 	{
 		AcctName:     "other_account",
 		Identifier:   "superfreak",
 		ClientSecret: secret,
+		SubType:      pb.SubCredType_ENV,
 	},
 	{
 		AcctName:     "other_account",
 		Identifier:   "frenchToast",
 		ClientSecret: secret,
+		SubType:      pb.SubCredType_ENV,
 	},
 	{
 		AcctName:     "other_account",
 		Identifier:   "normcore",
 		ClientSecret: secret,
+		SubType:      pb.SubCredType_ENV,
 	},
 }

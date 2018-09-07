@@ -186,7 +186,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -569,7 +570,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -737,7 +739,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           },
@@ -941,7 +944,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -1118,7 +1122,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -1316,7 +1321,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -1945,7 +1951,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "There is currently only one subType that is valid for GenericCreds, and it is ENV"
+          "title": "Subtypes are ENV, HELM_REPO"
         },
         "identifier": {
           "type": "string",
@@ -2252,7 +2258,8 @@
         "SSHKEY",
         "SLACK",
         "DEVPROFILE",
-        "ENV"
+        "ENV",
+        "HELM_REPO"
       ],
       "default": "NIL_SCT",
       "title": "- BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///"

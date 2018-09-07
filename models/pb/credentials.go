@@ -353,7 +353,7 @@ var (
 	sshSubTypes   = []SubCredType{SubCredType_SSHKEY}
 	appleSubTypes = []SubCredType{SubCredType_DEVPROFILE}
 	notifySubTypes = []SubCredType{SubCredType_SLACK}
-	genericSubTypes = []SubCredType{SubCredType_ENV}
+	genericSubTypes = []SubCredType{SubCredType_ENV, SubCredType_HELM_REPO}
 )
 
 // Subtypes will return all the SubCredTypes that are associated with that CredType. Will return nil if it is unknown
