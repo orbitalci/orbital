@@ -1,4 +1,4 @@
-package envlist
+package helmrepolist
 
 import (
 	"strings"

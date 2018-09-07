@@ -1,4 +1,4 @@
-package env
+package helmrepocli
 
 import (
 	"github.com/hashicorp/consul/command/flags"

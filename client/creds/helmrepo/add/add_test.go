@@ -1,4 +1,4 @@
-package envadd
+package helmrepoadd
 
 import (
 	"bytes"

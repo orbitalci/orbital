@@ -299,12 +299,14 @@ func (m *GenericCreds) ValidateForInsert() *ValidationErr {
 	if len(errr) != 0 {
 		return Invalidate(strings.Join(errr, "\n"))
 	}
-	re, err := regexp.Compile(ENV_SAFE)
-	if err != nil {
-		return Invalidate("Unable to compile regex, error is: " + err.Error())
-	}
-	if !re.MatchString(m.GetIdentifier()) {
-		return Invalidate(fmt.Sprintf("Identifier for credential must be environment variable safe, ie it must match the regex pattern %s. Your credential Identifier, %s, does not.", ENV_SAFE, m.GetIdentifier()))
+	if m.SubType == SubCredType_ENV {
+		re, err := regexp.Compile(ENV_SAFE)
+		if err != nil {
+			return Invalidate("Unable to compile regex, error is: " + err.Error())
+		}
+		if !re.MatchString(m.GetIdentifier()) {
+			return Invalidate(fmt.Sprintf("Identifier for credential must be environment variable safe, ie it must match the regex pattern %s. Your credential Identifier, %s, does not.", ENV_SAFE, m.GetIdentifier()))
+		}
 	}
 	return nil
 }
