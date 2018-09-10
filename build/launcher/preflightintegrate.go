@@ -10,6 +10,7 @@ import (
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/integrations/dockerconfig"
 	"github.com/shankj3/ocelot/build/integrations/helm"
+	"github.com/shankj3/ocelot/build/integrations/helmrepo"
 	"github.com/shankj3/ocelot/build/integrations/kubeconf"
 	"github.com/shankj3/ocelot/build/integrations/kubectl"
 	"github.com/shankj3/ocelot/build/integrations/minio"
@@ -31,6 +32,7 @@ func getIntegrationList() []integrations.StringIntegrator {
 		nexusm2.Create(),
 		xcode.Create(),
 		minioconfig.Create(),
+		helmrepo.Create(),
 	}
 }
 

@@ -28,15 +28,15 @@ func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder b
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
+	result = w.downloadBinaries(ctx, prefly, builder, werk.BuildConf)
+	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
+		return
+	}
 	result = w.doIntegrations(ctx, werk, builder, prefly)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
 
-	result = w.downloadBinaries(ctx, prefly, builder, werk.BuildConf)
-	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
-		return
-	}
 	// download codebase to werker node
 	result = downloadCodebase(ctx, werk, builder, prefly, w.infochan)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {

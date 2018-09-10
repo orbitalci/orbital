@@ -24,25 +24,26 @@ enum CredType {
 
 enum SubCredType {
 
-    NIL_SCT = 0;
+    NIL_SCT    = 0;
     /// VCS ///
-    BITBUCKET = 1;
-    GITHUB = 2;
+    BITBUCKET  = 1;
+    GITHUB     = 2;
     /// REPO ///
-    NEXUS = 3;
-    MAVEN = 4;
-    DOCKER = 5;
-    MINIO = 12;
+    NEXUS      = 3;
+    MAVEN      = 4;
+    DOCKER     = 5;
+    MINIO      = 12;
     /// K8S ///
-    KUBECONF = 6;
+    KUBECONF   = 6;
     /// SSH ///
-    SSHKEY = 8;
+    SSHKEY     = 8;
     /// NOTIFY ///
-    SLACK = 9;
+    SLACK      = 9;
     /// APPLE ///
     DEVPROFILE = 10;
     /// GENERIC ///
-    ENV = 11;
+    ENV        = 11;
+    HELM_REPO  = 13;
 }
 
 message AllCredsWrapper {
@@ -183,7 +184,7 @@ message GenericWrap {
 message GenericCreds {
     // account name to associate integration cred with
     string acctName = 1;
-    // There is currently only one subType that is valid for GenericCreds, and it is ENV
+    // Subtypes are ENV, HELM_REPO
     SubCredType subType = 2;
     // identifier is the unique identifier for the integration
     string identifier = 3;

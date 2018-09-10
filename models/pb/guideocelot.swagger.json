@@ -186,7 +186,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -237,8 +238,8 @@
     },
     "/v1/creds/env": {
       "get": {
-        "summary": "Get all known generic credentials (env).",
-        "description": "Get all known generic credentials (env).",
+        "summary": "Get all known generic credentials (env, helmrepo).",
+        "description": "Get all known generic credentials (env, helmrepo).",
         "operationId": "GetGenericCreds",
         "responses": {
           "200": {
@@ -255,8 +256,8 @@
         ]
       },
       "post": {
-        "summary": "Add new generic credentials",
-        "description": "Add new generic credentials.",
+        "summary": "Add new generic credentials (env, helmrepo)",
+        "description": "Add new generic credentials. (env, helmrepo)",
         "operationId": "SetGenericCreds",
         "responses": {
           "200": {
@@ -315,8 +316,8 @@
         ]
       },
       "put": {
-        "summary": "Update a Generic Credential",
-        "description": "Endpoint for updating a Generic credential in ocelot (ie ENV var). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields",
+        "summary": "Update a Generic Credential (env, helmrepo url)",
+        "description": "Endpoint for updating a Generic credential in ocelot (ie ENV var or HELMREPO url). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields",
         "operationId": "UpdateGenericCreds2",
         "responses": {
           "200": {
@@ -356,8 +357,8 @@
     },
     "/v1/creds/generic": {
       "get": {
-        "summary": "Get all known generic credentials (env).",
-        "description": "Get all known generic credentials (env).",
+        "summary": "Get all known generic credentials (env, helmrepo).",
+        "description": "Get all known generic credentials (env, helmrepo).",
         "operationId": "GetGenericCreds2",
         "responses": {
           "200": {
@@ -374,8 +375,8 @@
         ]
       },
       "post": {
-        "summary": "Add new generic credentials",
-        "description": "Add new generic credentials.",
+        "summary": "Add new generic credentials (env, helmrepo)",
+        "description": "Add new generic credentials. (env, helmrepo)",
         "operationId": "SetGenericCreds2",
         "responses": {
           "200": {
@@ -434,8 +435,8 @@
         ]
       },
       "put": {
-        "summary": "Update a Generic Credential",
-        "description": "Endpoint for updating a Generic credential in ocelot (ie ENV var). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields",
+        "summary": "Update a Generic Credential (env, helmrepo url)",
+        "description": "Endpoint for updating a Generic credential in ocelot (ie ENV var or HELMREPO url). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields",
         "operationId": "UpdateGenericCreds",
         "responses": {
           "200": {
@@ -569,7 +570,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -737,7 +739,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           },
@@ -941,7 +944,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -1118,7 +1122,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -1316,7 +1321,8 @@
               "SSHKEY",
               "SLACK",
               "DEVPROFILE",
-              "ENV"
+              "ENV",
+              "HELM_REPO"
             ],
             "default": "NIL_SCT"
           }
@@ -1945,7 +1951,7 @@
         },
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
-          "title": "There is currently only one subType that is valid for GenericCreds, and it is ENV"
+          "title": "Subtypes are ENV, HELM_REPO"
         },
         "identifier": {
           "type": "string",
@@ -2252,7 +2258,8 @@
         "SSHKEY",
         "SLACK",
         "DEVPROFILE",
-        "ENV"
+        "ENV",
+        "HELM_REPO"
       ],
       "default": "NIL_SCT",
       "title": "- BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///"
