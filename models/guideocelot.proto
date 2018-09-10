@@ -387,8 +387,8 @@ service GuideOcelot {
             }
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "Get all known generic credentials (env)."
-            description: "Get all known generic credentials (env)."
+            summary: "Get all known generic credentials (env, helmrepo)."
+            description: "Get all known generic credentials (env, helmrepo)."
             tags: "creds"
             tags: "env"
             tags: "generic"
@@ -404,8 +404,8 @@ service GuideOcelot {
             }
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "Add new generic credentials"
-            description: "Add new generic credentials."
+            summary: "Add new generic credentials (env, helmrepo)"
+            description: "Add new generic credentials. (env, helmrepo)"
             tags: "creds"
             tags: "env"
             tags: "generic"
@@ -421,8 +421,8 @@ service GuideOcelot {
 			}
 		};
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-            summary: "Update a Generic Credential"
-            description: "Endpoint for updating a Generic credential in ocelot (ie ENV var). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields"
+            summary: "Update a Generic Credential (env, helmrepo url)"
+            description: "Endpoint for updating a Generic credential in ocelot (ie ENV var or HELMREPO url). This should only be called if hte credential exists. subType is a required query param \nRefer to modelsGenericCreds for the object fields"
             tags: "creds"
             tags: "vcs"
         };
