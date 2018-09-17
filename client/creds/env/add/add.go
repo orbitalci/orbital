@@ -17,7 +17,7 @@ import (
 
 const (
 	credExists = `The environment variable with the name %s already exists under the account %s. Do you wish to overwrite? Only a YES will continue and update the environment variable value, otherwise this entry will be skipped.`
-	synopsis = "Add vault-secured environment variables for use in builds"
+	synopsis   = "Add vault-secured environment variables for use in builds"
 	// fixme: change help msg
 	help = `
 Usage: ocelot creds env add -acct my_kewl_acct FLAVORTOWN='X72BXHsdjk723!>E>>' DEPLOY_KEY=ad8231AND
@@ -27,7 +27,8 @@ Usage: ocelot creds env add -acct my_kewl_acct FLAVORTOWN='X72BXHsdjk723!>E>>' D
     DEPLOY_KEY: "ad8231AND"
   By running: 
     ocelot creds env add -acct my_kewl_acct -envfile=./env_creds.yml
-`)
+`
+)
 
 func New(ui cli.Ui) *cmd {
 	c := &cmd{UI: ui, config: commandhelper.Config}
@@ -64,7 +65,6 @@ func (c *cmd) init() {
 		"Account name to file environment variables under")
 }
 
-
 func (c *cmd) Synopsis() string {
 	return synopsis
 }
@@ -72,7 +72,6 @@ func (c *cmd) Synopsis() string {
 func (c *cmd) Help() string {
 	return help
 }
-
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
@@ -82,7 +81,7 @@ func (c *cmd) Run(args []string) int {
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	envCred := &models.GenericCreds{SubType:models.SubCredType_ENV}
+	envCred := &models.GenericCreds{SubType: models.SubCredType_ENV}
 	if c.account == "ERROR" {
 		c.UI.Error("-acct was not provided")
 		return 1
@@ -94,7 +93,6 @@ func (c *cmd) Run(args []string) int {
 		return c.argUpload()
 	}
 }
-
 
 func (c *cmd) fileUpload() int {
 	if c.fileloc == "" {
@@ -148,7 +146,7 @@ func (c *cmd) upload(envs map[string]string) int {
 
 	ctx = context.Background()
 	for identifier, envvalue := range envs {
-		env = &models.GenericCreds{AcctName:c.account, Identifier: identifier, SubType: models.SubCredType_ENV, ClientSecret: envvalue}
+		env = &models.GenericCreds{AcctName: c.account, Identifier: identifier, SubType: models.SubCredType_ENV, ClientSecret: envvalue}
 		exists, err := c.config.Client.GenericCredExists(ctx, env)
 		if err != nil {
 			c.UI.Error("Unable to check if credential exists, error is: " + getErrMsg(err))

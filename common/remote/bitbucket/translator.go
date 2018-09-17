@@ -1,6 +1,5 @@
 package bitbucket
 
-
 import (
 	"errors"
 	"io"
@@ -12,7 +11,7 @@ import (
 )
 
 func GetTranslator() *BBTranslate {
-	return &BBTranslate{Unmarshaler: jsonpb.Unmarshaler{AllowUnknownFields: true,},}
+	return &BBTranslate{Unmarshaler: jsonpb.Unmarshaler{AllowUnknownFields: true}}
 }
 
 type BBTranslate struct {
@@ -26,39 +25,38 @@ func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
 		return nil, err
 	}
 	prN := &pb.PullRequest{
-		Id: pr.Pullrequest.Id,
+		Id:          pr.Pullrequest.Id,
 		Description: pr.Pullrequest.Description,
 		Urls: &pb.PrUrls{
-			Commits: pr.Pullrequest.Links.Commits.Href,
+			Commits:  pr.Pullrequest.Links.Commits.Href,
 			Comments: pr.Pullrequest.Links.Comments.Href,
 			Statuses: pr.Pullrequest.Links.Statuses.Href,
-			Approve: pr.Pullrequest.Links.Approve.Href,
-			Decline: pr.Pullrequest.Links.Decline.Href,
-			Merge: pr.Pullrequest.Links.Merge.Href,
+			Approve:  pr.Pullrequest.Links.Approve.Href,
+			Decline:  pr.Pullrequest.Links.Decline.Href,
+			Merge:    pr.Pullrequest.Links.Merge.Href,
 		},
 		Title: pr.Pullrequest.Title,
 		Source: &pb.HeadData{
 			Repo: &pb.Repo{
-				Name: pr.Pullrequest.Source.Repository.FullName,
+				Name:     pr.Pullrequest.Source.Repository.FullName,
 				AcctRepo: pr.Pullrequest.Source.Repository.FullName,
 				RepoLink: pr.Pullrequest.Source.Repository.Links.Html.Href,
 			},
 			Branch: pr.Pullrequest.Source.Branch.GetName(),
-			Hash: pr.Pullrequest.Source.Commit.Hash,
+			Hash:   pr.Pullrequest.Source.Commit.Hash,
 		},
 		Destination: &pb.HeadData{
 			Repo: &pb.Repo{
-				Name: pr.Pullrequest.Destination.Repository.FullName,
+				Name:     pr.Pullrequest.Destination.Repository.FullName,
 				AcctRepo: pr.Pullrequest.Destination.Repository.FullName,
 				RepoLink: pr.Pullrequest.Destination.Repository.Links.Html.Href,
 			},
 			Branch: pr.Pullrequest.Destination.Branch.GetName(),
-			Hash: pr.Pullrequest.Destination.Commit.Hash,
+			Hash:   pr.Pullrequest.Destination.Commit.Hash,
 		},
 	}
 	return prN, nil
 }
-
 
 func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	push := &pbb.RepoPush{}
@@ -79,7 +77,7 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	var commits []*pb.Commit
 	changeset := push.Push.Changes[0]
 	for _, commit := range changeset.Commits {
-		commits = append(commits, &pb.Commit{Hash:commit.Hash, Date:commit.Date, Message:commit.Message, Author:&pb.User{UserName:commit.Author.Username}})
+		commits = append(commits, &pb.Commit{Hash: commit.Hash, Date: commit.Date, Message: commit.Message, Author: &pb.User{UserName: commit.Author.Username}})
 	}
 	if changeset.New.Type != "branch" {
 		ocelog.Log().Errorf("changeset type is not branch, it is %s. idk what to do!!!", changeset.New.Type)
@@ -87,11 +85,11 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 		return nil, errors.New("unexpected push type")
 	}
 	translPush := &pb.Push{
-		Repo: &pb.Repo{Name: push.Repository.FullName, AcctRepo:push.Repository.FullName, RepoLink: push.Repository.Links.Html.Href},
-		User: &pb.User{UserName: push.Actor.Username},
-		Commits: commits,
-		Branch: changeset.New.Name,
-		HeadCommit: &pb.Commit{Hash:changeset.New.Target.Hash, Message:changeset.New.Target.Hash, Date:changeset.New.Target.Date, Author:&pb.User{UserName:changeset.New.Target.Author.Username}},
+		Repo:       &pb.Repo{Name: push.Repository.FullName, AcctRepo: push.Repository.FullName, RepoLink: push.Repository.Links.Html.Href},
+		User:       &pb.User{UserName: push.Actor.Username},
+		Commits:    commits,
+		Branch:     changeset.New.Name,
+		HeadCommit: &pb.Commit{Hash: changeset.New.Target.Hash, Message: changeset.New.Target.Hash, Date: changeset.New.Target.Date, Author: &pb.User{UserName: changeset.New.Target.Author.Username}},
 	}
 	return translPush, nil
 }

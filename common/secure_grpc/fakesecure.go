@@ -39,7 +39,6 @@ func (fs *fakeSecure) GetNewTLS(serverRunsAt string) credentials.TransportCreden
 	})
 }
 
-
 func (fs *fakeSecure) GetKeyPair() *tls.Certificate {
 	pair, err := tls.X509KeyPair([]byte(insecure.Cert), []byte(insecure.Key))
 	if err != nil {

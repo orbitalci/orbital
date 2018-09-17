@@ -80,8 +80,8 @@ func (g *guideOcelotServer) GetVCSCred(ctx context.Context, credentials *pb.VCSC
 	return vcs, nil
 }
 
-func (g *guideOcelotServer) getAnyCred(credder pb.OcyCredder) (pb.OcyCredder, error){
-	if credder.GetSubType() == 0 || credder.GetAcctName() ==  "" || credder.GetIdentifier() == "" {
+func (g *guideOcelotServer) getAnyCred(credder pb.OcyCredder) (pb.OcyCredder, error) {
+	if credder.GetSubType() == 0 || credder.GetAcctName() == "" || credder.GetIdentifier() == "" {
 		return nil, status.Error(codes.InvalidArgument, "subType, acctName, and identifier are required fields")
 	}
 	creddy, err := g.RemoteConfig.GetCred(g.Storage, credder.GetSubType(), credder.GetIdentifier(), credder.GetAcctName(), true)
@@ -90,9 +90,9 @@ func (g *guideOcelotServer) getAnyCred(credder pb.OcyCredder) (pb.OcyCredder, er
 			return nil, status.Error(codes.NotFound, fmt.Sprintf("Credential %s/%s of Type %s Not Found", credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType()))
 		}
 		if _, ok := err.(*pb.ValidationErr); ok {
-			return nil, status.Error(codes.InvalidArgument, "Invalid arguments, error: " + err.Error())
+			return nil, status.Error(codes.InvalidArgument, "Invalid arguments, error: "+err.Error())
 		}
-		return nil, status.Error(codes.Unavailable, "Credential interface not available, error: " + err.Error())
+		return nil, status.Error(codes.Unavailable, "Credential interface not available, error: "+err.Error())
 	}
 	return creddy, nil
 }
@@ -126,8 +126,6 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 	}
 	return credWrapper, nil
 }
-
-
 
 func (g *guideOcelotServer) GetRepoCred(ctx context.Context, credentials *pb.RepoCreds) (*pb.RepoCreds, error) {
 	creddy, err := g.getAnyCred(credentials)
@@ -167,7 +165,6 @@ func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *pb.RepoCr
 	return g.checkAnyCredExists(ctx, creds)
 }
 
-
 func (g *guideOcelotServer) DeleteRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
 	return g.deleteAnyCred(ctx, creds, pb.CredType_REPO)
 }
@@ -205,7 +202,6 @@ func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty)
 	return credWrapper, nil
 }
 
-
 func (g *guideOcelotServer) GetK8SCred(ctx context.Context, credentials *pb.K8SCreds) (*pb.K8SCreds, error) {
 	creddy, err := g.getAnyCred(credentials)
 	if err != nil {
@@ -226,11 +222,9 @@ func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *pb.K8SCred
 	return g.checkAnyCredExists(ctx, creds)
 }
 
-
 func (g *guideOcelotServer) DeleteK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
 	return g.deleteAnyCred(ctx, creds, pb.CredType_K8S)
 }
-
 
 func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds pb.OcyCredder) (*empty.Empty, error) {
 	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
@@ -346,16 +340,15 @@ func appleNastiness(zipFile []byte, devProfilePassword string) (parsed []byte, e
 	appleKeychain, err := ioshelper.UnpackAppleDevAccount(zipFile, devProfilePassword)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't deal with this zip file...")
-		return nil, status.Error(codes.InvalidArgument, "could not unpack developeraccount zip to keychain, error is :" + err.Error())
+		return nil, status.Error(codes.InvalidArgument, "could not unpack developeraccount zip to keychain, error is :"+err.Error())
 	}
 	return appleKeychain, nil
 }
 
-
 func (g *guideOcelotServer) SetAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
 	vempty := &empty.Empty{}
 	if creds.GetSubType().Parent() != pb.CredType_APPLE {
-		return nil, status.Error(codes.InvalidArgument, "Subtype must be of apple type: " + strings.Join(pb.CredType_APPLE.SubtypesString(), " | "))
+		return nil, status.Error(codes.InvalidArgument, "Subtype must be of apple type: "+strings.Join(pb.CredType_APPLE.SubtypesString(), " | "))
 	}
 	var err error
 	creds.AppleSecrets, err = appleNastiness(creds.AppleSecrets, creds.AppleSecretsPassword)
@@ -365,9 +358,9 @@ func (g *guideOcelotServer) SetAppleCreds(ctx context.Context, creds *pb.AppleCr
 
 	if err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds); err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
-			return vempty, status.Error(codes.InvalidArgument, "Apple creds upload failed validation, errors are: " + err.Error())
+			return vempty, status.Error(codes.InvalidArgument, "Apple creds upload failed validation, errors are: "+err.Error())
 		}
-		return vempty, status.Error(codes.Internal, "Apple creds could not be uploaded, error is: " + err.Error())
+		return vempty, status.Error(codes.Internal, "Apple creds could not be uploaded, error is: "+err.Error())
 	}
 	log.Log().Info("unpacked & stored apple dev profile")
 	return vempty, nil
@@ -391,8 +384,7 @@ func (g *guideOcelotServer) GetAppleCreds(ctx context.Context, empty2 *empty.Emp
 	return wrapper, nil
 }
 
-
-func (g *guideOcelotServer) GetAppleCred(ctx context.Context, creds *pb.AppleCreds) (*pb.AppleCreds, error){
+func (g *guideOcelotServer) GetAppleCred(ctx context.Context, creds *pb.AppleCreds) (*pb.AppleCreds, error) {
 	creddy, err := g.getAnyCred(creds)
 	if err != nil {
 		return nil, err
@@ -517,7 +509,7 @@ func (g *guideOcelotServer) UpdateGenericCreds(ctx context.Context, creds *pb.Ge
 	return g.updateAnyCred(ctx, creds)
 }
 
-func (g *guideOcelotServer) deleteAnyCred(ctx context.Context, creds pb.OcyCredder, parentType pb.CredType) (*empty.Empty, error){
+func (g *guideOcelotServer) deleteAnyCred(ctx context.Context, creds pb.OcyCredder, parentType pb.CredType) (*empty.Empty, error) {
 	// make sure we have all the fields we need to be able to accurately delete the credential.
 	// try to intelligently deduce what subType teh cred is, but error out if that isn't possible
 	empti := &empty.Empty{}
@@ -529,7 +521,7 @@ func (g *guideOcelotServer) deleteAnyCred(ctx context.Context, creds pb.OcyCredd
 		if len(parentType.Subtypes()) == 1 {
 			creds.SetSubType(parentType.Subtypes()[0])
 		} else {
-			errmsg += "subType must be set since there is more than one sub type to this parent type " + parentType.String() + ": "+ strings.Join(parentType.SubtypesString(), "|")
+			errmsg += "subType must be set since there is more than one sub type to this parent type " + parentType.String() + ": " + strings.Join(parentType.SubtypesString(), "|")
 		}
 	}
 	if errmsg != "" {

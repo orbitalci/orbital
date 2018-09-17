@@ -15,18 +15,16 @@ import (
 
 var goodConfig = &pb.BuildConfig{
 	MachineTag: "hi",
-	Branches: []string{"branch1", "branch2_.*"},
-	BuildTool: "ios",
-	Stages: []*pb.Stage{{Name:"test", Script:[]string{"echo hi"}}},
+	Branches:   []string{"branch1", "branch2_.*"},
+	BuildTool:  "ios",
+	Stages:     []*pb.Stage{{Name: "test", Script: []string{"echo hi"}}},
 }
 
 var badConfig = &pb.BuildConfig{
-	Branches: []string{"branch1", "branch2_.*"},
+	Branches:   []string{"branch1", "branch2_.*"},
 	MachineTag: "hi",
-	Stages: []*pb.Stage{{Name:"test", Script:[]string{"echo hi"}}},
+	Stages:     []*pb.Stage{{Name: "test", Script: []string{"echo hi"}}},
 }
-
-
 
 func TestSignaler_validateAndQueue(t *testing.T) {
 	sig := GetFakeSignaler(t, false)
@@ -37,7 +35,7 @@ func TestSignaler_validateAndQueue(t *testing.T) {
 		t.Error(err)
 	}
 	<-sig.Producer.(*TestSingleProducer).Done
-	expectedBuildMsg := &pb.WerkerTask{VcsType: pb.SubCredType_BITBUCKET, CheckoutHash:"1234", Branch:"mine", BuildConf: goodConfig, VcsToken:"token", FullName:"jessi/shank", Id: 12}
+	expectedBuildMsg := &pb.WerkerTask{VcsType: pb.SubCredType_BITBUCKET, CheckoutHash: "1234", Branch: "mine", BuildConf: goodConfig, VcsToken: "token", FullName: "jessi/shank", Id: 12}
 	if diff := deep.Equal(expectedBuildMsg, sig.Producer.(*TestSingleProducer).Message); diff != nil {
 		t.Error(diff)
 	}
@@ -80,11 +78,11 @@ func TestSignaler_queueAndStore_happypath(t *testing.T) {
 	if sig.Producer.(*TestSingleProducer).Message == nil || sig.Producer.(*TestSingleProducer).Topic == "" {
 		t.Error("should have produced a message")
 	}
-	expectedSummary := &pb.BuildSummary{BuildId: 12, Hash: "1234", Branch:"dev", Account:"jessi", Repo:"shank", Failed:false, QueueTime:&timestamp.Timestamp{Seconds:0, Nanos: 0}}
+	expectedSummary := &pb.BuildSummary{BuildId: 12, Hash: "1234", Branch: "dev", Account: "jessi", Repo: "shank", Failed: false, QueueTime: &timestamp.Timestamp{Seconds: 0, Nanos: 0}}
 	if diff := deep.Equal(expectedSummary, sig.Store.(*TestStorage).summary); diff != nil {
 		t.Error(diff)
 	}
-	expectedStage := &models.StageResult{BuildId:12, Stage: models.HOOKHANDLER_VALIDATION, StageDuration: -99.99, Messages: []string{"Passed initial validation "+models.CHECKMARK}, Status: 0}
+	expectedStage := &models.StageResult{BuildId: 12, Stage: models.HOOKHANDLER_VALIDATION, StageDuration: -99.99, Messages: []string{"Passed initial validation " + models.CHECKMARK}, Status: 0}
 	liveStage := sig.Store.(*TestStorage).stages[0]
 	if expectedStage.BuildId != liveStage.BuildId {
 		t.Error(test.GenericStrFormatErrors("build id", expectedStage.BuildId, liveStage.BuildId))
@@ -104,11 +102,11 @@ func TestSignaler_queueAndStore_invalid(t *testing.T) {
 	if err != nil {
 		t.Error("should not pass validation, but should not return an error")
 	}
-	expectedSummary := &pb.BuildSummary{BuildId: 12, Hash: "1234", Branch:"dev", Account:"jessi", Repo:"shank", Failed:true,}
+	expectedSummary := &pb.BuildSummary{BuildId: 12, Hash: "1234", Branch: "dev", Account: "jessi", Repo: "shank", Failed: true}
 	if diff := deep.Equal(expectedSummary, sig.Store.(*TestStorage).summary); diff != nil {
 		t.Error(diff)
 	}
-	expectedStage := &models.StageResult{BuildId:12, Stage: models.HOOKHANDLER_VALIDATION, StageDuration: -99.99, Messages: []string{"Failed initial validation"}, Status: 1}
+	expectedStage := &models.StageResult{BuildId: 12, Stage: models.HOOKHANDLER_VALIDATION, StageDuration: -99.99, Messages: []string{"Failed initial validation"}, Status: 1}
 	liveStage := sig.Store.(*TestStorage).stages[0]
 	if expectedStage.BuildId != liveStage.BuildId {
 		t.Error(test.GenericStrFormatErrors("build id", expectedStage.BuildId, liveStage.BuildId))

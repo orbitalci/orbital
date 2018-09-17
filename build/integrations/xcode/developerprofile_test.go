@@ -19,7 +19,7 @@ func TestAppleDevProfile_GenerateIntegrationString(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	keychain := &ioshelper.AppleKeychain{MobileProvisions:map[string]string{"test.mobileprovision":common.BitzToBase64(aProfile)}, PrivateKeys:make(map[string]string)}
+	keychain := &ioshelper.AppleKeychain{MobileProvisions: map[string]string{"test.mobileprovision": common.BitzToBase64(aProfile)}, PrivateKeys: make(map[string]string)}
 	marshaled, err := json.Marshal(keychain)
 	if err != nil {
 		t.Fatal(err)
@@ -29,7 +29,7 @@ func TestAppleDevProfile_GenerateIntegrationString(t *testing.T) {
 	appledevprof := Create()
 	appledevprof.GenerateIntegrationString(creds)
 	envs := appledevprof.GetEnv()
-	if len(envs) > 1 || envs[0] != "test_OCY_mobileprovision=" + common.BitzToBase64(aProfile) {
+	if len(envs) > 1 || envs[0] != "test_OCY_mobileprovision="+common.BitzToBase64(aProfile) {
 		t.Error("only one env should have been rendered, and it should have been the base64 encoded mobile provisioning profile, test.mobileprovision")
 	}
 }
@@ -42,16 +42,15 @@ func TestAppleDevProfile_staticstuffs(t *testing.T) {
 	if prf.SubType() != pb.SubCredType_DEVPROFILE {
 		t.Error("subcredtype of apple dev profile should be DEVPROFILE")
 	}
-	wc := &pb.BuildConfig{BuildTool:"xcode"}
+	wc := &pb.BuildConfig{BuildTool: "xcode"}
 	if prf.IsRelevant(wc) {
 		t.Error("xcode should be disabled")
 	}
-	wc = &pb.BuildConfig{BuildTool:"maven"}
+	wc = &pb.BuildConfig{BuildTool: "maven"}
 	if prf.IsRelevant(wc) {
 		t.Error("build tool is maven, this integration is not relevant")
 	}
 }
-
 
 func TestAppleDevProfile_GetEnv(t *testing.T) {
 	devProfile := Create()

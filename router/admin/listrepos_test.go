@@ -13,7 +13,7 @@ import (
 
 type stor struct {
 	returnErr bool
-	notFound bool
+	notFound  bool
 	storage.OcelotStorage
 }
 
@@ -34,7 +34,7 @@ func (s *stor) GetTrackedRepos() (*pb.AcctRepos, error) {
 
 func TestGuideOcelotServer_GetTrackedRepos(t *testing.T) {
 	stora := &stor{}
-	gos := &guideOcelotServer{Storage:stora}
+	gos := &guideOcelotServer{Storage: stora}
 	ctx := context.Background()
 	repos, err := gos.GetTrackedRepos(ctx, nil)
 	if err != nil {
@@ -48,15 +48,15 @@ func TestGuideOcelotServer_GetTrackedRepos(t *testing.T) {
 	if err == nil {
 		t.Error("should return not found error")
 	}
-	 statErr, ok := status.FromError(err)
-	 if !ok {
-	 	t.Error("must return admin grpc error")
-	 }
-	 if statErr.Code() != codes.NotFound {
-	 	t.Error("stiorage returned a not found erorr, grpc code should be set to NOT FOUND")
-	 }
-	 stora.notFound = false
-	 stora.returnErr = true
+	statErr, ok := status.FromError(err)
+	if !ok {
+		t.Error("must return admin grpc error")
+	}
+	if statErr.Code() != codes.NotFound {
+		t.Error("stiorage returned a not found erorr, grpc code should be set to NOT FOUND")
+	}
+	stora.notFound = false
+	stora.returnErr = true
 	_, err = gos.GetTrackedRepos(ctx, nil)
 	if err == nil {
 		t.Error("should return error")

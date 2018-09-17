@@ -11,7 +11,6 @@ import (
 	"testing"
 )
 
-
 func TestWriteCronFile_DeleteCronFile(t *testing.T) {
 	event := &pb.PollRequest{Account: "accOmns7f", Repo: "d8sfasdnc3", Cron: "* * * * *", Branches: "test,master,queue"}
 	WriteCronFile(event, "./test-fixtures")
@@ -57,13 +56,13 @@ func Test_exists(t *testing.T) {
 
 func TestMsgHandler_UnmarshalAndProcess_pollplz(t *testing.T) {
 	var pollRequest = &pb.PollRequest{
-		Account: "acct",
-		Repo: "repo",
-		Cron: "* * * * *",
+		Account:  "acct",
+		Repo:     "repo",
+		Cron:     "* * * * *",
 		Branches: "ALL",
 	}
 	defer os.Remove("./test-fixtures/acct_repo")
-	nopoll := &MsgHandler{Topic: "poll_please", cronDir:"./test-fixtures"}
+	nopoll := &MsgHandler{Topic: "poll_please", cronDir: "./test-fixtures"}
 	pollBytes, err := proto.Marshal(pollRequest)
 	if err != nil {
 		t.Error(err)
@@ -82,12 +81,12 @@ func TestMsgHandler_UnmarshalAndProcess_pollplz(t *testing.T) {
 
 func TestMsgHandler_UnmarshalAndProcess_pollplz_fail(t *testing.T) {
 	var pollRequest = &pb.PollRequest{
-		Account: "acct",
-		Repo: "repo",
-		Cron: "* * * * *",
+		Account:  "acct",
+		Repo:     "repo",
+		Cron:     "* * * * *",
 		Branches: "ALL",
 	}
-	nopoll := &MsgHandler{Topic: "poll_please", cronDir:"./test-fixtures/dlajkfklsdjfklajsdfkl;ajsdflk;jads"}
+	nopoll := &MsgHandler{Topic: "poll_please", cronDir: "./test-fixtures/dlajkfklsdjfklajsdfkl;ajsdflk;jads"}
 	pollBytes, err := proto.Marshal(pollRequest)
 	if err != nil {
 		t.Error(err)
@@ -102,20 +101,20 @@ func TestMsgHandler_UnmarshalAndProcess_pollplz_fail(t *testing.T) {
 
 func TestMsgHandler_UnmarshalAndProcess_nopollplz(t *testing.T) {
 	var pollRequest = &pb.PollRequest{
-		Account: "acct2",
-		Repo: "repo2",
-		Cron: "* * * * *",
+		Account:  "acct2",
+		Repo:     "repo2",
+		Cron:     "* * * * *",
 		Branches: "ALL",
 	}
 	pollBytes, err := proto.Marshal(pollRequest)
 	done, finish := make(chan int, 1), make(chan int, 1)
-	poll := &MsgHandler{Topic: "poll_please", cronDir:"./test-fixtures"}
+	poll := &MsgHandler{Topic: "poll_please", cronDir: "./test-fixtures"}
 	err = poll.UnmarshalAndProcess(pollBytes, done, finish)
 	if err != nil {
 		t.Error(err)
 	}
 	done, finish = make(chan int, 1), make(chan int, 1)
-	nopoll := &MsgHandler{Topic: "no_poll_please", cronDir:"./test-fixtures"}
+	nopoll := &MsgHandler{Topic: "no_poll_please", cronDir: "./test-fixtures"}
 	if err != nil {
 		t.Error(err)
 		return
@@ -129,17 +128,16 @@ func TestMsgHandler_UnmarshalAndProcess_nopollplz(t *testing.T) {
 	}
 }
 
-
 func TestMsgHandler_UnmarshalAndProcess_default(t *testing.T) {
 	var pollRequest = &pb.PollRequest{
-		Account: "acct2",
-		Repo: "repo2",
-		Cron: "* * * * *",
+		Account:  "acct2",
+		Repo:     "repo2",
+		Cron:     "* * * * *",
 		Branches: "ALL",
 	}
 	pollBytes, err := proto.Marshal(pollRequest)
 	done, finish := make(chan int, 1), make(chan int, 1)
-	poll := &MsgHandler{Topic: "asdf", cronDir:"./test-fixtures"}
+	poll := &MsgHandler{Topic: "asdf", cronDir: "./test-fixtures"}
 	err = poll.UnmarshalAndProcess(pollBytes, done, finish)
 	if err == nil {
 		t.Error("bad topic name, this should not succesed")
@@ -151,7 +149,7 @@ func TestMsgHandler_UnmarshalAndProcess_default(t *testing.T) {
 
 func TestMsgHandler_UnmarshalAndProcess_baddata(t *testing.T) {
 	pollBytes := []byte("!!!!hummunu")
-	poll := &MsgHandler{Topic: "poll_please", cronDir:"./test-fixtures"}
+	poll := &MsgHandler{Topic: "poll_please", cronDir: "./test-fixtures"}
 	done, finish := make(chan int, 1), make(chan int, 1)
 	err := poll.UnmarshalAndProcess(pollBytes, done, finish)
 	if err == nil {

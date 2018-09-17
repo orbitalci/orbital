@@ -8,7 +8,7 @@ import (
 )
 
 func NCErr(msg string) *NoCreds {
-	return &NoCreds{msg:msg}
+	return &NoCreds{msg: msg}
 }
 
 type NoCreds struct {
@@ -28,7 +28,7 @@ func StrToBase64(str string) string {
 }
 
 func Base64ToBitz(b64string string) ([]byte, error) {
-	 return base64.StdEncoding.DecodeString(b64string)
+	return base64.StdEncoding.DecodeString(b64string)
 }
 
 // BuildScriptsContainString will check all stages' script lines for the existence of the specified desiredString

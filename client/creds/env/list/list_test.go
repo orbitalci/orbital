@@ -161,7 +161,7 @@ func TestCmd_Run(t *testing.T) {
 	}
 	c.init()
 	conf.Client.(*testutil.FakeGuideOcelotClient).Exists = true
-	conf.Client.(*testutil.FakeGuideOcelotClient).Generics = &pb.GenericWrap{Creds: []*pb.GenericCreds{{AcctName: "shankj3", Identifier: "ENVIRONMENT", ClientSecret: "********", SubType: pb.SubCredType_ENV,}}}
+	conf.Client.(*testutil.FakeGuideOcelotClient).Generics = &pb.GenericWrap{Creds: []*pb.GenericCreds{{AcctName: "shankj3", Identifier: "ENVIRONMENT", ClientSecret: "********", SubType: pb.SubCredType_ENV}}}
 	code := c.Run([]string{})
 	if code != 0 {
 		t.Error(code)
@@ -194,7 +194,7 @@ Env Vars:
   whoopwhooOop=********
   yellowNotepad=********
   `
-  expected2 := `Account: other_account
+	expected2 := `Account: other_account
 Env Vars:
   superkilla=********
   superfreak=********

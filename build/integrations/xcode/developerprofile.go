@@ -11,9 +11,8 @@ import (
 )
 
 const (
-	appleProfileDirec   = "/tmp/.appleProfs"
+	appleProfileDirec = "/tmp/.appleProfs"
 )
-
 
 func Create() *AppleDevProfile {
 	return &AppleDevProfile{joiner: " && ", pass: uuid.New().String()}
@@ -21,7 +20,7 @@ func Create() *AppleDevProfile {
 
 type AppleDevProfile struct {
 	// the zipped *.developerprofile secrets are retrieved from vault and set here
-	keys []*ioshelper.AppleKeychain
+	keys   []*ioshelper.AppleKeychain
 	joiner string
 	pass   string
 }
@@ -71,7 +70,7 @@ func (a *AppleDevProfile) GetEnv() []string {
 }
 
 // makeEnvValid will replace all the dots in the env var name
-func makeEnvValid(envName string) string{
+func makeEnvValid(envName string) string {
 	return strings.Replace(envName, ".", "_OCY_", -1)
 }
 
@@ -87,7 +86,7 @@ func (a *AppleDevProfile) MakeBashable(str string) []string {
 			// echo the private data to files
 			cmds = append(cmds, fmt.Sprintf("echo ${%s} | base64 -D > %s/%s", makeEnvValid(privKey), appleProfileDirec, privKey))
 			// add keys to ocelotty keychain
-			cmds = append(cmds,  fmt.Sprintf("security import %s/%s -k ocelotty -P %s -T /usr/bin/codesign -T /usr/bin/productsign", appleProfileDirec, privKey, key.DevProfilePassword))
+			cmds = append(cmds, fmt.Sprintf("security import %s/%s -k ocelotty -P %s -T /usr/bin/codesign -T /usr/bin/productsign", appleProfileDirec, privKey, key.DevProfilePassword))
 		}
 		provisioningDir := "${HOME}/Library/MobileDevice/Provisioning\\ Profiles"
 		for mobile := range key.MobileProvisions {

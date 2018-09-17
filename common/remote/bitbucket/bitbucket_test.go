@@ -45,12 +45,12 @@ func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
 
 func TestBitbucket_PostPRComment(t *testing.T) {
 	vcsConf := &pb.VCSCreds{
-		ClientId: "VEhMhdw6uprevzh8Du",
+		ClientId:     "VEhMhdw6uprevzh8Du",
 		ClientSecret: "JtxmvZy3QR2dJQwbnwmVktCJa4jaVsJS",
-		TokenURL: "https://bitbucket.org/site/oauth2/access_token",
-		AcctName: "level11consulting",
-		SubType: pb.SubCredType_BITBUCKET,
-		Identifier: pb.SubCredType_BITBUCKET.String() + "_level11consulting",
+		TokenURL:     "https://bitbucket.org/site/oauth2/access_token",
+		AcctName:     "level11consulting",
+		SubType:      pb.SubCredType_BITBUCKET,
+		Identifier:   pb.SubCredType_BITBUCKET.String() + "_level11consulting",
 	}
 	client, token, err := GetBitbucketClient(vcsConf)
 	if err != nil {
@@ -100,6 +100,6 @@ func (mhc MockHttpClient) GetUrlResponse(url string) (*http.Response, error) {
 	return nil, nil
 }
 
-func (mhc MockHttpClient)  PostUrlForm(url string, form url.Values) (*http.Response, error) {
+func (mhc MockHttpClient) PostUrlForm(url string, form url.Values) (*http.Response, error) {
 	return nil, nil
 }

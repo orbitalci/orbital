@@ -16,7 +16,7 @@ func TestLauncher_postFlight(t *testing.T) {
 	ctx := context.Background()
 	task := &pb.WerkerTask{
 		SignaledBy: pb.SignaledBy_PULL_REQUEST,
-		FullName: "shankj3/ocelot",
+		FullName:   "shankj3/ocelot",
 		PrData: &pb.PrWerkerData{
 			PrId: "2",
 			Urls: &pb.PrUrls{
@@ -24,20 +24,20 @@ func TestLauncher_postFlight(t *testing.T) {
 			},
 		},
 		CheckoutHash: "1234",
-		Id: 1023,
-		VcsType: pb.SubCredType_BITBUCKET,
+		Id:           1023,
+		VcsType:      pb.SubCredType_BITBUCKET,
 	}
-	lnchr.handler = &testHandler{failPostPR:true, cli: &testClient{}}
+	lnchr.handler = &testHandler{failPostPR: true, cli: &testClient{}}
 	err := lnchr.postFlight(ctx, task, true)
 	if err == nil || err.Error() != "nah" {
 		t.Error("expected error to be bubbled up from handler postPRComment")
 	}
-	lnchr.handler = &testHandler{cli:&testClient{}}
+	lnchr.handler = &testHandler{cli: &testClient{}}
 	err = lnchr.postFlight(ctx, task, true)
 	if err != nil {
 		t.Error("error should be nil, it is: " + err.Error())
 	}
-	handler := &testHandler{cli:&testClient{}}
+	handler := &testHandler{cli: &testClient{}}
 	lnchr.handler = handler
 	err = lnchr.postFlight(ctx, task, false)
 	if err != nil {
@@ -78,12 +78,11 @@ func TestLauncher_getAndSetHandler(t *testing.T) {
 	}
 }
 
-
 type testHandler struct {
 	models.VCSHandler
 	failPostPR bool
-	cli *testClient
-	posted int
+	cli        *testClient
+	posted     int
 }
 
 func (t *testHandler) PostPRComment(acctRepo string, prId string, hash string, failed bool, buildId int64) error {

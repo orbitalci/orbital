@@ -13,7 +13,6 @@ import (
 	"github.com/shankj3/ocelot/storage"
 )
 
-
 func storeStageToDb(store storage.BuildStage, stageResult *models.StageResult) error {
 	if err := store.AddStageDetail(stageResult); err != nil {
 		log.IncludeErrField(err).Error("unable to store hookhandler stage details to db")

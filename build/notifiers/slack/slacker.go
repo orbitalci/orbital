@@ -6,6 +6,7 @@ import (
 	"github.com/shankj3/ocelot/common/remote/slack"
 	"github.com/shankj3/ocelot/models/pb"
 )
+
 func Create() *Slacker {
 	return &Slacker{client: http.DefaultClient}
 }
@@ -17,7 +18,6 @@ type Slacker struct {
 func (s *Slacker) SubType() pb.SubCredType {
 	return pb.SubCredType_SLACK
 }
-
 
 func determineRelevancy(notifies []pb.StageResultVal, status pb.BuildStatus) (isWorthy bool) {
 	var notifyPass pb.StageResultVal
@@ -33,7 +33,6 @@ func determineRelevancy(notifies []pb.StageResultVal, status pb.BuildStatus) (is
 	}
 	return false
 }
-
 
 func (s *Slacker) IsRelevant(wc *pb.BuildConfig, buildStatus pb.BuildStatus) bool {
 	if wc.Notify != nil {
@@ -63,4 +62,3 @@ func (s *Slacker) RunIntegration(slackCreds []pb.OcyCredder, fullResult *pb.Stat
 	}
 	return nil
 }
-

@@ -15,10 +15,10 @@ import (
 
 type WerkerContext struct {
 	*models.WerkerFacts
-	consul        *consulet.Consulet
-	store         storage.OcelotStorage
-	streamPack    *streamer.StreamPack
-	killValet     *valet.ContextValet
+	consul     *consulet.Consulet
+	store      storage.OcelotStorage
+	streamPack *streamer.StreamPack
+	killValet  *valet.ContextValet
 }
 
 //
@@ -46,10 +46,10 @@ func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, con
 		ocelog.IncludeErrField(err)
 	}
 	werkerCtx := &WerkerContext{
-		WerkerFacts:   conf,
-		consul:        werkerConsul,
-		killValet:     contextValet,
-		store:         store,
+		WerkerFacts: conf,
+		consul:      werkerConsul,
+		killValet:   contextValet,
+		store:       store,
 	}
 	return werkerCtx
 }

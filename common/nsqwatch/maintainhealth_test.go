@@ -9,7 +9,6 @@ import (
 	"testing"
 )
 
-
 func TestNsqWatch_MaintainHealths(t *testing.T) {
 	rcHelathy := cred.NewHealthyMaintain()
 	storeHealth := storage.NewHealthyStorage()

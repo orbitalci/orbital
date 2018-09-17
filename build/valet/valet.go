@@ -31,10 +31,10 @@ const (
 // Valet is the overseer of builds. It handles registration of when the build is started, what stage it is actively on,
 // when to close the channel that signifies to nsqpb to stop refreshing the status of the message
 type Valet struct {
-	RemoteConfig    cred.CVRemoteConfig
-	store			storage.OcelotStorage
-	WerkerUuid		uuid.UUID
-	doneChannels    map[string]chan int
+	RemoteConfig cred.CVRemoteConfig
+	store        storage.OcelotStorage
+	WerkerUuid   uuid.UUID
+	doneChannels map[string]chan int
 	*ContextValet
 	sync.Mutex
 	c.Cleaner

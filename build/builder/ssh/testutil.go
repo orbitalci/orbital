@@ -18,7 +18,7 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-func createSSHBuilderNoInit(t *testing.T,  sshPort int, prefixdir string) (context.Context, *SSH, func()){
+func createSSHBuilderNoInit(t *testing.T, sshPort int, prefixdir string) (context.Context, *SSH, func()) {
 	cleanup, ctx := sshhelper.CreateSSHDockerContainer(t, fmt.Sprintf("%d", sshPort))
 	bshr, err := basher.NewBasher("", "", "docker.for.mac.localhost", prefixdir)
 	if err != nil {
@@ -28,19 +28,19 @@ func createSSHBuilderNoInit(t *testing.T,  sshPort int, prefixdir string) (conte
 	dir := filepath.Dir(filename)
 	path := filepath.Join(dir, "test-fixtures")
 	sshfacts := &models.SSHFacts{
-		User: "root",
-		Host: "localhost",
-		Port: sshPort,
+		User:  "root",
+		Host:  "localhost",
+		Port:  sshPort,
 		KeyFP: path + "/docker_id_rsa",
 	}
 	werkerFacts := &models.WerkerFacts{
-		Uuid: uuid.New(),
-		WerkerType: models.SSH,
-		LoopbackIp: "docker.for.mac.localhost",
-		RegisterIP: "docker.for.mac.localhost",
+		Uuid:        uuid.New(),
+		WerkerType:  models.SSH,
+		LoopbackIp:  "docker.for.mac.localhost",
+		RegisterIP:  "docker.for.mac.localhost",
 		ServicePort: "",
-		Dev: true,
-		Ssh: sshfacts,
+		Dev:         true,
+		Ssh:         sshfacts,
 	}
 	ssh, err := NewSSHBuilder(bshr, werkerFacts)
 	if err != nil {
@@ -51,10 +51,10 @@ func createSSHBuilderNoInit(t *testing.T,  sshPort int, prefixdir string) (conte
 
 func SetupSSHBuilderNoTempl(t *testing.T, sshPort int, testHash string, prefixdir string) (ctx context.Context, sh *SSH, dockerClean func()) {
 	ctx, ssh, cleanup := createSSHBuilderNoInit(t, sshPort, prefixdir)
-	logt := make(chan[]byte)
+	logt := make(chan []byte)
 	done := make(chan bool)
 	var out string
-	go func(){
+	go func() {
 		for i := range logt {
 			out += string(i) + "\n"
 		}
@@ -62,7 +62,7 @@ func SetupSSHBuilderNoTempl(t *testing.T, sshPort int, testHash string, prefixdi
 	}()
 	res := ssh.Init(ctx, testHash, logt)
 	close(logt)
-	<- done
+	<-done
 	//defer ssh.Close()
 	if res.Status != pb.StageResultVal_PASS {
 		t.Log(out)
@@ -99,20 +99,20 @@ func SetupSSHBuilder(t *testing.T, sshPort int, servicePort string) (bldr build.
 	dir = filepath.Dir(filename)
 	path := filepath.Join(dir, "test-fixtures")
 	sshfacts := &models.SSHFacts{
-		User: "root",
-		Host: "localhost",
-		Port: sshPort,
+		User:  "root",
+		Host:  "localhost",
+		Port:  sshPort,
 		KeyFP: path + "/docker_id_rsa",
 	}
 
 	werkerFacts := &models.WerkerFacts{
-		Uuid: uuid.New(),
-		WerkerType: models.SSH,
-		LoopbackIp: "docker.for.mac.localhost",
-		RegisterIP: "docker.for.mac.localhost",
+		Uuid:        uuid.New(),
+		WerkerType:  models.SSH,
+		LoopbackIp:  "docker.for.mac.localhost",
+		RegisterIP:  "docker.for.mac.localhost",
 		ServicePort: servicePort,
-		Dev: true,
-		Ssh: sshfacts,
+		Dev:         true,
+		Ssh:         sshfacts,
 	}
 	ssh, err := NewSSHBuilder(bshr, werkerFacts)
 	if err != nil {

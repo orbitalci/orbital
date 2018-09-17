@@ -62,7 +62,6 @@ Error: yaml: unmarshal errors:
 	}
 }
 
-
 func TestCmd_RunPathFileName(t *testing.T) {
 	ui := cli.NewMockUi()
 	pwd, _ := os.Getwd()
@@ -144,7 +143,7 @@ func TestCmd_Run_fromCurrentDirectory(t *testing.T) {
 	os.Chdir(filepath.Join("test-fixtures", "valid"))
 	var args []string
 	if exit := cmdd.Run(args); exit != 0 {
-		t.Error("should exit with 0: " , exit)
+		t.Error("should exit with 0: ", exit)
 	}
 	t.Log(string(ui.OutputWriter.Bytes()))
 	t.Log(string(ui.ErrorWriter.Bytes()))
@@ -155,7 +154,7 @@ func TestCmd_Run_fromCurrentDirectory_notFound(t *testing.T) {
 	cmdd := New(ui)
 	var args []string
 	if exit := cmdd.Run(args); exit != 1 {
-		t.Error("should exit with 1: " , exit)
+		t.Error("should exit with 1: ", exit)
 	}
 	errorStr := string(ui.ErrorWriter.Bytes())
 	expected := "Could not find ocelot.yml in current directory. Please pass ocelot.yml location as an argument.\n"

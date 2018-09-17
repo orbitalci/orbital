@@ -13,7 +13,6 @@ type SSHCleaner struct {
 	*models.SSHFacts
 }
 
-
 func (d *SSHCleaner) Cleanup(ctx context.Context, id string, logout chan []byte) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -29,7 +28,7 @@ func (d *SSHCleaner) Cleanup(ctx context.Context, id string, logout chan []byte)
 	if logout != nil {
 		logout <- []byte("removing build directory " + cloneDir)
 	}
-	err = ssh.RunAndLog("rm -rf " + cloneDir, []string{}, logout, sshhelper.BasicPipeHandler)
+	err = ssh.RunAndLog("rm -rf "+cloneDir, []string{}, logout, sshhelper.BasicPipeHandler)
 	if err != nil {
 		failedCleaning.WithLabelValues("ssh").Inc()
 		if logout != nil {

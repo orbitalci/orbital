@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ocelog "github.com/shankj3/go-til/log"
@@ -13,7 +14,6 @@ import (
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
-	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 )
 

@@ -26,10 +26,10 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI      cli.Ui
-	flags   *flag.FlagSet
-	config  *commandhelper.ClientConfig
-	renderTag bool
+	UI           cli.Ui
+	flags        *flag.FlagSet
+	config       *commandhelper.ClientConfig
+	renderTag    bool
 	renderNotify bool
 }
 
@@ -89,7 +89,6 @@ func (c *cmd) Run(args []string) int {
 	c.UI.Info("Successfully rendered an ocelot.yml file in the current directory" + dir)
 	return 0
 }
-
 
 func (c *cmd) Synopsis() string {
 	return synopsis

@@ -10,14 +10,14 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-var badConfigTests = []struct{
-	name string
-	badConf *pb.BuildConfig
+var badConfigTests = []struct {
+	name           string
+	badConf        *pb.BuildConfig
 	expectedErrMsg string
 }{
 	{
 		name: "no image or tag",
-		badConf:&pb.BuildConfig{
+		badConf: &pb.BuildConfig{
 			//Image:     "busybox:latest",
 			//MachineTag: "hi",
 			BuildTool: "maven",
@@ -31,25 +31,25 @@ var badConfigTests = []struct{
 	{
 		name: "image and tag",
 		badConf: &pb.BuildConfig{
-			Image:     "busybox:latest",
+			Image:      "busybox:latest",
 			MachineTag: "hi",
-			BuildTool: "maven",
-			Packages:  []string{},
-			Branches:  []string{"ALL"},
-			Env:       []string{},
-			Stages:    []*pb.Stage{{Name: "one"}, {Name: "build"}},
+			BuildTool:  "maven",
+			Packages:   []string{},
+			Branches:   []string{"ALL"},
+			Env:        []string{},
+			Stages:     []*pb.Stage{{Name: "one"}, {Name: "build"}},
 		},
 		expectedErrMsg: "you cannot have both image and machineTag. they are mutually exclusive",
 	},
 	{
 		name: "no build tool",
 		badConf: &pb.BuildConfig{
-			Image:     "busybox:latest",
+			Image: "busybox:latest",
 			//BuildTool: "maven",
-			Packages:  []string{},
-			Branches:  []string{"ALL"},
-			Env:       []string{},
-			Stages:    []*pb.Stage{{Name: "one"}, {Name: "boop!"}},
+			Packages: []string{},
+			Branches: []string{"ALL"},
+			Env:      []string{},
+			Stages:   []*pb.Stage{{Name: "one"}, {Name: "boop!"}},
 		},
 		expectedErrMsg: "BuildTool must be specified",
 	},
@@ -111,11 +111,11 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 	}
 	goodconfig2 := &pb.BuildConfig{
 		MachineTag: "ay",
-		BuildTool: "maven",
-		Packages:  []string{},
-		Branches:  []string{"ALL"},
-		Env:       []string{},
-		Stages:    []*pb.Stage{{Name: "one"}, {Name: "build"}},
+		BuildTool:  "maven",
+		Packages:   []string{},
+		Branches:   []string{"ALL"},
+		Env:        []string{},
+		Stages:     []*pb.Stage{{Name: "one"}, {Name: "build"}},
 	}
 	valid8r := GetOcelotValidator()
 	err := valid8r.ValidateConfig(goodconfig, nil)
@@ -173,12 +173,12 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 func TestValidateBranchAgainstConf(t *testing.T) {
 	ocyv := &OcelotValidator{}
 	buildConf := &pb.BuildConfig{
-			Image: "busybox:latest",
-			BuildTool: "w/e",
-			Branches: []string{"rc_.*"},
-			Stages: []*pb.Stage{
-				{Name: "hi", Script: []string{"echo sup"}},
-			},
+		Image:     "busybox:latest",
+		BuildTool: "w/e",
+		Branches:  []string{"rc_.*"},
+		Stages: []*pb.Stage{
+			{Name: "hi", Script: []string{"echo sup"}},
+		},
 	}
 	err := ocyv.ValidateBranchAgainstConf(buildConf, "rc_1234")
 	if err != nil {
@@ -195,7 +195,6 @@ func TestValidateBranchAgainstConf(t *testing.T) {
 	}
 }
 
-
 func TestOcelotValidator_ValidateViability(t *testing.T) {
 	valid8r := GetOcelotValidator()
 	if err := valid8r.ValidateViability("branch", []string{"bra.*h", "banana"}, []*pb.Commit{}, false); err != nil {
@@ -208,7 +207,7 @@ func TestOcelotValidator_ValidateViability(t *testing.T) {
 	}
 
 	expectedErr := "build will not be queued because one of [skip ci] | [ci skip] was found in the commit with hash abcd. the full commit message is its time to be skipped [ci skip]"
-	if err := valid8r.ValidateViability("branch", []string{"branch"}, []*pb.Commit{{Message: "its time to be skipped [ci skip]", Hash:"abcd"}}, false); err == nil {
+	if err := valid8r.ValidateViability("branch", []string{"branch"}, []*pb.Commit{{Message: "its time to be skipped [ci skip]", Hash: "abcd"}}, false); err == nil {
 		t.Error("should have failed commit validation - msg has [ci skip]")
 	} else if err.Error() != expectedErr {
 		t.Error(test.StrFormatErrors("error message", expectedErr, err.Error()))

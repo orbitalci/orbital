@@ -33,17 +33,17 @@ func TestMinioConf_GenerateIntegrationString(t *testing.T) {
 	minio := Create()
 	credz := []pb.OcyCredder{
 		&pb.RepoCreds{
-			SubType: pb.SubCredType_MINIO,
-			RepoUrl: "https://minio.go",
-			Password: "ksdjlfaklsdfj",
-			Username: ";lsakdfjak",
+			SubType:    pb.SubCredType_MINIO,
+			RepoUrl:    "https://minio.go",
+			Password:   "ksdjlfaklsdfj",
+			Username:   ";lsakdfjak",
 			Identifier: "mypurtyminio",
 		},
 		&pb.RepoCreds{
-			SubType: pb.SubCredType_MINIO,
-			RepoUrl: "https://minio.gorgeous",
-			Password: "thisisasecretkey",
-			Username: "thisisaaccesskey",
+			SubType:    pb.SubCredType_MINIO,
+			RepoUrl:    "https://minio.gorgeous",
+			Password:   "thisisasecretkey",
+			Username:   "thisisaaccesskey",
 			Identifier: "theminiobaaaaby",
 		},
 	}
@@ -57,7 +57,7 @@ func TestMinioConf_GenerateIntegrationString(t *testing.T) {
 		t.Error(err)
 	}
 
-	bitz, err  := common.Base64ToBitz(string(generatedString))
+	bitz, err := common.Base64ToBitz(string(generatedString))
 	if err != nil {
 		t.Error(err)
 	}

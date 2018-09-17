@@ -19,7 +19,7 @@ import (
 func TestGuideOcelotServer_GetVCSCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
 	ctx := context.Background()
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	wrap, err := gos.GetVCSCreds(ctx, nil)
 	if err != nil {
 		t.Error(err)
@@ -62,18 +62,17 @@ func TestGuideOcelotServer_GetVCSCreds(t *testing.T) {
 
 }
 
-
 func TestGuideOcelotServer_SetVCSCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
 	ctx := context.Background()
-	gos := &guideOcelotServer{RemoteConfig:rc, AdminValidator: & credentials.AdminValidator{}}
+	gos := &guideOcelotServer{RemoteConfig: rc, AdminValidator: &credentials.AdminValidator{}}
 	cred := &pb.VCSCreds{
-		SubType: pb.SubCredType_BITBUCKET,
-		ClientId: "hi",
+		SubType:      pb.SubCredType_BITBUCKET,
+		ClientId:     "hi",
 		ClientSecret: "secret",
-		AcctName: "shankj3",
-		Identifier: "identifier",
-		TokenURL: "http://adsfadsfasdfasdfadsfasdfasdfadsfasdfasdfasdfasdfasdf.com",
+		AcctName:     "shankj3",
+		Identifier:   "identifier",
+		TokenURL:     "http://adsfadsfasdfasdfadsfasdfasdfadsfasdfasdfasdfasdfasdf.com",
 	}
 	// even tho the url is bunk, it last calls the remoteconfig which we can control
 	_, err := gos.SetVCSCreds(ctx, cred)
@@ -108,13 +107,13 @@ func TestGuideOcelotServer_SetVCSCreds(t *testing.T) {
 func TestGuideOcelotServer_GetVCSCred(t *testing.T) {
 	rc := &vcsRemoteConf{}
 	ctx := context.Background()
-	gos := &guideOcelotServer{RemoteConfig:rc}
-	_, err := gos.GetVCSCred(ctx, &pb.VCSCreds{ClientId:"xxxx", Identifier:"id", AcctName:"account", SubType: pb.SubCredType_BITBUCKET})
+	gos := &guideOcelotServer{RemoteConfig: rc}
+	_, err := gos.GetVCSCred(ctx, &pb.VCSCreds{ClientId: "xxxx", Identifier: "id", AcctName: "account", SubType: pb.SubCredType_BITBUCKET})
 	if err != nil {
 		t.Error(err)
 	}
 	rc.returnWrong = true
-	_, err = gos.GetVCSCred(ctx, &pb.VCSCreds{ClientId:"xxxx", Identifier:"id", AcctName:"account", SubType: pb.SubCredType_BITBUCKET})
+	_, err = gos.GetVCSCred(ctx, &pb.VCSCreds{ClientId: "xxxx", Identifier: "id", AcctName: "account", SubType: pb.SubCredType_BITBUCKET})
 	if err == nil {
 		t.Error("returned wrong struct, should fail")
 	}
@@ -122,9 +121,9 @@ func TestGuideOcelotServer_GetVCSCred(t *testing.T) {
 
 func TestGuideOcelotServer_getAnyCred(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	rc.notFound = true
-	_, err := gos.getAnyCred(&pb.VCSCreds{AcctName:"hi", Identifier:"123", SubType:pb.SubCredType_BITBUCKET})
+	_, err := gos.getAnyCred(&pb.VCSCreds{AcctName: "hi", Identifier: "123", SubType: pb.SubCredType_BITBUCKET})
 	if err == nil {
 		t.Error("remote config returned a not found, this shoudl fail")
 	}
@@ -136,12 +135,12 @@ func TestGuideOcelotServer_getAnyCred(t *testing.T) {
 	if statErr.Code() != codes.NotFound {
 		t.Error("should return grpc code of not found if remoteconfig returns a NotFound errror")
 	}
-	if statErr.Message() !=  "Credential hi/123 of Type BITBUCKET Not Found" {
+	if statErr.Message() != "Credential hi/123 of Type BITBUCKET Not Found" {
 		t.Error("should return not found message, got: " + statErr.Message())
 	}
 	rc.notFound = false
 	rc.validationErr = true
-	_, err = gos.getAnyCred(&pb.VCSCreds{AcctName:"hi", Identifier:"123", SubType:pb.SubCredType_BITBUCKET})
+	_, err = gos.getAnyCred(&pb.VCSCreds{AcctName: "hi", Identifier: "123", SubType: pb.SubCredType_BITBUCKET})
 	if err == nil {
 		t.Error("remote config returned a validation error, this shoudl fail")
 	}
@@ -155,7 +154,7 @@ func TestGuideOcelotServer_getAnyCred(t *testing.T) {
 	}
 	rc.validationErr = false
 	rc.returnErr = true
-	_, err = gos.getAnyCred(&pb.VCSCreds{AcctName:"hi", Identifier:"123", SubType:pb.SubCredType_BITBUCKET})
+	_, err = gos.getAnyCred(&pb.VCSCreds{AcctName: "hi", Identifier: "123", SubType: pb.SubCredType_BITBUCKET})
 	if err == nil {
 		t.Error("remote config returned a validation error, this shoudl fail")
 	}
@@ -168,7 +167,7 @@ func TestGuideOcelotServer_getAnyCred(t *testing.T) {
 		t.Error("remote config returned an unhandled error, server should return unavailable")
 	}
 	rc.returnErr = false
-	_, err = gos.getAnyCred(&pb.VCSCreds{AcctName:"hi", Identifier:"123", SubType:pb.SubCredType_BITBUCKET})
+	_, err = gos.getAnyCred(&pb.VCSCreds{AcctName: "hi", Identifier: "123", SubType: pb.SubCredType_BITBUCKET})
 	if err != nil {
 		t.Error("remote config is playing nice, this should just work. instead error is: " + err.Error())
 	}
@@ -177,7 +176,7 @@ func TestGuideOcelotServer_getAnyCred(t *testing.T) {
 
 func TestGuideOcelotServer_updateAnyCred(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	var err error
 	ctx := context.Background()
 	cred := &pb.VCSCreds{}
@@ -214,8 +213,8 @@ func TestGuideOcelotServer_updateAnyCred(t *testing.T) {
 
 func TestGuideOcelotServer_UpdateVCSCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
-	cred := &pb.VCSCreds{AcctName:"shankj3", SubType:pb.SubCredType_BITBUCKET}
+	gos := &guideOcelotServer{RemoteConfig: rc}
+	cred := &pb.VCSCreds{AcctName: "shankj3", SubType: pb.SubCredType_BITBUCKET}
 	if _, err := gos.UpdateVCSCreds(context.Background(), cred); err != nil {
 		t.Error("remoteconf is playing nice, this hsould not fail")
 	}
@@ -227,7 +226,7 @@ func TestGuideOcelotServer_UpdateVCSCreds(t *testing.T) {
 func TestGuideOcelotServer_checkAnyCredExists(t *testing.T) {
 	rc := &vcsRemoteConf{}
 	stor := &store{}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	exists, err := gos.checkAnyCredExists(context.Background(), &pb.VCSCreds{})
 	if err != nil {
 		t.Error("should not return an error, as storage is reachable")
@@ -251,11 +250,10 @@ func TestGuideOcelotServer_checkAnyCredExists(t *testing.T) {
 	}
 }
 
-
 func TestGuideOcelotServer_VCSCredExists(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	exists, err := gos.VCSCredExists(context.Background(), &pb.VCSCreds{})
 	if err != nil {
 		t.Error("should pass")
@@ -267,7 +265,7 @@ func TestGuideOcelotServer_VCSCredExists(t *testing.T) {
 
 func TestGuideOcelotServer_GetRepoCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	rc.notFound = true
 	_, err := gos.GetRepoCreds(context.Background(), nil)
 	if err == nil {
@@ -297,19 +295,19 @@ func TestGuideOcelotServer_GetRepoCreds(t *testing.T) {
 
 func TestGuideOcelotServer_GetRepoCred(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
-	_, err := gos.GetRepoCred(context.Background(), &pb.RepoCreds{Identifier:"id", AcctName:"shankj3", SubType:pb.SubCredType_NEXUS})
+	gos := &guideOcelotServer{RemoteConfig: rc}
+	_, err := gos.GetRepoCred(context.Background(), &pb.RepoCreds{Identifier: "id", AcctName: "shankj3", SubType: pb.SubCredType_NEXUS})
 	if err != nil {
 		t.Error("should succeed, err: " + err.Error())
 	}
 	rc.returnErr = true
-	_, err = gos.GetRepoCred(context.Background(), &pb.RepoCreds{Identifier:"id", AcctName:"shankj3", SubType:pb.SubCredType_NEXUS})
+	_, err = gos.GetRepoCred(context.Background(), &pb.RepoCreds{Identifier: "id", AcctName: "shankj3", SubType: pb.SubCredType_NEXUS})
 	if err == nil {
 		t.Error("remote conf returned an error, this should bubble up")
 	}
 	rc.returnErr = false
 	rc.returnWrong = true
-	_, err = gos.GetRepoCred(context.Background(), &pb.RepoCreds{Identifier:"id", AcctName:"shankj3", SubType:pb.SubCredType_NEXUS})
+	_, err = gos.GetRepoCred(context.Background(), &pb.RepoCreds{Identifier: "id", AcctName: "shankj3", SubType: pb.SubCredType_NEXUS})
 	if err == nil {
 		t.Error("returned wrong struct, should fail")
 	}
@@ -317,14 +315,14 @@ func TestGuideOcelotServer_GetRepoCred(t *testing.T) {
 
 func TestGuideOcelotServer_SetRepoCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	creds := &pb.RepoCreds{
-		Username: "user",
-		Password: "password",
-		RepoUrl: "http://repo.url",
-		AcctName: "shankj3",
+		Username:   "user",
+		Password:   "password",
+		RepoUrl:    "http://repo.url",
+		AcctName:   "shankj3",
 		Identifier: "id!me",
-		SubType: pb.SubCredType_DOCKER,
+		SubType:    pb.SubCredType_DOCKER,
 	}
 	ctx := context.Background()
 	_, err := gos.SetRepoCreds(ctx, creds)
@@ -375,7 +373,7 @@ func TestGuideOcelotServer_SetRepoCreds(t *testing.T) {
 func TestGuideOcelotServer_UpdateRepoCreds(t *testing.T) {
 	// this is tested heavily in updateAnyCred
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	_, err := gos.UpdateRepoCreds(context.Background(), &pb.RepoCreds{})
 	if err != nil {
 		t.Error(err)
@@ -384,8 +382,8 @@ func TestGuideOcelotServer_UpdateRepoCreds(t *testing.T) {
 
 func TestGuideOcelotServer_RepoCredExists(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	exists, err := gos.RepoCredExists(context.Background(), &pb.RepoCreds{})
 	if err != nil {
 		t.Error(err)
@@ -397,12 +395,12 @@ func TestGuideOcelotServer_RepoCredExists(t *testing.T) {
 
 func TestGuideOcelotServer_SetK8SCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	creds := &pb.K8SCreds{
-		K8SContents:"hi",
-		AcctName:"hi",
-		Identifier:"hi",
-		SubType: pb.SubCredType_KUBECONF,
+		K8SContents: "hi",
+		AcctName:    "hi",
+		Identifier:  "hi",
+		SubType:     pb.SubCredType_KUBECONF,
 	}
 	ctx := context.Background()
 	_, err := gos.SetK8SCreds(ctx, creds)
@@ -417,7 +415,7 @@ func TestGuideOcelotServer_SetK8SCreds(t *testing.T) {
 	rc.validationErr = false
 	creds.SubType = pb.SubCredType_DOCKER
 	_, err = gos.SetK8SCreds(ctx, creds)
-	if err  == nil {
+	if err == nil {
 		t.Error("not the right subtype, shoud fail")
 	}
 	creds.SubType = pb.SubCredType_KUBECONF
@@ -430,7 +428,7 @@ func TestGuideOcelotServer_SetK8SCreds(t *testing.T) {
 
 func TestGuideOcelotServer_GetK8SCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	ctx := context.Background()
 	creds, err := gos.GetK8SCreds(ctx, nil)
 	if err != nil {
@@ -467,9 +465,9 @@ func TestGuideOcelotServer_GetK8SCreds(t *testing.T) {
 }
 
 func TestGuideOcelotServer_getK8sCred(t *testing.T) {
-	cred := &pb.K8SCreds{AcctName:"shankj3", Identifier: "hi", SubType: pb.SubCredType_KUBECONF}
+	cred := &pb.K8SCreds{AcctName: "shankj3", Identifier: "hi", SubType: pb.SubCredType_KUBECONF}
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	ctx := context.Background()
 	cred, err := gos.GetK8SCred(ctx, cred)
 	if err != nil {
@@ -488,24 +486,21 @@ func TestGuideOcelotServer_getK8sCred(t *testing.T) {
 	}
 }
 
-
 func TestGuideOcelotServer_updateK8sCreds(t *testing.T) {
 	// this is tested heavily in updateAnyCred
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc,}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	_, err := gos.UpdateK8SCreds(context.Background(), &pb.K8SCreds{})
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-
-
 func TestGuideOcelotServer_K8SCredExists(t *testing.T) {
 	// this is tested heavily in checkAnyCredExists
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	exists, err := gos.K8SCredExists(context.Background(), &pb.K8SCreds{})
 	if err != nil {
 		t.Error(err)
@@ -517,8 +512,8 @@ func TestGuideOcelotServer_K8SCredExists(t *testing.T) {
 
 func TestGuideOcelotServer_GetAllCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	all, err := gos.GetAllCreds(context.Background(), nil)
 	if err != nil {
 		t.Error(err)
@@ -533,11 +528,11 @@ func TestGuideOcelotServer_GetAllCreds(t *testing.T) {
 
 func TestGuideOcelotServer_SetVCSPrivateKey(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	cred := &pb.SSHKeyWrapper{
-		AcctName: "shankj3",
+		AcctName:   "shankj3",
 		Identifier: "kubeconf",
-		SubType: pb.SubCredType_BITBUCKET,
+		SubType:    pb.SubCredType_BITBUCKET,
 		PrivateKey: []byte("so priv much secret"),
 	}
 	ctx := context.Background()
@@ -558,11 +553,10 @@ func TestGuideOcelotServer_SetVCSPrivateKey(t *testing.T) {
 	}
 }
 
-
 func TestGuideOcelotServer_UpdateSSHCreds(t *testing.T) {
 	// this is tested heavily in updateAnyCred
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	_, err := gos.UpdateSSHCreds(context.Background(), &pb.SSHKeyWrapper{})
 	if err != nil {
 		t.Error(err)
@@ -572,8 +566,8 @@ func TestGuideOcelotServer_UpdateSSHCreds(t *testing.T) {
 func TestGuideOcelotServer_SSHCredExists(t *testing.T) {
 	// tested heavily in checkAnyCredExists
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	exists, err := gos.SSHCredExists(context.Background(), &pb.SSHKeyWrapper{})
 	if err != nil {
 		t.Error("should pass")
@@ -585,11 +579,11 @@ func TestGuideOcelotServer_SSHCredExists(t *testing.T) {
 
 func TestGuideOcelotServer_SetSSHCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	creds := &pb.SSHKeyWrapper{
-		AcctName:"hi",
-		Identifier:"hi",
-		SubType: pb.SubCredType_SSHKEY,
+		AcctName:   "hi",
+		Identifier: "hi",
+		SubType:    pb.SubCredType_SSHKEY,
 		PrivateKey: []byte("much priv"),
 	}
 	ctx := context.Background()
@@ -605,7 +599,7 @@ func TestGuideOcelotServer_SetSSHCreds(t *testing.T) {
 	rc.validationErr = false
 	creds.SubType = pb.SubCredType_DOCKER
 	_, err = gos.SetSSHCreds(ctx, creds)
-	if err  == nil {
+	if err == nil {
 		t.Error("not the right subtype, shoud fail")
 	}
 	creds.SubType = pb.SubCredType_SSHKEY
@@ -618,7 +612,7 @@ func TestGuideOcelotServer_SetSSHCreds(t *testing.T) {
 
 func TestGuideOcelotServer_GetSSHCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	ctx := context.Background()
 	creds, err := gos.GetSSHCreds(ctx, nil)
 	if err != nil {
@@ -655,9 +649,9 @@ func TestGuideOcelotServer_GetSSHCreds(t *testing.T) {
 }
 
 func TestGuideOcelotServer_GetSSHCred(t *testing.T) {
-	cred := &pb.SSHKeyWrapper{AcctName:"shankj3", Identifier: "hi", SubType: pb.SubCredType_SSHKEY}
+	cred := &pb.SSHKeyWrapper{AcctName: "shankj3", Identifier: "hi", SubType: pb.SubCredType_SSHKEY}
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	ctx := context.Background()
 	cred, err := gos.GetSSHCred(ctx, cred)
 	if err != nil {
@@ -692,14 +686,14 @@ func TestGuideOcelotServer_appleNastiness(t *testing.T) {
 func TestGuideOcelotServer_SetAppleCreds(t *testing.T) {
 	zipdata, pw := ioshelper.GetZipAndPw(t)
 	creds := &pb.AppleCreds{
-		AcctName: "shankj3",
-		Identifier: "apple prof",
-		AppleSecrets: zipdata,
+		AcctName:             "shankj3",
+		Identifier:           "apple prof",
+		AppleSecrets:         zipdata,
 		AppleSecretsPassword: pw,
-		SubType: pb.SubCredType_DEVPROFILE,
+		SubType:              pb.SubCredType_DEVPROFILE,
 	}
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	ctx := context.Background()
 	_, err := gos.SetAppleCreds(ctx, creds)
 	if err != nil {
@@ -737,7 +731,7 @@ func TestGuideOcelotServer_SetAppleCreds(t *testing.T) {
 
 func TestGuideOcelotServer_GetAppleCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	ctx := context.Background()
 	creds, err := gos.GetAppleCreds(ctx, nil)
 	if err != nil {
@@ -788,9 +782,9 @@ func TestGuideOcelotServer_GetAppleCreds(t *testing.T) {
 
 func TestGuideOcelotServer_GetAppleCred(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc, RepoValidator: credentials.GetRepoValidator()}
+	gos := &guideOcelotServer{RemoteConfig: rc, RepoValidator: credentials.GetRepoValidator()}
 	ctx := context.Background()
-	_, err := gos.GetAppleCred(ctx, &pb.AppleCreds{AcctName:"ay", Identifier:"id"})
+	_, err := gos.GetAppleCred(ctx, &pb.AppleCreds{AcctName: "ay", Identifier: "id"})
 	if err == nil {
 		t.Error("subtype is not given, this request should return an error")
 	}
@@ -799,7 +793,7 @@ func TestGuideOcelotServer_GetAppleCred(t *testing.T) {
 		t.Error(test.StrFormatErrors("err msg", msg, err.Error()))
 	}
 	rc.returnWrong = true
-	_, err = gos.GetAppleCred(ctx, &pb.AppleCreds{AcctName:"ay", Identifier:"id", SubType:pb.SubCredType_DEVPROFILE})
+	_, err = gos.GetAppleCred(ctx, &pb.AppleCreds{AcctName: "ay", Identifier: "id", SubType: pb.SubCredType_DEVPROFILE})
 	if err == nil {
 		t.Error("returned wrong cred, shoudl fail")
 	}
@@ -809,14 +803,14 @@ func TestGuideOcelotServer_GetAppleCred(t *testing.T) {
 func TestGuideOcelotServer_UpdateAppleCreds(t *testing.T) {
 	zipdata, pw := ioshelper.GetZipAndPw(t)
 	creds := &pb.AppleCreds{
-		AcctName: "shankj3",
-		Identifier: "apple prof",
-		AppleSecrets: zipdata,
+		AcctName:             "shankj3",
+		Identifier:           "apple prof",
+		AppleSecrets:         zipdata,
 		AppleSecretsPassword: pw,
-		SubType: pb.SubCredType_DEVPROFILE,
+		SubType:              pb.SubCredType_DEVPROFILE,
 	}
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	ctx := context.Background()
 	_, err := gos.UpdateAppleCreds(ctx, creds)
 	if err != nil {
@@ -831,8 +825,8 @@ func TestGuideOcelotServer_UpdateAppleCreds(t *testing.T) {
 
 func TestGuideOcelotServer_AppleCredExists(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	exists, err := gos.AppleCredExists(context.Background(), &pb.AppleCreds{})
 	if err != nil {
 		t.Error("should pass")
@@ -844,13 +838,13 @@ func TestGuideOcelotServer_AppleCredExists(t *testing.T) {
 
 func TestGuideOcelotServer_SetNotifyCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	cred := &pb.NotifyCreds{
-		AcctName:"shankj3",
-		SubType:pb.SubCredType_SLACK,
+		AcctName:     "shankj3",
+		SubType:      pb.SubCredType_SLACK,
 		ClientSecret: "http://seceret.post",
-		Identifier: "derp",
+		Identifier:   "derp",
 	}
 	ctx := context.Background()
 	_, err := gos.SetNotifyCreds(ctx, cred)
@@ -880,8 +874,8 @@ func TestGuideOcelotServer_SetNotifyCreds(t *testing.T) {
 func TestGuideOcelotServer_NotifyCredExists(t *testing.T) {
 	// tested extensively in checkAnyCredExists
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	exists, err := gos.NotifyCredExists(context.Background(), &pb.NotifyCreds{})
 	if err != nil {
 		t.Error("should pass")
@@ -894,7 +888,7 @@ func TestGuideOcelotServer_NotifyCredExists(t *testing.T) {
 func TestGuideOcelotServer_UpdateNotifyCreds(t *testing.T) {
 	// tested extensively in updateAnyCred
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	ctx := context.Background()
 	_, err := gos.UpdateNotifyCreds(ctx, &pb.NotifyCreds{})
 	if err != nil {
@@ -904,12 +898,12 @@ func TestGuideOcelotServer_UpdateNotifyCreds(t *testing.T) {
 
 func TestGuideOcelotServer_GetNotifyCred(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	cred := &pb.NotifyCreds{
 		Identifier: "slackky",
-		SubType:pb.SubCredType_SLACK,
-		AcctName: "accountname",
+		SubType:    pb.SubCredType_SLACK,
+		AcctName:   "accountname",
 	}
 	ctx := context.Background()
 	_, err := gos.GetNotifyCred(ctx, cred)
@@ -931,8 +925,8 @@ func TestGuideOcelotServer_GetNotifyCred(t *testing.T) {
 
 func TestGuideOcelotServer_GetNotifyCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	ctx := context.Background()
 	creds, err := gos.GetNotifyCreds(ctx, nil)
 	if err != nil {
@@ -962,13 +956,13 @@ func TestGuideOcelotServer_GetNotifyCreds(t *testing.T) {
 
 func TestGuideOcelotServer_SetGenericCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	cred := &pb.GenericCreds{
-		AcctName:"shankj3",
-		SubType: pb.SubCredType_ENV,
+		AcctName:     "shankj3",
+		SubType:      pb.SubCredType_ENV,
 		ClientSecret: "http://seceret.post",
-		Identifier: "derp",
+		Identifier:   "derp",
 	}
 	ctx := context.Background()
 	_, err := gos.SetGenericCreds(ctx, cred)
@@ -995,11 +989,10 @@ func TestGuideOcelotServer_SetGenericCreds(t *testing.T) {
 	}
 }
 
-
 func TestGuideOcelotServer_GetGenericCreds(t *testing.T) {
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	ctx := context.Background()
 	creds, err := gos.GetGenericCreds(ctx, nil)
 	if err != nil {
@@ -1027,12 +1020,11 @@ func TestGuideOcelotServer_GetGenericCreds(t *testing.T) {
 	}
 }
 
-
 func TestGuideOcelotServer_GenericCredExists(t *testing.T) {
 	// tested extensively in checkAnyCredExists
 	rc := &vcsRemoteConf{}
-	stor := &store{exists:true}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage:stor}
+	stor := &store{exists: true}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: stor}
 	exists, err := gos.GenericCredExists(context.Background(), &pb.GenericCreds{})
 	if err != nil {
 		t.Error("should pass")
@@ -1042,17 +1034,16 @@ func TestGuideOcelotServer_GenericCredExists(t *testing.T) {
 	}
 }
 
-
 func TestGuideOcelotServer_UpdateGenericCreds(t *testing.T) {
 	// tested extensively in updateAnyCred
 	cred := &pb.GenericCreds{
-		AcctName:"shankj3",
-		SubType: pb.SubCredType_ENV,
+		AcctName:     "shankj3",
+		SubType:      pb.SubCredType_ENV,
 		ClientSecret: "http://seceret.post",
-		Identifier: "derp",
+		Identifier:   "derp",
 	}
 	rc := &vcsRemoteConf{}
-	gos := &guideOcelotServer{RemoteConfig:rc}
+	gos := &guideOcelotServer{RemoteConfig: rc}
 	ctx := context.Background()
 
 	_, err := gos.UpdateGenericCreds(ctx, cred)
@@ -1070,9 +1061,9 @@ func TestGuideOcelotServer_deleteAnyCred(t *testing.T) {
 	// test fields are correct
 	tooFew := &pb.VCSCreds{
 		Identifier: "huzzah",
-		AcctName: "1",
+		AcctName:   "1",
 	}
-	gos := &guideOcelotServer{RemoteConfig:rc, Storage: store}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: store}
 	_, err := gos.deleteAnyCred(ctx, tooFew, pb.CredType_VCS)
 	if err == nil {
 		t.Error("should error as there is no subtype and vcs has more than one subtype")
@@ -1082,10 +1073,10 @@ func TestGuideOcelotServer_deleteAnyCred(t *testing.T) {
 	}
 	// cred not found
 	justRight := &pb.GenericCreds{
-		Identifier: "id",
-		AcctName: "2",
+		Identifier:   "id",
+		AcctName:     "2",
 		ClientSecret: "1",
-		SubType: pb.SubCredType_ENV,
+		SubType:      pb.SubCredType_ENV,
 	}
 	store.EXPECT().CredExists(justRight).Return(false, nil).Times(1)
 	_, err = gos.deleteAnyCred(ctx, justRight, pb.CredType_GENERIC)
@@ -1115,9 +1106,9 @@ func TestGuideOcelotServer_deleteAnyCred(t *testing.T) {
 		t.Error("expected passed along message from deletecred failure, got " + stat.Message())
 	}
 	// now check to make sure that detecting subtype is alright
-	justRightNoST :=  &pb.GenericCreds{
-		Identifier: "id",
-		AcctName: "2",
+	justRightNoST := &pb.GenericCreds{
+		Identifier:   "id",
+		AcctName:     "2",
 		ClientSecret: "1",
 	}
 
@@ -1130,65 +1121,64 @@ func TestGuideOcelotServer_deleteAnyCred(t *testing.T) {
 
 type vcsRemoteConf struct {
 	credentials.CVRemoteConfig
-	sshExists bool
-	empty bool
-	notFound bool
-	returnErr bool
+	sshExists     bool
+	empty         bool
+	notFound      bool
+	returnErr     bool
 	validationErr bool
-	returnWrong bool
-	updated []pb.OcyCredder
+	returnWrong   bool
+	updated       []pb.OcyCredder
 }
 
-
 var vcsCred = &pb.VCSCreds{
-	ClientId: "1",
+	ClientId:     "1",
 	ClientSecret: "2",
-	Identifier: "sec",
-	TokenURL: "http://token.url",
-	SubType: pb.SubCredType_BITBUCKET,
-	AcctName: "shankj3",
+	Identifier:   "sec",
+	TokenURL:     "http://token.url",
+	SubType:      pb.SubCredType_BITBUCKET,
+	AcctName:     "shankj3",
 }
 
 var repoCred = &pb.RepoCreds{
-	AcctName: "shankj3",
-	Password: "password",
-	Username: "username",
+	AcctName:   "shankj3",
+	Password:   "password",
+	Username:   "username",
 	Identifier: "identitty",
-	SubType: pb.SubCredType_SSHKEY,
+	SubType:    pb.SubCredType_SSHKEY,
 }
 
 var k8sCred = &pb.K8SCreds{
-	AcctName:"shankj3",
-	Identifier:"k8s",
+	AcctName:    "shankj3",
+	Identifier:  "k8s",
 	K8SContents: "hummunuauauaua",
-	SubType: pb.SubCredType_KUBECONF,
+	SubType:     pb.SubCredType_KUBECONF,
 }
 
 var sshCred = &pb.SSHKeyWrapper{
-	AcctName: "shankj3",
-	Identifier:"ssh",
+	AcctName:   "shankj3",
+	Identifier: "ssh",
 	PrivateKey: []byte("priv key"),
-	SubType: pb.SubCredType_SSHKEY,
+	SubType:    pb.SubCredType_SSHKEY,
 }
 var appleCred = &pb.AppleCreds{
-	AcctName: "shankj3",
-	Identifier:"apple",
-	AppleSecrets: []byte("secretzip"),
+	AcctName:             "shankj3",
+	Identifier:           "apple",
+	AppleSecrets:         []byte("secretzip"),
 	AppleSecretsPassword: "pw",
-	SubType: pb.SubCredType_DEVPROFILE,
+	SubType:              pb.SubCredType_DEVPROFILE,
 }
 
 var notifycred = &pb.NotifyCreds{
-	AcctName:"shankj3",
-	Identifier: "notify",
-	SubType: pb.SubCredType_SLACK,
+	AcctName:     "shankj3",
+	Identifier:   "notify",
+	SubType:      pb.SubCredType_SLACK,
 	ClientSecret: "secretive.",
 }
 
 var genericCred = &pb.GenericCreds{
-	AcctName: "shankj3",
-	Identifier: "thisbemycreeeedence",
-	SubType: pb.SubCredType_ENV,
+	AcctName:     "shankj3",
+	Identifier:   "thisbemycreeeedence",
+	SubType:      pb.SubCredType_ENV,
 	ClientSecret: "secretsecret",
 }
 
@@ -1249,7 +1239,6 @@ func (r *vcsRemoteConf) UpdateCreds(store storage.CredTable, anyCred pb.OcyCredd
 	return nil
 }
 
-
 func (r *vcsRemoteConf) GetCred(store storage.CredTable, subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error) {
 	if r.returnErr {
 		return nil, errors.New("this is an error")
@@ -1269,37 +1258,37 @@ func (r *vcsRemoteConf) GetCred(store storage.CredTable, subCredType pb.SubCredT
 		if r.returnWrong {
 			return notifycred, nil
 		}
-		return &pb.VCSCreds{AcctName:accountName, Identifier:identifier, ClientSecret: "secret", ClientId: "xxxxx"}, nil
+		return &pb.VCSCreds{AcctName: accountName, Identifier: identifier, ClientSecret: "secret", ClientId: "xxxxx"}, nil
 	case pb.CredType_REPO:
 		if r.returnWrong {
 			return notifycred, nil
 		}
-		return &pb.RepoCreds{AcctName:accountName, Identifier:identifier, Password:"secret", Username:"username", RepoUrl: "http://repo.url"}, nil
+		return &pb.RepoCreds{AcctName: accountName, Identifier: identifier, Password: "secret", Username: "username", RepoUrl: "http://repo.url"}, nil
 	case pb.CredType_K8S:
 		if r.returnWrong {
 			return notifycred, nil
 		}
-		return &pb.K8SCreds{AcctName:accountName, Identifier:identifier, SubType:subCredType, K8SContents:"hi!"}, nil
+		return &pb.K8SCreds{AcctName: accountName, Identifier: identifier, SubType: subCredType, K8SContents: "hi!"}, nil
 	case pb.CredType_SSH:
 		if r.returnWrong {
 			return notifycred, nil
 		}
-		return &pb.SSHKeyWrapper{AcctName:accountName, Identifier:identifier, SubType:subCredType, PrivateKey:[]byte("hi")}, nil
+		return &pb.SSHKeyWrapper{AcctName: accountName, Identifier: identifier, SubType: subCredType, PrivateKey: []byte("hi")}, nil
 	case pb.CredType_APPLE:
 		if r.returnWrong {
 			return notifycred, nil
 		}
-		return &pb.AppleCreds{AcctName:accountName, Identifier:identifier, SubType:subCredType, AppleSecretsPassword:"pw", AppleSecrets: []byte("pw")}, nil
+		return &pb.AppleCreds{AcctName: accountName, Identifier: identifier, SubType: subCredType, AppleSecretsPassword: "pw", AppleSecrets: []byte("pw")}, nil
 	case pb.CredType_NOTIFIER:
 		if r.returnWrong {
 			return appleCred, nil
 		}
-		return &pb.NotifyCreds{AcctName:accountName, Identifier:identifier, SubType:subCredType, ClientSecret: "http://slackurl.go"}, nil
+		return &pb.NotifyCreds{AcctName: accountName, Identifier: identifier, SubType: subCredType, ClientSecret: "http://slackurl.go"}, nil
 	case pb.CredType_GENERIC:
 		if r.returnWrong {
 			return appleCred, nil
 		}
-		return &pb.GenericCreds{AcctName:accountName, Identifier:identifier, SubType:subCredType, ClientSecret: "mewmewmewmew"}, nil
+		return &pb.GenericCreds{AcctName: accountName, Identifier: identifier, SubType: subCredType, ClientSecret: "mewmewmewmew"}, nil
 	}
 	return nil, errors.New("hehe not supported yet")
 
@@ -1313,12 +1302,12 @@ func (r *vcsRemoteConf) AddSSHKey(path string, sshKeyFile []byte) (err error) {
 }
 
 type store struct {
-	exists bool
+	exists    bool
 	returnErr bool
 	storage.OcelotStorage
 }
 
-func (s *store) CredExists(credder pb.OcyCredder) (bool, error){
+func (s *store) CredExists(credder pb.OcyCredder) (bool, error) {
 	if s.returnErr {
 		return false, errors.New("erroring at cred existss check ")
 	}

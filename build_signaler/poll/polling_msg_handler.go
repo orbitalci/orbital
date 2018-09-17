@@ -16,13 +16,13 @@ const CronDir = "/etc/cron.d"
 
 func NewMsgHandler(topic string) *MsgHandler {
 	return &MsgHandler{
-		Topic:topic,
+		Topic:   topic,
 		cronDir: "/etc/cron.d",
 	}
 }
 
 type MsgHandler struct {
-	Topic string
+	Topic   string
 	cronDir string
 }
 

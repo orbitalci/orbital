@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var ipv4s = []struct{
+var ipv4s = []struct {
 	host string
 	isIp bool
 }{

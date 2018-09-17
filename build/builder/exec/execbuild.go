@@ -22,7 +22,7 @@ import (
 
 type Exec struct {
 	killer     *valet.ContextValet
-	stage  	   *build.StageUtil
+	stage      *build.StageUtil
 	globalEnvs []string
 
 	*basher.Basher
@@ -30,7 +30,7 @@ type Exec struct {
 }
 
 func NewExecBuilder(b *basher.Basher, facts *models.WerkerFacts) build.Builder {
-	return &Exec{Basher:b, WerkerFacts: facts}
+	return &Exec{Basher: b, WerkerFacts: facts}
 }
 
 func (e *Exec) SetGlobalEnv(envs []string) {
@@ -41,10 +41,10 @@ func (e *Exec) AddGlobalEnvs(envs []string) {
 	e.globalEnvs = append(e.globalEnvs, envs...)
 }
 
-func (e *Exec) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Result {
+func (e *Exec) Init(ctx context.Context, hash string, logout chan []byte) *pb.Result {
 	res := &pb.Result{
-		Stage: "INIT",
-		Status: pb.StageResultVal_PASS,
+		Stage:    "INIT",
+		Status:   pb.StageResultVal_PASS,
 		Messages: []string{"Initializing Exec builder... " + models.CHECKMARK},
 	}
 	return res
@@ -60,12 +60,12 @@ func (e *Exec) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan 
 	downloadTemplates := e.execute(ctx, su, []string{}, []string{cmd}, logout)
 	if downloadTemplates.Status == pb.StageResultVal_FAIL {
 		log.Log().Error("An error occured while trying to download templates ", downloadTemplates.Error)
-		setupMessages = append(setupMessages, "failed to download templates " + models.FAILED)
+		setupMessages = append(setupMessages, "failed to download templates "+models.FAILED)
 		downloadTemplates.Messages = setupMessages
 		return downloadTemplates, werk.CheckoutHash
 	}
-	setupMessages = append(setupMessages, "Set up via Exec " + models.CHECKMARK)
-	return &pb.Result{Stage: su.GetStage(), Status: pb.StageResultVal_PASS, Error:"", Messages:setupMessages}, werk.CheckoutHash
+	setupMessages = append(setupMessages, "Set up via Exec "+models.CHECKMARK)
+	return &pb.Result{Stage: su.GetStage(), Status: pb.StageResultVal_PASS, Error: "", Messages: setupMessages}, werk.CheckoutHash
 }
 
 func (e *Exec) Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
@@ -74,7 +74,7 @@ func (e *Exec) Execute(ctx context.Context, actions *pb.Stage, logout chan []byt
 	return e.execute(ctx, su, actions.Env, e.CDAndRunCmds(actions.Script, commitHash), logout)
 }
 
-func (e *Exec) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan[]byte) *pb.Result {
+func (e *Exec) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan []byte) *pb.Result {
 	return e.execute(ctx, stgUtil, stage.Env, stage.Script, logout)
 }
 
@@ -131,13 +131,13 @@ func (e *Exec) execute(ctx context.Context, stage *build.StageUtil, env []string
 	err = exechelper.RunAndStreamCmd(command, logout, e.writeToInfo)
 	if err != nil {
 		return &pb.Result{
-			Stage: stage.Stage,
-			Status: pb.StageResultVal_FAIL,
-			Error: err.Error(),
+			Stage:    stage.Stage,
+			Status:   pb.StageResultVal_FAIL,
+			Error:    err.Error(),
 			Messages: messages,
 		}
 	}
-	return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_PASS, Error: "", Messages:append(messages, fmt.Sprintf("completed %s stage %s", stage.Stage, models.CHECKMARK))}
+	return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_PASS, Error: "", Messages: append(messages, fmt.Sprintf("completed %s stage %s", stage.Stage, models.CHECKMARK))}
 }
 
 func (e *Exec) Close() error {

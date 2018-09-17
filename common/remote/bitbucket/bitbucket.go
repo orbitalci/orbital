@@ -34,11 +34,11 @@ func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 }
 
 func GetBitbucketFromHttpClient(cli *http.Client) models.VCSHandler {
-	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields:true}
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
 	bb := &Bitbucket{
-		Client: &ocenet.OAuthClient{AuthClient:*cli, Unmarshaler: unmarshaler},
-		Unmarshaler:unmarshaler,
-		Marshaler: jsonpb.Marshaler{},
+		Client:        &ocenet.OAuthClient{AuthClient: *cli, Unmarshaler: unmarshaler},
+		Unmarshaler:   unmarshaler,
+		Marshaler:     jsonpb.Marshaler{},
 		isInitialized: true,
 	}
 	return bb
@@ -50,7 +50,7 @@ func GetBitbucketHandler(adminConfig *pb.VCSCreds, client ocenet.HttpClient) mod
 	bb := &Bitbucket{
 		Client:        client,
 		Marshaler:     jsonpb.Marshaler{},
-		Unmarshaler:   jsonpb.Unmarshaler{AllowUnknownFields: true,},
+		Unmarshaler:   jsonpb.Unmarshaler{AllowUnknownFields: true},
 		credConfig:    adminConfig,
 		isInitialized: true,
 	}
@@ -117,7 +117,7 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 		return commits, nil
 	}
 	var foundLast bool
-	urrl := fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch
+	urrl := fmt.Sprintf(bb.GetBaseURL(), acctRepo) + "/commits/" + branch
 	for {
 		if urrl == "" {
 			break
@@ -129,7 +129,7 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 			return commits, err
 		}
 		for _, commit := range commitz.Values {
-			commits = append(commits, &pb.Commit{Hash:commit.Hash, Message:commit.Message, Date:commit.Date})
+			commits = append(commits, &pb.Commit{Hash: commit.Hash, Message: commit.Message, Date: commit.Date})
 			if commit.Hash == lastHash {
 				foundLast = true
 				break
@@ -165,7 +165,7 @@ func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.
 	}
 	defer resp.Body.Close()
 	// status code handling using bitbucket API spec
-    //   https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/refs/branches/%7Bname%7D
+	//   https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/refs/branches/%7Bname%7D
 	switch resp.StatusCode {
 	case http.StatusNotFound:
 		err = models.Branch404(branch, acctRepo)
@@ -206,7 +206,6 @@ func (bb *Bitbucket) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.Branch
 	}
 	return branchHistory, nil
 }
-
 
 //CreateWebhook will create webhook at specified webhook url
 func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
@@ -323,7 +322,6 @@ func (bb *Bitbucket) FindWebhooks(getWebhookURL string) bool {
 	return bb.FindWebhooks(webhooks.GetNext())
 }
 
-
 func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
 	var commits []*pb.Commit
 	for {
@@ -337,20 +335,19 @@ func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
 			return commits, err
 		}
 		for _, commit := range commitz.Values {
-			commits = append(commits, &pb.Commit{Hash:commit.Hash, Message:commit.Message, Date:commit.Date, Author:&pb.User{UserName: commit.Author.Username}})
+			commits = append(commits, &pb.Commit{Hash: commit.Hash, Message: commit.Message, Date: commit.Date, Author: &pb.User{UserName: commit.Author.Username}})
 		}
 		url = commitz.GetNext()
 	}
 	return commits, nil
 }
 
-
 func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, buildId int64) error {
 	//	https://api.bitbucket.org/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments --data "content=string"
 	// ** need to use v1 url because atlassian is annoying: **
 	// https://community.atlassian.com/t5/Answers-Developer-Questions/Are-you-planning-on-offering-an-update-pull-request-comment-API/qaq-p/526892
 	path := fmt.Sprintf("%s/pullrequests/%s/comments", acctRepo, prId)
-    urll := fmt.Sprintf(V1RepoBaseURL, path)
+	urll := fmt.Sprintf(V1RepoBaseURL, path)
 	var status string
 	switch fail {
 	case true:
@@ -358,12 +355,12 @@ func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, build
 	case false:
 		status = "PASSED"
 	}
-    content := fmt.Sprintf("Ocelot build has **%s** for commit **%s**.\n\nRun `ocelot status -build-id %d` for detailed stage status, and `ocelot run -build-id %d` for complete build logs.", status, hash, buildId, buildId)
-	resp, err := bb.Client.PostUrlForm(urll, url.Values{"content":{content}})
+	content := fmt.Sprintf("Ocelot build has **%s** for commit **%s**.\n\nRun `ocelot status -build-id %d` for detailed stage status, and `ocelot run -build-id %d` for complete build logs.", status, hash, buildId, buildId)
+	resp, err := bb.Client.PostUrlForm(urll, url.Values{"content": {content}})
 	defer resp.Body.Close()
 	if err != nil {
 		failedBBRemoteCalls.WithLabelValues("PostPRComment").Inc()
-    	return err
+		return err
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)

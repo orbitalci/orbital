@@ -18,7 +18,7 @@ func Test_prep(t *testing.T) {
 	}
 	//cleanup()
 	//serv.GracefulStop()
-	_, _, _, _, err = GetGrpcServer(&rc{nostore:true}, secure_grpc.NewFakeSecure(), "localhost", "9099", "9098")
+	_, _, _, _, err = GetGrpcServer(&rc{nostore: true}, secure_grpc.NewFakeSecure(), "localhost", "9099", "9098")
 	if err == nil {
 		t.Error("should fail, as did not return storage")
 	}
@@ -27,14 +27,13 @@ func Test_prep(t *testing.T) {
 }
 
 func Test_Start(t *testing.T) {
-	serv, listen,_,_, err := GetGrpcServer(&rc{}, secure_grpc.NewFakeSecure(), "localhost", "9999", "9998")
+	serv, listen, _, _, err := GetGrpcServer(&rc{}, secure_grpc.NewFakeSecure(), "localhost", "9999", "9998")
 	if err != nil {
 		t.Error(err)
 	}
 	go Start(serv, listen)
 	serv.GracefulStop()
 }
-
 
 func Test_serveSwagger(t *testing.T) {
 	resp := httptest.NewRecorder()
@@ -68,7 +67,7 @@ type rc struct {
 	credentials.CVRemoteConfig
 }
 
-func (r *rc) GetOcelotStorage() (storage.OcelotStorage, error){
+func (r *rc) GetOcelotStorage() (storage.OcelotStorage, error) {
 	if r.nostore {
 		return nil, errors.New("nostore4u")
 	}
@@ -81,4 +80,3 @@ type st struct {
 }
 
 func (s *st) Close() {}
-

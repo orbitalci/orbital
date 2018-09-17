@@ -54,7 +54,7 @@ func GetRemoteTranslator(sct pb.SubCredType) (models.Translator, error) {
 func GetVCSSubTypeFromUrl(url string) (pb.SubCredType, error) {
 	switch {
 	case strings.Contains(url, "bitbucket"):
-		return pb.SubCredType_BITBUCKET,  nil
+		return pb.SubCredType_BITBUCKET, nil
 	case strings.Contains(url, "github"):
 		return pb.SubCredType_GITHUB, nil
 	default:

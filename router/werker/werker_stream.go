@@ -6,15 +6,10 @@ import (
 	"path"
 	"runtime"
 
-
-
-
-
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-
 )
 
 var (

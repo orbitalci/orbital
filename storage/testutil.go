@@ -20,12 +20,12 @@ func CreateTestFileSystemStorage(t *testing.T) BuildSum {
 
 // create a test postgres database on port 5555 using the official docker image, create the tables, and insert some
 // seed data
-func insertDependentData(t *testing.T, pg *PostgresStorage) (int64) {
+func insertDependentData(t *testing.T, pg *PostgresStorage) int64 {
 	hash := "123"
 	model := &pb.BuildSummary{
 		Hash:          hash,
 		Failed:        false,
-		BuildTime:     &timestamp.Timestamp{Seconds:time.Now().Unix()},
+		BuildTime:     &timestamp.Timestamp{Seconds: time.Now().Unix()},
 		Account:       "testAccount",
 		BuildDuration: 23.232,
 		Repo:          "testRepo",

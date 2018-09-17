@@ -48,7 +48,7 @@ import (
 func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan chan *models.Transport, buildChan chan *models.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
-			ocelog.Log().Info("i am about to sleep for 10s because i couldn't find the topic " + topic + " at ", p.Config.LookupDAddress())
+			ocelog.Log().Info("i am about to sleep for 10s because i couldn't find the topic "+topic+" at ", p.Config.LookupDAddress())
 			time.Sleep(10 * time.Second)
 		} else {
 			//mode := os.Getenv("ENV")

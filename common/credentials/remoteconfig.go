@@ -20,7 +20,7 @@ import (
 var (
 	failedCredRetrieval = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name:"ocelot_failed_cred",
+			Name: "ocelot_failed_cred",
 			Help: "number of times ocelot is unable to interact with cred store",
 		},
 		// interaction_type: create | read | update | delete
@@ -94,7 +94,6 @@ func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfi
 		return nil, err
 	}
 	remoteConfig.Vault = vaultClient
-
 
 	return remoteConfig, nil
 }
@@ -171,7 +170,6 @@ func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 	rc.Vault = vault
 }
 
-
 func (rc *RemoteConfig) Healthy() bool {
 	vaultConnected := true
 	_, err := rc.Vault.GetVaultData("secret/data/config/ocelot/here")
@@ -187,7 +185,6 @@ func (rc *RemoteConfig) Healthy() bool {
 	}
 	return true
 }
-
 
 func (rc *RemoteConfig) Reconnect() error {
 	_, err := rc.Vault.GetVaultData("secret/data/config/ocelot/here")
@@ -241,7 +238,7 @@ func (rc *RemoteConfig) deletePassword(scType pb.SubCredType, acctName, identifi
 	credPath := BuildCredPath(scType, acctName, scType.Parent(), identifier)
 	ocelog.Log().Debug("CREDPATH=", credPath)
 	if err := rc.Vault.DeletePath(credPath); err != nil {
-		return errors.WithMessage(err, "Unable to delete password for user " + acctName + " w/ identifier " + identifier)
+		return errors.WithMessage(err, "Unable to delete password for user "+acctName+" w/ identifier "+identifier)
 	}
 	return nil
 }
@@ -400,7 +397,6 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	}
 	return credsForType, nil
 }
-
 
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 	kv, err := rc.Consul.GetKeyValue(common.StorageType)

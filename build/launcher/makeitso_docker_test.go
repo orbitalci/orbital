@@ -26,15 +26,14 @@ import (
 )
 
 var kubeconfs = []pb.OcyCredder{
-	&pb.K8SCreds{AcctName: "acct1", K8SContents:`herearemyk8scontentshowsickisthat
+	&pb.K8SCreds{AcctName: "acct1", K8SContents: `herearemyk8scontentshowsickisthat
 wowowoowowowoowoowowowo
 herebeanotherlinebudshowniceisthaaat`, Identifier: "THERECANONLYBEONE", SubType: pb.SubCredType_KUBECONF},
-&pb.K8SCreds{AcctName: "acct1", K8SContents:`Worst case Ontario`, Identifier: "ricky", SubType: pb.SubCredType_KUBECONF},
-&pb.K8SCreds{AcctName: "acct1", K8SContents:`Propane
+	&pb.K8SCreds{AcctName: "acct1", K8SContents: `Worst case Ontario`, Identifier: "ricky", SubType: pb.SubCredType_KUBECONF},
+	&pb.K8SCreds{AcctName: "acct1", K8SContents: `Propane
 	and propane accessories
 	I tell you hwhat`, Identifier: "HankHill", SubType: pb.SubCredType_KUBECONF},
 }
-
 
 var dockerCreds = []pb.OcyCredder{
 	makeDockerCred("mydockeridentity", "dockeruser", "dockerpw", "http://urls.go", "jessdanshnak"),
@@ -42,7 +41,7 @@ var dockerCreds = []pb.OcyCredder{
 }
 
 var sshCreds = []pb.OcyCredder{
-	&pb.SSHKeyWrapper{AcctName:"account1", PrivateKey:[]byte(testSSHKey), SubType:pb.SubCredType_SSHKEY, Identifier: "THISISANSSHKEY"},
+	&pb.SSHKeyWrapper{AcctName: "account1", PrivateKey: []byte(testSSHKey), SubType: pb.SubCredType_SSHKEY, Identifier: "THISISANSSHKEY"},
 }
 var testSSHKey = `-----BEGIN RSA PRIVATE KEY-----
 wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
@@ -78,7 +77,6 @@ func makeDockerCred(id, uname, pw, url, acctname string) *pb.RepoCreds {
 
 type dummyCVRC struct {
 	cred.CVRemoteConfig
-
 }
 
 func (d *dummyCVRC) GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error) {
@@ -129,7 +127,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {
 		t.Error(diff)
 	}
-	result = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf:&pb.BuildConfig{BuildTool:"gala"}}, dckr, baseStage)
+	result = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "gala"}}, dckr, baseStage)
 	close(launch.infochan)
 	expectedMsgs = []string{
 		"completed preflight | integ | ssh keyfile integration stage ✓",
@@ -139,7 +137,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	}
 	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {
 		var i []byte
-		i =  <- launch.infochan
+		i = <-launch.infochan
 		t.Log(string(i))
 		//t.Log(<-launch.infochan)
 		t.Error(diff)
@@ -152,7 +150,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 		t.Log(res.Messages)
 		t.Error(result.Error)
 	}
-	config := <- launch.infochan
+	config := <-launch.infochan
 	if !bytes.Equal(expectedDockerConfig, config) {
 		t.Error(test.GenericStrFormatErrors("docker config contents", string(expectedDockerConfig), string(config)))
 	}
@@ -223,7 +221,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	}
 	// add one more newline to expected as a result of the script that echoed the env var into the container
 	testSSHKey += "\n"
-	if sshKeyRendered  != testSSHKey {
+	if sshKeyRendered != testSSHKey {
 		t.Error(test.StrFormatErrors("ssh file contents", testSSHKey, sshKeyRendered))
 	}
 }

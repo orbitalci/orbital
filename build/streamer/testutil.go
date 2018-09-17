@@ -4,7 +4,7 @@ import "sync"
 
 type testStreamArray struct {
 	data [][]byte
-	mu sync.Mutex
+	mu   sync.Mutex
 	done bool
 }
 
@@ -42,6 +42,6 @@ func NewTestStreamArray() *testStreamArray {
 	return &testStreamArray{
 		data: data,
 		done: done,
-		mu: sync.Mutex{},
+		mu:   sync.Mutex{},
 	}
 }

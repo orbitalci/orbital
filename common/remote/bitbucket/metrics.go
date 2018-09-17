@@ -13,4 +13,3 @@ var (
 func init() {
 	prometheus.MustRegister(failedBBRemoteCalls)
 }
-

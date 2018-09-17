@@ -35,7 +35,7 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 		}
 		// only do approve for now, because decline is irreversible i guess??
 		if !failed {
-			if werk.PrData.Urls.Approve  == "" {
+			if werk.PrData.Urls.Approve == "" {
 				return errors.New("approve url is empty!!")
 			}
 			err = w.handler.GetClient().PostUrl(werk.PrData.Urls.Approve, "{}", nil)

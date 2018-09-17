@@ -24,7 +24,7 @@ type fakeCommitLister struct {
 func (f *fakeCommitLister) GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error) {
 	var commits []*pb.Commit
 	for _, ci := range f.commits {
-		commits = append(commits, &pb.Commit{Hash:ci.Hash, Message:ci.Message, Date:ci.Date})
+		commits = append(commits, &pb.Commit{Hash: ci.Hash, Message: ci.Message, Date: ci.Date})
 	}
 	return commits, nil
 }
@@ -34,7 +34,7 @@ func (f *fakeCommitLister) GetAllCommits(string, string) (*pbb.Commits, error) {
 }
 
 func (f *fakeCommitLister) GetBranchLastCommitData(acctRepo, branch string) (*pb.BranchHistory, error) {
-	return &pb.BranchHistory{Branch:branch, Hash:f.commits[0].Hash, LastCommitTime:&timestamp.Timestamp{}}, nil
+	return &pb.BranchHistory{Branch: branch, Hash: f.commits[0].Hash, LastCommitTime: &timestamp.Timestamp{}}, nil
 }
 
 func (f *fakeCommitLister) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error) {
@@ -49,7 +49,7 @@ func (f *fakeCommitLister) GetFile(string, string, string) ([]byte, error) {
 }
 
 // faked all this out and wrote an interface because i only wanted to test the logic of whether or not this should trigger a build
-type fakeWerkerTeller struct{
+type fakeWerkerTeller struct {
 	told int
 }
 
@@ -69,13 +69,12 @@ var branchTests = []struct {
 	{"no last commit", "", "triggerMePlease", "triggerMePlease"},
 }
 
-
 func TestChangeChecker_InspectCommits(t *testing.T) {
 	for _, testcase := range branchTests {
 		t.Run(testcase.name, func(t *testing.T) {
 			commitList := []*pbb.Commit{{Hash: testcase.commitListHash}}
 			commitListen := &fakeCommitLister{commits: commitList}
-			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{}, AcctRepo: "test/test", handler:commitListen, token: "TOLKEIN", teller: &fakeWerkerTeller{}}
+			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{}, AcctRepo: "test/test", handler: commitListen, token: "TOLKEIN", teller: &fakeWerkerTeller{}}
 			//InspectCommits(branch string, lastHash string) (newLastHash string, err error) {
 			newLastHash, err := conf.InspectCommits("test", testcase.oldhash)
 			if err != nil {
@@ -89,32 +88,32 @@ func TestChangeChecker_InspectCommits(t *testing.T) {
 	}
 }
 
-var allBranchesTests = []struct{
-	name string
-	histories []*pb.BranchHistory
-	buildHashMap map[string]string
+var allBranchesTests = []struct {
+	name              string
+	histories         []*pb.BranchHistory
+	buildHashMap      map[string]string
 	finalBuildHashMap map[string]string
-	toldTimes int
+	toldTimes         int
 }{
 	{
 		"multiple branches should build",
-		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},},
+		[]*pb.BranchHistory{{Hash: "1234", Branch: "abranch", LastCommitTime: &timestamp.Timestamp{Seconds: time.Now().Unix(), Nanos: 0}}, {Hash: "1a34", Branch: "bbranch", LastCommitTime: &timestamp.Timestamp{Seconds: time.Now().Unix(), Nanos: 0}}},
 		map[string]string{"abranch": "abcd", "bbranch": "12er"},
 		map[string]string{"abranch": "1234", "bbranch": "1a34"},
 		2,
 	},
 	{
 		"no branches should build",
-		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},},
-		map[string]string{"abranch":"1234", "bbranch": "1a34"},
-		map[string]string{"abranch":"1234", "bbranch": "1a34"},
+		[]*pb.BranchHistory{{Hash: "1234", Branch: "abranch", LastCommitTime: &timestamp.Timestamp{Seconds: time.Now().Unix(), Nanos: 0}}, {Hash: "1a34", Branch: "bbranch", LastCommitTime: &timestamp.Timestamp{Seconds: time.Now().Unix(), Nanos: 0}}},
+		map[string]string{"abranch": "1234", "bbranch": "1a34"},
+		map[string]string{"abranch": "1234", "bbranch": "1a34"},
 		0,
 	},
 	{
 		"untracked branch",
-		[]*pb.BranchHistory{{Hash:"1234", Branch:"abranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().Unix(), Nanos:0}},{Hash:"1a34", Branch:"bbranch", LastCommitTime: &timestamp.Timestamp{Seconds:time.Now().AddDate(0,0,6).Unix(), Nanos:0}},},
-		map[string]string{"abranch":"1234"},
-		map[string]string{"abranch":"1234", "bbranch": "1a34"},
+		[]*pb.BranchHistory{{Hash: "1234", Branch: "abranch", LastCommitTime: &timestamp.Timestamp{Seconds: time.Now().Unix(), Nanos: 0}}, {Hash: "1a34", Branch: "bbranch", LastCommitTime: &timestamp.Timestamp{Seconds: time.Now().AddDate(0, 0, 6).Unix(), Nanos: 0}}},
+		map[string]string{"abranch": "1234"},
+		map[string]string{"abranch": "1234", "bbranch": "1a34"},
 		1,
 	},
 }
@@ -124,7 +123,7 @@ func TestChangeChecker_HandleAllBranches(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			commitListen := &fakeCommitLister{allBranchData: testcase.histories}
 			teller := &fakeWerkerTeller{}
-			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{}, AcctRepo: "test/test", handler:commitListen, token: "TOLKEIN", teller: teller}
+			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{}, AcctRepo: "test/test", handler: commitListen, token: "TOLKEIN", teller: teller}
 			//InspectCommits(branch string, lastHash string) (newLastHash string, err error) {
 			err := conf.HandleAllBranches(testcase.buildHashMap)
 			if err != nil {
