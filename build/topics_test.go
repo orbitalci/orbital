@@ -7,14 +7,14 @@ import (
 	"github.com/go-test/deep"
 )
 
-var tests = []struct{
-	name string
+var tests = []struct {
+	name        string
 	tagStrInput string
-	expected []string
+	expected    []string
 }{
 	{"empty", "", []string{DEFAULT}},
 	{"notempty", "ios,baremetal", []string{"build_ios", "build_baremetal"}},
-	{"longs", "ios,baremetal,1728,", []string{"build_ios", "build_baremetal", "build_1728", DEFAULT,}},
+	{"longs", "ios,baremetal,1728,", []string{"build_ios", "build_baremetal", "build_1728", DEFAULT}},
 }
 
 func TestGetTopics(t *testing.T) {

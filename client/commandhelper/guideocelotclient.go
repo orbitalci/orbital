@@ -34,7 +34,6 @@ func GetClient(serverAddr string, noUseBlockingDial bool, tlsDns string) (client
 	return
 }
 
-
 // BlockingDial is a helper method to dial the given address, using optional TLS credentials,
 // and blocking until the returned connection is ready. If the given credentials are nil, the
 // connection will be insecure (plain-text).

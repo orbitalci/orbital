@@ -15,7 +15,7 @@ import (
 //GetPrWerkerTeller will return a new PRWerkerTeller object with the private fields prId and destBranch instantiated
 func GetPrWerkerTeller(prdata *pb.PrWerkerData, destBranch string) *PRWerkerTeller {
 	return &PRWerkerTeller{
-		prData: prdata,
+		prData:     prdata,
 		destBranch: destBranch,
 	}
 }
@@ -25,7 +25,7 @@ func GetPrWerkerTeller(prdata *pb.PrWerkerData, destBranch string) *PRWerkerTell
 // there needs to be some special finegaling.
 type PRWerkerTeller struct {
 	destBranch string
-	prData *pb.PrWerkerData
+	prData     *pb.PrWerkerData
 }
 
 //TellWerker will get the ocelot.yml configuration, build the werker task, validate viablilty off of the (*PRWerkerTeller).destBranch field instead off the normal branch passed , then will queue the build using the normal passed branch.

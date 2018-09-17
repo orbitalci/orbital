@@ -38,7 +38,6 @@ func (w *launcher) runStages(ctx context.Context, werk *pb.WerkerTask, builder b
 			break
 		}
 
-
 		if err = storeStageToDb(w.Store, werk.Id, stageResult, stageStart, stageDura.Seconds()); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't store build output")
 			return
@@ -72,7 +71,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 			}
 		}
 		if !branchGood {
-			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_SKIP, Error: "", Messages:[]string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", branch)}}
+			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_SKIP, Error: "", Messages: []string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", branch)}}
 			// we could save to db, the branch running is not in the list of trigger branches, so we can flip the shouldSkip bool now.
 			shouldSkip = true
 			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {

@@ -13,11 +13,12 @@ import (
 
 const (
 	credExists = `The helm repo address with the name %s already exists under the account %s. Do you wish to overwrite? Only a YES will continue and update the helm chart repo value, otherwise this entry will be skipped.`
-	synopsis = "Add a helm repository address for downloading charts. "
+	synopsis   = "Add a helm repository address for downloading charts. "
 	// fixme: change help msg
 	help = `
 Usage: ocelot creds helmrepo add -acct my_kewl_acct -repo-name shankj3_charts -helm-url https://github.io/shankj3_helm_repository
-`)
+`
+)
 
 func New(ui cli.Ui) *cmd {
 	c := &cmd{UI: ui, config: commandhelper.Config}
@@ -30,7 +31,7 @@ type cmd struct {
 	flags        *flag.FlagSet
 	chartRepoUrl string
 	account      string
-	name    	 string
+	name         string
 	repoName     string
 	config       *commandhelper.ClientConfig
 }
@@ -49,11 +50,10 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.account, "acct", "ERROR","Account name to file environment variables under")
+	c.flags.StringVar(&c.account, "acct", "ERROR", "Account name to file environment variables under")
 	c.flags.StringVar(&c.repoName, "repo-name", "ERROR", "Identifier for helm chart repo credential. During the build, the helm repo will be added under this name.")
 	c.flags.StringVar(&c.chartRepoUrl, "helm-url", "ERROR", "URL of helm chart repository")
 }
-
 
 func (c *cmd) Synopsis() string {
 	return synopsis
@@ -62,7 +62,6 @@ func (c *cmd) Synopsis() string {
 func (c *cmd) Help() string {
 	return help
 }
-
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
@@ -93,7 +92,6 @@ func (c *cmd) Run(args []string) int {
 	}
 	return c.upload(helmCred)
 }
-
 
 func getErrMsg(err error) (msg string) {
 	statErr, ok := status.FromError(err)
@@ -139,4 +137,3 @@ func (c *cmd) upload(helmCred *models.GenericCreds) int {
 
 	return 0
 }
-

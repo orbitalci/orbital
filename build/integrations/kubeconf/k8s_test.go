@@ -86,7 +86,7 @@ func TestK8sInt_staticstuffs(t *testing.T) {
 		t.Error("kubeconfig render is currently always relevant")
 	}
 	inte.k8sContents = "eyJkZXJweSI6Indhc3NzdXBwcHBwcHAifQ=="
-	if diff := deep.Equal(inte.GetEnv(), []string{"derpy=wasssuppppppp","K8S_INDEX=derpy "}); diff != nil {
+	if diff := deep.Equal(inte.GetEnv(), []string{"derpy=wasssuppppppp", "K8S_INDEX=derpy "}); diff != nil {
 		t.Error("getEnv not right, diff is: \n", diff)
 	}
 	expectedbash := []string{"/bin/bash", "-c", "mkdir -p ~/.kube && for kubeconf in ${K8S_INDEX}; do echo \"${!kubeconf}\" > ~/.kube/${kubeconf}; done"}

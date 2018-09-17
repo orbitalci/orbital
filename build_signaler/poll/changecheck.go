@@ -17,7 +17,6 @@ func NewChangeChecker(signaler *signal.Signaler, acctRepo string) *ChangeChecker
 		Signaler: signaler,
 		AcctRepo: acctRepo,
 		teller:   &signal.CCWerkerTeller{},
-
 	}
 }
 
@@ -55,7 +54,6 @@ func (w *ChangeChecker) generateCommitList(acctRepo string, branch string, lastH
 	return
 }
 
-
 // HandleAllBranches will get all branches associated with the repository along with their last commit information.
 //  If the branch is already in the map and the commit in the branch map is different than the one retrieved from bitbucket,
 //    then a build will be triggered ad teh branchLastHashes map will be updated with the newest commit
@@ -90,7 +88,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			branchLastHashes[branchHist.Branch] = branchHist.Hash
 			// this has never been built/tracked before... so if anything has been committed in the last week, build it and add it to the map
 			lastCommitTime := time.Unix(branchHist.LastCommitTime.Seconds, int64(branchHist.LastCommitTime.Nanos))
-			lastWeek := time.Now().AddDate(0,0,-7)
+			lastWeek := time.Now().AddDate(0, 0, -7)
 			ocelog.Log().WithField("last commit time", lastCommitTime.Format("Jan 2 15:04:05 2006")).WithField("last week", lastWeek.Format("Jan 2 15:04:05 2006")).Info("times!")
 			if lastCommitTime.After(lastWeek) {
 				ocelog.Log().WithField("branch", branchHist.Branch).WithField("hash", branchHist.Hash).Info("it is! it has been active at least in the past week, it will be built then added to ocelot tracking")

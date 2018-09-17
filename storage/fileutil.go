@@ -11,12 +11,12 @@ import (
 )
 
 func NewCabinet(name string) *Cabinet {
-	return &Cabinet{name:name}
+	return &Cabinet{name: name}
 }
 
 type Cabinet struct {
-	files     []*Drawer
-	name      string
+	files []*Drawer
+	name  string
 }
 
 type Drawer struct {
@@ -96,7 +96,7 @@ func fileMaker(direc string, id int64, hash string, name string) (string, error)
 func getBuildIdFromPath(path string) (int64, error) {
 	var buildId int64
 	paths := strings.Split(path, string(os.PathSeparator))
-	segment := paths[len(paths) - 2]
+	segment := paths[len(paths)-2]
 	id, err := strconv.Atoi(segment)
 	if err != nil {
 		return 0, errors.New("did not find build id in path: " + path + "\nerror: " + err.Error())
@@ -115,8 +115,6 @@ func getBuildIdFromPath(path string) (int64, error) {
 	}
 	return buildId, nil
 }
-
-
 
 // wiill return a subdirec of direc that does not exist. uses random package
 func getRandomStorage(direc string) int64 {

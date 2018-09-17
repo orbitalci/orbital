@@ -55,11 +55,11 @@ type WerkerConf struct {
 	*models.WerkerFacts
 	WerkerName string
 	// list of tags for this build node
-	tags     []string
+	tags []string
 	//werkerProcessor builder.Processor
-	LogLevel        string
+	LogLevel string
 	//LoopBackIp      string
-	RemoteConfig    cred.CVRemoteConfig
+	RemoteConfig cred.CVRemoteConfig
 }
 
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
@@ -80,7 +80,7 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&werker.LogLevel, "log-level", "info", "log level")
 	flrg.BoolVar(&werker.Dev, "dev", false, "run dev mode")
 	flrg.StringVar(&werker.RegisterIP, "register-ip", "localhost", "ip to register with consul when picking up builds")
-	flrg.StringVar(&werker.LoopbackIp, "loopback-ip", "172.17.0.1", "ip to use for spawned containers to successfully contact the host. " +
+	flrg.StringVar(&werker.LoopbackIp, "loopback-ip", "172.17.0.1", "ip to use for spawned containers to successfully contact the host. "+
 		"This may be different for different container systems / host machines. For example, when using docker for mac the loopback-ip would be docker.for.mac.localhost")
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")

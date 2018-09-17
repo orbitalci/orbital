@@ -14,7 +14,6 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
 )
 
 //WerkerServer embeds the werkerappcontext so we can stream + access active builds

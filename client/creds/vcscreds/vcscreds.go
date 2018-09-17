@@ -40,4 +40,3 @@ Usage: ocelot creds vcs <subcommand> [options] [args]
 
   For more examples, ask for subcommand help or view the documentation.
 `
-

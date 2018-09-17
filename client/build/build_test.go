@@ -19,12 +19,12 @@ import (
 
 type fakeCli struct {
 	pb.GuideOcelotClient
-	stream *fakeStream
+	stream    *fakeStream
 	returnErr bool
-	buildReq *pb.BuildReq
+	buildReq  *pb.BuildReq
 }
 
-func (f *fakeCli) BuildRepoAndHash(ctx context.Context, buildReq *pb.BuildReq, opts ...grpc.CallOption) (pb.GuideOcelot_BuildRepoAndHashClient, error){
+func (f *fakeCli) BuildRepoAndHash(ctx context.Context, buildReq *pb.BuildReq, opts ...grpc.CallOption) (pb.GuideOcelot_BuildRepoAndHashClient, error) {
 	f.buildReq = buildReq
 	if f.returnErr {
 		return nil, status.Error(codes.Internal, "this is an error.")
@@ -38,7 +38,7 @@ func (f *fakeCli) CheckConn(ctx context.Context, in *empty.Empty, opts ...grpc.C
 
 type fakeStream struct {
 	countBeforeEOF int
-	count 		   int
+	count          int
 	fail           bool
 	pb.GuideOcelot_BuildRepoAndHashClient
 }
@@ -61,8 +61,8 @@ func (f *fakeStream) RecvMsg(intr interface{}) error {
 }
 
 func TestCmd_Run(t *testing.T) {
-	stream := &fakeStream{countBeforeEOF:5}
-	clie := &fakeCli{stream:stream}
+	stream := &fakeStream{countBeforeEOF: 5}
+	clie := &fakeCli{stream: stream}
 	ui := cli.NewMockUi()
 	config := &commandhelper.ClientConfig{Client: clie, Theme: commandhelper.Default(true)}
 	cmd2 := &cmd{UI: ui, config: config, OcyHelper: &commandhelper.OcyHelper{}}
@@ -82,7 +82,7 @@ func TestCmd_Run(t *testing.T) {
 		t.Error(diff)
 	}
 
-	clie2 := &fakeCli{returnErr:true}
+	clie2 := &fakeCli{returnErr: true}
 	ui2 := cli.NewMockUi()
 	config = &commandhelper.ClientConfig{Client: clie2, Theme: commandhelper.Default(true)}
 	cmd2 = &cmd{UI: ui2, config: config, OcyHelper: &commandhelper.OcyHelper{}}
@@ -93,9 +93,9 @@ func TestCmd_Run(t *testing.T) {
 	}
 	out := string(ui2.ErrorWriter.Bytes())
 	if out != "this is an error.\n" {
-		t.Errorf("expected %s for output, got %s",  "this is an error.\n", out )
+		t.Errorf("expected %s for output, got %s", "this is an error.\n", out)
 	}
-	clie3 := &fakeCli{returnErr:false, stream:&fakeStream{fail:true}}
+	clie3 := &fakeCli{returnErr: false, stream: &fakeStream{fail: true}}
 	ui3 := cli.NewMockUi()
 	config = &commandhelper.ClientConfig{Client: clie3, Theme: commandhelper.Default(true)}
 	cmd2 = &cmd{UI: ui3, config: config, OcyHelper: &commandhelper.OcyHelper{}}
@@ -108,8 +108,8 @@ func TestCmd_Run(t *testing.T) {
 }
 
 func TestCmd_Run_force(t *testing.T) {
-	stream := &fakeStream{countBeforeEOF:5}
-	clie := &fakeCli{stream:stream}
+	stream := &fakeStream{countBeforeEOF: 5}
+	clie := &fakeCli{stream: stream}
 	ui := cli.NewMockUi()
 	config := &commandhelper.ClientConfig{Client: clie, Theme: commandhelper.Default(true)}
 	cmd2 := &cmd{UI: ui, config: config, OcyHelper: &commandhelper.OcyHelper{}}
@@ -121,10 +121,10 @@ func TestCmd_Run_force(t *testing.T) {
 		t.Log(string(ui.OutputWriter.Bytes()))
 	}
 	expected := &pb.BuildReq{
-		AcctRepo:"1/2",
-		Hash:"1",
-		Branch:"branch",
-		Force:true,
+		AcctRepo: "1/2",
+		Hash:     "1",
+		Branch:   "branch",
+		Force:    true,
 	}
 	if diff := deep.Equal(expected, clie.buildReq); diff != nil {
 		t.Error(diff)
@@ -132,8 +132,8 @@ func TestCmd_Run_force(t *testing.T) {
 }
 
 func TestCmd_Run_acctReop(t *testing.T) {
-	stream := &fakeStream{countBeforeEOF:5}
-	clie := &fakeCli{stream:stream}
+	stream := &fakeStream{countBeforeEOF: 5}
+	clie := &fakeCli{stream: stream}
 	ui := cli.NewMockUi()
 	config := &commandhelper.ClientConfig{Client: clie, Theme: commandhelper.Default(true)}
 	cmd2 := &cmd{UI: ui, config: config, OcyHelper: &commandhelper.OcyHelper{}}
@@ -145,7 +145,7 @@ func TestCmd_Run_acctReop(t *testing.T) {
 		t.Log(string(ui.OutputWriter.Bytes()))
 	}
 	expected := &pb.BuildReq{
-		AcctRepo:"1/2",
+		AcctRepo: "1/2",
 	}
 	if diff := deep.Equal(expected, clie.buildReq); diff != nil {
 		t.Error(diff)
@@ -154,8 +154,8 @@ func TestCmd_Run_acctReop(t *testing.T) {
 
 //this is detecting the current account/repo through git commands, it may break? like if we move repos or something
 func TestCmd_Run_latest(t *testing.T) {
-	stream := &fakeStream{countBeforeEOF:5}
-	clie := &fakeCli{stream:stream}
+	stream := &fakeStream{countBeforeEOF: 5}
+	clie := &fakeCli{stream: stream}
 	ui := cli.NewMockUi()
 	config := &commandhelper.ClientConfig{Client: clie, Theme: commandhelper.Default(true)}
 	cmd2 := &cmd{UI: ui, config: config, OcyHelper: &commandhelper.OcyHelper{}}
@@ -167,7 +167,7 @@ func TestCmd_Run_latest(t *testing.T) {
 		t.Log(string(ui.OutputWriter.Bytes()))
 	}
 	expected := &pb.BuildReq{
-		AcctRepo:"shankj3/ocelot",
+		AcctRepo: "shankj3/ocelot",
 	}
 	if diff := deep.Equal(expected, clie.buildReq); diff != nil {
 		t.Error(diff)

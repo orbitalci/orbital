@@ -17,7 +17,7 @@ func Create(loopbackip string, port string) integrations.BinaryIntegrator {
 }
 
 type minioInteg struct {
-	ip string
+	ip   string
 	port string
 }
 

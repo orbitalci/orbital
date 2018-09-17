@@ -5,4 +5,3 @@ type TriggerData struct {
 	commitTexts  []string
 	branch       string
 }
-

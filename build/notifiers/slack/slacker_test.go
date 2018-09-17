@@ -76,15 +76,15 @@ func TestSlacker_RunIntegration(t *testing.T) {
 		&pb.NotifyCreds{ClientSecret: "http://slack.rest", Identifier: "id2"},
 		&pb.NotifyCreds{ClientSecret: "http://slack.fest", Identifier: "id3"},
 	}
-	fullResult := &pb.Status{BuildSum: &pb.BuildSummary{Hash:"123", Failed:false}, Stages:[]*pb.StageStatus{{StageStatus:"stage1", Error:"", Messages: []string{"good"}}}}
+	fullResult := &pb.Status{BuildSum: &pb.BuildSummary{Hash: "123", Failed: false}, Stages: []*pb.StageStatus{{StageStatus: "stage1", Error: "", Messages: []string{"good"}}}}
 	notifications := &pb.Notifications{
-		Slack:&pb.Slack{
-			Channel: "@jessi-shank",
+		Slack: &pb.Slack{
+			Channel:    "@jessi-shank",
 			Identifier: "id2",
-			On: []pb.StageResultVal{pb.StageResultVal_FAIL},
+			On:         []pb.StageResultVal{pb.StageResultVal_FAIL},
 		},
 	}
-	slacker := &Slacker{client:cli}
+	slacker := &Slacker{client: cli}
 	err := slacker.RunIntegration(slackCreds, fullResult, notifications)
 	if err != nil {
 		t.Error(err)

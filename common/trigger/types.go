@@ -4,10 +4,7 @@ import "strings"
 
 //go:generate stringer -type=TriggerType,Conditional
 
-
-
 type TriggerType int
-
 
 const (
 	TNone TriggerType = iota
@@ -31,13 +28,16 @@ func (t TriggerType) Spawn() Section {
 
 func convertTriggerType(str string) TriggerType {
 	switch strings.ToLower(str) {
-	case "branch:":   return Branch
-	case "filepath:": return Filepath
-	case "text:":     return Text
-	default:          return TNone
+	case "branch:":
+		return Branch
+	case "filepath:":
+		return Filepath
+	case "text:":
+		return Text
+	default:
+		return TNone
 	}
 }
-
 
 type Conditional int
 
@@ -49,17 +49,23 @@ const (
 
 func convertConditionalWord(str string) Conditional {
 	switch strings.ToUpper(str) {
-	case "OR":  return Or
-	case "AND": return And
-	default:    return CNone
+	case "OR":
+		return Or
+	case "AND":
+		return And
+	default:
+		return CNone
 	}
 }
 
 func convertConditionalSymbol(str string) Conditional {
 	switch strings.TrimSpace(str) {
-	case "||": return Or
-	case "&&": return And
-	default:   return CNone
+	case "||":
+		return Or
+	case "&&":
+		return And
+	default:
+		return CNone
 	}
 }
 

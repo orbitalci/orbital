@@ -21,19 +21,18 @@ import (
 
 type SSH struct {
 	*basher.Basher
-	killer  *valet.ContextValet
-	cnxn    *sshhelper.Channel
-	stage   *build.StageUtil
+	killer *valet.ContextValet
+	cnxn   *sshhelper.Channel
+	stage  *build.StageUtil
 	*models.WerkerFacts
 }
-
 
 // NewSSHBuilder will establish the BARE connection then return the BARE builder. It will fail if it cannot
 // establish a connection, as it should. It requires more than the docker builder say, because this ssh conneciton
 // isn't a "clean" builder, unfortunately. It is not destroyed afterword, so we need things like hash to know what to clean up
 // once the build process has completed.
 func NewSSHBuilder(b *basher.Basher, facts *models.WerkerFacts) (build.Builder, error) {
-	return &SSH{Basher:b, WerkerFacts: facts}, nil
+	return &SSH{Basher: b, WerkerFacts: facts}, nil
 }
 
 func (h *SSH) SetGlobalEnv(envs []string) {
@@ -44,9 +43,9 @@ func (h *SSH) AddGlobalEnvs(envs []string) {
 	h.cnxn.AppendGlobals(envs)
 }
 
-func (h *SSH) Init(ctx context.Context, hash string, logout chan[]byte) *pb.Result {
+func (h *SSH) Init(ctx context.Context, hash string, logout chan []byte) *pb.Result {
 	res := &pb.Result{
-		Stage: "Init",
+		Stage:  "Init",
 		Status: pb.StageResultVal_PASS,
 	}
 	cnxn, err := sshhelper.CreateSSHChannel(ctx, h.Ssh, hash)
@@ -71,12 +70,12 @@ func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan s
 	downloadTemplates := h.execute(ctx, su, []string{}, []string{cmd}, logout)
 	if downloadTemplates.Status == pb.StageResultVal_FAIL {
 		log.Log().Error("An error occured while trying to download templates ", downloadTemplates.Error)
-		setupMessages = append(setupMessages, "failed to download templates " + models.FAILED)
+		setupMessages = append(setupMessages, "failed to download templates "+models.FAILED)
 		downloadTemplates.Messages = setupMessages
 		return downloadTemplates, werk.CheckoutHash
 	}
-	setupMessages = append(setupMessages, "successfully downloaded templates " + models.CHECKMARK)
-	return &pb.Result{Stage: su.GetStage(), Status: pb.StageResultVal_PASS, Error:"", Messages:setupMessages}, werk.CheckoutHash
+	setupMessages = append(setupMessages, "successfully downloaded templates "+models.CHECKMARK)
+	return &pb.Result{Stage: su.GetStage(), Status: pb.StageResultVal_PASS, Error: "", Messages: setupMessages}, werk.CheckoutHash
 }
 
 func (h *SSH) Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
@@ -85,7 +84,7 @@ func (h *SSH) Execute(ctx context.Context, actions *pb.Stage, logout chan []byte
 	return h.execute(ctx, su, actions.Env, h.CDAndRunCmds(actions.Script, commitHash), logout)
 }
 
-func (h *SSH) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan[]byte) *pb.Result {
+func (h *SSH) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan []byte) *pb.Result {
 	return h.execute(ctx, stgUtil, stage.Env, stage.Script, logout)
 }
 
@@ -115,7 +114,6 @@ func unwrapCommand(cmds []string) []string {
 	return []string{cmds[2]}
 }
 
-
 func (h *SSH) execute(ctx context.Context, stage *build.StageUtil, env []string, cmds []string, logout chan []byte) *pb.Result {
 	if len(cmds) >= 2 && strings.Contains(cmds[1], "-c") {
 		cmds = unwrapCommand(cmds)
@@ -127,12 +125,11 @@ func (h *SSH) execute(ctx context.Context, stage *build.StageUtil, env []string,
 	err := h.cnxn.RunAndLog(sshcmd, env, logout, h.writeToInfo)
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to complete %s stage %s", stage.Stage, models.FAILED)
-		return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_FAIL, Error: err.Error(), Messages:[]string{errMsg}}
+		return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_FAIL, Error: err.Error(), Messages: []string{errMsg}}
 	}
 	success := []string{fmt.Sprintf("completed %s stage %s", stage.Stage, models.CHECKMARK)}
-	return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_PASS, Error: "", Messages:success}
+	return &pb.Result{Stage: stage.Stage, Status: pb.StageResultVal_PASS, Error: "", Messages: success}
 }
-
 
 func (h *SSH) Close() error {
 	if h.cnxn != nil {

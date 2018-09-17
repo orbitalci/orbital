@@ -19,7 +19,7 @@ func TarTemplates(t *testing.T, tarLoc, relativeTemplateLoc string) func(t *test
 	here, _ := ioutil.ReadDir(".")
 	t.Log(here)
 	t.Log("PWD IS", os.ExpandEnv("$PWD"))
-	cmdstr := "tar -cvf " + tarLoc +  " *"
+	cmdstr := "tar -cvf " + tarLoc + " *"
 	t.Log(cmdstr)
 	cmd := exec.Command("/bin/sh", "-c", cmdstr)
 	cmd.Dir = relativeTemplateLoc
@@ -48,7 +48,6 @@ func TarTemplates(t *testing.T, tarLoc, relativeTemplateLoc string) func(t *test
 	}
 }
 
-
 func CreateDoThingsWebServer(tarLoc string, port string) {
 	r := mux.NewRouter()
 	//_, filename, _, ok := runtime.Caller(0)
@@ -58,5 +57,5 @@ func CreateDoThingsWebServer(tarLoc string, port string) {
 	r.HandleFunc("/do_things.tar", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, tarLoc)
 	})
-	http.ListenAndServe(":" + port, r)
+	http.ListenAndServe(":"+port, r)
 }

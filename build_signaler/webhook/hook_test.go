@@ -10,16 +10,16 @@ import (
 )
 
 func TestGetPrWerkerTeller(t *testing.T) {
-	prwt := GetPrWerkerTeller(&pb.PrWerkerData{PrId:"1"}, "branch")
-	if  prwt.destBranch != "branch" {
+	prwt := GetPrWerkerTeller(&pb.PrWerkerData{PrId: "1"}, "branch")
+	if prwt.destBranch != "branch" {
 		t.Error("not prwt not rendered properly")
 	}
 }
 
 func TestPRWerkerTeller_TellWerker(t *testing.T) {
-	prwt := GetPrWerkerTeller(&pb.PrWerkerData{PrId:"1"}, "master")
+	prwt := GetPrWerkerTeller(&pb.PrWerkerData{PrId: "1"}, "master")
 	sig := build_signaler.GetFakeSignaler(t, false)
-	handler := &build_signaler.DummyVcsHandler{NotFound:true}
+	handler := &build_signaler.DummyVcsHandler{NotFound: true}
 	err := prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
 		t.Error("error should not be nil")
@@ -36,7 +36,7 @@ func TestPRWerkerTeller_TellWerker(t *testing.T) {
 		t.Error("should have bubbled up generic error that vcshandler threw, instead threw " + err.Error())
 	}
 	sig = build_signaler.GetFakeSignaler(t, true)
-	handler = &build_signaler.DummyVcsHandler{Filecontents:build_signaler.Buildfile}
+	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.Buildfile}
 	err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
 		t.Error("should return not viable error ")
@@ -45,18 +45,17 @@ func TestPRWerkerTeller_TellWerker(t *testing.T) {
 		t.Error("if build is in consul should return a not viable error and bubble it up to prwt caller")
 	}
 	sig = build_signaler.GetFakeSignaler(t, false)
-	handler = &build_signaler.DummyVcsHandler{Filecontents:build_signaler.BuildFileMasterOnly}
+	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.BuildFileMasterOnly}
 	err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
 	if err != nil {
 		t.Error("the build file says master only for building branches, and this pr is being merged to master, therefore this should build and stfu. the error is: " + err.Error())
 	}
 	sig = build_signaler.GetFakeSignaler(t, false)
-	handler = &build_signaler.DummyVcsHandler{Filecontents:build_signaler.BuildFileMasterOnly}
+	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.BuildFileMasterOnly}
 	prwt.destBranch = "feature_2"
 	err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
 		t.Error("the build file says master only for building branches, and this pr is being merged to feature_2,therefore this build should not run")
 	}
-
 
 }

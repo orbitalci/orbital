@@ -3,8 +3,8 @@ package ssh
 import (
 	"context"
 	"fmt"
-	"testing"
 	"github.com/google/uuid"
+	"testing"
 
 	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
@@ -16,19 +16,19 @@ import (
 
 func TestSSH_Initfail(t *testing.T) {
 	sshfacts := &models.SSHFacts{
-		User: "root",
-		Host: "localhost",
-		Port: 1234,
+		User:  "root",
+		Host:  "localhost",
+		Port:  1234,
 		KeyFP: "id",
 	}
 	werkerFacts := &models.WerkerFacts{
-		Uuid: uuid.New(),
-		WerkerType: models.SSH,
-		LoopbackIp: "docker.for.mac.localhost",
-		RegisterIP: "docker.for.mac.localhost",
+		Uuid:        uuid.New(),
+		WerkerType:  models.SSH,
+		LoopbackIp:  "docker.for.mac.localhost",
+		RegisterIP:  "docker.for.mac.localhost",
 		ServicePort: "",
-		Dev: true,
-		Ssh: sshfacts,
+		Dev:         true,
+		Ssh:         sshfacts,
 	}
 	bshr, err := basher.NewBasher("", "", "docker.for.mac.localhost", "/tmp")
 	ssh, err := NewSSHBuilder(bshr, werkerFacts)
@@ -49,19 +49,19 @@ func TestSSH_Initfail(t *testing.T) {
 
 func TestSSH_GetContainerId(t *testing.T) {
 	sshfacts := &models.SSHFacts{
-		User: "root",
-		Host: "localhost",
-		Port: 1234,
+		User:  "root",
+		Host:  "localhost",
+		Port:  1234,
 		KeyFP: "id",
 	}
 	werkerFacts := &models.WerkerFacts{
-		Uuid: uuid.New(),
-		WerkerType: models.SSH,
-		LoopbackIp: "docker.for.mac.localhost",
-		RegisterIP: "docker.for.mac.localhost",
+		Uuid:        uuid.New(),
+		WerkerType:  models.SSH,
+		LoopbackIp:  "docker.for.mac.localhost",
+		RegisterIP:  "docker.for.mac.localhost",
 		ServicePort: "",
-		Dev: true,
-		Ssh: sshfacts,
+		Dev:         true,
+		Ssh:         sshfacts,
 	}
 	bshr, err := basher.NewBasher("", "", "docker.for.mac.localhost", "/tmp")
 	ssh, err := NewSSHBuilder(bshr, werkerFacts)
@@ -75,7 +75,7 @@ func TestSSH_GetContainerId(t *testing.T) {
 
 // runs all the tests using one ssh container
 func TestSSH(t *testing.T) {
-	task := &pb.WerkerTask{CheckoutHash:"TESTHASHAYYY"}
+	task := &pb.WerkerTask{CheckoutHash: "TESTHASHAYYY"}
 	ssher, ctx, cancel, tarRm, cleaner := SetupSSHBuilder(t, 2222, "3833")
 	defer tarRm(t)
 	defer cleaner()
@@ -87,23 +87,23 @@ func TestSSH(t *testing.T) {
 	t.Run("SSH_setup2", func(t *testing.T) {
 		testSSH_Setup2(t, ssher, ctx, task)
 	})
-	t.Run("execute", func(t *testing.T){
+	t.Run("execute", func(t *testing.T) {
 		testSSH_execute(t, ssher, ctx)
 	})
 	t.Run("execute integration", func(t *testing.T) {
 		testSSH_ExecuteIntegration(t, ssher, ctx)
 	})
-	t.Run("execute 2", func(t *testing.T){
+	t.Run("execute 2", func(t *testing.T) {
 		testSSH_Execute(t, ssher, ctx, task.CheckoutHash)
 	})
 }
 
 func testSSH_Setup(t *testing.T, ssher build.Builder, ctx context.Context, task *pb.WerkerTask) {
-	logt := make(chan[]byte, 100)
+	logt := make(chan []byte, 100)
 	logdone := make(chan int)
 	var output string
-	go func(){
-		for i:=range logt{
+	go func() {
+		for i := range logt {
 			output += string(i) + "\n"
 		}
 		close(logdone)
@@ -133,11 +133,11 @@ func testSSH_Setup(t *testing.T, ssher build.Builder, ctx context.Context, task 
 
 // failure scenario
 func testSSH_Setup2(t *testing.T, ssher build.Builder, ctx context.Context, task *pb.WerkerTask) {
-	logt := make(chan[]byte)
+	logt := make(chan []byte)
 	logdone := make(chan int)
 	var output string
-	go func(){
-		for i:=range logt{
+	go func() {
+		for i := range logt {
 			output += string(i) + "\n"
 		}
 		close(logdone)
@@ -148,7 +148,7 @@ func testSSH_Setup2(t *testing.T, ssher build.Builder, ctx context.Context, task
 	if res.Status != pb.StageResultVal_PASS {
 		t.Log(res.Messages)
 		t.Log(output)
-		t.Error("should pass, error is: " +res.Error)
+		t.Error("should pass, error is: " + res.Error)
 		return
 	}
 	expected := "Successfully established ssh connection " + models.CHECKMARK
@@ -177,7 +177,7 @@ func testSSH_execute(t *testing.T, sher build.Builder, ctx context.Context) {
 	logdone := make(chan bool, 1)
 	var live string
 	go func() {
-		for i:=range logout {
+		for i := range logout {
 			live += string(i) + "\n"
 		}
 		close(logdone)
@@ -201,15 +201,15 @@ func testSSH_ExecuteIntegration(t *testing.T, ssher build.Builder, ctx context.C
 	logdone := make(chan bool, 1)
 	var live string
 	go func() {
-		for i:=range logout {
+		for i := range logout {
 			live += string(i) + "\n"
 		}
 		close(logdone)
 	}()
 	stage := &pb.Stage{
-		Env: []string{"AYYY=123"},
+		Env:    []string{"AYYY=123"},
 		Script: []string{"echo 'SUPERCALLAFRAGILISTICEXPIALADOCIOUS' | grep banana"},
-		Name: "SSHEXEC",
+		Name:   "SSHEXEC",
 	}
 	res := ssher.ExecuteIntegration(ctx, stage, build.InitStageUtil(stage.Name), logout)
 	if res.Status == pb.StageResultVal_PASS {
@@ -221,13 +221,13 @@ func testSSH_ExecuteIntegration(t *testing.T, ssher build.Builder, ctx context.C
 }
 
 func testSSH_Execute(t *testing.T, sher build.Builder, ctx context.Context, hash string) {
-	logout := make(chan[]byte, 1000)
+	logout := make(chan []byte, 1000)
 	ssher := sher.(*SSH)
 	res := ssher.execute(ctx, build.InitStageUtil("execute"), []string{}, []string{"mkdir -p /tmp/.ocelot/" + hash, fmt.Sprintf("touch /tmp/.ocelot/%s/README.md", hash)}, logout)
 	close(logout)
 	if res.Status == pb.StageResultVal_FAIL {
 		var out string
-		for i:=range logout {
+		for i := range logout {
 			out += string(i) + "\n"
 		}
 		t.Error("unable to set up hash direc for test, output is: \n" + out)
@@ -235,12 +235,12 @@ func testSSH_Execute(t *testing.T, sher build.Builder, ctx context.Context, hash
 	//Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
 	execStage := &pb.Stage{
 		Script: []string{"echo 'ayyyyyy'", "ls"},
-		Name: "testcd",
+		Name:   "testcd",
 	}
 	var out string
 	logout = make(chan []byte)
 	logsdone := make(chan bool, 1)
-	go func(){
+	go func() {
 		for i := range logout {
 			out += string(i) + "\n"
 		}
@@ -248,7 +248,7 @@ func testSSH_Execute(t *testing.T, sher build.Builder, ctx context.Context, hash
 	}()
 	res = ssher.Execute(ctx, execStage, logout, hash)
 	close(logout)
-	<- logsdone
+	<-logsdone
 	if res.Status == pb.StageResultVal_FAIL {
 		t.Error("exec stage should have passed")
 	}

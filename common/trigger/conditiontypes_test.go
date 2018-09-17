@@ -73,7 +73,7 @@ func TestTextCondition(t *testing.T) {
 		t.Error("should  pass muster, it now has t82nsla7812l")
 	}
 
-	if !text.PassesMuster(&TriggerData{commitTexts:[]string{"text1 geez text2345 t82nsla7812l"}}) {
+	if !text.PassesMuster(&TriggerData{commitTexts: []string{"text1 geez text2345 t82nsla7812l"}}) {
 		t.Error("should pass, as it has all the commit text messages")
 	}
 }
@@ -96,7 +96,7 @@ func TestFilepathCondition(t *testing.T) {
 		t.Error(diff)
 	}
 	changelist := []string{"src/test/garbo", "src/test/resource/somexml.xml", "src/main/jarra"}
-	if !fp.PassesMuster(&TriggerData{filesChanged:changelist}) {
+	if !fp.PassesMuster(&TriggerData{filesChanged: changelist}) {
 		t.Error("should pass because logical is Or and src/test is in the changelist")
 	}
 	fp.logical = And
@@ -105,7 +105,7 @@ func TestFilepathCondition(t *testing.T) {
 	}
 
 	robustList := []string{"src/test/resources/main.yaml", "src/main/java/com/boop/here.java", "src/main/resources/com/boop/here.xml"}
-	if !fp.PassesMuster(&TriggerData{filesChanged:robustList}) {
+	if !fp.PassesMuster(&TriggerData{filesChanged: robustList}) {
 		t.Error("all required changes are present, this should pass")
 	}
 }

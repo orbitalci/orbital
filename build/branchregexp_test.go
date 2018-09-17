@@ -7,10 +7,10 @@ import (
 	"github.com/shankj3/go-til/test"
 )
 
-var branchTests = []struct{
-	branch string
+var branchTests = []struct {
+	branch          string
 	allowedBranches []string
-	regexOk bool
+	regexOk         bool
 }{
 	{"lets-go-to-the-movies", []string{"lets-go", "movietime", "lets-go-torp-the-movies"}, false},
 	{"here/we/go", []string{"gotime", `here\/.*\/go`}, true},
@@ -19,7 +19,6 @@ var branchTests = []struct{
 	{"v1.0.0", []string{`v[0-9]+\.[0-9]+\.[0-9a-zA-Z]+`}, true},
 	{"rc-v1.0.0", []string{`rc-v.*`}, true},
 	{"rc-v1.0.0", []string{`ALL`}, true},
-
 }
 
 func Test_BranchRegexOk(t *testing.T) {

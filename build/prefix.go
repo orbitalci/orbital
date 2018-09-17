@@ -19,6 +19,7 @@ func GetOcyPrefixFromWerkerType(wt models.WerkType) string {
 		return ""
 	}
 }
+
 //
 func GetOcelotDir(prefix string) string {
 	return prefix + "/.ocelot"

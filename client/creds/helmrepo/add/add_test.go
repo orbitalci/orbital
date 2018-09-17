@@ -64,7 +64,6 @@ func TestCmd_Run_noparams(t *testing.T) {
 	}
 }
 
-
 func TestCmd_Run(t *testing.T) {
 	ui := cli.NewMockUi()
 	conf := commandhelper.NewTestClientConfig([]string{})
@@ -79,12 +78,12 @@ func TestCmd_Run(t *testing.T) {
 		t.Error("shouldn't fail")
 	}
 	expected := &pb.GenericWrap{
-		Creds:[]*pb.GenericCreds{
+		Creds: []*pb.GenericCreds{
 			{
-				AcctName: "jessishank",
-				Identifier: "ocelot_charts",
+				AcctName:     "jessishank",
+				Identifier:   "ocelot_charts",
 				ClientSecret: "https://ocelot.github.io/helm",
-				SubType: pb.SubCredType_HELM_REPO,
+				SubType:      pb.SubCredType_HELM_REPO,
 			},
 		},
 	}
@@ -92,7 +91,6 @@ func TestCmd_Run(t *testing.T) {
 		t.Error(diff)
 	}
 }
-
 
 func TestCmd_Run_badArg(t *testing.T) {
 	ui := cli.NewMockUi()

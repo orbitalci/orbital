@@ -15,7 +15,6 @@ var (
 	FAILED                 = "\u2717"
 )
 
-
 type BuildOutput struct {
 	BuildId  int64  `json:"buildId,omitempty"`
 	Output   []byte `json:"output,omitempty"`

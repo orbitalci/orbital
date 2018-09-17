@@ -1,9 +1,8 @@
 package trigger
 
-
 type ConditionalDirective struct {
-	Conditions  []Section
-	Logical     Conditional
+	Conditions []Section
+	Logical    Conditional
 }
 
 func (c *ConditionalDirective) Passes(td *TriggerData) bool {

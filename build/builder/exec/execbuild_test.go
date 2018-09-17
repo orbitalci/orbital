@@ -32,12 +32,12 @@ func setupExec(t *testing.T) *Exec {
 		t.Fatal(err)
 	}
 	facts := &models.WerkerFacts{
-		Uuid: uuid.New(),
-		WerkerType: models.Exec,
-		LoopbackIp: "localhost",
-		RegisterIP: "localhost",
+		Uuid:        uuid.New(),
+		WerkerType:  models.Exec,
+		LoopbackIp:  "localhost",
+		RegisterIP:  "localhost",
 		ServicePort: "9999",
-		Dev: true,
+		Dev:         true,
 	}
 	return NewExecBuilder(bshr, facts).(*Exec)
 
@@ -51,7 +51,7 @@ func TestExec_Setup(t *testing.T) {
 	go testutil.CreateDoThingsWebServer("./test-fixtures/werker_files.tar", "9999")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	logout := make(chan[]byte, 1000)
+	logout := make(chan []byte, 1000)
 	idChan := make(chan string, 1)
 	task := &pb.WerkerTask{CheckoutHash: hash}
 	res, id := exc.Setup(ctx, logout, idChan, task, nil, "9999")
@@ -91,14 +91,13 @@ func TestExec_Setup(t *testing.T) {
 
 }
 
-
 func TestExec_Setupfail(t *testing.T) {
 	hash := "execbuild123"
 	exc := setupExec(t)
 	// webserver isn't running, should fail to connect
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	logout := make(chan[]byte, 1000)
+	logout := make(chan []byte, 1000)
 	idChan := make(chan string, 1)
 	task := &pb.WerkerTask{CheckoutHash: hash}
 	res, _ := exc.Setup(ctx, logout, idChan, task, nil, "9999")
@@ -131,14 +130,14 @@ func TestExec_Execute(t *testing.T) {
 	}
 	exc := setupExec(t)
 	runStage := &pb.Stage{
-		Env: []string{"HEREBEMYTESTVAR=3"},
+		Env:    []string{"HEREBEMYTESTVAR=3"},
 		Script: []string{"echo $HEREBEMYTESTVAR", "ls"},
-		Name: "executethisbish",
+		Name:   "executethisbish",
 	}
 	var logs string
 	logsdone := make(chan int, 1)
 	logout := make(chan []byte)
-	go func(){
+	go func() {
 		for i := range logout {
 			logs += string(i) + "\n"
 			fmt.Println(logs)
@@ -172,11 +171,10 @@ func createFileMap(files []os.FileInfo) map[string]int {
 	return fm
 }
 
-
 func Test_prepCmds(t *testing.T) {
 	var tests = []struct {
-		name string
-		cmds []string
+		name     string
+		cmds     []string
 		expected [3]string
 	}{
 		{"already parsed", []string{"/bin/bash", "-c", "echo ayyyyyyy"}, [3]string{"/bin/bash", "-c", "echo ayyyyyyy"}},
@@ -185,7 +183,7 @@ func Test_prepCmds(t *testing.T) {
 	}
 
 	for _, tst := range tests {
-		t.Run(tst.name, func(t *testing.T){
+		t.Run(tst.name, func(t *testing.T) {
 			prepped := prepCmds(tst.cmds)
 			if diff := deep.Equal(prepped, tst.expected); diff != nil {
 				t.Error(diff)
@@ -205,7 +203,7 @@ func TestExec_execute(t *testing.T) {
 	logout := make(chan []byte)
 	logsdone := make(chan bool, 1)
 	var logs string
-	go func(){
+	go func() {
 		for i := range logout {
 			logs += string(i) + "\n"
 		}
@@ -228,7 +226,6 @@ func TestExec_execute(t *testing.T) {
 	}
 }
 
-
 func TestExec_executeFail(t *testing.T) {
 	DIREC, _ := os.Getwd()
 	t.Log("WORKIN DIRECTORY!", DIREC)
@@ -238,7 +235,7 @@ func TestExec_executeFail(t *testing.T) {
 	logout := make(chan []byte)
 	logsdone := make(chan bool, 1)
 	var logs string
-	go func(){
+	go func() {
 		for i := range logout {
 			logs += string(i) + "\n"
 		}
@@ -247,10 +244,9 @@ func TestExec_executeFail(t *testing.T) {
 	DIREC, _ = os.Getwd()
 	t.Log("WORKIN DIRECTORY!", DIREC)
 	stage := &pb.Stage{
-		Name: "execccctessst",
+		Name:   "execccctessst",
 		Script: []string{"echo hi | grep onomotopoeia"},
-		Env:  []string{"PRIVTEST=execute"},
-
+		Env:    []string{"PRIVTEST=execute"},
 	}
 	res := exc.ExecuteIntegration(ctx, stage, su, logout)
 	close(logout)
@@ -261,7 +257,6 @@ func TestExec_executeFail(t *testing.T) {
 	}
 }
 
-
 func TestExec_SetGlobalEnv(t *testing.T) {
 	exc := setupExec(t)
 	ctx := context.Background()
@@ -270,7 +265,7 @@ func TestExec_SetGlobalEnv(t *testing.T) {
 	logout := make(chan []byte)
 	logsdone := make(chan bool, 1)
 	var logs string
-	go func(){
+	go func() {
 		for i := range logout {
 			logs += string(i) + "\n"
 		}

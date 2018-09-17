@@ -101,7 +101,7 @@ func scanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageTy
 
 // Logs will stream logs from storage. If the build is not complete, an InvalidArgument gRPC error will be returned
 //   If the BuildQuery's BuildId is > 0, then logs will be retrieved from storage via the buildId. If this is not the case,
-//   then the latest log entry from the hash will be retrieved and streamed. 
+//   then the latest log entry from the hash will be retrieved and streamed.
 func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
 	start := startRequest()
 	defer finishRequest(start)

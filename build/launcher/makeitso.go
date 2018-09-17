@@ -37,7 +37,7 @@ var (
 	)
 )
 
-func init(){
+func init() {
 	prometheus.MustRegister(activeBuilds, buildDurationHist, buildCount)
 }
 
@@ -74,7 +74,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 		endBuild(w.WerkerType.String(), start)
 	}()
 	// set up notifications to be executed on build completion
-	defer func(){
+	defer func() {
 		if err := w.doNotifications(werk); err != nil {
 			ocelog.IncludeErrField(err).Error("build notification failed!")
 		}
@@ -95,7 +95,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	// start building with the Builder
 	result := builder.Init(ctx, werk.CheckoutHash, w.infochan)
 	// at the end of the build, close out any build-length connections associated with build
-	defer func(){
+	defer func() {
 		if err := builder.Close(); err != nil {
 			ocelog.IncludeErrField(err).Error("unable to close builder connections cleanly")
 		}
@@ -146,7 +146,9 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	}
 
 	// run integrations, executable download, codebase download
-	if bailOut, err := w.preFlight(ctx, werk, builder); err != nil || bailOut { return }
+	if bailOut, err := w.preFlight(ctx, werk, builder); err != nil || bailOut {
+		return
+	}
 
 	// run the actual stages outlined in the ocelot.yml
 	fail, dura, err := w.runStages(ctx, werk, builder)
@@ -166,7 +168,6 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	ocelog.Log().Infof("finished building id %s", werk.CheckoutHash)
 }
 
-
 // addGlobalEnvVars sets the global env vars on builders, these are the variables that will live for the duration of the build.
 //	- `GIT_HASH`
 //	- `BUILD_ID`
@@ -184,7 +185,6 @@ func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) 
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 	builder.SetGlobalEnv(paddedEnvs)
 }
-
 
 func (w *launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
 	dockerUuid := <-dockerChan

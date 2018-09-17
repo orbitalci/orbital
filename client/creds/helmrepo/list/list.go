@@ -78,7 +78,7 @@ func (c *cmd) Run(args []string) int {
 	return 0
 }
 
-func organize(cred *models.GenericWrap) map[string]*[]*models.GenericCreds{
+func organize(cred *models.GenericWrap) map[string]*[]*models.GenericCreds {
 	organizedCreds := make(map[string]*[]*models.GenericCreds)
 	for _, cred := range cred.Creds {
 		if cred.SubType != models.SubCredType_HELM_REPO {
@@ -104,7 +104,7 @@ Helm Repos:
 	var vars bytes.Buffer
 	vars.WriteString("  ")
 	for _, cred := range *envs {
-		vars.WriteString(cred.Identifier+": "+cred.ClientSecret+"\n  ")
+		vars.WriteString(cred.Identifier + ": " + cred.ClientSecret + "\n  ")
 	}
 	return fmt.Sprintf(str, acctName, vars.String())
 }

@@ -1,16 +1,13 @@
 package common
 
-
 import (
 	"fmt"
 	"strings"
 )
 
-
-
 const (
 	buildBase       = "ci/builds/"
-	buildIdOnly     = buildBase + "%s" // werkerId
+	buildIdOnly     = buildBase + "%s"    // werkerId
 	buildPath       = buildBase + "%s/%s" // werkerId, hash
 	DockerUuidKey   = "docker_uuid"
 	BuildDockerUuid = buildPath + "/" + DockerUuidKey
@@ -31,7 +28,6 @@ const (
 	WerkerWs       = werkerLocation + "/werker_ws_port"
 	WerkerTags     = werkerLocation + "/tags"
 )
-
 
 func MakeBuildPath(werkerId string, gitHash string) string {
 	return GetPrefix() + fmt.Sprintf(buildPath, werkerId, gitHash)
@@ -81,7 +77,6 @@ func MakeWerkerTagsPath(werkerId string) string {
 	return GetPrefix() + fmt.Sprintf(WerkerTags, werkerId)
 }
 
-
 // ParseGenericBuildPath will return the werkerId and hash out of a key related to the build path
 // must be fully qualified key path, not prefix
 // ie: ci/builds/<werkerId>/<hash>/docker_uuid
@@ -97,14 +92,12 @@ func ParseGenericBuildPath(buildPath string) (werkerId string, hash string, key 
 	return
 }
 
-
 // ParseBuildMapPath will return the git hash of the WerkerBuildMap key
 // 	ie: ci/werker_build_map/<hash>
 func ParseBuildMapPath(path string) (hash string) {
 	split := strings.Split(path, "/")
-	return split[len(split) - 1]
+	return split[len(split)-1]
 }
-
 
 //ParseWerkerLocPath will return the werkerId from a werkerLocation path configured in Consul
 // ie: ci/werker_location/<werkerId>/werker_ip

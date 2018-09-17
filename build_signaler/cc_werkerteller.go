@@ -35,4 +35,3 @@ func (w *CCWerkerTeller) TellWerker(hash string, signaler *Signaler, branch stri
 	}
 	return nil
 }
-

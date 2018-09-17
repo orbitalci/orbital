@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 )
+
 func TestRobustImagePull(t *testing.T) {
 	out, err := RobustImagePull("busybox:latest")
 	out.Close()
@@ -41,7 +42,7 @@ func TestRobustImagePull_integration(t *testing.T) {
 	out, err := RobustImagePull(privateImage)
 	defer out.Close()
 	if err != nil {
-		t.Error("may have failed because " + privateImage + "has been deleted when it shouldn't have been. error: ", err.Error())
+		t.Error("may have failed because "+privateImage+"has been deleted when it shouldn't have been. error: ", err.Error())
 		return
 	}
 }

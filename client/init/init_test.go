@@ -49,14 +49,14 @@ func getNewUI(t *testing.T) (*cmd, *cli.MockUi, func()) {
 	cur, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
-		return nil, ui,  func(){}
+		return nil, ui, func() {}
 	}
 	err = os.Chdir(path)
 	if err != nil {
 		t.Fatal(err)
-		return nil, ui,  func(){}
+		return nil, ui, func() {}
 	}
-	return init, ui,  func(){
+	return init, ui, func() {
 		os.Chdir(cur)
 		os.RemoveAll(path)
 	}

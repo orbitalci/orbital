@@ -44,8 +44,8 @@ func (b *buildDatum) CheckDone() bool {
 
 func GetStreamPack(store storage.OcelotStorage, consulet *consul.Consulet) *StreamPack {
 	return &StreamPack{
-		Consul: consulet,
-		Store:  store,
+		Consul:    consulet,
+		Store:     store,
 		BuildInfo: make(map[string]*buildDatum),
 	}
 }

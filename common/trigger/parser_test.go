@@ -7,7 +7,6 @@ import (
 	"github.com/go-test/deep"
 )
 
-
 func TestParseSpacing(t *testing.T) {
 	branchUnit := &BranchCondition{acceptedBranches: []string{"master", "develop", "release.*"}, logical: Or}
 	textUnit := &TextCondition{acceptedTexts: []string{"schema_changed"}, logical: CNone}
@@ -33,12 +32,12 @@ func TestParseSpacing(t *testing.T) {
 
 func TestParse(t *testing.T) {
 	cases := []struct {
-		err bool
+		err       bool
 		directive string
-		parsed *ConditionalDirective
+		parsed    *ConditionalDirective
 	}{
 		{
-			err: false,
+			err:       false,
 			directive: "branch: fix.* and text: buildme and filepath: GisCommon",
 			parsed: &ConditionalDirective{
 				Logical: And,
@@ -50,36 +49,35 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			err: false,
+			err:       false,
 			directive: "branch: master||develop and filepath: src/test && src/main",
 			parsed: &ConditionalDirective{
 				Logical: And,
 				Conditions: []Section{
 					&BranchCondition{acceptedBranches: []string{"master", "develop"}, logical: Or},
-					&FilepathCondition{acceptedFilepaths: []string{"src/test", "src/main"}, logical:And},
+					&FilepathCondition{acceptedFilepaths: []string{"src/test", "src/main"}, logical: And},
 				},
 			},
 		},
 		{
-			err: false,
+			err:       false,
 			directive: "branch: master or text: force_build || buildBetch",
 			parsed: &ConditionalDirective{
 				Logical: Or,
 				Conditions: []Section{
-					&BranchCondition{ acceptedBranches: []string{"master"}, logical: CNone},
-					&TextCondition{ acceptedTexts: []string{"force_build", "buildBetch"}, logical: Or},
+					&BranchCondition{acceptedBranches: []string{"master"}, logical: CNone},
+					&TextCondition{acceptedTexts: []string{"force_build", "buildBetch"}, logical: Or},
 				},
 			},
 		},
 		{
-			err: true,
+			err:       true,
 			directive: "branch master or text: force_build || buildBetch",
 		},
 		{
-			err: true,
+			err:       true,
 			directive: "branch: master or text: force_build || buildBetch && hereWeGOAgain",
 		},
-
 	}
 	for _, tc := range cases {
 		live, err := Parse(tc.directive)

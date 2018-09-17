@@ -73,9 +73,9 @@ type Translator interface {
 }
 
 type CommitNotFound struct {
-	hash string
+	hash     string
 	acctRepo string
-	branch string
+	branch   string
 }
 
 func (cnf *CommitNotFound) Error() string {
@@ -83,11 +83,11 @@ func (cnf *CommitNotFound) Error() string {
 }
 
 func Commit404(hash, acctRepo, branch string) *CommitNotFound {
-	return &CommitNotFound{hash: hash, acctRepo: acctRepo, branch:branch}
+	return &CommitNotFound{hash: hash, acctRepo: acctRepo, branch: branch}
 }
 
 type BranchNotFound struct {
-	branch string
+	branch   string
 	acctRepo string
 }
 
@@ -96,5 +96,5 @@ func (bnf *BranchNotFound) Error() string {
 }
 
 func Branch404(branch, acctRepo string) *BranchNotFound {
-	return &BranchNotFound{acctRepo:acctRepo, branch:branch}
+	return &BranchNotFound{acctRepo: acctRepo, branch: branch}
 }

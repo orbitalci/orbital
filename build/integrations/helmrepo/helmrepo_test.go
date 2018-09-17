@@ -10,15 +10,15 @@ import (
 
 var conf = []pb.OcyCredder{
 	&pb.GenericCreds{
-		Identifier: "myhelmrepo",
+		Identifier:   "myhelmrepo",
 		ClientSecret: "http://helm.me",
-		SubType: pb.SubCredType_HELM_REPO,
-		AcctName: "schmear",
-	},&pb.GenericCreds{
-		Identifier: "thehelmrepo",
+		SubType:      pb.SubCredType_HELM_REPO,
+		AcctName:     "schmear",
+	}, &pb.GenericCreds{
+		Identifier:   "thehelmrepo",
 		ClientSecret: "http://helm.co",
-		SubType: pb.SubCredType_HELM_REPO,
-		AcctName: "schmear",
+		SubType:      pb.SubCredType_HELM_REPO,
+		AcctName:     "schmear",
 	},
 }
 
@@ -61,7 +61,7 @@ func TestHelmRepoInt_Statics(t *testing.T) {
 }
 
 func TestHelmRepoInt_IsRelevant(t *testing.T) {
-	helmy :=  &HelmRepoInt{}
+	helmy := &HelmRepoInt{}
 	wc := &pb.BuildConfig{
 		Stages: []*pb.Stage{
 			{Script: []string{"helm"}},

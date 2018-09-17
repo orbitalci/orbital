@@ -35,12 +35,11 @@ func (fs *leSecure) GetNewClientTLS(serverRunsAt string) credentials.TransportCr
 
 func (fs *leSecure) GetNewTLS(serverRunsAt string) credentials.TransportCredentials {
 	return credentials.NewTLS(&tls.Config{
-		ServerName: serverRunsAt,
-		RootCAs:    fs.cert,
+		ServerName:         serverRunsAt,
+		RootCAs:            fs.cert,
 		InsecureSkipVerify: true,
 	})
 }
-
 
 func (fs *leSecure) GetKeyPair() *tls.Certificate {
 	key, err := ioutil.ReadFile("/etc/letsencrypt/live/ocelot.hq.l11.com/privkey.pem")
@@ -53,7 +52,6 @@ func (fs *leSecure) GetKeyPair() *tls.Certificate {
 	}
 	return &pair
 }
-
 
 var fullChain = `-----BEGIN CERTIFICATE-----
 MIIGCzCCBPOgAwIBAgISBGKihHplX7yT6hNM3MmiluFuMA0GCSqGSIb3DQEBCwUA

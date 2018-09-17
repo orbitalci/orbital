@@ -45,7 +45,6 @@ func (b *BranchCondition) GetConditionValues() []string {
 	return b.acceptedBranches
 }
 
-
 func stringInChangeList(str string, stringz []string) bool {
 	for _, strr := range stringz {
 		if strings.Contains(strr, str) {
@@ -74,13 +73,10 @@ func changesPassMuster(logical Conditional, realChanges []string, acceptedChange
 	return false
 }
 
-
-
 type TextCondition struct {
 	acceptedTexts []string
 	logical       Conditional
 }
-
 
 func (b *TextCondition) GetTriggerType() TriggerType {
 	return Text

@@ -32,4 +32,3 @@ Usage: ocelot creds k8s <subcommand> [options] [args]
 
   For more examples, ask for subcommand help or view the documentation.
 `
-

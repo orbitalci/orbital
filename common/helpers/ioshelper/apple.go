@@ -13,7 +13,7 @@ import (
 )
 
 func NewKeychain() *AppleKeychain {
-	return &AppleKeychain{PrivateKeys:make(map[string]string), MobileProvisions:make(map[string]string)}
+	return &AppleKeychain{PrivateKeys: make(map[string]string), MobileProvisions: make(map[string]string)}
 }
 
 // appleKeychain holds the identities for ever added apple developer profile
@@ -88,5 +88,3 @@ func (a *AppleKeychain) GetSecretsFromZip(profileReadre SizeReader, profPass str
 	}
 	return nil
 }
-
-

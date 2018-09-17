@@ -1,8 +1,8 @@
 package repos
 
 import (
-"github.com/hashicorp/consul/command/flags"
-"github.com/mitchellh/cli"
+	"github.com/hashicorp/consul/command/flags"
+	"github.com/mitchellh/cli"
 )
 
 func New() *helpcmd {

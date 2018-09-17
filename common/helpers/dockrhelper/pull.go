@@ -44,11 +44,11 @@ func RobustImagePull(imageName string) (closer io.ReadCloser, err error) {
 		return ioutil.NopCloser(&errb), errors.New("cannot check for docker pull because docker is not installed on the machine")
 	}
 
-	cmd = exec.Command("/bin/sh", "-c", "docker pull " + imageName)
+	cmd = exec.Command("/bin/sh", "-c", "docker pull "+imageName)
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
 	if err := cmd.Run(); err != nil {
-		return ioutil.NopCloser(&errb), errors.New(fmt.Sprintf("An error has occured while trying to pull for image %s. \nFull Error is %s. ", imageName, outb.String() + "\n" + errb.String()))
+		return ioutil.NopCloser(&errb), errors.New(fmt.Sprintf("An error has occured while trying to pull for image %s. \nFull Error is %s. ", imageName, outb.String()+"\n"+errb.String()))
 	}
 	return ioutil.NopCloser(&outb), nil
 }

@@ -102,7 +102,7 @@ func AddDockerRepoCreds(t *testing.T, rc CVRemoteConfig, store storage.CredTable
 }
 
 func NewHealthyMaintain() *HealthyMaintain {
-	return &HealthyMaintain{SuccessfulReconnect:true, IsHealthy: true}
+	return &HealthyMaintain{SuccessfulReconnect: true, IsHealthy: true}
 }
 
 type HealthyMaintain struct {
@@ -143,7 +143,6 @@ func (h *HealthyMaintain) SetUnHealthy() {
 	defer h.Unlock()
 	h.IsHealthy = false
 }
-
 
 func (h *HealthyMaintain) SetHealthy() {
 	h.Lock()

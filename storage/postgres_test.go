@@ -17,22 +17,22 @@ import (
 func Test_PostgresStorage(t *testing.T) {
 	util.BuildServerHack(t)
 	port := 5455
-	cleanup, pw  := CreateTestPgDatabase(t, port)
+	cleanup, pw := CreateTestPgDatabase(t, port)
 	defer cleanup(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	pg.Connect()
 	defer PostgresTeardown(t, pg.db)
-	t.Run("add sum start", func(t *testing.T){postgresStorage_AddSumStart(t, pg)})
+	t.Run("add sum start", func(t *testing.T) { postgresStorage_AddSumStart(t, pg) })
 	id := insertDependentData(t, pg)
-	t.Run("get last data", func(t *testing.T){postgresStorage_GetLastData(t, pg)})
-	t.Run("add out", func(t *testing.T){postgresStorage_AddOut(t, pg, id)})
-	t.Run("add stage detail", func(t *testing.T){postgresStorage_AddStageDetail(t, pg, id)})
-	t.Run("add queue time", func(t *testing.T){postgresStorage_SetQueueTime(t, pg)})
-	t.Run("store failed validation", func(t *testing.T){postgresStorage_StoreFailedValidation(t, pg)})
-	t.Run("retrieve hash partial", func(t *testing.T){postgresStorage_RetrieveHashStartsWith(t, pg)})
-	t.Run("cred add", func(t *testing.T){postgresStorage_InsertCred(t, pg)})
-	t.Run("cred delete", func(t *testing.T){postgresStorage_DeleteCred(t, pg)})
-	t.Run("healthy check", func(t *testing.T){postgresStorage_Healthy(t, pg, cleanup)})
+	t.Run("get last data", func(t *testing.T) { postgresStorage_GetLastData(t, pg) })
+	t.Run("add out", func(t *testing.T) { postgresStorage_AddOut(t, pg, id) })
+	t.Run("add stage detail", func(t *testing.T) { postgresStorage_AddStageDetail(t, pg, id) })
+	t.Run("add queue time", func(t *testing.T) { postgresStorage_SetQueueTime(t, pg) })
+	t.Run("store failed validation", func(t *testing.T) { postgresStorage_StoreFailedValidation(t, pg) })
+	t.Run("retrieve hash partial", func(t *testing.T) { postgresStorage_RetrieveHashStartsWith(t, pg) })
+	t.Run("cred add", func(t *testing.T) { postgresStorage_InsertCred(t, pg) })
+	t.Run("cred delete", func(t *testing.T) { postgresStorage_DeleteCred(t, pg) })
+	t.Run("healthy check", func(t *testing.T) { postgresStorage_Healthy(t, pg, cleanup) })
 }
 
 func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {
@@ -266,9 +266,9 @@ func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
 // TODO: add more cred tests here, checking validation etc
 func postgresStorage_InsertCred(t *testing.T, pg *PostgresStorage) {
 	testCred1 := &pb.GenericCreds{
-		Identifier: "THISBEDACRED",
-		SubType: pb.SubCredType_ENV,
-		AcctName: "OCELOTRULES",
+		Identifier:   "THISBEDACRED",
+		SubType:      pb.SubCredType_ENV,
+		AcctName:     "OCELOTRULES",
 		ClientSecret: "thiswontgetinserted",
 	}
 	if err := pg.InsertCred(testCred1, true); err != nil {
@@ -285,12 +285,13 @@ func postgresStorage_InsertCred(t *testing.T, pg *PostgresStorage) {
 		t.Error(diff)
 	}
 }
+
 // this is expected to run after postgresStorage_insertCred
 func postgresStorage_DeleteCred(t *testing.T, pg *PostgresStorage) {
 	testCred1 := &pb.GenericCreds{
-		Identifier: "THISBEDACRED",
-		SubType: pb.SubCredType_ENV,
-		AcctName: "OCELOTRULES",
+		Identifier:   "THISBEDACRED",
+		SubType:      pb.SubCredType_ENV,
+		AcctName:     "OCELOTRULES",
 		ClientSecret: "thisisthesecret",
 	}
 	// make sure it actually is there...

@@ -77,7 +77,6 @@ func NewClientConfig() *ClientConfig {
 	}
 }
 
-
 func IsIPv4Address(host string) bool {
 	if host == "localhost" {
 		return true

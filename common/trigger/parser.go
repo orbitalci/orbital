@@ -113,8 +113,8 @@ func CannotCombineSymbols() *ErrNotSupported {
 	return NotSupported("|| and && cannot yet be combined in one directive. sorry.")
 }
 
-func NotSupported(msg string) (*ErrNotSupported) {
-	return &ErrNotSupported{msg:msg}
+func NotSupported(msg string) *ErrNotSupported {
+	return &ErrNotSupported{msg: msg}
 }
 
 type ErrNotSupported struct {

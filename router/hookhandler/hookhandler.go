@@ -13,7 +13,6 @@ import (
 	"github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/common/remote"
 	"github.com/shankj3/ocelot/models/pb"
-
 )
 
 var (
@@ -30,16 +29,15 @@ func init() {
 }
 
 func GetContext(sig *signal.Signaler, teller *signal.CCWerkerTeller) *HookHandlerContext {
-	return &HookHandlerContext{Signaler:sig, teller:teller}
+	return &HookHandlerContext{Signaler: sig, teller: teller}
 }
 
 //context contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*signal.Signaler
 	// todo: CHANGE THIS
-	teller   *signal.CCWerkerTeller
+	teller *signal.CCWerkerTeller
 }
-
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
@@ -73,7 +71,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 
 //TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
-func (hhc *HookHandlerContext)  PullRequest(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
+func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
 	hookRecieves.WithLabelValues(vcsType.String(), "pullrequest").Inc()
 	translator, err := remote.GetRemoteTranslator(vcsType)
 	if err != nil {

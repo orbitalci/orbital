@@ -170,7 +170,7 @@ func (f *FakeGuideOcelotClient) GetNotifyCreds(ctx context.Context, in *empty.Em
 	return nil, nil
 }
 
-func (f *FakeGuideOcelotClient) UpdateNotifyCreds(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error){
+func (f *FakeGuideOcelotClient) UpdateNotifyCreds(ctx context.Context, in *pb.NotifyCreds, opts ...grpc.CallOption) (*empty.Empty, error) {
 	return nil, nil
 }
 
@@ -311,9 +311,8 @@ func (f *FakeGuideOcelotClient) GenericCredExists(ctx context.Context, in *pb.Ge
 	if f.ReturnError {
 		return nil, errors.New("returning an erro on set")
 	}
-	return &pb.Exists{Exists:f.Exists}, nil
+	return &pb.Exists{Exists: f.Exists}, nil
 }
-
 
 func NewFakeGuideOcelotLogsCli(lines []string) *fakeGuideOcelotLogsClient {
 	return &fakeGuideOcelotLogsClient{outputLines: lines}
