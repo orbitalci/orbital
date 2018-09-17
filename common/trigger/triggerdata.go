@@ -1,6 +1,6 @@
 package trigger
 
-type TriggerData struct {
+type ChangesetData struct {
 	filesChanged []string
 	commitTexts  []string
 	branch       string

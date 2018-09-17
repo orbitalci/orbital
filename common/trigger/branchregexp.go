@@ -1,4 +1,4 @@
-package build
+package trigger
 
 import (
 	"errors"

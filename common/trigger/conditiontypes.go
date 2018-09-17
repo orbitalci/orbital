@@ -1,10 +1,12 @@
 package trigger
 
-import "strings"
+import (
+	"strings"
+)
 
 type Section interface {
 	GetTriggerType() TriggerType
-	PassesMuster(*TriggerData) bool
+	PassesMuster(*ChangesetData) bool
 	GetLogical() Conditional
 	SetLogical(Conditional)
 	AddConditionValue(string)
@@ -20,13 +22,9 @@ func (b *BranchCondition) GetTriggerType() TriggerType {
 	return Branch
 }
 
-func (b *BranchCondition) PassesMuster(td *TriggerData) bool {
-	for _, branch := range b.acceptedBranches {
-		if branch == td.branch {
-			return true
-		}
-	}
-	return false
+func (b *BranchCondition) PassesMuster(td *ChangesetData) bool {
+	ok, _ := BranchRegexOk(td.branch, b.acceptedBranches)
+	return ok
 }
 
 func (b *BranchCondition) GetLogical() Conditional {
@@ -82,7 +80,7 @@ func (b *TextCondition) GetTriggerType() TriggerType {
 	return Text
 }
 
-func (b *TextCondition) PassesMuster(td *TriggerData) bool {
+func (b *TextCondition) PassesMuster(td *ChangesetData) bool {
 	return changesPassMuster(b.logical, td.commitTexts, b.acceptedTexts)
 }
 
@@ -113,7 +111,7 @@ func (b *FilepathCondition) GetTriggerType() TriggerType {
 	return Filepath
 }
 
-func (b *FilepathCondition) PassesMuster(td *TriggerData) bool {
+func (b *FilepathCondition) PassesMuster(td *ChangesetData) bool {
 	return changesPassMuster(b.logical, td.filesChanged, b.acceptedFilepaths)
 }
 
