@@ -1,0 +1,6 @@
+package trigger
+
+//import (
+//	"testing"
+//)
+//

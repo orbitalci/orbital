@@ -1,4 +1,4 @@
-package triggerparser
+package trigger
 
 import "strings"
 
@@ -8,6 +8,7 @@ import "strings"
 
 type TriggerType int
 
+
 const (
 	TNone TriggerType = iota
 	Branch
@@ -15,7 +16,20 @@ const (
 	Text
 )
 
-func ConvertTriggerType(str string) TriggerType {
+func (t TriggerType) Spawn() Section {
+	switch t {
+	case Branch:
+		return &BranchCondition{}
+	case Filepath:
+		return &FilepathCondition{}
+	case Text:
+		return &TextCondition{}
+	default:
+		panic("shouldn't happen")
+	}
+}
+
+func convertTriggerType(str string) TriggerType {
 	switch strings.ToLower(str) {
 	case "branch:":   return Branch
 	case "filepath:": return Filepath
@@ -33,7 +47,7 @@ const (
 	And
 )
 
-func ConvertConditionalWord(str string) Conditional {
+func convertConditionalWord(str string) Conditional {
 	switch strings.ToUpper(str) {
 	case "OR":  return Or
 	case "AND": return And
@@ -41,7 +55,7 @@ func ConvertConditionalWord(str string) Conditional {
 	}
 }
 
-func ConvertConditionalSymbol(str string) Conditional {
+func convertConditionalSymbol(str string) Conditional {
 	switch strings.TrimSpace(str) {
 	case "||": return Or
 	case "&&": return And
@@ -49,14 +63,14 @@ func ConvertConditionalSymbol(str string) Conditional {
 	}
 }
 
-func ContainsConditionalSymbol(str string) bool {
+func containsConditionalSymbol(str string) bool {
 	if !strings.Contains(str, "||") && !strings.Contains(str, "&&") {
 		return false
 	}
 	return true
 }
 
-func SplitConditionals(str string) ([]string, Conditional, error) {
+func splitConditionals(str string) ([]string, Conditional, error) {
 	if strings.Contains(str, "||") && strings.Contains(str, "&&") {
 		return nil, CNone, CannotCombineSymbols()
 	}
@@ -77,9 +91,4 @@ type ConditionalSection struct {
 	Values  []string
 	Logical Conditional
 	index   int
-}
-
-type ConditionalDirective struct {
-	Conditions  []*ConditionalSection
-	Logical     Conditional
 }

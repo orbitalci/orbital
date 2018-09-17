@@ -1,4 +1,4 @@
-package triggerparser
+package trigger
 
 import (
 	"encoding/json"
@@ -9,9 +9,9 @@ import (
 
 
 func TestParseSpacing(t *testing.T) {
-	branchUnit := &ConditionalSection{Ttype: Branch, Values: []string{"master", "develop", "release.*"}, Logical: Or, index: 0}
-	textUnit := &ConditionalSection{Ttype: Text, Values: []string{"schema_changed"}}
-	full := &ConditionalDirective{Conditions: []*ConditionalSection{branchUnit, textUnit}, Logical: And}
+	branchUnit := &BranchCondition{acceptedBranches: []string{"master", "develop", "release.*"}, logical: Or}
+	textUnit := &TextCondition{acceptedTexts: []string{"schema_changed"}, logical: CNone}
+	full := &ConditionalDirective{Conditions: []Section{branchUnit, textUnit}, Logical: And}
 	cases := []string{
 		"branch: master||develop|| release.* and text: schema_changed",
 		"branch: master || develop||release.* and text: schema_changed",
@@ -42,10 +42,10 @@ func TestParse(t *testing.T) {
 			directive: "branch: fix.* and text: buildme and filepath: GisCommon",
 			parsed: &ConditionalDirective{
 				Logical: And,
-				Conditions: []*ConditionalSection{
-					{Ttype: Branch, Values: []string{"fix.*"}, Logical: CNone},
-					{Ttype: Text, Values: []string{"buildme"}, Logical: CNone},
-					{Ttype: Filepath, Values: []string{"GisCommon"}, Logical: CNone},
+				Conditions: []Section{
+					&BranchCondition{acceptedBranches: []string{"fix.*"}, logical: CNone},
+					&TextCondition{acceptedTexts: []string{"buildme"}, logical: CNone},
+					&FilepathCondition{acceptedFilepaths: []string{"GisCommon"}, logical: CNone},
 				},
 			},
 		},
@@ -54,9 +54,9 @@ func TestParse(t *testing.T) {
 			directive: "branch: master||develop and filepath: src/test && src/main",
 			parsed: &ConditionalDirective{
 				Logical: And,
-				Conditions: []*ConditionalSection{
-					{Ttype: Branch, Values: []string{"master", "develop"}, Logical: Or},
-					{Ttype: Filepath, Values: []string{"src/test", "src/main"}, Logical: And},
+				Conditions: []Section{
+					&BranchCondition{acceptedBranches: []string{"master", "develop"}, logical: Or},
+					&FilepathCondition{acceptedFilepaths: []string{"src/test", "src/main"}, logical:And},
 				},
 			},
 		},
@@ -65,9 +65,9 @@ func TestParse(t *testing.T) {
 			directive: "branch: master or text: force_build || buildBetch",
 			parsed: &ConditionalDirective{
 				Logical: Or,
-				Conditions: []*ConditionalSection{
-					{Ttype: Branch, Values: []string{"master"}, Logical: CNone},
-					{Ttype: Text, Values: []string{"force_build", "buildBetch"}, Logical: Or},
+				Conditions: []Section{
+					&BranchCondition{ acceptedBranches: []string{"master"}, logical: CNone},
+					&TextCondition{ acceptedTexts: []string{"force_build", "buildBetch"}, logical: Or},
 				},
 			},
 		},
