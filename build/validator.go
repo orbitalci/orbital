@@ -19,7 +19,6 @@ func GetOcelotValidator() *OcelotValidator {
 	return &OcelotValidator{}
 }
 
-
 //validates config, takes in an optional cli out
 func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) error {
 	var err error
@@ -32,21 +31,25 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	if len(config.BuildTool) == 0 {
 		return errors.New("BuildTool must be specified")
 	}
-	writeUIInfo(UI, "BuildTool is specified " + models.CHECKMARK)
+	writeUIInfo(UI, "BuildTool is specified "+models.CHECKMARK)
 
 	if len(config.Stages) == 0 {
 		return errors.New("there must be at least one stage listed")
 	}
-	// todo: add in checking if any machines match machinetag 
+	// todo: add in checking if any machines match machinetag
 	if config.Image != "" {
 		writeUIInfo(UI, "Connecting to docker to check for image validity...")
 		var out io.ReadCloser
 		out, err = dockrhelper.RobustImagePull(config.Image)
-		defer func(){if out != nil {out.Close()}}()
+		defer func() {
+			if out != nil {
+				out.Close()
+			}
+		}()
 		if err != nil {
-			writeUIError(UI, config.Image + " does not exist or credentials cannot be found")
+			writeUIError(UI, config.Image+" does not exist or credentials cannot be found")
 		} else {
-			writeUIInfo(UI, config.Image + " exists " + models.CHECKMARK)
+			writeUIInfo(UI, config.Image+" exists "+models.CHECKMARK)
 		}
 	}
 	return err
@@ -95,12 +98,11 @@ func (ov *OcelotValidator) ValidateBranchAgainstConf(buildConf *pb.BuildConfig, 
 	return nil
 }
 
-
 // NotViable is an error that means that this commit should not be queued for a build
 type NotViable struct {
-	branch string
+	branch  string
 	commits []string
-	msg string
+	msg     string
 }
 
 func (dq *NotViable) Error() string {
@@ -109,9 +111,8 @@ func (dq *NotViable) Error() string {
 
 // NoViability will return a NotViable error, signaling it won't be queued and shouldn't be stored
 func NoViability(msg string) *NotViable {
-	return &NotViable{msg:msg}
+	return &NotViable{msg: msg}
 }
-
 
 func writeUIInfo(ui cli.Ui, msg string) {
 	if ui != nil {

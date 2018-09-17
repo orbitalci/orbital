@@ -130,12 +130,12 @@ func TestRecovery(t *testing.T) {
 
 type testStore struct {
 	storage.OcelotStorage
-	addedSum *pb.BuildSummary
+	addedSum     *pb.BuildSummary
 	stageDetails []models.StageResult
 }
 
 func (t *testStore) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
-	t.addedSum =&pb.BuildSummary{Hash:hash, Account:account, Repo:repo, Branch:branch, Status: pb.BuildStatus_QUEUED, BuildTime: &timestamp.Timestamp{Seconds: 0, Nanos: 0}}
+	t.addedSum = &pb.BuildSummary{Hash: hash, Account: account, Repo: repo, Branch: branch, Status: pb.BuildStatus_QUEUED, BuildTime: &timestamp.Timestamp{Seconds: 0, Nanos: 0}}
 	return 1, nil
 }
 
@@ -164,7 +164,6 @@ func (t *testStore) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error
 }
 
 //RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error)
-
 
 func Test_Delete(t *testing.T) {
 	werkerId := "werkerId"

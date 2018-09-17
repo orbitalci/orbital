@@ -13,7 +13,7 @@ func Create(loopbackip string, port string) integrations.BinaryIntegrator {
 }
 
 type helmInteg struct {
-	ip string
+	ip   string
 	port string
 }
 

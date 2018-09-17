@@ -12,34 +12,30 @@ import (
 	slack "github.com/shankj3/ocelot/models/slack/pb"
 )
 
-
-
 func TestThrowStatusWebhook(t *testing.T) {
 	url := "https://hooks.slack.com/fake"
 	status := &pb.Status{
 		BuildSum: &pb.BuildSummary{
 			BuildId: 1234,
-			Failed: true,
-			Hash: "testhash",
-			Branch: "banana",
+			Failed:  true,
+			Hash:    "testhash",
+			Branch:  "banana",
 			Account: "jessishank",
-			Repo: "ocyocyocyocy",
-			Status: pb.BuildStatus_FAILED,
+			Repo:    "ocyocyocyocy",
+			Status:  pb.BuildStatus_FAILED,
 		},
 		Stages: []*pb.StageStatus{
 			{
-				Error: "all good here",
+				Error:       "all good here",
 				StageStatus: "prebuild",
-				Messages: []string{"YOU PASSED YOU RAMBUNCTIOUS FELLA"},
-				Status: int32(pb.StageResultVal_PASS),
-
+				Messages:    []string{"YOU PASSED YOU RAMBUNCTIOUS FELLA"},
+				Status:      int32(pb.StageResultVal_PASS),
 			},
 			{
-				Error: "this has failed!",
+				Error:       "this has failed!",
 				StageStatus: "buildmeeee",
-				Messages: []string{"it failed because you are a failure " + models.FAILED},
-				Status: int32(pb.StageResultVal_FAIL),
-
+				Messages:    []string{"it failed because you are a failure " + models.FAILED},
+				Status:      int32(pb.StageResultVal_FAIL),
 			},
 		},
 	}
@@ -53,18 +49,18 @@ func TestThrowStatusWebhook(t *testing.T) {
 	}
 	expected := &slack.WebhookMsg{
 		Username: "ocelot",
-		IconUrl: ocelotIcon,
+		IconUrl:  ocelotIcon,
 		Attachments: []*slack.Attachment{
 			{
 				Fallback: "Build for `jessishank/ocyocyocyocy` at commit `testhash` and branch `banana` has *failed*.\n Build Id is 1234. \nExecute `ocelot logs -build-id 1234` in a terminal for more information.\nYou can also visit https://ocelot.me/repos/jessishank/ocyocyocyocy/1234",
-				Color: "danger",
-				Pretext: "*Ocelot Status*",
-				Title: "Build failed",
-				Text: "Stage details: \n```\n[prebuild] Passed\n\t * YOU PASSED YOU RAMBUNCTIOUS FELLA: all good here\n[buildmeeee] Failed\n\t * it failed because you are a failure " + models.FAILED + ": this has failed!```\nExecute `ocelot logs -build-id 1234` in a terminal for more information.\nYou can also visit https://ocelot.me/repos/jessishank/ocyocyocyocy/1234",
+				Color:    "danger",
+				Pretext:  "*Ocelot Status*",
+				Title:    "Build failed",
+				Text:     "Stage details: \n```\n[prebuild] Passed\n\t * YOU PASSED YOU RAMBUNCTIOUS FELLA: all good here\n[buildmeeee] Failed\n\t * it failed because you are a failure " + models.FAILED + ": this has failed!```\nExecute `ocelot logs -build-id 1234` in a terminal for more information.\nYou can also visit https://ocelot.me/repos/jessishank/ocyocyocyocy/1234",
 				Fields: []*slack.Field{
-					{Title:"Repo", Value: "jessishank/ocyocyocyocy", Short: false},
+					{Title: "Repo", Value: "jessishank/ocyocyocyocy", Short: false},
 					{Title: "Branch", Value: "banana", Short: true},
-					{Title:"Commit", Value: "testhas", Short: true},
+					{Title: "Commit", Value: "testhas", Short: true},
 				},
 			},
 		},
@@ -85,26 +81,24 @@ func TestThrowStatusWebhook_pass(t *testing.T) {
 	status := &pb.Status{
 		BuildSum: &pb.BuildSummary{
 			BuildId: 1234,
-			Failed: false,
-			Hash: "testhash",
-			Branch: "banana",
+			Failed:  false,
+			Hash:    "testhash",
+			Branch:  "banana",
 			Account: "jessishank",
-			Repo: "ocyocyocyocy",
+			Repo:    "ocyocyocyocy",
 		},
 		Stages: []*pb.StageStatus{
 			{
-				Error: "all good here",
+				Error:       "all good here",
 				StageStatus: "prebuild",
-				Messages: []string{"YOU PASSED YOU RAMBUNCTIOUS FELLA"},
-				Status: int32(pb.StageResultVal_PASS),
-
+				Messages:    []string{"YOU PASSED YOU RAMBUNCTIOUS FELLA"},
+				Status:      int32(pb.StageResultVal_PASS),
 			},
 			{
-				Error: "this has failed!",
+				Error:       "this has failed!",
 				StageStatus: "buildmeeee",
-				Messages: []string{"it failed because you are a failure " + models.FAILED},
-				Status: int32(pb.StageResultVal_PASS),
-
+				Messages:    []string{"it failed because you are a failure " + models.FAILED},
+				Status:      int32(pb.StageResultVal_PASS),
 			},
 		},
 	}
@@ -112,17 +106,17 @@ func TestThrowStatusWebhook_pass(t *testing.T) {
 	err := ThrowStatusWebhook(fakeCli, url, channel, status, "")
 	expected := &slack.WebhookMsg{
 		Username: "ocelot",
-		IconUrl: ocelotIcon,
-		Channel: "@jessi-shank",
+		IconUrl:  ocelotIcon,
+		Channel:  "@jessi-shank",
 		Attachments: []*slack.Attachment{
 			{
 				Fallback: "Build for `jessishank/ocyocyocyocy` at commit `testhash` and branch `banana` has *passed*.\n Build Id is 1234. \nExecute `ocelot logs -build-id 1234` in a terminal for more information.",
-				Color: "good",
-				Pretext: "*Ocelot Status*",
-				Title: "Build passed",
-				Text: "Stage details: \n```\n[prebuild] Passed\n[buildmeeee] Passed```\nExecute `ocelot logs -build-id 1234` in a terminal for more information.",
+				Color:    "good",
+				Pretext:  "*Ocelot Status*",
+				Title:    "Build passed",
+				Text:     "Stage details: \n```\n[prebuild] Passed\n[buildmeeee] Passed```\nExecute `ocelot logs -build-id 1234` in a terminal for more information.",
 				Fields: []*slack.Field{
-					{Title: "Repo", Value:"jessishank/ocyocyocyocy", Short: false},
+					{Title: "Repo", Value: "jessishank/ocyocyocyocy", Short: false},
 					{Title: "Branch", Value: "banana", Short: true},
 					{Title: "Commit", Value: "testhas", Short: true},
 				},
@@ -145,26 +139,24 @@ func TestThrowStatusWebhook_handleError(t *testing.T) {
 	status := &pb.Status{
 		BuildSum: &pb.BuildSummary{
 			BuildId: 1234,
-			Failed: false,
-			Hash: "testhash",
-			Branch: "banana",
+			Failed:  false,
+			Hash:    "testhash",
+			Branch:  "banana",
 			Account: "jessishank",
-			Repo: "ocyocyocyocy",
+			Repo:    "ocyocyocyocy",
 		},
 		Stages: []*pb.StageStatus{
 			{
-				Error: "all good here",
+				Error:       "all good here",
 				StageStatus: "prebuild",
-				Messages: []string{"YOU PASSED YOU RAMBUNCTIOUS FELLA"},
-				Status: int32(pb.StageResultVal_PASS),
-
+				Messages:    []string{"YOU PASSED YOU RAMBUNCTIOUS FELLA"},
+				Status:      int32(pb.StageResultVal_PASS),
 			},
 			{
-				Error: "this has failed!",
+				Error:       "this has failed!",
 				StageStatus: "buildmeeee",
-				Messages: []string{"it failed because you are a failure " + models.FAILED},
-				Status: int32(pb.StageResultVal_PASS),
-
+				Messages:    []string{"it failed because you are a failure " + models.FAILED},
+				Status:      int32(pb.StageResultVal_PASS),
 			},
 		},
 	}

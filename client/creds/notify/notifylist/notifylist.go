@@ -109,4 +109,3 @@ Usage: ocelot creds notify list
 
   Retrieves all credentials that ocelot uses to notify on status of builds
 `
-

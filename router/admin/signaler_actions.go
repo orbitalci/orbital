@@ -94,7 +94,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		hist, err := handler.GetBranchLastCommitData(buildReq.AcctRepo, buildReq.Branch)
 		if err != nil {
 			if _, ok := err.(*models.BranchNotFound); !ok {
-				return status.Error(codes.Unavailable, "Unable to retrieve last commit data from bitbucket handler, error from api is: " + err.Error())
+				return status.Error(codes.Unavailable, "Unable to retrieve last commit data from bitbucket handler, error from api is: "+err.Error())
 			} else {
 				return status.Error(codes.InvalidArgument, fmt.Sprintf("Branch %s was not found for repository %s", buildReq.Branch, buildReq.AcctRepo))
 			}
@@ -160,7 +160,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	if err = g.getSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
-			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Use Force if you want to override. Error is: " + err.Error())
+			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Use Force if you want to override. Error is: "+err.Error())
 		}
 		log.IncludeErrField(err).Error("couldn't add to build queue or store in db")
 		return status.Error(codes.InvalidArgument, "Couldn't add to build queue or store in DB, err: "+err.Error())
@@ -169,7 +169,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	return nil
 }
 
-func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error){
+func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 	if g.handler != nil {
 		return g.handler, "token", nil
 	}
@@ -189,7 +189,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	if repoAcct.Repo == "" || repoAcct.Account == "" {
 		return nil, status.Error(codes.InvalidArgument, "repo and account are required fields")
 	}
-	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account + "/" + repoAcct.Repo, g.RemoteConfig)
+	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		if _, ok := err.(*common.FormatError); ok {

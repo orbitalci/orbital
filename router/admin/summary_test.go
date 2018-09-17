@@ -14,11 +14,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-
 func TestGuideOcelotServer_LastFewSummaries(t *testing.T) {
 	store := &summstorage{}
-	gos := &guideOcelotServer{Storage:store}
-	repoAct := &pb.RepoAccount{Repo:"shankj3", Account:"ocelot", Limit: 1}
+	gos := &guideOcelotServer{Storage: store}
+	repoAct := &pb.RepoAccount{Repo: "shankj3", Account: "ocelot", Limit: 1}
 	ctx := context.Background()
 	sums, err := gos.LastFewSummaries(ctx, repoAct)
 	if err != nil {
@@ -55,34 +54,34 @@ func TestGuideOcelotServer_LastFewSummaries(t *testing.T) {
 }
 
 type summstorage struct {
-	returnErr bool
-	notFound bool
+	returnErr   bool
+	notFound    bool
 	returnEmpty bool
 	storage.OcelotStorage
 }
 
 var summary = &pb.BuildSummary{
-	Hash: "hash",
-	Failed: true,
-	Account: "shankj3",
-	Repo: "ocelot",
-	Branch: "master",
-	BuildId: 12,
+	Hash:          "hash",
+	Failed:        true,
+	Account:       "shankj3",
+	Repo:          "ocelot",
+	Branch:        "master",
+	BuildId:       12,
 	BuildDuration: 12.1234,
-	QueueTime: &timestamp.Timestamp{Seconds: time.Unix(0,0).Unix()},
-	BuildTime: &timestamp.Timestamp{Seconds: time.Unix(0,0).Unix()},
+	QueueTime:     &timestamp.Timestamp{Seconds: time.Unix(0, 0).Unix()},
+	BuildTime:     &timestamp.Timestamp{Seconds: time.Unix(0, 0).Unix()},
 }
 
 var pbsummary = &pb.BuildSummary{
-	Hash: summary.Hash,
-	Failed: summary.Failed,
-	Account: summary.Account,
-	Repo: summary.Repo,
-	Branch: summary.Branch,
-	BuildId: summary.BuildId,
+	Hash:          summary.Hash,
+	Failed:        summary.Failed,
+	Account:       summary.Account,
+	Repo:          summary.Repo,
+	Branch:        summary.Branch,
+	BuildId:       summary.BuildId,
 	BuildDuration: summary.BuildDuration,
-	QueueTime: &timestamp.Timestamp{Seconds:0},
-	BuildTime: &timestamp.Timestamp{Seconds:0},
+	QueueTime:     &timestamp.Timestamp{Seconds: 0},
+	BuildTime:     &timestamp.Timestamp{Seconds: 0},
 }
 
 func (s *summstorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]*pb.BuildSummary, error) {

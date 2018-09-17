@@ -25,8 +25,8 @@ var (
 		Help: "number of current db requests",
 	})
 	dbDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "ocelot_db_transaction_duration",
-		Help: "database execution times",
+		Name:    "ocelot_db_transaction_duration",
+		Help:    "database execution times",
 		Buckets: prometheus.LinearBuckets(0, 0.25, 15),
 		// table: build_summary, etc
 		// interaction_type: create | read | update | delete
@@ -129,7 +129,7 @@ func convertTimestampToTime(stamp *timestamp.Timestamp) time.Time {
 }
 
 func convertTimeToTimestamp(tyme time.Time) *timestamp.Timestamp {
-	return &timestamp.Timestamp{Seconds:tyme.Unix()}
+	return &timestamp.Timestamp{Seconds: tyme.Unix()}
 }
 
 // AddSumStart updates the build_summary table with the initial information that you get from a webhook
@@ -334,7 +334,6 @@ func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (*pb.BuildSum
 		return &sum, err
 	}
 	defer stmt.Close()
-
 
 	err = stmt.QueryRow(partialGitHash+"%").Scan(&sum.Hash, &sum.Failed, &starttime, &sum.Account, &sum.BuildDuration, &sum.Repo, &sum.BuildId, &sum.Branch, &queuetime, &sum.Status)
 	if err == sql.ErrNoRows {

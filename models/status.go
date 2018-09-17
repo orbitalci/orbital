@@ -23,7 +23,7 @@ func ParseStagesByBuildId(buildSum *pb.BuildSummary, stageResults []StageResult)
 
 	hashStatus := &pb.Status{
 		BuildSum: buildSum,
-		Stages: parsedStages,
+		Stages:   parsedStages,
 	}
 
 	return hashStatus

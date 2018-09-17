@@ -11,7 +11,6 @@ import (
 
 // package contains utils for drawing tables
 
-
 //SelectFromHashes will draw a table that can be displayed if there's multiple matching hashes
 //+------------------------------------------+----------------------------+-------------------+
 //|                   HASH                   |            REPO            |   ACCOUNT NAME    |
@@ -89,13 +88,13 @@ func PrintStatusStages(statuses *models.Status, wide bool, theme *ColorDefs) (st
 	default:
 		theme.Error.Println("Status is nil, this should not happen.")
 		os.Exit(1)
-	    color = theme.Normal
+		color = theme.Normal
 	}
 
 	if statuses != nil && len(statuses.Stages) > 0 {
 		for _, stage := range statuses.Stages {
 			statusEnum := models.StageResultVal(stage.Status)
-			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.StageStatus, PrettifyTime(stage.StageDuration, statuses.BuildSum.Status==models.BuildStatus_QUEUED), statusEnum.String())
+			stageStatus += fmt.Sprintf("\n[%s] took %s to %s", stage.StageStatus, PrettifyTime(stage.StageDuration, statuses.BuildSum.Status == models.BuildStatus_QUEUED), statusEnum.String())
 			if statuses.BuildSum.Status == models.BuildStatus_FAILED || wide {
 				stageStatus += fmt.Sprintf("\n\t * %s", strings.Join(stage.Messages, "\n\t * "))
 				if len(stage.Error) > 0 {

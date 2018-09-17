@@ -12,7 +12,6 @@ import (
 	models "github.com/shankj3/ocelot/models/pb"
 )
 
-
 func New(ui cli.Ui) *cmd {
 	c := &cmd{UI: ui, config: commandhelper.Config}
 	c.init()
@@ -90,7 +89,7 @@ func (c *cmd) Run(args []string) int {
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	creds := &models.AppleCreds{SubType:models.SubCredType_DEVPROFILE}
+	creds := &models.AppleCreds{SubType: models.SubCredType_DEVPROFILE}
 	if c.account == "ERROR" {
 		c.UI.Error("-acct was not provided")
 		return 1

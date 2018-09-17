@@ -9,8 +9,6 @@ import (
 	"github.com/shankj3/ocelot/common"
 )
 
-
-
 func TestAppleKeychain_GetSecretsFromZip(t *testing.T) {
 	zipData, err := ioutil.ReadFile("./test-fixtures/test.zip")
 	if err != nil {
@@ -54,7 +52,7 @@ func TestUnpackAppleDevAccount(t *testing.T) {
 	}
 	encodedTestData := GetAndEncodeDevFolder(t)
 	expected := &AppleKeychain{
-		PrivateKeys: map[string]string{"id1.p12":encodedTestData["id1.p12"]},
+		PrivateKeys: map[string]string{"id1.p12": encodedTestData["id1.p12"]},
 		MobileProvisions: map[string]string{
 			"prof1.mobileprovision": encodedTestData["prof1.mobileprovision"],
 			"prof2.mobileprovision": encodedTestData["prof2.mobileprovision"],

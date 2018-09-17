@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-
 func New(ui cli.Ui, credType models.CredType) *cmd {
 	c := &cmd{UI: ui, config: commandhelper.Config, credType: credType}
 	c.init()
@@ -46,9 +45,8 @@ func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	c.flags.StringVar(&c.st, "subtype", "ERROR", "If more than one subtype for this cred, specify subtype")
 	c.flags.StringVar(&c.account, "acct", "ERROR", "Account name to file the xcode profile under.")
-	c.flags.StringVar(&c.identifier, "identifier", "ERROR","unique identifier for this ssh key")
+	c.flags.StringVar(&c.identifier, "identifier", "ERROR", "unique identifier for this ssh key")
 }
-
 
 func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
@@ -104,7 +102,7 @@ func (c *cmd) DeleteACredential(ctx context.Context, subType models.SubCredType)
 	var err error
 	switch c.credType {
 	case models.CredType_GENERIC:
-		_, err = c.config.Client.DeleteGenericCreds(ctx, &models.GenericCreds{AcctName: c.account, Identifier: c.identifier, SubType:subType})
+		_, err = c.config.Client.DeleteGenericCreds(ctx, &models.GenericCreds{AcctName: c.account, Identifier: c.identifier, SubType: subType})
 	case models.CredType_NOTIFIER:
 		_, err = c.config.Client.DeleteNotifyCreds(ctx, &models.NotifyCreds{AcctName: c.account, Identifier: c.identifier, SubType: subType})
 	case models.CredType_SSH:

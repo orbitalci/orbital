@@ -18,7 +18,6 @@ import (
 	"github.com/shankj3/ocelot/storage"
 )
 
-
 func getLoopbackIp(t *testing.T) string {
 	var loopIp string
 	switch runtime.GOOS {
@@ -55,33 +54,32 @@ func getTestingLauncher(t *testing.T) (*launcher, func(t *testing.T)) {
 	valet := valet2.NewValet(remoteConf, uid, models.Docker, pg, nil)
 	loopIp := getLoopbackIp(t)
 	facts := &models.WerkerFacts{
-		Uuid: uid,
-		WerkerType: models.Docker,
-		LoopbackIp: loopIp,
-		RegisterIP: "localhost",
+		Uuid:        uid,
+		WerkerType:  models.Docker,
+		LoopbackIp:  loopIp,
+		RegisterIP:  "localhost",
 		ServicePort: "9090",
-		GrpcPort: "9099",
+		GrpcPort:    "9099",
 	}
 	stream := make(chan *models.Transport, 1000)
 	buildCtx := make(chan *models.BuildContext, 1000)
 	bshr := getTestBasher(t)
 	launcher := NewLauncher(facts, remoteConf, stream, buildCtx, bshr, pg, valet)
-	cleanitall := func(t *testing.T){
+	cleanitall := func(t *testing.T) {
 		cleanup(t)
 		credentials.TeardownVaultAndConsul(listener, testserver)
 	}
 	return launcher, cleanitall
 }
 
-
 type testStore struct {
 	storage.OcelotStorage
-	addedSum *pb.BuildSummary
+	addedSum     *pb.BuildSummary
 	stageDetails []models.StageResult
 }
 
 func (t *testStore) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
-	t.addedSum =&pb.BuildSummary{Hash:hash, Account:account, Repo:repo, Branch:branch, Status: pb.BuildStatus_QUEUED, BuildTime: &timestamp.Timestamp{Seconds: 0, Nanos: 0}}
+	t.addedSum = &pb.BuildSummary{Hash: hash, Account: account, Repo: repo, Branch: branch, Status: pb.BuildStatus_QUEUED, BuildTime: &timestamp.Timestamp{Seconds: 0, Nanos: 0}}
 	return 1, nil
 }
 
@@ -109,32 +107,30 @@ func (t *testStore) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error
 	return t.addedSum, nil
 }
 
-
 func (t *testStore) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error) {
 	return nil, nil
 }
 
-
 type fakeBuilder struct {
-	failInit bool
-	failSetup bool
-	failExecute bool
+	failInit               bool
+	failSetup              bool
+	failExecute            bool
 	failExecuteIntegration bool
-	failNum int
-	currentnum int
-	stagesRan []*pb.Stage
-	taskGiven *pb.WerkerTask
-	setEnvs []string
-	addedEnvs []string
-	uid uuid.UUID
+	failNum                int
+	currentnum             int
+	stagesRan              []*pb.Stage
+	taskGiven              *pb.WerkerTask
+	setEnvs                []string
+	addedEnvs              []string
+	uid                    uuid.UUID
 	*basher.Basher
 }
 
 func (f *fakeBuilder) Init(ctx context.Context, hash string, logout chan []byte) *pb.Result {
 	if f.failInit {
-		return &pb.Result{Status:pb.StageResultVal_FAIL, Error:"i was told to fail", Messages: []string{"fail!"}, Stage:"init"}
+		return &pb.Result{Status: pb.StageResultVal_FAIL, Error: "i was told to fail", Messages: []string{"fail!"}, Stage: "init"}
 	}
-	return &pb.Result{Status:pb.StageResultVal_PASS, Messages:[]string{"passed!"}, Stage:"init"}
+	return &pb.Result{Status: pb.StageResultVal_PASS, Messages: []string{"passed!"}, Stage: "init"}
 }
 
 func (f *fakeBuilder) SetGlobalEnv(envs []string) {
@@ -150,21 +146,21 @@ func (f *fakeBuilder) Setup(ctx context.Context, logout chan []byte, dockerId ch
 	close(dockerId)
 	f.uid = uuid.New()
 	if f.failSetup {
-		return &pb.Result{Status:pb.StageResultVal_FAIL, Error:"i was told to fail", Messages: []string{"fail!"}, Stage:"setup"}, f.uid.String()
+		return &pb.Result{Status: pb.StageResultVal_FAIL, Error: "i was told to fail", Messages: []string{"fail!"}, Stage: "setup"}, f.uid.String()
 	}
-	return &pb.Result{Status:pb.StageResultVal_PASS, Messages: []string{"passed setup!!"}, Stage: "setup"}, f.uid.String()
+	return &pb.Result{Status: pb.StageResultVal_PASS, Messages: []string{"passed setup!!"}, Stage: "setup"}, f.uid.String()
 }
 
 func (f *fakeBuilder) Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	if f.failExecute {
-		return &pb.Result{Status:pb.StageResultVal_FAIL, Error:"i was told to fail", Messages: []string{"fail!"}, Stage:actions.Name}
+		return &pb.Result{Status: pb.StageResultVal_FAIL, Error: "i was told to fail", Messages: []string{"fail!"}, Stage: actions.Name}
 	}
 	f.stagesRan = append(f.stagesRan, actions)
-	return &pb.Result{Status:pb.StageResultVal_PASS, Messages:[]string{"passing stage"}, Stage: actions.Name}
+	return &pb.Result{Status: pb.StageResultVal_PASS, Messages: []string{"passing stage"}, Stage: actions.Name}
 }
 
 func (f *fakeBuilder) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan []byte) *pb.Result {
-	failureres := &pb.Result{Status:pb.StageResultVal_FAIL, Error:"i was told to fail", Messages: []string{"fail!"}, Stage:stgUtil.Stage}
+	failureres := &pb.Result{Status: pb.StageResultVal_FAIL, Error: "i was told to fail", Messages: []string{"fail!"}, Stage: stgUtil.Stage}
 	if f.failExecuteIntegration {
 		if f.failNum != 0 {
 			if f.failNum == f.currentnum {
@@ -176,7 +172,7 @@ func (f *fakeBuilder) ExecuteIntegration(ctx context.Context, stage *pb.Stage, s
 		}
 	}
 	f.stagesRan = append(f.stagesRan, stage)
-	return &pb.Result{Status:pb.StageResultVal_PASS,  Messages: []string{"passssin"}, Stage:stgUtil.Stage}
+	return &pb.Result{Status: pb.StageResultVal_PASS, Messages: []string{"passssin"}, Stage: stgUtil.Stage}
 }
 
 func (f *fakeBuilder) GetContainerId() string {

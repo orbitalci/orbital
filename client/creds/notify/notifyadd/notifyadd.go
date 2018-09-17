@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
-	
+
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/commandhelper"
 	models "github.com/shankj3/ocelot/models/pb"
@@ -19,14 +19,14 @@ func New(ui cli.Ui) *cmd {
 }
 
 type cmd struct {
-	UI         	  cli.Ui
-	flags      	  *flag.FlagSet
-	notifyUrl  	  string
-	acctName   	  string
-	identifier 	  string
+	UI            cli.Ui
+	flags         *flag.FlagSet
+	notifyUrl     string
+	acctName      string
+	identifier    string
 	stringSubType string
 	baseUrl       string
-	config     	  *commandhelper.ClientConfig
+	config        *commandhelper.ClientConfig
 }
 
 func (c *cmd) GetClient() models.GuideOcelotClient {
@@ -147,5 +147,3 @@ Usage: ocelot creds notify add --identifier L11_SLACK --acctname level11consulti
         - "PASS"
         - "FAIL"
 `
-
-

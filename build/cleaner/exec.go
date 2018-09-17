@@ -44,4 +44,3 @@ func (e *ExecCleaner) Cleanup(ctx context.Context, id string, logout chan []byte
 	}
 	return nil
 }
-

@@ -9,7 +9,7 @@ import (
 
 // MakeFakePoster will create a FakePoster instance for you with the desired resopnse code and response body set
 func MakeFakePoster(desiredStatusCode int, desiredReturnBody string) *FakePoster {
-	return &FakePoster{ResponseCode:desiredStatusCode, ResponseBody:desiredReturnBody}
+	return &FakePoster{ResponseCode: desiredStatusCode, ResponseBody: desiredReturnBody}
 }
 
 // FakePoster is for testing anything related to posting slack webhooks
@@ -25,7 +25,6 @@ type FakePoster struct {
 	ResponseBody string
 	// urls that have been posted
 	PostedUrls []string
-
 }
 
 func (f *FakePoster) Post(url string, contentType string, body io.Reader) (resp *http.Response, err error) {

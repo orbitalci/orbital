@@ -30,7 +30,7 @@ func tarTemplates(t *testing.T) func(t *testing.T) {
 	werkertar := filepath.Join(filepath.Dir(dir), "werker_files.tar")
 	here, _ := ioutil.ReadDir(".")
 	fmt.Println(here)
-	cmd := exec.Command("/bin/sh", "-c", "tar -cvf " + werkertar + " *")
+	cmd := exec.Command("/bin/sh", "-c", "tar -cvf "+werkertar+" *")
 	cmd.Dir = template
 	var out, err bytes.Buffer
 	cmd.Stdout = &out

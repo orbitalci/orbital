@@ -25,7 +25,7 @@ type ColorDefs struct {
 	Warning          *Color
 	Status           *Color
 	TableHeaderColor *Color
-	NoColor 		 bool
+	NoColor          bool
 }
 
 func Default(noColor bool) *ColorDefs {
@@ -37,15 +37,15 @@ func Default(noColor bool) *ColorDefs {
 	//blue := color.New(color.FgBlue).SprintfFunc()
 	cyan := color.New(color.FgCyan)
 	theme := &ColorDefs{
-		Failed: &Color{red},
-		Queued: &Color{black},
-		Passed: &Color{green},
-		Done: &Color{black},
-		Info: &Color{cyan},
+		Failed:  &Color{red},
+		Queued:  &Color{black},
+		Passed:  &Color{green},
+		Done:    &Color{black},
+		Info:    &Color{cyan},
 		Warning: &Color{yellow},
-		Normal: &Color{black},
+		Normal:  &Color{black},
 		Running: &Color{purple},
-		Error: &Color{red},
+		Error:   &Color{red},
 	}
 	if runtime.GOOS == "windows" || noColor {
 		color.NoColor = true

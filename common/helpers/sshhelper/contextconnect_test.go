@@ -55,7 +55,6 @@ func contextConnection_CheckConnection(t *testing.T, ctx context.Context, facts 
 	}
 }
 
-
 func contextConnection_RunAndLog(t *testing.T, ctx context.Context, facts *models.SSHFacts) {
 	cnxn, err := CreateSSHChannel(ctx, facts, "")
 	if err != nil {
@@ -80,7 +79,7 @@ func contextConnection_RunAndLog(t *testing.T, ctx context.Context, facts *model
 }
 
 //type StreamingFunc func(r io.Reader, logout chan[]byte, wg *sync.WaitGroup)
-func testPipeHandler(rc io.Reader, logout chan[]byte, wg *sync.WaitGroup) {
+func testPipeHandler(rc io.Reader, logout chan []byte, wg *sync.WaitGroup) {
 	defer wg.Done()
 	scanner := bufio.NewScanner(rc)
 	for scanner.Scan() {
@@ -88,7 +87,6 @@ func testPipeHandler(rc io.Reader, logout chan[]byte, wg *sync.WaitGroup) {
 		logout <- scanner.Bytes()
 	}
 }
-
 
 func contextConnection_Setenvs(t *testing.T, ctx context.Context, facts *models.SSHFacts) {
 	cnxn, err := CreateSSHChannel(ctx, facts, "")
@@ -99,7 +97,7 @@ func contextConnection_Setenvs(t *testing.T, ctx context.Context, facts *models.
 	defer cnxn.Close()
 	cnxn.SetGlobals([]string{"IVORYTRADE=BAD", "GIT_HASH=nd8sb29"})
 	logout := make(chan []byte, 1000)
-	if err = cnxn.RunAndLog("echo $RUNTIME && echo $IVORYTRADE && echo $GIT_HASH", []string{"RUNTIME=1", "LONG="+ SUPERLONGLINE}, logout, testPipeHandler); err != nil {
+	if err = cnxn.RunAndLog("echo $RUNTIME && echo $IVORYTRADE && echo $GIT_HASH", []string{"RUNTIME=1", "LONG=" + SUPERLONGLINE}, logout, testPipeHandler); err != nil {
 		t.Error(err)
 		return
 	}
@@ -122,10 +120,9 @@ func contextConnection_Setenvs(t *testing.T, ctx context.Context, facts *models.
 		t.Error(test.StrFormatErrors("GIT_HASH value", "nd8sb29", totallist[2]))
 	}
 
-
 }
 
-const SUPERLONGLINE=`jjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j
+const SUPERLONGLINE = `jjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j
 =jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjj
 jjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j
 =jjjjjjjjjjjjj=j=jjjjjjjjjjjjj=j=jjjjjjjjjjjjj

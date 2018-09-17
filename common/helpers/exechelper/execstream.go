@@ -9,7 +9,7 @@ import (
 // StreamingFunc is the function that will process the input coming off of either stdoutpipe() or stderrpipe() and write it to the stream channel. this function is expected to call wg.Done() upon finish
 type StreamingFunc func(input io.ReadCloser, streamChan chan []byte, wg *sync.WaitGroup, inputDescription string)
 
-func RunAndStreamCmd(cmd *exec.Cmd, logout chan[]byte, procFunc StreamingFunc) error {
+func RunAndStreamCmd(cmd *exec.Cmd, logout chan []byte, procFunc StreamingFunc) error {
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -29,4 +29,3 @@ func RunAndStreamCmd(cmd *exec.Cmd, logout chan[]byte, procFunc StreamingFunc) e
 	wg.Wait()
 	return err
 }
-

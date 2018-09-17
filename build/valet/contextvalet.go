@@ -10,8 +10,9 @@ import (
 )
 
 func NewContextValet() *ContextValet {
-	return &ContextValet{contexts:make(map[string]*models.BuildContext)}
+	return &ContextValet{contexts: make(map[string]*models.BuildContext)}
 }
+
 // ContextValet is responsible for managing all of the cancellable build contexts, and calling
 // their cancel func. It will also un-track the builds that have completed
 type ContextValet struct {
@@ -21,7 +22,7 @@ type ContextValet struct {
 func (kv *ContextValet) ListenForKillRequests(hashKillChan chan string) {
 	for {
 		time.Sleep(time.Millisecond)
-		hash := <- hashKillChan
+		hash := <-hashKillChan
 		kv.Kill(hash)
 	}
 }
@@ -48,7 +49,6 @@ func (kv *ContextValet) ListenBuilds(buildsChan chan *models.BuildContext, mapLo
 
 	}
 }
-
 
 func (kv *ContextValet) contextCleanup(buildCtx *models.BuildContext, mapLock sync.Mutex) {
 	select {

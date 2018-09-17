@@ -38,7 +38,6 @@ func Test_RCtoDockerConfig(t *testing.T) {
 	//fmt.Println(base64.StdEncoding.EncodeToString(jsonbit))
 }
 
-
 func Test_RCtoDockerConfigFail(t *testing.T) {
 	vcss := []pb.OcyCredder{&pb.VCSCreds{}}
 	d := Create()
@@ -58,7 +57,7 @@ func TestDockrInt_staticsstuffs(t *testing.T) {
 		t.Error("docker config integration should always be relevant")
 	}
 	di.dConfig = ";alksdfjalk;sdjfklajsdfkl;ajsdfl;ajsdfl;aksdjfkl;ajsdfkl;asjdfl;jadslafjk"
-	if diff := deep.Equal(d.GetEnv(), []string{"DCONF="+di.dConfig}); diff != nil {
+	if diff := deep.Equal(d.GetEnv(), []string{"DCONF=" + di.dConfig}); diff != nil {
 		t.Error("Envs not equal, diff is: \n", diff)
 	}
 	expectedBashable := []string{"/bin/sh", "-c", "mkdir -p ~/.docker && echo \"${DCONF}\" | base64 -d > ~/.docker/config.json"}

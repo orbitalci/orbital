@@ -10,7 +10,7 @@ import (
 
 // VagrantUp will run the command "vagrant up" from the vagrantDir specified. It will also save the output
 // of vagrant ssh-config to the vagrantDir as the file vagrant-ssh for easy config of ssh clients
-func VagrantUp(ctx context.Context, vagrantDir string, infoChan chan[]byte, stage *build.StageUtil) error {
+func VagrantUp(ctx context.Context, vagrantDir string, infoChan chan []byte, stage *build.StageUtil) error {
 	cmd := exec.CommandContext(ctx, "/bin/sh", "-c", "vagrant up")
 	cmd.Dir = vagrantDir
 	if err := runCommandLogToChan(cmd, infoChan, stage); err != nil {
@@ -22,7 +22,7 @@ func VagrantUp(ctx context.Context, vagrantDir string, infoChan chan[]byte, stag
 	return runCommandLogToChan(cmd, infoChan, stage)
 }
 
-func VagrantDown(ctx context.Context, vagrantDir string, infoChan chan[]byte) error {
+func VagrantDown(ctx context.Context, vagrantDir string, infoChan chan []byte) error {
 	cmd := exec.CommandContext(ctx, "/bin/sh", "-c", "vagrant destroy -f")
 	cmd.Dir = vagrantDir
 	if err := runCommandLogToChan(cmd, infoChan, build.InitStageUtil("vagrant down")); err != nil {
@@ -31,7 +31,7 @@ func VagrantDown(ctx context.Context, vagrantDir string, infoChan chan[]byte) er
 	return nil
 }
 
-func handleCancel(ctx context.Context, vagrantDir string, infoChan chan[]byte) error {
+func handleCancel(ctx context.Context, vagrantDir string, infoChan chan []byte) error {
 	select {
 	case <-ctx.Done():
 		log.Log().Info("KILLING VAGRANT")

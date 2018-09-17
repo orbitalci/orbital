@@ -8,31 +8,30 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-
 var expectedBuildConf = &pb.BuildConfig{
 	BuildTool: "go",
-	Image: "golang:1.10.2-alpine3.7",
-	Env: []string{"BUILD_DIR=/go/src/bitbucket.org/level11consulting/"},
-	Branches: []string{"ALL"},
+	Image:     "golang:1.10.2-alpine3.7",
+	Env:       []string{"BUILD_DIR=/go/src/bitbucket.org/level11consulting/"},
+	Branches:  []string{"ALL"},
 	Stages: []*pb.Stage{
 		{
-			Name: "install consul for testing",
+			Name:   "install consul for testing",
 			Script: []string{"apk update", "apk add unzip", "cd /go/bin", "wget https://releases.hashicorp.com/consul/1.1.0/consul_1.1.0_linux_amd64.zip", "echo \"unzipping\"", "unzip consul_1.1.0_linux_amd64.zip", "echo \"Done\""},
 		},
 		{
-			Name: "configure git",
+			Name:   "configure git",
 			Script: []string{`git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.org/"`},
 		},
 		{
-			Name: "make stoopid dep thing",
+			Name:   "make stoopid dep thing",
 			Script: []string{"mkdir -p $BUILD_DIR", "cp -r $WORKSPACE $BUILD_DIR/go-til"},
 		},
 		{
-			Name: "install dep & ensure dependencies",
+			Name:   "install dep & ensure dependencies",
 			Script: []string{"cd $BUILD_DIR/go-til", "go get -u github.com/golang/dep/...", "dep ensure -v"},
 		},
 		{
-			Name: "test",
+			Name:   "test",
 			Script: []string{"cd $BUILD_DIR", "go test ./..."},
 		},
 	},

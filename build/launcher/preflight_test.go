@@ -20,21 +20,21 @@ import (
 func Test_downloadCodebase(t *testing.T) {
 	bilder := &fakeBuilder{
 		setEnvs: []string{},
-		Basher: getTestBasher(t),
+		Basher:  getTestBasher(t),
 	}
 	ctx := context.Background()
 	task := &pb.WerkerTask{
-		VcsType: pb.SubCredType_BITBUCKET,
+		VcsType:      pb.SubCredType_BITBUCKET,
 		CheckoutHash: "123",
-		VcsToken: "token",
-		FullName: "shankj3/ocelot",
+		VcsToken:     "token",
+		FullName:     "shankj3/ocelot",
 	}
 	logout := make(chan []byte, 100)
 	stage := build.InitStageUtil("test")
-	result := downloadCodebase(ctx, task, bilder, stage,  logout)
+	result := downloadCodebase(ctx, task, bilder, stage, logout)
 	close(logout)
 	var output string
-	for i:= range logout {
+	for i := range logout {
 		output += string(i) + "\n"
 	}
 	if result.Status != pb.StageResultVal_PASS {
@@ -42,7 +42,7 @@ func Test_downloadCodebase(t *testing.T) {
 	}
 	bilder.failExecuteIntegration = true
 	logout = make(chan []byte, 100)
-	result = downloadCodebase(ctx, task, bilder, stage,  logout)
+	result = downloadCodebase(ctx, task, bilder, stage, logout)
 	if result.Status != pb.StageResultVal_FAIL {
 		t.Error("builder returned a failure, this should also fail.")
 	}
@@ -51,26 +51,26 @@ func Test_downloadCodebase(t *testing.T) {
 func TestLauncher_preFlight(t *testing.T) {
 	t.Skip(t)
 	lnchr, _ := getTestingLauncher(t)
-	time.Sleep(3*time.Second)
+	time.Sleep(3 * time.Second)
 	//defer clean(t)
 	bilder := &fakeBuilder{
 		setEnvs: []string{},
-		Basher: getTestBasher(t),
+		Basher:  getTestBasher(t),
 	}
 	ctx := context.Background()
-	time.Sleep(5*time.Second)
+	time.Sleep(5 * time.Second)
 	id, err := lnchr.Store.AddSumStart("123", "shankj3", "ocelot", "branch")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	task := &pb.WerkerTask{
-		VcsType: pb.SubCredType_BITBUCKET,
+		VcsType:      pb.SubCredType_BITBUCKET,
 		CheckoutHash: "123",
-		VcsToken: "token",
-		FullName: "shankj3/ocelot",
-		Branch: "branch",
-		Id: id,
+		VcsToken:     "token",
+		FullName:     "shankj3/ocelot",
+		Branch:       "branch",
+		Id:           id,
 	}
 	_, err = lnchr.preFlight(ctx, task, bilder)
 	if err != nil {
@@ -103,30 +103,30 @@ func TestLauncher_preFlight(t *testing.T) {
 func TestLauncher_handleEnvSecrets(t *testing.T) {
 	creds := []pb.OcyCredder{
 		&pb.GenericCreds{
-			AcctName: "oooooops",
-			Identifier: "noicenoice",
+			AcctName:     "oooooops",
+			Identifier:   "noicenoice",
 			ClientSecret: "thisissecret",
-			SubType: pb.SubCredType_ENV,
+			SubType:      pb.SubCredType_ENV,
 		},
 		&pb.GenericCreds{
-			AcctName: "oooooops",
-			Identifier: "GIT_SECRET",
+			AcctName:     "oooooops",
+			Identifier:   "GIT_SECRET",
 			ClientSecret: "mewmew",
-			SubType: pb.SubCredType_ENV,
+			SubType:      pb.SubCredType_ENV,
 		},
 		&pb.GenericCreds{
-			AcctName: "oooooops",
-			Identifier: "ddd",
+			AcctName:     "oooooops",
+			Identifier:   "ddd",
 			ClientSecret: "showme==",
-			SubType: pb.SubCredType_ENV,
+			SubType:      pb.SubCredType_ENV,
 		},
 	}
-	rc := &remoteConf{creds:creds}
-	lnchr := &launcher{RemoteConf:rc}
+	rc := &remoteConf{creds: creds}
+	lnchr := &launcher{RemoteConf: rc}
 	bilder := &fakeBuilder{
-		setEnvs: []string{},
+		setEnvs:   []string{},
 		addedEnvs: []string{},
-		Basher: getTestBasher(t),
+		Basher:    getTestBasher(t),
 	}
 	res := lnchr.handleEnvSecrets(context.Background(), bilder, "oooooops", build.InitStageUtil("PREFLIGHT"))
 	if res.Status == pb.StageResultVal_FAIL {
@@ -140,7 +140,6 @@ func TestLauncher_handleEnvSecrets(t *testing.T) {
 	if diff := deep.Equal(expectedEnvs, bilder.addedEnvs); diff != nil {
 		t.Error(diff)
 	}
-
 
 }
 

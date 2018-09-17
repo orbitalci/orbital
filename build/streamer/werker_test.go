@@ -33,7 +33,7 @@ func Test_writeInfoChanToInMemMap(t *testing.T) {
 	}
 	trans := &models.Transport{Hash: "FOR_TESTING", InfoChan: make(chan []byte), DbId: id}
 	werkerConsulet, _ := consulet.Default()
-	sp := &StreamPack{Consul: werkerConsulet, Store: store, BuildInfo: make(map[string]*buildDatum),}
+	sp := &StreamPack{Consul: werkerConsulet, Store: store, BuildInfo: make(map[string]*buildDatum)}
 
 	middleIndex := 6
 	go sp.writeInfoChanToInMemMap(trans)

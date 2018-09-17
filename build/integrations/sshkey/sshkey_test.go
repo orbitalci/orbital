@@ -111,7 +111,6 @@ func TestSSHKeyInt_MakeBashable(t *testing.T) {
 
 }
 
-
 func TestSSHKeyInt_staticstuff(t *testing.T) {
 	ssh := Create()
 	if ssh.String() != "ssh keyfile integration" {
@@ -121,7 +120,7 @@ func TestSSHKeyInt_staticstuff(t *testing.T) {
 		t.Error("subcredtype of ssh is SSHKEY")
 	}
 	ssher := ssh.(*SSHKeyInt)
-	if ssher.strictHostKey !=  "mkdir -p ~/.ssh && echo \"StrictHostKeyChecking no\" >> ~/.ssh/config && chmod 400 ~/.ssh/config" {
+	if ssher.strictHostKey != "mkdir -p ~/.ssh && echo \"StrictHostKeyChecking no\" >> ~/.ssh/config && chmod 400 ~/.ssh/config" {
 		t.Error(test.StrFormatErrors("first hostkey script", "mkdir -p ~/.ssh && echo \"StrictHostKeyChecking no\" >> ~/.ssh/config && chmod 400 ~/.ssh/config", ssher.strictHostKey))
 	}
 	if !ssh.IsRelevant(&pb.BuildConfig{}) {

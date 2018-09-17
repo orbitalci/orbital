@@ -21,7 +21,7 @@ func NewBasher(downloadUrl, GHubDownloadUrl, LoopbackIP, dotOcelotPrefix string)
 		if string(dotOcelotPrefix[0]) != "/" {
 			return nil, errors.New("ocelot prefix must begin with a filepath separator")
 		}
-		if string(dotOcelotPrefix[len(dotOcelotPrefix) -1 ]) == "/" {
+		if string(dotOcelotPrefix[len(dotOcelotPrefix)-1]) == "/" {
 			dotOcelotPrefix = string(dotOcelotPrefix[(len(dotOcelotPrefix) - 1):])
 		}
 	}
@@ -90,7 +90,7 @@ func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 
 //DownloadSSHKey will using the vault token to try to download the ssh key located at the path + `/ssh`
 func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
-	return []string{"/bin/sh", "-c", fmt.Sprintf("%s/get_ssh_key.sh %s %s", b.OcelotDir(), vaultKey, vaultPath + "/ssh")}
+	return []string{"/bin/sh", "-c", fmt.Sprintf("%s/get_ssh_key.sh %s %s", b.OcelotDir(), vaultKey, vaultPath+"/ssh")}
 }
 
 //DownloadTemplateFiles will download template files necessary to build containers from werker

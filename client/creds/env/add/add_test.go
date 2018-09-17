@@ -98,18 +98,18 @@ func TestCmd_Run(t *testing.T) {
 		t.Error("shouldn't fail")
 	}
 	expected := &pb.GenericWrap{
-		Creds:[]*pb.GenericCreds{
+		Creds: []*pb.GenericCreds{
 			{
-				AcctName: "jessishank",
-				Identifier: "ENVIRON1",
+				AcctName:     "jessishank",
+				Identifier:   "ENVIRON1",
 				ClientSecret: "MISSISSIPPI",
-				SubType: pb.SubCredType_ENV,
+				SubType:      pb.SubCredType_ENV,
 			},
 			{
-				AcctName: "jessishank",
-				Identifier: "ENV19",
+				AcctName:     "jessishank",
+				Identifier:   "ENV19",
 				ClientSecret: "BEYONCE",
-				SubType: pb.SubCredType_ENV,
+				SubType:      pb.SubCredType_ENV,
 			},
 		},
 	}

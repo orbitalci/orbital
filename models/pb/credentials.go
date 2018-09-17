@@ -51,7 +51,6 @@ func (m *RepoCreds) GetClientSecret() string {
 	return m.Password
 }
 
-
 func (m *RepoCreds) CreateAdditionalFields() ([]byte, error) {
 	fields := make(map[string]string)
 	fields["username"] = m.Username
@@ -89,11 +88,9 @@ func (m *RepoCreds) ValidateForInsert() *ValidationErr {
 	return nil
 }
 
-
 func NewVCSCreds() *VCSCreds {
 	return &VCSCreds{}
 }
-
 
 func (m *VCSCreds) CreateAdditionalFields() ([]byte, error) {
 	fields := make(map[string]string)
@@ -117,7 +114,6 @@ func (m *VCSCreds) UnmarshalAdditionalFields(fields []byte) error {
 	}
 	return nil
 }
-
 
 func (m *VCSCreds) SetSubType(sct SubCredType) {
 	m.SubType = sct
@@ -148,7 +144,6 @@ func (m *VCSCreds) ValidateForInsert() *ValidationErr {
 	return nil
 }
 
-
 func NewK8sCreds() *K8SCreds {
 	return &K8SCreds{}
 }
@@ -156,7 +151,6 @@ func NewK8sCreds() *K8SCreds {
 func (m *K8SCreds) GetClientSecret() string {
 	return m.K8SContents
 }
-
 
 func (m *K8SCreds) SetSubType(sct SubCredType) {
 	m.SubType = sct
@@ -171,7 +165,6 @@ func (m *K8SCreds) SetSecret(str string) {
 	m.K8SContents = str
 }
 
-
 func (m *K8SCreds) CreateAdditionalFields() ([]byte, error) {
 	return []byte("{}"), nil
 }
@@ -179,7 +172,6 @@ func (m *K8SCreds) CreateAdditionalFields() ([]byte, error) {
 func (m *K8SCreds) UnmarshalAdditionalFields(fields []byte) error {
 	return nil
 }
-
 
 func (m *K8SCreds) ValidateForInsert() *ValidationErr {
 	errr := validateCommonFieldsForInsert(m)
@@ -192,7 +184,6 @@ func (m *K8SCreds) ValidateForInsert() *ValidationErr {
 func (m *SSHKeyWrapper) GetClientSecret() string {
 	return string(m.PrivateKey)
 }
-
 
 func (m *SSHKeyWrapper) SetSubType(sct SubCredType) {
 	m.SubType = sct
@@ -231,7 +222,6 @@ func (m *AppleCreds) ValidateForInsert() *ValidationErr {
 func (m *AppleCreds) CreateAdditionalFields() ([]byte, error) {
 	return []byte("{}"), nil
 }
-
 
 func (m *AppleCreds) SetSubType(sct SubCredType) {
 	m.SubType = sct
@@ -315,7 +305,6 @@ func (m *GenericCreds) SetSubType(sct SubCredType) {
 	m.SubType = sct
 }
 
-
 func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
 	if credder.GetIdentifier() == "" {
 		errors = append(errors, "identifier is required, creds need a unique name to identify by")
@@ -337,7 +326,6 @@ func validateCommonFieldsForInsert(credder OcyCredder) (errors []string) {
 	return
 }
 
-
 // wrapper interface around models.BuildRuntimeInfo
 type BuildRuntime interface {
 	GetDone() bool
@@ -347,14 +335,13 @@ type BuildRuntime interface {
 	CreateBuildClient() (BuildClient, error)
 }
 
-
 var (
-	vcsSubTypes   = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}
-	repoSubTypes  = []SubCredType{SubCredType_NEXUS, SubCredType_MAVEN, SubCredType_DOCKER, SubCredType_MINIO}
-	k8sSubTypes   = []SubCredType{SubCredType_KUBECONF}
-	sshSubTypes   = []SubCredType{SubCredType_SSHKEY}
-	appleSubTypes = []SubCredType{SubCredType_DEVPROFILE}
-	notifySubTypes = []SubCredType{SubCredType_SLACK}
+	vcsSubTypes     = []SubCredType{SubCredType_BITBUCKET, SubCredType_GITHUB}
+	repoSubTypes    = []SubCredType{SubCredType_NEXUS, SubCredType_MAVEN, SubCredType_DOCKER, SubCredType_MINIO}
+	k8sSubTypes     = []SubCredType{SubCredType_KUBECONF}
+	sshSubTypes     = []SubCredType{SubCredType_SSHKEY}
+	appleSubTypes   = []SubCredType{SubCredType_DEVPROFILE}
+	notifySubTypes  = []SubCredType{SubCredType_SLACK}
 	genericSubTypes = []SubCredType{SubCredType_ENV, SubCredType_HELM_REPO}
 )
 
@@ -383,7 +370,7 @@ func (x CredType) Subtypes() []SubCredType {
 func (x CredType) SubtypesString() []string {
 	var subtypes []string
 	for _, st := range x.Subtypes() {
-		 subtypes = append(subtypes, st.String())
+		subtypes = append(subtypes, st.String())
 	}
 	return subtypes
 }
@@ -398,13 +385,13 @@ func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCre
 	case CredType_K8S:
 		return &K8SCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	case CredType_SSH:
-		return &SSHKeyWrapper{AcctName: account, Identifier: identifier, SubType:subCredType}
+		return &SSHKeyWrapper{AcctName: account, Identifier: identifier, SubType: subCredType}
 	case CredType_APPLE:
-		return &AppleCreds{AcctName: account, Identifier: identifier, SubType:subCredType}
+		return &AppleCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	case CredType_NOTIFIER:
 		return &NotifyCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	case CredType_GENERIC:
-		return &GenericCreds{AcctName:account, Identifier:identifier, SubType:subCredType}
+		return &GenericCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
 	default:
 		return nil
 	}
@@ -474,7 +461,7 @@ func (i *SubCredType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return err
 }
 
-func CreateVCSIdentifier(sct SubCredType, acctName string) (string, error){
+func CreateVCSIdentifier(sct SubCredType, acctName string) (string, error) {
 	if !Contains(sct, CredType_VCS.Subtypes()) {
 		return "", errors.New("must be of type CredType_VCS")
 	}

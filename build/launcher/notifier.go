@@ -7,7 +7,6 @@ import (
 	"github.com/shankj3/ocelot/build/notifiers/slack"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
-
 )
 
 func getNotifiers() []notifiers.Notifier {

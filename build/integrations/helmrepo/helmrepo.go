@@ -12,7 +12,7 @@ func Create() integrations.StringIntegrator {
 	return &HelmRepoInt{}
 }
 
-type HelmRepoInt struct {}
+type HelmRepoInt struct{}
 
 func (k *HelmRepoInt) String() string {
 	return "helm repo configuration"
@@ -26,7 +26,6 @@ func (k *HelmRepoInt) SubType() pb.SubCredType {
 func (k *HelmRepoInt) MakeBashable(encoded string) []string {
 	return []string{"/bin/bash", "-c", encoded}
 }
-
 
 func (k *HelmRepoInt) IsRelevant(wc *pb.BuildConfig) bool {
 	return common.BuildScriptsContainString(wc, "helm")

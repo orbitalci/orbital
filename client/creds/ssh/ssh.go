@@ -32,4 +32,3 @@ Usage: ocelot creds ssh <subcommand> [options] [args]
 
   For more examples, ask for subcommand help or view the documentation.
 `
-

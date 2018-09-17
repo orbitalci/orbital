@@ -19,13 +19,12 @@ import (
 
 func TestGuideOcelotServer_GetStatus_hashPath(t *testing.T) {
 	consl := &statusConsl{}
-	rc := &credentials.RemoteConfig{Consul:consl}
+	rc := &credentials.RemoteConfig{Consul: consl}
 	//store := &statusStore{}
 	ctl := gomock.NewController(t)
 	storey := storage.NewMockOcelotStorage(ctl)
-	gos := &guideOcelotServer{Storage:storey, RemoteConfig:rc}
+	gos := &guideOcelotServer{Storage: storey, RemoteConfig: rc}
 	ctx := context.Background()
-
 
 	consl.inConsul = true
 	storey.EXPECT().RetrieveLatestSum("1234").Return(testSummary, nil).Times(1)
@@ -68,11 +67,11 @@ func TestGuideOcelotServer_GetStatus_hashPath(t *testing.T) {
 
 func TestGuideOcelotServer_GetStatus_acctRepo(t *testing.T) {
 	consl := &statusConsl{}
-	rc := &credentials.RemoteConfig{Consul:consl}
+	rc := &credentials.RemoteConfig{Consul: consl}
 	//store := &statusStore{}
 	ctl := gomock.NewController(t)
 	storey := storage.NewMockOcelotStorage(ctl)
-	gos := &guideOcelotServer{Storage:storey, RemoteConfig:rc}
+	gos := &guideOcelotServer{Storage: storey, RemoteConfig: rc}
 	ctx := context.Background()
 	var status *pb.Status
 	var err error
@@ -118,11 +117,11 @@ func TestGuideOcelotServer_GetStatus_acctRepo(t *testing.T) {
 
 func TestGuideOcelotServer_GetStatus_partialRepo(t *testing.T) {
 	consl := &statusConsl{}
-	rc := &credentials.RemoteConfig{Consul:consl}
+	rc := &credentials.RemoteConfig{Consul: consl}
 	//store := &statusStore{}
 	ctl := gomock.NewController(t)
 	storey := storage.NewMockOcelotStorage(ctl)
-	gos := &guideOcelotServer{Storage:storey, RemoteConfig:rc}
+	gos := &guideOcelotServer{Storage: storey, RemoteConfig: rc}
 	ctx := context.Background()
 	var status *pb.Status
 	var err error
@@ -187,7 +186,6 @@ func TestGuideOcelotServer_GetStatus_partialRepo(t *testing.T) {
 	// check buildId
 }
 
-
 func TestGuideOcelotServer_GetStatus_build_id(t *testing.T) {
 	consl := &statusConsl{}
 	rc := &credentials.RemoteConfig{Consul: consl}
@@ -213,62 +211,62 @@ func TestGuideOcelotServer_GetStatus_build_id(t *testing.T) {
 }
 
 var testSummary = &pb.BuildSummary{
-	Hash: "hashy",
-	Failed: true,
+	Hash:      "hashy",
+	Failed:    true,
 	QueueTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()},
 	BuildTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()},
-	Account: "shankj3",
-	Repo: "ocelot",
-	Branch: "master",
-	BuildId: 12,
+	Account:   "shankj3",
+	Repo:      "ocelot",
+	Branch:    "master",
+	BuildId:   12,
 }
 
 var testResults = []models.StageResult{
 	{
-		BuildId: 12,
+		BuildId:       12,
 		StageResultId: 1,
-		Stage: "first",
-		Status: int(pb.StageResultVal_PASS),
-		Error: "",
-		Messages: []string{"passed first stage, sweet"},
-		StartTime: time.Now().Add(-time.Minute*30),
+		Stage:         "first",
+		Status:        int(pb.StageResultVal_PASS),
+		Error:         "",
+		Messages:      []string{"passed first stage, sweet"},
+		StartTime:     time.Now().Add(-time.Minute * 30),
 		StageDuration: 22.17,
 	},
 	{
-		BuildId: 12,
+		BuildId:       12,
 		StageResultId: 2,
-		Stage: "second",
-		Status: int(pb.StageResultVal_PASS),
-		Error: "",
-		Messages: []string{"passed second stage, sweet"},
-		StartTime: time.Now().Add(-time.Minute*29),
+		Stage:         "second",
+		Status:        int(pb.StageResultVal_PASS),
+		Error:         "",
+		Messages:      []string{"passed second stage, sweet"},
+		StartTime:     time.Now().Add(-time.Minute * 29),
 		StageDuration: 29.17,
 	},
 	{
-		BuildId: 12,
+		BuildId:       12,
 		StageResultId: 3,
-		Stage: "third",
-		Status: int(pb.StageResultVal_PASS),
-		Error: "",
-		Messages: []string{"passed third stage, sweet"},
-		StartTime: time.Now().Add(-time.Minute*25),
+		Stage:         "third",
+		Status:        int(pb.StageResultVal_PASS),
+		Error:         "",
+		Messages:      []string{"passed third stage, sweet"},
+		StartTime:     time.Now().Add(-time.Minute * 25),
 		StageDuration: 21.17,
 	},
 	{
-		BuildId: 12,
+		BuildId:       12,
 		StageResultId: 4,
-		Stage: "fourth",
-		Status: int(pb.StageResultVal_FAIL),
-		Error: "noooo this failed! how dare it!",
-		Messages: []string{"failed fourth stage. tsk tsk."},
-		StartTime: time.Now().Add(-time.Minute*20),
+		Stage:         "fourth",
+		Status:        int(pb.StageResultVal_FAIL),
+		Error:         "noooo this failed! how dare it!",
+		Messages:      []string{"failed fourth stage. tsk tsk."},
+		StartTime:     time.Now().Add(-time.Minute * 20),
 		StageDuration: 29.17,
 	},
 }
 
 type statusConsl struct {
 	consul.Consuletty
-	inConsul bool
+	inConsul  bool
 	returnErr bool
 }
 

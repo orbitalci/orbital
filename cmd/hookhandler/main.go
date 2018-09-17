@@ -43,7 +43,6 @@ func main() {
 		ocelog.Log().Fatal(err)
 	}
 
-
 	//mode := os.Getenv("ENV")
 	//if strings.EqualFold(mode, "dev") {
 	//	hookHandlerContext = &hh.MockHookHandlerContext{}

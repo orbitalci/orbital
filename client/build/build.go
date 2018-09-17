@@ -87,7 +87,6 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
 		help.Debuggit(c.UI, err.Error())
 	}

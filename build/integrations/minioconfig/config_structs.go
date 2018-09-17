@@ -18,21 +18,21 @@ package minioconfig
 func getMinioObj() *minioConfig {
 	return &minioConfig{
 		Version: defaultVersion,
-		Hosts: make(map[string]*minioConfigEntry),
+		Hosts:   make(map[string]*minioConfigEntry),
 	}
 }
 
 type minioConfigEntry struct {
-	Url  	  string	`json:"url"`
-	AccessKey string	`json:"accessKey"`
-	SecretKey string	`json:"secretKey"`
-	Api 	  string	`json:"api"`
-	Lookup    string	`json:"lookup"`
+	Url       string `json:"url"`
+	AccessKey string `json:"accessKey"`
+	SecretKey string `json:"secretKey"`
+	Api       string `json:"api"`
+	Lookup    string `json:"lookup"`
 }
 
 type minioConfig struct {
-	Hosts 	map[string]*minioConfigEntry `json:"hosts"`
-	Version string `json:"version,omitempty"`
+	Hosts   map[string]*minioConfigEntry `json:"hosts"`
+	Version string                       `json:"version,omitempty"`
 }
 
 const (

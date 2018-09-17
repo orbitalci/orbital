@@ -7,7 +7,6 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-
 func TestCreate(t *testing.T) {
 	h := Create("localhost", "9090")
 	hel := h.(*minioInteg)

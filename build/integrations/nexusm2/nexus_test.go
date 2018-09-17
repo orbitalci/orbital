@@ -1,10 +1,10 @@
 package nexusm2
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/shankj3/go-til/test"
-    "github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 var expected = `<?xml version="1.0" encoding="UTF-8"?>
@@ -44,32 +44,32 @@ var expected = `<?xml version="1.0" encoding="UTF-8"?>
 </settings>`
 
 func Test_executeTempl(t *testing.T) {
-    creds := []*pb.RepoCreds{
-        {Username: "testuser1", Password: "testpw", RepoUrl: "testRepo.com", Identifier: "myFirstRepo"},
-        {Username: "testuser2", Password: "testpw2", RepoUrl: "11testRepo.com", Identifier: "mySecondRepo"},
-    }
-    wrap := &pb.RepoCredWrapper{Repo: creds}
-    template, err := executeTempl(wrap)
-    if err != nil {
-        t.Error(err)
-    }
-    if expected != template {
-        t.Error("should be the same?")
-    }
+	creds := []*pb.RepoCreds{
+		{Username: "testuser1", Password: "testpw", RepoUrl: "testRepo.com", Identifier: "myFirstRepo"},
+		{Username: "testuser2", Password: "testpw2", RepoUrl: "11testRepo.com", Identifier: "mySecondRepo"},
+	}
+	wrap := &pb.RepoCredWrapper{Repo: creds}
+	template, err := executeTempl(wrap)
+	if err != nil {
+		t.Error(err)
+	}
+	if expected != template {
+		t.Error("should be the same?")
+	}
 }
 
 func TestNexusInt_GenerateIntegrationString(t *testing.T) {
-    creds := []pb.OcyCredder{
-        &pb.RepoCreds{Username: "testuser1", Password: "testpw", RepoUrl: "testRepo.com", Identifier: "myFirstRepo"},
-        &pb.RepoCreds{Username: "testuser2", Password: "testpw2", RepoUrl: "11testRepo.com", Identifier: "mySecondRepo"},
-    }
-    integ := Create()
-    rendered, err := integ.GenerateIntegrationString(creds)
-    if err != nil {
-        t.Error(err)
-        return
-    }
-    if rendered != expected {
-        t.Error(test.StrFormatErrors("rendered settings.xml", expected, rendered))
-    }
+	creds := []pb.OcyCredder{
+		&pb.RepoCreds{Username: "testuser1", Password: "testpw", RepoUrl: "testRepo.com", Identifier: "myFirstRepo"},
+		&pb.RepoCreds{Username: "testuser2", Password: "testpw2", RepoUrl: "11testRepo.com", Identifier: "mySecondRepo"},
+	}
+	integ := Create()
+	rendered, err := integ.GenerateIntegrationString(creds)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if rendered != expected {
+		t.Error(test.StrFormatErrors("rendered settings.xml", expected, rendered))
+	}
 }

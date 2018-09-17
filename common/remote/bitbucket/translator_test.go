@@ -49,4 +49,3 @@ func TestBBTranslate_TranslatePR(t *testing.T) {
 		t.Error(test.StrFormatErrors("dest hash", "32ed49560d10", pull.Destination.Hash))
 	}
 }
-

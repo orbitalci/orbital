@@ -100,4 +100,3 @@ Usage: ocelot creds apple list
 
   Retrieves all apple profiles that ocelot has for use in builds. 
 `
-

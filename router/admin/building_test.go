@@ -23,9 +23,9 @@ import (
 
 func TestGuideOcelotServer_BuildRuntime_hash(t *testing.T) {
 	consl := &buildruntimeconsl{}
-	rc := &credentials.RemoteConfig{Consul:consl}
-	gos := &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{}}
-	bilds, err := gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash:"1234sdfasdfasf"})
+	rc := &credentials.RemoteConfig{Consul: consl}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{}}
+	bilds, err := gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash: "1234sdfasdfasf"})
 	if err != nil {
 		t.Error(err)
 		return
@@ -33,10 +33,10 @@ func TestGuideOcelotServer_BuildRuntime_hash(t *testing.T) {
 	if bilds.Builds["1234sdfasdfasf"].Done {
 		t.Error("still in consul, this buildruntime should be Done:false")
 	}
-	consl = &buildruntimeconsl{empty:true}
-	rc = &credentials.RemoteConfig{Consul:consl}
-	gos = &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{}}
-	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash:"1234sdfasdfasf"})
+	consl = &buildruntimeconsl{empty: true}
+	rc = &credentials.RemoteConfig{Consul: consl}
+	gos = &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{}}
+	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash: "1234sdfasdfasf"})
 	if err != nil {
 		t.Error(err)
 		return
@@ -45,14 +45,14 @@ func TestGuideOcelotServer_BuildRuntime_hash(t *testing.T) {
 		t.Error("build not in consul, this buildru/ntime shoudl be Done:true")
 	}
 	consl.fail = true
-	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash:"1234sdfasdfasf"})
+	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash: "1234sdfasdfasf"})
 	if bilds != nil || err == nil {
 		t.Error("consul 'failed', this shoud return an error and a nil summary obj")
 	}
 	consl = &buildruntimeconsl{}
 	rc.Consul = consl
-	gos = &guideOcelotServer{RemoteConfig:rc, Storage:&buildruntimestorage{fail:true}}
-	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash:"1234sdfasdfasf"})
+	gos = &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{fail: true}}
+	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash: "1234sdfasdfasf"})
 	if err == nil {
 		t.Error("storage returned an error, this should bubble up that error")
 	}
@@ -63,8 +63,8 @@ func TestGuideOcelotServer_BuildRuntime_hash(t *testing.T) {
 	}
 	consl = &buildruntimeconsl{}
 	rc.Consul = consl
-	gos = &guideOcelotServer{RemoteConfig:rc, Storage:&buildruntimestorage{notFound:true}}
-	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash:"1234sdfasdfasf"})
+	gos = &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{notFound: true}}
+	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{Hash: "1234sdfasdfasf"})
 	if err == nil {
 		t.Error("storage returned an error, this should bubble up that error")
 	}
@@ -84,8 +84,8 @@ func TestGuideOcelotServer_BuildRuntime_none(t *testing.T) {
 
 func TestGuideOcelotServer_BuildRuntime_buildId(t *testing.T) {
 	consl := &buildruntimeconsl{}
-	rc := &credentials.RemoteConfig{Consul:consl}
-	gos := &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{}}
+	rc := &credentials.RemoteConfig{Consul: consl}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{}}
 	bilds, err := gos.BuildRuntime(context.Background(), &pb.BuildQuery{BuildId: 12})
 	if err != nil {
 		t.Error(err)
@@ -96,7 +96,7 @@ func TestGuideOcelotServer_BuildRuntime_buildId(t *testing.T) {
 	if bilds.Builds["1234"].AcctName != "shankj3" {
 		t.Error("wtf")
 	}
-	gos = &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{fail:true}}
+	gos = &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{fail: true}}
 	bilds, err = gos.BuildRuntime(context.Background(), &pb.BuildQuery{BuildId: 12})
 	if err == nil {
 		t.Error("storage failed, should return error")
@@ -110,10 +110,10 @@ func TestGuideOcelotServer_Logs(t *testing.T) {
 		t.Error("empty query, hsould return failure")
 	}
 	consl := &buildruntimeconsl{}
-	rc := &credentials.RemoteConfig{Consul:consl}
-	gos := &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{}}
+	rc := &credentials.RemoteConfig{Consul: consl}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{}}
 	logserver := &logserv{}
-	err = gos.Logs(&pb.BuildQuery{BuildId:12}, logserver)
+	err = gos.Logs(&pb.BuildQuery{BuildId: 12}, logserver)
 	if err != nil {
 		t.Error(err)
 	}
@@ -121,8 +121,8 @@ func TestGuideOcelotServer_Logs(t *testing.T) {
 	if diff := deep.Equal(outlines[:10], logserver.sentLines); diff != nil {
 		t.Error(diff)
 	}
-	gos = &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{fail:true}}
-	if err := gos.Logs(&pb.BuildQuery{BuildId:12}, nil); err == nil {
+	gos = &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{fail: true}}
+	if err := gos.Logs(&pb.BuildQuery{BuildId: 12}, nil); err == nil {
 		t.Error("should have failed, storage returned a failure")
 	} else if !strings.Contains(err.Error(), "Unable to retrive from FAKE") {
 		t.Error("should bubble up dstorage failure, instead: " + err.Error())
@@ -131,21 +131,21 @@ func TestGuideOcelotServer_Logs(t *testing.T) {
 
 func TestGuideOcelotServer_Logs_fromHash(t *testing.T) {
 	consl := &buildruntimeconsl{}
-	rc := &credentials.RemoteConfig{Consul:consl}
-	gos := &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{}}
+	rc := &credentials.RemoteConfig{Consul: consl}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{}}
 	serv := &logserv{}
-	err := gos.Logs(&pb.BuildQuery{Hash:"1234"}, serv)
+	err := gos.Logs(&pb.BuildQuery{Hash: "1234"}, serv)
 	if err == nil {
 		t.Error("build in consul, should return an error")
 	}
 	if serv.sentLines[0] != "build is not finished, use BuildRuntime method and stream from the werker registered" {
 		t.Error("should return build not finished in stream ")
 	}
-	consl = &buildruntimeconsl{empty:true}
+	consl = &buildruntimeconsl{empty: true}
 	serv = &logserv{}
-	rc = &credentials.RemoteConfig{Consul:consl}
-	gos = &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{}}
-	err = gos.Logs(&pb.BuildQuery{Hash:"1234"}, serv)
+	rc = &credentials.RemoteConfig{Consul: consl}
+	gos = &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{}}
+	err = gos.Logs(&pb.BuildQuery{Hash: "1234"}, serv)
 	if err != nil {
 		t.Error("should not fail, error is: " + err.Error())
 	}
@@ -156,16 +156,16 @@ func TestGuideOcelotServer_Logs_fromHash(t *testing.T) {
 }
 
 func TestGuideOcelotServer_FindWerker(t *testing.T) {
-	consl := &buildruntimeconsl{empty:true}
-	rc := &credentials.RemoteConfig{Consul:consl}
-	gos := &guideOcelotServer{RemoteConfig: rc, Storage:&buildruntimestorage{}}
+	consl := &buildruntimeconsl{empty: true}
+	rc := &credentials.RemoteConfig{Consul: consl}
+	gos := &guideOcelotServer{RemoteConfig: rc, Storage: &buildruntimestorage{}}
 	if _, err := gos.FindWerker(context.Background(), &pb.BuildReq{Hash: "1234"}); err == nil {
 		t.Error("shouldreturn error, as consul is empty")
 	} else if !strings.Contains(err.Error(), "werker not found for request as it has already finished") {
-		t.Error("error should be build finished, got: "+ err.Error())
+		t.Error("error should be build finished, got: " + err.Error())
 	}
 	consl.empty = false
-	brtinfo, err := gos.FindWerker(context.Background(), &pb.BuildReq{Hash:"1234"})
+	brtinfo, err := gos.FindWerker(context.Background(), &pb.BuildReq{Hash: "1234"})
 	if err != nil {
 		t.Error("shouldn't fail")
 	}
@@ -174,7 +174,7 @@ func TestGuideOcelotServer_FindWerker(t *testing.T) {
 	}
 	consl.empty = false
 	consl.fail = true
-	_, err = gos.FindWerker(context.Background(), &pb.BuildReq{Hash:"1234"})
+	_, err = gos.FindWerker(context.Background(), &pb.BuildReq{Hash: "1234"})
 	if err == nil {
 		t.Error("consul returned an unknown error, should bubble up")
 	}
@@ -183,13 +183,13 @@ func TestGuideOcelotServer_FindWerker(t *testing.T) {
 	}
 	consl.fail = false
 	consl.runtimeMulti = true
-	_, err = gos.FindWerker(context.Background(), &pb.BuildReq{Hash:"1234"})
+	_, err = gos.FindWerker(context.Background(), &pb.BuildReq{Hash: "1234"})
 	if err == nil {
 		t.Error("multiple werker builds found for hash, should return an error")
 		return
 	}
 	if err.Error() != "rpc error: code = InvalidArgument desc = ONE and ONE ONLY match should be found for your hash" {
-		t.Error("should return multiple hash match error, got: "+ err.Error())
+		t.Error("should return multiple hash match error, got: " + err.Error())
 	}
 	_, err = gos.FindWerker(context.Background(), &pb.BuildReq{})
 	if err == nil {
@@ -203,11 +203,11 @@ func TestGuideOcelotServer_FindWerker(t *testing.T) {
 
 type buildruntimeconsl struct {
 	consul.Consuletty
-	fail bool
-	empty bool
+	fail         bool
+	empty        bool
 	runtimeMulti bool
-	uuid string
-	hash string
+	uuid         string
+	hash         string
 }
 
 func (b *buildruntimeconsl) GetKeyValue(path string) (*api.KVPair, error) {
@@ -217,7 +217,7 @@ func (b *buildruntimeconsl) GetKeyValue(path string) (*api.KVPair, error) {
 	if b.empty {
 		return nil, nil
 	}
-	return &api.KVPair{Key:path, Value:[]byte("uuiuuiuuiuuiduiduiduid")}, nil
+	return &api.KVPair{Key: path, Value: []byte("uuiuuiuuiuuiduiduiduid")}, nil
 
 }
 
@@ -232,18 +232,18 @@ func (b *buildruntimeconsl) GetKeyValues(prefix string) (api.KVPairs, error) {
 	fullHash := common.ParseBuildMapPath(prefix)
 	if strings.Contains(prefix, "werker_build_map") {
 		if b.runtimeMulti {
-			kvp = api.KVPairs{{Key:"ci/werker_build_map/"+fullHash, Value: []byte(b.uuid)},
-				{Key:"ci/werker_build_map/"+fullHash+"2", Value: []byte(b.uuid+"2")}}
+			kvp = api.KVPairs{{Key: "ci/werker_build_map/" + fullHash, Value: []byte(b.uuid)},
+				{Key: "ci/werker_build_map/" + fullHash + "2", Value: []byte(b.uuid + "2")}}
 		} else {
-			kvp = api.KVPairs{{Key:"ci/werker_build_map/"+fullHash, Value: []byte(b.uuid)}}
+			kvp = api.KVPairs{{Key: "ci/werker_build_map/" + fullHash, Value: []byte(b.uuid)}}
 		}
 		return kvp, nil
 	}
-	if strings.Contains(prefix,"ci/werker_location/") {
+	if strings.Contains(prefix, "ci/werker_location/") {
 		kvp = api.KVPairs{
-			{Key: "ci/werker_location/"+ b.uuid + "/werker_ip", Value: []byte("localhost")},
-			{Key: "ci/werker_location/"+ b.uuid + "/werker_grpc_port", Value: []byte("9090")},
-			{Key: "ci/werker_location/"+ b.uuid + "/werker_ws_port", Value: []byte("9099")},
+			{Key: "ci/werker_location/" + b.uuid + "/werker_ip", Value: []byte("localhost")},
+			{Key: "ci/werker_location/" + b.uuid + "/werker_grpc_port", Value: []byte("9090")},
+			{Key: "ci/werker_location/" + b.uuid + "/werker_ws_port", Value: []byte("9099")},
 		}
 		return kvp, nil
 	}
@@ -252,12 +252,11 @@ func (b *buildruntimeconsl) GetKeyValues(prefix string) (api.KVPairs, error) {
 
 type buildruntimestorage struct {
 	storage.OcelotStorage
-	notFound bool
-	fail bool
+	notFound    bool
+	fail        bool
 	buildFailed bool
-	hash string
+	hash        string
 }
-
 
 func (b *buildruntimestorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.BuildSummary, error) {
 	if b.notFound {
@@ -266,7 +265,7 @@ func (b *buildruntimestorage) RetrieveHashStartsWith(partialGitHash string) ([]*
 	if b.fail {
 		return nil, errors.New("failing storage at RetrieveHashStartsWith")
 	}
-	return []*pb.BuildSummary{{Hash: partialGitHash, Failed:b.buildFailed, QueueTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, BuildTime:&timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: 1}}, nil
+	return []*pb.BuildSummary{{Hash: partialGitHash, Failed: b.buildFailed, QueueTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, BuildTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: 1}}, nil
 
 }
 
@@ -277,7 +276,7 @@ func (b *buildruntimestorage) RetrieveLatestSum(gitHash string) (*pb.BuildSummar
 	if b.fail {
 		return nil, errors.New("failing storage at RetrieveLatestSum")
 	}
-	return &pb.BuildSummary{Hash:gitHash, Failed: b.buildFailed, QueueTime:&timestamp.Timestamp{Seconds:  time.Now().Add(-time.Hour).Unix()}, BuildTime:&timestamp.Timestamp{Seconds:time.Now().Add(-time.Hour).Unix()}, Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: 12}, nil
+	return &pb.BuildSummary{Hash: gitHash, Failed: b.buildFailed, QueueTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, BuildTime: &timestamp.Timestamp{Seconds: time.Now().Add(-time.Hour).Unix()}, Account: "shankj3", Repo: "ocelot", Branch: "master", BuildId: 12}, nil
 }
 
 func (b *buildruntimestorage) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
@@ -302,7 +301,6 @@ var output = `ON an exceptionally hot evening early in July a young man came out
   With a sinking heart and a nervous tremor, he went up to a huge house which on one side looked on to the canal, and on the other into the street. This house was let out in tiny tenements and was inhabited by working people of all kinds—tailors, locksmiths, cooks, Germans of sorts, girls picking up a living as best they could, petty clerks, &c. There 
 `
 
-
 func (b *buildruntimestorage) StorageType() string {
 	return "FAKE"
 }
@@ -311,19 +309,19 @@ func (b *buildruntimestorage) RetrieveOut(buildId int64) (models.BuildOutput, er
 	if b.fail {
 		return models.BuildOutput{}, errors.New("failing at retrieveOut")
 	}
-	return models.BuildOutput{BuildId:buildId, Output: []byte(output), OutputId: 1}, nil
+	return models.BuildOutput{BuildId: buildId, Output: []byte(output), OutputId: 1}, nil
 }
 
 func (b *buildruntimestorage) RetrieveLastOutByHash(gitHash string) (models.BuildOutput, error) {
 	if b.fail {
 		return models.BuildOutput{}, errors.New("failing at RetrieveLastOutByHash")
 	}
-	return models.BuildOutput{BuildId:12, Output: []byte(output), OutputId: 1}, nil
+	return models.BuildOutput{BuildId: 12, Output: []byte(output), OutputId: 1}, nil
 }
 
 type logserv struct {
 	pb.GuideOcelot_LogsServer
-	sentLines []string
+	sentLines  []string
 	returnErro bool
 }
 

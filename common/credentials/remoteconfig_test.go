@@ -210,13 +210,12 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	crreddy  := cred.(*pb.VCSCreds)
+	crreddy := cred.(*pb.VCSCreds)
 	if crreddy.TokenURL != "bannananahammooooock" {
 		t.Error(test.StrFormatErrors("identifier", "bannananahammooooock", crreddy.TokenURL))
 	}
 
 }
-
 
 func Test_BuildCredPath(t *testing.T) {
 	expected := "creds/vcs/banana/bitbucket/derp"
@@ -309,10 +308,10 @@ func TestRemoteConfig_Reconnect(t *testing.T) {
 func TestRemoteConfig_DeleteCred(t *testing.T) {
 	// happy path
 	testCred := &pb.RepoCreds{SubType: pb.SubCredType_DOCKER, Identifier: "shazam", AcctName: "jazzy"}
-	ctl   := gomock.NewController(t)
+	ctl := gomock.NewController(t)
 	store := storage.NewMockOcelotStorage(ctl)
-	safe  := vault.NewMockVaulty(ctl)
-	rc := &RemoteConfig{Vault:safe}
+	safe := vault.NewMockVaulty(ctl)
+	rc := &RemoteConfig{Vault: safe}
 	store.EXPECT().DeleteCred(testCred).Return(nil).Times(1)
 	safe.EXPECT().DeletePath("creds/repo/jazzy/docker/shazam").Return(nil).Times(1)
 	err := rc.DeleteCred(store, testCred)
@@ -349,6 +348,5 @@ func TestRemoteConfig_DeleteCred(t *testing.T) {
 	if err.Error() != "unable to delete sensitive data : Unable to delete password for user jazzy w/ identifier shazam: oh jesus wtf happened : unable to delete un-sensitive data: no credential found for jazzy docker" {
 		t.Error("did not get expected errors, got " + err.Error())
 	}
-
 
 }
