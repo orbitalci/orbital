@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -13,6 +14,17 @@ import (
 	protobuf "github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc"
 )
+
+const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+
+var re = regexp.MustCompile(ansi)
+
+func MaybeStrip(str string, stripAnsi bool) string {
+	if stripAnsi {
+		return re.ReplaceAllString(str, "")
+	}
+	return str
+}
 
 /*
 This gets embedded inside of ocelot clients and performs helper functions common across all clients.
@@ -96,7 +108,7 @@ func (oh *OcyHelper) DetectHash(ui cli.Ui) error {
 
 //handles streaming for grpc clients,
 //***THIS ASSUMES THAT THE STREAMING SERVER HAS A FIELD CALLED OUTPUTLINE****
-func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream grpc.ClientStream) error {
+func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream grpc.ClientStream, stripAnsi bool) error {
 	interrupt := make(chan os.Signal, 2)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -117,7 +129,7 @@ func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream grpc.ClientStream) error 
 			UIErrFromGrpc(err, ui, "Error streaming from werker.")
 			return err
 		}
-		ui.Info(resp.GetOutputLine())
+		ui.Info(MaybeStrip(resp.GetOutputLine(), stripAnsi))
 	}
 	return nil
 }
