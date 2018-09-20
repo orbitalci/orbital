@@ -8,6 +8,7 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/common/helpers/dockrhelper"
+	"github.com/shankj3/ocelot/common/trigger"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
@@ -66,7 +67,8 @@ func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []stri
 		return nil
 	}
 	// next, check if branch has a regex match with any of the buildable branches
-	branchOk, err := BranchRegexOk(branch, buildBranches)
+	branchOk, err := trigger.BranchRegexOk(branch, buildBranches)
+
 	if err != nil {
 		return err
 	}
@@ -88,7 +90,7 @@ func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []stri
 }
 
 func (ov *OcelotValidator) ValidateBranchAgainstConf(buildConf *pb.BuildConfig, branch string) error {
-	branchOk, err := BranchRegexOk(branch, buildConf.Branches)
+	branchOk, err := trigger.BranchRegexOk(branch, buildConf.Branches)
 	if err != nil {
 		return err
 	}

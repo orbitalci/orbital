@@ -8,6 +8,7 @@ import (
 
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/common/trigger"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 )
@@ -61,7 +62,7 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 			// return false, the block is empty and there is nothing to check
 			return
 		}
-		branchGood, err := build.BranchRegexOk(branch, stage.Trigger.Branches)
+		branchGood, err := trigger.BranchRegexOk(branch, stage.Trigger.Branches)
 		if err != nil {
 			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_FAIL, Error: err.Error(), Messages: []string{"failed to check if current branch fit the trigger criteria"}}
 			// not sure if we should store, but i think its good visibility especially for right now
