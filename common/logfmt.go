@@ -12,9 +12,6 @@ var regrad = regexp.MustCompile(gradle)
 func MaybeStrip(output []byte, stripAnsi bool) []byte {
 	if stripAnsi {
 		return regrad.ReplaceAll(re.ReplaceAll(output, []byte("")), []byte(""))
-		//return regrad.ReplaceAllString(re.ReplaceAllString(str, ""), "")
-		//return regrad.ReplaceAllString(str, "")
-		//return str
 	}
 	return output
 }
