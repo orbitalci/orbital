@@ -88,7 +88,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	err = c.HandleStreaming(c.UI, stream, c.config.Theme.NoColor)
+	err = c.HandleStreaming(c.UI, stream)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1

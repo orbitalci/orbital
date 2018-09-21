@@ -130,7 +130,7 @@ func (c *cmd) fromStorage(ctx context.Context, hash string, id int64) int {
 			commandhelper.UIErrFromGrpc(err, c.UI, "Error streaming from storage via admin.")
 			return 1
 		}
-		c.UI.Info(commandhelper.MaybeStrip(line.GetOutputLine(), c.config.Theme.NoColor))
+		c.UI.Info(line.GetOutputLine())
 	}
 }
 
@@ -148,7 +148,7 @@ func (c *cmd) fromWerker(ctx context.Context, build *models.BuildRuntimeInfo) in
 		return 1
 	}
 
-	err = c.HandleStreaming(c.UI, stream, c.config.Theme.NoColor)
+	err = c.HandleStreaming(c.UI, stream)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1

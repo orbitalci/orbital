@@ -113,7 +113,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	err = c.HandleStreaming(c.UI, stream, c.config.Theme.NoColor)
+	err = c.HandleStreaming(c.UI, stream)
 	if err != nil {
 		help.Debuggit(c.UI, err.Error())
 		return 1
