@@ -83,6 +83,7 @@ message WerkerTask {
     // id from vcs to be able to access pull request later
 //    string prId = 11;
     PrWerkerData prData = 12;
+    ChangesetData changesetData = 13;
 }
 
 //don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//
@@ -100,3 +101,16 @@ message WerkerTask {
 //    string vaultToken = 3;
 //    string checkoutHash = 4;
 //}
+
+
+//type ChangesetData struct {
+//filesChanged []string
+//commitTexts  []string
+//branch       string
+//}
+
+message ChangesetData {
+    repeated string filesChanged = 1;
+    repeated string commitTexts = 2;
+    string branch = 3;
+}
