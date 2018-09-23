@@ -114,7 +114,7 @@ func (c *cmd) Help() string {
 func (c *cmd) fromStorage(ctx context.Context, hash string, id int64) int {
 	var stream models.GuideOcelot_LogsClient
 	var err error
-	stream, err = c.config.Client.Logs(ctx, &models.BuildQuery{BuildId: id, Hash: hash})
+	stream, err = c.config.Client.Logs(ctx, &models.BuildQuery{BuildId: id, Hash: hash, Strip: c.config.Theme.NoColor})
 	if err != nil {
 		commandhelper.UIErrFromGrpc(err, c.UI, "Unable to get stream from admin.")
 		return 1

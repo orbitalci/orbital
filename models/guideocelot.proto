@@ -593,8 +593,10 @@ message StatusQuery {
 message BuildQuery {
     // hash is the git hash that corresponds to a commit you wish to get information on
     string hash = 1;
-    // build id is the build number given by ocelot that is associated with the commit
+    // buildId is the build number given by ocelot that is associated with the commit
     int64 buildId = 2;
+    // strip will return builds without ansi // tty formatting
+    bool strip = 3;
 }
 
 message Builds {
