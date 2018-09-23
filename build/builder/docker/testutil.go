@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -112,6 +113,7 @@ func CreateLivingDockerContainer(t *testing.T, ctx context.Context, imageName st
 	if err != nil {
 		t.Fatal("couldn't pull image, err: ", err.Error())
 	}
+	time.Sleep(1)
 	defer out.Close()
 	//todo: make sure to call this at some point
 	cleanupTar := tarTemplates(t)

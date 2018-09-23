@@ -1,4 +1,4 @@
-FROM golang:1.9-alpine as builder
+FROM golang:1.11-alpine as builder
 
 ARG SSH_PRIVATE_KEY
 

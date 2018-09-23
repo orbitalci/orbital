@@ -70,11 +70,19 @@
           },
           {
             "name": "buildId",
-            "description": "build id is the build number given by ocelot that is associated with the commit.",
+            "description": "buildId is the build number given by ocelot that is associated with the commit.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "int64"
+          },
+          {
+            "name": "strip",
+            "description": "strip will return builds without ansi // tty formatting.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1436,11 +1444,19 @@
           },
           {
             "name": "buildId",
-            "description": "build id is the build number given by ocelot that is associated with the commit.",
+            "description": "buildId is the build number given by ocelot that is associated with the commit.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "int64"
+          },
+          {
+            "name": "strip",
+            "description": "strip will return builds without ansi // tty formatting.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [

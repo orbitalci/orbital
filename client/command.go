@@ -55,7 +55,7 @@ var Commands map[string]cli.CommandFactory
 
 func init() {
 	base := &cli.BasicUi{Writer: os.Stdout, ErrorWriter: os.Stderr, Reader: os.Stdin}
-	ui := &cli.ColoredUi{Ui: base, OutputColor: cli.UiColorNone, InfoColor: cli.UiColorBlue, ErrorColor: cli.UiColorRed, WarnColor: cli.UiColorYellow}
+	ui := &cli.ColoredUi{Ui: base, OutputColor: cli.UiColorNone, InfoColor: cli.UiColorNone, ErrorColor: cli.UiColorRed, WarnColor: cli.UiColorYellow}
 	verHuman := ocyVersion.GetHumanVersion()
 	Commands = map[string]cli.CommandFactory{
 		"creds": func() (cli.Command, error) { return creds.New(), nil },

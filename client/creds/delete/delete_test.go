@@ -38,7 +38,7 @@ func TestCmd_Run(t *testing.T) {
 
 	cmdd.credType = pb.CredType_GENERIC
 	ui.InputReader = bytes.NewBuffer([]byte("es"))
-	exitcode = cmdd.Run([]string{"-acct=12", "-identifier=123"})
+	exitcode = cmdd.Run([]string{"-acct=12", "-identifier=123", "-subtype=env"})
 	if exitcode != 0 {
 		t.Error("After cancelling out of delete confirmation, should return 0 exit code")
 	}
@@ -64,7 +64,7 @@ func TestCmd_Run(t *testing.T) {
 	if exitcode != 1 {
 		t.Error("should return 1 exit code as bad input ")
 	}
-	expectedOutput = "-subtype not provided and REPO has more than one subtype, please select NEXUS|MAVEN|DOCKER|MINIO\n"
+	expectedOutput = "Not the correct subtype for this credential (REPO). Please pick one of NEXUS|MAVEN|DOCKER|MINIO\n"
 	live := ui.ErrorWriter.String()
 	if expectedOutput != live {
 		t.Error(test.StrFormatErrors("error output", expectedOutput, live))
