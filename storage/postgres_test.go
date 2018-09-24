@@ -22,6 +22,7 @@ func Test_PostgresStorage(t *testing.T) {
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	pg.Connect()
 	defer PostgresTeardown(t, pg.db)
+	t.Run("get tracked repos", func(t *testing.T) { postgresStorage_GetTrackedRepos(t, pg) })
 	t.Run("add sum start", func(t *testing.T) { postgresStorage_AddSumStart(t, pg) })
 	id := insertDependentData(t, pg)
 	t.Run("get last data", func(t *testing.T) { postgresStorage_GetLastData(t, pg) })
@@ -158,7 +159,7 @@ func postgresStorage_AddStageDetail(t *testing.T, pg *PostgresStorage, id int64)
 		if stage.StageResultId != 1 {
 			t.Error(test.GenericStrFormatErrors("postgres assigned stage result id", 1, stage.StageResultId))
 		}
-		if stage.BuildId != 2 {
+		if stage.BuildId != id {
 			t.Error(test.GenericStrFormatErrors("test build id", 2, stage.BuildId))
 		}
 		if len(stage.Error) != 0 {
@@ -261,6 +262,38 @@ func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
 			t.Error("unexpected build summary")
 		}
 	}
+}
+
+func postgresStorage_GetTrackedRepos(t *testing.T, pg *PostgresStorage) {
+	id, err := pg.AddSumStart("hash", "account", "repo", "branch")
+	if err != nil { t.Error(err) }
+	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
+
+	id, err = pg.AddSumStart("ha1sh", "account", "repo", "branch1")
+	if err != nil {
+		t.Error(err)
+	}
+	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
+	time.Sleep(1)
+	id, err = pg.AddSumStart("hash2", "account1", "repo", "branch")
+	if err != nil {
+		t.Error(err)
+	}
+	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
+
+	repos, err := pg.GetTrackedRepos()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(repos.AcctRepos) != 2 {
+		t.Error("should only be two distinct acct repos")
+	}
+	for _, repo := range repos.AcctRepos {
+		if repo.LastQueue == nil {
+			t.Error("last queued time should be set!!")
+		}
+	}
+
 }
 
 // TODO: add more cred tests here, checking validation etc

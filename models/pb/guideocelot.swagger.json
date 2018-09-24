@@ -70,11 +70,19 @@
           },
           {
             "name": "buildId",
-            "description": "build id is the build number given by ocelot that is associated with the commit.",
+            "description": "buildId is the build number given by ocelot that is associated with the commit.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "int64"
+          },
+          {
+            "name": "strip",
+            "description": "strip will return builds without ansi // tty formatting.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1436,11 +1444,19 @@
           },
           {
             "name": "buildId",
-            "description": "build id is the build number given by ocelot that is associated with the commit.",
+            "description": "buildId is the build number given by ocelot that is associated with the commit.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "int64"
+          },
+          {
+            "name": "strip",
+            "description": "strip will return builds without ansi // tty formatting.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1721,11 +1737,16 @@
       "properties": {
         "account": {
           "type": "string",
-          "title": "VCS Account"
+          "title": "account is VCS Account"
         },
         "repo": {
           "type": "string",
-          "title": "VCS Repository"
+          "title": "repo is the VCS Repository"
+        },
+        "lastQueue": {
+          "type": "string",
+          "format": "date-time",
+          "title": "lastqueue last time build was queued"
         }
       },
       "title": "Used in displaying all repos that are tracked by ocelot"

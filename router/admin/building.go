@@ -8,6 +8,7 @@ import (
 
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 
@@ -84,8 +85,14 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 
 // scanLog will create a scanner out of the buildOutput byte data and send it over the GuideOcelot logs stream.
 //   will return a grpc error if something goes wrong
-func scanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageType string) error {
-	scanner := bufio.NewScanner(bytes.NewReader(out.Output))
+func scanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageType string, stripAnsi bool) error {
+	var cleanedOutput []byte
+	if stripAnsi {
+		cleanedOutput = common.MaybeStrip(out.Output, stripAnsi)
+	} else {
+		cleanedOutput = out.Output
+	}
+	scanner := bufio.NewScanner(bytes.NewReader(cleanedOutput))
 	buf := make([]byte, 0, 64*1024)
 	scanner.Buffer(buf, 1024*1024)
 	for scanner.Scan() {
@@ -115,7 +122,7 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 		if err != nil {
 			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrive from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		return scanLog(out, stream, g.Storage.StorageType())
+		return scanLog(out, stream, g.Storage.StorageType(), bq.Strip)
 	}
 
 	if !build.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
@@ -127,7 +134,7 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 		if err != nil {
 			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		return scanLog(out, stream, g.Storage.StorageType())
+		return scanLog(out, stream, g.Storage.StorageType(), bq.Strip)
 	}
 }
 

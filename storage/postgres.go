@@ -1052,7 +1052,10 @@ func (p *PostgresStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
 	if err := p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	queryStr := `SELECT distinct account,repo FROM build_summary;`
+	var queuetime time.Time
+	queryStr := `SELECT DISTINCT ON (account, repo) account, repo, queuetime
+FROM build_summary
+ORDER BY account, repo, queuetime DESC NULLS LAST;`
 	stmt, err := p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
@@ -1066,12 +1069,13 @@ func (p *PostgresStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
 	acctRepos := &pb.AcctRepos{}
 	for rows.Next() {
 		acctRepo := &pb.AcctRepo{}
-		if err := rows.Scan(&acctRepo.Account, &acctRepo.Repo); err != nil {
+		if err := rows.Scan(&acctRepo.Account, &acctRepo.Repo, &queuetime); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, BuildSumNotFound("any account/repo")
 			}
 			return nil, err
 		}
+		acctRepo.LastQueue = convertTimeToTimestamp(queuetime)
 		acctRepos.AcctRepos = append(acctRepos.AcctRepos, acctRepo)
 	}
 	return acctRepos, nil

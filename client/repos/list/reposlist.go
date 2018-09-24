@@ -5,6 +5,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 	"github.com/olekukonko/tablewriter"
@@ -60,12 +62,17 @@ func (c *cmd) Run(args []string) int {
 		writer := &bytes.Buffer{}
 		writ := tablewriter.NewWriter(writer)
 		writ.SetAlignment(tablewriter.ALIGN_LEFT)
-		writ.SetHeader([]string{"Account", "Repo"})
+		writ.SetHeader([]string{"Account", "Repo", "Last Queued"})
 		for _, acctrepo := range msg.AcctRepos {
+			var unixTimeFormatted = "N/A"
+			if acctrepo.LastQueue != nil {
+				unixTimeFormatted = time.Unix(acctrepo.LastQueue.Seconds, int64(acctrepo.LastQueue.Nanos)).Format("Mon Jan _2 15:04:05")
+			}
 			var row []string
 			row = append(row,
 				acctrepo.Account,
 				acctrepo.Repo,
+				unixTimeFormatted,
 			)
 			writ.Append(row)
 		}

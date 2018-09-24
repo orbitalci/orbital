@@ -1114,8 +1114,8 @@ func TestGuideOcelotServer_deleteAnyCred(t *testing.T) {
 
 	store.EXPECT().CredExists(justRight).Return(true, nil).Times(1)
 	rc.EXPECT().DeleteCred(store, justRight).Return(nil).Times(1)
-	if _, err = gos.deleteAnyCred(ctx, justRightNoST, pb.CredType_GENERIC); err != nil {
-		t.Error("should know that sct is ENV since it is the only subtype of generic, instaed got error: " + err.Error())
+	if _, err = gos.deleteAnyCred(ctx, justRightNoST, pb.CredType_GENERIC); err == nil {
+		t.Error("should error since there is more than one generic cred type")
 	}
 }
 
