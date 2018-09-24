@@ -4,7 +4,7 @@ services:
   vault:
 #    depends_on:
 #      - consul
-    image: vault
+    image: vault:0.10.1
     container_name: vault
     hostname: vault
 #    links:
@@ -22,7 +22,8 @@ services:
       - ./docs/docker-compose/vault-consul/tools/wait-for-it.sh:/wait-for-it.sh
       - ./docs/docker-compose/vault-consul/config/vault:/config
       - ./docs/docker-compose/vault-consul/config/vault/policies:/policies
-    entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl
+    entrypoint: vault server -dev -dev-root-token-id="ocelotdev" -dev-listen-address=0.0.0.0:8200 -log-level=debug
+    #entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl
 networks:
   default:
     external:

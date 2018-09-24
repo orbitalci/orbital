@@ -1,3 +1,5 @@
+ui = true
+
 backend "consul" {
   address = "http://consul:8500"
   advertise_addr = "http://consul:8200"
