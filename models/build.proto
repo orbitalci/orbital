@@ -28,6 +28,8 @@ message Stage {
     string name = 3;
     // @inject_tag: yaml:"trigger"
     Triggers trigger = 4;
+    // @inject_tag: yaml:"triggers"
+    repeated string Triggers = 5;
 }
 
 // todo: move to a new notifications.proto?

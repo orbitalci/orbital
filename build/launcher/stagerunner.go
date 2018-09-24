@@ -19,7 +19,7 @@ func (w *launcher) runStages(ctx context.Context, werk *pb.WerkerTask, builder b
 	start := time.Now()
 	for _, stage := range werk.BuildConf.Stages {
 		var shouldSkip bool
-		if shouldSkip, err = handleTriggers(werk.Branch, werk.Id, w.Store, stage); err != nil {
+		if shouldSkip, err = handleTriggers(werk, w.Store, stage); err != nil {
 			return
 		} else if shouldSkip {
 			continue
@@ -54,7 +54,7 @@ func (w *launcher) runStages(ctx context.Context, werk *pb.WerkerTask, builder b
 //  if the trigger block exists, and current branch is in the list of trigger branches, the funciton will return a shouldSkip of false, signifying that the stage should execute.
 //  If the current branch is not in the list of trigger branches, shouldSkip of true will be returned and the stage should not be executed.
 //  If the stage is a shouldSkip, it will also save to the database that the stage will be skipped.
-func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb.Stage) (shouldSkip bool, err error) {
+func handleTriggers(task *pb.WerkerTask, store storage.BuildStage, stage *pb.Stage) (shouldSkip bool, err error) {
 	// null value of bool is false, so shouldSkip is false until told otherwise
 	if stage.Trigger != nil {
 		if len(stage.Trigger.Branches) == 0 {
@@ -62,26 +62,42 @@ func handleTriggers(branch string, id int64, store storage.BuildStage, stage *pb
 			// return false, the block is empty and there is nothing to check
 			return
 		}
-		branchGood, err := trigger.BranchRegexOk(branch, stage.Trigger.Branches)
+		branchGood, err := trigger.BranchRegexOk(task.Branch, stage.Trigger.Branches)
 		if err != nil {
 			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_FAIL, Error: err.Error(), Messages: []string{"failed to check if current branch fit the trigger criteria"}}
 			// not sure if we should store, but i think its good visibility especially for right now
-			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
+			if err = storeStageToDb(store, task.Id, result, time.Now(), 0); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
 				return shouldSkip, err
 			}
 		}
 		if !branchGood {
-			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_SKIP, Error: "", Messages: []string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", branch)}}
+			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_SKIP, Error: "", Messages: []string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list", task.Branch)}}
 			// we could save to db, the branch running is not in the list of trigger branches, so we can flip the shouldSkip bool now.
 			shouldSkip = true
-			if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
+			if err = storeStageToDb(store, task.Id, result, time.Now(), 0); err != nil {
 				ocelog.IncludeErrField(err).Error("couldn't store build output")
 				return shouldSkip, err
 			}
 			return shouldSkip, err
 		}
-		ocelog.Log().Debugf("building from trigger stage with branch %s. triggerBranches are %s", branch, strings.Join(stage.Trigger.Branches, ", "))
+		ocelog.Log().Debugf("building from trigger stage with branch %s. triggerBranches are %s", task.Branch, strings.Join(stage.Trigger.Branches, ", "))
+	}
+	// each line in triggers is an OR statement, so if any of them
+	if stage.Triggers != nil {
+		var passed bool
+		for _, triggerString := range stage.Triggers {
+			var directive *trigger.ConditionalDirective
+			directive, err = trigger.Parse(triggerString)
+			if err != nil {
+				return
+			}
+			if directive.Passes(task.ChangesetData) {
+				passed = true
+				break
+			}
+		}
+		return !passed, err
 	}
 	// will return false
 	return

@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
+
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 func TestBranchCondition(t *testing.T) {
@@ -20,11 +22,11 @@ func TestBranchCondition(t *testing.T) {
 	if diff := deep.Equal(brch.GetConditionValues(), []string{"here", "there"}); diff != nil {
 		t.Error(diff)
 	}
-	triggerData := &ChangesetData{branch: "borg"}
+	triggerData := &pb.ChangesetData{Branch: "borg"}
 	if brch.PassesMuster(triggerData) {
 		t.Error("shouldn't pass, as 'borg' is not in the list")
 	}
-	triggerData.branch = "there"
+	triggerData.Branch = "there"
 	if !brch.PassesMuster(triggerData) {
 		t.Error("should pass, as 'there' is in the condition list")
 	}
@@ -57,7 +59,7 @@ func TestTextCondition(t *testing.T) {
 	if diff := deep.Equal(conditionals, text.GetConditionValues()); diff != nil {
 		t.Error(diff)
 	}
-	td := &ChangesetData{commitTexts: []string{"text1 goes here and that's real nice", "text2345 is also here!!!", "but we don't have the last nonsensical boi"}}
+	td := &pb.ChangesetData{CommitTexts: []string{"text1 goes here and that's real nice", "text2345 is also here!!!", "but we don't have the last nonsensical boi"}}
 	if text.PassesMuster(td) {
 		t.Error("should not pass muster, it doens't have t82nsla7812l")
 	}
@@ -68,12 +70,12 @@ func TestTextCondition(t *testing.T) {
 	}
 	text.SetLogical(And)
 
-	td.commitTexts = append(td.commitTexts, "now we got it.... t82nsla7812l")
+	td.CommitTexts = append(td.CommitTexts, "now we got it.... t82nsla7812l")
 	if !text.PassesMuster(td) {
 		t.Error("should  pass muster, it now has t82nsla7812l")
 	}
 
-	if !text.PassesMuster(&ChangesetData{commitTexts: []string{"text1 geez text2345 t82nsla7812l"}}) {
+	if !text.PassesMuster(&pb.ChangesetData{CommitTexts: []string{"text1 geez text2345 t82nsla7812l"}}) {
 		t.Error("should pass, as it has all the commit text messages")
 	}
 }
@@ -96,16 +98,16 @@ func TestFilepathCondition(t *testing.T) {
 		t.Error(diff)
 	}
 	changelist := []string{"src/test/garbo", "src/test/resource/somexml.xml", "src/main/jarra"}
-	if !fp.PassesMuster(&ChangesetData{filesChanged: changelist}) {
+	if !fp.PassesMuster(&pb.ChangesetData{FilesChanged: changelist}) {
 		t.Error("should pass because logical is Or and src/test is in the changelist")
 	}
 	fp.logical = And
-	if fp.PassesMuster(&ChangesetData{filesChanged: changelist}) {
+	if fp.PassesMuster(&pb.ChangesetData{FilesChanged: changelist}) {
 		t.Error("logical is And, not all conditions are present. this should fail")
 	}
 
 	robustList := []string{"src/test/resources/main.yaml", "src/main/java/com/boop/here.java", "src/main/resources/com/boop/here.xml"}
-	if !fp.PassesMuster(&ChangesetData{filesChanged: robustList}) {
+	if !fp.PassesMuster(&pb.ChangesetData{FilesChanged: robustList}) {
 		t.Error("all required changes are present, this should pass")
 	}
 }

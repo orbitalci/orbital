@@ -2,11 +2,13 @@ package trigger
 
 import (
 	"strings"
+	
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 type Section interface {
 	GetTriggerType() TriggerType
-	PassesMuster(*ChangesetData) bool
+	PassesMuster(*pb.ChangesetData) bool
 	GetLogical() Conditional
 	SetLogical(Conditional)
 	AddConditionValue(string)
@@ -22,8 +24,8 @@ func (b *BranchCondition) GetTriggerType() TriggerType {
 	return Branch
 }
 
-func (b *BranchCondition) PassesMuster(td *ChangesetData) bool {
-	ok, _ := BranchRegexOk(td.branch, b.acceptedBranches)
+func (b *BranchCondition) PassesMuster(td *pb.ChangesetData) bool {
+	ok, _ := BranchRegexOk(td.Branch, b.acceptedBranches)
 	return ok
 }
 
@@ -80,8 +82,8 @@ func (b *TextCondition) GetTriggerType() TriggerType {
 	return Text
 }
 
-func (b *TextCondition) PassesMuster(td *ChangesetData) bool {
-	return changesPassMuster(b.logical, td.commitTexts, b.acceptedTexts)
+func (b *TextCondition) PassesMuster(td *pb.ChangesetData) bool {
+	return changesPassMuster(b.logical, td.CommitTexts, b.acceptedTexts)
 }
 
 func (b *TextCondition) GetLogical() Conditional {
@@ -111,8 +113,8 @@ func (b *FilepathCondition) GetTriggerType() TriggerType {
 	return Filepath
 }
 
-func (b *FilepathCondition) PassesMuster(td *ChangesetData) bool {
-	return changesPassMuster(b.logical, td.filesChanged, b.acceptedFilepaths)
+func (b *FilepathCondition) PassesMuster(td *pb.ChangesetData) bool {
+	return changesPassMuster(b.logical, td.FilesChanged, b.acceptedFilepaths)
 }
 
 func (b *FilepathCondition) GetLogical() Conditional {
