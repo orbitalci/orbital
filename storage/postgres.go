@@ -1053,7 +1053,7 @@ func (p *PostgresStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var queuetime time.Time
-	queryStr := `SELECT DISTINCT (account, repo) account, repo, queuetime
+	queryStr := `SELECT DISTINCT ON (account, repo) account, repo, queuetime
 FROM build_summary
 ORDER BY account, repo, queuetime DESC NULLS LAST;`
 	stmt, err := p.db.Prepare(queryStr)
