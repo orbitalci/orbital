@@ -12,10 +12,10 @@ func TestParseSpacing(t *testing.T) {
 	textUnit := &TextCondition{acceptedTexts: []string{"schema_changed"}, logical: CNone}
 	full := &ConditionalDirective{Conditions: []Section{branchUnit, textUnit}, Logical: And}
 	cases := []string{
-		"branch: master||develop|| release.* and text: schema_changed",
-		"branch: master || develop||release.* and text: schema_changed",
-		"branch: master|| develop ||release.* and text: schema_changed",
-		"branch: master  || develop ||   release.* and text: schema_changed",
+		`\branch master||develop|| release.* and \text schema_changed`,
+		`\branch master || develop||release.* and \text schema_changed`,
+		`\branch master|| develop ||release.* and \text schema_changed`,
+		`\branch master  || develop ||   release.* and \text schema_changed`,
 	}
 	for _, tc := range cases {
 		live, err := Parse(tc)
@@ -38,7 +38,7 @@ func TestParse(t *testing.T) {
 	}{
 		{
 			err:       false,
-			directive: "branch: fix.* and text: buildme and filepath: GisCommon",
+			directive: `\branch fix.* and \text buildme and \filepath GisCommon`,
 			parsed: &ConditionalDirective{
 				Logical: And,
 				Conditions: []Section{
@@ -50,7 +50,7 @@ func TestParse(t *testing.T) {
 		},
 		{
 			err:       false,
-			directive: "branch: master||develop and filepath: src/test && src/main",
+			directive: `\branch master||develop and \filepath src/test && src/main`,
 			parsed: &ConditionalDirective{
 				Logical: And,
 				Conditions: []Section{
@@ -61,7 +61,7 @@ func TestParse(t *testing.T) {
 		},
 		{
 			err:       false,
-			directive: "branch: master or text: force_build || buildBetch",
+			directive: `\branch master or \text force_build || buildBetch`,
 			parsed: &ConditionalDirective{
 				Logical: Or,
 				Conditions: []Section{
@@ -72,11 +72,11 @@ func TestParse(t *testing.T) {
 		},
 		{
 			err:       true,
-			directive: "branch master or text: force_build || buildBetch",
+			directive: `branch master or \text force_build || buildBetch`,
 		},
 		{
 			err:       true,
-			directive: "branch: master or text: force_build || buildBetch && hereWeGOAgain",
+			directive: `\branch master or \text force_build || buildBetch && hereWeGOAgain`,
 		},
 	}
 	for _, tc := range cases {

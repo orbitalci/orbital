@@ -28,11 +28,11 @@ func (t TriggerType) Spawn() Section {
 
 func convertTriggerType(str string) TriggerType {
 	switch strings.ToLower(str) {
-	case "branch:":
+	case `\branch`:
 		return Branch
-	case "filepath:":
+	case `\filepath`:
 		return Filepath
-	case "text:":
+	case `\text`:
 		return Text
 	default:
 		return TNone
