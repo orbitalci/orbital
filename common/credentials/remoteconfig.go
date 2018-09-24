@@ -449,25 +449,12 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 			storeConfig.Port, _ = strconv.Atoi(string(pair.Value))
 		}
 	}
-
-	ocelog.Log().Debugf("Config from Consul %s", storeConfig)
-	ocelog.Log().Debugf("Path to look in vault %s", common.PostgresPasswordLoc)
-
 	secrets, err := rc.Vault.GetVaultData(common.PostgresPasswordLoc)
-	ocelog.Log().Debugf("Secret from Vault %s", secrets)
 	if err != nil {
 		return storeConfig, errors.New("unable to get postgres password from vault, err: " + err.Error())
 	}
 	// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
-	//storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
-
-	// Unwrap password from Vault response, store password
-	secretData := secrets["data"]
-	password, _ := secretData.(map[string]interface{})
-	storeConfig.Password = password["clientsecret"].(string)
-
-	ocelog.Log().Debugf("Postgres config %s", storeConfig)
-
+	storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
 	return storeConfig, nil
 }
 
@@ -493,7 +480,6 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	}
 	switch typ {
 	case storage.FileSystem:
-		// This type is unimplemented. We should consider failing here
 		return storage.NewFileBuildStorage(creds.Location), nil
 	case storage.Postgres:
 		store := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)

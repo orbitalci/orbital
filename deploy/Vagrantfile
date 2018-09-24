@@ -71,6 +71,11 @@ Vagrant.configure("2") do |config|
       echo 'export DBHOST=192.168.56.78' | sudo tee -a /etc/bash.bashrc
       export DBHOST=192.168.56.78
 
+      # Set up Vault to use kv version 1, for now
+      # Unmount secret/
+      vault secrets disable secret
+      vault secrets enable -path=secret -version=1 kv
+
       /home/vagrant/go/src/github.com/shankj3/ocelot/scripts/setup-cv.sh
 
       cd /home/vagrant/go/src/github.com/shankj3/ocelot/
