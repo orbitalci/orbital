@@ -7,7 +7,7 @@ type ConditionalDirective struct {
 	Logical    Conditional
 }
 
-func (c *ConditionalDirective) Passes(td *pb.ChangesetData) bool {
+func (c *ConditionalDirective) IsFulfilled(td *pb.ChangesetData) bool {
 	for _, condition := range c.Conditions {
 		if condition.PassesMuster(td) {
 			// if logical is Or, the first time this condition passes return true.
