@@ -1,7 +1,5 @@
 FROM golang:1.11-alpine as builder
 
-ARG SSH_PRIVATE_KEY
-
 RUN apk --update --no-cache add git protobuf-dev ca-certificates openssh python mercurial tini && \
     go get -v -u github.com/golang/dep/cmd/dep && \
     go get -v -u github.com/golang/protobuf/proto && \
@@ -12,21 +10,10 @@ RUN apk --update --no-cache add git protobuf-dev ca-certificates openssh python 
 
 WORKDIR /go/src/github.com/shankj3/ocelot/
 COPY . .
-RUN cd models && ./build-protos.sh && cd -
+#RUN cd models && ./build-protos.sh && cd -
+#RUN make proto
 
-RUN mkdir /root/.ssh
-
-# Add your ssh key
-RUN echo "${SSH_PRIVATE_KEY}" > /root/.ssh/private_key && \
-    echo "IdentityFile /root/.ssh/private_key" >> /root/.ssh/config && \
-    echo "StrictHostKeyChecking no" >> /root/.ssh/config && \
-    chmod 600 /root/.ssh/private_key && \
-    chmod 400 /root/.ssh/config
-
-RUN git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.org/"
-
-#CMD ["python","-m","SimpleHTTPServer"]
-RUN dep ensure -v && rm /root/.ssh/private_key
+RUN dep ensure -v
 RUN apk --update --no-cache add openssl wget bash zip curl curl-dev docker
 RUN apk -v --update add \
         python \

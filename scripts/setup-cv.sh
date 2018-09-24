@@ -4,12 +4,15 @@ set -e
 if [ "${PATH_PREFIX}" != "" ]; then
     prefix="${PATH_PREFIX}/"
 fi
-echo "prefix is ${prefix}"
+echo "prefix is \"${prefix}\""
 
-DBHOST=$1
-if [ "${DBHOST}" == "" ]; then
-    echo "using localhost as db host location"
-    DBHOST=localhost
+# If DBHOST is unset, check if it is passed as arg. Fallback to localhost
+if [ -z "${DBHOST}" ]; then
+  DBHOST=$1
+  if [ "${DBHOST}" == "" ]; then
+      echo "using localhost as db host location"
+      DBHOST=localhost
+  fi
 fi
 
 #exitcode=vault version | grep v10
@@ -22,9 +25,13 @@ locals() {
     consul kv put ${prefix}config/ocelot/postgres/location ${DBHOST}
     consul kv put ${prefix}config/ocelot/postgres/port 5432
     consul kv put ${prefix}config/ocelot/postgres/username postgres
-    vault write secret/data/config/ocelot/postgres clientsecret=mysecretpassword
-    #vault kv put secret/${prefix}config/ocelot/postgres clientsecret=mysecretpassword
 
+    # Vault 0.11.1
+    # This shouldn't work, but does
+    #vault kv put secret/config/ocelot/postgres clientsecret="mysecretpassword"
+
+    # This should work, but doesn't
+    vault kv put secret/data/config/ocelot/postgres clientsecret="mysecretpassword"
 }
 
 if [ "${DEV_K8S}" == "" ]; then
@@ -43,8 +50,7 @@ dev_k8s() {
     consul kv put ${prefix}config/ocelot/postgres/location ${loc}
     consul kv put ${prefix}config/ocelot/postgres/port ${port}
     consul kv put ${prefix}config/ocelot/postgres/username ocelot
-    vault write secret/${prefix}config/ocelot/postgres clientsecret=${pw}
-    #vault kv put secret/${prefix}config/ocelot/postgres clientsecret=${pw}
+    vault kv put secret/${prefix}config/ocelot/postgres clientsecret=${pw}
 }
 
 if [ "${DEV_K8S}" != "" ]; then

@@ -20,17 +20,17 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type WebhookMsg struct {
 	// required
-	Text string `protobuf:"bytes,1,opt,name=text" json:"text,omitempty"`
+	Text string `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
 	// if not entered, will be default channel of url
-	Channel string `protobuf:"bytes,2,opt,name=channel" json:"channel,omitempty"`
+	Channel string `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`
 	// if not entered, will be user that created webhook
-	Username string `protobuf:"bytes,3,opt,name=username" json:"username,omitempty"`
+	Username string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
 	// obv not required
-	IconUrl string `protobuf:"bytes,4,opt,name=icon_url,json=iconUrl" json:"icon_url,omitempty"`
+	IconUrl string `protobuf:"bytes,4,opt,name=icon_url,json=iconUrl,proto3" json:"icon_url,omitempty"`
 	// obv not required
-	IconEmoji string `protobuf:"bytes,5,opt,name=icon_emoji,json=iconEmoji" json:"icon_emoji,omitempty"`
+	IconEmoji string `protobuf:"bytes,5,opt,name=icon_emoji,json=iconEmoji,proto3" json:"icon_emoji,omitempty"`
 	// if you wanna get fancy
-	Attachments          []*Attachment `protobuf:"bytes,6,rep,name=attachments" json:"attachments,omitempty"`
+	Attachments          []*Attachment `protobuf:"bytes,6,rep,name=attachments,proto3" json:"attachments,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
 	XXX_sizecache        int32         `json:"-"`
@@ -103,9 +103,9 @@ func (m *WebhookMsg) GetAttachments() []*Attachment {
 }
 
 type Field struct {
-	Title                string   `protobuf:"bytes,1,opt,name=title" json:"title,omitempty"`
-	Value                string   `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
-	Short                bool     `protobuf:"varint,3,opt,name=short" json:"short,omitempty"`
+	Title                string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Value                string   `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Short                bool     `protobuf:"varint,3,opt,name=short,proto3" json:"short,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -157,20 +157,20 @@ func (m *Field) GetShort() bool {
 }
 
 type Attachment struct {
-	Fallback             string   `protobuf:"bytes,1,opt,name=fallback" json:"fallback,omitempty"`
-	Color                string   `protobuf:"bytes,2,opt,name=color" json:"color,omitempty"`
-	Pretext              string   `protobuf:"bytes,3,opt,name=pretext" json:"pretext,omitempty"`
-	AuthorName           string   `protobuf:"bytes,4,opt,name=author_name,json=authorName" json:"author_name,omitempty"`
-	AuthorLink           string   `protobuf:"bytes,5,opt,name=author_link,json=authorLink" json:"author_link,omitempty"`
-	AuthorIcon           string   `protobuf:"bytes,6,opt,name=author_icon,json=authorIcon" json:"author_icon,omitempty"`
-	Title                string   `protobuf:"bytes,7,opt,name=title" json:"title,omitempty"`
-	TitleLink            string   `protobuf:"bytes,8,opt,name=title_link,json=titleLink" json:"title_link,omitempty"`
-	Text                 string   `protobuf:"bytes,9,opt,name=text" json:"text,omitempty"`
-	Fields               []*Field `protobuf:"bytes,10,rep,name=fields" json:"fields,omitempty"`
-	ImageUrl             string   `protobuf:"bytes,11,opt,name=image_url,json=imageUrl" json:"image_url,omitempty"`
-	ThumbUrl             string   `protobuf:"bytes,12,opt,name=thumb_url,json=thumbUrl" json:"thumb_url,omitempty"`
-	Footer               string   `protobuf:"bytes,13,opt,name=footer" json:"footer,omitempty"`
-	FooterIcon           string   `protobuf:"bytes,14,opt,name=footer_icon,json=footerIcon" json:"footer_icon,omitempty"`
+	Fallback             string   `protobuf:"bytes,1,opt,name=fallback,proto3" json:"fallback,omitempty"`
+	Color                string   `protobuf:"bytes,2,opt,name=color,proto3" json:"color,omitempty"`
+	Pretext              string   `protobuf:"bytes,3,opt,name=pretext,proto3" json:"pretext,omitempty"`
+	AuthorName           string   `protobuf:"bytes,4,opt,name=author_name,json=authorName,proto3" json:"author_name,omitempty"`
+	AuthorLink           string   `protobuf:"bytes,5,opt,name=author_link,json=authorLink,proto3" json:"author_link,omitempty"`
+	AuthorIcon           string   `protobuf:"bytes,6,opt,name=author_icon,json=authorIcon,proto3" json:"author_icon,omitempty"`
+	Title                string   `protobuf:"bytes,7,opt,name=title,proto3" json:"title,omitempty"`
+	TitleLink            string   `protobuf:"bytes,8,opt,name=title_link,json=titleLink,proto3" json:"title_link,omitempty"`
+	Text                 string   `protobuf:"bytes,9,opt,name=text,proto3" json:"text,omitempty"`
+	Fields               []*Field `protobuf:"bytes,10,rep,name=fields,proto3" json:"fields,omitempty"`
+	ImageUrl             string   `protobuf:"bytes,11,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
+	ThumbUrl             string   `protobuf:"bytes,12,opt,name=thumb_url,json=thumbUrl,proto3" json:"thumb_url,omitempty"`
+	Footer               string   `protobuf:"bytes,13,opt,name=footer,proto3" json:"footer,omitempty"`
+	FooterIcon           string   `protobuf:"bytes,14,opt,name=footer_icon,json=footerIcon,proto3" json:"footer_icon,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

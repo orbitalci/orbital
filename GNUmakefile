@@ -15,8 +15,6 @@ GIT_IMPORT=github.com/shankj3/ocelot/version
 GOLDFLAGS=-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)
 GOLDFLAGS_REL=$(GOLDFLAGS) -X $(GIT_IMPORT).VersionPrerelease=
 export GOLDFLAGS
-SSH_PRIVATE_KEY ?= $(HOME)/.ssh/id_rsa
-export SSH_PRIVATE_KEY
 GIT_HASH := $(shell git rev-parse --short HEAD)
 
 versionexists:
@@ -106,14 +104,8 @@ darwin-werker: versionexists ## install mac werker zip and upload to s3
 	@aws s3 cp --acl public-read-write --content-disposition attachment darwin-werker-$(VERSION).zip s3://ocelotty/darwin-werker-$(VERSION).zip
 	rm darwin-werker-$(VERSION).zip
 
-sshexists:
-ifeq ("$(wildcard $(SSH_PRIVATE_KEY))","")
-	$(error SSH_PRIVATE_KEY must exist or ~/.ssh/id_rsa must exist!)
-endif
-
-docker-base: sshexists ## build ocelot-builder base image
+docker-base: ## build ocelot-builder base image
 	@docker build \
-	   --build-arg SSH_PRIVATE_KEY="$$(cat $${SSH_PRIVATE_KEY})" \
 	   -f Dockerfile.build \
 	   -t ocelot-build \
 	   .

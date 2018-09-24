@@ -6,7 +6,7 @@ COPY . .
 
 RUN cd cmd/${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .
 
-FROM alpine:3.7
+FROM alpine:3.8
 RUN apk --update --no-cache add docker
 ENV SERVICE_NAME werker
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
