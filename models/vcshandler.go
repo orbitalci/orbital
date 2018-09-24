@@ -53,6 +53,10 @@ type VCSHandler interface {
 	// If the lastHash commit value is never found, will return an error.
 	GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error)
 
+	// GetChangedFiles will return a list of all the files that have been changed between the two commits
+	//  analogous to:  git diff --name-only firstHash..lastHash
+	GetChangedFiles(acctRepo, firstHash, lastHash string) ([]string, error)
+
 	// GetPRCommits will return a list of commits for the given url for commits. It'll call the url from (e.g. bb or github),
 	//   unmarshal into its vcs-specific model, then translate to the global model to return a list of generic commits
 	GetPRCommits(url string) ([]*pb.Commit, error)

@@ -369,3 +369,7 @@ func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, build
 	}
 	return err
 }
+
+func (bb *Bitbucket) GetChangedFiles(acctRepo, firstHash, lastHash string) ([]string, error) {
+
+}
