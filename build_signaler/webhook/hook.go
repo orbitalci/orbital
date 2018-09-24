@@ -1,7 +1,7 @@
 package webhook
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/shankj3/ocelot/build"
 	signal "github.com/shankj3/ocelot/build_signaler"
@@ -33,28 +33,29 @@ func (pr *PRWerkerTeller) TellWerker(hash string, signaler *signal.Signaler, bra
 	buildConf, err := signal.GetConfig(acctRepo, hash, signaler.Deserializer, handler)
 	if err != nil {
 		if err == ocenet.FileNotFound {
-			err = errors.New("no ocelot yml found for repo " + acctRepo)
-			ocelog.IncludeErrField(err).Error("no ocelotyml")
-			return err
+			ocelog.IncludeErrField(err).Error("no ocelot.yml")
+			return errors.New("no ocelot yaml found for repo " + acctRepo)
 		} else {
-			err = errors.New("unable to get build configuration; err: " + err.Error())
-			ocelog.IncludeErrField(err).Error("couldn't get ocelotyml")
-			return err
+			return errors.Wrap(err, "unable to get build configuration")
 		}
 	}
 	task := signal.BuildInitialWerkerTask(buildConf, hash, token, branch, acctRepo, pb.SignaledBy_PULL_REQUEST, pr.prData)
+	task.ChangesetData, err = signal.BuildChangesetData(handler, acctRepo, hash, branch, commits)
+	if err != nil {
+		return errors.Wrap(err, "did not queue because unable to contact vcs repo to get changelist data")
+	}
 	err = signaler.OcyValidator.ValidateViability(pr.destBranch, buildConf.Branches, commits, false)
 	if err != nil {
 		ocelog.IncludeErrField(err).Warn("fyi, this pull request is not valid for a build!! it will not be queued!!")
-		return err
+		return errors.Wrap(err, "did not queue because it shouldn't be queued, as there is a validation error")
 	}
 	if err = signaler.QueueAndStore(task); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			ocelog.IncludeErrField(err).Warn("fyi, this pull request is not valid for a build!! it will not be queued!!")
-			return err
+			return errors.Wrap(err, "did not queue because it shouldn't be queued, as there is a validation error")
 		}
 		ocelog.IncludeErrField(err).Warn("something went awry trying to queue and store")
-		return err
+		return errors.Wrap(err, "unable to queue or store")
 	}
 	return nil
 }

@@ -342,6 +342,8 @@ func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
 	return commits, nil
 }
 
+// fixme: this can now use the 2.0 api!!!
+// https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests/%7Bpull_request_id%7D/comments#post
 func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, buildId int64) error {
 	//	https://api.bitbucket.org/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments --data "content=string"
 	// ** need to use v1 url because atlassian is annoying: **
@@ -370,6 +372,31 @@ func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, build
 	return err
 }
 
-func (bb *Bitbucket) GetChangedFiles(acctRepo, firstHash, lastHash string) ([]string, error) {
-
+func (bb *Bitbucket) GetChangedFiles(acctRepo, latestHash, earliestHash string) (changedFiles []string, err error) {
+	changedFileSet := map[string]bool{}
+	// https://api.bitbucket.org/2.0/repositories/bitbucket/geordi/diffstat/d222fa2..e174964
+	path := fmt.Sprintf("%s/diffstat/%s..%s", acctRepo, latestHash, earliestHash)
+	urll := fmt.Sprintf(bb.GetBaseURL(), path)
+	for {
+		if urll == "" {
+			break
+		}
+		diff := &pbb.FullDiff{}
+		bb.Client.GetUrl(urll, diff)
+		if err != nil {
+			failedBBRemoteCalls.WithLabelValues("GetChangedFiles").Inc()
+			return changedFiles, err
+		}
+		for _, diffstat := range diff.Values {
+			if diffstat.New != nil {
+				changedFileSet[diffstat.New.Path] = true
+			}
+			if diffstat.Old != nil {
+				changedFileSet[diffstat.Old.Path] = true
+			}
+		}
+		urll = diff.GetNext()
+	}
+	changedFiles = common.GetMapStringKeys(changedFileSet)
+	return
 }
