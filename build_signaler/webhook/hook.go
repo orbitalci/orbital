@@ -35,9 +35,10 @@ func (pr *PRWerkerTeller) TellWerker(hash string, signaler *signal.Signaler, bra
 		if err == ocenet.FileNotFound {
 			ocelog.IncludeErrField(err).Error("no ocelot.yml")
 			return errors.New("no ocelot yaml found for repo " + acctRepo)
-		} else {
-			return errors.Wrap(err, "unable to get build configuration")
 		}
+		ocelog.IncludeErrField(err).Error("couldn't get ocelot.yml")
+		return errors.Wrap(err, "unable to get build configuration")
+
 	}
 	task := signal.BuildInitialWerkerTask(buildConf, hash, token, branch, acctRepo, pb.SignaledBy_PULL_REQUEST, pr.prData)
 	task.ChangesetData, err = signal.BuildChangesetData(handler, acctRepo, hash, branch, commits)

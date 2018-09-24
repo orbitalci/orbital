@@ -13,6 +13,8 @@ import (
 
 type CCWerkerTeller struct{}
 
+
+
 func (w *CCWerkerTeller) TellWerker(hash string, signaler *Signaler, branch string, handler models.VCSHandler, token, acctRepo string, commits []*pb.Commit, force bool, sigType pb.SignaledBy) (err error) {
 	ocelog.Log().WithField("hash", hash).WithField("acctRepo", acctRepo).WithField("branch", branch).Info("found new commit")
 	if token == "" {
