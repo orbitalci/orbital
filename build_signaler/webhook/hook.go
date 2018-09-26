@@ -41,10 +41,11 @@ func (pr *PRWerkerTeller) TellWerker(hash string, signaler *signal.Signaler, bra
 
 	}
 	task := signal.BuildInitialWerkerTask(buildConf, hash, token, branch, acctRepo, pb.SignaledBy_PULL_REQUEST, pr.prData)
-	task.ChangesetData, err = signal.BuildChangesetData(handler, acctRepo, hash, branch, commits)
-	if err != nil {
-		return errors.Wrap(err, "did not queue because unable to contact vcs repo to get changelist data")
-	}
+
+	// todo: right now, we do not want to build out the changed files and commit messages, because those should just be done on push events
+	// maybe we should re-evaluate down the road? idk, just seems like duping that work if its done on push & pr...
+	task.ChangesetData = &pb.ChangesetData{Branch: branch}
+
 	err = signaler.OcyValidator.ValidateViability(pr.destBranch, buildConf.Branches, commits, false)
 	if err != nil {
 		ocelog.IncludeErrField(err).Warn("fyi, this pull request is not valid for a build!! it will not be queued!!")
