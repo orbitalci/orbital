@@ -16,6 +16,7 @@ import (
 	"github.com/shankj3/ocelot/build"
 	mock_credentials "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/mock_models"
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
@@ -317,7 +318,7 @@ func setupMockedGuideOcelot(t *testing.T) (*guideOcelotServer, *gomock.Controlle
 	ctl := gomock.NewController(t)
 	mockz := &mocks{}
 	mockz.store = storage.NewMockOcelotStorage(ctl)
-	mockz.handler = pb.NewMockVCSHandler(ctl)
+	mockz.handler = mock_models.NewMockVCSHandler(ctl)
 	mockz.rc = mock_credentials.NewMockCVRemoteConfig(ctl)
 	mockz.producer = nsqpb.NewMockProducer(ctl)
 	gos := &guideOcelotServer{
@@ -335,7 +336,7 @@ type mocks struct {
 	producer *nsqpb.MockProducer
 	rc       *mock_credentials.MockCVRemoteConfig
 	store    *storage.MockOcelotStorage
-	handler  *pb.MockVCSHandler
+	handler  *mock_models.MockVCSHandler
 }
 
 func TestGuideOcelotServer_BuildRepoAndHash_previouslybuilt(t *testing.T) {
