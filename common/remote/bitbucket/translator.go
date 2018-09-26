@@ -75,21 +75,32 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 		return nil, errors.New("too many changesets")
 	}
 	var commits []*pb.Commit
+	//todo: when is there ever more than one changeset in the changes array?
 	changeset := push.Push.Changes[0]
-	for _, commit := range changeset.Commits {
+	var last int
+	for ind, commit := range changeset.Commits {
 		commits = append(commits, &pb.Commit{Hash: commit.Hash, Date: commit.Date, Message: commit.Message, Author: &pb.User{UserName: commit.Author.Username}})
+		last = ind
 	}
 	if changeset.New.Type != "branch" {
 		ocelog.Log().Errorf("changeset type is not branch, it is %s. idk what to do!!!", changeset.New.Type)
 		ocelog.Log().Error(push)
 		return nil, errors.New("unexpected push type")
 	}
-	translPush := &pb.Push{
-		Repo:       &pb.Repo{Name: push.Repository.FullName, AcctRepo: push.Repository.FullName, RepoLink: push.Repository.Links.Html.Href},
-		User:       &pb.User{UserName: push.Actor.Username},
-		Commits:    commits,
-		Branch:     changeset.New.Name,
-		HeadCommit: &pb.Commit{Hash: changeset.New.Target.Hash, Message: changeset.New.Target.Hash, Date: changeset.New.Target.Date, Author: &pb.User{UserName: changeset.New.Target.Author.Username}},
+	if changeset.New.Target.Hash != commits[0].Hash {
+		ocelog.Log().WithField("changeset.New.Target.Hash", changeset.New.Target.Hash).WithField("commits[0].Hash", commits[0].Hash).Error("WHAT THE HELL? new & first commit SHOULD BE THE SAME!")
 	}
+	if changeset.Old.Target.Hash != commits[last].Hash {
+		ocelog.Log().Infof("setting last commit to be %s, as it was %s", changeset.Old.Target.Hash, commits[last].Hash)
+		commits = append(commits, &pb.Commit{Hash: changeset.Old.Target.Hash, Message: changeset.Old.Target.Message, Author: &pb.User{UserName: changeset.Old.Target.Author.Username}, Date: changeset.Old.Target.Date})
+	}
+	translPush := &pb.Push{
+		Repo:               &pb.Repo{Name: push.Repository.FullName, AcctRepo: push.Repository.FullName, RepoLink: push.Repository.Links.Html.Href},
+		User:               &pb.User{UserName: push.Actor.Username},
+		Commits:            commits,
+		Branch:             changeset.New.Name,
+		HeadCommit:         &pb.Commit{Hash: changeset.New.Target.Hash, Message: changeset.New.Target.Message, Date: changeset.New.Target.Date, Author: &pb.User{UserName: changeset.New.Target.Author.Username}},
+		PreviousHeadCommit: &pb.Commit{Hash: changeset.Old.Target.Hash, Message: changeset.Old.Target.Message, Date: changeset.Old.Target.Date, Author: &pb.User{UserName: changeset.Old.Target.Author.Username}},
+}
 	return translPush, nil
 }
