@@ -5,6 +5,8 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
+//go:generate mockgen -source werkerteller.go -destination werkerteller.mock.go -package build_signaler
+
 // made this interface for easy testing
 type WerkerTeller interface {
 	TellWerker(lastCommit string, conf *Signaler, branch string, handler models.VCSHandler, token, acctRepo string, commits []*pb.Commit, force bool, sigBy pb.SignaledBy) error

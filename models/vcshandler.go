@@ -10,6 +10,8 @@ import (
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 )
 
+//go:generate mockgen -source vcshandler.go -destination mock_models/vcshandler.mock.go -package mock_models
+
 type VCSHandler interface {
 	//Walk will iterate over all repositories for specified vcs account, and create webhooks at specified webhook url
 	//if one does not yet exist

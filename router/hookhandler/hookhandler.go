@@ -12,6 +12,7 @@ import (
 	"github.com/shankj3/ocelot/build_signaler/webhook"
 	"github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/common/remote"
+	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
@@ -36,7 +37,15 @@ func GetContext(sig *signal.Signaler, teller *signal.CCWerkerTeller) *HookHandle
 type HookHandlerContext struct {
 	*signal.Signaler
 	// todo: CHANGE THIS
-	teller *signal.CCWerkerTeller
+	teller signal.WerkerTeller
+	testingHandler models.VCSHandler
+}
+
+func (hhc *HookHandlerContext) getHandler(cred *pb.VCSCreds) (models.VCSHandler, string, error) {
+	if hhc.testingHandler != nil {
+		return hhc.testingHandler, "", nil
+	}
+	return remote.GetHandler(cred)
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -58,7 +67,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get creds, err: ", err)
 		return
 	}
-	handler, token, err := remote.GetHandler(cred)
+	handler, token, err := hhc.getHandler(cred)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get vcs handler")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get vcs handler, err: ", err)
