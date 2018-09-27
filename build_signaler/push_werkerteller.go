@@ -30,8 +30,11 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 		return errors.Wrap(err, "unable to get build configuration")
 	}
 	task := BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil)
-	// todo: change build changeset data to also take in first / last hash for diffing instead of taking first/last in commit array.
-	task.ChangesetData, err = BuildChangesetData(handler, push.Repo.AcctRepo, push.HeadCommit.Hash, push.Branch, push.Commits)
+	if push.PreviousHeadCommit == nil {
+		task.ChangesetData = GenerateNoPreviousHeadChangeset(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash)
+	} else {
+		task.ChangesetData, err = GenerateChangesetFromVCS(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash, push.PreviousHeadCommit.Hash, push.Commits)
+	}
 	if err != nil {
 		return errors.Wrap(err, "did not queue because unable to contact vcs repo to get changelist data")
 	}
@@ -43,4 +46,24 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 		return errors.Wrap(err, "unable to queue or store")
 	}
 	return nil
+}
+
+// GenerateChangeSetFromVCS will retrieve and fill out fields of a Changeset by calling the handler for the diff of the latest Commit Hash and earliest Commit hash
+//  and by pulling out all commit messages from the commit list. these will be used as data to check criteria of triggers
+func GenerateChangesetFromVCS(handler models.VCSHandler, acctRepo, branch, latestCommitHash, earliestCommitHash string, commits []*pb.Commit) (*pb.ChangesetData, error) {
+	var commitMsgs []string
+	changedFiles, err := handler.GetChangedFiles(acctRepo, latestCommitHash, earliestCommitHash)
+	if err != nil {
+		return nil, err
+	}
+	for _, commit := range commits {
+		commitMsgs = append(commitMsgs, commit.Message)
+	}
+	return &pb.ChangesetData{FilesChanged: changedFiles, CommitTexts: commitMsgs, Branch: branch}, nil
+
+}
+
+
+func GenerateNoPreviousHeadChangeset(handler models.VCSHandler, acctRepo, branch, latestCommitHash string) (*pb.ChangesetData) {
+	return &pb.ChangesetData{Branch: branch}
 }

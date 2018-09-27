@@ -121,7 +121,7 @@ var allBranchesTests = []struct {
 func TestChangeChecker_HandleAllBranches(t *testing.T) {
 	for _, testcase := range allBranchesTests {
 		t.Run(testcase.name, func(t *testing.T) {
-			commitListen := &fakeCommitLister{allBranchData: testcase.histories}
+			commitListen := &fakeCommitLister{allBranchData: testcase.histories, commits: []*pbb.Commit{{Hash: "1"}, {Hash: "2"}, }}
 			teller := &fakeWerkerTeller{}
 			conf := &ChangeChecker{Signaler: &build_signaler.Signaler{}, AcctRepo: "test/test", handler: commitListen, token: "TOLKEIN", pTeller: teller}
 			//InspectCommits(branch string, lastHash string) (newLastHash string, err error) {

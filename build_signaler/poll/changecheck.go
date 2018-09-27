@@ -50,15 +50,9 @@ func (w *ChangeChecker) generatePushWithCommits(acctRepo, previousHash, branch s
 		return nil, err
 	}
 	commitNum := len(commits)
-	//if commitNum == 0 {
-	//	return &pb.Push{
-	//		Commits: []*pb.Commit{},
-	//		Branch: branch,
-	//		Repo: &pb.Repo{AcctRepo: acctRepo},
-	//		HeadCommit:
-	//	}
-	//	return nil, errors.New("no commits in push, nothing to do")
-	//}
+	if commitNum == 0 {
+		return nil, errors.New("no commits in push, nothing to do")
+	}
 	lastCommit := commits[commitNum - 1]
 
 	return &pb.Push{
