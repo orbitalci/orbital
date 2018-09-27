@@ -10,6 +10,7 @@ import (
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/shankj3/ocelot/build"
 	signal "github.com/shankj3/ocelot/build_signaler"
+	"github.com/shankj3/ocelot/build_signaler/webhook"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	hh "github.com/shankj3/ocelot/router/hookhandler"
 	"github.com/shankj3/ocelot/version"
@@ -55,8 +56,7 @@ func main() {
 		ocelog.IncludeErrField(err).Fatal("couldn't get storage!")
 	}
 	signaler := &signal.Signaler{RC: remoteConfig, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator(), Store: store}
-	teller := &signal.PushWerkerTeller{}
-	hookHandlerContext := hh.GetContext(signaler, teller)
+	hookHandlerContext := hh.GetContext(signaler, &signal.PushWerkerTeller{}, &webhook.PullReqWerkerTeller{})
 	defer store.Close()
 
 	startServer(hookHandlerContext, port)

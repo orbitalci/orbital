@@ -29,14 +29,15 @@ func init() {
 	prometheus.MustRegister(hookRecieves)
 }
 
-func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller) *HookHandlerContext {
-	return &HookHandlerContext{Signaler: sig, pTeller: teller}
+func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller, prTeller *webhook.PullReqWerkerTeller) *HookHandlerContext {
+	return &HookHandlerContext{Signaler: sig, pTeller: teller, prTeller: prTeller}
 }
 
 //context contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*signal.Signaler
-	pTeller signal.CommitPushWerkerTeller
+	pTeller  	   signal.CommitPushWerkerTeller
+	prTeller 	   signal.PRWerkerTeller
 	testingHandler models.VCSHandler
 }
 
@@ -103,12 +104,6 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get vcs handler, err: ", err)
 		return
 	}
-	commits, err := handler.GetPRCommits(pr.Urls.Commits)
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't get commits for PR ")
-		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not commits for PR, err: ", err)
-		return
-	}
 	prData := &pb.PrWerkerData{
 		Urls: &pb.PrUrls{
 			Approve:  pr.Urls.Approve,
@@ -120,9 +115,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		},
 		PrId: fmt.Sprintf("%d", pr.Id),
 	}
-	pwt := webhook.GetPrWerkerTeller(prData, pr.Destination.Branch)
-	err = pwt.TellWerker(pr.Source.Hash, hhc.Signaler, pr.Source.Branch, handler, token, pr.Source.Repo.AcctRepo, commits, false, pb.SignaledBy_PULL_REQUEST)
-	if err != nil {
+	if err = hhc.prTeller.TellWerker(pr, prData, hhc.Signaler, handler, token, false, pb.SignaledBy_PULL_REQUEST); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get commits for PR ")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not commits for PR, err: ", err)
 	}

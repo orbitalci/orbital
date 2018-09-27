@@ -70,13 +70,13 @@ func (m *MockPRWerkerTeller) EXPECT() *MockPRWerkerTellerMockRecorder {
 }
 
 // TellWerker mocks base method
-func (m *MockPRWerkerTeller) TellWerker(push *pb.PullRequest, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
-	ret := m.ctrl.Call(m, "TellWerker", push, conf, handler, token, force, sigBy)
+func (m *MockPRWerkerTeller) TellWerker(push *pb.PullRequest, prData *pb.PrWerkerData, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
+	ret := m.ctrl.Call(m, "TellWerker", push, prData, conf, handler, token, force, sigBy)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // TellWerker indicates an expected call of TellWerker
-func (mr *MockPRWerkerTellerMockRecorder) TellWerker(push, conf, handler, token, force, sigBy interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TellWerker", reflect.TypeOf((*MockPRWerkerTeller)(nil).TellWerker), push, conf, handler, token, force, sigBy)
+func (mr *MockPRWerkerTellerMockRecorder) TellWerker(push, prData, conf, handler, token, force, sigBy interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TellWerker", reflect.TypeOf((*MockPRWerkerTeller)(nil).TellWerker), push, prData, conf, handler, token, force, sigBy)
 }

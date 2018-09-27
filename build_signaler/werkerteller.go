@@ -12,7 +12,7 @@ type CommitPushWerkerTeller interface {
 }
 
 type PRWerkerTeller interface {
-	TellWerker(push *pb.PullRequest, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error
+	TellWerker(push *pb.PullRequest, prData *pb.PrWerkerData, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error
 }
 
 func BuildChangesetData(handler models.VCSHandler, acctRepo, latestCommit, branch string, commits []*pb.Commit) (*pb.ChangesetData, error){
