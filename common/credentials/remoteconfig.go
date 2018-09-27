@@ -514,15 +514,18 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
 
 	case "database":
-		secrets, err := rc.Vault.GetVaultData("database/creds/ocelot")
+		secrets, err := rc.Vault.GetVaultSecret("database/creds/ocelot")
 		if err != nil {
 			return storeConfig, errors.New("unable to get dynamic postgres creds from vault, err: " + err.Error())
 		}
 
-		storeConfig.User = fmt.Sprintf("%v", secrets["username"].(string))
-		storeConfig.Password = fmt.Sprintf("%v", secrets["password"].(string))
+		storeConfig.User = fmt.Sprintf("%v", secrets.Data["username"].(string))
+		storeConfig.Password = fmt.Sprintf("%v", secrets.Data["password"].(string))
 
-		ocelog.Log().Debugf("%v", secrets)
+		ocelog.Log().Debugf("Dynamic postgres creds from Vault: %v", secrets)
+
+		// Kick of a lease renewal goroutine
+		go rc.Vault.RenewLeaseForever(secrets)
 	}
 
 	return storeConfig, nil
