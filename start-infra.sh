@@ -8,7 +8,7 @@ VAULT=1
 NSQ=1
 NSQTJ=0
 POSTGRES=1
-NEXUS=1
+NEXUS=0
 while [[ $# -gt 0 ]]
 do
 key="$1"
