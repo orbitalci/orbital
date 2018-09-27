@@ -28,13 +28,13 @@ import (
 	"github.com/shankj3/ocelot/storage"
 )
 
-func createMockedHHC(t *testing.T) (*HookHandlerContext, *credentials.MockCVRemoteConfig, *nsqpb.MockProducer, *storage.MockOcelotStorage, *mock_models.MockVCSHandler){
+func createMockedHHC(t *testing.T) (*HookHandlerContext, *credentials.MockCVRemoteConfig, *nsqpb.MockProducer, *storage.MockOcelotStorage, *mock_models.MockVCSHandler, *build_signaler.MockWerkerTeller){
 	ctl := gomock.NewController(t)
 	handler := mock_models.NewMockVCSHandler(ctl)
 	rc := credentials.NewMockCVRemoteConfig(ctl)
 	produce := nsqpb.NewMockProducer(ctl)
 	store := storage.NewMockOcelotStorage(ctl)
-	teller
+	teller := build_signaler.NewMockWerkerTeller(ctl)
 	hhc := &HookHandlerContext{
 		Signaler: &build_signaler.Signaler{
 			RC: 	      rc,
@@ -44,9 +44,9 @@ func createMockedHHC(t *testing.T) (*HookHandlerContext, *credentials.MockCVRemo
 			OcyValidator: build.GetOcelotValidator(),
 		},
 		testingHandler: handler,
-		teller:
+		teller: teller,
 	}
-	return hhc, rc, produce, store, handler
+	return hhc, rc, produce, store, handler, teller
 }
 
 func TestRepoPush(t *testing.T) {
@@ -60,9 +60,10 @@ func TestRepoPush(t *testing.T) {
 	resp := httptest.NewRecorder()
 	vcsType := pb.SubCredType_BITBUCKET
 
-	hhc, mockRC, mockProduce, mockStore, handler := createMockedHHC(t)
+	hhc, mockRC, mockProduce, mockStore, handler, teller := createMockedHHC(t)
 	ident, _ := pb.CreateVCSIdentifier(pb.SubCredType_BITBUCKET, "shankj3")
 	mockRC.EXPECT().GetCred(mockStore, pb.SubCredType_BITBUCKET, ident, "shankj3", false).Return(&pb.VCSCreds{AcctName:"shankj3", ClientSecret:"xxx", Identifier: ident}, nil).Times(1)
+	teller.EXPECT().TellWerker("4f59e57d8878daabcbc6af6bd374929b9fe03568", hhc.Signaler, )
 
 
 }
