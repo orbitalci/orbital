@@ -79,7 +79,7 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	changeset := push.Push.Changes[0]
 	var last int
 	for ind, commit := range changeset.Commits {
-		commits = append(commits, &pb.Commit{Hash: commit.Hash, Date: commit.Date, Message: commit.Message, Author: &pb.User{UserName: commit.Author.Username}})
+		commits = append(commits, &pb.Commit{Hash: commit.Hash, Date: commit.Date, Message: commit.Message, Author: &pb.User{UserName: commit.Author.User.Username, DisplayName: commit.Author.User.DisplayName}})
 		last = ind
 	}
 	if changeset.New.Type != "branch" {
@@ -90,17 +90,35 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	if changeset.New.Target.Hash != commits[0].Hash {
 		ocelog.Log().WithField("changeset.New.Target.Hash", changeset.New.Target.Hash).WithField("commits[0].Hash", commits[0].Hash).Error("WHAT THE HELL? new & first commit SHOULD BE THE SAME!")
 	}
-	if changeset.Old.Target.Hash != commits[last].Hash {
-		ocelog.Log().Infof("setting last commit to be %s, as it was %s", changeset.Old.Target.Hash, commits[last].Hash)
-		commits = append(commits, &pb.Commit{Hash: changeset.Old.Target.Hash, Message: changeset.Old.Target.Message, Author: &pb.User{UserName: changeset.Old.Target.Author.Username}, Date: changeset.Old.Target.Date})
+
+	// if there is an old block, then set that as the last commit, otherwise set it to the last commit in the array
+	var previousHeadCommit *pb.Commit
+	if changeset.Old != nil {
+		ocelog.Log().WithField("previousHeadCommit", changeset.Old.Target.Hash).Info("setting PreviousHeadCommit from 'old' field in push object.")
+		previousHeadCommit = &pb.Commit{Hash: changeset.Old.Target.Hash, Message: changeset.Old.Target.Message, Author: &pb.User{UserName: changeset.Old.Target.Author.User.Username, DisplayName: changeset.Old.Target.Author.User.DisplayName}, Date: changeset.Old.Target.Date}
+		// todo: i don't know if we should be appending like this, maybe we should just go off of PreviousHeadCommit?
+		commits = append(commits, previousHeadCommit)
+	} else {
+		ocelog.Log().WithField("previousHeadCommit", commits[last].Hash).Infof("'old' field is null, setting last previousHeadCommit to be the last commit in the commits array.")
+		previousHeadCommit = commits[last]
+	}
+	// if there is a 'new' field in the bitbucket push, then set it as the head commit. otherwise set the head commit to be the first commit in the commits array
+	var headCommit *pb.Commit
+	if changeset.New != nil {
+		ocelog.Log().WithField("headCommit", changeset.New.Target.Hash).Info("setting headCommit from 'new' field in push object.")
+		headCommit = &pb.Commit{Hash: changeset.New.Target.Hash, Message: changeset.New.Target.Message, Date: changeset.New.Target.Date, Author: &pb.User{UserName: changeset.New.Target.Author.User.Username, DisplayName: changeset.New.Target.Author.User.DisplayName}}
+	} else {
+		// todo: this should more accurately follow the body that is in push_new_branch_one_commit.json, where that was only one push, but the commit array is 4 before it as well. i'm not sure how this should work..
+		ocelog.Log().WithField("headCommit", commits[last].Hash).Info("'new' field is null, setting headCommit to be the first commit in commits array ")
+		headCommit = commits[last]
 	}
 	translPush := &pb.Push{
 		Repo:               &pb.Repo{Name: push.Repository.FullName, AcctRepo: push.Repository.FullName, RepoLink: push.Repository.Links.Html.Href},
-		User:               &pb.User{UserName: push.Actor.Username},
+		User:               &pb.User{UserName: push.Actor.Username, DisplayName: push.Actor.DisplayName},
 		Commits:            commits,
 		Branch:             changeset.New.Name,
-		HeadCommit:         &pb.Commit{Hash: changeset.New.Target.Hash, Message: changeset.New.Target.Message, Date: changeset.New.Target.Date, Author: &pb.User{UserName: changeset.New.Target.Author.Username}},
-		PreviousHeadCommit: &pb.Commit{Hash: changeset.Old.Target.Hash, Message: changeset.Old.Target.Message, Date: changeset.Old.Target.Date, Author: &pb.User{UserName: changeset.Old.Target.Author.Username}},
+		HeadCommit:         headCommit,
+		PreviousHeadCommit: previousHeadCommit,
 }
 	return translPush, nil
 }

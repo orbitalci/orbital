@@ -11,31 +11,31 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-type CCWerkerTeller struct{}
 
+type PushWerkerTeller struct {}
 
-
-func (w *CCWerkerTeller) TellWerker(hash string, signaler *Signaler, branch string, handler models.VCSHandler, token, acctRepo string, commits []*pb.Commit, force bool, sigType pb.SignaledBy) (err error) {
-	ocelog.Log().WithField("hash", hash).WithField("acctRepo", acctRepo).WithField("branch", branch).Info("found new commit")
+func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) (err error) {
+	ocelog.Log().WithField("current HEAD hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).WithField("branch", push.Branch).Infof("new build from push of type %s coming in", sigBy.String())
 	if token == "" {
 		return errors.New("token cannot be empty")
 	}
 	var buildConf *pb.BuildConfig
-	buildConf, err = GetConfig(acctRepo, hash, signaler.Deserializer, handler)
+	buildConf, err = GetConfig(push.Repo.AcctRepo, push.HeadCommit.Hash, conf.Deserializer, handler)
 	if err != nil {
 		if err == ocenet.FileNotFound {
 			ocelog.IncludeErrField(err).Error("no ocelot.yml")
-			return errors.New("no ocelot yaml found for repo " + acctRepo)
+			return errors.New("no ocelot yaml found for repo " + push.Repo.AcctRepo)
 		}
 		ocelog.IncludeErrField(err).Error("couldn't get ocelot.yml")
 		return errors.Wrap(err, "unable to get build configuration")
 	}
-	task := BuildInitialWerkerTask(buildConf, hash, token, branch, acctRepo, sigType, nil)
-	task.ChangesetData, err = BuildChangesetData(handler, acctRepo, hash, branch, commits)
+	task := BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil)
+	// todo: change buildchangeset data to also take in first / last hash for diffing instead of taking first/last in commit array.
+	task.ChangesetData, err = BuildChangesetData(handler, push.Repo.AcctRepo, push.HeadCommit.Hash, push.Branch, push.Commits)
 	if err != nil {
 		return errors.Wrap(err, "did not queue because unable to contact vcs repo to get changelist data")
 	}
-	if err = signaler.CheckViableThenQueueAndStore(task, force, commits); err != nil {
+	if err = conf.CheckViableThenQueueAndStore(task, force, push.Commits); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			return errors.New("did not queue because it shouldn't be queued. explanation: " + err.Error())
 		}

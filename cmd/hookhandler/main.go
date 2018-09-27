@@ -55,7 +55,7 @@ func main() {
 		ocelog.IncludeErrField(err).Fatal("couldn't get storage!")
 	}
 	signaler := &signal.Signaler{RC: remoteConfig, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator(), Store: store}
-	teller := &signal.CCWerkerTeller{}
+	teller := &signal.PushWerkerTeller{}
 	hookHandlerContext := hh.GetContext(signaler, teller)
 	defer store.Close()
 

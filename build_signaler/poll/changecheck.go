@@ -16,7 +16,7 @@ func NewChangeChecker(signaler *signal.Signaler, acctRepo string) *ChangeChecker
 	return &ChangeChecker{
 		Signaler: signaler,
 		AcctRepo: acctRepo,
-		teller:   &signal.CCWerkerTeller{},
+		pTeller:  &signal.PushWerkerTeller{},
 	}
 }
 
@@ -25,7 +25,7 @@ type ChangeChecker struct {
 	handler  models.VCSHandler
 	token    string
 	AcctRepo string
-	teller   signal.WerkerTeller
+	pTeller  signal.CommitPushWerkerTeller
 }
 
 // SetAuth retrieves VCS credentials based on the account, then creates a VCS handler with it.
@@ -43,9 +43,38 @@ func (w *ChangeChecker) SetAuth() error {
 	return nil
 }
 
-// generateCheckViablityData just calls the handler function to get commit log. should be mirrored in hook.go
-func (w *ChangeChecker) generateCommitList(acctRepo string, branch string, lastHash string) (commits []*pb.Commit) {
-	var err error
+
+func (w *ChangeChecker) generatePushWithCommits(acctRepo, previousHash, branch string) (*pb.Push, error) {
+	commits, err := w.generateCommitList(acctRepo, branch, previousHash)
+	if err != nil {
+		return nil, err
+	}
+	commitNum := len(commits)
+	lastCommit := commits[commitNum - 1]
+
+	return &pb.Push{
+		// the commits in this quasi push are all the commits since the previousHash value, but not including it.
+		// that value is popped out into PreviousHeadCommit
+		Commits: commits[0:commitNum-1],
+		Branch: branch,
+		Repo: &pb.Repo{AcctRepo: acctRepo},
+		HeadCommit: commits[0],
+		PreviousHeadCommit: lastCommit,
+	}, nil
+}
+
+func (w *ChangeChecker) generatePushNoCommits(acctRepo, latestHash, branch string) (*pb.Push) {
+	return &pb.Push{
+		Commits: []*pb.Commit{},
+		Branch: branch,
+		Repo: &pb.Repo{AcctRepo: acctRepo},
+		HeadCommit: &pb.Commit{Hash: latestHash},
+		PreviousHeadCommit: nil,
+	}
+}
+
+// generateCommitList just calls the handler function to get commit log. should be mirrored in hook.go
+func (w *ChangeChecker) generateCommitList(acctRepo string, branch string, lastHash string) (commits []*pb.Commit, err error) {
 	commits, err = w.handler.GetCommitLog(acctRepo, branch, lastHash)
 	if err != nil {
 		commits = nil
@@ -75,8 +104,11 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			ocelog.Log().WithField("branch", branchHist.Branch).Info("this branch is already being tracked, checking if the built hash is the same as the one retrieved from VCS ")
 			if lastHash != branchHist.Hash {
 				ocelog.Log().WithField("branch", branchHist.Branch).Info("hashes are not the same, telling werker...")
-				commitLis := w.generateCommitList(w.AcctRepo, branchHist.Branch, lastHash)
-				err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo, commitLis, false, pb.SignaledBy_POLL)
+				writtenPush, err := w.generatePushWithCommits(w.AcctRepo, branchHist.Branch, lastHash)
+				if err != nil {
+					return err
+				}
+				err = w.pTeller.TellWerker(writtenPush, w.Signaler, w.handler, w.token, false, pb.SignaledBy_POLL)
 				branchLastHashes[branchHist.Branch] = branchHist.Hash
 				if err != nil {
 					return err
@@ -93,7 +125,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			if lastCommitTime.After(lastWeek) {
 				ocelog.Log().WithField("branch", branchHist.Branch).WithField("hash", branchHist.Hash).Info("it is! it has been active at least in the past week, it will be built then added to ocelot tracking")
 				// since this has never been built before, we aren't going to parse the commit list to check for CI SKIP, we wouldn't have anything to check against
-				if err = w.teller.TellWerker(branchHist.Hash, w.Signaler, branchHist.Branch, w.handler, w.token, w.AcctRepo, nil, false, pb.SignaledBy_POLL); err != nil {
+				if err = w.pTeller.TellWerker(w.generatePushNoCommits(w.AcctRepo, branchHist.Hash, branchHist.Branch), w.Signaler, w.handler, w.token, false, pb.SignaledBy_POLL); err != nil {
 					return err
 				}
 			} else {
@@ -101,7 +133,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 			}
 		}
 	}
-	ocelog.Log().WithField("acctrepo", w.AcctRepo).Info("finished checking all branches")
+	ocelog.Log().WithField("acctRepo", w.AcctRepo).Info("finished checking all branches")
 	return nil
 }
 
@@ -117,7 +149,7 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if lastHash == "" {
 		newLastHash = lastCommit.Hash
 		// no last hash, therefore not going to check for ci skip
-		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo, nil, false, pb.SignaledBy_POLL); err != nil {
+		if err = w.pTeller.TellWerker(w.generatePushNoCommits(w.AcctRepo, lastCommit.Hash, branch), w.Signaler, w.handler, w.token, false, pb.SignaledBy_POLL); err != nil {
 			ocelog.IncludeErrField(err).Error("could not queue!")
 		}
 		return
@@ -126,9 +158,12 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if lastHash != lastCommit.Hash {
 		ocelog.Log().Infof("found a new hash %s, telling werker", lastCommit.Hash)
 		// this has been tracked before, and we have a last hash to get a commit list so we can check for ci skip
-		commitList := w.generateCommitList(w.AcctRepo, branch, lastHash)
+		generatedPush, err := w.generatePushWithCommits(w.AcctRepo, branch, lastHash)
+		if err != nil {
+			return "", err
+		}
 		newLastHash = lastCommit.Hash
-		if err = w.teller.TellWerker(lastCommit.Hash, w.Signaler, branch, w.handler, w.token, w.AcctRepo, commitList, false, pb.SignaledBy_POLL); err != nil {
+		if err := w.pTeller.TellWerker(generatedPush, w.Signaler, w.handler, w.token, false, pb.SignaledBy_POLL); err != nil {
 			return
 		}
 	} else {

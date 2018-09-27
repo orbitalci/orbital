@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/shankj3/ocelot/build"
@@ -49,6 +50,32 @@ func createMockedHHC(t *testing.T) (*HookHandlerContext, *credentials.MockCVRemo
 	return hhc, rc, produce, store, handler, teller
 }
 
+var jessiUser = &pb.User{
+	UserName:    "jessi_shank",
+	DisplayName: "Jessi Shank",
+}
+
+var twoPushCommits = []*pb.Commit{
+	{
+		Hash: "4f59e57d8878daabcbc6af6bd374929b9fe03568",
+		Message: "adding test data\n",
+		Author: jessiUser,
+		Date: &timestamp.Timestamp{Seconds:1537998853},
+	},
+	{
+		Hash: "48bd5377046bdd5bcce847c50b3bce90e22bd66d",
+		Message: "another one!\n",
+		Author: jessiUser,
+		Date: &timestamp.Timestamp{Seconds:1537998814},
+	},
+	{
+		Hash: "906a8969084b9ab0d8ce1056d3e046629eb2d6f9",
+		Message: "adding one more change after submitting pr!!! woooahh nelly!\n",
+		Author: jessiUser,
+		Date: &timestamp.Timestamp{Seconds:1537998072},
+	},
+}
+
 func TestRepoPush(t *testing.T) {
 	twoCommitPushFp := filepath.Join("test-fixtures", "two_commit_push.json")
 
@@ -58,12 +85,12 @@ func TestRepoPush(t *testing.T) {
 	}
 	req := httptest.NewRequest("POST", "/bitbucket", twoCommitPush)
 	resp := httptest.NewRecorder()
-	vcsType := pb.SubCredType_BITBUCKET
 
-	hhc, mockRC, mockProduce, mockStore, handler, teller := createMockedHHC(t)
-	ident, _ := pb.CreateVCSIdentifier(pb.SubCredType_BITBUCKET, "shankj3")
-	mockRC.EXPECT().GetCred(mockStore, pb.SubCredType_BITBUCKET, ident, "shankj3", false).Return(&pb.VCSCreds{AcctName:"shankj3", ClientSecret:"xxx", Identifier: ident}, nil).Times(1)
-	teller.EXPECT().TellWerker("4f59e57d8878daabcbc6af6bd374929b9fe03568", hhc.Signaler, )
+	hhc, mockRC, _, mockStore, handler, teller := createMockedHHC(t)
+	ident, _ := pb.CreateVCSIdentifier(pb.SubCredType_BITBUCKET, "jessishank")
+	mockRC.EXPECT().GetCred(mockStore, pb.SubCredType_BITBUCKET, ident, "jessishank", false).Return(&pb.VCSCreds{AcctName:"jessishank", ClientSecret:"xxx", Identifier: ident}, nil).Times(1)
+	teller.EXPECT().TellWerker("4f59e57d8878daabcbc6af6bd374929b9fe03568", hhc.Signaler, "here_we_go", handler, gomock.Any(), "jessishank/mytestocy", twoPushCommits, false, pb.SignaledBy_PUSH).Times(1)
+	hhc.RepoPush(resp, req, pb.SubCredType_BITBUCKET)
 
 
 }

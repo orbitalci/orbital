@@ -11,6 +11,8 @@ import "google/protobuf/timestamp.proto";
 message Owner {
     string type = 1;
     string username = 2;
+    // @inject_tag: yaml:"display_name"
+    string display_name = 4;
     Links links = 3;
 }
 
@@ -79,7 +81,7 @@ message Changeset {
 
 message Commit {
     string hash = 1;
-    Owner author = 2;
+    Author author = 2;
     string message = 3;
     google.protobuf.Timestamp date = 4;
     // ignoring the "parents" field

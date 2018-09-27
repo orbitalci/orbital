@@ -335,7 +335,7 @@ func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
 			return commits, err
 		}
 		for _, commit := range commitz.Values {
-			commits = append(commits, &pb.Commit{Hash: commit.Hash, Message: commit.Message, Date: commit.Date, Author: &pb.User{UserName: commit.Author.Username}})
+			commits = append(commits, &pb.Commit{Hash: commit.Hash, Message: commit.Message, Date: commit.Date, Author: &pb.User{UserName: commit.Author.User.Username}})
 		}
 		url = commitz.GetNext()
 	}

@@ -29,15 +29,14 @@ func init() {
 	prometheus.MustRegister(hookRecieves)
 }
 
-func GetContext(sig *signal.Signaler, teller *signal.CCWerkerTeller) *HookHandlerContext {
-	return &HookHandlerContext{Signaler: sig, teller: teller}
+func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller) *HookHandlerContext {
+	return &HookHandlerContext{Signaler: sig, pTeller: teller}
 }
 
 //context contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*signal.Signaler
-	// todo: CHANGE THIS
-	teller signal.WerkerTeller
+	pTeller signal.CommitPushWerkerTeller
 	testingHandler models.VCSHandler
 }
 
@@ -73,7 +72,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get vcs handler, err: ", err)
 		return
 	}
-	if err := hhc.teller.TellWerker(push.HeadCommit.Hash, hhc.Signaler, push.Branch, handler, token, push.Repo.AcctRepo, push.Commits, false, pb.SignaledBy_PUSH); err != nil {
+	if err := hhc.pTeller.TellWerker(push, hhc.Signaler, handler, token, false, pb.SignaledBy_PUSH); err != nil {
 		ocelog.IncludeErrField(err).WithField("hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).WithField("branch", push.Branch).Error("unable to tell werker")
 	}
 }
