@@ -30,7 +30,7 @@ locals() {
     vault kv put secret/data/config/ocelot/postgres clientsecret="mysecretpassword"
 
     # Vault database secret engine (Dynamic secret)
-    vault secrets enable database
+    vault secrets enable database || true
     vault write database/config/my-postgresql-database \
         plugin_name=postgresql-database-plugin \
         allowed_roles="ocelot" \

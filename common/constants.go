@@ -8,6 +8,12 @@ var (
 	OcyConfigBase = GetPrefix() + "config/ocelot"
 	StorageType   = OcyConfigBase + "/storagetype"
 
+	// For configuring how we get Postgres credentials
+	VaultConf           = OcyConfigBase + "/vault"
+	VaultDBSecretEngine = VaultConf + "/secretbackend"
+	VaultRoleName       = VaultConf + "/rolename"
+
+	// For static DB connection info in vault
 	PostgresCredLoc      = OcyConfigBase + "/postgres"
 	PostgresDatabaseName = PostgresCredLoc + "/db"
 	PostgresLocation     = PostgresCredLoc + "/location"
