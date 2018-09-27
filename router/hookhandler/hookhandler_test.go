@@ -29,13 +29,13 @@ import (
 	"github.com/shankj3/ocelot/storage"
 )
 
-func createMockedHHC(t *testing.T) (*HookHandlerContext, *credentials.MockCVRemoteConfig, *nsqpb.MockProducer, *storage.MockOcelotStorage, *mock_models.MockVCSHandler, *build_signaler.MockWerkerTeller){
+func createMockedHHC(t *testing.T) (*HookHandlerContext, *credentials.MockCVRemoteConfig, *nsqpb.MockProducer, *storage.MockOcelotStorage, *mock_models.MockVCSHandler, *build_signaler.MockCommitPushWerkerTeller){
 	ctl := gomock.NewController(t)
 	handler := mock_models.NewMockVCSHandler(ctl)
 	rc := credentials.NewMockCVRemoteConfig(ctl)
 	produce := nsqpb.NewMockProducer(ctl)
 	store := storage.NewMockOcelotStorage(ctl)
-	teller := build_signaler.NewMockWerkerTeller(ctl)
+	teller := build_signaler.NewMockCommitPushWerkerTeller(ctl)
 	hhc := &HookHandlerContext{
 		Signaler: &build_signaler.Signaler{
 			RC: 	      rc,
@@ -45,7 +45,7 @@ func createMockedHHC(t *testing.T) (*HookHandlerContext, *credentials.MockCVRemo
 			OcyValidator: build.GetOcelotValidator(),
 		},
 		testingHandler: handler,
-		teller: teller,
+		pTeller: teller,
 	}
 	return hhc, rc, produce, store, handler, teller
 }

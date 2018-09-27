@@ -158,12 +158,13 @@ func (w *ChangeChecker) InspectCommits(branch string, lastHash string) (newLastH
 	if lastHash != lastCommit.Hash {
 		ocelog.Log().Infof("found a new hash %s, telling werker", lastCommit.Hash)
 		// this has been tracked before, and we have a last hash to get a commit list so we can check for ci skip
-		generatedPush, err := w.generatePushWithCommits(w.AcctRepo, branch, lastHash)
+		var generatedPush *pb.Push
+		generatedPush, err = w.generatePushWithCommits(w.AcctRepo, branch, lastHash)
 		if err != nil {
 			return "", err
 		}
 		newLastHash = lastCommit.Hash
-		if err := w.pTeller.TellWerker(generatedPush, w.Signaler, w.handler, w.token, false, pb.SignaledBy_POLL); err != nil {
+		if err = w.pTeller.TellWerker(generatedPush, w.Signaler, w.handler, w.token, false, pb.SignaledBy_POLL); err != nil {
 			return
 		}
 	} else {

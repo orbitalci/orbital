@@ -11,37 +11,72 @@ import (
 	reflect "reflect"
 )
 
-// MockWerkerTeller is a mock of WerkerTeller interface
-type MockWerkerTeller struct {
+// MockCommitPushWerkerTeller is a mock of CommitPushWerkerTeller interface
+type MockCommitPushWerkerTeller struct {
 	ctrl     *gomock.Controller
-	recorder *MockWerkerTellerMockRecorder
+	recorder *MockCommitPushWerkerTellerMockRecorder
 }
 
-// MockWerkerTellerMockRecorder is the mock recorder for MockWerkerTeller
-type MockWerkerTellerMockRecorder struct {
-	mock *MockWerkerTeller
+// MockCommitPushWerkerTellerMockRecorder is the mock recorder for MockCommitPushWerkerTeller
+type MockCommitPushWerkerTellerMockRecorder struct {
+	mock *MockCommitPushWerkerTeller
 }
 
-// NewMockWerkerTeller creates a new mock instance
-func NewMockWerkerTeller(ctrl *gomock.Controller) *MockWerkerTeller {
-	mock := &MockWerkerTeller{ctrl: ctrl}
-	mock.recorder = &MockWerkerTellerMockRecorder{mock}
+// NewMockCommitPushWerkerTeller creates a new mock instance
+func NewMockCommitPushWerkerTeller(ctrl *gomock.Controller) *MockCommitPushWerkerTeller {
+	mock := &MockCommitPushWerkerTeller{ctrl: ctrl}
+	mock.recorder = &MockCommitPushWerkerTellerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockWerkerTeller) EXPECT() *MockWerkerTellerMockRecorder {
+func (m *MockCommitPushWerkerTeller) EXPECT() *MockCommitPushWerkerTellerMockRecorder {
 	return m.recorder
 }
 
 // TellWerker mocks base method
-func (m *MockWerkerTeller) TellWerker(lastCommit string, conf *Signaler, branch string, handler models.VCSHandler, token, acctRepo string, commits []*pb.Commit, force bool, sigBy pb.SignaledBy) error {
-	ret := m.ctrl.Call(m, "TellWerker", lastCommit, conf, branch, handler, token, acctRepo, commits, force, sigBy)
+func (m *MockCommitPushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
+	ret := m.ctrl.Call(m, "TellWerker", push, conf, handler, token, force, sigBy)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // TellWerker indicates an expected call of TellWerker
-func (mr *MockWerkerTellerMockRecorder) TellWerker(lastCommit, conf, branch, handler, token, acctRepo, commits, force, sigBy interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TellWerker", reflect.TypeOf((*MockWerkerTeller)(nil).TellWerker), lastCommit, conf, branch, handler, token, acctRepo, commits, force, sigBy)
+func (mr *MockCommitPushWerkerTellerMockRecorder) TellWerker(push, conf, handler, token, force, sigBy interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TellWerker", reflect.TypeOf((*MockCommitPushWerkerTeller)(nil).TellWerker), push, conf, handler, token, force, sigBy)
+}
+
+// MockPRWerkerTeller is a mock of PRWerkerTeller interface
+type MockPRWerkerTeller struct {
+	ctrl     *gomock.Controller
+	recorder *MockPRWerkerTellerMockRecorder
+}
+
+// MockPRWerkerTellerMockRecorder is the mock recorder for MockPRWerkerTeller
+type MockPRWerkerTellerMockRecorder struct {
+	mock *MockPRWerkerTeller
+}
+
+// NewMockPRWerkerTeller creates a new mock instance
+func NewMockPRWerkerTeller(ctrl *gomock.Controller) *MockPRWerkerTeller {
+	mock := &MockPRWerkerTeller{ctrl: ctrl}
+	mock.recorder = &MockPRWerkerTellerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockPRWerkerTeller) EXPECT() *MockPRWerkerTellerMockRecorder {
+	return m.recorder
+}
+
+// TellWerker mocks base method
+func (m *MockPRWerkerTeller) TellWerker(push *pb.PullRequest, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
+	ret := m.ctrl.Call(m, "TellWerker", push, conf, handler, token, force, sigBy)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TellWerker indicates an expected call of TellWerker
+func (mr *MockPRWerkerTellerMockRecorder) TellWerker(push, conf, handler, token, force, sigBy interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TellWerker", reflect.TypeOf((*MockPRWerkerTeller)(nil).TellWerker), push, conf, handler, token, force, sigBy)
 }

@@ -30,7 +30,7 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 		return errors.Wrap(err, "unable to get build configuration")
 	}
 	task := BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil)
-	// todo: change buildchangeset data to also take in first / last hash for diffing instead of taking first/last in commit array.
+	// todo: change build changeset data to also take in first / last hash for diffing instead of taking first/last in commit array.
 	task.ChangesetData, err = BuildChangesetData(handler, push.Repo.AcctRepo, push.HeadCommit.Hash, push.Branch, push.Commits)
 	if err != nil {
 		return errors.Wrap(err, "did not queue because unable to contact vcs repo to get changelist data")
