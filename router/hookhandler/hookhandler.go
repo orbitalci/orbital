@@ -33,7 +33,7 @@ func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller, prTeller 
 	return &HookHandlerContext{Signaler: sig, pTeller: teller, prTeller: prTeller}
 }
 
-//context contains long lived resources. See bottom for getters/setters
+//HookHandlerContext contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*signal.Signaler
 	pTeller  	   signal.CommitPushWerkerTeller
@@ -78,7 +78,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-//TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
+// TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
 	hookRecieves.WithLabelValues(vcsType.String(), "pullrequest").Inc()
