@@ -88,10 +88,13 @@ func (w *ChangeChecker) generateCommitList(acctRepo string, branch string, lastH
 
 // HandleAllBranches will get all branches associated with the repository along with their last commit information.
 //  If the branch is already in the map and the commit in the branch map is different than the one retrieved from bitbucket,
-//    then a build will be triggered ad teh branchLastHashes map will be updated with the newest commit
+//    then a build will be triggered ad teh branchLastHashes map will be updated with the newest commit. A full changeset to
+//    trigger certain stages on will also be available the will be the files changed between the last commit and the most recent one, and
+//    all the commit messages
 //
 //  If the branch is not in the map, and if there is a new commit on the branch in the last week, a build will be triggered.
-//    If the branch is not in the map but there are no recent commits, then the map will be updated to include this branch,
+//    This type of trigger will not result in a changeset of files changed / commit messages to trigger stages on.
+//  If the branch is not in the map but there are no recent commits, then the map will be updated to include this branch,
 //    but a build will not be triggered.
 func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) error {
 	branchHistories, err := w.handler.GetAllBranchesLastCommitData(w.AcctRepo)

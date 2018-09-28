@@ -98,7 +98,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get creds, err: ", err)
 		return
 	}
-	handler, token, err := remote.GetHandler(cred)
+	handler, token, err := hhc.getHandler(cred)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get vcs handler")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get vcs handler, err: ", err)
