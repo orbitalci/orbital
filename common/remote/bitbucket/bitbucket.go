@@ -372,10 +372,20 @@ func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, build
 	return err
 }
 
+//GetChangedFiles will get the list of files that have changed between commits. If earliestHash is not passed,
+// then the diff list will be off of just the changed files in the latestHash. If earliesthash is passed, then it will
+// return the changeset similar to git diff --name-only <latestHash>..<earliestHash>
 func (bb *Bitbucket) GetChangedFiles(acctRepo, latestHash, earliestHash string) (changedFiles []string, err error) {
 	changedFileSet := map[string]bool{}
 	// https://api.bitbucket.org/2.0/repositories/bitbucket/geordi/diffstat/d222fa2..e174964
-	path := fmt.Sprintf("%s/diffstat/%s..%s", acctRepo, latestHash, earliestHash)
+
+	var diffStatPath string
+	if earliestHash != "" {
+		diffStatPath = fmt.Sprintf("%s..%s", latestHash, earliestHash)
+	} else {
+		diffStatPath = latestHash
+	}
+	path := fmt.Sprintf("%s/diffstat/%s", acctRepo, diffStatPath)
 	urll := fmt.Sprintf(bb.GetBaseURL(), path)
 	for {
 		if urll == "" {

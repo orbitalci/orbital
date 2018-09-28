@@ -58,6 +58,7 @@ func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
 	return prN, nil
 }
 
+// TranslatePush will convert a push event from bitbucket into the VCS-generic push object.
 func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	push := &pbb.RepoPush{}
 	err := bb.Unmarshaler.Unmarshal(reader, push)
@@ -66,11 +67,13 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	}
 
 	if len(push.Push.Changes) < 1 {
+		noChangesets.Inc()
 		ocelog.Log().Error("no commits found in push")
 		// todo: evaluate if this is actually what should happen, what about pushing tags?
 		return nil, errors.New("no commits found in push")
 	}
 	if len(push.Push.Changes) > 1 {
+		tooManyChangesets.Inc()
 		ocelog.Log().Errorf("length of push changes is > 1, changes are %#v", push.Push.Changes)
 		return nil, errors.New("too many changesets")
 	}
@@ -83,10 +86,11 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 		last = ind
 	}
 	if changeset.New.Type != "branch" {
+		unsupportedPush.WithLabelValues(changeset.New.Type).Inc()
 		ocelog.Log().Errorf("changeset type is not branch, it is %s. idk what to do!!!", changeset.New.Type)
-		ocelog.Log().Error(push)
 		return nil, errors.New("unexpected push type")
 	}
+	// sanity check
 	if changeset.New.Target.Hash != commits[0].Hash {
 		ocelog.Log().WithField("changeset.New.Target.Hash", changeset.New.Target.Hash).WithField("commits[0].Hash", commits[0].Hash).Error("WHAT THE HELL? new & first commit SHOULD BE THE SAME!")
 	}
@@ -96,9 +100,8 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	if changeset.Old != nil {
 		ocelog.Log().WithField("previousHeadCommit", changeset.Old.Target.Hash).Info("setting PreviousHeadCommit from 'old' field in push object.")
 		previousHeadCommit = &pb.Commit{Hash: changeset.Old.Target.Hash, Message: changeset.Old.Target.Message, Author: &pb.User{UserName: changeset.Old.Target.Author.User.Username, DisplayName: changeset.Old.Target.Author.User.DisplayName}, Date: changeset.Old.Target.Date}
-		// todo: i don't know if we should be appending like this, maybe we should just go off of PreviousHeadCommit?
-		commits = append(commits, previousHeadCommit)
 	} else {
+		noPreviousHead.Inc()
 		ocelog.Log().WithField("previousHeadCommit", commits[last].Hash).Infof("'old' field is null, setting last previousHeadCommit to be the last commit in the commits array.")
 		previousHeadCommit = commits[last]
 	}

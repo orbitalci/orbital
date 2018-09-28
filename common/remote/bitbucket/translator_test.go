@@ -62,10 +62,10 @@ var mytestOcy = &pb.Repo{
 	AcctRepo: "jessishank/mytestocy",
 }
 
-var tests = []struct{
+var pushTests = []struct{
 	filename   string
 	translated *pb.Push
-	errored    bool
+	errorMsg   string
 }{
 	{
 		filename: "push_new_branch_one_commit.json",
@@ -155,6 +155,42 @@ var tests = []struct{
 			},
 		},
 	},
+	{
+		filename: "push_after_pr_push_event.json",
+		translated: &pb.Push{
+			Repo: mytestOcy,
+			User: jessiOwner,
+			Branch: "here_we_go",
+			HeadCommit: &pb.Commit{
+				Hash: "906a8969084b9ab0d8ce1056d3e046629eb2d6f9",
+				Message: "adding one more change after submitting pr!!! woooahh nelly!\n",
+				Author: jessiUser,
+				Date: &timestamp.Timestamp{Seconds:1537998072},
+			},
+			PreviousHeadCommit: &pb.Commit{
+				Hash: "7e4a3761b5a5945367d62fb7f4acd374a0c18dd7",
+				Message: "just going to do one commit this time\n",
+				Author: jessiUser,
+				Date: &timestamp.Timestamp{Seconds:1537997943},
+			},
+			Commits: []*pb.Commit{
+				{
+					Hash: "906a8969084b9ab0d8ce1056d3e046629eb2d6f9",
+					Message: "adding one more change after submitting pr!!! woooahh nelly!\n",
+					Author: jessiUser,
+					Date: &timestamp.Timestamp{Seconds:1537998072},
+				},
+			},
+		},
+	},
+	{
+		filename: "two_changesets.json",
+		errorMsg: "too many changesets",
+	},
+	{
+		filename: "push_tag.json",
+		errorMsg: "unexpected push type",
+	},
 }
 
 func TestBBTranslate_TranslatePush(t *testing.T) {
@@ -163,7 +199,7 @@ func TestBBTranslate_TranslatePush(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	for _, unitTest := range tests {
+	for _, unitTest := range pushTests {
 		t.Run(unitTest.filename, func(t *testing.T) {
 			file, err := os.Open(filepath.Join(pwd, "test-fixtures", unitTest.filename))
 			defer file.Close()
@@ -174,6 +210,9 @@ func TestBBTranslate_TranslatePush(t *testing.T) {
 			trans := GetTranslator()
 			push, err := trans.TranslatePush(file)
 			if err != nil {
+				if unitTest.errorMsg == err.Error() {
+					return
+				}
 				t.Error(err)
 				return
 			}

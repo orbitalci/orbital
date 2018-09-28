@@ -55,8 +55,9 @@ type VCSHandler interface {
 	// If the lastHash commit value is never found, will return an error.
 	GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error)
 
-	// GetChangedFiles will return a list of all the files that have been changed between the two commits
-	//  analogous to:  git diff --name-only latestHash..earliestHash
+	// GetChangedFiles will get the list of files that have changed between commits. If earliestHash is not passed,
+	//  then the diff list will be off of just the changed files in the latestHash. If earliesthash is passed, then it will
+	//  return the changeset similar to git diff --name-only <latestHash>..<earliestHash>
 	GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error)
 
 	// GetPRCommits will return a list of commits for the given url for commits. It'll call the url from (e.g. bb or github),

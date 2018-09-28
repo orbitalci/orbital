@@ -14,6 +14,9 @@ import (
 
 type PushWerkerTeller struct {}
 
+// TellWerker will get config off of the HeadCommit Hash, Build the werker task object based off of the push head commit data,
+// retrieve and generate changeset data from bitbucket to get the files changes / commit messages in the push, then it will add all of that
+// to nsq so a werker node can swoop by and pick it up
 func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) (err error) {
 	ocelog.Log().WithField("current HEAD hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).WithField("branch", push.Branch).Infof("new build from push of type %s coming in", sigBy.String())
 	if token == "" {
@@ -31,7 +34,7 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 	}
 	task := BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil)
 	if push.PreviousHeadCommit == nil {
-		task.ChangesetData = GenerateNoPreviousHeadChangeset(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash)
+		task.ChangesetData, err = GenerateNoPreviousHeadChangeset(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash)
 	} else {
 		task.ChangesetData, err = GenerateChangesetFromVCS(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash, push.PreviousHeadCommit.Hash, push.Commits)
 	}
@@ -64,6 +67,10 @@ func GenerateChangesetFromVCS(handler models.VCSHandler, acctRepo, branch, lates
 }
 
 
-func GenerateNoPreviousHeadChangeset(handler models.VCSHandler, acctRepo, branch, latestCommitHash string) (*pb.ChangesetData) {
-	return &pb.ChangesetData{Branch: branch}
+func GenerateNoPreviousHeadChangeset(handler models.VCSHandler, acctRepo, branch, latestCommitHash string) (*pb.ChangesetData, error) {
+	changedFiles, err := handler.GetChangedFiles(acctRepo, latestCommitHash, "")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ChangesetData{Branch: branch, FilesChanged: changedFiles}, nil
 }
