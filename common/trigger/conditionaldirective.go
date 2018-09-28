@@ -11,7 +11,7 @@ func (c *ConditionalDirective) IsFulfilled(td *pb.ChangesetData) bool {
 	for _, condition := range c.Conditions {
 		if condition.PassesMuster(td) {
 			// if logical is Or, the first time this condition passes return true.
-			if c.Logical == Or {
+			if c.Logical == Or || c.Logical == CNone {
 				return true
 			}
 			// if the logical is And, make sure every condition passes before calling this good
