@@ -106,7 +106,7 @@ func handleTriggers(task *pb.WerkerTask, store storage.BuildStage, stage *pb.Sta
 
 func storeSkipped(store storage.BuildStage, stage *pb.Stage, branch string, id int64) (skip bool, err error) {
 	skip = true
-	result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_SKIP, Error: "", Messages: []string{fmt.Sprintf("skipping stage because %s is not in the trigger branches list, or no conditions in the triggers list were met", branch)}}
+	result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_SKIP, Error: "", Messages: []string{"skipping because the current changeset does not meet the trigger conditions"}}
 	if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't store build output")
 		return
