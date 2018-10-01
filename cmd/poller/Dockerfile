@@ -4,8 +4,8 @@ ARG SERVICE_NAME=poller
 WORKDIR /go/src/github.com/shankj3/ocelot/
 COPY . .
 
-RUN cd cmd/${SERVICE_NAME} && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/${SERVICE_NAME} .
-RUN cd cmd/changecheck && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/changecheck
+RUN make static-linux-bin SERVICE_NAME=${SERVICE_NAME}
+RUN make static-linux-bin SERVICE_NAME=changecheck
 
 FROM ubuntu:latest
 ENV SERVICE_NAME poller
