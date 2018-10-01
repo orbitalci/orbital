@@ -1737,11 +1737,16 @@
       "properties": {
         "account": {
           "type": "string",
-          "title": "VCS Account"
+          "title": "account is VCS Account"
         },
         "repo": {
           "type": "string",
-          "title": "VCS Repository"
+          "title": "repo is the VCS Repository"
+        },
+        "lastQueue": {
+          "type": "string",
+          "format": "date-time",
+          "title": "lastqueue last time build was queued"
         }
       },
       "title": "Used in displaying all repos that are tracked by ocelot"

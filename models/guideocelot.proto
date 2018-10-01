@@ -671,10 +671,12 @@ message Exists {
 
 // Used in displaying all repos that are tracked by ocelot
 message AcctRepo {
-    // VCS Account
+    // account is VCS Account
     string account = 1;
-    // VCS Repository
+    // repo is the VCS Repository
     string repo  = 2;
+    // lastqueue last time build was queued
+    google.protobuf.Timestamp lastQueue = 3;
 }
 
 // AcctRepos is used in the response to /v1/tracked-repositories, it is an array of AcctRepo objects. have to wrap it cuz proto -_-
