@@ -30,6 +30,21 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+  nsqadmin:
+    image: nsqio/nsq
+    container_name: nsqadmin
+    depends_on:
+      - nsqlookupd
+    command: >
+      /nsqadmin
+      -lookupd-http-address nsqlookupd:4161
+    ports:
+      - 4171:4171
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
 networks:
   default:
     external:
