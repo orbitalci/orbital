@@ -168,6 +168,19 @@ func (mr *MockVCSHandlerMockRecorder) GetAllBranchesLastCommitData(acctRepo inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBranchesLastCommitData", reflect.TypeOf((*MockVCSHandler)(nil).GetAllBranchesLastCommitData), acctRepo)
 }
 
+// GetCommit mocks base method
+func (m *MockVCSHandler) GetCommit(acctRepo, hash string) (*pb0.Commit, error) {
+	ret := m.ctrl.Call(m, "GetCommit", acctRepo, hash)
+	ret0, _ := ret[0].(*pb0.Commit)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCommit indicates an expected call of GetCommit
+func (mr *MockVCSHandlerMockRecorder) GetCommit(acctRepo, hash interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommit", reflect.TypeOf((*MockVCSHandler)(nil).GetCommit), acctRepo, hash)
+}
+
 // GetBranchLastCommitData mocks base method
 func (m *MockVCSHandler) GetBranchLastCommitData(acctRepo, branch string) (*pb0.BranchHistory, error) {
 	ret := m.ctrl.Call(m, "GetBranchLastCommitData", acctRepo, branch)
