@@ -38,6 +38,7 @@ type BuildSum interface {
 	StoreFailedValidation(id int64) error
 	SetQueueTime(id int64) error
 	GetTrackedRepos() (*pb.AcctRepos, error)
+	GetLastSuccessfulBuildHash(account, repo, branch string) (string, error)
 }
 
 type BuildStage interface {

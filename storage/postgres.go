@@ -1081,6 +1081,41 @@ ORDER BY account, repo, queuetime DESC NULLS LAST;`
 	return acctRepos, nil
 }
 
+//GetLastSuccessfulBuildHash will retrieve the last hash of a successful build on the given branch. If there are no builds
+// for that branch, a BuildSumNotFound error will be returned. If there are no successful builds,
+// a BuildSumNotFound will also be returned.
+func (p *PostgresStorage) GetLastSuccessfulBuildHash(account, repo, branch string) (string, error) {
+	start := startTransaction()
+	defer finishTransaction(start, "build_summary", "read")
+	if err := p.Connect(); err != nil {
+		return "", errors.New("could not connect to postgres: " + err.Error())
+	}
+	queryStr := `SELECT hash 
+FROM build_summary
+WHERE (account,repo,branch,status) = ($1,$2,$3,$4)
+ORDER BY queuetime DESC 
+limit 1;`
+	stmt, err := p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare statment")
+		return "", err
+	}
+	defer stmt.Close()
+	row := stmt.QueryRow(account, repo, branch, pb.BuildStatus_PASSED)
+	if err != nil {
+		return "", err
+	}
+	var hash string
+	err = row.Scan(&hash)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", BuildSumNotFound("successful build hash for branch")
+		}
+		return "", err
+	}
+	return hash, nil
+}
+
 func (p *PostgresStorage) StorageType() string {
 	return fmt.Sprintf("Postgres Database at %s", p.location)
 }
