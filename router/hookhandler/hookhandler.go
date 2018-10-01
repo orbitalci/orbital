@@ -4,8 +4,7 @@ package hookhandler
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/prometheus/client_golang/prometheus"
+	
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 	signal "github.com/shankj3/ocelot/build_signaler"
@@ -15,19 +14,6 @@ import (
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
-
-var (
-	hookRecieves = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "ocelot_recieved_hooks",
-		Help: "hooks recieved and processed by hookhandler",
-		// vcs_type: bitbucket | github | etc
-		// event_type: pullrequest | push
-	}, []string{"vcs_type", "event_type"})
-)
-
-func init() {
-	prometheus.MustRegister(hookRecieves)
-}
 
 func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller, prTeller *webhook.PullReqWerkerTeller) *HookHandlerContext {
 	return &HookHandlerContext{Signaler: sig, pTeller: teller, prTeller: prTeller}
@@ -43,7 +29,7 @@ type HookHandlerContext struct {
 
 func (hhc *HookHandlerContext) getHandler(cred *pb.VCSCreds) (models.VCSHandler, string, error) {
 	if hhc.testingHandler != nil {
-		return hhc.testingHandler, "", nil
+		return hhc.testingHandler, "token", nil
 	}
 	return remote.GetHandler(cred)
 }
@@ -58,6 +44,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 	}
 	push, err := translator.TranslatePush(r.Body)
 	if err != nil {
+		failedTranslation.WithLabelValues("push").Inc()
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
@@ -74,6 +61,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if err := hhc.pTeller.TellWerker(push, hhc.Signaler, handler, token, false, pb.SignaledBy_PUSH); err != nil {
+		failedToTellWerker.Inc()
 		ocelog.IncludeErrField(err).WithField("hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).WithField("branch", push.Branch).Error("unable to tell werker")
 	}
 }
@@ -89,6 +77,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 	}
 	pr, err := translator.TranslatePR(r.Body)
 	if err != nil {
+		failedTranslation.WithLabelValues("pullrequest").Inc()
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
@@ -116,6 +105,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		PrId: fmt.Sprintf("%d", pr.Id),
 	}
 	if err = hhc.prTeller.TellWerker(pr, prData, hhc.Signaler, handler, token, false, pb.SignaledBy_PULL_REQUEST); err != nil {
+		failedToTellWerker.Inc()
 		ocelog.IncludeErrField(err).Error("couldn't get commits for PR ")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not commits for PR, err: ", err)
 	}
@@ -129,6 +119,7 @@ func (hhc *HookHandlerContext) HandleBBEvent(w http.ResponseWriter, r *http.Requ
 		"pullrequest:updated":
 		hhc.PullRequest(w, r, pb.SubCredType_BITBUCKET)
 	default:
+		unprocessibleEvent.WithLabelValues(r.Header.Get("X-Event-Key"), pb.SubCredType_BITBUCKET.String())
 		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}

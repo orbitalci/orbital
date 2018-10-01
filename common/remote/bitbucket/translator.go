@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/go-test/deep"
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
@@ -23,6 +24,9 @@ func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
 	err := bb.Unmarshaler.Unmarshal(reader, pr)
 	if err != nil {
 		return nil, err
+	}
+	if pr.Pullrequest == nil {
+		return nil, errors.New("could not unmarshal into PR object, no fields matched")
 	}
 	prN := &pb.PullRequest{
 		Id:          pr.Pullrequest.Id,
@@ -65,7 +69,9 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if diff := deep.Equal(push, &pbb.RepoPush{}); diff == nil {
+		return nil, errors.New("could not unmarshal into push object, no fields matched")
+	}
 	if len(push.Push.Changes) < 1 {
 		noChangesets.Inc()
 		ocelog.Log().Error("no commits found in push")
