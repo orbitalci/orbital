@@ -2,7 +2,6 @@ package launcher
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -76,7 +75,7 @@ func handleTriggers(task *pb.WerkerTask, store storage.BuildStage, stage *pb.Sta
 		}
 		// if no branches match and the trigger block was set, then skip the stage
 		if !branchGood {
-			return storeSkipped(store, stage, task.Branch, task.Id)
+			return storeSkipped(store, stage, task.Id)
 		}
 		ocelog.Log().Debugf("building from trigger stage with branch %s. triggerBranches are %s", task.Branch, strings.Join(stage.Trigger.Branches, ", "))
 	}
@@ -97,14 +96,14 @@ func handleTriggers(task *pb.WerkerTask, store storage.BuildStage, stage *pb.Sta
 		// if none of the conditions in the triggers list were met, then skip the stage
 		shouldSkip = !passed
 		if shouldSkip {
-			return storeSkipped(store, stage, task.Branch, task.Id)
+			return storeSkipped(store, stage, task.Id)
 		}
 	}
 	return
 }
 
 
-func storeSkipped(store storage.BuildStage, stage *pb.Stage, branch string, id int64) (skip bool, err error) {
+func storeSkipped(store storage.BuildStage, stage *pb.Stage, id int64) (skip bool, err error) {
 	skip = true
 	result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_SKIP, Error: "", Messages: []string{"skipping because the current changeset does not meet the trigger conditions"}}
 	if err = storeStageToDb(store, id, result, time.Now(), 0); err != nil {
