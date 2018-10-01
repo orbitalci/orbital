@@ -2,7 +2,6 @@ package werker
 
 import (
 	"net"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -52,7 +51,4 @@ func ServeMe(transportChan chan *models.Transport, conf *models.WerkerFacts, sto
 	go n.Run(":" + conf.ServicePort)
 	// now run the grpc server
 	go grpcServer.Serve(con)
-	go func() {
-		ocelog.Log().Info(http.ListenAndServe(":6060", nil))
-	}()
 }
