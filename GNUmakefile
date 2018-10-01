@@ -14,9 +14,8 @@ GIT_DESCRIBE=$(shell git describe --tags --always)
 GIT_IMPORT=github.com/shankj3/ocelot/version
 GOLDFLAGS=-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)
 GOLDFLAGS_REL=$(GOLDFLAGS) -X $(GIT_IMPORT).VersionPrerelease=
+GOLDFLAGS_REL_STATIC=$(GOLDFLAGS_REL) -linkmode external -extldflags -static
 export GOLDFLAGS
-SSH_PRIVATE_KEY ?= $(HOME)/.ssh/id_rsa
-export SSH_PRIVATE_KEY
 GIT_HASH := $(shell git rev-parse --short HEAD)
 
 versionexists:
@@ -30,6 +29,9 @@ local: ## install locally but with the tags/flags injected in
 
 local-release:
 	go install -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' ./...
+
+static-linux-bin:
+	go install -ldflags '$(GOLDFLAGS_REL_STATIC)' -tags '$(GOTAGS)' -a ./cmd/$(SERVICE_NAME)
 
 windows-client: versionexists ## install zipped windows ocelot client to pkg/windows_amd64
 	mkdir -p pkg/windows_amd64/
@@ -106,14 +108,8 @@ darwin-werker: versionexists ## install mac werker zip and upload to s3
 	@aws s3 cp --acl public-read-write --content-disposition attachment darwin-werker-$(VERSION).zip s3://ocelotty/darwin-werker-$(VERSION).zip
 	rm darwin-werker-$(VERSION).zip
 
-sshexists:
-ifeq ("$(wildcard $(SSH_PRIVATE_KEY))","")
-	$(error SSH_PRIVATE_KEY must exist or ~/.ssh/id_rsa must exist!)
-endif
-
-docker-base: sshexists ## build ocelot-builder base image
+docker-base: ## build ocelot-builder base image
 	@docker build \
-	   --build-arg SSH_PRIVATE_KEY="$$(cat $${SSH_PRIVATE_KEY})" \
 	   -f Dockerfile.build \
 	   -t ocelot-build \
 	   .

@@ -4,13 +4,15 @@ services:
   vault:
 #    depends_on:
 #      - consul
-    image: vault
+    image: vault:0.11.1
     container_name: vault
     hostname: vault
 #    links:
 #      - consul:consul
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
+      VAULT_DEV_ROOT_TOKEN_ID: ocelotdev
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
     ports:
       - 8200:8200
     logging:
@@ -22,7 +24,8 @@ services:
       - ./docs/docker-compose/vault-consul/tools/wait-for-it.sh:/wait-for-it.sh
       - ./docs/docker-compose/vault-consul/config/vault:/config
       - ./docs/docker-compose/vault-consul/config/vault/policies:/policies
-    entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl
+    entrypoint: vault server -dev
+    #entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl
 networks:
   default:
     external:
