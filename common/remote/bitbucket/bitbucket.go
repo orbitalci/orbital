@@ -392,7 +392,7 @@ func (bb *Bitbucket) GetChangedFiles(acctRepo, latestHash, earliestHash string) 
 			break
 		}
 		diff := &pbb.FullDiff{}
-		bb.Client.GetUrl(urll, diff)
+		err := bb.Client.GetUrl(urll, diff)
 		if err != nil {
 			failedBBRemoteCalls.WithLabelValues("GetChangedFiles").Inc()
 			return changedFiles, err
@@ -409,4 +409,19 @@ func (bb *Bitbucket) GetChangedFiles(acctRepo, latestHash, earliestHash string) 
 	}
 	changedFiles = common.GetMapStringKeys(changedFileSet)
 	return
+}
+
+func (bb *Bitbucket) GetCommit(acctRepo, hash string) (*pb.Commit, error) {
+	path := fmt.Sprintf("%s/commit/%s", acctRepo, hash)
+	urll := fmt.Sprintf(bb.GetBaseURL(), path)
+	commit := &pbb.Commit{}
+	err := bb.Client.GetUrl(urll, commit)
+	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("GetCommit").Inc()
+		return nil, err
+	}
+	translatedCommit := &pb.Commit{Message: commit.Message, Hash: commit.Hash, Date: commit.Date, Author: &pb.User{UserName: commit.Author.User.Username, DisplayName: commit.Author.User.DisplayName}}
+	return translatedCommit, nil
+
+
 }

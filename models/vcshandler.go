@@ -48,6 +48,9 @@ type VCSHandler interface {
 	//GetAllBranchesLastCommitData returns a list of all active branches, their last hash, and the last commit datetime
 	GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error)
 
+	//GetCommit will return commit information of a specific hash
+	GetCommit(acctRepo, hash string) (*pb.Commit, error)
+
 	//GetBranchLastCommitData should return the last hash and commit datetime of a specific branch
 	GetBranchLastCommitData(acctRepo, branch string) (*pb.BranchHistory, error)
 

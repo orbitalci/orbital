@@ -72,5 +72,9 @@ func GenerateNoPreviousHeadChangeset(handler models.VCSHandler, acctRepo, branch
 	if err != nil {
 		return nil, err
 	}
-	return &pb.ChangesetData{Branch: branch, FilesChanged: changedFiles}, nil
+	text, err := handler.GetCommit(acctRepo, latestCommitHash)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ChangesetData{Branch: branch, FilesChanged: changedFiles, CommitTexts: []string{text.Message}}, nil
 }
