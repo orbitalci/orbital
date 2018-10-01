@@ -29,6 +29,7 @@ func Test_PostgresStorage(t *testing.T) {
 	t.Run("add out", func(t *testing.T) { postgresStorage_AddOut(t, pg, id) })
 	t.Run("add stage detail", func(t *testing.T) { postgresStorage_AddStageDetail(t, pg, id) })
 	t.Run("add queue time", func(t *testing.T) { postgresStorage_SetQueueTime(t, pg) })
+	t.Run("get last successful build hash", func(t *testing.T) { postgresStorage_GetLastSuccessfulBuildHash(t, pg) })
 	t.Run("store failed validation", func(t *testing.T) { postgresStorage_StoreFailedValidation(t, pg) })
 	t.Run("retrieve hash partial", func(t *testing.T) { postgresStorage_RetrieveHashStartsWith(t, pg) })
 	t.Run("cred add", func(t *testing.T) { postgresStorage_InsertCred(t, pg) })
@@ -347,4 +348,59 @@ func postgresStorage_DeleteCred(t *testing.T, pg *PostgresStorage) {
 	if _, ok := err.(*ErrNotFound); !ok {
 		t.Error("should be a not found error? wtf? instead its: ", err.Error())
 	}
+}
+
+
+func postgresStorage_GetLastSuccessfulBuildHash(t *testing.T, pg *PostgresStorage) {
+	var data = []struct{
+		hash string
+		branch string
+		failed bool
+	}{
+		{"hash1", "branch1", true},
+		{"hash2", "branch1", true},
+		{"hash10", "branch1", false},
+
+		{"hash4", "branch2", true},
+		{"hash5", "branch2", false},
+		{"hash6", "branch2", true},
+
+		{"hash7", "branch3", true},
+	}
+	for _, datum := range data {
+		id, err := pg.AddSumStart(datum.hash, "account", "repo", datum.branch)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		pg.SetQueueTime(id)
+		time.Sleep(2)
+		if err = pg.UpdateSum(datum.failed, 10.0112, id); err != nil {
+			t.Error(err)
+			return
+		}
+	}
+	lastHash, err := pg.GetLastSuccessfulBuildHash("account", "repo", "branch3")
+	if err == nil {
+		t.Error("branch3 has no sucessful builds, this should fail")
+		return
+	}
+
+	lastHash, err = pg.GetLastSuccessfulBuildHash("account", "repo", "branch2")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if lastHash != "hash5" {
+		t.Error("branch2 has one successful build, hash5. this returned " + lastHash)
+	}
+	lastHash, err = pg.GetLastSuccessfulBuildHash("account", "repo", "branch1")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if lastHash != "hash10" {
+		t.Error("branch2 has two succesful builds, and the latest is hash10. this returned " + lastHash)
+	}
+
 }
