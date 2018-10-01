@@ -3,6 +3,7 @@ package launcher
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -174,13 +175,17 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 //	- `GIT_HASH_SHORT`
 //	- `GIT_BRANCH`
 //	- `WORKSPACE`
+//  - `GIT_PREVIOUS_SUCCESSFUL_COMMIT`
 func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) {
+	data := strings.Split(werk.FullName, "/")
+	lastSuccessfulHash, _ := w.Store.GetLastSuccessfulBuildHash(data[0], data[1],werk.Branch)
 	paddedEnvs := []string{
 		fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash),
 		fmt.Sprintf("BUILD_ID=%d", werk.Id),
 		fmt.Sprintf("GIT_HASH_SHORT=%s", werk.CheckoutHash[:7]),
 		fmt.Sprintf("GIT_BRANCH=%s", werk.Branch),
 		fmt.Sprintf("WORKSPACE=%s", w.Basher.CloneDir(werk.CheckoutHash)),
+		fmt.Sprintf("GIT_PREVIOUS_SUCCESSFUL_COMMIT=%s", lastSuccessfulHash),
 	}
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
 	builder.SetGlobalEnv(paddedEnvs)
