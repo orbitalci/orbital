@@ -178,6 +178,8 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 //  - `GIT_PREVIOUS_SUCCESSFUL_COMMIT`
 func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) {
 	data := strings.Split(werk.FullName, "/")
+	// we don't care if there is an error retrieving this, if it fails it'll return an empty value
+	// and that's what we want!
 	lastSuccessfulHash, _ := w.Store.GetLastSuccessfulBuildHash(data[0], data[1],werk.Branch)
 	paddedEnvs := []string{
 		fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash),
