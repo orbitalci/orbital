@@ -119,7 +119,7 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 	var foundLast bool
 	urrl := fmt.Sprintf(bb.GetBaseURL(), acctRepo) + "/commits/" + branch
 	for {
-		if urrl == "" {
+		if urrl == "" || foundLast == true {
 			break
 		}
 		commitz := &pbb.Commits{}
