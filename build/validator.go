@@ -34,20 +34,6 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	}
 	writeUIInfo(UI, "BuildTool is specified "+models.CHECKMARK)
 
-	if len(config.Stages) == 0 {
-		return errors.New("there must be at least one stage listed")
-	}
-	for _, stage := range config.Stages {
-		if len(stage.Script) == 0 {
-			return errors.New("Script for stage " + stage.Name + "should not be empty")
-		}
-		for _, triggy := range stage.Triggers {
-			_, err := trigger.Parse(triggy)
-			if err != nil {
-				return errors.Wrap(err, "'triggers' conditions must follow spec, this one did not: " + triggy)
-			}
-		}
-	}
 	// todo: add in checking if any machines match machinetag
 	if config.Image != "" {
 		writeUIInfo(UI, "Connecting to docker to check for image validity...")
@@ -62,6 +48,30 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 			writeUIError(UI, config.Image+" does not exist or credentials cannot be found")
 		} else {
 			writeUIInfo(UI, config.Image+" exists "+models.CHECKMARK)
+		}
+	}
+
+	if len(config.Stages) == 0 {
+		return errors.New("there must be at least one stage listed")
+	}
+	for ind, stage := range config.Stages {
+		if ind == 0 {
+			writeUIInfo(UI, "Validating stages... ")
+		}
+		writeUIInfo(UI, "  " + stage.Name)
+		if len(stage.Script) == 0 {
+			return errors.New("Script for stage " + stage.Name + "should not be empty")
+		}
+		for ind, triggy := range stage.Triggers {
+			if ind == 0 {
+				writeUIInfo(UI, "    Validating trigger strings...")
+			}
+			_, err := trigger.Parse(triggy)
+			if err != nil {
+				writeUIError(UI, fmt.Sprintf("      - %s %s", triggy, models.FAILED))
+				return errors.Wrap(err, "'triggers' conditions must follow spec, this one did not: " + triggy)
+			}
+			writeUIInfo(UI, fmt.Sprintf("      - %s %s", triggy, models.CHECKMARK))
 		}
 	}
 	return err
