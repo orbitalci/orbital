@@ -29,15 +29,15 @@ Files Changed:
 	_ = templ.Execute(&printedChangeset, c)
 	return printedChangeset.String()
 }
-
-
-
-func (wt *WerkerTask) PrettyPrint() string {
-	pretty := `CheckoutHash: {{.CheckoutHash}}
-VcsType: {{.VcsType}}
-FullName: {{.FullName}}
-Id: {{.Id}}
-Branch: {{.Branch}]
-SignaledBy: {{.SignaledBy}}
-`
-}
+//
+//
+//
+//func (wt *WerkerTask) PrettyPrint() string {
+//	pretty := `CheckoutHash: {{.CheckoutHash}}
+//VcsType: {{.VcsType}}
+//FullName: {{.FullName}}
+//Id: {{.Id}}
+//Branch: {{.Branch}]
+//SignaledBy: {{.SignaledBy}}
+//`
+//}
