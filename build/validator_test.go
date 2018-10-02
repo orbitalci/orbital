@@ -73,7 +73,7 @@ var badConfigTests = []struct {
 			Packages:  []string{},
 			Branches:  []string{"ALL"},
 			Env:       []string{},
-			Stages:    []*pb.Stage{{Name: "one"}, {Name: "boop!"}},
+			Stages:    []*pb.Stage{{Name: "one", Script: []string{"echo test"}}, {Name: "boop!", Script: []string{"echo test"}}},
 		},
 		expectedErrMsg: `An error has occured while trying to pull for image adlskfja893balkxc72. 
 Full Error is Using default tag: latest
@@ -107,7 +107,7 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 		Packages:  []string{},
 		Branches:  []string{"ALL"},
 		Env:       []string{},
-		Stages:    []*pb.Stage{{Name: "one"}, {Name: "build"}},
+		Stages:    []*pb.Stage{{Name: "one", Script: []string{"echo test"}}, {Name: "build", Script: []string{"echo test"}}},
 	}
 	goodconfig2 := &pb.BuildConfig{
 		MachineTag: "ay",
@@ -115,7 +115,7 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 		Packages:   []string{},
 		Branches:   []string{"ALL"},
 		Env:        []string{},
-		Stages:     []*pb.Stage{{Name: "one"}, {Name: "build"}},
+		Stages:     []*pb.Stage{{Name: "one", Script: []string{"echo test"}}, {Name: "build", Script: []string{"echo test"}}},
 	}
 	valid8r := GetOcelotValidator()
 	err := valid8r.ValidateConfig(goodconfig, nil)
@@ -132,7 +132,7 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 		Packages:  []string{},
 		Branches:  []string{"ALL"},
 		Env:       []string{},
-		Stages:    []*pb.Stage{{Name: "one"}},
+		Stages:    []*pb.Stage{{Name: "one", Script: []string{"echo test"}}},
 	}
 	err = valid8r.ValidateConfig(badConfig, nil)
 	if err != nil {
@@ -160,7 +160,7 @@ func TestOcelotValidator_ValidateConfig(t *testing.T) {
 		Packages:  []string{},
 		Branches:  []string{"ALL"},
 		Env:       []string{},
-		Stages:    []*pb.Stage{{Name: "one"}, {Name: "build"}},
+		Stages:    []*pb.Stage{{Name: "one", Script: []string{"echo test"}}, {Name: "build", Script: []string{"echo test"}}},
 	}
 	err = valid8r.ValidateConfig(goodPrivateConfig, nil)
 	if err != nil {
