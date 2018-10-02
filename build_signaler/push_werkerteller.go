@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
@@ -43,7 +44,6 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 		task.ChangesetData, err = GenerateChangesetFromVCS(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash, push.PreviousHeadCommit.Hash, push.Commits)
 	}
 	ocelog.Log().WithField("currentHeadCommit", push.HeadCommit.Hash).Info()
-	fmt.Println("----CHANGESET DATA-----\n" + task.ChangesetData.PrettyPrint())
 	if err != nil {
 		return errors.Wrap(err, "did not queue because unable to contact vcs repo to get changelist data")
 	}
