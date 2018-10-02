@@ -106,11 +106,16 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 		if ok {
 			ocelog.Log().WithField("branch", branchHist.Branch).Info("this branch is already being tracked, checking if the built hash is the same as the one retrieved from VCS ")
 			if lastHash != branchHist.Hash {
-				ocelog.Log().WithField("branch", branchHist.Branch).Info("hashes are not the same, telling werker...")
+				ocelog.Log().
+					WithField("branch", branchHist.Branch).
+					WithField("db last hash", lastHash).
+					WithField("most recent hash", branchHist.Hash).
+					Info("hashes are not the same, telling werker...")
 				writtenPush, err := w.generatePush(w.AcctRepo,  lastHash, "", branchHist.Branch)
 				if err != nil {
 					return err
 				}
+				ocelog.Log().WithField("generated push lash hash", writtenPush.PreviousHeadCommit.Hash).Info()
 				err = w.pTeller.TellWerker(writtenPush, w.Signaler, w.handler, w.token, false, pb.SignaledBy_POLL)
 				branchLastHashes[branchHist.Branch] = branchHist.Hash
 				if err != nil {
