@@ -32,10 +32,10 @@ func (e *ExecCleaner) Cleanup(ctx context.Context, id string, logout chan []byte
 
 	if logout != nil {
 		if err != nil {
-			logout <- []byte("successfully removed build directory.")
-		} else {
 			failedCleaning.WithLabelValues("exec").Inc()
 			logout <- []byte("error removing build directory: " + err.Error())
+		} else {
+			logout <- []byte("successfully removed build directory.")
 		}
 	}
 	// if the context has been cancelled, then it was killed, as this deferred cleanup function is higher in the stack than the deferred cancel in (*launcher).makeitso
