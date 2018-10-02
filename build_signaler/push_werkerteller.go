@@ -1,6 +1,8 @@
 package build_signaler
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	ocelog "github.com/shankj3/go-til/log"
@@ -34,10 +36,14 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 	}
 	task := BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil)
 	if push.PreviousHeadCommit == nil {
+
 		task.ChangesetData, err = GenerateNoPreviousHeadChangeset(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash)
 	} else {
+		ocelog.Log().WithField("previousHeadCommit", push.PreviousHeadCommit.Hash).Info("")
 		task.ChangesetData, err = GenerateChangesetFromVCS(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash, push.PreviousHeadCommit.Hash, push.Commits)
 	}
+	ocelog.Log().WithField("currentHeadCommit", push.HeadCommit.Hash).Info()
+	fmt.Println("----CHANGESET DATA-----\n" + task.ChangesetData.PrettyPrint())
 	if err != nil {
 		return errors.Wrap(err, "did not queue because unable to contact vcs repo to get changelist data")
 	}
