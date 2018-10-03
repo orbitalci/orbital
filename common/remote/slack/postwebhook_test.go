@@ -42,7 +42,8 @@ func TestThrowStatusWebhook(t *testing.T) {
 	channel := ""
 	fakeCli := &FakePoster{ResponseCode: http.StatusOK}
 	// uncomment below and set url to a real slack url to see what it looks like
-	//err := ThrowStatusWebhook(http.DefaultClient, url, channel, status)
+	//url = "<real webhook url>"
+	//err := ThrowStatusWebhook(http.DefaultClient, url, channel, status, "https://ocelot.metaverse.l11.com")
 	err := ThrowStatusWebhook(fakeCli, url, channel, status, "https://ocelot.me")
 	if err != nil {
 		t.Error(err)
@@ -56,11 +57,13 @@ func TestThrowStatusWebhook(t *testing.T) {
 				Color:    "danger",
 				Pretext:  "*Ocelot Status*",
 				Title:    "Build failed",
-				Text:     "Stage details: \n```\n[prebuild] Passed\n\t * YOU PASSED YOU RAMBUNCTIOUS FELLA: all good here\n[buildmeeee] Failed\n\t * it failed because you are a failure " + models.FAILED + ": this has failed!```\nExecute `ocelot logs -build-id 1234` in a terminal for more information.\nYou can also visit https://ocelot.me/repos/jessishank/ocyocyocyocy/1234",
+				Text:     "Stage details: \n```\n[prebuild] Passed\n\t * YOU PASSED YOU RAMBUNCTIOUS FELLA: all good here\n[buildmeeee] Failed\n\t * it failed because you are a failure " + models.FAILED + ": this has failed!```\n",
 				Fields: []*slack.Field{
 					{Title: "Repo", Value: "jessishank/ocyocyocyocy", Short: false},
 					{Title: "Branch", Value: "banana", Short: true},
 					{Title: "Commit", Value: "testhas", Short: true},
+					{Title: "Logs Command", Value: "`ocelot logs -build-id 1234`", Short: false},
+					{Title: "Detail Url", Value: "https://ocelot.me/repos/jessishank/ocyocyocyocy/1234", Short: false},
 				},
 			},
 		},
@@ -114,11 +117,12 @@ func TestThrowStatusWebhook_pass(t *testing.T) {
 				Color:    "good",
 				Pretext:  "*Ocelot Status*",
 				Title:    "Build passed",
-				Text:     "Stage details: \n```\n[prebuild] Passed\n[buildmeeee] Passed```\nExecute `ocelot logs -build-id 1234` in a terminal for more information.",
+				Text:     "Stage details: \n```\n[prebuild] Passed\n[buildmeeee] Passed```\n",
 				Fields: []*slack.Field{
 					{Title: "Repo", Value: "jessishank/ocyocyocyocy", Short: false},
 					{Title: "Branch", Value: "banana", Short: true},
 					{Title: "Commit", Value: "testhas", Short: true},
+					{Title: "Logs Command", Value: "`ocelot logs -build-id 1234`", Short: false},
 				},
 			},
 		},
