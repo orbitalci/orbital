@@ -32,8 +32,8 @@ func (pr *PullReqWerkerTeller) TellWerker(pullreq *pb.PullRequest, prData *pb.Pr
 	// maybe we should re-evaluate down the road? idk, just seems like duping that work if its done on push & pr...
 	task.ChangesetData = &pb.ChangesetData{Branch: pullreq.Source.Branch}
 
-	// we don't want to use all the commits to validate whether or not to build this. one commit in the whole branch / fork before subvmitting a PR might have had CI SKIP, but
-	// that doesn't mean the pr shoudln't be built, just that push that had the comment w/ CI SKIP
+	// we don't want to use all the commits to validate whether or not to build this. one commit in the whole branch / fork before submitting a PR might have had CI SKIP, but
+	// that doesn't mean the pr shouldn't be built, just that push that had the comment w/ CI SKIP
 	//commits, err := handler.GetPRCommits(pullreq.GetUrls().GetCommits())
 	//if err != nil {
 	//	ocelog.IncludeErrField(err).Error("unable to get pr commits")
