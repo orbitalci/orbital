@@ -47,7 +47,7 @@ func (pr *PullReqWerkerTeller) TellWerker(pullreq *pb.PullRequest, prData *pb.Pr
 	if err = signaler.QueueAndStore(task); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			ocelog.IncludeErrField(err).Warn("fyi, this pull request is not valid for a build!! it will not be queued!!")
-			return errors.Wrap(err, "did not queue because it shouldn't be queued, as there is a validation error")
+			return build.NoViability(errors.Wrap(err, "did not queue because it shouldn't be queued, as there is a validation error").Error())
 		}
 		ocelog.IncludeErrField(err).Warn("something went awry trying to queue and store")
 		return errors.Wrap(err, "unable to queue or store")
