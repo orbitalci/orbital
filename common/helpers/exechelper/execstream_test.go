@@ -33,7 +33,7 @@ func (t *tester) streamer(input io.ReadCloser, streamChan chan []byte, wg *sync.
 
 func TestRunAndStreamCmd(t *testing.T) {
 	ctx, _ := context.WithCancel(context.Background())
-	cmd1 := exec.CommandContext(ctx, "/bin/bash", "-c", ">&2 echo \"error\" && echo \"stdout\"")
+	cmd1 := exec.CommandContext(ctx, "/bin/bash", "-c", ">&2 echo \"error\" && sleep 0.1 && echo \"stdout\"")
 	logout := make(chan []byte, 100)
 	te := &tester{t: t}
 	err := RunAndStreamCmd(cmd1, logout, te.streamer)
