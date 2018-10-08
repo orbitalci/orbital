@@ -8,10 +8,17 @@ import (
 
 type Section interface {
 	GetTriggerType() TriggerType
+	// PassesMuster should be going through the relevant changeset data that it is given and figuring out
+	//  if its trigger type is fulfilled in that given set. For example, the Branch TriggerType will be making sure the active
+	//  branch in the changeset data regex matches with at least one of the branches in its acceptable branches list
 	PassesMuster(*pb.ChangesetData) bool
+	// GetLogical will retrieve the type of logical and/or that should be used for each condition value given for this particular trigger type
 	GetLogical() Conditional
 	SetLogical(Conditional)
+	// AddConditionValue should add to the list of values that PassesMuster will check against. The ConditionValue for example
+	//  could be 'master', or 'develop', etc for branches
 	AddConditionValue(string)
+	// GetConditionValues returns all the conditions values that have been added for that section. E.g. []string{"master", "develop", "release\/.*"} for branch
 	GetConditionValues() []string
 }
 
@@ -24,6 +31,8 @@ func (b *BranchCondition) GetTriggerType() TriggerType {
 	return Branch
 }
 
+// PassesMuster will check to make sure the branch in the changeset data regex matches with at least one of
+// the accepted branches in its list
 func (b *BranchCondition) PassesMuster(td *pb.ChangesetData) bool {
 	ok, _ := BranchRegexOk(td.Branch, b.acceptedBranches)
 	return ok
@@ -37,6 +46,7 @@ func (b *BranchCondition) SetLogical(conditional Conditional) {
 	b.logical = conditional
 }
 
+// AddConditionalValue will add to the list of branches that will be checked against in PassesMuster
 func (b *BranchCondition) AddConditionValue(str string) {
 	b.acceptedBranches = append(b.acceptedBranches, str)
 }
@@ -82,6 +92,13 @@ func (b *TextCondition) GetTriggerType() TriggerType {
 	return Text
 }
 
+// PassesMuster will make sure that the text supplied as conditional values is found in the changeset data.
+//  This is done along two different paths:
+//    If the GetLogical() is OR:
+//      At least one of the supplied commit texts given in the conditional values must be found in the
+//      commit messages in the changeset data
+//    If the GetLogical() is AND:
+//      Every supplied commit text given in the conditional values must be found in the commit messages
 func (b *TextCondition) PassesMuster(td *pb.ChangesetData) bool {
 	return changesPassMuster(b.logical, td.CommitTexts, b.acceptedTexts)
 }
@@ -113,6 +130,14 @@ func (b *FilepathCondition) GetTriggerType() TriggerType {
 	return Filepath
 }
 
+// PassesMuster will make sure that the filepaths supplied as conditional values are found in the changeset data.
+//  This is done along two different paths:
+//    If the GetLogical() is OR:
+//      At least one of the supplied filepaths given in the conditional values added by AddConditionalValue() must be
+//      in the list of changed files in the ChangesetData
+//    If the GetLogical() is AND:
+//      All supplied filepaths given in the conditional values added by AddConditionalValue() must be
+//      in the list of changed files in the ChangesetData
 func (b *FilepathCondition) PassesMuster(td *pb.ChangesetData) bool {
 	return changesPassMuster(b.logical, td.FilesChanged, b.acceptedFilepaths)
 }
