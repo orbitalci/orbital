@@ -364,7 +364,8 @@ func TestGuideOcelotServer_BuildRepoAndHash_previouslybuilt(t *testing.T) {
 	mockz.store.EXPECT().RetrieveLatestSum("ks72bas").Return(&pb.BuildSummary{Hash: "ks72basasdfasdf", Branch: "master", BuildId: 123, Repo: "ocelot", Account: "shankj3"}, nil)
 	mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "ks72basasdfasdf").Return(ocelot, nil)
 	mockz.handler.EXPECT().GetChangedFiles("shankj3/ocelot", gomock.Any(), gomock.Any()).Return([]string{"ocelot.yml"}, nil)
-	mockz.handler.EXPECT().GetCommit("shankj3/ocelot", "ks72basasdfasdf").Return(&pb.Commit{Message:"hi", Hash: "ks72basasdfasdf"}, nil).Times(1)
+	mockz.handler.EXPECT().GetCommit("shankj3/ocelot", "ks72basasdfasdf").Return(&pb.Commit{Message:"hi", Hash: "ks72basasdfasdf" +
+		""}, nil).Times(1)
 
 	consl.EXPECT().GetKeyValue("ci/werker_build_map/ks72basasdfasdf").Return(nil, nil)
 	vlt.EXPECT().CreateThrowawayToken().Return("sup", nil)
