@@ -80,7 +80,8 @@ func (p *PostgresStorage) Connect() error {
 			return
 		}
 		p.db.SetMaxOpenConns(20)
-		p.db.SetMaxIdleConns(5)
+		p.db.SetMaxIdleConns(0)
+		p.db.SetConnMaxLifetime(time.Millisecond)
 	})
 	return nil
 }
