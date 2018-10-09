@@ -33,7 +33,7 @@ case $key in
     shift
     ;;
     --admin)
-    ADMIN=0
+    ADMIN=1
     echo "will tag and push admin"
     shift
     ;;
@@ -50,12 +50,12 @@ if (( POLLER == 1 )); then
 fi
 
 if (( HOOKHANDLER == 1 )); then
-    docker tag ocelot-poller docker.metaverse.l11.com/ocelot-hookhandler:${VERSION}
+    docker tag ocelot-hookhandler docker.metaverse.l11.com/ocelot-hookhandler:${VERSION}
     docker push docker.metaverse.l11.com/ocelot-hookhandler:${VERSION}
 fi
 
 if (( ADMIN == 1 )); then
-    docker tag ocelot-poller docker.metaverse.l11.com/ocelot-admin:${VERSION}
+    docker tag ocelot-admin docker.metaverse.l11.com/ocelot-admin:${VERSION}
     docker push docker.metaverse.l11.com/ocelot-admin:${VERSION}
 fi
 
