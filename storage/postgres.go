@@ -33,7 +33,7 @@ var (
 		// interaction_type: create | read | update | delete
 	}, []string{"table", "interaction_type"})
 	databaseFailed = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "ocelot_db_bad_connection",
+		Name: "ocelot_db_sqllib_error",
 		Help: "sql library error count",
 	}, []string{"error_type"})
 )

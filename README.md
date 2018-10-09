@@ -27,6 +27,7 @@ Future big wants:
 - ocelot_recieved_hooks
 - ocelot_db_active_requests
 - ocelot_db_transaction_duration
+- ocelot_db_sqllib_error
 
 # Developers
 ## Getting started with Vagrant
