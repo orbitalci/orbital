@@ -4,7 +4,7 @@ ARG SERVICE_NAME=hookhandler
 WORKDIR /go/src/github.com/shankj3/ocelot/
 COPY . .
 
-RUN make static-linux-bin SERVICE_NAME=${SERVICE_NAME}
+RUN make local-service SERVICE_NAME=${SERVICE_NAME}
 
 FROM alpine:3.8
 ENV SERVICE_NAME hookhandler

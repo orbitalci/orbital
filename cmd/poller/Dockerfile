@@ -4,8 +4,8 @@ ARG SERVICE_NAME=poller
 WORKDIR /go/src/github.com/shankj3/ocelot/
 COPY . .
 
-RUN make static-linux-bin SERVICE_NAME=${SERVICE_NAME}
-RUN make static-linux-bin SERVICE_NAME=changecheck
+RUN make local-service SERVICE_NAME=${SERVICE_NAME}
+RUN make local-service SERVICE_NAME=changecheck
 
 FROM ubuntu:latest
 ENV SERVICE_NAME poller
