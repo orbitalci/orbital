@@ -38,8 +38,13 @@ var (
 	}, []string{"error_type"})
 )
 
+
 func init() {
 	prometheus.MustRegister(activeRequests, dbDuration, databaseFailed)
+	// seed data
+	databaseFailed.WithLabelValues("ErrConnDone").Add(0)
+	databaseFailed.WithLabelValues("ErrBadCon").Add(0)
+	databaseFailed.WithLabelValues("ErrTxDone").Add(0)
 }
 
 func startTransaction() time.Time {
