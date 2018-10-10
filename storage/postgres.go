@@ -39,7 +39,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(activeRequests, dbDuration)
+	prometheus.MustRegister(activeRequests, dbDuration, databaseFailed)
 }
 
 func startTransaction() time.Time {
