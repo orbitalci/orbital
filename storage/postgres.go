@@ -2,8 +2,8 @@ package storage
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/models"
@@ -31,6 +32,10 @@ var (
 		// table: build_summary, etc
 		// interaction_type: create | read | update | delete
 	}, []string{"table", "interaction_type"})
+	databaseFailed = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "ocelot_db_sqllib_error",
+		Help: "sql library error count",
+	}, []string{"error_type"})
 )
 
 func init() {
@@ -80,15 +85,16 @@ func (p *PostgresStorage) Connect() error {
 			return
 		}
 		p.db.SetMaxOpenConns(20)
-		p.db.SetMaxIdleConns(0)
-		p.db.SetConnMaxLifetime(time.Millisecond)
+		p.db.SetMaxIdleConns(5)
 	})
 	return nil
 }
 
 // todo: need to write a test for this
 func (p *PostgresStorage) Healthy() bool {
-	err := p.Connect()
+	var err error
+	defer metricizeDbErr(err)
+	err = p.Connect()
 	if err != nil {
 		return false
 	}
@@ -100,7 +106,9 @@ func (p *PostgresStorage) Healthy() bool {
 	return true
 }
 func (p *PostgresStorage) Close() {
-	err := p.db.Close()
+	var err error
+	defer metricizeDbErr(err)
+	err = p.db.Close()
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("error closing postgres db")
 	}
@@ -135,19 +143,22 @@ func convertTimeToTimestamp(tyme time.Time) *timestamp.Timestamp {
 // AddSumStart updates the build_summary table with the initial information that you get from a webhook
 // returning the build id that postgres generates
 func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "create")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return 0, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var id int64
 	query := `INSERT INTO build_summary(hash, account, repo, branch, status) values ($1,$2,$3,$4,$5) RETURNING id`
-	stmt, err := p.db.Prepare(query)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(query)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
-	if err := stmt.QueryRow(hash, account, repo, branch, pb.BuildStatus_NIL).Scan(&id); err != nil {
+	if err = stmt.QueryRow(hash, account, repo, branch, pb.BuildStatus_NIL).Scan(&id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return id, err
 	}
@@ -156,19 +167,22 @@ func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, 
 
 // SetQueueTime will update the QueueTime in the database to the current time
 func (p *PostgresStorage) SetQueueTime(id int64) error {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "update")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `UPDATE build_summary SET queuetime=$1, status=$2 WHERE id=$3`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(time.Now().Format(TimeFormat), pb.BuildStatus_QUEUED, id); err != nil {
+	if _, err = stmt.Exec(time.Now().Format(TimeFormat), pb.BuildStatus_QUEUED, id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
@@ -177,17 +191,20 @@ func (p *PostgresStorage) SetQueueTime(id int64) error {
 
 //StoreFailedValidation will update the rest of the summary fields (failed:true, duration:0)
 func (p *PostgresStorage) StoreFailedValidation(id int64) error {
-	if err := p.Connect(); err != nil {
+	var err error
+	defer metricizeDbErr(err)
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	querystr := `UPDATE build_summary SET failed=$1, buildtime=$2, status=$3 WHERE id=$4`
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(true, 0, pb.BuildStatus_FAILED_PRESTART, id); err != nil {
+	if _, err = stmt.Exec(true, 0, pb.BuildStatus_FAILED_PRESTART, id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
@@ -195,17 +212,20 @@ func (p *PostgresStorage) StoreFailedValidation(id int64) error {
 }
 
 func (p *PostgresStorage) setStartTime(id int64, stime time.Time) error {
-	if err := p.Connect(); err != nil {
+	var err error
+	defer metricizeDbErr(err)
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `UPDATE build_summary SET starttime=$1, status=$2 WHERE id=$3`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(stime.Format(TimeFormat), pb.BuildStatus_RUNNING, id); err != nil {
+	if _, err = stmt.Exec(stime.Format(TimeFormat), pb.BuildStatus_RUNNING, id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
@@ -220,9 +240,11 @@ func (p *PostgresStorage) StartBuild(id int64) error {
 
 // UpdateSum updates the remaining fields in the build_summary table
 func (p *PostgresStorage) UpdateSum(failed bool, duration float64, id int64) error {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "update")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	buildstat := pb.BuildStatus_PASSED
@@ -230,35 +252,38 @@ func (p *PostgresStorage) UpdateSum(failed bool, duration float64, id int64) err
 		buildstat = pb.BuildStatus_FAILED
 	}
 	querystr := `UPDATE build_summary SET failed=$1, buildtime=$2, status=$3 WHERE id=$4`
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(failed, duration, buildstat, id); err != nil {
+	if _, err = stmt.Exec(failed, duration, buildstat, id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
 	return nil
 }
 
-func (p *PostgresStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error) {
+func (p *PostgresStorage) RetrieveSum(gitHash string) (sums []*pb.BuildSummary, err error) {
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
-	var sums []*pb.BuildSummary
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var queuetime, starttime time.Time
 	querystr := `SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime, status FROM build_summary WHERE hash = $1`
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(gitHash)
+	var rows *sql.Rows
+	rows, err = stmt.Query(gitHash)
 	if err != nil {
 		ocelog.IncludeErrField(err)
 		return sums, err
@@ -284,21 +309,23 @@ func (p *PostgresStorage) RetrieveSum(gitHash string) ([]*pb.BuildSummary, error
 
 //RetrieveHashStartsWith will return a list of all hashes starting with the partial string in db
 //** THIS WILL ONLY RETURN HASH, ACCOUNT, AND REPO **
-func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.BuildSummary, error) {
-	var hashes []*pb.BuildSummary
+func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) (hashes []*pb.BuildSummary, err error) {
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return hashes, errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `select distinct (hash), account, repo from build_summary where hash ilike $1`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(partialGitHash + "%")
+	var rows *sql.Rows
+	rows, err = stmt.Query(partialGitHash + "%")
 	if err != nil {
 		ocelog.IncludeErrField(err)
 		return hashes, err
@@ -320,15 +347,18 @@ func (p *PostgresStorage) RetrieveHashStartsWith(partialGitHash string) ([]*pb.B
 
 // RetrieveLatestSum will return the latest entry of build_summary where hash starts with `gitHash`
 func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (*pb.BuildSummary, error) {
+	var err error
+	defer metricizeDbErr(err)
 	var sum pb.BuildSummary
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return &sum, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var queuetime, starttime time.Time
 	querystr := `SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime, status FROM build_summary WHERE hash ilike $1 ORDER BY id DESC LIMIT 1;`
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return &sum, err
@@ -347,15 +377,18 @@ func (p *PostgresStorage) RetrieveLatestSum(partialGitHash string) (*pb.BuildSum
 
 // RetrieveSumByBuildId will return a build summary based on build id
 func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error) {
+	var err error
+	defer metricizeDbErr(err)
 	var sum pb.BuildSummary
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return &sum, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var queuetime, starttime time.Time
 	querystr := `SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime, status FROM build_summary WHERE id = $1`
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return &sum, err
@@ -372,22 +405,24 @@ func (p *PostgresStorage) RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary,
 }
 
 // RetrieveLastFewSums will return < limit> number of summaries that correlate with a repo and account.
-func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) ([]*pb.BuildSummary, error) {
-	var sums []*pb.BuildSummary
+func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit int32) (sums []*pb.BuildSummary, err error) {
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
 	querystr := fmt.Sprintf(`SELECT hash, failed, starttime, account, buildtime, repo, id, branch, queuetime, status FROM build_summary WHERE repo=$1 and account=$2 ORDER BY id DESC LIMIT %d`, limit)
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
 	var queuetime, starttime time.Time
-	rows, err := stmt.Query(repo, account)
+	var rows *sql.Rows
+	rows, err = stmt.Query(repo, account)
 
 	if err != nil {
 		ocelog.IncludeErrField(err)
@@ -411,21 +446,25 @@ func (p *PostgresStorage) RetrieveLastFewSums(repo string, account string, limit
 
 // RetrieveAcctRepo will return to you a list of accountname + repositories that matches starting with partialRepo
 func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]*pb.BuildSummary, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
 	var sums []*pb.BuildSummary
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return sums, errors.New("could not connect to postgres: " + err.Error())
 	}
 	querystr := fmt.Sprintf(`select distinct on (account, repo) account, repo from build_summary where repo ilike $1;`)
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(partialRepo + "%")
+	var rows *sql.Rows
+	rows, err = stmt.Query(partialRepo + "%")
 	if err != nil {
 		ocelog.IncludeErrField(err)
 		return sums, err
@@ -455,44 +494,50 @@ func (p *PostgresStorage) RetrieveAcctRepo(partialRepo string) ([]*pb.BuildSumma
 
 //AddOut adds build output text to build_output table
 func (p *PostgresStorage) AddOut(output *models.BuildOutput) error {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_output", "create")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	if err := output.Validate(); err != nil {
+	if err = output.Validate(); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return err
 	}
 	querystr := `INSERT INTO build_output(build_id, output) values ($1,$2)`
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
 	//"2006-01-02 15:04:05"
-	if _, err := stmt.Exec(output.BuildId, output.Output); err != nil {
+	if _, err = stmt.Exec(output.BuildId, output.Output); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_output", "read")
 	out := models.BuildOutput{}
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return out, errors.New("could not connect to postgres: " + err.Error())
 	}
 	querystr := `SELECT * FROM build_output WHERE build_id=$1`
-	stmt, err := p.db.Prepare(querystr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(querystr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return out, err
 	}
 	defer stmt.Close()
-	if err := stmt.QueryRow(buildId).Scan(&out.BuildId, &out.Output, &out.OutputId); err != nil {
+	if err = stmt.QueryRow(buildId).Scan(&out.BuildId, &out.Output, &out.OutputId); err != nil {
 		ocelog.IncludeErrField(err)
 		return out, err
 	}
@@ -501,16 +546,19 @@ func (p *PostgresStorage) RetrieveOut(buildId int64) (models.BuildOutput, error)
 
 // RetrieveLastOutByHash will return the last output text that correlates with the gitHash
 func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOutput, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_output", "read")
 	queryStr := "select build_id, output, build_output.id from build_output " +
 		"join build_summary on build_output.build_id = build_summary.id and build_summary.hash = $1 " +
 		"order by build_summary.queuetime desc limit 1;"
 	out := models.BuildOutput{}
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return out, errors.New("could not connect to postgres: " + err.Error())
 	}
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return out, err
@@ -524,23 +572,26 @@ func (p *PostgresStorage) RetrieveLastOutByHash(gitHash string) (models.BuildOut
 //  The fields required on stageResult to insert into stage detail table are:
 // 		stageResult.BuildId, stageResult.Stage, stageResult.Error, stageResult.StartTime, stageResult.StageDuration, stageResult.Status, stageResult.Messages
 func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_stage_details", "create")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	if err := stageResult.Validate(); err != nil {
+	if err = stageResult.Validate(); err != nil {
 		ocelog.IncludeErrField(err)
 		return err
 	}
 	queryStr := `INSERT INTO build_stage_details(build_id, stage, error, starttime, runtime, status, messages) values ($1, $2, $3, $4, $5, $6, $7)`
-	jsonStr, err := json.Marshal(stageResult.Messages)
+	var jsonStr []byte
+	jsonStr, err = json.Marshal(stageResult.Messages)
 	if err != nil {
 		ocelog.IncludeErrField(err)
 		return err
 	}
-
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
@@ -556,19 +607,23 @@ func (p *PostgresStorage) AddStageDetail(stageResult *models.StageResult) error 
 
 // Retrieve StageDetail will return all stages matching build id
 func (p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResult, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_stage_details", "read")
 	var stages []models.StageResult
 	queryStr := "select id, build_id, error, starttime, runtime, status, messages, stage from build_stage_details where build_id = $1 order by build_id asc;"
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return stages, errors.New("could not connect to postgres: " + err.Error())
 	}
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(buildId)
+	var rows *sql.Rows
+	rows, err = stmt.Query(buildId)
 	defer rows.Close()
 	for rows.Next() {
 		stage := models.StageResult{}
@@ -593,13 +648,15 @@ func (p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResu
 }
 
 func (p *PostgresStorage) InsertPoll(account string, repo string, cronString string, branches string) (err error) {
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "create")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `INSERT INTO polling_repos(account, repo, cron_string, branches, last_cron_time) values ($1, $2, $3, $4, $5)`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
@@ -613,13 +670,15 @@ func (p *PostgresStorage) InsertPoll(account string, repo string, cronString str
 }
 
 func (p *PostgresStorage) UpdatePoll(account string, repo string, cronString string, branches string) (err error) {
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "update")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `UPDATE polling_repos SET (cron_string, branches) = ($1,$2) WHERE (account,repo) = ($3,$4);`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
@@ -633,34 +692,38 @@ func (p *PostgresStorage) UpdatePoll(account string, repo string, cronString str
 }
 
 func (p *PostgresStorage) SetLastData(account string, repo string, lasthashes map[string]string) (err error) {
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "update")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	//starttime.Format(TimeFormat)
-	hashes, err := json.Marshal(lasthashes)
+	var hashes []byte
+	hashes, err = json.Marshal(lasthashes)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't marshal hash map to byte??")
 		return err
 	}
 	queryStr := `UPDATE polling_repos SET (last_cron_time, last_hashes)=($1,$2) WHERE (account,repo) = ($3,$4);`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(time.Now().Format(TimeFormat), hashes, account, repo); err != nil {
+	if _, err = stmt.Exec(time.Now().Format(TimeFormat), hashes, account, repo); err != nil {
 		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).Error("could not update last_cron_time in database")
 	}
 	return
 }
 
 func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error) {
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 
 		return time.Now(), nil, errors.New("could not connect to postgres: " + err.Error())
 	}
@@ -670,7 +733,8 @@ func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, 
 	}
 	account, repo := acctRepo[0], acctRepo[1]
 	queryStr := `SELECT last_cron_time, last_hashes FROM polling_repos WHERE (account,repo) = ($1,$2);`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return time.Unix(0, 0), nil, err
@@ -697,14 +761,17 @@ func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, 
 }
 
 func (p *PostgresStorage) PollExists(account string, repo string) (bool, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return false, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var count int64
 	queryStr := `select count(*) from polling_repos where (account,repo) = ($1,$2);`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return false, err
@@ -722,19 +789,22 @@ func (p *PostgresStorage) PollExists(account string, repo string) (bool, error) 
 }
 
 func (p *PostgresStorage) DeletePoll(account string, repo string) error {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "delete")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `delete from polling_repos where (account, repo) =($1,$2)`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(account, repo); err != nil {
+	if _, err = stmt.Exec(account, repo); err != nil {
 		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).Error("could not delete poll entry from database")
 		return err
 	}
@@ -742,20 +812,24 @@ func (p *PostgresStorage) DeletePoll(account string, repo string) error {
 }
 
 func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "read")
 	var polls []*models.PollRequest
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `select account, repo, cron_string, last_cron_time, branches from polling_repos`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query()
+	var rows *sql.Rows
+	rows, err = stmt.Query()
 	if err != nil {
 		return nil, err
 	}
@@ -791,21 +865,25 @@ func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
 //InsertCred will insert an ocyCredder object into the credentials table after calling its ValidateForInsert method.
 // if the OcyCredder fails validation, it will return a *models.ValidationErr
 func (p *PostgresStorage) InsertCred(credder pb.OcyCredder, overwriteOk bool) error {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "create")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	if invalid := credder.ValidateForInsert(); invalid != nil {
 		return invalid
 	}
 	//possibleCred, err := p.RetrieveCred(credder.GetSubType(), identifier, accountName string)
-	moreFields, err := credder.CreateAdditionalFields()
+	var moreFields []byte
+	moreFields, err = credder.CreateAdditionalFields()
 	if err != nil {
 		return errors.New("could not create additional_fields column, error: " + err.Error())
 	}
 	queryStr := `INSERT INTO credentials(account, identifier, cred_type, cred_sub_type, additional_fields) values ($1,$2,$3,$4,$5)`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
@@ -816,20 +894,24 @@ func (p *PostgresStorage) InsertCred(credder pb.OcyCredder, overwriteOk bool) er
 }
 
 func (p *PostgresStorage) UpdateCred(credder pb.OcyCredder) error {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "update")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	if invalid := credder.ValidateForInsert(); invalid != nil {
 		return invalid
 	}
-	moreFields, err := credder.CreateAdditionalFields()
+	var moreFields []byte
+	moreFields, err = credder.CreateAdditionalFields()
 	if err != nil {
 		return errors.New("could not create additional_fields column, error: " + err.Error())
 	}
 	queryStr := `UPDATE credentials SET additional_fields=$1 WHERE (account,identifier,cred_sub_type)=($2,$3,$4)`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return err
@@ -840,13 +922,16 @@ func (p *PostgresStorage) UpdateCred(credder pb.OcyCredder) error {
 }
 
 func (p *PostgresStorage) DeleteCred(credder pb.OcyCredder) error {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "delete")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `DELETE from credentials where (account,identifier,cred_sub_type)=($1,$2,$3)`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare statement")
 		return err
@@ -858,14 +943,17 @@ func (p *PostgresStorage) DeleteCred(credder pb.OcyCredder) error {
 }
 
 func (p *PostgresStorage) CredExists(credder pb.OcyCredder) (bool, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return false, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var count int64
 	queryStr := `select count(*) from credentials where (account,identifier,cred_sub_type) = ($1,$2,$3);`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return false, err
@@ -883,19 +971,23 @@ func (p *PostgresStorage) CredExists(credder pb.OcyCredder) (bool, error) {
 }
 
 func (p *PostgresStorage) RetrieveAllCreds() ([]pb.OcyCredder, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `SELECT account, identifier, cred_type, cred_sub_type, additional_fields from credentials order by cred_type`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query()
+	var rows *sql.Rows
+	rows, err = stmt.Query()
 	if err != nil {
 		return nil, err
 	}
@@ -905,13 +997,13 @@ func (p *PostgresStorage) RetrieveAllCreds() ([]pb.OcyCredder, error) {
 		var credType, subCredType int32
 		var addtlFields []byte
 		var account, identifier string
-		err := rows.Scan(&account, &identifier, &credType, &subCredType, &addtlFields)
+		err = rows.Scan(&account, &identifier, &credType, &subCredType, &addtlFields)
 		if err != nil {
 			return nil, err
 		}
 		ocyCredType := pb.CredType(credType)
 		cred := ocyCredType.SpawnCredStruct(account, identifier, pb.SubCredType(subCredType))
-		if err := cred.UnmarshalAdditionalFields(addtlFields); err != nil {
+		if err = cred.UnmarshalAdditionalFields(addtlFields); err != nil {
 			return nil, err
 		}
 		creds = append(creds, cred)
@@ -926,19 +1018,23 @@ func (p *PostgresStorage) RetrieveAllCreds() ([]pb.OcyCredder, error) {
 }
 
 func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "read")
-	if err := p.Connect(); err != nil {
-		return nil, errors.New("could not connect to postgres: " + err.Error())
+	if err = p.Connect(); err != nil {
+		return nil, errors.Wrap(err, "could not connect to postgres")
 	}
 	queryStr := `SELECT account, identifier, cred_type, cred_sub_type, additional_fields FROM credentials WHERE cred_type=$1`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(credType)
+	var rows *sql.Rows
+	rows, err = stmt.Query(credType)
 	if err != nil {
 		return nil, err
 	}
@@ -948,7 +1044,7 @@ func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, 
 		var credType, subCredType int32
 		var addtlFields []byte
 		var account, identifier string
-		err := rows.Scan(&account, &identifier, &credType, &subCredType, &addtlFields)
+		err = rows.Scan(&account, &identifier, &credType, &subCredType, &addtlFields)
 		if err != nil {
 			return nil, err
 		}
@@ -958,7 +1054,7 @@ func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, 
 			// shouldn't happen?
 			return nil, errors.New("unsupported cred type")
 		}
-		if err := cred.UnmarshalAdditionalFields(addtlFields); err != nil {
+		if err = cred.UnmarshalAdditionalFields(addtlFields); err != nil {
 			return nil, err
 		}
 		creds = append(creds, cred)
@@ -973,21 +1069,24 @@ func (p *PostgresStorage) RetrieveCreds(credType pb.CredType) ([]pb.OcyCredder, 
 }
 
 func (p *PostgresStorage) RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "read")
-	if err := p.Connect(); err != nil {
-		return nil, errors.New("could not connect to postgres: " + err.Error())
+	if err = p.Connect(); err != nil {
+		return nil, errors.Wrap(err, "could not connect to postgres")
 	}
 	queryStr := `SELECT additional_fields FROM credentials WHERE (cred_sub_type,identifier,account)=($1,$2,$3)`
 	ocelog.Log().Debugf("%d %s %s", subCredType, identifier, accountName)
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
 	var addtlFields []byte
-	if err := stmt.QueryRow(subCredType, identifier, accountName).Scan(&addtlFields); err != nil {
+	if err = stmt.QueryRow(subCredType, identifier, accountName).Scan(&addtlFields); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, CredNotFound(accountName, identifier)
 		}
@@ -1003,23 +1102,29 @@ func (p *PostgresStorage) RetrieveCred(subCredType pb.SubCredType, identifier, a
 }
 
 func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType, acctName string) ([]pb.OcyCredder, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "credentials", "read")
-	if err := p.Connect(); err != nil {
-		return nil, errors.New("could not connect to postgres: " + err.Error())
+	if err = p.Connect(); err != nil {
+		return nil, errors.Wrap(err, "could not connect to postgres")
 	}
 	queryStr := `SELECT additional_fields, identifier FROM credentials WHERE (cred_sub_type,account)=($1,$2)`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(scredType, acctName)
+
+	var rows *sql.Rows
+	rows, err = stmt.Query(scredType, acctName)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
 	var creds []pb.OcyCredder
 	for rows.Next() {
 		var addtlFields []byte
@@ -1047,21 +1152,25 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 }
 
 func (p *PostgresStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
-	if err := p.Connect(); err != nil {
-		return nil, errors.New("could not connect to postgres: " + err.Error())
+	if err = p.Connect(); err != nil {
+		return nil, errors.Wrap(err, "could not connect to postgres")
 	}
 	var queuetime time.Time
 	queryStr := `SELECT DISTINCT ON (account, repo) account, repo, queuetime
 FROM build_summary
 ORDER BY account, repo, queuetime DESC NULLS LAST;`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
 		return nil, err
 	}
-	rows, err := stmt.Query()
+	var rows *sql.Rows
+	rows, err = stmt.Query()
 	if err != nil {
 		return nil, err
 	}
@@ -1069,7 +1178,7 @@ ORDER BY account, repo, queuetime DESC NULLS LAST;`
 	acctRepos := &pb.AcctRepos{}
 	for rows.Next() {
 		acctRepo := &pb.AcctRepo{}
-		if err := rows.Scan(&acctRepo.Account, &acctRepo.Repo, &queuetime); err != nil {
+		if err = rows.Scan(&acctRepo.Account, &acctRepo.Repo, &queuetime); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, BuildSumNotFound("any account/repo")
 			}
@@ -1085,9 +1194,11 @@ ORDER BY account, repo, queuetime DESC NULLS LAST;`
 // for that branch, a BuildSumNotFound error will be returned. If there are no successful builds,
 // a BuildSumNotFound will also be returned.
 func (p *PostgresStorage) GetLastSuccessfulBuildHash(account, repo, branch string) (string, error) {
+	var err error
+	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "build_summary", "read")
-	if err := p.Connect(); err != nil {
+	if err = p.Connect(); err != nil {
 		return "", errors.New("could not connect to postgres: " + err.Error())
 	}
 	queryStr := `SELECT hash 
@@ -1095,16 +1206,14 @@ FROM build_summary
 WHERE (account,repo,branch,status) = ($1,$2,$3,$4)
 ORDER BY queuetime DESC 
 limit 1;`
-	stmt, err := p.db.Prepare(queryStr)
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't prepare statment")
 		return "", err
 	}
 	defer stmt.Close()
 	row := stmt.QueryRow(account, repo, branch, pb.BuildStatus_PASSED)
-	if err != nil {
-		return "", err
-	}
 	var hash string
 	err = row.Scan(&hash)
 	if err != nil {
@@ -1118,4 +1227,17 @@ limit 1;`
 
 func (p *PostgresStorage) StorageType() string {
 	return fmt.Sprintf("Postgres Database at %s", p.location)
+}
+
+
+// metricizeDbErr will check the type of error and increment the necessary prometheus metrics
+func metricizeDbErr(err error) {
+	switch err {
+	case driver.ErrBadConn:
+		databaseFailed.WithLabelValues("ErrBadCon").Inc()
+	case sql.ErrTxDone:
+		databaseFailed.WithLabelValues("ErrTxDone").Inc()
+	case sql.ErrConnDone:
+		databaseFailed.WithLabelValues("ErrConnDone").Inc()
+	}
 }
