@@ -120,7 +120,7 @@ func (b *Basher) DownloadKubectl(werkerPort string) []string {
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
 	cdCmd := fmt.Sprintf("cd %s", b.CloneDir(commitHash))
 	bild := append([]string{cdCmd}, cmds...)
-	buildAndDeploy := append([]string{"/dev/init", "-s", "--", "/bin/sh", "-c", strings.Join(bild, " && ")})
+	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(bild, " && ")})
 	return buildAndDeploy
 }
 
