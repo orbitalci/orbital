@@ -126,11 +126,13 @@ func CreateLivingDockerContainer(t *testing.T, ctx context.Context, imageName st
 		AttachStdin:  true,
 		Tty:          true,
 	}
+	init := true
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
 		Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		//Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
+		Init: &init,
 	}
 	resp, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
 	if err != nil {
