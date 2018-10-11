@@ -20,7 +20,7 @@ import (
 func DockerCreateExec(t *testing.T, ctx context.Context, imageName string, ports []string, mounts ...string) (cleanup func(), err error) {
 	portsString := " -p " + strings.Join(ports, " -p ")
 	mountsStrings := " -v " + strings.Join(mounts, " -v ")
-	command := fmt.Sprintf("docker run --rm -d %s %s %s", portsString, mountsStrings, imageName)
+	command := fmt.Sprintf("docker run --rm --init -d %s %s %s", portsString, mountsStrings, imageName)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.CommandContext(ctx, "/bin/bash", "-c", command)
@@ -68,6 +68,7 @@ func DockerCreate(t *testing.T, ctx context.Context, imageName string, ports []s
 		Tty:          true,
 	}
 	binds := append([]string{"/var/run/docker.sock:/var/run/docker.sock"}, mounts...)
+	init := true
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
 		Binds:        binds,
@@ -75,6 +76,7 @@ func DockerCreate(t *testing.T, ctx context.Context, imageName string, ports []s
 		AutoRemove:   true,
 		//Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
+		Init: &init,
 	}
 	resp, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
 	if err != nil {

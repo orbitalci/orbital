@@ -113,12 +113,14 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	}
 
 	//homeDirectory, _ := homedir.Expand("~/.ocelot")
+	init := true
 	//host config binds are mount points
 	hostConfig := &container.HostConfig{
 		//TODO: have it be overridable via env variable
 		Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		//Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
+		Init: &init,
 	}
 
 	resp, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
