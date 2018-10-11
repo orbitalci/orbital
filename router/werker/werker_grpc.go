@@ -1,6 +1,7 @@
 package werker
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -48,10 +49,11 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 			log.IncludeErrField(err).Error("unable to retrieve active builds from consul")
 			return status.Error(codes.Internal, err.Error())
 		}
-		_, ok := hashes[request.Hash]
+		build, ok := hashes[request.Hash]
 		if ok {
-			// this should be handled by valet
-			//w.Cleanup(context.Background(), build.DockerUuid, nil)
+			// this should be handled by valet, but docker doesn't handle killing a build that is expecting stdin (ie a request for for accepting integrity of an ssh key)
+			// fixme: figure our how to be able to do this, because just cancelling in the context in the stdin scenario doesn't trigger docker api to kill the container
+			err = w.Cleanup(context.Background(), build.DockerUuid, nil)
 			stream.Send(wrap(fmt.Sprintf("Successfully killed build for %s %s", request.Hash, models.CHECKMARK)))
 		} else {
 			stream.Send(wrap("Wow you killed your build before it even got to the setup stage??"))
