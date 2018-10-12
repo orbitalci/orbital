@@ -61,7 +61,7 @@
 
 [[constraint]]
 #  version = "0.2.1"
-  revision = "caa9734a6aa5afc36f24cbac5240c9c037b74d67"
+  revision = "81287ec22a30d62a078b865a510e3cdc1252427f"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]
@@ -88,3 +88,7 @@
 [[constraint]]
   name = "github.com/golang/mock"
   version = "1.1.1"
+
+[[constraint]]
+  name = "github.com/tomnomnom/linkheader"
+  version = "0.1.0"

@@ -628,13 +628,19 @@
     "test",
     "vault"
   ]
-  revision = "caa9734a6aa5afc36f24cbac5240c9c037b74d67"
+  revision = "81287ec22a30d62a078b865a510e3cdc1252427f"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
   version = "v1.0.5"
+
+[[projects]]
+  name = "github.com/tomnomnom/linkheader"
+  packages = ["."]
+  revision = "6953a30d444317754766fccdd3f7f000edc874f6"
+  version = "0.1.0"
 
 [[projects]]
   branch = "master"
@@ -803,6 +809,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a4ed7fdd6c1f8e04b2d834105b71b8600c72a7c0a90a7bd1de356eb66da2cd89"
+  inputs-digest = "e9b4039d5dd03ea54afaabc0eeef686bf475454477b214fa5346748242b7a5c7"
   solver-name = "gps-cdcl"
   solver-version = 1

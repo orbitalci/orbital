@@ -22,3 +22,10 @@ message Owner {
     string type = 17;
     bool site_admin = 18;
 }
+
+message File {
+    string name = 1;
+    string path = 2;
+    string sha = 3;
+
+}

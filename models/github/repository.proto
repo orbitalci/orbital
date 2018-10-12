@@ -3,7 +3,7 @@ syntax = "proto3";
 package protos;
 
 import "google/protobuf/timestamp.proto";
-import "owner.proto";
+import "general.proto";
 
 //https://developer.github.com/v3/repos
 

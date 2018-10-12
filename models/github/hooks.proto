@@ -11,7 +11,6 @@ message Hook {
     string url = 2;
     string test_url = 3;
     string ping_url = 4;
-    string name = 5;
     repeated string events = 6;
     bool active = 7;
 
