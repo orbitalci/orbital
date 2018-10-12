@@ -51,7 +51,8 @@ Vagrant.configure("2") do |config|
       go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
       go get -v -u github.com/favadi/protoc-go-inject-tag && \
       go get -v -u github.com/golang/mock/mockgen && \
-      go get -v -u golang.org/x/tools/cmd/stringer
+      go get -v -u golang.org/x/tools/cmd/stringer && \
+      go get golang.org/x/tools/cmd/cover
 
       echo '# Ocelot configuration:' | sudo tee -a /etc/bashrc.bashrc
       echo 'export VAULT_TOKEN=ocelotdev' | sudo tee -a /etc/bash.bashrc

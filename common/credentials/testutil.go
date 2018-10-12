@@ -21,6 +21,7 @@ import (
 	"testing"
 )
 
+// Add the Vault stuff here
 func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName string, location string, port string, username string, pw string) (err error) {
 	err = consulet.AddKeyValue(common.StorageType, []byte("postgres"))
 	if err != nil {
@@ -42,9 +43,21 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 	if err != nil {
 		return
 	}
+
+	// FIXME: These two fields need to be exposed for this function
+	err = consulet.AddKeyValue(common.VaultDBSecretEngine, []byte("kv"))
+	if err != nil {
+		return
+	}
+
+	err = consulet.AddKeyValue(common.VaultRoleName, []byte("ocelot"))
+	if err != nil {
+		return
+	}
 	var a = map[string]interface{}{common.PostgresPasswordKey: pw}
 	_, err = vaulty.AddVaultData(common.PostgresPasswordLoc, a)
 	return err
+
 }
 
 //////test setup and tear down///////

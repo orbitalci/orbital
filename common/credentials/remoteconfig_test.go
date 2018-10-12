@@ -1,11 +1,15 @@
 package credentials
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/go-til/vault"
+	"github.com/shankj3/ocelot/common"
 	pb "github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 
@@ -217,7 +221,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 
 }
 
-func Test_BuildCredPath(t *testing.T) {
+func TestRemoteConfig_BuildCredPath(t *testing.T) {
 	expected := "creds/vcs/banana/bitbucket/derp"
 	live := BuildCredPath(pb.SubCredType_BITBUCKET, "banana", pb.CredType_VCS, "derp")
 	if live != expected {
@@ -348,5 +352,172 @@ func TestRemoteConfig_DeleteCred(t *testing.T) {
 	if err.Error() != "unable to delete sensitive data : Unable to delete password for user jazzy w/ identifier shazam: oh jesus wtf happened : unable to delete un-sensitive data: no credential found for jazzy docker" {
 		t.Error("did not get expected errors, got " + err.Error())
 	}
+
+}
+
+func TestRemoteConfig_BuildCredKey(t *testing.T) {
+
+	expectedCredKey := "credType/acctName"
+	returnedCredKey := BuildCredKey("credType", "acctName")
+
+	if returnedCredKey != expectedCredKey {
+		t.Error("expected: "+returnedCredKey+"got :", expectedCredKey)
+	}
+}
+
+func TestRemoteConfig_GetSetConsulVault(t *testing.T) {
+
+	// GetInstance, error path
+	consulHostNull := ""
+	consulPortNull := 0
+	vaultTokenNull := ""
+
+	badRC, baderr := GetInstance(consulHostNull, consulPortNull, vaultTokenNull)
+
+	expectedRemoteConfigString := "*credentials.RemoteConfig"
+	remoteConfigString := fmt.Sprintf("%T", badRC)
+	if remoteConfigString != expectedRemoteConfigString || baderr != nil {
+		t.Error("Bad consulHost and port provided. Expected " + expectedRemoteConfigString + "and no errors, but got: " + fmt.Sprintf("%T", badRC) + "and " + fmt.Sprintf("%s", baderr))
+	}
+
+	// GetInstance, happy path, via TestSetupVaultAndConsul
+	goodRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+	defer TeardownVaultAndConsul(vaultListener, consulServer)
+
+	// Verify Vault and Consul get/set integriy
+	testVaultHandler := goodRemoteConfig.GetVault()
+	goodRemoteConfig.SetVault(testVaultHandler)
+	if testVaultHandler != goodRemoteConfig.GetVault() {
+		t.Error("Vault get/set integrity fail")
+	}
+
+	testConsulHandler := goodRemoteConfig.GetConsul()
+	goodRemoteConfig.SetConsul(testConsulHandler)
+	if testConsulHandler != goodRemoteConfig.GetConsul() {
+		t.Error("Consul get/set integrity fail")
+	}
+
+}
+
+func TestRemoteConfig_GetToken(t *testing.T) {
+	oldToken := os.Getenv("VAULT_TOKEN")
+
+	if oldToken != "" {
+		setupErr := os.Unsetenv("VAULT_TOKEN")
+		if setupErr != nil {
+			t.Error("VAULT_TOKEN should be unset now for this test, but it isn't...")
+		}
+	}
+
+	badToken, badErr := GetToken("")
+
+	if badToken != "" || badErr == nil {
+		t.Error("VAULT_TOKEN env var isn't set. This token should be empty")
+	}
+
+	// FIXME: This case needs a way to force an I/O error when reading a real path. /dev/zero,/dev/null doesn't work
+	// 			Try creating a temp file with no read permissions
+	// os.Setenv("VAULT_TOKEN", "")
+	// badToken, badErr = GetToken("/dev/null")
+
+	// if badToken != "" || badErr == nil {
+	// 	t.Error("VAULT_TOKEN should be empty, and a real filepath w/o a token")
+	// }
+
+	somethingToken, somethingErr := GetToken("/usr/share/dict/words")
+	if somethingToken == "" || somethingErr != nil {
+		t.Error("Assuming /usr/share/dict/words exists, this token should be set to a real value")
+	}
+}
+
+func TestRemoteConfig_GetStorageType(t *testing.T) {
+
+	if testing.Short() {
+		t.Skip("skipping docker container create due to -short being set")
+	}
+
+	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+	defer TeardownVaultAndConsul(vaultListener, consulServer)
+
+	// Testing GetStorageType()
+
+	// Consul StorageType unconfigured
+	storageType, err := testRemoteConfig.GetStorageType()
+	if err != nil {
+		t.Error("This call should have failed, because Consul not fully initialized")
+	}
+
+	// StorageType is an invalid option
+	err = testRemoteConfig.GetConsul().AddKeyValue(common.StorageType, []byte("punchcard"))
+	if err != nil {
+		return
+	}
+	storageType, err = testRemoteConfig.GetStorageType()
+
+	if storageType != 0 || err == nil {
+		t.Error("punchcard isn't a valid option. This should have failed")
+	}
+
+	// filesystem case
+	err = testRemoteConfig.GetConsul().AddKeyValue(common.StorageType, []byte("filesystem"))
+	if err != nil {
+		return
+	}
+
+	storageType, err = testRemoteConfig.GetStorageType()
+
+	switch storageType {
+	case storage.Postgres:
+		t.Error("The expected storageType is filesystem")
+	case storage.FileSystem:
+		fmt.Println("filesystem")
+	default:
+		t.Error("This should be an unreachable case - filesystem case")
+	}
+
+	// postgres case
+	err = testRemoteConfig.GetConsul().AddKeyValue(common.StorageType, []byte("postgres"))
+	if err != nil {
+		return
+	}
+
+	storageType, err = testRemoteConfig.GetStorageType()
+
+	switch storageType {
+	case storage.Postgres:
+		fmt.Println("postgres")
+	case storage.FileSystem:
+		t.Error("The expected storageType is postgres")
+	default:
+		t.Error("This should be an unreachable case - postgres case")
+	}
+
+}
+
+func TestRemoteConfig_getForPostgres(t *testing.T) {
+
+	if testing.Short() {
+		t.Skip("skipping docker container create due to -short being set")
+	}
+
+	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+	defer TeardownVaultAndConsul(vaultListener, consulServer)
+	println(testRemoteConfig)
+
+	//	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+	//	defer TeardownVaultAndConsul(vaultListener, consulServer)
+	//	port := 5438
+	//	cleanup, pw := storage.CreateTestPgDatabase(t, port)
+	//	defer cleanup(t)
+	//	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	//	pg.Connect()
+	//	defer pg.Close()
+
+	// We are going to want to set these fields individually, to hit the error branches
+	//err := SetStoragePostgres(testRemoteConfig.GetConsul().(*consul.Consulet), testRemoteConfig.GetVault(), "postgres", "localhost", "port", "postgres", pw)
+	//if err != nil {
+	//	t.Error("Got an error trying to configure storage")
+	//}
+	////println(testRemoteConfig)
 
 }

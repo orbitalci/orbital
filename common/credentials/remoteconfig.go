@@ -417,6 +417,8 @@ func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 		ocelog.Log().Warning(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; using file system as the default.", common.StorageType))
 		return storage.FileSystem, nil
 	}
+
+	// ?: Is there an overall positive experience for making this value case-insensitive?
 	storageType := string(kv.Value)
 	switch storageType {
 	case "postgres":
