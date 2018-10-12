@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package protos;
+
+message Owner {
+    string login = 1;
+    int64 id = 2;
+    string node_id = 3;
+    string avatar_url = 4;
+    string gravatar_id = 5;
+    string url = 6;
+    string html_url = 7;
+    string followers_url = 8;
+    string following_url = 9;
+    string gists_url = 10;
+    string starred_url = 11;
+    string subscriptions_url = 12;
+    string organizations_url = 13;
+    string repos_url = 14;
+    string events_url = 15;
+    string received_events_url = 16;
+    string type = 17;
+    bool site_admin = 18;
+}
