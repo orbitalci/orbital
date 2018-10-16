@@ -157,6 +157,12 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	//	}
 	//}
 	task := signal.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil)
+	task.ChangesetData, err = signal.GenerateNoPreviousHeadChangeset(handler, buildReq.AcctRepo, buildBranch, buildHash)
+	if err != nil {
+		log.IncludeErrField(err).Error("unable to generate previous head changeset, changeset data will only include branch")
+		task.ChangesetData = &pb.ChangesetData{Branch: buildBranch}
+		stream.Send(RespWrap(fmt.Sprintf("Unable to retrieve files changed for this commit, triggers for stages will only be off of branch and not commit message or files changed.")))
+	}
 	if err = g.getSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())

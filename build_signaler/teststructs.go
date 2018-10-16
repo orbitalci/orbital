@@ -160,9 +160,13 @@ func (ts *TestStorage) AddStageDetail(result *models.StageResult) error {
 type DummyVcsHandler struct {
 	Fail         bool
 	Filecontents []byte
+	ChangedFiles []string
+	ReturnCommit *pb.Commit
+	CommitNotFound bool
 	models.VCSHandler
 	NotFound bool
 }
+//fixme: need to add handler.GetChangedFiles and handler.GetCommit
 
 func (d *DummyVcsHandler) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	if d.Fail {
@@ -172,4 +176,25 @@ func (d *DummyVcsHandler) GetFile(filePath string, fullRepoName string, commitHa
 		return nil, ocenet.FileNotFound
 	}
 	return d.Filecontents, nil
+}
+
+func (d *DummyVcsHandler) GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error) {
+	return d.ChangedFiles, nil
+}
+
+func (d *DummyVcsHandler) GetCommit(acctRepo, hash string) (*pb.Commit, error) {
+	if d.CommitNotFound {
+		return nil, errors.New("not found")
+	}
+	return d.ReturnCommit, nil
+}
+
+// set all flags to their default nil value
+func (d *DummyVcsHandler) Reset() {
+	d.Fail = false
+	d.Filecontents = []byte{}
+	d.ChangedFiles = []string{}
+	d.ReturnCommit = nil
+	d.CommitNotFound = false
+	d.NotFound = false
 }

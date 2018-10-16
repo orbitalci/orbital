@@ -4,39 +4,34 @@ package hookhandler
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/prometheus/client_golang/prometheus"
+	
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 	signal "github.com/shankj3/ocelot/build_signaler"
 	"github.com/shankj3/ocelot/build_signaler/webhook"
 	"github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/common/remote"
+	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-var (
-	hookRecieves = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "ocelot_recieved_hooks",
-		Help: "hooks recieved and processed by hookhandler",
-		// vcs_type: bitbucket | github | etc
-		// event_type: pullrequest | push
-	}, []string{"vcs_type", "event_type"})
-)
-
-func init() {
-	prometheus.MustRegister(hookRecieves)
+func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller, prTeller *webhook.PullReqWerkerTeller) *HookHandlerContext {
+	return &HookHandlerContext{Signaler: sig, pTeller: teller, prTeller: prTeller}
 }
 
-func GetContext(sig *signal.Signaler, teller *signal.CCWerkerTeller) *HookHandlerContext {
-	return &HookHandlerContext{Signaler: sig, teller: teller}
-}
-
-//context contains long lived resources. See bottom for getters/setters
+//HookHandlerContext contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*signal.Signaler
-	// todo: CHANGE THIS
-	teller *signal.CCWerkerTeller
+	pTeller  	   signal.CommitPushWerkerTeller
+	prTeller 	   signal.PRWerkerTeller
+	testingHandler models.VCSHandler
+}
+
+func (hhc *HookHandlerContext) getHandler(cred *pb.VCSCreds) (models.VCSHandler, string, error) {
+	if hhc.testingHandler != nil {
+		return hhc.testingHandler, "token", nil
+	}
+	return remote.GetHandler(cred)
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
@@ -49,6 +44,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 	}
 	push, err := translator.TranslatePush(r.Body)
 	if err != nil {
+		failedTranslation.WithLabelValues("push").Inc()
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
@@ -58,18 +54,19 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get creds, err: ", err)
 		return
 	}
-	handler, token, err := remote.GetHandler(cred)
+	handler, token, err := hhc.getHandler(cred)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get vcs handler")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get vcs handler, err: ", err)
 		return
 	}
-	if err := hhc.teller.TellWerker(push.HeadCommit.Hash, hhc.Signaler, push.Branch, handler, token, push.Repo.AcctRepo, push.Commits, false, pb.SignaledBy_PUSH); err != nil {
+	if err := hhc.pTeller.TellWerker(push, hhc.Signaler, handler, token, false, pb.SignaledBy_PUSH); err != nil {
+		failedToTellWerker.Inc()
 		ocelog.IncludeErrField(err).WithField("hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).WithField("branch", push.Branch).Error("unable to tell werker")
 	}
 }
 
-//TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
+// TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
 	hookRecieves.WithLabelValues(vcsType.String(), "pullrequest").Inc()
@@ -80,6 +77,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 	}
 	pr, err := translator.TranslatePR(r.Body)
 	if err != nil {
+		failedTranslation.WithLabelValues("pullrequest").Inc()
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
@@ -89,16 +87,10 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get creds, err: ", err)
 		return
 	}
-	handler, token, err := remote.GetHandler(cred)
+	handler, token, err := hhc.getHandler(cred)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get vcs handler")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get vcs handler, err: ", err)
-		return
-	}
-	commits, err := handler.GetPRCommits(pr.Urls.Commits)
-	if err != nil {
-		ocelog.IncludeErrField(err).Error("couldn't get commits for PR ")
-		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not commits for PR, err: ", err)
 		return
 	}
 	prData := &pb.PrWerkerData{
@@ -112,9 +104,8 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		},
 		PrId: fmt.Sprintf("%d", pr.Id),
 	}
-	pwt := webhook.GetPrWerkerTeller(prData, pr.Destination.Branch)
-	err = pwt.TellWerker(pr.Source.Hash, hhc.Signaler, pr.Source.Branch, handler, token, pr.Source.Repo.AcctRepo, commits, false, pb.SignaledBy_PULL_REQUEST)
-	if err != nil {
+	if err = hhc.prTeller.TellWerker(pr, prData, hhc.Signaler, handler, token, false, pb.SignaledBy_PULL_REQUEST); err != nil {
+		failedToTellWerker.Inc()
 		ocelog.IncludeErrField(err).Error("couldn't get commits for PR ")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not commits for PR, err: ", err)
 	}
@@ -128,6 +119,7 @@ func (hhc *HookHandlerContext) HandleBBEvent(w http.ResponseWriter, r *http.Requ
 		"pullrequest:updated":
 		hhc.PullRequest(w, r, pb.SubCredType_BITBUCKET)
 	default:
+		unprocessibleEvent.WithLabelValues(r.Header.Get("X-Event-Key"), pb.SubCredType_BITBUCKET.String())
 		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}

@@ -283,6 +283,19 @@ func (mr *MockBuildSumMockRecorder) GetTrackedRepos() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTrackedRepos", reflect.TypeOf((*MockBuildSum)(nil).GetTrackedRepos))
 }
 
+// GetLastSuccessfulBuildHash mocks base method
+func (m *MockBuildSum) GetLastSuccessfulBuildHash(account, repo, branch string) (string, error) {
+	ret := m.ctrl.Call(m, "GetLastSuccessfulBuildHash", account, repo, branch)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLastSuccessfulBuildHash indicates an expected call of GetLastSuccessfulBuildHash
+func (mr *MockBuildSumMockRecorder) GetLastSuccessfulBuildHash(account, repo, branch interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastSuccessfulBuildHash", reflect.TypeOf((*MockBuildSum)(nil).GetLastSuccessfulBuildHash), account, repo, branch)
+}
+
 // MockBuildStage is a mock of BuildStage interface
 type MockBuildStage struct {
 	ctrl     *gomock.Controller
@@ -812,6 +825,19 @@ func (m *MockOcelotStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
 // GetTrackedRepos indicates an expected call of GetTrackedRepos
 func (mr *MockOcelotStorageMockRecorder) GetTrackedRepos() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTrackedRepos", reflect.TypeOf((*MockOcelotStorage)(nil).GetTrackedRepos))
+}
+
+// GetLastSuccessfulBuildHash mocks base method
+func (m *MockOcelotStorage) GetLastSuccessfulBuildHash(account, repo, branch string) (string, error) {
+	ret := m.ctrl.Call(m, "GetLastSuccessfulBuildHash", account, repo, branch)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLastSuccessfulBuildHash indicates an expected call of GetLastSuccessfulBuildHash
+func (mr *MockOcelotStorageMockRecorder) GetLastSuccessfulBuildHash(account, repo, branch interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastSuccessfulBuildHash", reflect.TypeOf((*MockOcelotStorage)(nil).GetLastSuccessfulBuildHash), account, repo, branch)
 }
 
 // AddStageDetail mocks base method
