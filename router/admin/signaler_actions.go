@@ -55,10 +55,9 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
-	handler, token, err := g.getHandler(cfg)
-	if err != nil {
-		log.IncludeErrField(err).Error()
-		return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve the bitbucket client config for %s. \n Error: %s", buildReq.AcctRepo, err.Error()))
+	handler, token, grpcErr := g.getHandler(cfg)
+	if grpcErr != nil {
+		return grpcErr
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully used VCS Credentials to obtain a token %s", models.CHECKMARK)))
 	// see if this request's hash has already been built before. if it has, then that means that we can validate the acct/repo in the db against the buildreq one.
@@ -175,6 +174,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	return nil
 }
 
+// getHandler returns a grpc status.Error
 func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 	if g.handler != nil {
 		return g.handler, "token", nil
@@ -182,7 +182,7 @@ func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, str
 	handler, token, err := remote.GetHandler(cfg)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		return nil, token, status.Error(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s")
+		return nil, token, status.Errorf(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s", cfg.AcctName, err.Error())
 	}
 	return handler, token, nil
 }
