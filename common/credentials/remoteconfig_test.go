@@ -439,8 +439,6 @@ func TestRemoteConfig_GetStorageType(t *testing.T) {
 	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
 	defer TeardownVaultAndConsul(vaultListener, consulServer)
 
-	// Testing GetStorageType()
-
 	// Consul StorageType unconfigured
 	storageType, err := testRemoteConfig.GetStorageType()
 	if err != nil {
@@ -494,30 +492,129 @@ func TestRemoteConfig_GetStorageType(t *testing.T) {
 
 }
 
-func TestRemoteConfig_getForPostgres(t *testing.T) {
-
+func TestRemoteConfig_GetStorageCreds(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping docker container create due to -short being set")
 	}
 
 	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
 	defer TeardownVaultAndConsul(vaultListener, consulServer)
-	println(testRemoteConfig)
 
-	//	testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
-	//	defer TeardownVaultAndConsul(vaultListener, consulServer)
-	//	port := 5438
-	//	cleanup, pw := storage.CreateTestPgDatabase(t, port)
-	//	defer cleanup(t)
-	//	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
-	//	pg.Connect()
-	//	defer pg.Close()
+	// This case fails to due to incomplete implementation of filesystem StorageType
+	//	// filesystem case
+	//	err := testRemoteConfig.GetConsul().AddKeyValue(common.StorageType, []byte("filesystem"))
+	//	if err != nil {
+	//		return
+	//	}
+	//
+	//	storageType, err := testRemoteConfig.GetStorageType()
+	//
+	//	switch storageType {
+	//	case storage.Postgres:
+	//		t.Error("The expected storageType is filesystem")
+	//	case storage.FileSystem:
+	//		fmt.Println("filesystem")
+	//
+	//		creds, err := testRemoteConfig.GetStorageCreds(&storageType)
+	//		if err != nil {
+	//			t.Error("Failed to get filesystem storageCreds")
+	//		}
+	//
+	//		fmt.Println(creds)
+	//	default:
+	//		t.Error("This should be an unreachable case - filesystem case")
+	//	}
 
-	// We are going to want to set these fields individually, to hit the error branches
-	//err := SetStoragePostgres(testRemoteConfig.GetConsul().(*consul.Consulet), testRemoteConfig.GetVault(), "postgres", "localhost", "port", "postgres", pw)
-	//if err != nil {
-	//	t.Error("Got an error trying to configure storage")
-	//}
-	////println(testRemoteConfig)
+	// garbage case
+	err := testRemoteConfig.GetConsul().AddKeyValue(common.StorageType, []byte("garbage"))
+	_, err = testRemoteConfig.GetStorageType()
+	if err == nil {
+		t.Error("This case is supposed to fail. There is no garbage storageType")
+	}
+
+	// postgres case
+	err = testRemoteConfig.GetConsul().AddKeyValue(common.StorageType, []byte("postgres"))
+	if err != nil {
+		return
+	}
+
+	storageType, err := testRemoteConfig.GetStorageType()
+	switch storageType {
+	// Testing getForPostgres()
+	case storage.Postgres:
+
+		testRemoteConfig, vaultListener, consulServer := TestSetupVaultAndConsul(t)
+		defer TeardownVaultAndConsul(vaultListener, consulServer)
+		port := 5438
+		cleanup, pw := storage.CreateTestPgDatabase(t, port)
+		defer cleanup(t)
+		//_ = storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+
+		// We are going to want to set these fields individually, to hit the error branches
+
+		creds, err := testRemoteConfig.GetStorageCreds(&storageType)
+		if err == nil {
+			t.Error("This call should fail. Consul should not have all config details yet")
+		}
+
+		err = testRemoteConfig.GetConsul().AddKeyValue(common.StorageType, []byte("postgres"))
+		if err != nil {
+			return
+		}
+		creds, err = testRemoteConfig.GetStorageCreds(&storageType)
+		if err == nil {
+			t.Error("This call should fail. Consul should not have all config details yet")
+		}
+
+		// Setting everything at once. Key-value (static) postgresql creds
+		err = SetStoragePostgres(testRemoteConfig.GetConsul().(*consul.Consulet),
+			testRemoteConfig.GetVault(),
+			"postgres",
+			"localhost",
+			fmt.Sprintf("%d", port),
+			"postgres",
+			pw,
+			"kv",
+			"")
+		if err != nil {
+			t.Error("Got an error trying to configure storage")
+		}
+		//println(testRemoteConfig)
+
+		creds, err = testRemoteConfig.GetStorageCreds(&storageType)
+		if err != nil {
+			t.Error("Failed to get postgres storageCreds")
+		}
+
+		fmt.Println(creds)
+
+		// FIXME: This is commented out until we can configure Vault to enable database backend + set up role against through testutil
+		//// Re-configure consul + vault for dynamic postgres creds
+		//err = SetStoragePostgres(testRemoteConfig.GetConsul().(*consul.Consulet),
+		//	testRemoteConfig.GetVault(),
+		//	"postgres",
+		//	"localhost",
+		//	fmt.Sprintf("%d", port),
+		//	"postgres",
+		//	pw,
+		//	"database",
+		//	"ocelotRole")
+		//if err != nil {
+		//	t.Error("Got an error trying to configure vault+postgres with dynamic creds")
+		//}
+		////println(testRemoteConfig)
+
+		//creds, err = testRemoteConfig.GetStorageCreds(&storageType)
+		//if err != nil {
+		//	t.Error("Failed to get postgres storageCreds")
+		//}
+
+		//fmt.Println(creds)
+
+	case storage.FileSystem:
+		t.Error("The expected storageType is postgres")
+	default:
+		t.Error("This should be an unreachable case - filesystem case")
+	}
 
 }

@@ -431,7 +431,7 @@ func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 }
 
 // GetStorageCreds initializes datastore info based on the configured storage type in Consul
-// Future me: I switched the input to be a pointer, bc this function only needs to borrow type, and not even mutate. This may ripple, so see if it is going to be worth the trouble now
+// FIXME: We're doing ourselves a disservice by forcing a user to pass in a *storage.Dest when we can handle this internally through rc
 func (rc *RemoteConfig) GetStorageCreds(typ *storage.Dest) (*StorageCreds, error) {
 	switch *typ {
 	case storage.Postgres:
@@ -453,34 +453,46 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	// The default behavior is to use static secrets
 
 	vaultConf, err := rc.Consul.GetKeyValues(common.VaultConf)
-	if err != nil {
-		return nil, errors.New("unable to get vault operating mode from consul, err: " + err.Error())
+	if len(vaultConf) == 0 || err != nil {
+		errorMsg := fmt.Sprintf("unable to get vault operating mode from consul")
+		if err != nil {
+			errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+		}
+		return &StorageCreds{}, errors.New(errorMsg)
 	}
 
-	vaultRoleName := ""
-	vaultBackend := "kv"
+	//vaultRoleName := ""
+	vaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
 	for _, vconf := range vaultConf {
 		switch vconf.Key {
 		case common.VaultDBSecretEngine:
 			switch string(vconf.Value) {
 			case "kv":
 				ocelog.Log().Debugf("Static Postgres creds")
+				break
 			case "database":
 				ocelog.Log().Debugf("Dynamic Postgres creds")
+				break
+			default:
+				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine")
 			}
 			vaultBackend = string(vconf.Value)
-
-		case common.VaultRoleName:
-			vaultRoleName = string(vconf.Value)
+			//case common.VaultRoleName:
+			//	vaultRoleName = string(vconf.Value)
+			//	break
 		}
 	}
-	ocelog.Log().Debugf("vaultRoleName: %s\nvaultBackend: %s", vaultRoleName, vaultBackend)
+	//ocelog.Log().Debugf("vaultRoleName: %s\nvaultBackend: %s", vaultRoleName, vaultBackend)
 
 	storeConfig := &StorageCreds{}
 
 	kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
-	if err != nil {
-		return nil, errors.New("unable to get postgres creds from consul, err: " + err.Error())
+	if len(kvconfig) == 0 || err != nil {
+		errorMsg := fmt.Sprintf("unable to get postgres creds from consul")
+		if err != nil {
+			errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+		}
+		return &StorageCreds{}, errors.New(errorMsg)
 	}
 
 	for _, pair := range kvconfig {
@@ -498,8 +510,12 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	switch vaultBackend {
 	case "kv":
 		kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
-		if err != nil {
-			return nil, errors.New("unable to get postgres creds from consul, err: " + err.Error())
+		if len(kvconfig) == 0 || err != nil {
+			errorMsg := fmt.Sprintf("unable to get postgres location from consul")
+			if err != nil {
+				errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+			}
+			return &StorageCreds{}, errors.New(errorMsg)
 		}
 		for _, pair := range kvconfig {
 			switch pair.Key {
@@ -509,16 +525,25 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		}
 
 		secrets, err := rc.Vault.GetVaultData(common.PostgresPasswordLoc)
-		if err != nil {
-			return storeConfig, errors.New("unable to get postgres password from vault, err: " + err.Error())
+		if len(secrets) == 0 || err != nil {
+			errorMsg := fmt.Sprintf("unable to get postgres password from consul")
+			if err != nil {
+				errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+			}
+			return &StorageCreds{}, errors.New(errorMsg)
 		}
+
 		// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
 		storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
 
 	case "database":
 		secrets, err := rc.Vault.GetVaultSecret("database/creds/ocelot")
 		if err != nil {
-			return storeConfig, errors.New("unable to get dynamic postgres creds from vault, err: " + err.Error())
+			errorMsg := fmt.Sprintf("unable to get dynamic postgres creds from vault")
+			if err != nil {
+				errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+			}
+			return &StorageCreds{}, errors.New(errorMsg)
 		}
 
 		storeConfig.User = fmt.Sprintf("%v", secrets.Data["username"].(string))
@@ -535,6 +560,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 
 func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
 	pair, err := rc.Consul.GetKeyValue(common.FilesystemDir)
+
 	if err != nil {
 		return nil, errors.New("unable to get save directory from consul, err: " + err.Error())
 	}
@@ -543,6 +569,7 @@ func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
 
 // GetOcelotStorage instantiates the datastore based on Consul configuration for Ocelot. Opens the database connection for Postgres.
 func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
+	// FIXME: We should get rid of this call, and let GetStorageCreds() handle more of this
 	typ, err := rc.GetStorageType()
 	if err != nil {
 		return nil, err

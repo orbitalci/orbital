@@ -24,12 +24,15 @@ locals() {
     consul kv put ${prefix}config/ocelot/postgres/db postgres
     consul kv put ${prefix}config/ocelot/postgres/location ${DBHOST}
     consul kv put ${prefix}config/ocelot/postgres/port 5432
-    consul kv put ${prefix}config/ocelot/postgres/username postgres
 
     # Vault kv secret engine (Static secret)
+    consul kv put ${prefix}config/ocelot/vault/secretbackend kv
+    consul kv put ${prefix}config/ocelot/postgres/username postgres
     vault kv put secret/data/config/ocelot/postgres clientsecret="mysecretpassword"
 
+
     # Vault database secret engine (Dynamic secret)
+    # Uncomment if you want to operate using the dynamic secrets
     vault secrets enable database || true
     vault write database/config/my-postgresql-database \
         plugin_name=postgresql-database-plugin \
@@ -46,7 +49,14 @@ locals() {
         default_ttl="10m" \
         max_ttl="1h"
 
+    consul kv put ${prefix}config/ocelot/vault/secretbackend database
+    consul kv put ${prefix}config/ocelot/vault/rolename ocelot
+
+    # Test that we can get dynamic creds from Vault
     vault read database/creds/ocelot
+
+    # Vault database secret engine END
+
 }
 
 if [ "${DEV_K8S}" == "" ]; then
@@ -65,6 +75,7 @@ dev_k8s() {
     consul kv put ${prefix}config/ocelot/postgres/location ${loc}
     consul kv put ${prefix}config/ocelot/postgres/port ${port}
     consul kv put ${prefix}config/ocelot/postgres/username ocelot
+    consul kv put ${prefix}config/ocelot/vault/secretbackend kv
     vault kv put secret/${prefix}config/ocelot/postgres clientsecret=${pw}
 }
 

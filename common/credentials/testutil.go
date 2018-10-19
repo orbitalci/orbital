@@ -21,8 +21,9 @@ import (
 	"testing"
 )
 
-// Add the Vault stuff here
-func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName string, location string, port string, username string, pw string) (err error) {
+// SetStoragePostgres Instantiates Consul and Vault instances with configuration values for postgresql server usage for static or dynamic credentials
+// FIXME: vaulty is a borrowed value, so we should use as a reference
+func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName string, location string, port string, username string, pw string, vaultEngine string, vaultRole string) (err error) {
 	err = consulet.AddKeyValue(common.StorageType, []byte("postgres"))
 	if err != nil {
 		return
@@ -44,24 +45,58 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 		return
 	}
 
-	// FIXME: These two fields need to be exposed for this function
-	err = consulet.AddKeyValue(common.VaultDBSecretEngine, []byte("kv"))
+	err = consulet.AddKeyValue(common.VaultDBSecretEngine, []byte(vaultEngine))
 	if err != nil {
 		return
 	}
 
-	err = consulet.AddKeyValue(common.VaultRoleName, []byte("ocelot"))
+	err = consulet.AddKeyValue(common.VaultRoleName, []byte(vaultRole))
 	if err != nil {
 		return
 	}
-	var a = map[string]interface{}{common.PostgresPasswordKey: pw}
-	_, err = vaulty.AddVaultData(common.PostgresPasswordLoc, a)
-	return err
+
+	switch vaultEngine {
+	case "kv":
+		// if the Vault DB Secret Engine is "kv", then we have to write the password in vault
+		var a = map[string]interface{}{common.PostgresPasswordKey: pw}
+		_, err = vaulty.AddVaultData(common.PostgresPasswordLoc, a)
+		return err
+	case "database":
+		return errors.New("This test case is incomplete. This test requires go-til support for enabling the Database secret engine + creating a role")
+	//	// if the Vault DB Secret Engine is "database", then we have to set up the database engine, and create a role
+	//	var configPayload = map[string]interface{}{
+	//		"plugin_name":             "postgresql-database-plugin",
+	//		"allowed_roles":           fmt.Sprintf("%s", vaultRole),
+	//		"connection_url":          fmt.Sprintf("postgresql://{{username}}:{{password}}@%s:%s/%s/?sslmode=disable", location, port, dbName),
+	//		"max_open_connections":    5,
+	//		"max_connection_lifetime": "5s",
+	//		"username":                fmt.Sprintf("%s", username),
+	//		"password":                fmt.Sprintf("%s", pw),
+	//	}
+	//	//_, err = vaulty.AddVaultData("/database/config/ocelot", configPayload)
+	//	err = vaulty.EnableDatabaseSecretEngine(configPayload)
+	//	if err != nil {
+	//		return err
+	//	}
+
+	//	var rolePayload = map[string]interface{}{
+	//		"db_name":             fmt.Sprintf("%s", dbName),
+	//		"creation_statements": []string{"CREATE ROLE '{{name}}' WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO '{{name}}';"},
+	//		"default_ttl":         "30s",
+	//		"max_ttl":             "10m",
+	//	}
+	//	_, err = vaulty.AddVaultData(fmt.Sprintf("/database/role/%s", vaultRole), rolePayload)
+	//	return err
+
+	default:
+		return errors.New("We only support 'kv' or 'database' secret engines in Vault")
+	}
 
 }
 
 //////test setup and tear down///////
 
+// TestSetupVaultAndConsul Returns an initialized remoteconfig, Vault, and Consul instances. Caller is responsible for calling TeardownVaultAndConsul() to close the connections
 func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testutil.TestServer) {
 	//set up unsealed vault for testing
 	tu.BuildServerHack(t)

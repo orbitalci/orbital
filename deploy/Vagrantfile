@@ -8,7 +8,7 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
 
-  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/shankj3/ocelot/", type: "rsync"
+  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/shankj3/ocelot/", type: "rsync
 
   config.vm.define "infra" do |infra|
     infra.vm.box = "ubuntu/bionic64"
@@ -73,6 +73,10 @@ Vagrant.configure("2") do |config|
       export LOG_LEVEL=debug
       echo 'export DBHOST=192.168.56.78' | sudo tee -a /etc/bash.bashrc
       export DBHOST=192.168.56.78
+      echo 'export ADMIN_HOST=192.168.12.34' | sudo tee -a /etc/bash.bashrc
+      export ADMIN_HOST=192.168.12.34
+      echo 'export ADMIN_PORT=10000' | sudo tee -a /etc/bash.bashrc
+      export ADMIN_PORT=10000
 
       # Set up Vault to use kv version 1, for now
       # Unmount secret/
