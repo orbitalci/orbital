@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/pkg/errors"
 	"github.com/tomnomnom/linkheader"
 
@@ -90,6 +92,8 @@ func getNextPage(headers http.Header) string {
 	return nexts[0].URL
 }
 
+// recurseOverRepos will iterate over every repository checking for an ocelot.yml
+// if one is found, then a webhook will be created
 func (gh *github) recurseOverRepos(repoUrl string) error {
 	if repoUrl == "" {
 		return nil
@@ -108,17 +112,26 @@ func (gh *github) recurseOverRepos(repoUrl string) error {
 		return errors.Wrap(err, "unable to unmarshal to repo list")
 	}
 	for _, repo := range repos {
-		resp, err = gh.Client.GetUrlResponse(getUrlForFileFromContentsUrl(repo.ContentsUrl, common.BuildFileName))
-		if err != nil {
-			return errors.Wrap(err, "unable to see if ocelot.yml exists")
+		statusCode, erro := gh.checkForOcelotFile(repo.ContentsUrl)
+		if erro != nil {
+			return erro
 		}
-		if resp.StatusCode == http.StatusOK {
+		if statusCode == http.StatusOK {
 			if err = gh.CreateWebhook(repo.HooksUrl); err != nil {
 				return errors.Wrap(err, "unable to create webhook")
 			}
 		}
 	}
 	return gh.recurseOverRepos(getNextPage(resp.Header))
+}
+
+func (gh *github) checkForOcelotFile(contentsUrl string) (int, error) {
+	resp, err := gh.Client.GetUrlResponse(getUrlForFileFromContentsUrl(contentsUrl, common.BuildFileName))
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to see if ocelot.yml exists")
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode, nil
 }
 
 func (gh *github) CreateWebhook(hookUrl string) error {
@@ -177,4 +190,162 @@ func (gh *github) GetRepoLinks(acctRepo string) (*pb.Links, error) {
 		Pullrequests: repo.PullsUrl,
 	}
 	return links, nil
+}
+
+func (gh *github) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error) {
+	var branchesHistory []*pb.BranchHistory
+	url := fmt.Sprintf(gh.GetBaseURL(), buildBranchesPath(acctRepo, ""))
+	resp, err := gh.Client.GetUrlResponse(url)
+	if err != nil {
+		failedGHRemoteCalls.WithLabelValues("GetAllBranchesLastCommitData").Inc()
+		return nil, err
+	}
+	defer resp.Body.Close()
+	bytez, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusOK {
+		branchesHistory, err = gh.buildBranchHistories(bytez)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		var ghErr *gpb.Error
+		err = json.Unmarshal(bytez, ghErr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New(fmt.Sprintf("github returned unexpected error: %s", ghErr.Message))
+	}
+	return branchesHistory, nil
+}
+
+func (gh *github) buildBranchHistories(responseBytes []byte) (histories []*pb.BranchHistory, err error) {
+	var branchesLastCommit []*gpb.BranchLastCommit
+	err = json.Unmarshal(responseBytes, branchesLastCommit)
+	if err != nil {
+		return
+	}
+	for _, branch := range branchesLastCommit {
+		stamp, err := gh.getCommitTime(branch.Commit.Url)
+		if err != nil {
+			return
+		}
+		histories = append(histories, &pb.BranchHistory{Hash: branch.Commit.Sha, Branch: branch.Name, LastCommitTime: stamp})
+	}
+	return
+}
+
+func (gh *github) getCommitTime(commitUrl string) (*timestamp.Timestamp, error) {
+	commit := &gpb.Commit{}
+	err := gh.Client.GetUrl(commitUrl, commit)
+	if err != nil {
+		failedGHRemoteCalls.WithLabelValues("getCommitTime").Inc()
+		return nil, err
+	}
+	return commit.Commit.Commiter.Date, err
+}
+
+func (gh *github) GetBranchLastCommitData(acctRepo, branch string) (history *pb.BranchHistory, err error) {
+	url := fmt.Sprintf(gh.GetBaseURL(), buildBranchesPath(acctRepo, ""))
+	var resp *http.Response
+	resp, err = gh.Client.GetUrlResponse(url)
+	if err != nil {
+		failedGHRemoteCalls.WithLabelValues("GetBranchLastCommitData").Inc()
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var responseBody []byte
+	responseBody, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusOK {
+		var branchLastCommit *gpb.BranchLastCommit
+		err = json.Unmarshal(responseBody, branchLastCommit)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to unmarshal response body to BranchLastCommit")
+		}
+		history.LastCommitTime = branchLastCommit.Commit.Commit.Commiter.Date
+		history.Branch = branchLastCommit.Name
+		history.Hash = branchLastCommit.Commit.Sha
+	} else {
+		var ghErr *gpb.Error
+		err = json.Unmarshal(responseBody, ghErr)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to unmarshal body to github error")
+		}
+		err = errors.New(fmt.Sprintf("unexpected error while getting last commit data: %s", ghErr.Message))
+	}
+	return
+}
+
+func (gh *github) GetCommitLog(acctRepo string, branch string, lastHash string) (commits []*pb.Commit, err error) {
+	// todo : add to go-til/net query params
+	//https://stackoverflow.com/questions/30652577/go-doing-a-get-request-and-building-the-querystring/30657518
+	path := buildCommitsPath(acctRepo) + "?sha=" + branch
+	url := fmt.Sprintf(gh.GetBaseURL(), path)
+	for {
+		if url == "" || err != nil {
+			break
+		}
+		var pagedCommits []*pb.Commit
+		pagedCommits, url, err = gh.getCommitsList(url, lastHash)
+		commits = append(commits, pagedCommits...)
+
+	}
+	// if there are no errors at this point, then it means the entire branch history was exhausted without finding the hash
+	if err == nil {
+		err = models.Commit404(lastHash, acctRepo, branch)
+	}
+	// if HitTheCommit error was returned, it means it successfully found lastHash and the commit list is complete. no need to error here
+	if err == HitTheCommit {
+		err = nil
+	}
+	return
+}
+
+var HitTheCommit = errors.New("hit the last commit that was supplied")
+
+// getCommitsList will use the url provided to request a list of commits, attempt to unmarshal to a list of
+//  github commit structs, then translate that commit into a generic commit. if in iterating over the commit it
+//  reaches a commit with the same sha as lastCommitHash, then it will return a HitTheCommit error which should be
+//  handled by the calling function. it will also parse the headers for a Link and return the next url found in
+//  that Link if it is found.
+func (gh *github) getCommitsList(url, lastCommitHash string) (commits []*pb.Commit, nextUrl string, err error) {
+	var resp *http.Response
+	resp, err = gh.Client.GetUrlResponse(url)
+	if err != nil {
+		failedGHRemoteCalls.WithLabelValues("GetCommitLog").Inc()
+		return
+	}
+	defer resp.Body.Close()
+	var responseBody []byte
+	responseBody, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, "", err
+	}
+	if resp.StatusCode == http.StatusOK {
+		var ghCommits []*gpb.Commit
+		err = json.Unmarshal(responseBody, ghCommits)
+		if err != nil {
+			return nil,"", errors.Wrap(err, "unable to unmarshal response body to list of Commits")
+		}
+		// look at all the commits, translate them to *pb.Commit, and check for the lastCommitHash
+		for _, commit := range ghCommits {
+			commits = append(commits, &pb.Commit{Hash: commit.Sha, Message: commit.Commit.Message, Date: commit.Commit.Commiter.Date, Author: &pb.User{UserName: commit.Commit.Commiter.Name}})
+			if strings.Contains(commit.Sha, lastCommitHash) {
+				return nil, "", HitTheCommit
+			}
+		}
+	} else {
+		var ghErr *gpb.Error
+		if err = json.Unmarshal(responseBody, ghErr); err != nil {
+			return nil, "", errors.Wrap(err, "unable to unmarshal response body to github error obj")
+		}
+		return nil, "", errors.New("unable to retrieve list of commits, error is " + ghErr.Message)
+ 	}
+ 	nextUrl = getNextPage(resp.Header)
+ 	return
 }

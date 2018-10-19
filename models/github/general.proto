@@ -27,5 +27,4 @@ message File {
     string name = 1;
     string path = 2;
     string sha = 3;
-
 }

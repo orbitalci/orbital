@@ -9,6 +9,7 @@ var (
 	// all repositories of authenticated user
 	ALLREPOS = "/user/repos"
 	REPOS = "/repos"
+	BRANCHES = REPOS + "/%s/branches%s"
 	FILE = REPOS + "/%s/contents/%s"
 	COMMIT = "/repos/%s/commits%s"
 )
@@ -55,4 +56,15 @@ func buildFilePath(accountrepo, filepath string) string {
 
 func buildRepoPath(accountRepo string) string {
 	return REPOS + "/" + accountRepo
+}
+
+func buildBranchesPath(accountRepo, branch string) string {
+	if branch != "" {
+		branch = "/" + branch
+	}
+	return fmt.Sprintf(BRANCHES, accountRepo, branch)
+}
+
+func buildCommitsPath(acctRepo string) string {
+	return fmt.Sprintf(COMMIT, acctRepo, "")
 }

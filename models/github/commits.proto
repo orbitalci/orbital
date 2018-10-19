@@ -81,3 +81,11 @@ message DiffCommits {
     repeated Commit commits = 12;
     repeated ChangedFile files = 13;
 }
+
+
+//https://api.github.com/repos/shankj3/ocelot/branches
+message BranchLastCommit {
+    string name = 1;
+    // commit is the last commmit data if searching all branches, this commit will only have the last sha and the url for the commit. if search is only on one branch, then it will be a full last commit
+    Commit commit = 2;
+}
