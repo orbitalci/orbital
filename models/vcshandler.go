@@ -5,9 +5,7 @@ import (
 	"io"
 
 	ocenet "github.com/shankj3/go-til/net"
-	pb "github.com/shankj3/ocelot/models/pb"
-	// ugh stuck 4 now
-	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 type VCSHandler interface {
