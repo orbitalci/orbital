@@ -67,21 +67,21 @@ func (dbs *dummyBuildStage) RetrieveStageDetail(buildId int64) ([]models.StageRe
 
 func Test_handleTriggers(t *testing.T) {
 	var triggerData = []struct {
-		branch      string
+		task        *pb.WerkerTask
 		shouldSkip  bool
 		store       *dummyBuildStage
 		shouldError bool
 	}{
-		{"boogaloo", true, &dummyBuildStage{details: []*models.StageResult{}}, false},
-		{"alks;djf", true, &dummyBuildStage{details: []*models.StageResult{}, fail: true}, true},
-		{"vibranium", false, &dummyBuildStage{details: []*models.StageResult{}}, false},
+		{&pb.WerkerTask{Branch: "boogaloo"},true, &dummyBuildStage{details: []*models.StageResult{}}, false},
+		{&pb.WerkerTask{Branch: "alks;djf"}, true, &dummyBuildStage{details: []*models.StageResult{}, fail: true}, true},
+		{&pb.WerkerTask{Branch: "vibranium"}, false, &dummyBuildStage{details: []*models.StageResult{}}, false},
 	}
 	triggers := &pb.Triggers{Branches: []string{"apple", "banana", "quartz", "vibranium"}}
 	stage := &pb.Stage{Env: []string{}, Script: []string{"echo suuuup yooo"}, Name: "testing_triggers", Trigger: triggers}
 
 	for ind, wd := range triggerData {
 		t.Run(fmt.Sprintf("%d-trigger", ind), func(t *testing.T) {
-			shouldSkip, err := handleTriggers(wd.branch, 12, wd.store, stage)
+			shouldSkip, err := handleTriggers(wd.task, wd.store, stage)
 			if err != nil && !wd.shouldError {
 				t.Fatal(err)
 			}
@@ -89,7 +89,7 @@ func Test_handleTriggers(t *testing.T) {
 				t.Error("handleTriggers should have errored, didn't")
 			}
 			if wd.shouldSkip != shouldSkip {
-				t.Logf("branch %s | shouldSkip %v | shouldError %v", wd.branch, wd.shouldSkip, wd.shouldError)
+				t.Logf("branch %s | shouldSkip %v | shouldError %v", wd.task.Branch, wd.shouldSkip, wd.shouldError)
 				t.Error(test.GenericStrFormatErrors("should skip", wd.shouldSkip, shouldSkip))
 			}
 		})

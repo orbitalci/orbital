@@ -2,33 +2,43 @@ package webhook
 
 import (
 	"strings"
+	//"strings"
 	"testing"
 
 	"github.com/shankj3/ocelot/build"
+	//"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build_signaler"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-func TestGetPrWerkerTeller(t *testing.T) {
-	prwt := GetPrWerkerTeller(&pb.PrWerkerData{PrId: "1"}, "branch")
-	if prwt.destBranch != "branch" {
-		t.Error("not prwt not rendered properly")
-	}
-}
-
 func TestPRWerkerTeller_TellWerker(t *testing.T) {
-	prwt := GetPrWerkerTeller(&pb.PrWerkerData{PrId: "1"}, "master")
+	prwt := &PullReqWerkerTeller{}
 	sig := build_signaler.GetFakeSignaler(t, false)
 	handler := &build_signaler.DummyVcsHandler{NotFound: true}
-	err := prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
+	//pr := &pb.PullRequest{
+	//pullreq.Source.Repo.AcctRepo
+	//}
+	pr := &pb.PullRequest{
+		Destination: &pb.HeadData{Hash: "hash"},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name: "ocelot"}},
+		Id: 12,
+	}
+	prwd := &pb.PrWerkerData{PrId: "12",}
+	err := prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
+	//err := prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
 		t.Error("error should not be nil")
 	}
-	if err.Error() != "no ocelot yml found for repo shankj3/ocelot" {
+	if err.Error() != "no ocelot yaml found for repo shankj3/ocelot" {
 		t.Error("should have bubbled up notfound error that vcshandler threw")
 	}
 	handler = &build_signaler.DummyVcsHandler{Fail: true}
-	err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
+	pr = &pb.PullRequest{
+		Destination: &pb.HeadData{Hash: "hash"},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name: "ocelot"}},
+	}
+	prwd = &pb.PrWerkerData{PrId: "12"}
+	err = prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
 		t.Error("error should not be nil")
 	}
@@ -37,7 +47,11 @@ func TestPRWerkerTeller_TellWerker(t *testing.T) {
 	}
 	sig = build_signaler.GetFakeSignaler(t, true)
 	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.Buildfile}
-	err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
+	pr = &pb.PullRequest{
+		Destination: &pb.HeadData{Hash: "hash"},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name:"ocelot"}},
+	}
+	err = prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
 		t.Error("should return not viable error ")
 	}
@@ -46,16 +60,24 @@ func TestPRWerkerTeller_TellWerker(t *testing.T) {
 	}
 	sig = build_signaler.GetFakeSignaler(t, false)
 	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.BuildFileMasterOnly}
-	err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
+	pr = &pb.PullRequest{
+		Destination: &pb.HeadData{Hash: "hash", Branch: "master"},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name: "ocelot"}, Branch: "feature"},
+	}
+	prwd = &pb.PrWerkerData{PrId: "12"}
+	err = prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
+	//err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
 	if err != nil {
 		t.Error("the build file says master only for building branches, and this pr is being merged to master, therefore this should build and stfu. the error is: " + err.Error())
 	}
 	sig = build_signaler.GetFakeSignaler(t, false)
 	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.BuildFileMasterOnly}
-	prwt.destBranch = "feature_2"
-	err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
+	pr = &pb.PullRequest{
+		Destination: &pb.HeadData{Hash: "hash", Branch: "feature2"},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name: "ocelot"}, Branch: "feature2"},
+	}
+	err = prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
 		t.Error("the build file says master only for building branches, and this pr is being merged to feature_2,therefore this build should not run")
 	}
-
 }

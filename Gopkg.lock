@@ -323,9 +323,14 @@
     "testutil",
     "testutil/retry",
   ]
+<<<<<<< HEAD
   pruneopts = ""
   revision = "5174058f0d2bda63fa5198ab96c33d9a909c58ed"
   version = "v1.1.0"
+=======
+  revision = "48d287ef690ada66634885640f3444dbf7b71d18"
+  version = "v1.2.3"
+>>>>>>> master
 
 [[projects]]
   branch = "master"
@@ -534,6 +539,12 @@
   ]
   pruneopts = ""
   revision = "d11a37f123888ff060339f516e392032dfcb98ff"
+
+[[projects]]
+  name = "github.com/kr/text"
+  packages = ["."]
+  revision = "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -795,6 +806,7 @@
   version = "v1.0.5"
 
 [[projects]]
+<<<<<<< HEAD
   branch = "master"
   digest = "1:db160b681f1e369602a37f6f2c5f376002baaadfa4e01836636a1d58e9c76062"
   name = "github.com/tonnerre/golang-text"
@@ -804,6 +816,8 @@
 
 [[projects]]
   digest = "1:b9e40449c82e4d149a786f2e4b1f687215d61dd38eddc382a4f7f21f8408a658"
+=======
+>>>>>>> master
   name = "github.com/urfave/negroni"
   packages = ["."]
   pruneopts = ""
@@ -987,6 +1001,7 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
+<<<<<<< HEAD
   input-imports = [
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",
@@ -1039,5 +1054,8 @@
     "google.golang.org/grpc/status",
     "gopkg.in/yaml.v2",
   ]
+=======
+  inputs-digest = "26766e79a59ad7318a9928d5db17dff5bcabcd81ad326310ec038c2d5a9a0a61"
+>>>>>>> master
   solver-name = "gps-cdcl"
   solver-version = 1

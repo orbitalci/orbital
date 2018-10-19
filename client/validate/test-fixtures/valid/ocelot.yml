@@ -6,5 +6,7 @@ env:
   - "MARIANNE=1"
 stages:
   - name : build
+    triggers:
+    - \branch maven
     script:
       - mvn clean install

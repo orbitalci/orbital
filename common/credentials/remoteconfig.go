@@ -34,6 +34,8 @@ func init() {
 	prometheus.MustRegister(failedCredRetrieval)
 }
 
+//go:generate mockgen -source remoteconfig.go -destination remoteconfig.mock.go -package credentials
+
 // GetToken will check for a vault token first in the environment variable VAULT_TOKEN. If not found at the env var,
 // either the path given or the default path of /etc/vaulted/token will be searched to see if it exists. If it exists,
 // its contents will be read and returned as the vault token. for kubernetes support

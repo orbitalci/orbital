@@ -119,7 +119,7 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 	var foundLast bool
 	urrl := fmt.Sprintf(bb.GetBaseURL(), acctRepo) + "/commits/" + branch
 	for {
-		if urrl == "" {
+		if urrl == "" || foundLast == true {
 			break
 		}
 		commitz := &pbb.Commits{}
@@ -335,13 +335,15 @@ func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
 			return commits, err
 		}
 		for _, commit := range commitz.Values {
-			commits = append(commits, &pb.Commit{Hash: commit.Hash, Message: commit.Message, Date: commit.Date, Author: &pb.User{UserName: commit.Author.Username}})
+			commits = append(commits, &pb.Commit{Hash: commit.Hash, Message: commit.Message, Date: commit.Date, Author: &pb.User{UserName: commit.Author.User.Username}})
 		}
 		url = commitz.GetNext()
 	}
 	return commits, nil
 }
 
+// fixme: this can now use the 2.0 api!!!
+// https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests/%7Bpull_request_id%7D/comments#post
 func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, buildId int64) error {
 	//	https://api.bitbucket.org/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments --data "content=string"
 	// ** need to use v1 url because atlassian is annoying: **
@@ -368,4 +370,58 @@ func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, build
 		return err
 	}
 	return err
+}
+
+//GetChangedFiles will get the list of files that have changed between commits. If earliestHash is not passed,
+// then the diff list will be off of just the changed files in the latestHash. If earliesthash is passed, then it will
+// return the changeset similar to git diff --name-only <latestHash>..<earliestHash>
+func (bb *Bitbucket) GetChangedFiles(acctRepo, latestHash, earliestHash string) (changedFiles []string, err error) {
+	changedFileSet := map[string]bool{}
+	// https://api.bitbucket.org/2.0/repositories/bitbucket/geordi/diffstat/d222fa2..e174964
+
+	var diffStatPath string
+	if earliestHash != "" {
+		diffStatPath = fmt.Sprintf("%s..%s", latestHash, earliestHash)
+	} else {
+		diffStatPath = latestHash
+	}
+	path := fmt.Sprintf("%s/diffstat/%s", acctRepo, diffStatPath)
+	urll := fmt.Sprintf(bb.GetBaseURL(), path)
+	for {
+		if urll == "" {
+			break
+		}
+		diff := &pbb.FullDiff{}
+		err := bb.Client.GetUrl(urll, diff)
+		if err != nil {
+			failedBBRemoteCalls.WithLabelValues("GetChangedFiles").Inc()
+			return changedFiles, err
+		}
+		for _, diffstat := range diff.Values {
+			if diffstat.New != nil {
+				changedFileSet[diffstat.New.Path] = true
+			}
+			if diffstat.Old != nil {
+				changedFileSet[diffstat.Old.Path] = true
+			}
+		}
+		urll = diff.GetNext()
+	}
+	changedFiles = common.GetMapStringKeys(changedFileSet)
+	return
+}
+
+func (bb *Bitbucket) GetCommit(acctRepo, hash string) (*pb.Commit, error) {
+	path := fmt.Sprintf("%s/commit/%s", acctRepo, hash)
+	urll := fmt.Sprintf(bb.GetBaseURL(), path)
+	commit := &pbb.Commit{}
+	err := bb.Client.GetUrl(urll, commit)
+	if err != nil {
+		failedBBRemoteCalls.WithLabelValues("GetCommit").Inc()
+		return nil, err
+	}
+	translatedCommit := &pb.Commit{Message: commit.Message, Hash: commit.Hash, Date: commit.Date, Author: &pb.User{UserName: commit.Author.User.Username, DisplayName: commit.Author.User.DisplayName}}
+	return translatedCommit, nil
+
+
 }

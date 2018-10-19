@@ -21,6 +21,7 @@ services:
       - nsqlookupd
     command: >
       /nsqd
+      -broadcast-address docker.for.mac.host.internal
       -lookupd-tcp-address docker.for.mac.host.internal:4160
     ports:
       - 4150:4150

@@ -18,7 +18,7 @@ func (d *DockerCleaner) Cleanup(ctx context.Context, id string, logout chan []by
 		return err
 	}
 
-	if err := cli.ContainerKill(ctx, id, "SIGKILL"); err != nil {
+	if err = cli.ContainerKill(ctx, id, "SIGKILL"); err != nil {
 		if err == context.Canceled && logout != nil {
 			logout <- []byte("//////////REDRUM////////REDRUM////////REDRUM/////////")
 		}

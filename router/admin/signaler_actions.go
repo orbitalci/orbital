@@ -55,10 +55,9 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
-	handler, token, err := g.getHandler(cfg)
-	if err != nil {
-		log.IncludeErrField(err).Error()
-		return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve the bitbucket client config for %s. \n Error: %s", buildReq.AcctRepo, err.Error()))
+	handler, token, grpcErr := g.getHandler(cfg)
+	if grpcErr != nil {
+		return grpcErr
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully used VCS Credentials to obtain a token %s", models.CHECKMARK)))
 	// see if this request's hash has already been built before. if it has, then that means that we can validate the acct/repo in the db against the buildreq one.
@@ -157,6 +156,12 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	//	}
 	//}
 	task := signal.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil)
+	task.ChangesetData, err = signal.GenerateNoPreviousHeadChangeset(handler, buildReq.AcctRepo, buildBranch, buildHash)
+	if err != nil {
+		log.IncludeErrField(err).Error("unable to generate previous head changeset, changeset data will only include branch")
+		task.ChangesetData = &pb.ChangesetData{Branch: buildBranch}
+		stream.Send(RespWrap(fmt.Sprintf("Unable to retrieve files changed for this commit, triggers for stages will only be off of branch and not commit message or files changed.")))
+	}
 	if err = g.getSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
 		if _, ok := err.(*build.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
@@ -169,6 +174,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	return nil
 }
 
+// getHandler returns a grpc status.Error
 func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 	if g.handler != nil {
 		return g.handler, "token", nil
@@ -176,7 +182,7 @@ func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, str
 	handler, token, err := remote.GetHandler(cfg)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		return nil, token, status.Error(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s")
+		return nil, token, status.Errorf(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s", cfg.AcctName, err.Error())
 	}
 	return handler, token, nil
 }

@@ -2,6 +2,7 @@ package common
 
 import (
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 )
@@ -40,4 +41,15 @@ func GetPrefix() string {
 		}
 	})
 	return prefix
+}
+
+
+// helper for converting a quasi-set to an array of strings of the keys
+func GetMapStringKeys(stringMap map[string]bool) []string {
+	keys := reflect.ValueOf(stringMap).MapKeys()
+	strkeys := make([]string, len(keys))
+	for i := 0; i < len(keys); i++ {
+		strkeys[i] = keys[i].String()
+	}
+	return strkeys
 }

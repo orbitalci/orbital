@@ -119,8 +119,8 @@ func (b *Basher) DownloadKubectl(werkerPort string) []string {
 //CDAndRunCmds will cd into the root directory of the codebase and execute commands passed in
 func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
 	cdCmd := fmt.Sprintf("cd %s", b.CloneDir(commitHash))
-	build := append([]string{cdCmd}, cmds...)
-	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(build, " && ")})
+	bild := append([]string{cdCmd}, cmds...)
+	buildAndDeploy := append([]string{"/bin/sh", "-c", strings.Join(bild, " && ")})
 	return buildAndDeploy
 }
 

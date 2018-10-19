@@ -10,6 +10,8 @@ import (
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 )
 
+//go:generate mockgen -source vcshandler.go -destination mock_models/vcshandler.mock.go -package mock_models
+
 type VCSHandler interface {
 	//Walk will iterate over all repositories for specified vcs account, and create webhooks at specified webhook url
 	//if one does not yet exist
@@ -46,12 +48,20 @@ type VCSHandler interface {
 	//GetAllBranchesLastCommitData returns a list of all active branches, their last hash, and the last commit datetime
 	GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error)
 
+	//GetCommit will return commit information of a specific hash
+	GetCommit(acctRepo, hash string) (*pb.Commit, error)
+
 	//GetBranchLastCommitData should return the last hash and commit datetime of a specific branch
 	GetBranchLastCommitData(acctRepo, branch string) (*pb.BranchHistory, error)
 
 	//GetCommitLog will return a list of Commits, starting with the most recent and ending at the lastHash value.
 	// If the lastHash commit value is never found, will return an error.
 	GetCommitLog(acctRepo string, branch string, lastHash string) ([]*pb.Commit, error)
+
+	// GetChangedFiles will get the list of files that have changed between commits. If earliestHash is not passed,
+	//  then the diff list will be off of just the changed files in the latestHash. If earliesthash is passed, then it will
+	//  return the changeset similar to git diff --name-only <latestHash>..<earliestHash>
+	GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error)
 
 	// GetPRCommits will return a list of commits for the given url for commits. It'll call the url from (e.g. bb or github),
 	//   unmarshal into its vcs-specific model, then translate to the global model to return a list of generic commits
