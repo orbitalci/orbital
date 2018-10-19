@@ -8,7 +8,7 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
 
-  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/shankj3/ocelot/", type: "rsync
+  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/shankj3/ocelot/", type: "rsync"
 
   config.vm.define "infra" do |infra|
     infra.vm.box = "ubuntu/bionic64"
@@ -86,6 +86,9 @@ Vagrant.configure("2") do |config|
       /home/vagrant/go/src/github.com/shankj3/ocelot/scripts/setup-cv.sh
 
       cd /home/vagrant/go/src/github.com/shankj3/ocelot/
+      
+      # go generate ./...
+      # make proto
       make local
     SHELL
     ocelot.vm.network "private_network", ip: "192.168.12.34"
