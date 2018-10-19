@@ -31,14 +31,16 @@ type VCSHandler interface {
 	//GetBaseURL returns the base URL for this handler
 	GetBaseURL() string
 
+	// commenting this out because it wasn't used
 	//FindWebhooks iterates over existing webhooks and returns true (matches our callback urls) if one already exists
-	FindWebhooks(getWebhookURL string) bool
+	//FindWebhooks(getWebhookURL string) bool
 
 	//Get Repository links by account name + repo name
 	GetRepoLinks(acctRepo string) (*pb.Links, error)
 
+	// commenting out because i don't think this is used anywhere
 	//GetAllCommits returns a list of commits corresponding with branch
-	GetAllCommits(acctRepo string, branch string) ([]*pb.Commit, error)
+	//GetAllCommits(acctRepo string, branch string) ([]*pb.Commit, error)
 
 	//GetAllBranchesLastCommitData returns a list of all active branches, their last hash, and the last commit datetime
 	GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error)

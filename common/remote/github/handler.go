@@ -50,8 +50,7 @@ type github struct {
 	Marshaler     jsonpb.Marshaler
 	Unmarshaler   jsonpb.Unmarshaler
 	credConfig    *pb.VCSCreds
-
-	models.VCSHandler
+	baseUrl       string
 }
 
 func (gh *github) GetCallbackURL() string {
@@ -70,7 +69,14 @@ func (gh *github) GetClient() ocenet.HttpClient {
 }
 
 func (gh *github) GetBaseURL() string {
+	if gh.baseUrl != "" {
+		return gh.baseUrl
+	}
 	return "https://api.github.com/%s"
+}
+
+func (gh *github) SetBaseURL(baseUrl string) {
+	gh.baseUrl = baseUrl
 }
 
 //Walk iterates over all repositories and creates webhook if one doesn't
@@ -317,7 +323,7 @@ func (gh *github) getCommitsList(url, lastCommitHash string) (commits []*pb.Comm
 	var resp *http.Response
 	resp, err = gh.Client.GetUrlResponse(url)
 	if err != nil {
-		failedGHRemoteCalls.WithLabelValues("GetCommitLog").Inc()
+		failedGHRemoteCalls.WithLabelValues("getCommitsList").Inc()
 		return
 	}
 	defer resp.Body.Close()
@@ -348,4 +354,55 @@ func (gh *github) getCommitsList(url, lastCommitHash string) (commits []*pb.Comm
  	}
  	nextUrl = getNextPage(resp.Header)
  	return
+}
+
+
+func (gh *github) GetPRCommits(url string) (commits []*pb.Commit, err error) {
+	var pagedCommits []*pb.Commit
+	for {
+		if url == "" || err != nil {
+			break
+		}
+		// we want to just get all commits under the pr commits list
+		pagedCommits, url, err = gh.getCommitsList(url, "-random-ocelot&&&string")
+		commits = append(commits, pagedCommits...)
+	}
+	return
+}
+
+func (gh *github) PostPRComment(acctRepo, prId, hash string, failed bool, buildId int64) error {
+	url := fmt.Sprintf(gh.GetBaseURL(), buildPrCommentsPath(acctRepo, prId))
+	var status string
+	switch failed {
+	case true:
+		status = "FAILED"
+	case false:
+		status = "PASSED"
+	}
+	content := fmt.Sprintf("Ocelot build has **%s** for commit **%s**.\n\nRun `ocelot status -build-id %d` for detailed stage status, and `ocelot run -build-id %d` for complete build logs.", status, hash, buildId, buildId)
+	body := map[string]string{
+		"body": content,
+	}
+	bits, err := json.Marshal(body)
+	if err != nil {
+		return errors.Wrap(err, "unable to marshal pr comment body to json")
+	}
+	resp, err := gh.Client.GetAuthClient().Post(url, "application/json", bytes.NewReader(bits))
+	if err != nil {
+		return errors.Wrap(err, "unable to post pr comment to github")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	} else {
+		var ghErr *gpb.Error
+		bytz, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Wrap(err, "reader readall error")
+		}
+		if err = json.Unmarshal(bytz, ghErr); err != nil {
+			return errors.Wrap(err, "unable to unmarshal to github error")
+		}
+		return errors.New("error posting PR comment: " + ghErr.Message)
+	}
 }

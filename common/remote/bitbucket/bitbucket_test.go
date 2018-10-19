@@ -15,33 +15,33 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func TestBitbucket_FindWebhooksExists(t *testing.T) {
-	config := &pb.VCSCreds{}
-	bb := GetBitbucketHandler(config, MockHttpClient{
-		Unmarshaler: &jsonpb.Unmarshaler{
-			AllowUnknownFields: true,
-		},
-	})
-	bb.SetCallbackURL("webhook-exists-url")
-	results := bb.FindWebhooks("webhooks-exists")
-	if !results {
-		t.Error(test.GenericStrFormatErrors("webhook exists", true, results))
-	}
-}
-
-func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
-	config := &pb.VCSCreds{}
-	bb := GetBitbucketHandler(config, MockHttpClient{
-		Unmarshaler: &jsonpb.Unmarshaler{
-			AllowUnknownFields: true,
-		},
-	})
-	bb.SetCallbackURL("marianne-empty-callback-url")
-	results := bb.FindWebhooks("empty-webhooks")
-	if results {
-		t.Error(test.GenericStrFormatErrors("no webhook yet", false, results))
-	}
-}
+//func TestBitbucket_FindWebhooksExists(t *testing.T) {
+//	config := &pb.VCSCreds{}
+//	bb := GetBitbucketHandler(config, MockHttpClient{
+//		Unmarshaler: &jsonpb.Unmarshaler{
+//			AllowUnknownFields: true,
+//		},
+//	})
+//	bb.SetCallbackURL("webhook-exists-url")
+//	results := bb.FindWebhooks("webhooks-exists")
+//	if !results {
+//		t.Error(test.GenericStrFormatErrors("webhook exists", true, results))
+//	}
+//}
+//
+//func TestBitbucket_FindWebhooksEmpty(t *testing.T) {
+//	config := &pb.VCSCreds{}
+//	bb := GetBitbucketHandler(config, MockHttpClient{
+//		Unmarshaler: &jsonpb.Unmarshaler{
+//			AllowUnknownFields: true,
+//		},
+//	})
+//	bb.SetCallbackURL("marianne-empty-callback-url")
+//	results := bb.FindWebhooks("empty-webhooks")
+//	if results {
+//		t.Error(test.GenericStrFormatErrors("no webhook yet", false, results))
+//	}
+//}
 
 func TestBitbucket_PostPRComment(t *testing.T) {
 	vcsConf := &pb.VCSCreds{

@@ -10,8 +10,10 @@ var (
 	ALLREPOS = "/user/repos"
 	REPOS = "/repos"
 	BRANCHES = REPOS + "/%s/branches%s"
+	ISSUE_COMMENTS = REPOS + "/%s/issues/%s/comments"
 	FILE = REPOS + "/%s/contents/%s"
 	COMMIT = "/repos/%s/commits%s"
+
 )
 
 // url replacements for github, see below for urls returned and what to replace
@@ -67,4 +69,8 @@ func buildBranchesPath(accountRepo, branch string) string {
 
 func buildCommitsPath(acctRepo string) string {
 	return fmt.Sprintf(COMMIT, acctRepo, "")
+}
+
+func buildPrCommentsPath(acctRepo, prId string) string {
+	return fmt.Sprintf(ISSUE_COMMENTS, acctRepo, prId)
 }
