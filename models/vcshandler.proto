@@ -67,3 +67,11 @@ message PrWerkerData {
     PrUrls urls = 1;
     string prId = 2;
 }
+
+message Links {
+    string commits = 1;
+    string branches = 2;
+    string tags = 3;
+    string hooks = 4;
+    string pullrequests = 5;
+}

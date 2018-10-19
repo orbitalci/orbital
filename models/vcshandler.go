@@ -36,12 +36,11 @@ type VCSHandler interface {
 	//FindWebhooks iterates over existing webhooks and returns true (matches our callback urls) if one already exists
 	FindWebhooks(getWebhookURL string) bool
 
-	//Get Repository details by account name + repo name
-	GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_RepositoryValues, error)
+	//Get Repository links by account name + repo name
+	GetRepoLinks(acctRepo string) (*pb.Links, error)
 
-	//todo: make this return []*pb.Commit to remove dependency on bitbucket models
-	//GetAllCommits returns a paginated list of commits corresponding with branch
-	GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error)
+	//GetAllCommits returns a list of commits corresponding with branch
+	GetAllCommits(acctRepo string, branch string) ([]*pb.Commit, error)
 
 	//GetAllBranchesLastCommitData returns a list of all active branches, their last hash, and the last commit datetime
 	GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error)

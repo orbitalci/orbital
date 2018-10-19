@@ -8,7 +8,8 @@ import (
 var (
 	// all repositories of authenticated user
 	ALLREPOS = "/user/repos"
-	FILE = "/repos/%s/contents/%s"
+	REPOS = "/repos"
+	FILE = REPOS + "/%s/contents/%s"
 	COMMIT = "/repos/%s/commits%s"
 )
 
@@ -50,4 +51,8 @@ func getUrlForCommitsFromCommitsUrl(commitsUrl, hash string) string {
 
 func buildFilePath(accountrepo, filepath string) string {
 	return fmt.Sprintf(FILE, accountrepo, filepath)
+}
+
+func buildRepoPath(accountRepo string) string {
+	return REPOS + "/" + accountRepo
 }

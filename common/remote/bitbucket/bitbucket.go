@@ -99,14 +99,27 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 	return
 }
 
+func translateBbCommit(commit *pbb.Commit) *pb.Commit {
+	return &pb.Commit{
+		Hash: commit.Hash,
+		Message: commit.Message,
+		Date: commit.Date,
+		Author: &pb.User{UserName: commit.Author.Username},
+	}
+}
+
 //GetAllCommits /2.0/repositories/{username}/{repo_slug}/commits
-func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error) {
+func (bb *Bitbucket) GetAllCommits(acctRepo string, branch string) ([]*pb.Commit, error) {
 	commits := &pbb.Commits{}
 	err := bb.Client.GetUrl(fmt.Sprintf(bb.GetBaseURL(), acctRepo)+"/commits/"+branch, commits)
 	if err != nil {
 		failedBBRemoteCalls.WithLabelValues("GetAllCommits").Inc()
 	}
-	return commits, err
+	var translatedCommits []*pb.Commit
+	for _, commit := range commits.Values {
+		translatedCommits = append(translatedCommits, translateBbCommit(commit))
+	}
+	return translatedCommits, err
 }
 
 //GetCommitLog will return a list of Commits, starting with the most recent and ending at the lastHash value.
@@ -144,14 +157,25 @@ func (bb *Bitbucket) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Comm
 	return commits, err
 }
 
-func (bb *Bitbucket) GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_RepositoryValues, error) {
+func (bb *Bitbucket) GetRepoLinks(acctRepo string) (*pb.Links, error) {
 	repoVal := &pbb.PaginatedRepository_RepositoryValues{}
 	err := bb.Client.GetUrl(fmt.Sprintf(DefaultRepoBaseURL, acctRepo), repoVal)
 	if err != nil {
 		failedBBRemoteCalls.WithLabelValues("GetRepoDetail").Inc()
-		return *repoVal, err
+		return nil, err
 	}
-	return *repoVal, nil
+	if repoVal.Type == "error" {
+		return nil, errors.New(fmt.Sprintf("could not get repository detail at %s", acctRepo))
+	}
+
+	links := &pb.Links{
+		Commits: repoVal.Links.Commits.Href,
+		Branches: repoVal.Links.Branches.Href,
+		Tags: repoVal.Links.Tags.Href,
+		Hooks: repoVal.Links.Hooks.Href,
+		Pullrequests: repoVal.Links.Pullrequests.Href,
+	}
+	return links, nil
 }
 
 func (bb *Bitbucket) GetBranchLastCommitData(acctRepo, branch string) (hist *pb.BranchHistory, err error) {

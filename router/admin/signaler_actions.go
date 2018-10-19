@@ -201,13 +201,11 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	if grpcErr != nil {
 		return nil, grpcErr
 	}
-	repoDetail, err := handler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
-	if repoDetail.Type == "error" || err != nil {
+	repoLinks, err := handler.GetRepoLinks(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
+	if err != nil {
 		return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
 	}
-
-	webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
-	err = handler.CreateWebhook(webhookURL)
+	err = handler.CreateWebhook(repoLinks.Hooks)
 
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.Unavailable, errors.WithMessage(err, "Unable to create webhook").Error())

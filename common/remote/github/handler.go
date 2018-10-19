@@ -11,8 +11,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tomnomnom/linkheader"
 
-	"github.com/shankj3/ocelot/common"
+	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models"
 	gpb "github.com/shankj3/ocelot/models/github/pb"
 	"github.com/shankj3/ocelot/models/pb"
@@ -51,11 +52,22 @@ type github struct {
 	models.VCSHandler
 }
 
+func (gh *github) GetCallbackURL() string {
+	if gh.CallbackURL == "" {
+		return DefaultCallbackURL
+	}
+	return gh.CallbackURL
+}
+
+func (gh *github) SetCallbackURL(cbUrl string) {
+	gh.CallbackURL = cbUrl
+}
+
 func (gh *github) GetClient() ocenet.HttpClient {
 	return gh.Client
 }
 
-func (gh *github) GetBaseUrl() string {
+func (gh *github) GetBaseURL() string {
 	return "https://api.github.com/%s"
 }
 
@@ -112,7 +124,6 @@ func (gh *github) recurseOverRepos(repoUrl string) error {
 func (gh *github) CreateWebhook(hookUrl string) error {
 	// create it, if it already exists it'll return a 422
 	hookReq := &gpb.Hook{
-		Name: "ocelot",
 		Active: true,
 		Events: []string{"push", "pull_request"},
 		Config: &gpb.Hook_Config{Url: DefaultCallbackURL, ContentType: "json"},
@@ -124,6 +135,7 @@ func (gh *github) CreateWebhook(hookUrl string) error {
 	var resp *http.Response
 	resp, err = gh.Client.GetAuthClient().Post(hookUrl, "application/json", bytes.NewReader(bits))
 	if err != nil {
+		failedGHRemoteCalls.WithLabelValues("CreateWebhook").Inc()
 		return errors.Wrap(err, "unable to complete webhook create")
 	}
 	defer resp.Body.Close()
@@ -142,7 +154,27 @@ func (gh *github) CreateWebhook(hookUrl string) error {
 
 func (gh *github) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	url := fmt.Sprintf(gh.GetBaseURL(), buildFilePath(fullRepoName, commitHash))
-	
+	bytez, err = gh.Client.GetUrlRawData(url)
+	if err != nil {
+		failedGHRemoteCalls.WithLabelValues("GetFile").Inc()
+		ocelog.IncludeErrField(err).Error("unable to get file")
+	}
+	return
+}
 
-
+func (gh *github) GetRepoLinks(acctRepo string) (*pb.Links, error) {
+	url := fmt.Sprintf(gh.GetBaseURL(), buildRepoPath(acctRepo))
+	repo := &gpb.Repository{}
+	err := gh.Client.GetUrl(url, repo)
+	if err != nil {
+		return nil, err
+	}
+	links := &pb.Links{
+		Commits: repo.CommitsUrl,
+		Branches: repo.BranchesUrl,
+		Tags: repo.TagsUrl,
+		Hooks: repo.HooksUrl,
+		Pullrequests: repo.PullsUrl,
+	}
+	return links, nil
 }
