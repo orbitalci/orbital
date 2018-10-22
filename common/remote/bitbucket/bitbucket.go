@@ -420,7 +420,13 @@ func (bb *Bitbucket) GetCommit(acctRepo, hash string) (*pb.Commit, error) {
 		failedBBRemoteCalls.WithLabelValues("GetCommit").Inc()
 		return nil, err
 	}
-	translatedCommit := &pb.Commit{Message: commit.Message, Hash: commit.Hash, Date: commit.Date, Author: &pb.User{UserName: commit.Author.User.Username, DisplayName: commit.Author.User.DisplayName}}
+	var author *pb.User
+	if commit.GetAuthor() != nil {
+		if user := commit.Author.GetUser(); user != nil {
+			author = &pb.User{UserName: user.Username, DisplayName: user.DisplayName}
+		}
+	}
+	translatedCommit := &pb.Commit{Message: commit.Message, Hash: commit.Hash, Date: commit.Date, Author: author}
 	return translatedCommit, nil
 
 
