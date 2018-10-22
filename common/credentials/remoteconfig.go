@@ -454,36 +454,24 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 
 	// The desired default behavior is to use static secrets. Don't error out if Vault settings aren't in Consul
 	vaultConf, _ := rc.Consul.GetKeyValues(common.VaultConf)
-	//if len(vaultConf) == 0 || err != nil {
-	//	errorMsg := fmt.Sprintf("unable to get vault operating mode from consul")
-	//	if err != nil {
-	//		errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
-	//	}
-	//	return &StorageCreds{}, errors.New(errorMsg)
-	//}
 
-	//vaultRoleName := ""
 	vaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
 	for _, vconf := range vaultConf {
 		switch vconf.Key {
 		case common.VaultDBSecretEngine:
 			switch string(vconf.Value) {
 			case "kv":
-				ocelog.Log().Debugf("Static Postgres creds")
+				ocelog.Log().Info("Static Postgres creds")
 				break
 			case "database":
-				ocelog.Log().Debugf("Dynamic Postgres creds")
+				ocelog.Log().Info("Dynamic Postgres creds")
 				break
 			default:
 				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine")
 			}
 			vaultBackend = string(vconf.Value)
-			//case common.VaultRoleName:
-			//	vaultRoleName = string(vconf.Value)
-			//	break
 		}
 	}
-	//ocelog.Log().Debugf("vaultRoleName: %s\nvaultBackend: %s", vaultRoleName, vaultBackend)
 
 	storeConfig := &StorageCreds{}
 
@@ -493,7 +481,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		if err != nil {
 			errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
 		}
-		return &StorageCreds{}, errors.New(errorMsg)
+		return nil, errors.New(errorMsg)
 	}
 
 	for _, pair := range kvconfig {
