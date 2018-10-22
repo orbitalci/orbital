@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -217,12 +218,7 @@ func (gh *github) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHis
 			return nil, err
 		}
 	} else {
-		var ghErr *gpb.Error
-		err = json.Unmarshal(bytez, ghErr)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New(fmt.Sprintf("github returned unexpected error: %s", ghErr.Message))
+		return nil, translateGithubApiError(resp.Body, "retrieve all last commit data for branches")
 	}
 	return branchesHistory, nil
 }
@@ -236,7 +232,7 @@ func (gh *github) buildBranchHistories(responseBytes []byte) (histories []*pb.Br
 	for _, branch := range branchesLastCommit {
 		stamp, err := gh.getCommitTime(branch.Commit.Url)
 		if err != nil {
-			return
+			return histories, err
 		}
 		histories = append(histories, &pb.BranchHistory{Hash: branch.Commit.Sha, Branch: branch.Name, LastCommitTime: stamp})
 	}
@@ -250,7 +246,13 @@ func (gh *github) getCommitTime(commitUrl string) (*timestamp.Timestamp, error) 
 		failedGHRemoteCalls.WithLabelValues("getCommitTime").Inc()
 		return nil, err
 	}
-	return commit.Commit.Commiter.Date, err
+	if commit.Commit == nil {
+		return nil, errors.New("commit doesn't exist")
+	}
+	if commit.Commit.Author == nil {
+		return nil, errors.New("no date given because no author")
+	}
+	return commit.Commit.Author.Date, err
 }
 
 func (gh *github) GetBranchLastCommitData(acctRepo, branch string) (history *pb.BranchHistory, err error) {
@@ -273,16 +275,14 @@ func (gh *github) GetBranchLastCommitData(acctRepo, branch string) (history *pb.
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to unmarshal response body to BranchLastCommit")
 		}
-		history.LastCommitTime = branchLastCommit.Commit.Commit.Commiter.Date
+		if !verifyAuthorExists(branchLastCommit) {
+			return nil, errors.New("commit does not have an author attached and therefore no date attached, which means it is invalid")
+		}
+		history.LastCommitTime = branchLastCommit.Commit.Commit.Author.Date
 		history.Branch = branchLastCommit.Name
 		history.Hash = branchLastCommit.Commit.Sha
 	} else {
-		var ghErr *gpb.Error
-		err = json.Unmarshal(responseBody, ghErr)
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to unmarshal body to github error")
-		}
-		err = errors.New(fmt.Sprintf("unexpected error while getting last commit data: %s", ghErr.Message))
+		return nil, translateGithubApiError(resp.Body, "retrieve commit data")
 	}
 	return
 }
@@ -290,7 +290,7 @@ func (gh *github) GetBranchLastCommitData(acctRepo, branch string) (history *pb.
 func (gh *github) GetCommitLog(acctRepo string, branch string, lastHash string) (commits []*pb.Commit, err error) {
 	// todo : add to go-til/net query params
 	//https://stackoverflow.com/questions/30652577/go-doing-a-get-request-and-building-the-querystring/30657518
-	path := buildCommitsPath(acctRepo) + "?sha=" + branch
+	path := buildCommitsPath(acctRepo, "") + "?sha=" + branch
 	url := fmt.Sprintf(gh.GetBaseURL(), path)
 	for {
 		if url == "" || err != nil {
@@ -340,17 +340,13 @@ func (gh *github) getCommitsList(url, lastCommitHash string) (commits []*pb.Comm
 		}
 		// look at all the commits, translate them to *pb.Commit, and check for the lastCommitHash
 		for _, commit := range ghCommits {
-			commits = append(commits, &pb.Commit{Hash: commit.Sha, Message: commit.Commit.Message, Date: commit.Commit.Commiter.Date, Author: &pb.User{UserName: commit.Commit.Commiter.Name}})
+			commits = append(commits, translateCommit(commit))
 			if strings.Contains(commit.Sha, lastCommitHash) {
 				return nil, "", HitTheCommit
 			}
 		}
 	} else {
-		var ghErr *gpb.Error
-		if err = json.Unmarshal(responseBody, ghErr); err != nil {
-			return nil, "", errors.Wrap(err, "unable to unmarshal response body to github error obj")
-		}
-		return nil, "", errors.New("unable to retrieve list of commits, error is " + ghErr.Message)
+		return nil, "", translateGithubApiError(resp.Body, "retrieve list of commits")
  	}
  	nextUrl = getNextPage(resp.Header)
  	return
@@ -395,14 +391,86 @@ func (gh *github) PostPRComment(acctRepo, prId, hash string, failed bool, buildI
 	if resp.StatusCode == http.StatusOK {
 		return nil
 	} else {
-		var ghErr *gpb.Error
-		bytz, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return errors.Wrap(err, "reader readall error")
-		}
-		if err = json.Unmarshal(bytz, ghErr); err != nil {
-			return errors.Wrap(err, "unable to unmarshal to github error")
-		}
-		return errors.New("error posting PR comment: " + ghErr.Message)
+		return translateGithubApiError(resp.Body, "post pr comment")
 	}
+}
+
+func (gh *github) GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error) {
+	//GET /repos/:owner/:repo/compare/:base...:head
+	url := fmt.Sprintf(gh.GetBaseURL(), buildComparePath(acctRepo, earliestHash, latesthash))
+	resp, err := gh.Client.GetUrlResponse(url)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get changed files")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		var files []string
+		var diff *gpb.DiffCommits
+		if err = jsonpb.Unmarshal(resp.Body, diff); err != nil {
+			return nil, errors.Wrap(err, "unable to unmarshal changed files to DiffCommits obj")
+		}
+		for _, changedFile := range diff.GetFiles() {
+			files = append(files, changedFile.GetFilename())
+		}
+		return files, nil
+	}
+	return nil, translateGithubApiError(resp.Body, "retrieve list of changed files")
+}
+
+func (gh *github) GetCommit(acctRepo, hash string) (*pb.Commit, error) {
+	url := fmt.Sprintf(gh.GetBaseURL(), buildCommitsPath(acctRepo, hash))
+	resp, err := gh.Client.GetUrlResponse(url)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get commit")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		var commit *gpb.Commit
+		if err = jsonpb.Unmarshal(resp.Body, commit); err != nil {
+			return nil, errors.Wrap(err, "unable to unmarshal commit response from github to commit struct")
+		}
+		return translateCommit(commit), nil
+	}
+	return nil, translateGithubApiError(resp.Body, "retrieve commit")
+}
+
+func translateCommit(commit *gpb.Commit) *pb.Commit {
+	var author *pb.User
+	var date *timestamp.Timestamp
+	if commit.GetCommit() == nil {
+		ocelog.Log().Error("why is this a thing, there should always be a commit")
+		return nil
+	}
+	if commit.Commit.GetAuthor() != nil {
+		author = &pb.User{UserName: commit.Commit.Author.Name}
+		date = commit.Commit.Author.Date
+	}
+	return &pb.Commit{
+		Hash: commit.Sha,
+		Date: date,
+		Author: author,
+		Message: commit.Commit.Message,
+	}
+}
+
+func verifyAuthorExists(commit *gpb.BranchLastCommit) (authorExists bool) {
+	if commit.Commit == nil {
+		return false
+	}
+	if commit.Commit.Commit == nil {
+		return false
+	}
+	if commit.Commit.Commit.Author == nil {
+		return false
+	}
+	return true
+}
+
+func translateGithubApiError(body io.Reader, apiAction string) error {
+	var err error
+	var ghErr *gpb.Error
+	if err = jsonpb.Unmarshal(body, ghErr); err != nil {
+		return errors.Wrap(err, "unable to unmarshal error into github Error obj")
+	}
+	return errors.New(fmt.Sprintf("error occurred while attempting to %s using github api: %s", apiAction, ghErr.Message))
 }

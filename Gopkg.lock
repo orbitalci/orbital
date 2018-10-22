@@ -642,7 +642,7 @@
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
   version = "v1.0.5"
 
-[[projects]]
+[[projects]]g
   name = "github.com/tomnomnom/linkheader"
   packages = ["."]
   revision = "6953a30d444317754766fccdd3f7f000edc874f6"

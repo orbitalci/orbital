@@ -28,3 +28,16 @@ message File {
     string path = 2;
     string sha = 3;
 }
+
+message DiffFile {
+    string sha = 1;
+    string filename = 2;
+    string status = 3;
+    int64 additions = 4;
+    int64 deletions = 5;
+    int64 changes = 6;
+    string blob_url = 7;
+    string raw_url = 8;
+    string contents_url = 9;
+    string patch = 10;
+}

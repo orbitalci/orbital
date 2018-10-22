@@ -45,7 +45,7 @@ message Verification {
 message CommitData {
     string url = 1;
     Creator author = 2;
-    Creator commiter = 3;
+    Creator committer = 3;
     string message = 4;
     Tree tree = 5;
     int64 comment_count = 6;
@@ -88,4 +88,21 @@ message BranchLastCommit {
     string name = 1;
     // commit is the last commmit data if searching all branches, this commit will only have the last sha and the url for the commit. if search is only on one branch, then it will be a full last commit
     Commit commit = 2;
+}
+
+//https://developer.github.com/v3/repos/commits/#compare-two-commits
+message CommitCompare {
+    string url = 1;
+    string html_url = 2;
+    string permalink_url = 3;
+    string diff_url= 4;
+    string patch_url = 5;
+    Commit base_commit = 6;
+    Commit merge_base_commit = 7;
+    string status = 8;
+    int32 ahead_by = 9;
+    int32 behind_by = 10;
+    int32 total_commits = 11;
+    repeated Commit commits = 12;
+    repeated DiffFile files = 13;
 }

@@ -104,7 +104,7 @@ func translateBbCommit(commit *pbb.Commit) *pb.Commit {
 		Hash: commit.Hash,
 		Message: commit.Message,
 		Date: commit.Date,
-		Author: &pb.User{UserName: commit.Author.Username},
+		Author: &pb.User{UserName: commit.Author.User.Username},
 	}
 }
 
@@ -452,6 +452,5 @@ func (bb *Bitbucket) GetCommit(acctRepo, hash string) (*pb.Commit, error) {
 	}
 	translatedCommit := &pb.Commit{Message: commit.Message, Hash: commit.Hash, Date: commit.Date, Author: author}
 	return translatedCommit, nil
-
 
 }

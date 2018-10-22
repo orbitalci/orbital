@@ -13,6 +13,8 @@ var (
 	ISSUE_COMMENTS = REPOS + "/%s/issues/%s/comments"
 	FILE = REPOS + "/%s/contents/%s"
 	COMMIT = "/repos/%s/commits%s"
+	// compare url GET /repos/:owner/:repo/compare/:base...:head
+	COMPARE = "/repos/%s/compare/%s...%s"
 
 )
 
@@ -67,10 +69,17 @@ func buildBranchesPath(accountRepo, branch string) string {
 	return fmt.Sprintf(BRANCHES, accountRepo, branch)
 }
 
-func buildCommitsPath(acctRepo string) string {
-	return fmt.Sprintf(COMMIT, acctRepo, "")
+func buildCommitsPath(acctRepo, singleCommit string) string {
+	if singleCommit != "" {
+		singleCommit = "/" + singleCommit
+	}
+	return fmt.Sprintf(COMMIT, acctRepo, singleCommit)
 }
 
 func buildPrCommentsPath(acctRepo, prId string) string {
 	return fmt.Sprintf(ISSUE_COMMENTS, acctRepo, prId)
+}
+
+func buildComparePath(acctRepo, previousHead, newHead string) string {
+	return fmt.Sprintf(COMPARE, acctRepo, previousHead, newHead)
 }
