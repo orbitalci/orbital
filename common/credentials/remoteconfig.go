@@ -452,16 +452,15 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	// Either creds are static, and stored as a KV secret in vault
 	// Or creds are dynamic, and managed by vault's database secret engine
 
-	// The default behavior is to use static secrets
-
-	vaultConf, err := rc.Consul.GetKeyValues(common.VaultConf)
-	if len(vaultConf) == 0 || err != nil {
-		errorMsg := fmt.Sprintf("unable to get vault operating mode from consul")
-		if err != nil {
-			errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
-		}
-		return &StorageCreds{}, errors.New(errorMsg)
-	}
+	// The desired default behavior is to use static secrets. Don't error out if Vault settings aren't in Consul
+	vaultConf, _ := rc.Consul.GetKeyValues(common.VaultConf)
+	//if len(vaultConf) == 0 || err != nil {
+	//	errorMsg := fmt.Sprintf("unable to get vault operating mode from consul")
+	//	if err != nil {
+	//		errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+	//	}
+	//	return &StorageCreds{}, errors.New(errorMsg)
+	//}
 
 	//vaultRoleName := ""
 	vaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
