@@ -34,9 +34,9 @@ func Test_splitEnvs(t *testing.T) {
 
 // testing multiple facets of code with same docker container
 func TestContextConnection(t *testing.T) {
-	cleanup, ctx := CreateSSHDockerContainer(t, "2222")
+	cleanup, ctx := CreateSSHDockerContainer(t, "2227")
 	defer cleanup()
-	facts := &models.SSHFacts{User: "root", Host: "localhost", Port: 2222, KeyFP: "./test-fixtures/docker_id_rsa"}
+	facts := &models.SSHFacts{User: "root", Host: "localhost", Port: 2227, KeyFP: "./test-fixtures/docker_id_rsa"}
 	contextConnection_CheckConnection(t, ctx, facts)
 	contextConnection_RunAndLog(t, ctx, facts)
 	contextConnection_Setenvs(t, ctx, facts)

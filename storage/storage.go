@@ -14,6 +14,8 @@ const (
 	Postgres
 )
 
+//go:generate mockgen -source storage.go -destination storage.mock.go -package storage
+
 type Stringy interface {
 	StorageType() string
 }

@@ -1,0 +1,199 @@
+{
+  "pullrequest": {
+    "merge_commit": null,
+    "description": "* er my gerd\r\n* useless garbage\r\n* i wonder if this will break d3 build\r\n* just going to do one commit this time",
+    "links": {
+      "decline": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4/decline"
+      },
+      "commits": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4/commits"
+      },
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4"
+      },
+      "comments": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4/comments"
+      },
+      "merge": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4/merge"
+      },
+      "html": {
+        "href": "https://bitbucket.org/jessishank/mytestocy/pull-requests/4"
+      },
+      "activity": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4/activity"
+      },
+      "diff": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4/diff"
+      },
+      "approve": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4/approve"
+      },
+      "statuses": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/pullrequests/4/statuses"
+      }
+    },
+    "title": "Here we go",
+    "close_source_branch": true,
+    "reviewers": [],
+    "destination": {
+      "commit": {
+        "type": "commit",
+        "hash": "8ca962b8612c",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/commit/8ca962b8612c"
+          },
+          "html": {
+            "href": "https://bitbucket.org/jessishank/mytestocy/commits/8ca962b8612c"
+          }
+        }
+      },
+      "branch": {
+        "name": "master"
+      },
+      "repository": {
+        "full_name": "jessishank/mytestocy",
+        "type": "repository",
+        "name": "mytestocy",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy"
+          },
+          "html": {
+            "href": "https://bitbucket.org/jessishank/mytestocy"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7Bf6521572-777f-42ed-9c41-a487c45ddde7%7D?ts=default"
+          }
+        },
+        "uuid": "{f6521572-777f-42ed-9c41-a487c45ddde7}"
+      }
+    },
+    "comment_count": 0,
+    "closed_by": null,
+    "source": {
+      "commit": {
+        "type": "commit",
+        "hash": "906a8969084b",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy/commit/906a8969084b"
+          },
+          "html": {
+            "href": "https://bitbucket.org/jessishank/mytestocy/commits/906a8969084b"
+          }
+        }
+      },
+      "branch": {
+        "name": "here_we_go"
+      },
+      "repository": {
+        "full_name": "jessishank/mytestocy",
+        "type": "repository",
+        "name": "mytestocy",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy"
+          },
+          "html": {
+            "href": "https://bitbucket.org/jessishank/mytestocy"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7Bf6521572-777f-42ed-9c41-a487c45ddde7%7D?ts=default"
+          }
+        },
+        "uuid": "{f6521572-777f-42ed-9c41-a487c45ddde7}"
+      }
+    },
+    "created_on": "2018-09-26T21:40:08.887970+00:00",
+    "state": "OPEN",
+    "task_count": 0,
+    "participants": [],
+    "reason": "",
+    "updated_on": "2018-09-26T21:41:18.506141+00:00",
+    "author": {
+      "username": "jessishank",
+      "display_name": "Jessi Shank",
+      "account_id": "557058:72686838-65b2-4a18-812a-de5929198c43",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/jessishank"
+        },
+        "html": {
+          "href": "https://bitbucket.org/jessishank/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/jessishank/avatar/"
+        }
+      },
+      "type": "user",
+      "uuid": "{c8256c33-f8b2-417c-bc38-d5f60e07ecd7}"
+    },
+    "summary": {
+      "raw": "* er my gerd\r\n* useless garbage\r\n* i wonder if this will break d3 build\r\n* just going to do one commit this time",
+      "markup": "markdown",
+      "html": "<ul>\n<li>er my gerd</li>\n<li>useless garbage</li>\n<li>i wonder if this will break d3 build</li>\n<li>just going to do one commit this time</li>\n</ul>",
+      "type": "rendered"
+    },
+    "type": "pullrequest",
+    "id": 4
+  },
+  "actor": {
+    "username": "jessishank",
+    "display_name": "Jessi Shank",
+    "account_id": "557058:72686838-65b2-4a18-812a-de5929198c43",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/users/jessishank"
+      },
+      "html": {
+        "href": "https://bitbucket.org/jessishank/"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/account/jessishank/avatar/"
+      }
+    },
+    "type": "user",
+    "uuid": "{c8256c33-f8b2-417c-bc38-d5f60e07ecd7}"
+  },
+  "repository": {
+    "scm": "git",
+    "website": "",
+    "name": "mytestocy",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/jessishank/mytestocy"
+      },
+      "html": {
+        "href": "https://bitbucket.org/jessishank/mytestocy"
+      },
+      "avatar": {
+        "href": "https://bytebucket.org/ravatar/%7Bf6521572-777f-42ed-9c41-a487c45ddde7%7D?ts=default"
+      }
+    },
+    "full_name": "jessishank/mytestocy",
+    "owner": {
+      "username": "jessishank",
+      "display_name": "Jessi Shank",
+      "account_id": "557058:72686838-65b2-4a18-812a-de5929198c43",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/jessishank"
+        },
+        "html": {
+          "href": "https://bitbucket.org/jessishank/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/jessishank/avatar/"
+        }
+      },
+      "type": "user",
+      "uuid": "{c8256c33-f8b2-417c-bc38-d5f60e07ecd7}"
+    },
+    "type": "repository",
+    "is_private": false,
+    "uuid": "{f6521572-777f-42ed-9c41-a487c45ddde7}"
+  }
+}

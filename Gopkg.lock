@@ -258,8 +258,8 @@
     "testutil",
     "testutil/retry"
   ]
-  revision = "5174058f0d2bda63fa5198ab96c33d9a909c58ed"
-  version = "v1.1.0"
+  revision = "48d287ef690ada66634885640f3444dbf7b71d18"
+  version = "v1.2.3"
 
 [[projects]]
   branch = "master"
@@ -434,6 +434,12 @@
     "rsa"
   ]
   revision = "d11a37f123888ff060339f516e392032dfcb98ff"
+
+[[projects]]
+  name = "github.com/kr/text"
+  packages = ["."]
+  revision = "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -643,12 +649,6 @@
   version = "0.1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/tonnerre/golang-text"
-  packages = ["."]
-  revision = "048ed3d792f7104850acbc8cfc01e5a6070f4c04"
-
-[[projects]]
   name = "github.com/urfave/negroni"
   packages = ["."]
   revision = "5dbbc83f748fc3ad38585842b0aedab546d0ea1e"
@@ -809,6 +809,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d3189ec735fe3f365bd0af1a484cccd3acf15eceff2ab6a0f8dfd34c9c82d079"
+  inputs-digest = "64980f865093d487c48ea07bce6ab42e7cb416222d4dc997dae5367f3719b763"
   solver-name = "gps-cdcl"
   solver-version = 1

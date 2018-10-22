@@ -135,7 +135,10 @@ func (c *cmd) Help() string {
 
 const synopsis = "Add notify credentials"
 const help = `
-Usage: ocelot creds notify add --identifier L11_SLACK --acctname level11consulting --url https://hooks.slack.com/services/T0DFsdSBA/345PPRP9C/5hUe12345v6BrxfSJt
+Usage: ocelot creds notify add --identifier L11_SLACK --acctname level11consulting --url https://hooks.slack.com/services/T0DFsdSBA/345PPRP9C/5hUe12345v6BrxfSJt --detail-url https://ocelot.mysite.io
+
+  The detail-url will be the domain for the ocelot frontend. It is optional, but if it is provided the notification will a link to the build information.
+	
   Currently only slack
 
   Example: using this notify credential in your ocelot.yml would look like this:

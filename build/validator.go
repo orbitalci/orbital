@@ -1,13 +1,14 @@
 package build
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"strings"
 
 	"github.com/mitchellh/cli"
+	"github.com/pkg/errors"
 	"github.com/shankj3/ocelot/common/helpers/dockrhelper"
+	"github.com/shankj3/ocelot/common/trigger"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
@@ -33,9 +34,6 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	}
 	writeUIInfo(UI, "BuildTool is specified "+models.CHECKMARK)
 
-	if len(config.Stages) == 0 {
-		return errors.New("there must be at least one stage listed")
-	}
 	// todo: add in checking if any machines match machinetag
 	if config.Image != "" {
 		writeUIInfo(UI, "Connecting to docker to check for image validity...")
@@ -52,6 +50,30 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 			writeUIInfo(UI, config.Image+" exists "+models.CHECKMARK)
 		}
 	}
+
+	if len(config.Stages) == 0 {
+		return errors.New("there must be at least one stage listed")
+	}
+	for ind, stage := range config.Stages {
+		if ind == 0 {
+			writeUIInfo(UI, "Validating stages... ")
+		}
+		writeUIInfo(UI, "  " + stage.Name)
+		if len(stage.Script) == 0 {
+			return errors.New("Script for stage " + stage.Name + "should not be empty")
+		}
+		for ind, triggy := range stage.Triggers {
+			if ind == 0 {
+				writeUIInfo(UI, "    Validating trigger strings...")
+			}
+			_, err := trigger.Parse(triggy)
+			if err != nil {
+				writeUIError(UI, fmt.Sprintf("      - %s %s", triggy, models.FAILED))
+				return errors.Wrap(err, "'triggers' conditions must follow spec, this one did not: " + triggy)
+			}
+			writeUIInfo(UI, fmt.Sprintf("      - %s %s", triggy, models.CHECKMARK))
+		}
+	}
 	return err
 }
 
@@ -66,7 +88,8 @@ func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []stri
 		return nil
 	}
 	// next, check if branch has a regex match with any of the buildable branches
-	branchOk, err := BranchRegexOk(branch, buildBranches)
+	branchOk, err := trigger.BranchRegexOk(branch, buildBranches)
+
 	if err != nil {
 		return err
 	}
@@ -88,7 +111,7 @@ func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []stri
 }
 
 func (ov *OcelotValidator) ValidateBranchAgainstConf(buildConf *pb.BuildConfig, branch string) error {
-	branchOk, err := BranchRegexOk(branch, buildConf.Branches)
+	branchOk, err := trigger.BranchRegexOk(branch, buildConf.Branches)
 	if err != nil {
 		return err
 	}

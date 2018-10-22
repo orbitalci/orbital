@@ -34,6 +34,7 @@ message Push {
     Repo repo = 1;
     User user = 2;
     Commit headCommit = 4;
+    Commit previousHeadCommit = 6;
     repeated Commit commits = 3;
     string Branch = 5;
 }

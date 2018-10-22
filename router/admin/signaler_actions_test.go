@@ -16,6 +16,7 @@ import (
 	"github.com/shankj3/ocelot/build"
 	mock_credentials "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
+	"github.com/shankj3/ocelot/models/mock_models"
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
@@ -254,6 +255,8 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
 		mockz.handler.EXPECT().GetBranchLastCommitData("shankj3/ocelot", "banana").Return(&pb.BranchHistory{Hash: "123", Branch: "banana"}, nil)
 		mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "123").Return(ocelot, nil)
+		mockz.handler.EXPECT().GetChangedFiles("shankj3/ocelot", gomock.Any(), gomock.Any()).Return([]string{"ocelot.yml"}, nil)
+		mockz.handler.EXPECT().GetCommit("shankj3/ocelot", "123").Return(&pb.Commit{Message:"hi", Hash: "123"}, nil).Times(1)
 		consl.EXPECT().GetKeyValue("ci/werker_build_map/123").Return(nil, nil)
 		vlt.EXPECT().CreateThrowawayToken().Return("sup", nil)
 		mockz.producer.EXPECT().WriteProto(gomock.Any(), "build").Times(1)
@@ -278,9 +281,9 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 			t.Error(diff)
 		}
 	})
-
-	// test scenario where hash and branch are both sent in the build request. an old build summary should be attempted to be retrieved to
-	// validate build info against, and even if it isn't there a build message should be put on the queue
+	//
+	//// test scenario where hash and branch are both sent in the build request. an old build summary should be attempted to be retrieved to
+	//// validate build info against, and even if it isn't there a build message should be put on the queue
 	t.Run("test building with a branch and a hash", func(t *testing.T) {
 		request := &pb.BuildReq{AcctRepo: "shankj3/ocelot", Branch: "banana", Hash: "123"}
 		mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
@@ -288,6 +291,9 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
 		mockz.store.EXPECT().RetrieveLatestSum("123").Return(&pb.BuildSummary{}, storage.BuildSumNotFound("123"))
 		mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "123").Return(ocelot, nil)
+		mockz.handler.EXPECT().GetChangedFiles("shankj3/ocelot", gomock.Any(), gomock.Any()).Return([]string{"ocelot.yml"}, nil)
+		mockz.handler.EXPECT().GetCommit("shankj3/ocelot", "123").Return(&pb.Commit{Message:"hi", Hash: "123"}, nil).Times(1)
+
 		consl.EXPECT().GetKeyValue("ci/werker_build_map/123").Return(nil, nil)
 		vlt.EXPECT().CreateThrowawayToken().Return("sup", nil)
 		// if this producer expect passes, it means that a message was produced
@@ -297,7 +303,7 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		gos.BuildRepoAndHash(request, streamer)
 	})
 
-	// test scenario where build conf isn't valid
+	//// test scenario where build conf isn't valid
 	t.Run("invalid ocelot yml", func(t *testing.T) {
 		mockz.rc.EXPECT().GetConsul().Return(consl).Times(1)
 		consl.EXPECT().GetKeyValue("ci/werker_build_map/123").Return(nil, nil)
@@ -305,6 +311,8 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		mockz.store.EXPECT().RetrieveLatestSum("123").Return(&pb.BuildSummary{}, storage.BuildSumNotFound("123"))
 		mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
 		mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "123").Return(ocelotInvalid, nil)
+		mockz.handler.EXPECT().GetChangedFiles("shankj3/ocelot", gomock.Any(), gomock.Any()).Return([]string{"ocelot.yml"}, nil)
+		mockz.handler.EXPECT().GetCommit("shankj3/ocelot", "123").Return(&pb.Commit{Message:"hi", Hash: "123"}, nil).Times(1)
 		mockz.store.EXPECT().AddSumStart("123", "shankj3", "ocelot", "master").Return(int64(1), nil).Times(1)
 		mockz.store.EXPECT().StoreFailedValidation(int64(1)).Times(1)
 		mockz.store.EXPECT().AddStageDetail(gomock.Any()).Return(nil).Times(1)
@@ -317,7 +325,7 @@ func setupMockedGuideOcelot(t *testing.T) (*guideOcelotServer, *gomock.Controlle
 	ctl := gomock.NewController(t)
 	mockz := &mocks{}
 	mockz.store = storage.NewMockOcelotStorage(ctl)
-	mockz.handler = pb.NewMockVCSHandler(ctl)
+	mockz.handler = mock_models.NewMockVCSHandler(ctl)
 	mockz.rc = mock_credentials.NewMockCVRemoteConfig(ctl)
 	mockz.producer = nsqpb.NewMockProducer(ctl)
 	gos := &guideOcelotServer{
@@ -335,7 +343,7 @@ type mocks struct {
 	producer *nsqpb.MockProducer
 	rc       *mock_credentials.MockCVRemoteConfig
 	store    *storage.MockOcelotStorage
-	handler  *pb.MockVCSHandler
+	handler  *mock_models.MockVCSHandler
 }
 
 func TestGuideOcelotServer_BuildRepoAndHash_previouslybuilt(t *testing.T) {
@@ -355,6 +363,10 @@ func TestGuideOcelotServer_BuildRepoAndHash_previouslybuilt(t *testing.T) {
 	mockz.rc.EXPECT().GetCred(mockz.store, pb.SubCredType_BITBUCKET, "BITBUCKET_shankj3", "shankj3", false).Return(cred, nil).Times(1)
 	mockz.store.EXPECT().RetrieveLatestSum("ks72bas").Return(&pb.BuildSummary{Hash: "ks72basasdfasdf", Branch: "master", BuildId: 123, Repo: "ocelot", Account: "shankj3"}, nil)
 	mockz.handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "ks72basasdfasdf").Return(ocelot, nil)
+	mockz.handler.EXPECT().GetChangedFiles("shankj3/ocelot", gomock.Any(), gomock.Any()).Return([]string{"ocelot.yml"}, nil)
+	mockz.handler.EXPECT().GetCommit("shankj3/ocelot", "ks72basasdfasdf").Return(&pb.Commit{Message:"hi", Hash: "ks72basasdfasdf" +
+		""}, nil).Times(1)
+
 	consl.EXPECT().GetKeyValue("ci/werker_build_map/ks72basasdfasdf").Return(nil, nil)
 	vlt.EXPECT().CreateThrowawayToken().Return("sup", nil)
 	mockz.producer.EXPECT().WriteProto(gomock.Any(), "build").Times(1)
