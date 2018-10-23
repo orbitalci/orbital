@@ -40,7 +40,7 @@
 
 [[constraint]]
 #  version = "0.2.1"
-  revision = "cfc9e8776079df99ca20bf24560e55cffe8ab276"
+  revision = "a17eb0655fc50674966bf7df4e587ecf7a6daa3a"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]
@@ -71,3 +71,7 @@
 [[constraint]]
   name = "github.com/tomnomnom/linkheader"
   version = "0.1.0"
+
+[[override]]
+  name = "github.com/google/go-github"
+  version = "18.2.0"

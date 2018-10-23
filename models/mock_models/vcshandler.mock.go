@@ -194,19 +194,6 @@ func (mr *MockVCSHandlerMockRecorder) GetChangedFiles(acctRepo, latesthash, earl
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChangedFiles", reflect.TypeOf((*MockVCSHandler)(nil).GetChangedFiles), acctRepo, latesthash, earliestHash)
 }
 
-// GetPRCommits mocks base method
-func (m *MockVCSHandler) GetPRCommits(url string) ([]*pb.Commit, error) {
-	ret := m.ctrl.Call(m, "GetPRCommits", url)
-	ret0, _ := ret[0].([]*pb.Commit)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPRCommits indicates an expected call of GetPRCommits
-func (mr *MockVCSHandlerMockRecorder) GetPRCommits(url interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPRCommits", reflect.TypeOf((*MockVCSHandler)(nil).GetPRCommits), url)
-}
-
 // PostPRComment mocks base method
 func (m *MockVCSHandler) PostPRComment(acctRepo, prId, hash string, failed bool, buildId int64) error {
 	ret := m.ctrl.Call(m, "PostPRComment", acctRepo, prId, hash, failed, buildId)

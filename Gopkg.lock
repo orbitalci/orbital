@@ -197,6 +197,18 @@
   revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  revision = "f55b50f38167644bb7e4be03d9a2bde71d435239"
+  version = "v18.2.0"
+
+[[projects]]
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/google/uuid"
   packages = ["."]
   revision = "064e2069ce9c359c118179501254f67d7d37ba24"
@@ -634,19 +646,13 @@
     "test",
     "vault"
   ]
-  revision = "cfc9e8776079df99ca20bf24560e55cffe8ab276"
+  revision = "a17eb0655fc50674966bf7df4e587ecf7a6daa3a"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
   version = "v1.0.5"
-
-[[projects]]g
-  name = "github.com/tomnomnom/linkheader"
-  packages = ["."]
-  revision = "6953a30d444317754766fccdd3f7f000edc874f6"
-  version = "0.1.0"
 
 [[projects]]
   name = "github.com/urfave/negroni"
@@ -809,6 +815,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "64980f865093d487c48ea07bce6ab42e7cb416222d4dc997dae5367f3719b763"
+  inputs-digest = "0ab303b7ad49ccf7ab04371e7201872fe533f239c834738bdb2514ea7c2c957f"
   solver-name = "gps-cdcl"
   solver-version = 1

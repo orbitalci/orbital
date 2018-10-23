@@ -62,9 +62,10 @@ type VCSHandler interface {
 	//  return the changeset similar to git diff --name-only <latestHash>..<earliestHash>
 	GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error)
 
+	// commenting out because this method is never used
 	// GetPRCommits will return a list of commits for the given url for commits. It'll call the url from (e.g. bb or github),
 	//   unmarshal into its vcs-specific model, then translate to the global model to return a list of generic commits
-	GetPRCommits(url string) ([]*pb.Commit, error)
+	//GetPRCommits(url string) ([]*pb.Commit, error)
 
 	// PostPRComment will add a comment to a pr belonging to acct/repo acctRepo and id prId with a comment that is along the lines of
 	// Ocelot build has <status>.
