@@ -1,28 +1,39 @@
 package github
 
 import (
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/go-test/deep"
+	"github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-func getCli(t *testing.T) models.VCSHandler {
-	creds := &pb.VCSCreds{
-		ClientId: "d964410498664a8a35e4",
-		TokenURL: "https://github.com/login/oauth/access_token",
-		ClientSecret: "6ac7e03ca35864b203e392540550578e92863f80",
-	}
 
+func getCliAuth(t *testing.T) models.VCSHandler {
+	token := os.Getenv("GITHUB_ACCESS_TOKEN")
+	if token == "" {
+		t.Skip("unit test requires authentication, and environment variable GITHUB_ACCESS_TOKEN not provided, skipping...")
+	}
+	creds := &pb.VCSCreds{
+		ClientSecret: token,
+	}
 	cli, _, err := GetGithubClient(creds)
 	if err != nil {
 		t.Fatal(err)
 	}
 	return cli
+}
+
+func getCli(t *testing.T) models.VCSHandler {
+	client := &net.OAuthClient{}
+	client.SetupNoAuthentication()
+	gh := GetGithubHandler(nil, client)
+	return gh
 }
 
 func TestGithub_GetFile(t *testing.T) {
@@ -56,7 +67,12 @@ func TestGithubVCS_GetRepoLinks(t *testing.T) {
 	if diff := deep.Equal(links, linkz); diff != nil {
 		t.Error(diff)
 	}
-	if err = cli.CreateWebhook(linkz.Hooks); err != nil {
+}
+
+func TestGithubVCS_CreateWebhook(t *testing.T) {
+	cli := getCliAuth(t)
+	hookUrl := "https://api.github.com/repos/shankj3/test-ocelot/hooks"
+	if err := cli.CreateWebhook(hookUrl); err != nil {
 		t.Error(err)
 	}
 }
@@ -113,7 +129,7 @@ func TestGithubVCS_GetCommitLog(t *testing.T) {
 }
 
 func TestGithubVCS_PostPRComment(t *testing.T) {
-	cli := getCli(t)
+	cli := getCliAuth(t)
 	ghCli := cli.(*githubVCS)
 	lastHash := "f21cd5a1a71b106f1578356dc9d80fa174e23f69"
 	if err := cli.PostPRComment("shankj3/test-ocelot", "1", lastHash, true, 12); err != nil  {
