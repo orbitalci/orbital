@@ -50,7 +50,7 @@ func (t *translator) TranslatePush(reader io.Reader) (*pb.Push, error) {
 			AcctRepo: push.GetRepo().GetFullName(),
 			RepoLink: push.GetRepo().GetURL(),
 		},
-		User: &pb.User{UserName: push.GetRepo().GetOwner().GetName()},
+		User: &pb.User{UserName: push.GetRepo().GetOwner().GetLogin()},
 		HeadCommit: translatePushCommit(push.GetHeadCommit()),
 		PreviousHeadCommit: getPreviousHead(push),
 		Commits: translatePushCommits(push.Commits),

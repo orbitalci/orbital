@@ -10,9 +10,9 @@ import (
 func translatePushCommit(commit *github.PushEventCommit) (*pb.Commit) {
 	return &pb.Commit{
 		Message: commit.GetMessage(),
-		Hash: commit.GetSHA(),
+		Hash: commit.GetID(),
 		Date: &timestamp.Timestamp{Seconds: commit.GetTimestamp().Unix()},
-		Author: &pb.User{UserName: commit.GetAuthor().GetName()},
+		Author: &pb.User{UserName: commit.GetAuthor().GetLogin(), DisplayName: commit.GetAuthor().GetName()},
 	}
 }
 
@@ -35,10 +35,10 @@ func getPreviousHead(push *github.PushEvent) (previousHead *pb.Commit) {
 	// if there was a previous head commit, set the hash to that
 	if push.GetBefore() != newBranchBefore {
 		previousHead = &pb.Commit{Hash: push.GetBefore()}
-	} else if commitLen := len(push.Commits); commitLen != 0 {
+	} else if len(push.Commits) != 0 {
 		// if there is no previous head commit but there are commits in the push, set the
 		// previous head to the last commit
-		previousHead = translatePushCommit(&push.Commits[commitLen - 1])
+		previousHead = translatePushCommit(&push.Commits[0])
 	}
 	return
 }
