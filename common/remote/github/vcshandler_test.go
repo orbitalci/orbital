@@ -1,6 +1,7 @@
 package github
 
 import (
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
+const acctRepo = "shankj3/test-ocelot"
 
 func getCliAuth(t *testing.T) models.VCSHandler {
 	token := os.Getenv("GITHUB_ACCESS_TOKEN")
@@ -38,7 +40,7 @@ func getCli(t *testing.T) models.VCSHandler {
 
 func TestGithub_GetFile(t *testing.T) {
 	cli := getCli(t)
-	fil, err := cli.GetFile("README.md", "shankj3/test-ocelot", "74302362d6101d8675dfd6a99af7fec0b660ff94")
+	fil, err := cli.GetFile("README.md", acctRepo , "74302362d6101d8675dfd6a99af7fec0b660ff94")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +55,7 @@ test repo for ocelot
 
 func TestGithubVCS_GetRepoLinks(t *testing.T) {
 	cli := getCli(t)
-	links, err := cli.GetRepoLinks("shankj3/test-ocelot")
+	links, err := cli.GetRepoLinks(acctRepo )
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +81,7 @@ func TestGithubVCS_CreateWebhook(t *testing.T) {
 
 func TestGithubVCS_GetAllBranchesLastCommitData(t *testing.T) {
 	cli := getCli(t)
-	allbranches, err := cli.GetAllBranchesLastCommitData("shankj3/test-ocelot")
+	allbranches, err := cli.GetAllBranchesLastCommitData(acctRepo )
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +96,7 @@ func TestGithubVCS_GetAllBranchesLastCommitData(t *testing.T) {
 
 func TestGithubVCS_GetBranchLastCommitData(t *testing.T) {
 	cli := getCli(t)
-	testBranch, err := cli.GetBranchLastCommitData("shankj3/test-ocelot", "fix/test-branch")
+	testBranch, err := cli.GetBranchLastCommitData(acctRepo , "fix/test-branch")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -116,7 +118,7 @@ func TestGithubVCS_GetBranchLastCommitData(t *testing.T) {
 func TestGithubVCS_GetCommitLog(t *testing.T) {
 	cli := getCli(t)
 	lastHash := "f21cd5a1a71b106f1578356dc9d80fa174e23f69"
-	log, err := cli.GetCommitLog("shankj3/test-ocelot", "fix/test-branch", lastHash)
+	log, err := cli.GetCommitLog(acctRepo , "fix/test-branch", lastHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +134,7 @@ func TestGithubVCS_PostPRComment(t *testing.T) {
 	cli := getCliAuth(t)
 	ghCli := cli.(*githubVCS)
 	lastHash := "f21cd5a1a71b106f1578356dc9d80fa174e23f69"
-	if err := cli.PostPRComment("shankj3/test-ocelot", "1", lastHash, true, 12); err != nil  {
+	if err := cli.PostPRComment(acctRepo , "1", lastHash, true, 12); err != nil  {
 		t.Fatal(err)
 	}
 	defer ghCli.deleteIssueComment("shankj3", "test-ocelot", ghCli.setCommentId)
@@ -146,12 +148,45 @@ func TestGithubVCS_GetChangedFiles(t *testing.T) {
 	cli := getCli(t)
 	latest := "094f6fc749227678a364f16a9d0f4ec3c41fdc8b"
 	earliest := "b70d8b6d7fdee0886558142688c211464f84b20e"
-	changedFiles, err := cli.GetChangedFiles("shankj3/test-ocelot", latest, earliest)
+	changedFiles, err := cli.GetChangedFiles(acctRepo , latest, earliest)
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectedChanged := []string{".hi", "README.md"}
 	if diff := deep.Equal(expectedChanged, changedFiles); diff != nil {
 		t.Fatal(diff)
+	}
+}
+
+func TestGithubVCS_checkForOcelotFile(t *testing.T) {
+	cli := getCli(t)
+	gh := cli.(*githubVCS)
+	status, err := gh.checkForOcelotFile("https://api.github.com/repos/shankj3/test-ocelot/contents/{+path}")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status != http.StatusOK {
+		t.Error("this should work")
+	}
+
+}
+
+func TestGithubVCS_StaticStuffs(t *testing.T) {
+	cli := getCli(t)
+	if cli.GetCallbackURL() != DefaultCallbackURL {
+		t.Error(test.StrFormatErrors("callback url wihtout being set", DefaultCallbackURL, cli.GetCallbackURL()))
+	}
+	cb := "http://hi.org"
+	cli.SetCallbackURL(cb)
+	if cli.GetCallbackURL() != cb {
+		t.Error(test.StrFormatErrors("set callback url", cb, cli.GetCallbackURL()))
+	}
+	if burl := cli.GetBaseURL(); burl != DefaultBaseURL {
+		t.Error(test.StrFormatErrors("unset base url", DefaultBaseURL, burl))
+	}
+	bu := "http://github.ci/%s"
+	cli.SetBaseURL(bu)
+	if burl := cli.GetBaseURL(); burl != bu {
+		t.Error(test.StrFormatErrors("set base url", bu, burl))
 	}
 }

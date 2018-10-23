@@ -23,6 +23,7 @@ import (
 )
 
 const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/github"
+const DefaultBaseURL = "https://api.github.com/%s"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
 func GetGithubClient(creds *pb.VCSCreds) (models.VCSHandler, string, error) {
@@ -79,7 +80,7 @@ func (gh *githubVCS) GetBaseURL() string {
 	if gh.baseUrl != "" {
 		return gh.baseUrl
 	}
-	return "https://api.github.com/%s"
+	return DefaultBaseURL
 }
 
 func (gh *githubVCS) SetBaseURL(baseUrl string) {
