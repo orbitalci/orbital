@@ -10,26 +10,21 @@ package github
 import (
 	"io"
 	"io/ioutil"
+	"strings"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/log"
 
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-type translator struct {
+// newBranchBefore is the "before" field in github if a push event is a new branch
+const newBranchBefore = "0000000000000000000000000000000000000000"
+const branchesRefPrefix = "refs/heads/"
 
-}
+type translator struct {}
 
-func translatePushCommit(commit *github.PushEventCommit) (*pb.Commit) {
-	return &pb.Commit{
-		Message: commit.GetMessage(),
-		Hash: commit.GetSHA(),
-		Date: &timestamp.Timestamp{Seconds: commit.GetTimestamp().Unix()},
-		Author: &pb.User{UserName: commit.GetAuthor().GetName()},
-	}
-}
 
 func (t *translator) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	bytez, err := ioutil.ReadAll(reader)
@@ -40,14 +35,15 @@ func (t *translator) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse push event into github struct")
 	}
-	push, err := hookPush.(*github.PushEvent)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to cast as github.PushEvent")
+	push, ok := hookPush.(*github.PushEvent)
+	if !ok {
+		return nil, errors.New("unable to cast as github.PushEvent")
 	}
-	var commits []*pb.Commit
-	for _, cmt := range push.Commits {
-		commits = append(commits, translatePushCommit(&cmt))
+	if !strings.Contains(push.GetRef(), branchesRefPrefix) {
+		log.Log().Errorf("changeset type is not branch, it is %s. idk what to do!!!", push.GetRef())
+		return nil, errors.New("unexpected push type")
 	}
+	branch := strings.Replace(push.GetRef(), branchesRefPrefix, "", 1)
 	pbPush := &pb.Push{
 		Repo: &pb.Repo{
 			Name: push.GetRepo().GetName(),
@@ -56,9 +52,30 @@ func (t *translator) TranslatePush(reader io.Reader) (*pb.Push, error) {
 		},
 		User: &pb.User{UserName: push.GetRepo().GetOwner().GetName()},
 		HeadCommit: translatePushCommit(push.GetHeadCommit()),
-		PreviousHeadCommit: &pb.Commit{Hash: push.GetBefore()},
-		Commits: commits,
-		Branch: push.
+		PreviousHeadCommit: getPreviousHead(push),
+		Commits: translatePushCommits(push.Commits),
+		Branch: branch,
 	}
+	return pbPush, nil
+}
 
+func (t *translator) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
+	bytez, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to read push event into bytes")
+	}
+	hookPR, err := github.ParseWebHook("pull_request", bytez)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse pr event into github struct")
+	}
+	pr := (hookPR).(*github.PullRequestEvent)
+	pullReq := &pb.PullRequest{
+		Urls: getPrUrlsFromPR(pr),
+		Description: pr.PullRequest.GetBody(),
+		Title: pr.PullRequest.GetTitle(),
+		Source: translateHeadData(pr.PullRequest.GetHead()),
+		Destination: translateHeadData(pr.PullRequest.GetBase()),
+		Id: int64(pr.GetNumber()),
+	}
+	return pullReq, nil
 }
