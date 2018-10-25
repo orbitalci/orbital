@@ -135,9 +135,9 @@ func (m *VCSCreds) ValidateForInsert() *ValidationErr {
 	if m.ClientId == "" {
 		errr = append(errr, "oauth client id is required")
 	}
-	if m.TokenURL == "" {
-		errr = append(errr, "oauth token url is required")
-	}
+	//if m.TokenURL == "" {
+	//	errr = append(errr, "oauth token url is required")
+	//}
 	if len(errr) != 0 {
 		return Invalidate(strings.Join(errr, "\n"))
 	}

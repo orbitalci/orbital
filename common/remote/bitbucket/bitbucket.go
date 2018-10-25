@@ -21,9 +21,11 @@ import (
 const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 const V1RepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v"
+const TokenUrl = "https://bitbucket.org/site/oauth2/access_token"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
 func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
+	cfg.TokenURL = TokenUrl
 	bbClient := &ocenet.OAuthClient{}
 	token, err := bbClient.Setup(cfg)
 	if err != nil {

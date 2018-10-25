@@ -36,6 +36,15 @@ func GetGithubClient(creds *pb.VCSCreds) (models.VCSHandler, string, error) {
 	return gh, token, nil
 }
 
+func GetGithubFromHttpClient(cli *http.Client) models.VCSHandler {
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	return &githubVCS{
+		Unmarshaler: unmarshaler,
+		Client: &ocenet.OAuthClient{AuthClient: cli, Unmarshaler: unmarshaler},
+		Marshaler: jsonpb.Marshaler{},
+	}
+}
+
 func GetGithubHandler(cred *pb.VCSCreds, cli ocenet.HttpClient) *githubVCS {
 	return &githubVCS{
 		Client:        cli,
@@ -100,6 +109,7 @@ func (gh *githubVCS) recurseOverRepos(pageNum int) error {
 	opts := &github.RepositoryListOptions{
 		ListOptions: github.ListOptions{PerPage: 50, Page: pageNum},
 	}
+	ocelog.Log().Info("checking all the repos")
 	repos, resp, err := gh.ghClient.Repositories.List(gh.ctx, "", opts)
 	if err != nil {
 		return errors.Wrap(err, "unable to list all repos")
@@ -111,6 +121,7 @@ func (gh *githubVCS) recurseOverRepos(pageNum int) error {
 			return erro
 		}
 		if statusCode == http.StatusOK {
+			ocelog.Log().Infof("%s has an ocelot.yml file!", repo.GetName())
 			if err = gh.CreateWebhook(repo.GetHooksURL()); err != nil {
 				return errors.Wrap(err, "unable to create webhook")
 			}
@@ -150,6 +161,7 @@ func (gh *githubVCS) CreateWebhook(hookUrl string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
+		ocelog.Log().Infof("successfully created webhook with %s", hookUrl)
 		return nil
 	}
 	ghErr := &gpb.Error{}
@@ -159,18 +171,22 @@ func (gh *githubVCS) CreateWebhook(hookUrl string) error {
 			return nil
 		}
 	}
-	return errors.New(resp.Status +": "+ ghErr.Message)
+	err = errors.New(resp.Status +": "+ ghErr.Message)
+	ocelog.IncludeErrField(err).Error("unable to create webhook!")
+	return err
 }
 
 
 func (gh *githubVCS) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
+	logWithFields := ocelog.Log().WithField("filePath", filePath).WithField("fullRepoName", fullRepoName).WithField("hash", commitHash)
+	logWithFields.Debug("getting file ")
 	acct, repo := splitAcctRepo(fullRepoName)
 	getOpts := &github.RepositoryContentGetOptions{Ref: commitHash}
 	var contents io.ReadCloser
 	contents, err = gh.ghClient.Repositories.DownloadContents(gh.ctx, acct, repo, filePath, getOpts)
 	if err != nil {
 		failedGHRemoteCalls.WithLabelValues("GetFile").Inc()
-		ocelog.IncludeErrField(err).Error("cannot get file contentx")
+		logWithFields.WithField("err", err.Error()).Error("cannot get file contents")
 		err = errors.Wrap(err, "unable to get file contents")
 		return
 	}
@@ -180,6 +196,8 @@ func (gh *githubVCS) GetFile(filePath string, fullRepoName string, commitHash st
 }
 
 func (gh *githubVCS) GetRepoLinks(acctRepo string) (*pb.Links, error) {
+	logWithFields := ocelog.Log().WithField("acctRepo", acctRepo)
+	logWithFields.Debug("getting repo links")
 	acct, repo := splitAcctRepo(acctRepo)
 	repository, resp, err := gh.ghClient.Repositories.Get(gh.ctx, acct, repo)
 	if err != nil {
@@ -195,6 +213,7 @@ func (gh *githubVCS) GetRepoLinks(acctRepo string) (*pb.Links, error) {
 		Hooks: repository.GetHooksURL(),
 		Pullrequests: repository.GetPullsURL(),
 	}
+	logWithFields.Debug("got repo links")
 	return links, nil
 }
 
@@ -223,20 +242,25 @@ func (gh *githubVCS) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.Branch
 
 
 func (gh *githubVCS) GetBranchLastCommitData(acctRepo, branch string) (history *pb.BranchHistory, err error) {
+	logWithFields := ocelog.Log().WithField("acctRepo", acctRepo).WithField("branch", branch)
+	logWithFields.Debug("getting branch last commit data")
 	acct, repo := splitAcctRepo(acctRepo)
 	brch, resp, err := gh.ghClient.Repositories.GetBranch(gh.ctx, acct, repo, branch)
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("unable to get last commit data")
+		logWithFields.WithField("err", err.Error()).Error("unable to get last commit data")
 		failedGHRemoteCalls.WithLabelValues("GetBranchLastCommitData").Inc()
 		err = errors.Wrap(err, "unable to get last commit data")
 		return
 	}
+	logWithFields.Debug("successfully got branch last commit data")
 	defer resp.Body.Close()
 	history = translateToBranchHistory(brch)
 	return
 }
 
 func (gh *githubVCS) GetCommitLog(acctRepo string, branch string, lastHash string) (commits []*pb.Commit, err error) {
+	logWithFields := ocelog.Log().WithField("acctRepo", acctRepo).WithField("branch", branch).WithField("lastHash", lastHash)
+	logWithFields.Debug("getting commit log")
 	acct, repo := splitAcctRepo(acctRepo)
 	opt := &github.CommitsListOptions{
 		SHA: branch,
@@ -248,7 +272,7 @@ func (gh *githubVCS) GetCommitLog(acctRepo string, branch string, lastHash strin
 		ghCommits, resp, err := gh.ghClient.Repositories.ListCommits(gh.ctx, acct, repo, opt)
 		if err != nil {
 			failedGHRemoteCalls.WithLabelValues("GetCommitLog").Inc()
-			ocelog.IncludeErrField(err).Error("unable to get list of commits!")
+			logWithFields.WithField("err", err).Error("unable to get list of commits!")
 			return nil, errors.Wrap(err, "unable to get list of commits")
 		}
 		resp.Body.Close()
@@ -264,10 +288,13 @@ func (gh *githubVCS) GetCommitLog(acctRepo string, branch string, lastHash strin
 		opt.Page = resp.NextPage
 	}
 RETURN:
+	logWithFields.Debug("got commit log!")
 	return
 }
 
 func (gh *githubVCS) PostPRComment(acctRepo, prId, hash string, failed bool, buildId int64) error {
+	logWithField := ocelog.Log().WithField("acctRepo", acctRepo).WithField("prId", prId).WithField("hash", hash).WithField("failed", failed).WithField("buildId", buildId)
+	logWithField.Debug("going to post pr comment")
 	acct, repo := splitAcctRepo(acctRepo)
 	var status string
 	switch failed {
@@ -285,11 +312,12 @@ func (gh *githubVCS) PostPRComment(acctRepo, prId, hash string, failed bool, bui
 	cmt, resp, err := gh.ghClient.Issues.CreateComment(gh.ctx, acct, repo, prIdInt, comment)
 	if err != nil {
 		failedGHRemoteCalls.WithLabelValues("PostPRComment").Inc()
-		ocelog.IncludeErrField(err).WithField("prId", prId).WithField("buildId", buildId).Error("unable to create pr comment")
+		logWithField.WithField("err", err.Error()).Error("unable to create pr comment")
 		return errors.Wrap(err, "unable to create a pr comment")
 	}
 	resp.Body.Close()
 	gh.setCommentId = cmt.GetID()
+	logWithField.Debug("successfully posted pr comment")
 	return nil
 }
 
@@ -318,19 +346,22 @@ func (gh *githubVCS) getIssueComment(account, repo string, commentID int64) erro
 }
 
 func (gh *githubVCS) GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error) {
+	logWithFields := ocelog.Log().WithField("acctRepo", acctRepo).WithField("latestHash", latesthash).WithField("earliestHash", earliestHash)
+	logWithFields.Debug("getting changed files")
 	var changedFiles []string
 	//GET /repos/:owner/:repo/compare/:base...:head
 	acct, repo := splitAcctRepo(acctRepo)
 	compare, resp, err := gh.ghClient.Repositories.CompareCommits(gh.ctx, acct, repo, earliestHash, latesthash)
 	if err != nil {
 		failedGHRemoteCalls.WithLabelValues("GetChangedFiles").Inc()
-		ocelog.IncludeErrField(err).WithField("latestHash", latesthash).WithField("earliestHash", earliestHash).Error("unable to get changed files")
+		logWithFields.WithField("err", err.Error()).Error("unable to get changed files")
 		return nil, errors.Wrap(err, "unable to get changed files")
 	}
 	resp.Body.Close()
 	for _, file := range compare.Files {
 		changedFiles = append(changedFiles, file.GetFilename())
 	}
+	logWithFields.Debug("successfully got changed files!")
 	return changedFiles, nil
 }
 

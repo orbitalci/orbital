@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/models"
 
 	"github.com/shankj3/ocelot/models/pb"
 )
@@ -22,6 +23,10 @@ import (
 // newBranchBefore is the "before" field in github if a push event is a new branch
 const newBranchBefore = "0000000000000000000000000000000000000000"
 const branchesRefPrefix = "refs/heads/"
+
+func GetTranslator() models.Translator {
+	return &translator{}
+}
 
 type translator struct {}
 
