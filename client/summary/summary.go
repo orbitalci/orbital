@@ -77,7 +77,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	if err := c.DetectAcctRepo(c.UI); err != nil {
+	if err := c.DetectAcctRepoVcsType(c.UI); err != nil {
 		return 1
 	}
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
