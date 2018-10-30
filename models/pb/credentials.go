@@ -2,10 +2,11 @@ package pb
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const ENV_SAFE = "^[a-zA-Z_]+$"
@@ -467,4 +468,14 @@ func CreateVCSIdentifier(sct SubCredType, acctName string) (string, error) {
 	}
 	identifier := SubCredType_name[int32(sct)] + "_" + acctName
 	return identifier, nil
+}
+
+func VcsTypeStringToSubCredType(vcsType string) (SubCredType, error) {
+	typ, ok := SubCredType_value[strings.ToUpper(vcsType)]
+	sct := SubCredType(typ)
+	if !ok {
+
+		return sct, errors.Errorf("not a supported vcs type, must be one of: %s", strings.Join(CredType_VCS.SubtypesString(), " | "))
+	}
+	return sct, nil
 }

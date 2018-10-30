@@ -571,6 +571,13 @@ message BuildReq {
     string branch = 3;
     // force is a flag that says to build even if it doesn't match the acceptable branches list and even if there is a "skip" ci message
     bool force = 4;
+    // vcsType is the vcs sub cred type that is associated with the acct/repo you wish to build.
+    //  GITHUB|BITBUCKET. If this is not passed in a build request then the credentials table will be checked
+    //  to see if there is only one account with that name to infer subcredtype from. If there is more than one
+    //  account with different subcredtypes, then an error will be returned to and it will be required to pass this
+    //  field
+    SubCredType vcsType = 5;
+
 }
 
 
@@ -630,6 +637,8 @@ message RepoAccount {
     string account = 2;
     // limit is the number of summary records desired to be returned
     int32  limit = 3;
+    // type is the vcs type fo the account and repo
+    SubCredType type = 4;
 }
 
 message Status {

@@ -120,4 +120,5 @@ type PollRequest struct {
 	Cron     string    `protobuf:"bytes,4,opt,name=cron" json:"cron,omitempty"`
 	Branches string    `protobuf:"bytes,5,opt,name=branches" json:"branches,omitempty"`
 	LastCron time.Time `protobuf:"bytes,6,opt,name=lastCron" json:"lastCron,omitempty"`
+
 }

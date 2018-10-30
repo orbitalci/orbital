@@ -2,6 +2,7 @@ syntax = "proto3";
 option go_package = "pb";
 package models;
 
+import "creds.proto";
 import "google/protobuf/timestamp.proto";
 
 //BuildSummary represents the build_summary table in postgres
@@ -48,6 +49,8 @@ message PollRequest {
     string cron = 4;
     // branches tells ocelot which branches should be checked for changes
     string branches = 5;
+    // type is the vcs subcredtype, ie github|bitbucket
+    SubCredType type = 8;
     // internal use only
     google.protobuf.Timestamp lastCronTime = 6;
     // internal use only

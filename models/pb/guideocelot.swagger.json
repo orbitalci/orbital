@@ -1630,6 +1630,29 @@
             "required": false,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "type",
+            "description": "type is the vcs type fo the account and repo.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
           }
         ],
         "tags": [
@@ -1723,6 +1746,29 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          },
+          {
+            "name": "vcsType",
+            "description": "vcsType is the vcs sub cred type that is associated with the acct/repo you wish to build.\n GITHUB|BITBUCKET. If this is not passed in a build request then the credentials table will be checked\n to see if there is only one account with that name to infer subcredtype from. If there is more than one\n account with different subcredtypes, then an error will be returned to and it will be required to pass this\n field.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
           }
         ],
         "tags": [
@@ -1832,6 +1878,10 @@
           "type": "boolean",
           "format": "boolean",
           "title": "force is a flag that says to build even if it doesn't match the acceptable branches list and even if there is a \"skip\" ci message"
+        },
+        "vcsType": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "vcsType is the vcs sub cred type that is associated with the acct/repo you wish to build.\n GITHUB|BITBUCKET. If this is not passed in a build request then the credentials table will be checked\n to see if there is only one account with that name to infer subcredtype from. If there is more than one\n account with different subcredtypes, then an error will be returned to and it will be required to pass this\n field"
         }
       }
     },
@@ -2090,6 +2140,10 @@
           "type": "string",
           "title": "branches tells ocelot which branches should be checked for changes"
         },
+        "type": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "type is the vcs subcredtype, ie github|bitbucket"
+        },
         "lastCronTime": {
           "type": "string",
           "format": "date-time",
@@ -2132,6 +2186,10 @@
           "type": "integer",
           "format": "int32",
           "title": "limit is the number of summary records desired to be returned"
+        },
+        "type": {
+          "$ref": "#/definitions/modelsSubCredType",
+          "title": "type is the vcs type fo the account and repo"
         }
       }
     },
