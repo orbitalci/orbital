@@ -45,13 +45,17 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 
 	// get credentials and appropriate VCS handler for the build request's account / repository
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
-	cfg, err := cred.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig)
+	cfg, err := cred.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig, buildReq.VcsType)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		if _, ok := err.(*common.FormatError); ok {
+		switch err.(type) {
+		case *common.FormatError:
 			return status.Error(codes.InvalidArgument, "Format error: "+err.Error())
+		case *storage.ErrMultipleVCSTypes:
+			return status.Error(codes.InvalidArgument, "There are multiple vcs types for that account. You must include the VcsType field to be able to retrieve credentials for this build. Original error: " + err.Error())
+		default:
+			return status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 		}
-		return status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
@@ -192,10 +196,10 @@ func (g *guideOcelotServer) getSignaler() *signal.Signaler {
 }
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
-	if repoAcct.Repo == "" || repoAcct.Account == "" {
-		return nil, status.Error(codes.InvalidArgument, "repo and account are required fields")
+	if repoAcct.Repo == "" || repoAcct.Account == "" || repoAcct.Type == pb.SubCredType_NIL_SCT {
+		return nil, status.Error(codes.InvalidArgument, "repo, account, and type are required fields")
 	}
-	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig)
+	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig, repoAcct.Type)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		if _, ok := err.(*common.FormatError); ok {
@@ -220,8 +224,8 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 }
 
 func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
-	if poll.Account == "" || poll.Repo == "" || poll.Cron == "" || poll.Branches == "" {
-		return nil, status.Error(codes.InvalidArgument, "account, repo, cron, and branches are required fields")
+	if poll.Account == "" || poll.Repo == "" || poll.Cron == "" || poll.Branches == "" || poll.Type == pb.SubCredType_NIL_SCT {
+		return nil, status.Error(codes.InvalidArgument, "account, repo, cron, branches, and type are required fields")
 	}
 	log.Log().Info("recieved poll request for ", poll.Account, poll.Repo, poll.Cron)
 	empti := &empty.Empty{}
