@@ -12,50 +12,12 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
-
-var (
-	activeRequests = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ocelot_db_active_requests",
-		Help: "number of current db requests",
-	})
-	dbDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "ocelot_db_transaction_duration",
-		Help:    "database execution times",
-		Buckets: prometheus.LinearBuckets(0, 0.25, 15),
-		// table: build_summary, etc
-		// interaction_type: create | read | update | delete
-	}, []string{"table", "interaction_type"})
-	databaseFailed = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "ocelot_db_sqllib_error",
-		Help: "sql library error count",
-	}, []string{"error_type"})
-)
-
-
-func init() {
-	prometheus.MustRegister(activeRequests, dbDuration, databaseFailed)
-	// seed data
-	databaseFailed.WithLabelValues("ErrConnDone").Add(0)
-	databaseFailed.WithLabelValues("ErrBadCon").Add(0)
-	databaseFailed.WithLabelValues("ErrTxDone").Add(0)
-}
-
-func startTransaction() time.Time {
-	activeRequests.Inc()
-	return time.Now()
-}
-
-func finishTransaction(start time.Time, table, crud string) {
-	activeRequests.Dec()
-	dbDuration.WithLabelValues(table, crud).Observe(time.Since(start).Seconds())
-}
 
 func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc string) *PostgresStorage {
 	pg := &PostgresStorage{
@@ -1155,6 +1117,49 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 	}
 	return creds, rows.Err()
 }
+
+func (p *PostgresStorage) GetVCSTypeFromAccount(account string) (pb.SubCredType, error){
+	var bad pb.SubCredType
+	var err error
+	defer metricizeDbErr(err)
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "read")
+	if err = p.Connect(); err != nil {
+		return bad, errors.Wrap(err, "could not connect to postgres")
+	}
+	queryStr := `SELECT DISTINCT cred_sub_type FROM credentials WHERE 
+(cred_type,account)=($1,$2)`
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return bad, err
+	}
+	defer stmt.Close()
+	var rows *sql.Rows
+	rows, err = stmt.Query(pb.CredType_VCS, account)
+	if err != nil {
+		return bad, err
+	}
+	defer rows.Close()
+	var scts []pb.SubCredType
+	for rows.Next() {
+		var sct int32
+		err = rows.Scan(&sct)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return bad, CredNotFound(account, "any")
+			}
+			return bad, err
+		}
+		scts = append(scts, pb.SubCredType(sct))
+	}
+	if len(scts) != 1 {
+		return bad, MultipleVCSTypes(account, scts)
+	}
+	return scts[0], nil
+}
+
 
 func (p *PostgresStorage) GetTrackedRepos() (*pb.AcctRepos, error) {
 	var err error
