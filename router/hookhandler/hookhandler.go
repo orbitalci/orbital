@@ -48,7 +48,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
-	cred, err := credentials.GetVcsCreds(hhc.Store, push.Repo.AcctRepo, hhc.RC)
+	cred, err := credentials.GetVcsCreds(hhc.Store, push.Repo.AcctRepo, hhc.RC, vcsType)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get creds")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get creds, err: ", err)
@@ -81,7 +81,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
-	cred, err := credentials.GetVcsCreds(hhc.Store, pr.Source.Repo.AcctRepo, hhc.RC)
+	cred, err := credentials.GetVcsCreds(hhc.Store, pr.Source.Repo.AcctRepo, hhc.RC, vcsType)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get creds")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get creds, err: ", err)
