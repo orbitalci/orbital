@@ -12,11 +12,12 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-func NewChangeChecker(signaler *signal.Signaler, acctRepo string) *ChangeChecker {
+func NewChangeChecker(signaler *signal.Signaler, acctRepo string, vcsType pb.SubCredType) *ChangeChecker {
 	return &ChangeChecker{
 		Signaler: signaler,
 		AcctRepo: acctRepo,
 		pTeller:  &signal.PushWerkerTeller{},
+		vcsType: vcsType,
 	}
 }
 
@@ -25,12 +26,13 @@ type ChangeChecker struct {
 	handler  models.VCSHandler
 	token    string
 	AcctRepo string
+	vcsType  pb.SubCredType
 	pTeller  signal.CommitPushWerkerTeller
 }
 
 // SetAuth retrieves VCS credentials based on the account, then creates a VCS handler with it.
 func (w *ChangeChecker) SetAuth() error {
-	cfg, err := credentials.GetVcsCreds(w.Store, w.AcctRepo, w.RC)
+	cfg, err := credentials.GetVcsCreds(w.Store, w.AcctRepo, w.RC, w.vcsType)
 	if err != nil {
 		return errors.New("couldn't get vcs creds, error: " + err.Error())
 	}
