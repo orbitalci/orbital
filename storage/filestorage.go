@@ -18,7 +18,7 @@ save-direc/
         └── sum.json
 
 */
-package file
+package storage
 
 import (
 	"encoding/json"
@@ -27,8 +27,6 @@ import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage/postgres"
-
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -39,7 +37,7 @@ import (
 // FileBuildStorage is an implementation of BuildOutput that is for filesystem.
 type FileBuildStorage struct {
 	saveDirec string
-	*postgres.Storage
+	*PostgresStorage
 }
 
 // NewFileBuildStorage will return an initialized FileBuildStorage with the saveDirec added to the
