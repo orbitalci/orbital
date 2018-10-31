@@ -1,4 +1,4 @@
-package storage
+package file
 
 import (
 	"github.com/golang/protobuf/ptypes/timestamp"

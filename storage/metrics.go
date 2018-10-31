@@ -18,7 +18,7 @@ var (
 		// table: build_summary, etc
 		// interaction_type: create | read | update | delete
 	}, []string{"table", "interaction_type"})
-	databaseFailed = prometheus.NewCounterVec(prometheus.CounterOpts{
+	DatabaseFailed = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "ocelot_db_sqllib_error",
 		Help: "sql library error count",
 	}, []string{"error_type"})
@@ -26,19 +26,19 @@ var (
 
 
 func init() {
-	prometheus.MustRegister(activeRequests, dbDuration, databaseFailed)
+	prometheus.MustRegister(activeRequests, dbDuration, DatabaseFailed)
 	// seed data
-	databaseFailed.WithLabelValues("ErrConnDone").Add(0)
-	databaseFailed.WithLabelValues("ErrBadCon").Add(0)
-	databaseFailed.WithLabelValues("ErrTxDone").Add(0)
+	DatabaseFailed.WithLabelValues("ErrConnDone").Add(0)
+	DatabaseFailed.WithLabelValues("ErrBadCon").Add(0)
+	DatabaseFailed.WithLabelValues("ErrTxDone").Add(0)
 }
 
-func startTransaction() time.Time {
+func StartTransaction() time.Time {
 	activeRequests.Inc()
 	return time.Now()
 }
 
-func finishTransaction(start time.Time, table, crud string) {
+func FinishTransaction(start time.Time, table, crud string) {
 	activeRequests.Dec()
 	dbDuration.WithLabelValues(table, crud).Observe(time.Since(start).Seconds())
 }
