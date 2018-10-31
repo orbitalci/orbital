@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage/file"
+	"github.com/shankj3/ocelot/storage/postgres"
+
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,12 +18,12 @@ import (
 )
 
 func CreateTestFileSystemStorage(t *testing.T) BuildSum {
-	return NewFileBuildStorage("./test-fixtures/storage")
+	return file.NewFileBuildStorage("./test-fixtures/storage")
 }
 
 // create a test postgres database on port 5555 using the official docker image, create the tables, and insert some
 // seed data
-func insertDependentData(t *testing.T, pg *PostgresStorage) int64 {
+func InsertDependentData(t *testing.T, pg *postgres.Storage) int64 {
 	hash := "123"
 	model := &pb.BuildSummary{
 		Hash:          hash,
@@ -38,17 +41,6 @@ func insertDependentData(t *testing.T, pg *PostgresStorage) int64 {
 	return id
 }
 
-func createOrUpdateAuditFile(msg string) error {
-	f, err := os.OpenFile("./test-fixtures/pg_audit", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	if _, err = f.WriteString(msg + "\n"); err != nil {
-		return err
-	}
-	return nil
-}
 
 // todo: add some auditing to this, have a file that says what test started it up and what test called cleanup, i know something's missing
 // create the postgres database using docker image, create tables using sql file in test-fixtures
@@ -65,9 +57,6 @@ func CreateTestPgDatabase(t *testing.T, port int) (cleanup func(t *testing.T), p
 	del.Run()
 	herp := fmt.Sprintf("docker run --rm -p %d:5432  -v %s:/docker-entrypoint-initdb.d -e POSTGRES_PASSWORD=%s --name pgtest_%d -d postgres", port, path, password, port)
 	cmd := exec.Command("/bin/sh", "-c", herp)
-	//if err := createOrUpdateAuditFile(fmt.Sprintf("%s,create", t.Name())); err != nil {
-	//	t.Error(err)
-	//}
 	var outbe, errbe bytes.Buffer
 	cmd.Stdout = &outbe
 	cmd.Stderr = &errbe
@@ -80,7 +69,6 @@ func CreateTestPgDatabase(t *testing.T, port int) (cleanup func(t *testing.T), p
 	//containerId = strings.Trim(outbe.String(), "\n")
 	t.Log("successfully started up test pg database on port 5555")
 	cleanup = func(t *testing.T) {
-		//createOrUpdateAuditFile(fmt.Sprintf("%s,delete", t.Name()))
 		t.Log("attempting to clean up db")
 		cmd := exec.Command("/bin/sh", "-c", "docker ps -a | grep pgtest")
 		err := cmd.Start()

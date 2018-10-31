@@ -1,4 +1,4 @@
-package storage
+package postgres
 
 import (
 	"github.com/go-test/deep"
@@ -7,6 +7,7 @@ import (
 	util "github.com/shankj3/ocelot/common/testutil"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/storage"
 
 	"bytes"
 	"testing"
@@ -17,14 +18,14 @@ import (
 func Test_PostgresStorage(t *testing.T) {
 	util.BuildServerHack(t)
 	port := 5455
-	cleanup, pw := CreateTestPgDatabase(t, port)
+	cleanup, pw := storage.CreateTestPgDatabase(t, port)
 	defer cleanup(t)
-	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	pg := NewStorage("postgres", pw, "localhost", port, "postgres")
 	pg.Connect()
-	defer PostgresTeardown(t, pg.db)
+	defer storage.PostgresTeardown(t, pg.db)
 	t.Run("get tracked repos", func(t *testing.T) { postgresStorage_GetTrackedRepos(t, pg) })
 	t.Run("add sum start", func(t *testing.T) { postgresStorage_AddSumStart(t, pg) })
-	id := insertDependentData(t, pg)
+	id := storage.InsertDependentData(t, pg)
 	t.Run("get last data", func(t *testing.T) { postgresStorage_GetLastData(t, pg) })
 	t.Run("add out", func(t *testing.T) { postgresStorage_AddOut(t, pg, id) })
 	t.Run("add stage detail", func(t *testing.T) { postgresStorage_AddStageDetail(t, pg, id) })
@@ -37,7 +38,7 @@ func Test_PostgresStorage(t *testing.T) {
 	t.Run("healthy check", func(t *testing.T) { postgresStorage_Healthy(t, pg, cleanup) })
 }
 
-func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_AddSumStart(t *testing.T, pg *Storage) {
 	const shortForm = "2006-01-02 15:04:05"
 	buildTime, err := time.Parse(shortForm, "2018-01-14 18:38:59")
 	if err != nil {
@@ -106,7 +107,7 @@ func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {
 	}
 }
 
-func postgresStorage_AddOut(t *testing.T, pg *PostgresStorage, id int64) {
+func postgresStorage_AddOut(t *testing.T, pg *Storage, id int64) {
 	txt := []byte("a;lsdkfjakl;sdjfakl;sdjfkl;asdj c389uro23ijrh8234¬˚å˙∆ßˆˆ…∂´¨¨;lsjkdafal;skdur23;klmnvxzic78r39q;lkmsndf")
 	out := &models.BuildOutput{
 		BuildId: id,
@@ -128,7 +129,7 @@ func postgresStorage_AddOut(t *testing.T, pg *PostgresStorage, id int64) {
 	}
 }
 
-func postgresStorage_AddStageDetail(t *testing.T, pg *PostgresStorage, id int64) {
+func postgresStorage_AddStageDetail(t *testing.T, pg *Storage, id int64) {
 	const shortForm = "2006-01-02 15:04:05"
 	startTime, _ := time.Parse(shortForm, "2018-01-14 18:38:59")
 	stageMessage := []string{"wow I am amazing"}
@@ -178,7 +179,7 @@ func postgresStorage_AddStageDetail(t *testing.T, pg *PostgresStorage, id int64)
 	}
 }
 
-func postgresStorage_Healthy(t *testing.T, pg *PostgresStorage, cleanup func(t2 *testing.T)) {
+func postgresStorage_Healthy(t *testing.T, pg *Storage, cleanup func(t2 *testing.T)) {
 	if !pg.Healthy() {
 		t.Error("postgres storage instance should return healthy, it isn't.")
 	}
@@ -189,7 +190,7 @@ func postgresStorage_Healthy(t *testing.T, pg *PostgresStorage, cleanup func(t2 
 	}
 }
 
-func postgresStorage_GetLastData(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_GetLastData(t *testing.T, pg *Storage) {
 	_, hashes, err := pg.GetLastData("level11consulting/ocelot")
 	if err != nil {
 		t.Error(err)
@@ -202,7 +203,7 @@ func postgresStorage_GetLastData(t *testing.T, pg *PostgresStorage) {
 	}
 }
 
-func postgresStorage_SetQueueTime(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_SetQueueTime(t *testing.T, pg *Storage) {
 	id, err := pg.AddSumStart("123", "account", "repo", "master")
 	if err != nil {
 		t.Error(err)
@@ -220,7 +221,7 @@ func postgresStorage_SetQueueTime(t *testing.T, pg *PostgresStorage) {
 	}
 }
 
-func postgresStorage_StoreFailedValidation(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_StoreFailedValidation(t *testing.T, pg *Storage) {
 	id, err := pg.AddSumStart("123", "account", "repo", "master")
 	if err != nil {
 		t.Error(err)
@@ -242,7 +243,7 @@ func postgresStorage_StoreFailedValidation(t *testing.T, pg *PostgresStorage) {
 
 }
 
-func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *Storage) {
 	_, err := pg.AddSumStart("abcbananahammock", "account", "repo", "master")
 	if err != nil {
 		t.Error(err)
@@ -265,7 +266,7 @@ func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
 	}
 }
 
-func postgresStorage_GetTrackedRepos(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_GetTrackedRepos(t *testing.T, pg *Storage) {
 	id, err := pg.AddSumStart("hash", "account", "repo", "branch")
 	if err != nil { t.Error(err) }
 	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
@@ -298,7 +299,7 @@ func postgresStorage_GetTrackedRepos(t *testing.T, pg *PostgresStorage) {
 }
 
 // TODO: add more cred tests here, checking validation etc
-func postgresStorage_InsertCred(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_InsertCred(t *testing.T, pg *Storage) {
 	testCred1 := &pb.GenericCreds{
 		Identifier:   "THISBEDACRED",
 		SubType:      pb.SubCredType_ENV,
@@ -321,7 +322,7 @@ func postgresStorage_InsertCred(t *testing.T, pg *PostgresStorage) {
 }
 
 // this is expected to run after postgresStorage_insertCred
-func postgresStorage_DeleteCred(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_DeleteCred(t *testing.T, pg *Storage) {
 	testCred1 := &pb.GenericCreds{
 		Identifier:   "THISBEDACRED",
 		SubType:      pb.SubCredType_ENV,
@@ -345,13 +346,13 @@ func postgresStorage_DeleteCred(t *testing.T, pg *PostgresStorage) {
 		t.Error("error should not be nil! this should be deleted!")
 		return
 	}
-	if _, ok := err.(*ErrNotFound); !ok {
+	if _, ok := err.(*storage.ErrNotFound); !ok {
 		t.Error("should be a not found error? wtf? instead its: ", err.Error())
 	}
 }
 
 
-func postgresStorage_GetLastSuccessfulBuildHash(t *testing.T, pg *PostgresStorage) {
+func postgresStorage_GetLastSuccessfulBuildHash(t *testing.T, pg *Storage) {
 	var data = []struct{
 		hash string
 		branch string
