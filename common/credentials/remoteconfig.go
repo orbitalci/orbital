@@ -410,6 +410,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	return credsForType, nil
 }
 
+// GetStorageType reads from consul at common.StorageType, and returns a handle for the configured storage.
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 	kv, err := rc.Consul.GetKeyValue(common.StorageType)
 	if err != nil {
@@ -502,7 +503,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		if len(kvconfig) == 0 || err != nil {
 			errorMsg := fmt.Sprintf("unable to get postgres location from consul")
 			if err != nil {
-				errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+				return &StorageCreds{}, errors.Wrap(err, errorMsg)
 			}
 			return &StorageCreds{}, errors.New(errorMsg)
 		}
@@ -517,7 +518,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		if len(secrets) == 0 || err != nil {
 			errorMsg := fmt.Sprintf("unable to get postgres password from consul")
 			if err != nil {
-				errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+				return &StorageCreds{}, errors.Wrap(err, errorMsg)
 			}
 			return &StorageCreds{}, errors.New(errorMsg)
 		}
@@ -530,7 +531,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		if err != nil {
 			errorMsg := fmt.Sprintf("unable to get dynamic postgres creds from vault")
 			if err != nil {
-				errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+				return &StorageCreds{}, errors.Wrap(err, errorMsg)
 			}
 			return &StorageCreds{}, errors.New(errorMsg)
 		}
@@ -538,7 +539,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		storeConfig.User = fmt.Sprintf("%v", secrets.Data["username"].(string))
 		storeConfig.Password = fmt.Sprintf("%v", secrets.Data["password"].(string))
 
-		ocelog.Log().Debugf("Dynamic postgres creds from Vault: %v", secrets)
+		//ocelog.Log().Debugf("Dynamic postgres creds from Vault: %v", secrets)
 
 		// Kick of a lease renewal goroutine
 		go rc.Vault.RenewLeaseForever(secrets)
@@ -551,7 +552,7 @@ func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
 	pair, err := rc.Consul.GetKeyValue(common.FilesystemDir)
 
 	if err != nil {
-		return nil, errors.New("unable to get save directory from consul, err: " + err.Error())
+		return nil, errors.Wrap(err, "unable to get save directory from consul")
 	}
 	return &StorageCreds{Location: string(pair.Value)}, nil
 }
@@ -585,5 +586,5 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	default:
 		return nil, errors.New("unknown type")
 	}
-	return nil, errors.New("could not grab ocelot storage")
+	return nil, errors.New("could not grab ocelot storage. This error should be unreachable")
 }
