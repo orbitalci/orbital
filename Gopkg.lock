@@ -8,6 +8,12 @@
   version = "v0.23.0"
 
 [[projects]]
+  branch = "master"
+  name = "code.cloudfoundry.org/bytefmt"
+  packages = ["."]
+  revision = "2aa6f33b730c79971cfc3c742f279195b0abc627"
+
+[[projects]]
   name = "github.com/Jeffail/gabs"
   packages = ["."]
   revision = "7a0fed31069aba77993a518cc2f37b28ee7aa883"
@@ -803,6 +809,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "26766e79a59ad7318a9928d5db17dff5bcabcd81ad326310ec038c2d5a9a0a61"
+  inputs-digest = "13ecf7f26a3fb8412d38f58cb3f3e04e596f9ec49ff6c238ce5ab87e44a8e457"
   solver-name = "gps-cdcl"
   solver-version = 1
