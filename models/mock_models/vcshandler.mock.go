@@ -35,6 +35,18 @@ func (m *MockVCSHandler) EXPECT() *MockVCSHandlerMockRecorder {
 	return m.recorder
 }
 
+// GetVcsType mocks base method
+func (m *MockVCSHandler) GetVcsType() pb.SubCredType {
+	ret := m.ctrl.Call(m, "GetVcsType")
+	ret0, _ := ret[0].(pb.SubCredType)
+	return ret0
+}
+
+// GetVcsType indicates an expected call of GetVcsType
+func (mr *MockVCSHandlerMockRecorder) GetVcsType() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVcsType", reflect.TypeOf((*MockVCSHandler)(nil).GetVcsType))
+}
+
 // Walk mocks base method
 func (m *MockVCSHandler) Walk() error {
 	ret := m.ctrl.Call(m, "Walk")
