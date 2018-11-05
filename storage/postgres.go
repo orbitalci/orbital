@@ -11,21 +11,12 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
-
-func init() {
-	prometheus.MustRegister(activeRequests, dbDuration, databaseFailed)
-	// seed data
-	databaseFailed.WithLabelValues("ErrConnDone").Add(0)
-	databaseFailed.WithLabelValues("ErrBadCon").Add(0)
-	databaseFailed.WithLabelValues("ErrTxDone").Add(0)
-}
 
 func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc string) *PostgresStorage {
 	pg := &PostgresStorage{
@@ -697,14 +688,14 @@ func (p *PostgresStorage) RetrieveStageDetail(buildId int64) ([]models.StageResu
 	return stages, err
 }
 
-func (p *PostgresStorage) InsertPoll(account string, repo string, cronString string, branches string) (err error) {
+func (p *PostgresStorage) InsertPoll(account string, repo string, cronString string, branches string, credsId int64) (err error) {
 	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "create")
 	if err = p.Connect(); err != nil {
 		return errors.New("could not connect to postgres: " + err.Error())
 	}
-	queryStr := `INSERT INTO polling_repos(account, repo, cron_string, branches, last_cron_time) values ($1, $2, $3, $4, $5)`
+	queryStr := `INSERT INTO polling_repos(account, repo, cron_string, branches, last_cron_time, credentials_id) values ($1, $2, $3, $4, $5, $6)`
 	var stmt *sql.Stmt
 	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
@@ -712,7 +703,7 @@ func (p *PostgresStorage) InsertPoll(account string, repo string, cronString str
 		return err
 	}
 	defer stmt.Close()
-	if _, err = stmt.Exec(account, repo, cronString, branches, time.Now()); err != nil {
+	if _, err = stmt.Exec(account, repo, cronString, branches, time.Now(), credsId); err != nil {
 		ocelog.IncludeErrField(err).WithField("account", account).WithField("repo", repo).WithField("cronString", cronString).Error("could not insert poll entry into database")
 		return
 	}
