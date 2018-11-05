@@ -11,6 +11,9 @@ type HCer struct {
 }
 
 func (hc *HCer) Healthy() error {
+	if hc.PauseThreshold == "" || hc.Path == "" {
+		return nil
+	}
 	thresholdBytes, err := bytefmt.ToBytes(hc.PauseThreshold)
 	if err != nil {
 		return err
