@@ -10,7 +10,6 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/go-til/net"
-	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/models/pb"
 	"golang.org/x/oauth2"
 )

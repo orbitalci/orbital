@@ -2,12 +2,14 @@ package bitbucket
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
+
 	//"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
@@ -20,7 +22,7 @@ import (
 
 const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
-const V1RepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v"
+//const V1RepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v"
 const TokenUrl = "https://bitbucket.org/site/oauth2/access_token"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
@@ -372,14 +374,9 @@ func (bb *Bitbucket) GetPRCommits(url string) ([]*pb.Commit, error) {
 	return commits, nil
 }
 
-// fixme: this can now use the 2.0 api!!!
-// https://developer.atlassian.com/bitbucket/api/2/reference/resource/repositories/%7Busername%7D/%7Brepo_slug%7D/pullrequests/%7Bpull_request_id%7D/comments#post
 func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, buildId int64) error {
-	//	https://api.bitbucket.org/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments --data "content=string"
-	// ** need to use v1 url because atlassian is annoying: **
-	// https://community.atlassian.com/t5/Answers-Developer-Questions/Are-you-planning-on-offering-an-update-pull-request-comment-API/qaq-p/526892
 	path := fmt.Sprintf("%s/pullrequests/%s/comments", acctRepo, prId)
-	urll := fmt.Sprintf(V1RepoBaseURL, path)
+	urll := fmt.Sprintf(bb.GetBaseURL(), path)
 	var status string
 	switch fail {
 	case true:
@@ -388,13 +385,20 @@ func (bb *Bitbucket) PostPRComment(acctRepo, prId, hash string, fail bool, build
 		status = "PASSED"
 	}
 	content := fmt.Sprintf("Ocelot build has **%s** for commit **%s**.\n\nRun `ocelot status -build-id %d` for detailed stage status, and `ocelot run -build-id %d` for complete build logs.", status, hash, buildId, buildId)
-	resp, err := bb.Client.PostUrlForm(urll, url.Values{"content": {content}})
+	body := map[string]map[string]string{
+		"content": {
+			"raw": content,
+			//"markup": "markdown",
+		},
+	}
+	bodybytes, _ := json.Marshal(body)
+	resp, err := bb.Client.GetAuthClient().Post(urll, "application/json", bytes.NewReader(bodybytes))
 	defer resp.Body.Close()
 	if err != nil {
 		failedBBRemoteCalls.WithLabelValues("PostPRComment").Inc()
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		body, _ := ioutil.ReadAll(resp.Body)
 		err = errors.New(fmt.Sprintf("got a non-ok exit code of %d, body is: %s", resp.StatusCode, string(body)))
 		return err
