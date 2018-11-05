@@ -350,6 +350,9 @@ func (gh *githubVCS) getIssueComment(account, repo string, commentID int64) erro
 }
 
 func (gh *githubVCS) GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error) {
+	if earliestHash == "" {
+		earliestHash = latesthash+"~1"
+	}
 	logWithFields := ocelog.Log().WithField("acctRepo", acctRepo).WithField("latestHash", latesthash).WithField("earliestHash", earliestHash)
 	logWithFields.Debug("getting changed files")
 	var changedFiles []string
