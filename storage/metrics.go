@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -41,4 +43,16 @@ func startTransaction() time.Time {
 func finishTransaction(start time.Time, table, crud string) {
 	activeRequests.Dec()
 	dbDuration.WithLabelValues(table, crud).Observe(time.Since(start).Seconds())
+}
+
+// metricizeDbErr will check the type of error and increment the necessary prometheus metrics
+func metricizeDbErr(err error) {
+	switch err {
+	case driver.ErrBadConn:
+		databaseFailed.WithLabelValues("ErrBadCon").Inc()
+	case sql.ErrTxDone:
+		databaseFailed.WithLabelValues("ErrTxDone").Inc()
+	case sql.ErrConnDone:
+		databaseFailed.WithLabelValues("ErrConnDone").Inc()
+	}
 }

@@ -198,6 +198,14 @@
               "HELM_REPO"
             ],
             "default": "NIL_SCT"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -582,6 +590,14 @@
               "HELM_REPO"
             ],
             "default": "NIL_SCT"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -765,6 +781,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -956,6 +980,14 @@
               "HELM_REPO"
             ],
             "default": "NIL_SCT"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -1134,6 +1166,14 @@
               "HELM_REPO"
             ],
             "default": "NIL_SCT"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -1333,6 +1373,14 @@
               "HELM_REPO"
             ],
             "default": "NIL_SCT"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -1845,6 +1893,11 @@
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
           "title": "@inject_tag: yaml:\"subType\""
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "id is credentials id from database"
         }
       }
     },
@@ -2031,6 +2084,11 @@
         "clientSecret": {
           "type": "string",
           "title": "clientSecret is the secret associated with the integration cred"
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "id is credentials id from database"
         }
       }
     },
@@ -2063,6 +2121,11 @@
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
           "title": "@inject_tag: yaml:\"subType\"\nthere is currently only one subtype for k8SCreds, and it is KUBECONF"
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "id is credentials id from database"
         }
       }
     },
@@ -2107,6 +2170,11 @@
         "detailUrlBase": {
           "type": "string",
           "title": "detailUrlBase is the base url for an ocelot ui. when building the notification, will\n  add {{detailUrlBase}}/repos/{{account}}/{{repo}}/{{buildId}}"
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "id is credentials id from database"
         }
       }
     },
@@ -2231,6 +2299,11 @@
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
           "title": "@inject_tag: yaml:\"subType\"\nthere are two subtypes that are valid for RepoCreds: DOCKER, NEXUS"
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "id is credentials id from database"
         }
       }
     },
@@ -2253,6 +2326,11 @@
         "identifier": {
           "type": "string",
           "description": "identifier is the unique identifier for when an ssh key is not associated with a VCS account."
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "id is credentials id from database"
         }
       }
     },
@@ -2385,6 +2463,11 @@
         "subType": {
           "$ref": "#/definitions/modelsSubCredType",
           "title": "there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET\n@inject_tag: yaml:\"subType\""
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "id is credentials id from database"
         }
       }
     },

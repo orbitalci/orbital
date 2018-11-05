@@ -1,8 +1,8 @@
-alter table build_summary add column status int;
-update build_summary as bs
-  set status = (case
-                  when bs.failed = false
-                  then 4
-                  else 3
-                end)
+ALTER TABLE build_summary ADD COLUMN status INT;
+UPDATE build_summary AS bs
+  SET status = (CASE
+                  WHEN bs.failed = false
+                  THEN 4
+                  ELSE 3
+                END)
 ;

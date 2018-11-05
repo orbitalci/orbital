@@ -49,7 +49,7 @@ type BuildStage interface {
 }
 
 type PollTable interface {
-	InsertPoll(account string, repo string, cronString string, branches string) error
+	InsertPoll(account string, repo string, cronString string, branches string, credsId int64) error
 	UpdatePoll(account string, repo string, cronString string, branches string) error
 	SetLastData(account string, repo string, lasthashes map[string]string) error
 	GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error)

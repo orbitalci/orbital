@@ -1,15 +1,14 @@
 package build
 
 import (
+	"context"
+	"flag"
 	"fmt"
-	"strings"
 
 	"github.com/mitchellh/cli"
 	help "github.com/shankj3/ocelot/client/commandhelper"
 	models "github.com/shankj3/ocelot/models/pb"
 
-	"context"
-	"flag"
 )
 
 const synopsis = "build a project hash"

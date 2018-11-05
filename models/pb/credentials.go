@@ -22,6 +22,7 @@ type OcyCredder interface {
 	GetSubType() SubCredType
 	SetSubType(sct SubCredType)
 	ValidateForInsert() *ValidationErr
+	GetId() int64
 }
 
 func Invalidate(reason string) *ValidationErr {
@@ -376,23 +377,23 @@ func (x CredType) SubtypesString() []string {
 	return subtypes
 }
 
-//SpawnCredStruct will instantiate an Cred object with account, identifier, subcredtype, and credtype
-func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCredType) OcyCredder {
+//SpawnCredStruct will instantiate an Cred object with account, identifier, subcredtype, subcredtype and credId
+func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCredType, credId int64) OcyCredder {
 	switch x {
 	case CredType_VCS:
-		return &VCSCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
+		return &VCSCreds{AcctName: account, Identifier: identifier, SubType: subCredType, Id: credId}
 	case CredType_REPO:
-		return &RepoCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
+		return &RepoCreds{AcctName: account, Identifier: identifier, SubType: subCredType, Id: credId}
 	case CredType_K8S:
-		return &K8SCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
+		return &K8SCreds{AcctName: account, Identifier: identifier, SubType: subCredType, Id: credId}
 	case CredType_SSH:
-		return &SSHKeyWrapper{AcctName: account, Identifier: identifier, SubType: subCredType}
+		return &SSHKeyWrapper{AcctName: account, Identifier: identifier, SubType: subCredType, Id: credId}
 	case CredType_APPLE:
-		return &AppleCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
+		return &AppleCreds{AcctName: account, Identifier: identifier, SubType: subCredType, Id: credId}
 	case CredType_NOTIFIER:
-		return &NotifyCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
+		return &NotifyCreds{AcctName: account, Identifier: identifier, SubType: subCredType, Id: credId}
 	case CredType_GENERIC:
-		return &GenericCreds{AcctName: account, Identifier: identifier, SubType: subCredType}
+		return &GenericCreds{AcctName: account, Identifier: identifier, SubType: subCredType, Id: credId}
 	default:
 		return nil
 	}

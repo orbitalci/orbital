@@ -368,15 +368,15 @@ func (m *MockPollTable) EXPECT() *MockPollTableMockRecorder {
 }
 
 // InsertPoll mocks base method
-func (m *MockPollTable) InsertPoll(account, repo, cronString, branches string) error {
-	ret := m.ctrl.Call(m, "InsertPoll", account, repo, cronString, branches)
+func (m *MockPollTable) InsertPoll(account, repo, cronString, branches string, credsId int64) error {
+	ret := m.ctrl.Call(m, "InsertPoll", account, repo, cronString, branches, credsId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // InsertPoll indicates an expected call of InsertPoll
-func (mr *MockPollTableMockRecorder) InsertPoll(account, repo, cronString, branches interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPoll", reflect.TypeOf((*MockPollTable)(nil).InsertPoll), account, repo, cronString, branches)
+func (mr *MockPollTableMockRecorder) InsertPoll(account, repo, cronString, branches, credsId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPoll", reflect.TypeOf((*MockPollTable)(nil).InsertPoll), account, repo, cronString, branches, credsId)
 }
 
 // UpdatePoll mocks base method
@@ -878,15 +878,15 @@ func (mr *MockOcelotStorageMockRecorder) StorageType() *gomock.Call {
 }
 
 // InsertPoll mocks base method
-func (m *MockOcelotStorage) InsertPoll(account, repo, cronString, branches string) error {
-	ret := m.ctrl.Call(m, "InsertPoll", account, repo, cronString, branches)
+func (m *MockOcelotStorage) InsertPoll(account, repo, cronString, branches string, credsId int64) error {
+	ret := m.ctrl.Call(m, "InsertPoll", account, repo, cronString, branches, credsId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // InsertPoll indicates an expected call of InsertPoll
-func (mr *MockOcelotStorageMockRecorder) InsertPoll(account, repo, cronString, branches interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPoll", reflect.TypeOf((*MockOcelotStorage)(nil).InsertPoll), account, repo, cronString, branches)
+func (mr *MockOcelotStorageMockRecorder) InsertPoll(account, repo, cronString, branches, credsId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPoll", reflect.TypeOf((*MockOcelotStorage)(nil).InsertPoll), account, repo, cronString, branches, credsId)
 }
 
 // UpdatePoll mocks base method
