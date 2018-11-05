@@ -64,6 +64,7 @@ type WerkerFacts struct {
 	// this is only for SSH type werkers
 	Ssh                    *SSHFacts
 	DiskUtilityHealthCheck *du.HealthChecker
+	HealthCheckInterval    int
 }
 
 // When a werker starts up as an SSH werker, it will also need to be initialized with these fields so it knows

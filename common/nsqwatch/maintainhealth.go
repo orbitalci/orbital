@@ -52,8 +52,9 @@ func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRe
 
 // MaintainHealths will
 func (nq *NsqWatch) MaintainHealths() {
+	ocelog.Log().Infof("checking for healthy dependency state on an interval of %d seconds", nq.interval)
 	for {
-		time.Sleep(time.Second * time.Duration(10))
+		time.Sleep(time.Second * time.Duration(nq.interval))
 		switch nq.paused {
 		case false:
 			var pause bool
