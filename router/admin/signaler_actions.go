@@ -159,7 +159,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	//		commits, err = handler.GetCommitLog(buildReq.AcctRepo, branch, sums[0].Hash)
 	//	}
 	//}
-	task := signal.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil)
+	task := signal.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil, handler.GetVcsType())
 	task.ChangesetData, err = signal.GenerateNoPreviousHeadChangeset(handler, buildReq.AcctRepo, buildBranch, buildHash)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to generate previous head changeset, changeset data will only include branch")
@@ -242,11 +242,14 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) 
 		}
 	} else {
 		log.Log().Info("inserting poll in db")
-		// todo when swap to github + bitbucket, use new function for determining account instead of hardcoding in request
-		identififer, _ := pb.CreateVCSIdentifier(pb.SubCredType_BITBUCKET, poll.Account)
-		creddy, err := g.Storage.RetrieveCred(pb.SubCredType_BITBUCKET, identififer, poll.Account)
+		creddy, err := cred.GetVcsCreds(g.Storage, common.CreateAcctRepo(poll.Account, poll.Repo), g.RemoteConfig, poll.Type)
 		if err != nil {
-			msg := "unable to find credentials for account " + poll.Account
+			var msg string
+			if _, ok := err.(*storage.ErrMultipleVCSTypes); ok {
+				msg = "multiple vcs types for this account, please include the Type"
+			} else {
+				msg = "unable to find credentials for account " + poll.Account
+			}
 			log.IncludeErrField(err).Error(msg)
 			return empti, status.Error(codes.InvalidArgument, msg+": "+err.Error())
 		}

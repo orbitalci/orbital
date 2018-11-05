@@ -72,6 +72,10 @@ type Bitbucket struct {
 	isInitialized bool
 }
 
+func (bb *Bitbucket) GetVcsType() pb.SubCredType {
+	return pb.SubCredType_BITBUCKET
+}
+
 func (bb *Bitbucket) GetClient() ocenet.HttpClient {
 	return bb.Client
 }

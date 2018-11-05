@@ -70,6 +70,10 @@ type githubVCS struct {
 	setCommentId  int64
 }
 
+func (gh *githubVCS) GetVcsType() pb.SubCredType {
+	return pb.SubCredType_GITHUB
+}
+
 func (gh *githubVCS) GetCallbackURL() string {
 	if gh.CallbackURL == "" {
 		return DefaultCallbackURL

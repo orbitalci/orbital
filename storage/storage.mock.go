@@ -579,6 +579,19 @@ func (mr *MockCredTableMockRecorder) DeleteCred(credder interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCred", reflect.TypeOf((*MockCredTable)(nil).DeleteCred), credder)
 }
 
+// GetVCSTypeFromAccount mocks base method
+func (m *MockCredTable) GetVCSTypeFromAccount(account string) (pb.SubCredType, error) {
+	ret := m.ctrl.Call(m, "GetVCSTypeFromAccount", account)
+	ret0, _ := ret[0].(pb.SubCredType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVCSTypeFromAccount indicates an expected call of GetVCSTypeFromAccount
+func (mr *MockCredTableMockRecorder) GetVCSTypeFromAccount(account interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVCSTypeFromAccount", reflect.TypeOf((*MockCredTable)(nil).GetVCSTypeFromAccount), account)
+}
+
 // MockHealthyChkr is a mock of HealthyChkr interface
 type MockHealthyChkr struct {
 	ctrl     *gomock.Controller
@@ -1064,6 +1077,19 @@ func (m *MockOcelotStorage) DeleteCred(credder pb.OcyCredder) error {
 // DeleteCred indicates an expected call of DeleteCred
 func (mr *MockOcelotStorageMockRecorder) DeleteCred(credder interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCred", reflect.TypeOf((*MockOcelotStorage)(nil).DeleteCred), credder)
+}
+
+// GetVCSTypeFromAccount mocks base method
+func (m *MockOcelotStorage) GetVCSTypeFromAccount(account string) (pb.SubCredType, error) {
+	ret := m.ctrl.Call(m, "GetVCSTypeFromAccount", account)
+	ret0, _ := ret[0].(pb.SubCredType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVCSTypeFromAccount indicates an expected call of GetVCSTypeFromAccount
+func (mr *MockOcelotStorageMockRecorder) GetVCSTypeFromAccount(account interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVCSTypeFromAccount", reflect.TypeOf((*MockOcelotStorage)(nil).GetVCSTypeFromAccount), account)
 }
 
 // Healthy mocks base method

@@ -60,9 +60,9 @@ func configure() *changeSetConfig {
 	}
 	var ok bool
 	var vcsTypeInt int32
-	vcsTypeInt, ok = pb.SubCredType_value[vcsType]
+	vcsTypeInt, ok = pb.SubCredType_value[strings.ToUpper(vcsType)]
 	if !ok {
-		ocelog.Log().Fatalf("%s is not a vcs subcredtype, need bitbucket|github", vcsType)
+		ocelog.Log().Fatalf("%s is not a vcs subcredtype, need %s", vcsType, strings.Join(pb.CredType_VCS.SubtypesString(), "|"))
 	}
 	branchList := strings.Split(branches, ",")
 	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator(), VcsType: pb.SubCredType(vcsTypeInt)}

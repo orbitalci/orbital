@@ -1,9 +1,11 @@
 package credentials
 
 import (
+	"strings"
+
 	"github.com/shankj3/ocelot/models/pb"
 
-	"errors"
+	"github.com/pkg/errors"
 )
 
 //validator for all admin related stuff
@@ -32,8 +34,10 @@ func (adminValidator AdminValidator) ValidateConfig(adminCreds *pb.VCSCreds) err
 		return errors.New("SUB CRED TYPE WAS NOT INSTANTIATED PROPERLY")
 	case pb.SubCredType_BITBUCKET:
 		return nil
+	case pb.SubCredType_GITHUB:
+		return nil
 	default:
-		return errors.New("creds must be one of the following type: bitbucket")
+		return errors.Errorf("creds must be one of the following type: %s", strings.Join(pb.CredType_VCS.SubtypesString(), "|"))
 	}
 	return nil
 }
