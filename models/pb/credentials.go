@@ -21,6 +21,7 @@ type OcyCredder interface {
 	GetSubType() SubCredType
 	SetSubType(sct SubCredType)
 	ValidateForInsert() *ValidationErr
+	GetId() int64
 }
 
 func Invalidate(reason string) *ValidationErr {
@@ -375,7 +376,7 @@ func (x CredType) SubtypesString() []string {
 	return subtypes
 }
 
-//SpawnCredStruct will instantiate an Cred object with account, identifier, subcredtype, and credtype
+//SpawnCredStruct will instantiate an Cred object with account, identifier, subcredtype, subcredtype and credId
 func (x CredType) SpawnCredStruct(account, identifier string, subCredType SubCredType, credId int64) OcyCredder {
 	switch x {
 	case CredType_VCS:

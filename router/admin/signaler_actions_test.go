@@ -94,6 +94,15 @@ func TestGuideOcelotServer_PollRepo(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	store.failNoCred = true
+	_, err = gos.PollRepo(ctx, poll)
+	if err == nil {
+		t.Fatal("no cred exests")
+	}
+	if !strings.Contains(err.Error(), "no cred") {
+		t.Error("should roll up no cred error")
+	}
+	store.failNoCred = false
 	store.failInsertPoll = true
 	_, err = gos.PollRepo(ctx, poll)
 	if err == nil {
@@ -156,6 +165,7 @@ type signalStorage struct {
 	failUpdatePoll bool
 	failInsertPoll bool
 	failPollExists bool
+	failNoCred	   bool
 	pollExists     bool
 }
 
@@ -173,11 +183,18 @@ func (s *signalStorage) UpdatePoll(account string, repo string, cronString strin
 	return nil
 }
 
-func (s *signalStorage) InsertPoll(account string, repo string, cronString string, branches string) error {
+func (s *signalStorage) InsertPoll(account string, repo string, cronString string, branches string, credId int64) error {
 	if s.failInsertPoll {
 		return errors.New("fail insert poll")
 	}
 	return nil
+}
+
+func (s *signalStorage) RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error) {
+	if s.failNoCred {
+		return nil, errors.New("no cred")
+	}
+	return &pb.VCSCreds{Id: 7}, nil
 }
 
 type handle struct {
