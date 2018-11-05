@@ -47,7 +47,7 @@ type BuildContext struct {
 }
 
 func NewFacts() *WerkerFacts {
-	return &WerkerFacts{Ssh: &SSHFacts{}, DiskUtilityHealthCheck: &du.HCer{}}
+	return &WerkerFacts{Ssh: &SSHFacts{}, DiskUtilityHealthCheck: &du.HealthChecker{}}
 }
 
 // WerkerFacts is a struct for the configurations in werker that affect actual builds.
@@ -63,7 +63,7 @@ type WerkerFacts struct {
 	Dev bool
 	// this is only for SSH type werkers
 	Ssh                    *SSHFacts
-	DiskUtilityHealthCheck *du.HCer
+	DiskUtilityHealthCheck *du.HealthChecker
 }
 
 // When a werker starts up as an SSH werker, it will also need to be initialized with these fields so it knows

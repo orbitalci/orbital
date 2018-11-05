@@ -5,7 +5,7 @@ import (
 )
 
 func TestHCer_Healthy(t *testing.T) {
-	hc := &HCer{
+	hc := &HealthChecker{
 		Path: "/var/lib",
 		PauseThreshold: "10GB",
 	}

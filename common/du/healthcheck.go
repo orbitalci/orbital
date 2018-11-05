@@ -5,12 +5,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-type HCer struct {
+type HealthChecker struct {
 	PauseThreshold string
 	Path 		   string
 }
 
-func (hc *HCer) Healthy() error {
+func (hc *HealthChecker) Healthy() error {
 	if hc.PauseThreshold == "" || hc.Path == "" {
 		return nil
 	}

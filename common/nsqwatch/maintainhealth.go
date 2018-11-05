@@ -36,10 +36,10 @@ type NsqWatch struct {
 	remoteConf cred.HealthyMaintainer
 	store      storage.HealthyChkr
 	paused     bool
-	diskUtilityCheck *du.HCer
+	diskUtilityCheck *du.HealthChecker
 }
 
-func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRemoteConfig, store storage.OcelotStorage, duHealthChecker *du.HCer) {
+func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRemoteConfig, store storage.OcelotStorage, duHealthChecker *du.HealthChecker) {
 	nsqwatch := &NsqWatch{
 		interval:         interval,
 		pConsumers:       consumers,
