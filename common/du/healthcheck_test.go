@@ -30,7 +30,7 @@ func TestHealthChecker_Healthy(t *testing.T) {
 		t.Error("an empty pausethreshold should result in no checks being made and no error")
 	}
 	hc.PauseThreshold = "1B"
-	hc.PauseThreshold = ""
+	hc.Path = ""
 	if err = hc.Healthy(); err != nil {
 		t.Error("an empty path should result in no checks being made and no error")
 	}
