@@ -10,7 +10,7 @@ import (
 // Space returns total and free bytes available in a directory, e.g. `C:\`.
 // It returns free space available to the user (including quota limitations),
 // so it can be lower than the free space of the disk.
-func Space(path string) (total, free int, err error) {
+func Space(path string) (total, free uint64, err error) {
 	kernel32, err := syscall.LoadLibrary("Kernel32.dll")
 	if err != nil {
 		return
