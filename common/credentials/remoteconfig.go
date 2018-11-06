@@ -557,6 +557,12 @@ func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
 	return &StorageCreds{Location: string(pair.Value)}, nil
 }
 
+//func (t *typ) GetStorageCreds() {
+//}
+
+/////// We want to clean up the calls that use/switch on typ, and creds.
+/////// The new storage should be cleaned up to take storage.OcelotStorage, instead of the elements within
+
 // GetOcelotStorage instantiates the datastore based on Consul configuration for Ocelot. Opens the database connection for Postgres.
 func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	// FIXME: We should get rid of this call, and let GetStorageCreds() handle more of this
