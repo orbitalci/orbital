@@ -49,7 +49,10 @@ Vagrant.configure("2") do |config|
       go get -v -u github.com/golang/protobuf/protoc-gen-go && \
       go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway && \
       go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
-      go get -v -u github.com/favadi/protoc-go-inject-tag
+      go get -v -u github.com/favadi/protoc-go-inject-tag && \
+      go get -v -u github.com/golang/mock/mockgen && \
+      go get -v -u golang.org/x/tools/cmd/stringer && \
+      go get golang.org/x/tools/cmd/cover
 
       echo '# Ocelot configuration:' | sudo tee -a /etc/bashrc.bashrc
       echo 'export VAULT_TOKEN=ocelotdev' | sudo tee -a /etc/bash.bashrc
@@ -70,6 +73,10 @@ Vagrant.configure("2") do |config|
       export LOG_LEVEL=debug
       echo 'export DBHOST=192.168.56.78' | sudo tee -a /etc/bash.bashrc
       export DBHOST=192.168.56.78
+      echo 'export ADMIN_HOST=192.168.12.34' | sudo tee -a /etc/bash.bashrc
+      export ADMIN_HOST=192.168.12.34
+      echo 'export ADMIN_PORT=10000' | sudo tee -a /etc/bash.bashrc
+      export ADMIN_PORT=10000
 
       # Set up Vault to use kv version 1, for now
       # Unmount secret/
@@ -79,6 +86,9 @@ Vagrant.configure("2") do |config|
       /home/vagrant/go/src/github.com/shankj3/ocelot/scripts/setup-cv.sh
 
       cd /home/vagrant/go/src/github.com/shankj3/ocelot/
+      
+      # go generate ./...
+      # make proto
       make local
     SHELL
     ocelot.vm.network "private_network", ip: "192.168.12.34"
