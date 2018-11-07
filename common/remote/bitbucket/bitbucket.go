@@ -36,7 +36,7 @@ func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 func GetBitbucketFromHttpClient(cli *http.Client) models.VCSHandler {
 	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
 	bb := &Bitbucket{
-		Client:        &ocenet.OAuthClient{AuthClient: *cli, Unmarshaler: unmarshaler},
+		Client:        &ocenet.OAuthClient{AuthClient: cli, Unmarshaler: unmarshaler},
 		Unmarshaler:   unmarshaler,
 		Marshaler:     jsonpb.Marshaler{},
 		isInitialized: true,
