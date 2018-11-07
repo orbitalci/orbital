@@ -454,19 +454,19 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	// Or creds are dynamic, and managed by vault's database secret engine
 
 	// The desired default behavior is to use static secrets. Don't error out if Vault settings aren't in Consul
-	vaultConf, _ := rc.Consul.GetKeyValues(common.VaultConf)
+	postgresVaultConf, _ := rc.Consul.GetKeyValues(common.PostgresVaultConf)
 
-	vaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
-	vaultRole := ""
-	for _, vconf := range vaultConf {
+	postgresVaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
+	postgresVaultRole := ""
+	for _, vconf := range postgresVaultConf {
 		switch vconf.Key {
-		case common.VaultDBSecretEngine:
-			if dbConfigType := string(vconf.Value); dbConfigType !=  "kv" && dbConfigType != "database"{
+		case common.PostgresVaultSecretsEngine:
+			if dbConfigType := string(vconf.Value); dbConfigType != "kv" && dbConfigType != "database" {
 				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine: " + dbConfigType)
 			}
-			vaultBackend = string(vconf.Value)
-		case common.VaultRoleName:
-			vaultRole = string(vconf.Value)
+			postgresVaultBackend = string(vconf.Value)
+		case common.PostgresVaultRoleName:
+			postgresVaultRole = string(vconf.Value)
 		}
 	}
 
@@ -493,7 +493,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		}
 	}
 
-	switch vaultBackend {
+	switch postgresVaultBackend {
 	case "kv":
 		ocelog.Log().Info("Static Postgres creds")
 		kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
@@ -525,7 +525,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 
 	case "database":
 		ocelog.Log().Info("Dynamic Postgres creds")
-		secrets, err := rc.Vault.GetVaultSecret(fmt.Sprintf("database/creds/%s", vaultRole))
+		secrets, err := rc.Vault.GetVaultSecret(fmt.Sprintf("database/creds/%s", postgresVaultRole))
 		if err != nil {
 			errorMsg := fmt.Sprintf("unable to get dynamic postgres creds from vault")
 			if err != nil {

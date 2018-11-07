@@ -26,7 +26,7 @@ locals() {
     consul kv put ${prefix}config/ocelot/postgres/port 5432
 
     # Vault kv secret engine (Static secret)
-    consul kv put ${prefix}config/ocelot/vault/secretbackend kv
+    consul kv put ${prefix}config/ocelot/postgres/vault/secretsengine kv
     consul kv put ${prefix}config/ocelot/postgres/username postgres
     vault kv put secret/data/config/ocelot/postgres clientsecret="mysecretpassword"
 
@@ -60,8 +60,8 @@ locals() {
     #    default_ttl="10m" \
     #    max_ttl="1h"
 
-    consul kv put ${prefix}config/ocelot/vault/secretbackend database
-    consul kv put ${prefix}config/ocelot/vault/rolename ocelot
+    consul kv put ${prefix}config/ocelot/postgres/vault/secretsengine database
+    consul kv put ${prefix}config/ocelot/postgres/vault/rolename ocelot
 
     # Test that we can get dynamic creds from Vault
     # In production, you will need to define policy for read to "database/creds/ocelot"

@@ -47,12 +47,12 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 		return
 	}
 
-	err = consulet.AddKeyValue(common.VaultDBSecretEngine, []byte(vaultEngine))
+	err = consulet.AddKeyValue(common.PostgresVaultSecretsEngine, []byte(vaultEngine))
 	if err != nil {
 		return
 	}
 
-	err = consulet.AddKeyValue(common.VaultRoleName, []byte(vaultRole))
+	err = consulet.AddKeyValue(common.PostgresVaultRoleName, []byte(vaultRole))
 	if err != nil {
 		return
 	}
