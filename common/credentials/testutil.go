@@ -1,6 +1,7 @@
 package credentials
 
 import (
+	"os/exec"
 	"sync"
 
 	"github.com/hashicorp/consul/testutil"
@@ -14,6 +15,7 @@ import (
 	"github.com/shankj3/ocelot/storage"
 
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"strconv"
@@ -62,35 +64,68 @@ func SetStoragePostgres(consulet *consul.Consulet, vaulty vault.Vaulty, dbName s
 		_, err = vaulty.AddVaultData(common.PostgresPasswordLoc, a)
 		return err
 	case "database":
-		// I should move the Vault setup stuff here, but for now, let's pretend it isn't a big deal
 
-		// We need to make sure that Consul has
+		// If the Vault DB Secret Engine is "database", then we have to set up the database engine, and create a role
+
+		// FIXME: We are expecting to use a different Vault instance (than the test vault) because the cli commands time out otherwise.
+		// We use the vault cli, since the api is really involved with enabling backends, and creating roles. I'm lazy... ¯\_(ツ)_/¯
+		vaultDbConfig := "vault write database/config/ocelot " +
+			"plugin_name=postgresql-database-plugin " +
+			"allowed_roles='ocelot' " +
+			"connection_url='postgresql://{{username}}:{{password}}@192.168.56.78:5432/?sslmode=disable' " +
+			"username='postgres' " +
+			"password='mysecretpassword'"
+
+		// FYI: This is a raw string bc of the nested quotes
+		vaultDbRole := `vault write database/roles/ocelot \
+        db_name=ocelot \
+        creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
+            GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
+        default_ttl="10m" \
+        max_ttl="1h"`
+
+		fmt.Printf("Vault config! %s\n", vaultDbConfig)
+		fmt.Printf("Vault role! %s\n", vaultDbRole)
+
+		vagrantVaultScheme := "http"
+		vagrantVaultIP := "192.168.56.78"
+		vagrantVaultPort := 8200
+		vagrantVaultToken := "ocelotdev"
+
+		vaultAddrStr := fmt.Sprintf("VAULT_ADDR=%s", fmt.Sprintf("%s://%s:%d", vagrantVaultScheme, vagrantVaultIP, vagrantVaultPort))
+		vaultTokenStr := fmt.Sprintf("VAULT_TOKEN=%s", vagrantVaultToken)
+
+		// Turn on database secrets backend
+		cmd := exec.Command("sh", "-c", fmt.Sprintf("vault secrets enable database || true"))
+		cmd.Env = append(cmd.Env, vaultAddrStr)
+		cmd.Env = append(cmd.Env, vaultTokenStr)
+
+		_, err := cmd.CombinedOutput()
+		if err != nil {
+			return errors.New("Got an error trying to enable database secrets backend")
+		}
+
+		// Configure the Vault database secrets backend
+		cmd = exec.Command("sh", "-c", fmt.Sprintf("%s", vaultDbConfig))
+		cmd.Env = append(cmd.Env, vaultAddrStr)
+		cmd.Env = append(cmd.Env, vaultTokenStr)
+
+		_, err = cmd.CombinedOutput()
+		if err != nil {
+			return errors.New("Got an error trying to load Vault database backend config")
+		}
+
+		// Configure Ocelot's Vault role
+		cmd = exec.Command("sh", "-c", fmt.Sprintf("%s", vaultDbRole))
+		cmd.Env = append(cmd.Env, vaultAddrStr)
+		cmd.Env = append(cmd.Env, vaultTokenStr)
+
+		_, err = cmd.CombinedOutput()
+		if err != nil {
+			return errors.New("Got an error trying to load Vault ocelot role configuration")
+		}
+
 		return nil
-		//return errors.New("This test case is incomplete. This test requires go-til support for enabling the Database secret engine + creating a role")
-	//	// if the Vault DB Secret Engine is "database", then we have to set up the database engine, and create a role
-	//	var configPayload = map[string]interface{}{
-	//		"plugin_name":             "postgresql-database-plugin",
-	//		"allowed_roles":           fmt.Sprintf("%s", vaultRole),
-	//		"connection_url":          fmt.Sprintf("postgresql://{{username}}:{{password}}@%s:%s/%s/?sslmode=disable", location, port, dbName),
-	//		"max_open_connections":    5,
-	//		"max_connection_lifetime": "5s",
-	//		"username":                fmt.Sprintf("%s", username),
-	//		"password":                fmt.Sprintf("%s", pw),
-	//	}
-	//	//_, err = vaulty.AddVaultData("/database/config/ocelot", configPayload)
-	//	err = vaulty.EnableDatabaseSecretEngine(configPayload)
-	//	if err != nil {
-	//		return err
-	//	}
-
-	//	var rolePayload = map[string]interface{}{
-	//		"db_name":             fmt.Sprintf("%s", dbName),
-	//		"creation_statements": []string{"CREATE ROLE '{{name}}' WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO '{{name}}';"},
-	//		"default_ttl":         "30s",
-	//		"max_ttl":             "10m",
-	//	}
-	//	_, err = vaulty.AddVaultData(fmt.Sprintf("/database/role/%s", vaultRole), rolePayload)
-	//	return err
 
 	default:
 		return errors.New("We only support 'kv' or 'database' secret engines in Vault")

@@ -3,7 +3,6 @@ package credentials
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 
@@ -593,91 +592,37 @@ func TestRemoteConfig_GetStorageCreds(t *testing.T) {
 
 		//// FIXME! From here on, expected that the vault instance is written against the Vagrant instance
 		/// Need to change environment variables to use GetInstance()
-		_ = os.Setenv("VAULT_ADDR", "http://192.168.56.78:8200")
-		_ = os.Setenv("VAULT_TOKEN", "ocelotdev")
+		vagrantVaultScheme := "http"
+		vagrantVaultIP := "192.168.56.78"
+		vagrantVaultPort := 8200
+		vagrantVaultRole := "ocelot"
+		vagrantVaultToken := "ocelotdev"
+		vagrantPostgresIP := vagrantVaultIP
+		vagrantPostgresUser := "postgres"
+		vagrantPostgresPort := 5432
+		vagrantPostgresDb := vagrantPostgresUser
+		vagrantPostgresPassword := "mysecretpassword"
+		_ = os.Setenv("VAULT_ADDR", fmt.Sprintf("%s://%s:%d", vagrantVaultScheme, vagrantVaultIP, vagrantVaultPort))
+		_ = os.Setenv("VAULT_TOKEN", vagrantVaultToken)
 
 		consulHack := strings.Split(testRemoteConfig.GetConsul().(*consul.Consulet).Config.Address, ":")
 		consulHackPort, _ := strconv.Atoi(consulHack[1])
 
-		vagrantRemoteConfig, err := GetInstance(consulHack[0], consulHackPort, os.Getenv("VAULT_TOKEN"))
+		vagrantRemoteConfig, err := GetInstance(consulHack[0], consulHackPort, vagrantVaultToken)
 		if err != nil {
 			t.Error("Failed trying to initialize vagrant remote config")
 		}
 
-		vaultDbConfig := "vault write database/config/ocelot " +
-			"plugin_name=postgresql-database-plugin " +
-			"allowed_roles='ocelot' " +
-			"connection_url='postgresql://{{username}}:{{password}}@192.168.56.78:5432/?sslmode=disable' " +
-			"username='postgres' " +
-			"password='mysecretpassword'"
-
-		vaultDbRole := `vault write database/roles/ocelot \
-        db_name=ocelot \
-        creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
-            GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
-        default_ttl="10m" \
-        max_ttl="1h"`
-
-		fmt.Printf("Vault config! %s\n", vaultDbConfig)
-		fmt.Printf("Vault role! %s\n", vaultDbRole)
-
-		// Set up test vault with the command line
-		cmd := exec.Command("sh", "-c", fmt.Sprintf("vault secrets enable database || true"))
-		//cmd := exec.Command("env")
-		cmd.Env = append(cmd.Env, fmt.Sprintf("VAULT_ADDR=%s", "http://192.168.56.78:8200"))
-		cmd.Env = append(cmd.Env, fmt.Sprintf("VAULT_TOKEN=%s", "ocelotdev"))
-
-		stdoutStderr, err := cmd.CombinedOutput()
-		if err != nil {
-			t.Error("Got an error trying to set vault up via cli")
-			fmt.Printf("I failed\n%s\n", stdoutStderr)
-		} else {
-			fmt.Printf("I passed\n%s\n", stdoutStderr)
-		}
-
-		///
-
-		// Set up test vault with the command line
-		cmd = exec.Command("sh", "-c", fmt.Sprintf("%s", vaultDbConfig))
-		//cmd := exec.Command("env")
-		cmd.Env = append(cmd.Env, fmt.Sprintf("VAULT_ADDR=%s", "http://192.168.56.78:8200"))
-		cmd.Env = append(cmd.Env, fmt.Sprintf("VAULT_TOKEN=%s", "ocelotdev"))
-
-		stdoutStderr, err = cmd.CombinedOutput()
-		if err != nil {
-			t.Error("Got an error trying to set vault up via cli")
-			fmt.Printf("I failed\n%s\n", stdoutStderr)
-		} else {
-			fmt.Printf("I passed\n%s\n", stdoutStderr)
-		}
-
-		///
-
-		// Set up test vault with the command line
-		cmd = exec.Command("sh", "-c", fmt.Sprintf("%s", vaultDbRole))
-		//cmd := exec.Command("env")
-		cmd.Env = append(cmd.Env, fmt.Sprintf("VAULT_ADDR=%s", "http://192.168.56.78:8200"))
-		cmd.Env = append(cmd.Env, fmt.Sprintf("VAULT_TOKEN=%s", "ocelotdev"))
-
-		stdoutStderr, err = cmd.CombinedOutput()
-		if err != nil {
-			t.Error("Got an error trying to set vault up via cli")
-			fmt.Printf("I failed\n%s\n", stdoutStderr)
-		} else {
-			fmt.Printf("I passed\n%s\n", stdoutStderr)
-		}
-
-		// FIXME: This is commented out until we can configure Vault to enable database backend + set up role against through testutil
 		//// Re-configure consul + vault for dynamic postgres creds
 		err = SetStoragePostgres(vagrantRemoteConfig.GetConsul().(*consul.Consulet),
 			vagrantRemoteConfig.GetVault(),
-			"postgres",
-			"192.168.56.78",
-			fmt.Sprintf("%d", 5432),
-			"postgres",
-			"mysecretpassword",
+			vagrantPostgresUser,
+			vagrantPostgresIP,
+			fmt.Sprintf("%d", vagrantPostgresPort),
+			vagrantPostgresDb,
+			vagrantPostgresPassword,
 			"database",
-			"ocelot")
+			vagrantVaultRole)
 		if err != nil {
 			t.Error("Got an error trying to configure vault+postgres with dynamic creds")
 		}

@@ -457,6 +457,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	vaultConf, _ := rc.Consul.GetKeyValues(common.VaultConf)
 
 	vaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
+	vaultRole := ""
 	for _, vconf := range vaultConf {
 		switch vconf.Key {
 		case common.VaultDBSecretEngine:
@@ -471,6 +472,8 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine")
 			}
 			vaultBackend = string(vconf.Value)
+		case common.VaultRoleName:
+			vaultRole = string(vconf.Value)
 		}
 	}
 
@@ -480,7 +483,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	if len(kvconfig) == 0 || err != nil {
 		errorMsg := fmt.Sprintf("unable to get postgres creds from consul")
 		if err != nil {
-			errorMsg = fmt.Sprintf("%s, err: %s", errorMsg, err.Error())
+			return storeConfig, errors.Wrap(err, errorMsg)
 		}
 		return nil, errors.New(errorMsg)
 	}
@@ -527,7 +530,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
 
 	case "database":
-		secrets, err := rc.Vault.GetVaultSecret("database/creds/ocelot")
+		secrets, err := rc.Vault.GetVaultSecret(fmt.Sprintf("database/creds/%s", vaultRole))
 		if err != nil {
 			errorMsg := fmt.Sprintf("unable to get dynamic postgres creds from vault")
 			if err != nil {
