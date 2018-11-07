@@ -461,15 +461,8 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	for _, vconf := range vaultConf {
 		switch vconf.Key {
 		case common.VaultDBSecretEngine:
-			switch string(vconf.Value) {
-			case "kv":
-				ocelog.Log().Info("Static Postgres creds")
-				break
-			case "database":
-				ocelog.Log().Info("Dynamic Postgres creds")
-				break
-			default:
-				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine")
+			if dbConfigType := string(vconf.Value); dbConfigType !=  "kv" && dbConfigType != "database"{
+				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine: " + dbConfigType)
 			}
 			vaultBackend = string(vconf.Value)
 		case common.VaultRoleName:
@@ -502,6 +495,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 
 	switch vaultBackend {
 	case "kv":
+		ocelog.Log().Info("Static Postgres creds")
 		kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
 		if len(kvconfig) == 0 || err != nil {
 			errorMsg := fmt.Sprintf("unable to get postgres location from consul")
@@ -530,6 +524,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
 
 	case "database":
+		ocelog.Log().Info("Dynamic Postgres creds")
 		secrets, err := rc.Vault.GetVaultSecret(fmt.Sprintf("database/creds/%s", vaultRole))
 		if err != nil {
 			errorMsg := fmt.Sprintf("unable to get dynamic postgres creds from vault")
