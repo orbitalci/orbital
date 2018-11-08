@@ -82,7 +82,11 @@ func (c *cmd) Run(args []string) int {
 		}
 	}
 
-	if err := c.DetectAcctRepoVcsType(c.UI); err != nil {
+	if err := c.DetectAcctRepo(c.UI); err != nil {
+		help.Debuggit(c.UI, err.Error())
+		return 1
+	}
+	if err := c.DetectOrConvertVcsType(c.UI); err != nil {
 		help.Debuggit(c.UI, err.Error())
 		return 1
 	}

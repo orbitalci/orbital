@@ -61,9 +61,15 @@ func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
-	if err := c.OcyHelper.DetectAcctRepoVcsType(c.UI); err != nil {
+	if err := c.DetectAcctRepo(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
 	}
+	if err := c.DetectOrConvertVcsType(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
+		return 1
+	}
+
 	if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
 		return 1
 	}

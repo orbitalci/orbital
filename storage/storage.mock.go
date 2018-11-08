@@ -431,9 +431,9 @@ func (mr *MockPollTableMockRecorder) PollExists(account, repo interface{}) *gomo
 }
 
 // GetAllPolls mocks base method
-func (m *MockPollTable) GetAllPolls() ([]*models.PollRequest, error) {
+func (m *MockPollTable) GetAllPolls() ([]*pb.PollRequest, error) {
 	ret := m.ctrl.Call(m, "GetAllPolls")
-	ret0, _ := ret[0].([]*models.PollRequest)
+	ret0, _ := ret[0].([]*pb.PollRequest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -954,9 +954,9 @@ func (mr *MockOcelotStorageMockRecorder) PollExists(account, repo interface{}) *
 }
 
 // GetAllPolls mocks base method
-func (m *MockOcelotStorage) GetAllPolls() ([]*models.PollRequest, error) {
+func (m *MockOcelotStorage) GetAllPolls() ([]*pb.PollRequest, error) {
 	ret := m.ctrl.Call(m, "GetAllPolls")
-	ret0, _ := ret[0].([]*models.PollRequest)
+	ret0, _ := ret[0].([]*pb.PollRequest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

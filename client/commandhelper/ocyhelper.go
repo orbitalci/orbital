@@ -75,35 +75,47 @@ func (oh *OcyHelper) SplitAndSetAcctRepo(ui cli.Ui) error {
 	return nil
 }
 
-//DetectAcctRepoVcsType will find the git remote origin of the repository in the current directory if it exists. It will
-// then use regex to determine if the repo is either github or bitbucket, and what the account and repository names are.
-// The happy path of DetectAcctRepoVcsType will end in OcyHelper's AcctRepo and VcsType fields being set. If an error occurs,
+//DetectAcctRepo will find the git remote origin of the repository in the current directory if it exists. It will
+// then use regex to determine what the account and repository names are.
+// The happy path of DetectAcctRepo will end in OcyHelper's AcctRepo field being set. If an error occurs,
 // a user-friendly error will be written to the client UI and the original error will be returned.
-func (oh *OcyHelper) DetectAcctRepoVcsType(ui cli.Ui) error {
-	var err error
-	if oh.AcctRepo == "ERROR" || oh.VcsTypeStr == "ERROR" {
-		acctRepo, vcsTyp, findErr := FindAcctRepo()
-		if oh.AcctRepo == "ERROR" {
-			oh.WriteUi(ui.Info, "Flag -acct-repo was not set, detecting account and repository using git commands")
-			oh.AcctRepo = acctRepo
-			oh.WriteUi(ui.Info, "Detected <account>/<repo> of " + acctRepo)
+func (oh *OcyHelper) DetectAcctRepo(ui cli.Ui) error {
+	if oh.AcctRepo == "ERROR" {
+		oh.WriteUi(ui.Info, "Flag -acct-repo was not set, detecting account and repository using git commands")
+		acctRepo, _, err := FindAcctRepo()
+		if err != nil {
+			oh.WriteUi(ui.Error, "Unable to detect account/repo from git commands, please report and use the flags to get around this error. Error is: " + err.Error())
+			return err
 		}
-		if oh.VcsTypeStr == "ERROR" || oh.VcsTypeStr == "" {
-			oh.WriteUi(ui.Info, "Flag -vcs-type not set, detecting from git origin url")
-			oh.VcsType = vcsTyp
-			oh.WriteUi(ui.Info, "Detected vcs type of " + oh.VcsType.String())
-		} else {
-			oh.VcsType, err = protobuf.VcsTypeStringToSubCredType(oh.VcsTypeStr)
-			if err != nil {
-				oh.WriteUi(ui.Error, "Unable to convert -vcs-type to VcsType enum. Error: " + err.Error())
-				return err
-			}
-		}
-		if findErr != nil {
-			oh.WriteUi(ui.Error, "Unable to detect account/repo/vcs-type from git commands, please report and use the flags to get around this error. Error is: " + findErr.Error())
-			return findErr
-		}
+		oh.AcctRepo = acctRepo
+		oh.WriteUi(ui.Info, "Detected <account>/<repo> of " + acctRepo)
+	}
+	return nil
+}
 
+//DetectOrConvertVcsType will find the git remote origin of the repository in the current directory if it exists. It will
+// then use regex to determine if the repo is either github or bitbucket. If the VcsTypeStr field is already set, then DetectOrConvertVcsType
+// will attempt to convert it to the SubCredType type. If this fails, then an error will be pretty printed to screen.
+// The happy path of DetectOrConvertVcsType will end in OcyHelper's VcsType field being set. If an error occurs,
+// a user-friendly error will be written to the client UI and the original error will be returned.
+func (oh *OcyHelper) DetectOrConvertVcsType(ui cli.Ui) error {
+	var err error
+	var credType protobuf.SubCredType
+	if oh.VcsTypeStr == "ERROR" {
+		_, credType, err = FindAcctRepo()
+		if err != nil {
+			oh.WriteUi(ui.Error, "Unable to detect vcs-type from git commands, please report and use the flags to get around this error. Error is: " + err.Error())
+			return err
+		}
+		oh.WriteUi(ui.Info, "Flag -vcs-type not set, detecting from git origin url")
+		oh.VcsType = credType
+		oh.WriteUi(ui.Info, "Detected vcs type of " + oh.VcsType.String())
+	} else {
+		oh.VcsType, err = protobuf.VcsTypeStringToSubCredType(oh.VcsTypeStr)
+		if err != nil {
+			oh.WriteUi(ui.Error, "Unable to convert -vcs-type to VcsType enum. Error: " + err.Error())
+			return err
+		}
 	}
 	return nil
 }

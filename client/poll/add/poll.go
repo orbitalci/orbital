@@ -57,7 +57,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
+	c.SetGitHelperFlags(c.flags)
 	c.flags.StringVar(&c.cron, "cron", "ERROR", "cron string for polling repo ")
 	c.flags.StringVar(&c.branches, "branches", "ERROR", "comma separated list of branches to poll vcs for")
 }
@@ -66,9 +66,15 @@ func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
-	if err := c.OcyHelper.DetectAcctRepoVcsType(c.UI); err != nil {
+	if err := c.DetectAcctRepo(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
 	}
+	if err := c.DetectOrConvertVcsType(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
+		return 1
+	}
+
 	if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
 		return 1
 	}
@@ -93,13 +99,15 @@ Error: %s`
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1
 	}
-	_, err := c.config.Client.PollRepo(ctx, &models.PollRequest{
+	pr := &models.PollRequest{
 		Account:  c.OcyHelper.Account,
 		Repo:     c.OcyHelper.Repo,
 		Cron:     c.cron,
 		Branches: c.branches,
-	})
-
+		Type:     c.VcsType,
+	}
+	commandhelper.Debuggit(c.UI, fmt.Sprintf("%#v", pr))
+	_, err := c.config.Client.PollRepo(ctx, pr)
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("unable to set up vcs polling for repo %s/%s! error: %s", c.OcyHelper.Repo, c.OcyHelper.Account, err.Error()))
 		return 1
