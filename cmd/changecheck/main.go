@@ -61,7 +61,7 @@ func configure() *changeSetConfig {
 	var ok bool
 	var vcsTypeInt int32
 	vcsTypeInt, ok = pb.SubCredType_value[strings.ToUpper(vcsType)]
-	if !ok {
+	if !ok || pb.SubCredType(vcsTypeInt) == pb.SubCredType_NIL_SCT {
 		ocelog.Log().Fatalf("%s is not a vcs subcredtype, need %s", vcsType, strings.Join(pb.CredType_VCS.SubtypesString(), "|"))
 	}
 	branchList := strings.Split(branches, ",")

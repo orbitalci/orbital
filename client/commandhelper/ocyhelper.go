@@ -88,7 +88,7 @@ func (oh *OcyHelper) DetectAcctRepoVcsType(ui cli.Ui) error {
 			oh.AcctRepo = acctRepo
 			oh.WriteUi(ui.Info, "Detected <account>/<repo> of " + acctRepo)
 		}
-		if oh.VcsTypeStr == "ERROR" {
+		if oh.VcsTypeStr == "ERROR" || oh.VcsTypeStr == "" {
 			oh.WriteUi(ui.Info, "Flag -vcs-type not set, detecting from git origin url")
 			oh.VcsType = vcsTyp
 			oh.WriteUi(ui.Info, "Detected vcs type of " + oh.VcsType.String())

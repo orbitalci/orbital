@@ -75,6 +75,7 @@ func (c *cmd) Run(args []string) int {
 	_, err := c.config.Client.WatchRepo(ctx, &models.RepoAccount{
 		Repo:    c.OcyHelper.Repo,
 		Account: c.OcyHelper.Account,
+		Type:    c.OcyHelper.VcsType,
 	})
 
 	if err != nil {
