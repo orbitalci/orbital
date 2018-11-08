@@ -852,16 +852,18 @@ func (p *PostgresStorage) DeletePoll(account string, repo string) error {
 	return nil
 }
 
-func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
+func (p *PostgresStorage) GetAllPolls() ([]*pb.PollRequest, error) {
 	var err error
 	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "read")
-	var polls []*models.PollRequest
+	var polls []*pb.PollRequest
 	if err = p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	queryStr := `select account, repo, cron_string, last_cron_time, branches from polling_repos`
+	queryStr := `SELECT polling_repos.account, polling_repos.repo, polling_repos.cron_string, polling_repos.last_cron_time, polling_repos.branches, credentials.cred_sub_type 
+FROM polling_repos LEFT JOIN credentials
+	ON credentials_id = id;`
 	var stmt *sql.Stmt
 	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
@@ -876,10 +878,12 @@ func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		pr := &models.PollRequest{}
-		if err = rows.Scan(&pr.Account, &pr.Repo, &pr.Cron, &pr.LastCron, &pr.Branches); err != nil {
+		pr := &pb.PollRequest{}
+		var tyme time.Time
+		if err = rows.Scan(&pr.Account, &pr.Repo, &pr.Cron, &tyme, &pr.Branches, &pr.Type); err != nil {
 			return nil, err
 		}
+		pr.LastCronTime = convertTimeToTimestamp(tyme)
 		polls = append(polls, pr)
 	}
 	return polls, rows.Err()

@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/shankj3/ocelot/build_signaler/poll"
 	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 	"github.com/shankj3/ocelot/version"
-	"os"
-	"time"
 )
 
 func configure() cred.CVRemoteConfig {
@@ -40,13 +40,7 @@ func loadFromDb(store storage.OcelotStorage) error {
 		return err
 	}
 	for _, oldPoll := range oldPolls {
-		msg := &pb.PollRequest{
-			Account:  oldPoll.Account,
-			Repo:     oldPoll.Repo,
-			Cron:     oldPoll.Cron,
-			Branches: oldPoll.Branches,
-		}
-		if err = poll.WriteCronFile(msg, poll.CronDir); err != nil {
+		if err = poll.WriteCronFile(oldPoll, poll.CronDir); err != nil {
 			ocelog.IncludeErrField(err).Error("couldn't write old cron files")
 		}
 

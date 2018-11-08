@@ -54,7 +54,7 @@ type PollTable interface {
 	SetLastData(account string, repo string, lasthashes map[string]string) error
 	GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error)
 	PollExists(account string, repo string) (bool, error)
-	GetAllPolls() ([]*models.PollRequest, error)
+	GetAllPolls() ([]*pb.PollRequest, error)
 	DeletePoll(account string, repo string) error
 }
 
