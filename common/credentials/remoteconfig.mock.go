@@ -37,7 +37,7 @@ func (m *MockStorageCred) EXPECT() *MockStorageCredMockRecorder {
 }
 
 // GetStorageCreds mocks base method
-func (m *MockStorageCred) GetStorageCreds(typ storage.Dest) (*StorageCreds, error) {
+func (m *MockStorageCred) GetStorageCreds(typ *storage.Dest) (*StorageCreds, error) {
 	ret := m.ctrl.Call(m, "GetStorageCreds", typ)
 	ret0, _ := ret[0].(*StorageCreds)
 	ret1, _ := ret[1].(error)
@@ -339,7 +339,7 @@ func (mr *MockCVRemoteConfigMockRecorder) Healthy() *gomock.Call {
 }
 
 // GetStorageCreds mocks base method
-func (m *MockCVRemoteConfig) GetStorageCreds(typ storage.Dest) (*StorageCreds, error) {
+func (m *MockCVRemoteConfig) GetStorageCreds(typ *storage.Dest) (*StorageCreds, error) {
 	ret := m.ctrl.Call(m, "GetStorageCreds", typ)
 	ret0, _ := ret[0].(*StorageCreds)
 	ret1, _ := ret[1].(error)

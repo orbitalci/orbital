@@ -39,8 +39,7 @@
 
 
 [[constraint]]
-#  version = "0.2.1"
-  revision = "256e2b900a791a9867e3dba78faebbc3251f12ba"
+  revision = "4f523ef67ae77a9fa415b14336c40bb6d5786909"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]
@@ -75,3 +74,7 @@
 [[override]]
   name = "github.com/google/go-github"
   version = "18.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "code.cloudfoundry.org/bytefmt"

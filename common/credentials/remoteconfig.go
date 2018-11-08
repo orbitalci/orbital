@@ -62,9 +62,12 @@ func GetToken(path string) (string, error) {
 
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
+// FIXME: This condense consulHost and consulPort into a single connection string
 //if token is an empty string, vault will be initialized with $VAULT_TOKEN
 func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfig, error) {
 	remoteConfig := &RemoteConfig{}
+
+	// FIXME: If we are reading from CONSUL_HTTP_ADDR, we may encounter Unix socket paths. For now, let's pretend our perfect world is always http
 
 	//intialize consul
 	if consulHost == "" && consulPort == 0 {
@@ -74,6 +77,7 @@ func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfi
 		}
 		remoteConfig.Consul = consulet
 	} else {
+
 		consulet, err := consul.New(consulHost, consulPort)
 		remoteConfig.Consul = consulet
 		if err != nil {
@@ -101,15 +105,16 @@ func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfi
 }
 
 type StorageCreds struct {
-	User     string
-	Location string
-	Port     int
-	DbName   string
-	Password string
+	User         string
+	Location     string
+	Port         int
+	DbName       string
+	Password     string
+	VaultLeaseID string
 }
 
 type StorageCred interface {
-	GetStorageCreds(typ storage.Dest) (*StorageCreds, error)
+	GetStorageCreds(typ *storage.Dest) (*StorageCreds, error)
 	GetStorageType() (storage.Dest, error)
 	GetOcelotStorage() (storage.OcelotStorage, error)
 }
@@ -151,23 +156,28 @@ type InsecureCredStorage interface {
 //	Store storage.CredTable
 //}
 
+// RemoteConfig returns a struct with client handlers for Consul and Vault. Mainly for passing around after authenticating
 type RemoteConfig struct {
 	Consul consul.Consuletty
 	Vault  ocevault.Vaulty
 }
 
+// GetConsul returns the local consul client handler
 func (rc *RemoteConfig) GetConsul() consul.Consuletty {
 	return rc.Consul
 }
 
+// SetConsul sets the local consul client handler
 func (rc *RemoteConfig) SetConsul(consl consul.Consuletty) {
 	rc.Consul = consl
 }
 
+// GetVault returns the local vault client handler
 func (rc *RemoteConfig) GetVault() ocevault.Vaulty {
 	return rc.Vault
 }
 
+// SetVault sets the local vault client handler
 func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
 	rc.Vault = vault
 }
@@ -220,7 +230,7 @@ func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
 	return
 }
 
-// CheckSSHKey returns a boolean indicating whether or not an ssh key has been uploaded
+// CheckSSHKeyExists returns a boolean indicating whether or not an ssh key has been uploaded
 func (rc *RemoteConfig) CheckSSHKeyExists(path string) error {
 	var err error
 
@@ -279,7 +289,7 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 	return passwordStr, nil
 }
 
-// AddRepoCreds adds repo integration creds to storage + vault
+// AddCreds adds repo integration creds to storage + vault
 func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error) {
 	if rc.Vault != nil {
 		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
@@ -318,7 +328,7 @@ func (rc *RemoteConfig) UpdateCreds(store storage.CredTable, anyCred pb.OcyCredd
 	return
 }
 
-//this builds the secret payload as accepted by vault docs here: https://www.vaultproject.io/api/secret/kv/kv-v2.html
+//buildSecretPayload builds the secret payload as accepted by vault docs here: https://www.vaultproject.io/api/secret/kv/kv-v2.html
 func buildSecretPayload(secret string) map[string]interface{} {
 	dataWrapper := make(map[string]interface{})
 	topSecret := make(map[string]string)
@@ -400,6 +410,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	return credsForType, nil
 }
 
+// GetStorageType reads from consul at common.StorageType, and returns a handle for the configured storage.
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 	kv, err := rc.Consul.GetKeyValue(common.StorageType)
 	if err != nil {
@@ -409,6 +420,8 @@ func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 		ocelog.Log().Warning(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; using file system as the default.", common.StorageType))
 		return storage.FileSystem, nil
 	}
+
+	// ?: Is there an overall positive experience for making this value case-insensitive?
 	storageType := string(kv.Value)
 	switch storageType {
 	case "postgres":
@@ -420,55 +433,137 @@ func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 	}
 }
 
-func (rc *RemoteConfig) GetStorageCreds(typ storage.Dest) (*StorageCreds, error) {
-	switch typ {
+// GetStorageCreds initializes datastore info based on the configured storage type in Consul
+// FIXME: We're doing ourselves a disservice by forcing a user to pass in a *storage.Dest when we can handle this internally through rc
+func (rc *RemoteConfig) GetStorageCreds(typ *storage.Dest) (*StorageCreds, error) {
+	switch *typ {
 	case storage.Postgres:
 		return rc.getForPostgres()
 	case storage.FileSystem:
 		return rc.getForFilesystem()
 	default:
-		fmt.Println("shouldnoteverhappen")
-		return nil, nil
+		return nil, errors.New("Failed to get storage creds for Postgres or Filesystem. This shouldn't ever happen, but it did")
 	}
 }
 
+// getForPostgres Reads configuration from Consul
 func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
-	pairs, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
-	if err != nil {
-		return nil, errors.New("unable to get postgres creds from consul, err: " + err.Error())
+
+	// Credentials for Postgres may come from 2 mutually exclusive areas in Vault
+	// Either creds are static, and stored as a KV secret in vault
+	// Or creds are dynamic, and managed by vault's database secret engine
+
+	// The desired default behavior is to use static secrets. Don't error out if Vault settings aren't in Consul
+	postgresVaultConf, _ := rc.Consul.GetKeyValues(common.PostgresVaultConf)
+
+	postgresVaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
+	postgresVaultRole := ""
+	for _, vconf := range postgresVaultConf {
+		switch vconf.Key {
+		case common.PostgresVaultSecretsEngine:
+			if dbConfigType := string(vconf.Value); dbConfigType != "kv" && dbConfigType != "database" {
+				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine: " + dbConfigType)
+			}
+			postgresVaultBackend = string(vconf.Value)
+		case common.PostgresVaultRoleName:
+			postgresVaultRole = string(vconf.Value)
+		}
 	}
+
 	storeConfig := &StorageCreds{}
-	for _, pair := range pairs {
+
+	kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
+	if len(kvconfig) == 0 || err != nil {
+		errorMsg := fmt.Sprintf("unable to get postgres creds from consul")
+		if err != nil {
+			return storeConfig, errors.Wrap(err, errorMsg)
+		}
+		return nil, errors.New(errorMsg)
+	}
+
+	for _, pair := range kvconfig {
 		switch pair.Key {
 		case common.PostgresDatabaseName:
 			storeConfig.DbName = string(pair.Value)
 		case common.PostgresLocation:
 			storeConfig.Location = string(pair.Value)
-		case common.PostgresUsername:
-			storeConfig.User = string(pair.Value)
 		case common.PostgresPort:
 			// todo: check for err
 			storeConfig.Port, _ = strconv.Atoi(string(pair.Value))
 		}
 	}
-	secrets, err := rc.Vault.GetVaultData(common.PostgresPasswordLoc)
-	if err != nil {
-		return storeConfig, errors.New("unable to get postgres password from vault, err: " + err.Error())
+
+	switch postgresVaultBackend {
+	case "kv":
+		ocelog.Log().Info("Static Postgres creds")
+		kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
+		if len(kvconfig) == 0 || err != nil {
+			errorMsg := fmt.Sprintf("unable to get postgres location from consul")
+			if err != nil {
+				return &StorageCreds{}, errors.Wrap(err, errorMsg)
+			}
+			return &StorageCreds{}, errors.New(errorMsg)
+		}
+		for _, pair := range kvconfig {
+			switch pair.Key {
+			case common.PostgresUsername:
+				storeConfig.User = string(pair.Value)
+			}
+		}
+
+		secrets, err := rc.Vault.GetVaultData(common.PostgresPasswordLoc)
+		if len(secrets) == 0 || err != nil {
+			errorMsg := fmt.Sprintf("unable to get postgres password from consul")
+			if err != nil {
+				return &StorageCreds{}, errors.Wrap(err, errorMsg)
+			}
+			return &StorageCreds{}, errors.New(errorMsg)
+		}
+
+		// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
+		storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
+
+	case "database":
+		ocelog.Log().Info("Dynamic Postgres creds")
+		secrets, err := rc.Vault.GetVaultSecret(fmt.Sprintf("database/creds/%s", postgresVaultRole))
+		if err != nil {
+			errorMsg := fmt.Sprintf("unable to get dynamic postgres creds from vault")
+			if err != nil {
+				return &StorageCreds{}, errors.Wrap(err, errorMsg)
+			}
+			return &StorageCreds{}, errors.New(errorMsg)
+		}
+
+		storeConfig.User = fmt.Sprintf("%v", secrets.Data["username"].(string))
+		storeConfig.Password = fmt.Sprintf("%v", secrets.Data["password"].(string))
+
+		//ocelog.Log().Debugf("Dynamic postgres creds from Vault: %v", secrets)
+
+		// Kick of a lease renewal goroutine
+		go rc.Vault.RenewLeaseForever(secrets)
 	}
-	// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
-	storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
+
 	return storeConfig, nil
 }
 
 func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
 	pair, err := rc.Consul.GetKeyValue(common.FilesystemDir)
+
 	if err != nil {
-		return nil, errors.New("unable to get save directory from consul, err: " + err.Error())
+		return nil, errors.Wrap(err, "unable to get save directory from consul")
 	}
 	return &StorageCreds{Location: string(pair.Value)}, nil
 }
 
+//func (t *typ) GetStorageCreds() {
+//}
+
+/////// We want to clean up the calls that use/switch on typ, and creds.
+/////// The new storage should be cleaned up to take storage.OcelotStorage, instead of the elements within
+
+// GetOcelotStorage instantiates the datastore based on Consul configuration for Ocelot. Opens the database connection for Postgres.
 func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
+	// FIXME: We should get rid of this call, and let GetStorageCreds() handle more of this
 	typ, err := rc.GetStorageType()
 	if err != nil {
 		return nil, err
@@ -476,19 +571,24 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	if typ == storage.Postgres {
 		fmt.Println("postgres storage")
 	}
-	creds, err := rc.GetStorageCreds(typ)
+
+	// This might return the full secrets struct
+	creds, err := rc.GetStorageCreds(&typ)
 	if err != nil {
 		return nil, err
 	}
+
+	/// Can I just pass creds? This would be more convenient
 	switch typ {
 	case storage.FileSystem:
 		return storage.NewFileBuildStorage(creds.Location), nil
 	case storage.Postgres:
 		store := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
 		//ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+
 		return store, store.Connect()
 	default:
 		return nil, errors.New("unknown type")
 	}
-	return nil, errors.New("could not grab ocelot storage")
+	return nil, errors.New("could not grab ocelot storage. This error should be unreachable")
 }

@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/shankj3/ocelot/models/pb"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 func CreateTestFileSystemStorage(t *testing.T) BuildSum {
