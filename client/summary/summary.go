@@ -68,7 +68,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to display build summaries for ")
+	c.OcyHelper.SetGitHelperFlags(c.flags)
 	c.flags.IntVar(&c.limit, "limit", 5, "number of rows to fetch")
 }
 

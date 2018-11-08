@@ -164,7 +164,7 @@ func (gh *githubVCS) CreateWebhook(hookUrl string) error {
 		return errors.Wrap(err, "unable to complete webhook create")
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated {
 		ocelog.Log().Infof("successfully created webhook with %s", hookUrl)
 		return nil
 	}
