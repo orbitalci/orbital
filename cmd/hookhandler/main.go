@@ -12,9 +12,11 @@ import (
 	signal "github.com/shankj3/ocelot/build_signaler"
 	"github.com/shankj3/ocelot/build_signaler/webhook"
 	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models/pb"
 	hh "github.com/shankj3/ocelot/router/hookhandler"
 	"github.com/shankj3/ocelot/version"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -66,7 +68,8 @@ func startServer(ctx *hh.HookHandlerContext, port string) {
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e
-	muxi.HandleFunc("/bitbucket", ctx.HandleBBEvent).Methods("POST")
+	muxi.HandleFunc("/" + strings.ToLower(pb.SubCredType_BITBUCKET.String()), ctx.HandleBBEvent).Methods("POST")
+	muxi.HandleFunc("/" + strings.ToLower(pb.SubCredType_GITHUB.String()), ctx.HandleGHEvent).Methods("POST")
 	muxi.Handle("/metrics", promhttp.Handler())
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)

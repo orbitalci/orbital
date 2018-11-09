@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/go-github/github"
@@ -22,7 +23,7 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/github"
+const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088"
 const DefaultBaseURL = "https://api.github.com/%s"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
@@ -76,9 +77,9 @@ func (gh *githubVCS) GetVcsType() pb.SubCredType {
 
 func (gh *githubVCS) GetCallbackURL() string {
 	if gh.CallbackURL == "" {
-		return DefaultCallbackURL
+		return DefaultCallbackURL + "/" + strings.ToLower(gh.GetVcsType().String())
 	}
-	return gh.CallbackURL
+	return gh.CallbackURL + "/" + strings.ToLower(gh.GetVcsType().String())
 }
 
 func (gh *githubVCS) SetCallbackURL(cbUrl string) {

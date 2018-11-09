@@ -124,3 +124,16 @@ func (hhc *HookHandlerContext) HandleBBEvent(w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
 }
+
+func (hhc *HookHandlerContext) HandleGHEvent(w http.ResponseWriter, r *http.Request) {
+	switch r.Header.Get("X-GitHub-Event") {
+	case "push":
+		hhc.RepoPush(w, r, pb.SubCredType_GITHUB)
+	case "pull_request":
+		hhc.PullRequest(w, r, pb.SubCredType_GITHUB)
+	default:
+		unprocessibleEvent.WithLabelValues(r.Header.Get("X-GitHub-Event"), pb.SubCredType_GITHUB.String())
+		ocelog.Log().Errorf("No support for Github event %s", r.Header.Get("X-GitHub-Event"))
+		w.WriteHeader(http.StatusUnprocessableEntity)
+	}
+}
