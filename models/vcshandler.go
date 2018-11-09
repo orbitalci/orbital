@@ -83,6 +83,20 @@ type Translator interface {
 	TranslatePR(reader io.Reader) (*pb.PullRequest, error)
 }
 
+type DontBuildThisEvent struct {
+	vcsType pb.SubCredType
+	// the event type (ie pull_request approved) that means that this build shouldn't occur
+	incorrectEventType string
+}
+func (dbe *DontBuildThisEvent) Error() string {
+	return fmt.Sprintf("this event has a type of %s witha vcs type of %s which has been flagged as not intended for build use", dbe.incorrectEventType, dbe.vcsType.String())
+}
+
+func DontBuildEvent(vcsType pb.SubCredType, incorrectEType string) error {
+	return &DontBuildThisEvent{vcsType:vcsType, incorrectEventType: incorrectEType}
+}
+
+
 type CommitNotFound struct {
 	hash     string
 	acctRepo string

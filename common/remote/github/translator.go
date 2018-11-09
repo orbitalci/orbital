@@ -74,6 +74,12 @@ func (t *translator) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
 		return nil, errors.Wrap(err, "unable to parse pr event into github struct")
 	}
 	pr := (hookPR).(*github.PullRequestEvent)
+	// if this webhook was fired because a PR was merged, it shouldn't trigger a build because the merge
+	// will generate a push event with the new head hash, and _that_ should be built
+	if pr.GetAction() == "closed" {
+		return nil, models.DontBuildEvent(pb.SubCredType_GITHUB, pr.GetAction())
+	}
+
 	pullReq := &pb.PullRequest{
 		Urls: getPrUrlsFromPR(pr),
 		Description: pr.PullRequest.GetBody(),
