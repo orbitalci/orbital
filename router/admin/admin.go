@@ -37,14 +37,14 @@ func Start(grpcServer *grpc.Server, listener net.Listener) {
 	}
 }
 
-func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
+func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string, hhBaseUrl string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
 	//initializes our "context" - guideOcelotServer
 	//store := cred.GetOcelotStorage()
 	store, err := configInstance.GetOcelotStorage()
 	if err != nil {
 		return nil, nil, nil, nil, errors.WithMessage(err, "could not get ocelot storage")
 	}
-	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), cred.GetValidator(), cred.GetRepoValidator(), store)
+	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), cred.GetValidator(), cred.GetRepoValidator(), store, hhBaseUrl)
 	//gateway
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
