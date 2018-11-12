@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
@@ -18,7 +19,7 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088/bitbucket"
+const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 const V1RepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v"
 
@@ -235,9 +236,9 @@ func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
 //GetCallbackURL is a getter for retrieving callbackURL for bitbucket webhooks
 func (bb *Bitbucket) GetCallbackURL() string {
 	if len(bb.CallbackURL) > 0 {
-		return bb.CallbackURL
+		return bb.CallbackURL + "/" + strings.ToLower(pb.SubCredType_GITHUB.String())
 	}
-	return DefaultCallbackURL
+	return DefaultCallbackURL + "/" + strings.ToLower(pb.SubCredType_GITHUB.String())
 }
 
 //SetCallbackURL sets callback urls to be used for webhooks
