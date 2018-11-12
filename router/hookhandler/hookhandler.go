@@ -48,6 +48,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
+	ocelog.Log().Infof("NEW COMMITS ARE IN! %#v", push.Commits)
 	cred, err := credentials.GetVcsCreds(hhc.Store, push.Repo.AcctRepo, hhc.RC, vcsType)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get creds")
@@ -63,6 +64,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 	if err := hhc.pTeller.TellWerker(push, hhc.Signaler, handler, token, false, pb.SignaledBy_PUSH); err != nil {
 		failedToTellWerker.Inc()
 		ocelog.IncludeErrField(err).WithField("hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).WithField("branch", push.Branch).Error("unable to tell werker")
+		return
 	}
 	ocelog.Log().WithField("hash", push.GetHeadCommit().GetHash()).WithField("acctRepo", push.GetRepo().GetAcctRepo()).Info("succesfully queued build from push event")
 }

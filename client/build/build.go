@@ -88,7 +88,8 @@ func (c *cmd) Run(args []string) int {
 	}
 	if err := c.DetectOrConvertVcsType(c.UI); err != nil {
 		help.Debuggit(c.UI, err.Error())
-		return 1
+		// if we can't set the vcs type rightn ow, that's alright. admin is going to try to figure out who owns this anyway
+		//return 1
 	}
 
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
