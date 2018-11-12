@@ -215,6 +215,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	if err != nil {
 		return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
 	}
+
 	if g.hhBaseUrl != "" { handler.SetCallbackURL(g.hhBaseUrl) }
 	err = handler.CreateWebhook(repoLinks.Hooks)
 

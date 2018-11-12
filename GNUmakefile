@@ -78,6 +78,8 @@ all-binaries-rel: versionexists ## build all binaries in RELEASE MODE and save t
 	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o werker .; zip -r ../../pkg/linux_amd64/linux-werker-$(VERSION).zip werker; rm werker; cd -
 	# werker darwin
 	cd cmd/werker/; env GOOS=darwin GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o werker .; zip -r ../../pkg/darwin_amd64/darwin-werker-$(VERSION).zip werker; rm werker; cd -
+	# hookhandler linux
+	cd cmd/hookhandler/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS_REL)' -tags '$(GOTAGS)' -o hookhandler .; zip -r ../../pkg/linux_amd64/linux-hookhandler-$(VERSION).zip hookhandler; rm hookhandler; cd -
 
 upload-binaries: versionexists ## upload all built binaries
 	# upload clients
@@ -101,6 +103,11 @@ linux-werker: versionexists ## install linux werker zip and upload to s3
 	cd cmd/werker/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o werker .; zip -r ../../linux-werker-$(VERSION).zip werker; rm werker; cd -
 	@aws s3 cp --acl public-read-write --content-disposition attachment linux-werker-$(VERSION).zip s3://ocelotty/linux-werker-$(VERSION).zip
 	rm linux-werker-$(VERSION).zip
+
+linux-hookhandler: versionexists ## install linux hookhandler zip and upload to s3
+	cd cmd/hookhandler/; env GOOS=linux GOARCH=amd64 go build -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o hookhandler .; zip -r ../../linux-hookhandler-$(VERSION).zip hookhandler; rm hookhandler; cd -
+	@aws s3 cp --acl public-read-write --content-disposition attachment linux-hookhandler-$(VERSION).zip s3://ocelotty/linux-hookhandler-$(VERSION).zip
+	rm linux-hookhandler-$(VERSION).zip
 
 darwin-werker: versionexists ## install mac werker zip and upload to s3
 	cd cmd/werker/; env GOOS=darwin GOARCH=amd64 go build -ldflags '$(GOLDFLAGS)' -tags '$(GOTAGS)' -o werker .; zip -r ../../darwin-werker-$(VERSION).zip werker; rm werker; cd -
