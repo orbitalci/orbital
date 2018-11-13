@@ -1,12 +1,15 @@
 package bitbucket
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/models"
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 	"github.com/shankj3/ocelot/models/pb"
 )
@@ -64,11 +67,14 @@ func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
 
 // TranslatePush will convert a push event from bitbucket into the VCS-generic push object.
 func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
+	var buf bytes.Buffer
+	tee := io.TeeReader(reader, &buf)
 	push := &pbb.RepoPush{}
-	err := bb.Unmarshaler.Unmarshal(reader, push)
+	err := bb.Unmarshaler.Unmarshal(tee, push)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(buf.String())
 	if diff := deep.Equal(push, &pbb.RepoPush{}); diff == nil {
 		return nil, errors.New("could not unmarshal into push object, no fields matched")
 	}
@@ -90,6 +96,11 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	for ind, commit := range changeset.Commits {
 		commits = append(commits, &pb.Commit{Hash: commit.Hash, Date: commit.Date, Message: commit.Message, Author: &pb.User{UserName: commit.Author.User.Username, DisplayName: commit.Author.User.DisplayName}})
 		last = ind
+	}
+	if changeset.GetNew() == nil {
+		unsupportedPush.WithLabelValues("no_new_changes").Inc()
+		ocelog.Log().Errorf("new is empty! nothing to do!")
+		return nil, models.DontBuildEvent(pb.SubCredType_BITBUCKET, "no new changes")
 	}
 	if changeset.New.Type != "branch" {
 		unsupportedPush.WithLabelValues(changeset.New.Type).Inc()

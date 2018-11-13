@@ -44,6 +44,11 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 	}
 	push, err := translator.TranslatePush(r.Body)
 	if err != nil {
+		if _, ok := err.(*models.DontBuildThisEvent); ok {
+			ocelog.Log().Infof("not building event because the translator noticed it is not viable: %s", err.Error())
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			return
+		}
 		failedTranslation.WithLabelValues("push").Inc()
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
