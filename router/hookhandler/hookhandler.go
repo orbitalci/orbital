@@ -4,7 +4,8 @@ package hookhandler
 import (
 	"fmt"
 	"net/http"
-	
+	"strings"
+
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 	signal "github.com/shankj3/ocelot/build_signaler"
@@ -53,7 +54,13 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
-	ocelog.Log().Infof("NEW COMMITS ARE IN! %#v", push.Commits)
+	if strings.ToLower(ocelog.GetLogLevel().String()) == "debug" {
+		var commits string
+		for _, commit := range push.Commits {
+			commits += fmt.Sprintf("%s:%s\n", commit.GetHash(), commit.GetMessage())
+		}
+		ocelog.Log().Infof("NEW COMMITS ARE IN! %s", commits)
+	}
 	cred, err := credentials.GetVcsCreds(hhc.Store, push.Repo.AcctRepo, hhc.RC, vcsType)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get creds")
