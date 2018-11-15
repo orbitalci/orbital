@@ -40,7 +40,7 @@
 
 [[constraint]]
 #  version = "0.2.1"
-  revision = "caa9734a6aa5afc36f24cbac5240c9c037b74d67"
+  revision = "4f523ef67ae77a9fa415b14336c40bb6d5786909"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]
@@ -67,3 +67,7 @@
 [[constraint]]
   name = "github.com/golang/mock"
   version = "1.1.1"
+
+[[constraint]]
+  branch = "master"
+  name = "code.cloudfoundry.org/bytefmt"

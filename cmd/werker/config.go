@@ -73,7 +73,7 @@ func GetConf() (*WerkerConf, error) {
 	var tags string
 
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
-	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes|docker|ssh")
+	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, exec|docker|ssh")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
 	flrg.StringVar(&werker.ServicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
 	flrg.StringVar(&werker.GrpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
@@ -85,6 +85,11 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
 	flrg.StringVar(&tags, "tags", "", "comma separated list of tags for this build node")
+	// set flags for disk utility checks
+	flrg.StringVar(&werker.DiskUtilityHealthCheck.PauseThreshold, "disk-pause-threshold", "1G", "How much free disk can be left before the werker will error out and stop consuming messasges")
+	flrg.StringVar(&werker.DiskUtilityHealthCheck.Path, "disk-pause-path", "","Path at which to check for disk-pause-threshold")
+	// set flag for interval on which to run healthcheck
+	flrg.IntVar(&werker.HealthCheckInterval, "healthcheck-interval", 60, "Interval on which to make sure that remote config, storage system, and disk is not full")
 	// ssh werker configuration
 	werker.Ssh.SetFlags(flrg)
 	flrg.Parse(os.Args[1:])

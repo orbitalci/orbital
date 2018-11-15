@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/shankj3/ocelot/common/du"
 )
 
 type WerkType int
@@ -46,7 +47,7 @@ type BuildContext struct {
 }
 
 func NewFacts() *WerkerFacts {
-	return &WerkerFacts{Ssh: &SSHFacts{}}
+	return &WerkerFacts{Ssh: &SSHFacts{}, DiskUtilityHealthCheck: &du.HealthChecker{}}
 }
 
 // WerkerFacts is a struct for the configurations in werker that affect actual builds.
@@ -61,7 +62,9 @@ type WerkerFacts struct {
 	// set dev mode
 	Dev bool
 	// this is only for SSH type werkers
-	Ssh *SSHFacts
+	Ssh                    *SSHFacts
+	DiskUtilityHealthCheck *du.HealthChecker
+	HealthCheckInterval    int
 }
 
 // When a werker starts up as an SSH werker, it will also need to be initialized with these fields so it knows
@@ -77,11 +80,12 @@ type SSHFacts struct {
 }
 
 func (sf *SSHFacts) SetFlags(flg Flagger) {
-	flg.IntVar(&sf.Port, "ssh-port", 22, "port to ssh to for build exectuion | ONLY VALID FOR SSH TYPE WERKERS")
-	flg.StringVar(&sf.Host, "ssh-host", "", "host to ssh to for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flg.StringVar(&sf.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flg.StringVar(&sf.User, "ssh-user", "root", "ssh user for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flg.StringVar(&sf.Password, "ssh-password", "", "password for ssh user if no key file | ONLY VALID FOR SSH TYPE WERKERS")
+	sshOnly := " | ONLY VALID FOR SSH TYPE WERKERS"
+	flg.IntVar(&sf.Port, "ssh-port", 22, "port to ssh to for build exectuion" + sshOnly)
+	flg.StringVar(&sf.Host, "ssh-host", "", "host to ssh to for build execution" + sshOnly)
+	flg.StringVar(&sf.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution" + sshOnly)
+	flg.StringVar(&sf.User, "ssh-user", "root", "ssh user for build execution" + sshOnly)
+	flg.StringVar(&sf.Password, "ssh-password", "", "password for ssh user if no key file" + sshOnly)
 }
 
 func (sf *SSHFacts) IsValid() bool {

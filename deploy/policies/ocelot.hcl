@@ -9,3 +9,14 @@ path "secret/data/creds/*"
 {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
+
+# database secret engine
+path "database/creds/ocelot"
+{
+  capabilities = ["read"]
+}
+
+#path "database/creds/ocelot/*"
+#{
+#  capabilities = ["update"]
+#}
