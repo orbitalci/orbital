@@ -1,5 +1,5 @@
 ALTER TABLE credentials ADD COLUMN id SERIAL;
-ALTER TABLE polling_repos ADD COLUMN credentials_id INT UNIQUE;
+ALTER TABLE polling_repos ADD COLUMN credentials_id INT;
 
 UPDATE polling_repos SET (credentials_id) =
 (
