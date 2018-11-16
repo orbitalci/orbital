@@ -80,11 +80,12 @@ type SSHFacts struct {
 }
 
 func (sf *SSHFacts) SetFlags(flg Flagger) {
-	flg.IntVar(&sf.Port, "ssh-port", 22, "port to ssh to for build exectuion | ONLY VALID FOR SSH TYPE WERKERS")
-	flg.StringVar(&sf.Host, "ssh-host", "", "host to ssh to for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flg.StringVar(&sf.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flg.StringVar(&sf.User, "ssh-user", "root", "ssh user for build execution | ONLY VALID FOR SSH TYPE WERKERS")
-	flg.StringVar(&sf.Password, "ssh-password", "", "password for ssh user if no key file | ONLY VALID FOR SSH TYPE WERKERS")
+	sshOnly := " | ONLY VALID FOR SSH TYPE WERKERS"
+	flg.IntVar(&sf.Port, "ssh-port", 22, "port to ssh to for build exectuion" + sshOnly)
+	flg.StringVar(&sf.Host, "ssh-host", "", "host to ssh to for build execution" + sshOnly)
+	flg.StringVar(&sf.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution" + sshOnly)
+	flg.StringVar(&sf.User, "ssh-user", "root", "ssh user for build execution" + sshOnly)
+	flg.StringVar(&sf.Password, "ssh-password", "", "password for ssh user if no key file" + sshOnly)
 }
 
 func (sf *SSHFacts) IsValid() bool {

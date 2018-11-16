@@ -73,7 +73,7 @@ func GetConf() (*WerkerConf, error) {
 	var tags string
 
 	flrg := flag.NewFlagSet("werker", flag.ExitOnError)
-	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, kubernetes|docker|ssh")
+	flrg.StringVar(&werkerTypeStr, "type", defaultWerkerType, "type of werker, exec|docker|ssh")
 	flrg.StringVar(&werker.WerkerName, "name", werkerName, "if wish to identify as other than hostname")
 	flrg.StringVar(&werker.ServicePort, "ws-port", defaultServicePort, "port to run websocket service on. default 9090")
 	flrg.StringVar(&werker.GrpcPort, "grpc-port", defaultGrpcPort, "port to run grpc server on. default 9099")
