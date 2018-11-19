@@ -82,3 +82,4 @@ fi
 
 docker-compose${args[@]} up${follow[@]}
 # TODO: TJ has some stuff that will unseal vault for us! Perhaps it goes here?
+echo "done! if you started up a postgres database you should probably run the flyway migrate script in deploy/"
