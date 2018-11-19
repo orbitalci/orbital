@@ -1,12 +1,5 @@
 package github
 
-//type Translator interface {
-//	//TranslatePush should take a reader body, unmarshal it to vcs-specific model, then translate it to the global Push object
-//	TranslatePush(reader io.Reader) (*pb.Push, error)
-//
-//	//TranslatePush should take a reader body, unmarshal it to vcs-specific model, then translate it to the global PullRequest object
-//	TranslatePR(reader io.Reader) (*pb.PullRequest, error)
-//}
 import (
 	"io"
 	"io/ioutil"

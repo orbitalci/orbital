@@ -138,6 +138,8 @@ func (gh *githubVCS) recurseOverRepos(pageNum int) error {
 	return gh.recurseOverRepos(resp.NextPage)
 }
 
+//checkForOcelotFile will attempt to retrieve the http status of a request for a file at the path `ocelot.yml`. It will
+// return the status code which can then be checked for if the file exists
 func (gh *githubVCS) checkForOcelotFile(contentsUrl string) (int, error) {
 	resp, err := gh.Client.GetUrlResponse(getUrlForFileFromContentsUrl(contentsUrl, common.BuildFileName))
 	if err != nil {
@@ -181,7 +183,7 @@ func (gh *githubVCS) CreateWebhook(hookUrl string) error {
 	return err
 }
 
-
+// GetFile will retrieve a file at {filePath} from account/repository specified by {fullRepoName} at the commitHash using the github api
 func (gh *githubVCS) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {
 	logWithFields := ocelog.Log().WithField("filePath", filePath).WithField("fullRepoName", fullRepoName).WithField("hash", commitHash)
 	logWithFields.Debug("getting file ")
