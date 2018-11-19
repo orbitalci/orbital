@@ -69,6 +69,8 @@ message SSHKeyWrapper {
     SubCredType subType = 10;
     // identifier is the unique identifier for when an ssh key is not associated with a VCS account.
     string identifier = 11;
+    // id is credentials id from database
+    int64 id = 12;
 }
 
 message SSHWrap {
@@ -96,6 +98,8 @@ message VCSCreds {
     // there is only one subtype that is valid for VCS creds at this time, and it is BITBUCKET
     // @inject_tag: yaml:"subType"
     SubCredType subType = 10;
+    // id is credentials id from database
+    int64 id = 11;
 }
 
 
@@ -122,6 +126,8 @@ message RepoCreds {
     // @inject_tag: yaml:"subType"
     // there are two subtypes that are valid for RepoCreds: DOCKER, NEXUS
     SubCredType subType = 10;
+    // id is credentials id from database
+    int64 id = 11;
 
 }
 
@@ -135,6 +141,8 @@ message K8SCreds {
     // @inject_tag: yaml:"subType"
     // there is currently only one subtype for k8SCreds, and it is KUBECONF
     SubCredType subType = 6;
+    // id is credentials id from database
+    int64 id = 7;
 
 }
 
@@ -153,6 +161,8 @@ message AppleCreds {
     string appleSecretsPassword = 6;
     // @inject_tag: yaml:"subType"
     SubCredType subType = 5;
+    // id is credentials id from database
+    int64 id = 7;
 }
 
 message AppleCredsWrapper {
@@ -175,6 +185,8 @@ message NotifyCreds {
     // detailUrlBase is the base url for an ocelot ui. when building the notification, will
     //   add {{detailUrlBase}}/repos/{{account}}/{{repo}}/{{buildId}}
     string detailUrlBase = 5;
+    // id is credentials id from database
+    int64 id = 6;
 }
 
 message GenericWrap {
@@ -190,4 +202,6 @@ message GenericCreds {
     string identifier = 3;
     // clientSecret is the secret associated with the integration cred
     string clientSecret = 4;
+    // id is credentials id from database
+    int64 id = 5;
 }

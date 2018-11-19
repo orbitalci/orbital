@@ -241,7 +241,15 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) 
 		}
 	} else {
 		log.Log().Info("inserting poll in db")
-		if err = g.Storage.InsertPoll(poll.Account, poll.Repo, poll.Cron, poll.Branches); err != nil {
+		// todo when swap to github + bitbucket, use new function for determining account instead of hardcoding in request
+		identififer, _ := pb.CreateVCSIdentifier(pb.SubCredType_BITBUCKET, poll.Account)
+		creddy, err := g.Storage.RetrieveCred(pb.SubCredType_BITBUCKET, identififer, poll.Account)
+		if err != nil {
+			msg := "unable to find credentials for account " + poll.Account
+			log.IncludeErrField(err).Error(msg)
+			return empti, status.Error(codes.InvalidArgument, msg+": "+err.Error())
+		}
+		if err = g.Storage.InsertPoll(poll.Account, poll.Repo, poll.Cron, poll.Branches, creddy.GetId()); err != nil {
 			msg := "unable to insert poll into storage"
 			log.IncludeErrField(err).Error(msg)
 			return empti, status.Error(codes.Unavailable, msg+": "+err.Error())
