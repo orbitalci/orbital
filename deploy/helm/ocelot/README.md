@@ -46,6 +46,7 @@ configuration for utilizing the [kubernetes auth method](https://www.vaultprojec
 
 | Parameter | Description | Default |
 |:----------|-------------|--------:|
+| `admin.enabled` | whether or not to deploy admin service | true |
 | `admin.swagger` | whether or not to serve swagger documentation | false |
 | `admin.replicaCount` | number of replicas for admin service | 3 |
 | `admin.image.repository` | docker repo of admin docker image | `docker.metaverse.l11.com/ocelot-admin` |
@@ -67,6 +68,7 @@ configuration for utilizing the [kubernetes auth method](https://www.vaultprojec
 
 | Parameter | Description | Default |
 |:----------|-------------|--------:|
+| `hookhandler.enabled` | whether or not to deploy hookhandler service | true |
 | `hookhandler.replicaCount` | number of replicas for hookhandler service | 3 |
 | `hookhandler.image.repository` | docker repo for hookhandler image | docker.metaverse.l11.com/ocelot-hookhandler |
 | `hookhandler.image.tag` | docker image tag for hookhandler | latest |
@@ -81,6 +83,7 @@ configuration for utilizing the [kubernetes auth method](https://www.vaultprojec
  
 | Parameter | Description | Default |
 |:----------|-------------|--------:|
+| `poller.enabled` | whether or not to deploy poller service | true |
 | `poller.image.repository` | docker repo for poller image | docker.metaverse.l11.com/ocelot-poller |
 | `poller.image.tag` | docker image tag for poller image | latest |
 | `poller.image.pullPolicy` | kubernetes pull policy | Always |

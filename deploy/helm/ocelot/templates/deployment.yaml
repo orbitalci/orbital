@@ -1,4 +1,5 @@
 {{/* admin service deployment */}}
+{{- if .Values.admin.enabled }}
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -110,7 +111,9 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+{{- end }}
 ---
+{{- if .Values.hookhandler.enabled }}
 {{/* hookhandler service deployment */}}
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -217,8 +220,10 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+{{- end }}
 ---
 {{/* poller service deployment */}}
+{{- if .Values.poller.enabled }}
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -309,3 +314,4 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+{{- end }}

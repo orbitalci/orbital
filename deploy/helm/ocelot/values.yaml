@@ -25,7 +25,7 @@ vault:
   # secretKey is the key to the secret map that will return the vault token
   secretKey: token
 # if consul is not configured on the host ip, set the values here
-#consul:
+consul: {}
 #  host: consul-consul # or w/e
 #  port: 8500 # or w/e
 # nsq is the config that tells ocelot where nsq is located
@@ -39,6 +39,7 @@ nsq:
     port: 4150
 
 admin:
+  enabled: true
   swagger: false
   replicaCount: 3
 
@@ -92,6 +93,7 @@ admin:
   affinity: {}
 
 hookhandler:
+  enabled: true
   replicaCount: 3
 
   image:
@@ -135,6 +137,7 @@ hookhandler:
   affinity: {}
 
 poller:
+  enabled: true
 ## do not change
   replicaCount: 1
 

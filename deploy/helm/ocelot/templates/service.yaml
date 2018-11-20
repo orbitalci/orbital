@@ -1,3 +1,4 @@
+{{- if .Values.admin.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -55,7 +56,9 @@ spec:
   selector:
     app: admin-{{ template "ocelot.name" . }}
     release: {{ .Release.Name }}
+{{- end }}
 ---
+{{- if .Values.hookhandler.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -77,3 +80,4 @@ spec:
   selector:
     app: hookhandler-{{ template "ocelot.name" . }}
     release: {{ .Release.Name }}
+{{- end }}
