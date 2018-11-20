@@ -1,4 +1,4 @@
-package build
+package commandhelper
 
 import (
 	"github.com/shankj3/ocelot/models/pb"

@@ -50,7 +50,9 @@ func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRe
 	nsqwatch.MaintainHealths()
 }
 
-// MaintainHealths will
+// MaintainHealths checks to make sure that disk, remoteConfig, and storage connections are all healthy. If they are not,
+//  then nsq consumers will be paused, effectively blocking all builds. The consumers will be unpaused when all checks return
+//  to healthy state
 func (nq *NsqWatch) MaintainHealths() {
 	ocelog.Log().Infof("checking for healthy dependency state on an interval of %d seconds", nq.interval)
 	for {
