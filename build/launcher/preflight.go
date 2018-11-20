@@ -70,6 +70,8 @@ func (w *launcher) mapOrStoreStageResults(subStageResult *pb.Result, parentResul
 	return
 }
 
+// handleEnvSecrets will grab all environment type credentials from storage / secret store and add them as global environment variables for
+// 	the entire build.
 func (w *launcher) handleEnvSecrets(ctx context.Context, builder build.Builder, accountName string, stage *build.StageUtil) *pb.Result {
 	creds, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, pb.SubCredType_ENV, accountName, false)
 	if err != nil {

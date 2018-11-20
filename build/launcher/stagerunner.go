@@ -12,6 +12,8 @@ import (
 	"github.com/shankj3/ocelot/storage"
 )
 
+// runStages runs the stages that are defined by the **user** ie what is in the ocelot.yml. Results will be stored in this stage as well.
+//   runStages will return whether any of the stages failed, the amount of time it took to run all the stages, and errors (if any)
 func (w *launcher) runStages(ctx context.Context, werk *pb.WerkerTask, builder build.Builder) (fail bool, dura time.Duration, err error) {
 	//all stages listed inside of the projects's ocelot.yml are executed + stored here
 	fail = false

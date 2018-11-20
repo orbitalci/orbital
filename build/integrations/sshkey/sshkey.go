@@ -1,3 +1,14 @@
+/*
+  sshkey is an implementation of the StringIntegrator interface
+
+	sshkey's methods will create keyfiles in the ~/.ssh directory for ssh type credential it is passed. the files will be
+	named the value of the Identifier field. builds can reference these to scp or ssh to remote servers
+	For example:
+		$ ocelot creds ssh add --identifier JESSI_SSH_KEY --acctname level11consulting --sshfile-loc /Users/jesseshank/.ssh/id_rsa
+	In the build, this ssh key can be utilized at `~/.ssh/JESSI_SSH_KEY`, in ocelot.yml:
+		script:
+		- ssh -i ~/.ssh/JESSI_SSH_KEY ubuntu@cloud-host.amazonaws.com docker restart buildcontainer
+*/
 package sshkey
 
 import (

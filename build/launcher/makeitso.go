@@ -61,7 +61,8 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 	w.StreamChan <- transport
 }
 
-// MakeItSo will call appropriate builder functions
+// MakeItSo is the bread and butter of the werker. It registers the build with consul, ensures notifications, stores all the build data
+//  in the OcelotStorage implementation, and runs all the stages both setup and ones defined by the user.
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
 	startBuild()
 	start := time.Now()

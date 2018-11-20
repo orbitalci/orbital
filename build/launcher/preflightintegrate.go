@@ -92,7 +92,8 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	return
 }
 
-// TODO: This should handle more than just kubectl. Helm, for example.
+// downloadBinaries runs all the binary integrations that are associated with this build. the binary integrations are defined by
+//  getBinaryIntegList.
 func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder, wc *pb.BuildConfig) (result *pb.Result) {
 	var integMessages []string
 	result = &pb.Result{}

@@ -1,3 +1,9 @@
+/*
+  minioconfig is an implementation of the StringIntegrator interface
+
+	minioconfig's methods will use all minio repo credentials and generate a mc-compatible config.json. builds can then use the mc minio client
+	to access the object store without any additional configuration
+*/
 package minioconfig
 
 import (

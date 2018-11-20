@@ -1,3 +1,11 @@
+/*
+  nexusm2 is a implementation of the StringIntegrator interface
+
+	nexusm2's methods will use all nexus credentials to generate a .m2/settings.xml file with a collection of server blocks.
+	The server will have an id of the credential Identifier field, with the credential's username and password. every nexus credentail
+	will create a new <server> block. the default repository in the settings.xml file will also be set, with the url pointing to the
+	environment variable NEXUS_PUBLIC_M2
+*/
 package nexusm2
 
 import (
