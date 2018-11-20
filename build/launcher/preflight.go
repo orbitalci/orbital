@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/common"
@@ -23,8 +24,12 @@ func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder b
 	start := time.Now()
 	prefly := build.InitStageUtil("PREFLIGHT")
 	preflightResult := &pb.Result{Stage: prefly.GetStage(), Status: pb.StageResultVal_PASS}
+	acct, _, err := common.GetAcctRepo(werk.FullName)
+	if err != nil {
+		return bailOut, err
+	}
 	var result *pb.Result
-	result = w.handleEnvSecrets(ctx, builder, strings.Split(werk.FullName, "/")[0], prefly)
+	result = w.handleEnvSecrets(ctx, builder, acct, prefly)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}

@@ -19,6 +19,7 @@ import (
 	"github.com/shankj3/ocelot/build"
 	signal "github.com/shankj3/ocelot/build_signaler"
 	"github.com/shankj3/ocelot/build_signaler/poll"
+	"github.com/shankj3/ocelot/common"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/version"
 )
@@ -56,11 +57,10 @@ func configure() *changeSetConfig {
 	}
 	branchList := strings.Split(branches, ",")
 	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator()}
-	acctrepolist := strings.Split(acctRepo, "/")
-	if len(acctrepolist) != 2 {
-		ocelog.Log().Fatal("-acct-repo must be in format <acct>/<repo>")
+	conf.Acct, conf.Repo, err = common.GetAcctRepo(acctRepo)
+	if err != nil {
+		ocelog.Log().Fatal(err)
 	}
-	conf.Acct, conf.Repo = acctrepolist[0], acctrepolist[1]
 	return conf
 }
 

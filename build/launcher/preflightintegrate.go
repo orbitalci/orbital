@@ -46,7 +46,12 @@ func getBinaryIntegList(loopbackHost, loopbackPort string) []integrations.Binary
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
 func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder, baseStage *build.StageUtil) (result *pb.Result) {
-	accountName := strings.Split(werk.FullName, "/")[0]
+	accountName, _, err := common.GetAcctRepo(werk.FullName)
+	if err != nil {
+		result.Status = pb.StageResultVal_FAIL
+		result.Error = err.Error()
+		return
+	}
 	result = &pb.Result{}
 	var integMessages []string
 	stage := build.CreateSubstage(baseStage, "INTEG")
