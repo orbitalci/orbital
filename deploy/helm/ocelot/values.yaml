@@ -73,12 +73,6 @@ admin:
     tlsSecret: metaverse-secret
 
 
-
-#  enabled: false
-#    host: ocelot-admin-grpc.metaverse.l11.com
-#    tlsSecret: metaverse-secret
-
-
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
@@ -113,7 +107,6 @@ hookhandler:
     enabled: false
     annotations: 
       kubernetes.io/ingress.class: "nginx"
-      # not sure this works...
       ingress.kubernetes.io/ssl-passthrough: "true"
     path: /
     hosts:
@@ -142,6 +135,7 @@ hookhandler:
   affinity: {}
 
 poller:
+## do not change
   replicaCount: 1
 
   image:

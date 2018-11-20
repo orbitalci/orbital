@@ -25,5 +25,6 @@ if [[ -z "$PG_USER" ]]; then
   exit 1
 fi
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-docker run --rm -v $(pwd)/sql:/flyway/sql boxfuse/flyway migrate -url=jdbc:postgresql://${PG_HOST}:5432/${PG_USER} -user=${PG_USER} -password=${PG_PASSWORD} -baselineOnMigrate=true
+docker run --rm -v ${DIR}/sql:/flyway/sql boxfuse/flyway migrate -url=jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_USER} -user=${PG_USER} -password=${PG_PASSWORD} -baselineOnMigrate=true
