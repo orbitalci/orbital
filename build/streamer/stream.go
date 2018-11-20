@@ -102,6 +102,7 @@ func iterateOverByteArray(array StreamArray, stream Streamable, index int) (int,
 	return index, nil
 }
 
+//StreamFromStorage will retrieve the entire build output from storage, send over stream line by line using *bufio.Scanner
 func StreamFromStorage(store storage.BuildOut, stream Streamable, storageKey int64) error {
 	output, err := store.RetrieveOut(storageKey)
 	if err != nil {

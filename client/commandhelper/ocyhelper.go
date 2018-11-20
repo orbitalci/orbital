@@ -6,10 +6,10 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/mitchellh/cli"
+	"github.com/shankj3/ocelot/common"
 	protobuf "github.com/shankj3/ocelot/models/pb"
 	"google.golang.org/grpc"
 )
@@ -53,15 +53,13 @@ func (oh *OcyHelper) WriteUi(writer func(string), msg string) {
 }
 
 // SplitAndSetAcctRepo will split up the AcctRepo field, and write an error to ui if it doesnt meet spec
-func (oh *OcyHelper) SplitAndSetAcctRepo(ui cli.Ui) error {
+func (oh *OcyHelper) SplitAndSetAcctRepo(ui cli.Ui) (err error) {
 	Debuggit(ui, "splitting and setting acct repo")
-	data := strings.Split(oh.AcctRepo, "/")
-	if len(data) != 2 {
+	oh.Account, oh.Repo, err = common.GetAcctRepo(oh.AcctRepo)
+	if err != nil {
 		oh.WriteUi(ui.Error, "flag -acct-repo must be in the format <account>/<repo>")
-		return errors.New("split created an array of len " + string(len(data)))
+		return err
 	}
-	oh.Account = data[0]
-	oh.Repo = data[1]
 	return nil
 }
 

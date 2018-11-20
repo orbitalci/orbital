@@ -1,3 +1,9 @@
+/*
+  helmrepo is an implementation of the StringIntegrator interface
+
+	If there is "helm" in any of the commands in the ocelot.yml file and there are helm repo credentials, then `helm init` will be run
+	and all the helm repos will be added to the container's local helm index
+*/
 package helmrepo
 
 import (

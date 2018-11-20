@@ -1,3 +1,8 @@
+/*
+  helm is an implementation of the BinaryIntegrator interface
+
+	If there is a command the has the string "helm" in it, then the binary helm will be downloaded and installed in the build user's path.
+*/
 package helm
 
 import (

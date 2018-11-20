@@ -103,53 +103,6 @@ func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfi
 
 	return remoteConfig, nil
 }
-
-type StorageCreds struct {
-	User         string
-	Location     string
-	Port         int
-	DbName       string
-	Password     string
-	VaultLeaseID string
-}
-
-type StorageCred interface {
-	GetStorageCreds(typ *storage.Dest) (*StorageCreds, error)
-	GetStorageType() (storage.Dest, error)
-	GetOcelotStorage() (storage.OcelotStorage, error)
-}
-
-type HealthyMaintainer interface {
-	Reconnect() error
-	Healthy() bool
-}
-
-//CVRemoteConfig is an abstraction for retrieving/setting creds for ocelot
-//currently uses consul + vault
-type CVRemoteConfig interface {
-	GetConsul() consul.Consuletty
-	SetConsul(consul consul.Consuletty)
-	GetVault() ocevault.Vaulty
-	SetVault(vault ocevault.Vaulty)
-	AddSSHKey(path string, sshKeyFile []byte) (err error)
-	CheckSSHKeyExists(path string) error
-	GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error)
-	DeleteCred(store storage.CredTable, anyCred pb.OcyCredder) (err error)
-	InsecureCredStorage
-	HealthyMaintainer
-
-	StorageCred
-}
-
-type InsecureCredStorage interface {
-	GetCredsByType(store storage.CredTable, ctype pb.CredType, hideSecret bool) ([]pb.OcyCredder, error)
-	GetAllCreds(store storage.CredTable, hideSecret bool) ([]pb.OcyCredder, error)
-	GetCred(store storage.CredTable, subCredType pb.SubCredType, identifier, accountName string, hideSecret bool) (pb.OcyCredder, error)
-	GetCredsBySubTypeAndAcct(store storage.CredTable, stype pb.SubCredType, accountName string, hideSecret bool) ([]pb.OcyCredder, error)
-	AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error)
-	UpdateCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error)
-}
-
 //
 //type CredStore struct {
 //	RC    CVRemoteConfig

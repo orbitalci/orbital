@@ -1,3 +1,9 @@
+/*
+  kubeconf is an implementation of the StringIntegrator interface
+
+	Its methods will use all the the kubeconfig credentials to generate kubeconfig files in the ~/.kube directory
+*/
+
 package kubeconf
 
 import (
@@ -36,8 +42,6 @@ func (k *K8sInt) IsRelevant(wc *pb.BuildConfig) bool {
 	return true
 }
 
-// FIXME: The StringIntegrator interface should be refactored to support multiple instances
-// FIXME: For backwards compatibility, check if key is THERECANONLYBEONE, and use the name "config"
 func (k *K8sInt) GenerateIntegrationString(creds []pb.OcyCredder) (string, error) {
 	// Stuff creds into a map, and convert into json so we can pass it with some context for environment variables
 	multiCreds := make(map[string]string)

@@ -1,3 +1,10 @@
+/*
+ dockerconfig is an implementation of the StringIntegrator interface
+
+	Its methods will grab docker repo credentials and transform them into docker config.json files that will be authentication for
+	docker repos. If docker repo creds are added to ocelot for the VCS account that is building, then the build will have access to images in
+	that docker repo.
+*/
 package dockerconfig
 
 import (

@@ -3,7 +3,6 @@ package kill
 import (
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/commandhelper"
-	bld "github.com/shankj3/ocelot/common/build"
 	models "github.com/shankj3/ocelot/models/pb"
 
 	"context"
@@ -75,7 +74,7 @@ func (c *cmd) Run(args []string) int {
 		return 1
 	}
 
-	client, err := bld.CreateBuildClient(build)
+	client, err := commandhelper.CreateBuildClient(build)
 	commandhelper.Debuggit(c.UI, fmt.Sprintf("dialing werker at %s:%s", build.GetIp(), build.GetGrpcPort()))
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Error dialing the werker at %s:%s! Error: %s", build.GetIp(), build.GetGrpcPort(), err.Error()))
