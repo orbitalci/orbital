@@ -4,8 +4,6 @@ services:
     image: postgres
     container_name: db
     hostname: db
-    volumes:
-    - ../../docs/postgres/ocelot_postgres_schema.sql:/docker-entrypoint-initdb.d/schema.sql
     ports:
       - 5432:5432
     environment:
