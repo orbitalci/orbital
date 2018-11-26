@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/common"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 )
@@ -768,11 +768,10 @@ func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, 
 
 		return time.Now(), nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	acctRepo := strings.Split(accountRepo, "/")
-	if len(acctRepo) != 2 {
-		return time.Now(), nil, errors.New("length on acct repo not correct")
+	account, repo, err := common.GetAcctRepo(accountRepo)
+	if err != nil {
+		return time.Now(), nil, err
 	}
-	account, repo := acctRepo[0], acctRepo[1]
 	queryStr := `SELECT last_cron_time, last_hashes FROM polling_repos WHERE (account,repo) = ($1,$2);`
 	var stmt *sql.Stmt
 	stmt, err = p.db.Prepare(queryStr)

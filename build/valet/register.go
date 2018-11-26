@@ -37,6 +37,7 @@ func Register(consulete consul.Consuletty, ip, grpcPort, wsPort string, tags []s
 	return
 }
 
+//UnRegister deletes all values out of the kv store that are related to the werkerId's specific configuration
 func UnRegister(consulete consul.Consuletty, werkerId string) error {
 	err := consulete.RemoveValues(common.MakeWerkerLocPath(werkerId))
 	return err

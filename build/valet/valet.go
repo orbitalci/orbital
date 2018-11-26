@@ -153,7 +153,7 @@ func (v *Valet) RemoveAllTrace() {
 		log.Log().WithField("werkerId", v.WerkerUuid.String()).Info("successfully unregistered")
 	}
 }
-
+//MakeItSoDed is a defer recovery function for when the werker has panicked
 func (v *Valet) MakeItSoDed(finish chan int) {
 	if rec := recover(); rec != nil {
 		defer os.Exit(1)
@@ -168,6 +168,7 @@ func (v *Valet) MakeItSoDed(finish chan int) {
 	os.Exit(1)
 }
 
+//RegisterDoneChan will write the nsq done channel to the in-memory map associated with this valet
 func (v *Valet) RegisterDoneChan(hash string, done chan int) {
 	v.Lock()
 	defer v.Unlock()
@@ -179,6 +180,7 @@ func (v *Valet) RegisterDoneChan(hash string, done chan int) {
 	v.doneChannels[hash] = done
 }
 
+//UnregisterDoneChan will delete the done channel associated with the given hash out of the in-memory map associated with this valet
 func (v *Valet) UnregisterDoneChan(hash string) {
 	v.Lock()
 	defer v.Unlock()
@@ -190,6 +192,7 @@ func (v *Valet) UnregisterDoneChan(hash string) {
 
 }
 
+//CallDoneForEverything will iterate over every entry in the in-memory done map and and call "done" on it (ie send an integer over the channel)
 func (v *Valet) CallDoneForEverything() {
 	// this will add to every done channel in its doneChannels map, triggering the nsqpb library to call Finish()
 	for _, done := range v.doneChannels {
@@ -197,12 +200,15 @@ func (v *Valet) CallDoneForEverything() {
 	}
 }
 
+//SignalRecvDed is responsible for closing out all active work when a werker has recieved a signal (SIGKILL, etc). It will store in the database
+// that it has been interrupted for every acssociated active build, it will call done for every nsq active connection, and it will delete all its
+// entries out of the database, then it will finally exit w/ code 0
 func (v *Valet) SignalRecvDed() {
 	log.Log().Info("received interrupt, cleaning up after myself...")
 	v.StoreInterrupt(Signal)
 	v.CallDoneForEverything()
 	v.RemoveAllTrace()
-	os.Exit(1)
+	os.Exit(0)
 }
 
 // Delete will remove everything related to that werker's build of the gitHash out of consul

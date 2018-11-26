@@ -39,7 +39,9 @@
 
 
 [[constraint]]
-  revision = "4f523ef67ae77a9fa415b14336c40bb6d5786909"
+  version = "v0.3.0"
+ #  use revision / commit number for fine tuning go-til
+ #  revision = "4f523ef67ae77a9fa415b14336c40bb6d5786909"
   name = "github.com/shankj3/go-til"
 
 [[constraint]]

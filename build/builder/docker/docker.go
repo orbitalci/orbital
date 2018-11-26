@@ -34,6 +34,8 @@ func init() {
 	prometheus.MustRegister(dockerErrors)
 }
 
+//Docker provides an implementation of the Builder interface that utilizes docker for its building. It will start up a docker container,
+// download code into it, add environment variables, and exec commands against it.
 type Docker struct {
 	Log             io.ReadCloser
 	ContainerId     string
@@ -63,6 +65,10 @@ func (d *Docker) GetContainerId() string {
 	return d.ContainerId
 }
 
+// Setup pulls the docker image defined in the werk task, then creates a container using that image, sending the container id over the dockerIdChan.
+//  It mounts the docker socket to allow for docker builds within the container. It then starts the container with the initial command of downloading
+//  all the ocelot related files and installing necessary packages, and attaches logout to the output so the logs can be stored with teh rest of the build
+//  logs
 func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	var setupMessages []string
 
@@ -243,6 +249,7 @@ func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUti
 	return d.Exec(ctx, stgUtil.GetStage(), stgUtil.GetStageLabel(), stage.Env, stage.Script, logout)
 }
 
+// Execute runs a command via Exec on the container, but it first will cd to the directory of the cloned repo
 func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	if len(d.ContainerId) == 0 {
 		return &pb.Result{
@@ -256,6 +263,7 @@ func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byt
 	return d.Exec(ctx, su.GetStage(), su.GetStageLabel(), stage.Env, d.CDAndRunCmds(stage.Script, commitHash), logout)
 }
 
+// Exec runs the equivalent of `docker exec`, sending all the logs over logout. The result of the command will be returned in a result object
 func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string, env []string, cmds []string, logout chan []byte) *pb.Result {
 	var stageMessages []string
 	resp, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerId, types.ExecConfig{
@@ -317,11 +325,14 @@ func (d *Docker) Exec(ctx context.Context, currStage string, currStageStr string
 	}
 }
 
+//Close isn't relevant to the docker implementation of the Builder interface
 func (d *Docker) Close() error {
 	// do nothing, this is for closing any connections that needed to be persisted for the build
 	return nil
 }
 
+// writeToInfo writes a buffer to the info channel using bufio's Scanner. It will append an error to the infochan if the scanner
+//  returns an error
 func (d *Docker) writeToInfo(stage string, rd *bufio.Reader, infochan chan []byte) {
 	scanner := bufio.NewScanner(rd)
 	buf := make([]byte, 0, 64*1024)

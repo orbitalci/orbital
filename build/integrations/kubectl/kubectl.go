@@ -1,3 +1,9 @@
+/*
+  kubectl is an implementation of the BinaryIntegrator interface
+
+	kubectl's methods will download  kubectl to the path of the docker container user if there is the string 'kubectl' in any of the
+	stages' commands in the ocelot.yml file
+*/
 package kubectl
 
 import (

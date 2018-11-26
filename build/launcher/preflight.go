@@ -3,7 +3,6 @@ package launcher
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	ocelog "github.com/shankj3/go-til/log"
@@ -23,8 +22,12 @@ func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder b
 	start := time.Now()
 	prefly := build.InitStageUtil("PREFLIGHT")
 	preflightResult := &pb.Result{Stage: prefly.GetStage(), Status: pb.StageResultVal_PASS}
+	acct, _, err := common.GetAcctRepo(werk.FullName)
+	if err != nil {
+		return bailOut, err
+	}
 	var result *pb.Result
-	result = w.handleEnvSecrets(ctx, builder, strings.Split(werk.FullName, "/")[0], prefly)
+	result = w.handleEnvSecrets(ctx, builder, acct, prefly)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
 		return
 	}
@@ -70,6 +73,8 @@ func (w *launcher) mapOrStoreStageResults(subStageResult *pb.Result, parentResul
 	return
 }
 
+// handleEnvSecrets will grab all environment type credentials from storage / secret store and add them as global environment variables for
+// 	the entire build.
 func (w *launcher) handleEnvSecrets(ctx context.Context, builder build.Builder, accountName string, stage *build.StageUtil) *pb.Result {
 	creds, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, pb.SubCredType_ENV, accountName, false)
 	if err != nil {
