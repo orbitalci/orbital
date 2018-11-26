@@ -3,7 +3,6 @@ package bitbucket
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/go-test/deep"
@@ -23,11 +22,16 @@ type BBTranslate struct {
 }
 
 func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
+	var buf bytes.Buffer
+	// using tee so we can unmarshal to the pbb.PullRequest obj and also to the buffer, so that we can debug log webhooks
+	//   it is additional overhead, but the imo the debugging of the pr event is worth the cost
+	tee := io.TeeReader(reader, &buf)
 	pr := &pbb.PullRequest{}
-	err := bb.Unmarshaler.Unmarshal(reader, pr)
+	err := bb.Unmarshaler.Unmarshal(tee, pr)
 	if err != nil {
 		return nil, err
 	}
+	ocelog.Log().WithField("postBody", buf.String()).Debug("bitbucket PR event")
 	if pr.Pullrequest == nil {
 		return nil, errors.New("could not unmarshal into PR object, no fields matched")
 	}
@@ -68,13 +72,15 @@ func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
 // TranslatePush will convert a push event from bitbucket into the VCS-generic push object.
 func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	var buf bytes.Buffer
+	// using tee so we can unmarshal to the RepoPush obj and also to the buffer, so that we can debug log webhooks
+	//   it is additional overhead, but the imo the debugging of the push event is worth the cost
 	tee := io.TeeReader(reader, &buf)
 	push := &pbb.RepoPush{}
 	err := bb.Unmarshaler.Unmarshal(tee, push)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(buf.String())
+	ocelog.Log().WithField("postBody", buf.String()).Debug("bitbucket push event")
 	if diff := deep.Equal(push, &pbb.RepoPush{}); diff == nil {
 		return nil, errors.New("could not unmarshal into push object, no fields matched")
 	}
