@@ -51,8 +51,7 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR",
-		"*REQUIRED* hash to get build data of")
+	c.SetGitHelperFlags(c.flags, false, true, false)
 	c.flags.IntVar(&c.buildId, "build-id", 0, "build id from build_summary table, if you do not want to get the last")
 }
 

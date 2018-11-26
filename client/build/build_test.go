@@ -67,7 +67,7 @@ func TestCmd_Run(t *testing.T) {
 	config := &commandhelper.ClientConfig{Client: clie, Theme: commandhelper.Default(true)}
 	cmd2 := &cmd{UI: ui, config: config, OcyHelper: &commandhelper.OcyHelper{}}
 	cmd2.init()
-	code := cmd2.Run([]string{"-acct-repo=1/2", "-hash=1", "-branch=branch"})
+	code := cmd2.Run([]string{"-acct-repo=1/2", "-hash=1", "-branch=branch", "-vcs-type=bitbucket"})
 	if code != 0 {
 		t.Error("should return 0")
 		t.Log(string(ui.ErrorWriter.Bytes()))
@@ -87,7 +87,7 @@ func TestCmd_Run(t *testing.T) {
 	config = &commandhelper.ClientConfig{Client: clie2, Theme: commandhelper.Default(true)}
 	cmd2 = &cmd{UI: ui2, config: config, OcyHelper: &commandhelper.OcyHelper{}}
 	cmd2.init()
-	code = cmd2.Run([]string{"-acct-repo=1/2", "-hash=1", "-branch=branch"})
+	code = cmd2.Run([]string{"-acct-repo=1/2", "-hash=1", "-branch=branch", "-vcs-type=bitbucket"})
 	if code != 1 {
 		t.Error("should fail as client returns an error")
 	}
@@ -125,6 +125,7 @@ func TestCmd_Run_force(t *testing.T) {
 		Hash:     "1",
 		Branch:   "branch",
 		Force:    true,
+		VcsType:  pb.SubCredType_GITHUB,
 	}
 	if diff := deep.Equal(expected, clie.buildReq); diff != nil {
 		t.Error(diff)
@@ -138,7 +139,7 @@ func TestCmd_Run_acctReop(t *testing.T) {
 	config := &commandhelper.ClientConfig{Client: clie, Theme: commandhelper.Default(true)}
 	cmd2 := &cmd{UI: ui, config: config, OcyHelper: &commandhelper.OcyHelper{}}
 	cmd2.init()
-	code := cmd2.Run([]string{"-acct-repo=1/2", "-latest"})
+	code := cmd2.Run([]string{"-acct-repo=1/2", "-latest", "-vcs-type=github"})
 	if code != 0 {
 		t.Error("should return 0")
 		t.Log(string(ui.ErrorWriter.Bytes()))
@@ -146,6 +147,7 @@ func TestCmd_Run_acctReop(t *testing.T) {
 	}
 	expected := &pb.BuildReq{
 		AcctRepo: "1/2",
+		VcsType:  pb.SubCredType_GITHUB,
 	}
 	if diff := deep.Equal(expected, clie.buildReq); diff != nil {
 		t.Error(diff)
@@ -168,6 +170,7 @@ func TestCmd_Run_latest(t *testing.T) {
 	}
 	expected := &pb.BuildReq{
 		AcctRepo: "shankj3/ocelot",
+		VcsType:  pb.SubCredType_GITHUB,
 	}
 	if diff := deep.Equal(expected, clie.buildReq); diff != nil {
 		t.Error(diff)

@@ -31,10 +31,16 @@ type OcyHelper struct {
 	SuppressUI bool
 }
 
-func (oh *OcyHelper) SetGitHelperFlags(flagger models.Flagger) {
-	flagger.StringVar(&oh.AcctRepo, "acct-repo", "ERROR", "<account>/<repo>. if not passed, will attempt detect using git commands")
-	flagger.StringVar(&oh.Hash, "hash", "ERROR", "git hash. if not passed, will attempt detect using git commands")
-	flagger.StringVar(&oh.VcsTypeStr, "vcs-type", "ERROR", fmt.Sprintf("vcs type of <account>/<repo> (%s). if not passed, will attempt detect using git commands", strings.Join(protobuf.CredType_VCS.SubtypesString(), "|")))
+func (oh *OcyHelper) SetGitHelperFlags(flagger models.Flagger, setAcctRepo, setHash, setVcsTypeStr bool) {
+	if setAcctRepo {
+		flagger.StringVar(&oh.AcctRepo, "acct-repo", "ERROR", "<account>/<repo>. if not passed, will attempt detect using git commands")
+	}
+	if setHash {
+		flagger.StringVar(&oh.Hash, "hash", "ERROR", "git hash. if not passed, will attempt detect using git commands")
+	}
+	if setVcsTypeStr {
+		flagger.StringVar(&oh.VcsTypeStr, "vcs-type", "ERROR", fmt.Sprintf("vcs type of <account>/<repo> (%s). if not passed, will attempt detect using git commands", strings.Join(protobuf.CredType_VCS.SubtypesString(), "|")))
+	}
 
 }
 

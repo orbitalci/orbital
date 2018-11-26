@@ -68,7 +68,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo>. if not passed, will attempt detect using git commands")
+	c.SetGitHelperFlags(c.flags, true, false, false)
 	c.flags.IntVar(&c.limit, "limit", 5, "number of rows to fetch")
 }
 

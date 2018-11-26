@@ -59,9 +59,7 @@ func (c *cmd) Help() string {
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	//we accept all 3 flags, but prioritize output in the following order: hash, acct-repo, acct
-	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR", "[optional]  <hash> to display build status")
-	c.flags.StringVar(&c.OcyHelper.Repo, "repo", "ERROR", "[optional]  <repo> to display build status")
-	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "[optional]  <account>/<repo> to display build status")
+	c.SetGitHelperFlags(c.flags, true, true, true)
 	c.flags.BoolVar(&c.wide, "wide", false, "[optional] -wide to see full status description even if build passed")
 }
 

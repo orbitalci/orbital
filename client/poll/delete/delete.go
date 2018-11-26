@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"strings"
 
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/commandhelper"
@@ -56,8 +55,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
-	c.flags.StringVar(&c.VcsTypeStr, "vcs-type", "ERROR", fmt.Sprintf("vcs type of <account>/<repo> (%s). if not passed, will attempt detect using git commands", strings.Join(models.CredType_VCS.SubtypesString(), "|")))
+	c.SetGitHelperFlags(c.flags, true, false, true)
 }
 
 func (c *cmd) Run(args []string) int {

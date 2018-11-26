@@ -53,7 +53,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
+	c.SetGitHelperFlags(c.flags, true, false, false)
 }
 
 func (c *cmd) Run(args []string) int {

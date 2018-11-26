@@ -44,7 +44,7 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 //NOTE: this assumes that only one build is happening with this hash!!!!!
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR", "[REQUIRED] <hash> to kill")
+	c.SetGitHelperFlags(c.flags, false, true, false)
 }
 
 func (c *cmd) Run(args []string) int {
