@@ -1197,7 +1197,10 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 }
 
 func (p *PostgresStorage) GetVCSTypeFromAccount(account string) (pb.SubCredType, error){
-	var bad pb.SubCredType
+	var bad pb.SubCredType = pb.SubCredType_NIL_SCT
+	
+	//  I'm not sure if this form is compilable 
+	// const pb.SubCredType bad = pb.SubCredType_NIL_SCT
 	var err error
 	defer metricizeDbErr(err)
 	start := startTransaction()
