@@ -199,6 +199,10 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	if repoAcct.Repo == "" || repoAcct.Account == "" || repoAcct.Type == pb.SubCredType_NIL_SCT {
 		return nil, status.Error(codes.InvalidArgument, "repo, account, and type are required fields")
 	}
+	// check to make sure url for webhook exists before trying anything fancy
+	if g.hhBaseUrl == "" {
+		return &empty.Empty{}, status.Error(codes.Unimplemented, "Admin is not configured with a hookhandler callback url to register webhooks with. Contact your administrator to run the ocelot admin service with the flag -hookhandler-url-base set to a url that can be accessed via a webhook for VCS push/pullrequest events.")
+	}
 	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig, repoAcct.Type)
 	if err != nil {
 		log.IncludeErrField(err).Error()
@@ -214,10 +218,6 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	repoLinks, err := handler.GetRepoLinks(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
 	if err != nil {
 		return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
-	}
-
-	if g.hhBaseUrl == "" {
-		return &empty.Empty{}, status.Error(codes.Unimplemented, "Admin is not configured with a hookhandler callback url to register webhooks with. Contact your administrator to run the ocelot admin service with the flag -hookhandler-url-base set to a url that can be accessed via a webhook for VCS push/pullrequest events.")
 	}
 	handler.SetCallbackURL(g.hhBaseUrl)
 	err = handler.CreateWebhook(repoLinks.Hooks)
