@@ -28,8 +28,13 @@ func TestGuideOcelotServer_WatchRepo(t *testing.T) {
 	ctx := context.Background()
 	handl := &handle{}
 	gos := &guideOcelotServer{RemoteConfig: rc, handler: handl}
-	acct := &pb.RepoAccount{Repo: "shankj3", Account: "ocelot"}
+	acct := &pb.RepoAccount{Repo: "shankj3", Account: "ocelot", Type: pb.SubCredType_GITHUB}
 	_, err := gos.WatchRepo(ctx, acct)
+	if err == nil {
+		t.Error("no hhBaseUrlSet, should error")
+	}
+	gos.hhBaseUrl = "https://here.me"
+	_, err = gos.WatchRepo(ctx, acct)
 	if err != nil {
 		t.Error(err)
 	}
@@ -225,6 +230,15 @@ func (h *handle) CreateWebhook(webhookURL string) error {
 	}
 	return nil
 }
+
+func (h *handle) GetRepoLinks(acctRepo string) (*pb.Links, error) {
+	if h.failDetail {
+		return nil, errors.New("failing detail")
+	}
+	return &pb.Links{}, nil
+}
+
+func (h *handle) SetCallbackURL(string) {}
 
 var ocelot = []byte(`image: jessishank/mavendocker
 buildTool: maven

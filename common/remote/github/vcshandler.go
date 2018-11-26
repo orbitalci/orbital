@@ -23,7 +23,6 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088"
 const DefaultBaseURL = "https://api.github.com/%s"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
@@ -59,7 +58,6 @@ func GetGithubHandler(cred *pb.VCSCreds, cli ocenet.HttpClient) *githubVCS {
 
 type githubVCS struct {
 	CallbackURL   string
-	RepoBaseURL   string
 	Client 		  ocenet.HttpClient
 	ghClient      *github.Client
 	ctx           context.Context
@@ -76,9 +74,6 @@ func (gh *githubVCS) GetVcsType() pb.SubCredType {
 }
 
 func (gh *githubVCS) GetCallbackURL() string {
-	if gh.CallbackURL == "" {
-		return DefaultCallbackURL + "/" + strings.ToLower(gh.GetVcsType().String())
-	}
 	return gh.CallbackURL + "/" + strings.ToLower(gh.GetVcsType().String())
 }
 
@@ -150,11 +145,14 @@ func (gh *githubVCS) checkForOcelotFile(contentsUrl string) (int, error) {
 }
 
 func (gh *githubVCS) CreateWebhook(hookUrl string) error {
+	if gh.CallbackURL == "" {
+		return models.NoCallbackURL(pb.SubCredType_GITHUB)
+	}
 	// create it, if it already exists it'll return a 422
 	hookReq := &gpb.Hook{
 		Active: true,
 		Events: []string{"push", "pull_request"},
-		Config: &gpb.Hook_Config{Url: DefaultCallbackURL, ContentType: "json"},
+		Config: &gpb.Hook_Config{Url: gh.GetCallbackURL(), ContentType: "json"},
 	}
 	bits, err := json.Marshal(hookReq)
 	if err != nil {

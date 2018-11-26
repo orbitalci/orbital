@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
 	"google.golang.org/grpc/codes"
@@ -94,13 +93,13 @@ func (f *fakeStorage) DeletePoll(account string, repo string) error {
 	return nil
 }
 
-var polls = []*models.PollRequest{
+var polls = []*pb.PollRequest{
 	{Account: "shankj3", Repo: "repo2", Cron: "* * * * *", Branches: "branch1,branch2"},
 	{Account: "shankj3", Repo: "repo2", Cron: "* * * * *", Branches: "branch1,branch9"},
 	{Account: "accountBoiiii", Repo: "repo1", Cron: "* * * * *", Branches: "master,dev"},
 }
 
-func (f *fakeStorage) GetAllPolls() ([]*models.PollRequest, error) {
+func (f *fakeStorage) GetAllPolls() ([]*pb.PollRequest, error) {
 	if f.returnErr {
 		return nil, errors.New("no get all polls for u")
 	}
