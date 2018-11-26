@@ -166,3 +166,8 @@ func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream grpc.ClientStream) error 
 	}
 	return nil
 }
+
+
+func (oh *OcyHelper) DebugOcyHelper(ui cli.Ui) {
+	Debuggit(ui, fmt.Sprintf("%#v", oh))
+}

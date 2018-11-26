@@ -58,13 +58,11 @@ func (c *cmd) Run(args []string) int {
 	var build *models.BuildRuntimeInfo
 	var err error
 
-	if c.Hash == "ERROR" {
-		if err := c.OcyHelper.DetectHash(c.UI); err != nil {
-			commandhelper.Debuggit(c.UI, err.Error())
-			return 1
-		}
+	if err := c.OcyHelper.DetectHash(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
+		return 1
 	}
-
+	c.DebugOcyHelper(c.UI)
 	build, err = c.config.Client.FindWerker(ctx, &models.BuildReq{
 		Hash: c.Hash,
 	})

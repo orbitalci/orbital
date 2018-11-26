@@ -78,6 +78,7 @@ func (c *cmd) Run(args []string) int {
 	if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
 		return 1
 	}
+	c.DebugOcyHelper(c.UI)
 	if c.cron == "ERROR" {
 		commandhelper.Debuggit(c.UI, strings.Join(args[:], ","))
 		c.UI.Error("-cron is a required flag")

@@ -95,7 +95,7 @@ func (c *cmd) Run(args []string) int {
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
 		help.Debuggit(c.UI, err.Error())
 	}
-
+	c.DebugOcyHelper(c.UI)
 	ctx := context.Background()
 	if err := help.CheckConnection(c, ctx); err != nil {
 		return 1

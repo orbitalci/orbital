@@ -76,6 +76,8 @@ func (c *cmd) Run(args []string) int {
 		build, err = c.config.Client.BuildRuntime(ctx, &models.BuildQuery{Hash: c.OcyHelper.Hash})
 	}
 
+	c.DebugOcyHelper(c.UI)
+
 	if err != nil {
 		c.UI.Error("unable to get build runtime! error: " + err.Error())
 		return 1

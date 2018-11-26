@@ -151,8 +151,8 @@ func (c *cmd) Run(args []string) int {
 		}
 		goto STATUS_FOUND
 	}
-	return 0
 STATUS_FOUND:
+	c.DebugOcyHelper(c.UI)
 	commandhelper.Debuggit(c.UI, fmt.Sprintf("status is %s", statuses.BuildSum.Status.String()))
 
 	//statuses.BuildSum.QueueTime time.Unix(0,0)
