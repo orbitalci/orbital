@@ -11,15 +11,28 @@ import (
 
 )
 
-const synopsis = "build a project hash"
+const synopsis = "build a specific commit of a repository"
 const helpmsg = `
-Usage: ocelot build -acct-repo <acct>/<repo> -hash <git_hash> -branch <branch>
+Usage: ocelot build -acct-repo <acct>/<repo> -hash <git_hash> -branch <branch> [-latest]
 	Triggers a build to happen for the specified account/repository and hash starting with <git_hash>
 	If you running this command from the directory of your cloned git repo, ocelot will run some git commands
 	to detect the account and repo name from the origin url, and it will detect the last pushed commit. 
 	Those values will be used to trigger the build. If passing in a hash that hasn't been built before, 
 	branch MUST BE SPECIFIED. If a build corresponding with the passed hash (or starts with passed hash value) 
-	already exists, then the branch can be inferred and you will not be required to pass a branch flag. 
+	already exists, then the branch can be inferred and you will not be required to pass a branch flag. If you 
+	wish to run the remote tip of a branch, pass in the -latest flag
+
+Example: 
+    1. Building a commit that has already been built before, while in the directory of the git repo:
+        $ ocelot build 
+	   In this case, the client will detect the vcs account, repository, and the hash by running git commands. Since it
+	   has been built previously, the branch will already be known to ocelot.
+	2. Building a commit that you just pushed to master, while in the directory of the git repo:
+	    $ ocelot build -branch master
+       Here, a new commit is being detected by the ocelot client, and therefore it will not be able to guess which branch it belongs to. 
+	3. Building the tip of a remote branch (let's say, feature2)
+	    $ ocelot build -branch feature2 -latest
+       The -latest flag will tell ocelot to search for the head commit at the remote git repository (branch feature2) and build using that hash. 
 `
 
 func New(ui cli.Ui) *cmd {
