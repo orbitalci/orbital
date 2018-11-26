@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	ocenet "github.com/shankj3/go-til/net"
 	"github.com/shankj3/ocelot/models/pb"
@@ -73,6 +74,19 @@ type VCSHandler interface {
 	PostPRComment(acctRepo, prId, hash string, failed bool, buildId int64) error
 
 	GetClient() ocenet.HttpClient
+}
+
+// NoCallbackURL will return an error struct that denotes that SetCallbackURL has not been called and a webhook callback url is required
+func NoCallbackURL(sctType pb.SubCredType) *NoWebhookCallback {
+	return &NoWebhookCallback{sctType: sctType}
+}
+
+type NoWebhookCallback struct {
+	sctType pb.SubCredType
+}
+
+func (nwc *NoWebhookCallback) Error() string {
+	return fmt.Sprintf("No %s CallbackURL set! Must use SetCallbackURL()", strings.ToTitle(nwc.sctType.String()))
 }
 
 type Translator interface {

@@ -58,7 +58,6 @@ func GetGithubHandler(cred *pb.VCSCreds, cli ocenet.HttpClient) *githubVCS {
 
 type githubVCS struct {
 	CallbackURL   string
-	RepoBaseURL   string
 	Client 		  ocenet.HttpClient
 	ghClient      *github.Client
 	ctx           context.Context
@@ -146,6 +145,9 @@ func (gh *githubVCS) checkForOcelotFile(contentsUrl string) (int, error) {
 }
 
 func (gh *githubVCS) CreateWebhook(hookUrl string) error {
+	if gh.CallbackURL == "" {
+		return models.NoCallbackURL(pb.SubCredType_GITHUB)
+	}
 	// create it, if it already exists it'll return a 422
 	hookReq := &gpb.Hook{
 		Active: true,

@@ -239,6 +239,9 @@ func (bb *Bitbucket) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.Branch
 
 //CreateWebhook will create webhook at specified webhook url
 func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
+	if bb.CallbackURL == "" {
+		return models.NoCallbackURL(pb.SubCredType_BITBUCKET)
+	}
 	if !bb.FindWebhooks(webhookURL) {
 		//create webhook if one does not already exist
 		newWebhook := &pbb.CreateWebhook{
