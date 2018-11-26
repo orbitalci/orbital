@@ -40,7 +40,7 @@ func (m *WebhookMsg) Reset()         { *m = WebhookMsg{} }
 func (m *WebhookMsg) String() string { return proto.CompactTextString(m) }
 func (*WebhookMsg) ProtoMessage()    {}
 func (*WebhookMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_slack_f60cdea5ddeeb863, []int{0}
+	return fileDescriptor_slack_8347294e148134e4, []int{0}
 }
 func (m *WebhookMsg) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_WebhookMsg.Unmarshal(m, b)
@@ -115,7 +115,7 @@ func (m *Field) Reset()         { *m = Field{} }
 func (m *Field) String() string { return proto.CompactTextString(m) }
 func (*Field) ProtoMessage()    {}
 func (*Field) Descriptor() ([]byte, []int) {
-	return fileDescriptor_slack_f60cdea5ddeeb863, []int{1}
+	return fileDescriptor_slack_8347294e148134e4, []int{1}
 }
 func (m *Field) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Field.Unmarshal(m, b)
@@ -180,7 +180,7 @@ func (m *Attachment) Reset()         { *m = Attachment{} }
 func (m *Attachment) String() string { return proto.CompactTextString(m) }
 func (*Attachment) ProtoMessage()    {}
 func (*Attachment) Descriptor() ([]byte, []int) {
-	return fileDescriptor_slack_f60cdea5ddeeb863, []int{2}
+	return fileDescriptor_slack_8347294e148134e4, []int{2}
 }
 func (m *Attachment) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Attachment.Unmarshal(m, b)
@@ -304,9 +304,9 @@ func init() {
 	proto.RegisterType((*Attachment)(nil), "slack.Attachment")
 }
 
-func init() { proto.RegisterFile("slack.proto", fileDescriptor_slack_f60cdea5ddeeb863) }
+func init() { proto.RegisterFile("slack.proto", fileDescriptor_slack_8347294e148134e4) }
 
-var fileDescriptor_slack_f60cdea5ddeeb863 = []byte{
+var fileDescriptor_slack_8347294e148134e4 = []byte{
 	// 397 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x52, 0x4d, 0xab, 0xdb, 0x30,
 	0x10, 0x24, 0x1f, 0x76, 0xec, 0x75, 0x5a, 0xa8, 0x28, 0x45, 0x6d, 0x08, 0x0d, 0xa1, 0x87, 0x9c,

@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v19/github"
 	"github.com/pkg/errors"
 
 	ocelog "github.com/shankj3/go-til/log"

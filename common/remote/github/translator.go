@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v19/github"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/models"

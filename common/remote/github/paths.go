@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v19/github"
 	"github.com/shankj3/ocelot/models/pb"
 )
 
