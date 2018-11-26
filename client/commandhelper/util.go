@@ -72,6 +72,6 @@ func UploadSSHKeyFile(ctx context.Context, ui cli.Ui, oceClient models.GuideOcel
 // maybe make it a flag later, not really worried about the performance of all the lookups though since its for debugging
 func Debuggit(ui cli.Ui, msg string) {
 	if _, ok := os.LookupEnv("DEBUGGIT"); ok {
-		ui.Warn(msg)
+		ui.Warn("DEBUGGIT -- "+msg)
 	}
 }
