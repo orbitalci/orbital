@@ -19,9 +19,8 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088"
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
-//const V1RepoBaseURL = "https://api.bitbucket.org/1.0/repositories/%v"
+
 const TokenUrl = "https://bitbucket.org/site/oauth2/access_token"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
@@ -265,10 +264,7 @@ func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
 
 //GetCallbackURL is a getter for retrieving callbackURL for bitbucket webhooks
 func (bb *Bitbucket) GetCallbackURL() string {
-	if len(bb.CallbackURL) > 0 {
-		return bb.CallbackURL + "/" + strings.ToLower(bb.GetVcsType().String())
-	}
-	return DefaultCallbackURL + "/" + strings.ToLower(bb.GetVcsType().String())
+	return bb.CallbackURL + "/" + strings.ToLower(bb.GetVcsType().String())
 }
 
 //SetCallbackURL sets callback urls to be used for webhooks

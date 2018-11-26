@@ -23,7 +23,6 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-const DefaultCallbackURL = "http://ec2-34-212-13-136.us-west-2.compute.amazonaws.com:8088"
 const DefaultBaseURL = "https://api.github.com/%s"
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
@@ -76,9 +75,6 @@ func (gh *githubVCS) GetVcsType() pb.SubCredType {
 }
 
 func (gh *githubVCS) GetCallbackURL() string {
-	if gh.CallbackURL == "" {
-		return DefaultCallbackURL + "/" + strings.ToLower(gh.GetVcsType().String())
-	}
 	return gh.CallbackURL + "/" + strings.ToLower(gh.GetVcsType().String())
 }
 
@@ -154,7 +150,7 @@ func (gh *githubVCS) CreateWebhook(hookUrl string) error {
 	hookReq := &gpb.Hook{
 		Active: true,
 		Events: []string{"push", "pull_request"},
-		Config: &gpb.Hook_Config{Url: DefaultCallbackURL, ContentType: "json"},
+		Config: &gpb.Hook_Config{Url: gh.GetCallbackURL(), ContentType: "json"},
 	}
 	bits, err := json.Marshal(hookReq)
 	if err != nil {
