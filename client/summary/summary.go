@@ -68,7 +68,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.OcyHelper.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to display build summaries for ")
+	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo>. if not passed, will attempt detect using git commands")
 	c.flags.IntVar(&c.limit, "limit", 5, "number of rows to fetch")
 }
 
@@ -76,10 +76,11 @@ func (c *cmd) Run(args []string) int {
 	if err := c.flags.Parse(args); err != nil {
 		return 1
 	}
-
 	if err := c.DetectAcctRepo(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
 		return 1
 	}
+
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
 		return 1
 	}

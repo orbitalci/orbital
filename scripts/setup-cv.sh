@@ -34,11 +34,12 @@ locals() {
     # Vault database secret engine (Dynamic secret)
     # Uncomment if you want to operate using the dynamic secrets
     # TODO: We should practice development using a user w/o superuser access
+
     vault secrets enable database || true
     vault write database/config/ocelot \
         plugin_name=postgresql-database-plugin \
         allowed_roles="ocelot" \
-        connection_url="postgresql://{{username}}:{{password}}@192.168.56.78:5432/?sslmode=disable" \
+        connection_url="postgresql://{{username}}:{{password}}@${DBHOST}:5432/?sslmode=disable" \
         username="postgres" \
         password="mysecretpassword"
 
@@ -51,7 +52,7 @@ locals() {
         default_ttl="10m" \
         max_ttl="1h"
 
-    # Example of tuning role to a more minimally scoped user using 
+    # Example of tuning role to a more minimally scoped user using
     #vault write database/roles/ocelot \
     #    db_name=ocelot \
     #    creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \

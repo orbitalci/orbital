@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -19,6 +20,10 @@ func GetAcctRepo(fullName string) (acct string, repo string, err error) {
 	acct = list[0]
 	repo = list[1]
 	return
+}
+
+func CreateAcctRepo(account, repo string) string {
+	return fmt.Sprintf("%s/%s", account, repo)
 }
 
 func BadFormat(msg string) *FormatError {

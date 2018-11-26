@@ -113,13 +113,14 @@ func BuildInitialWerkerTask(buildConf *pb.BuildConfig,
 	branch string,
 	acctRepo string,
 	sigType pb.SignaledBy,
-	prData *pb.PrWerkerData) *pb.WerkerTask {
+	prData *pb.PrWerkerData,
+	vcsType pb.SubCredType) *pb.WerkerTask {
 	return &pb.WerkerTask{
 		CheckoutHash: hash,
 		Branch:       branch,
 		BuildConf:    buildConf,
 		VcsToken:     authToken,
-		VcsType:      pb.SubCredType_BITBUCKET,
+		VcsType:      vcsType,
 		FullName:     acctRepo,
 		SignaledBy:   sigType,
 		PrData:       prData,

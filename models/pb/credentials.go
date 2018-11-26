@@ -2,10 +2,11 @@ package pb
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const ENV_SAFE = "^[a-zA-Z_]+$"
@@ -136,9 +137,9 @@ func (m *VCSCreds) ValidateForInsert() *ValidationErr {
 	if m.ClientId == "" {
 		errr = append(errr, "oauth client id is required")
 	}
-	if m.TokenURL == "" {
-		errr = append(errr, "oauth token url is required")
-	}
+	//if m.TokenURL == "" {
+	//	errr = append(errr, "oauth token url is required")
+	//}
 	if len(errr) != 0 {
 		return Invalidate(strings.Join(errr, "\n"))
 	}
@@ -468,4 +469,14 @@ func CreateVCSIdentifier(sct SubCredType, acctName string) (string, error) {
 	}
 	identifier := SubCredType_name[int32(sct)] + "_" + acctName
 	return identifier, nil
+}
+
+func VcsTypeStringToSubCredType(vcsType string) (SubCredType, error) {
+	typ, ok := SubCredType_value[strings.ToUpper(vcsType)]
+	sct := SubCredType(typ)
+	if !ok {
+
+		return sct, errors.Errorf("not a supported vcs type, must be one of: %s", strings.Join(CredType_VCS.SubtypesString(), " | "))
+	}
+	return sct, nil
 }

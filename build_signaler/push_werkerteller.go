@@ -32,7 +32,7 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 		ocelog.IncludeErrField(err).Error("couldn't get ocelot.yml")
 		return errors.Wrap(err, "unable to get build configuration")
 	}
-	task := BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil)
+	task := BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil, handler.GetVcsType())
 	if push.PreviousHeadCommit == nil {
 
 		task.ChangesetData, err = GenerateNoPreviousHeadChangeset(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash)

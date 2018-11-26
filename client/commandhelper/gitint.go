@@ -7,34 +7,43 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 var (
 	cmdName       = "git"
-	sshGit        = regexp.MustCompile(`git\@\w+\.\w+\:([^\/.]*)\/([^\..]*)\.git`)
-	httpsGithub   = regexp.MustCompile(`https:\/\/github\.com\/([^\/.]*)\/([^\..]*)\.git`)
-	httpsBb       = regexp.MustCompile(`https:\/\/\w+\@\w+\.org\/([^\/.]*)\/([^\..]*)\.git`)
-	httpsBbNoUser = regexp.MustCompile(`https:\/\/\w+\.org\/([^\/.]*)\/([^\..]*)\.git`)
+	//sshGit        = regexp.MustCompile(`git\@\w+\.\w+\:([^\/.]*)\/([^\..]*)[\.git]?`)
+	githubGit     = regexp.MustCompile(`git\@github\.\w+\:([^\/.]*)\/([^\..]*)[\.git]?`)
+	bitbucketGit  = regexp.MustCompile(`git\@bitbucket\.\w+\:([^\/.]*)\/([^\..]*)[\.git]?`)
+	httpsGithub   = regexp.MustCompile(`https:\/\/github\.com\/([^\/.]*)\/([^\..]*)[\.git]?`)
+	httpsBb       = regexp.MustCompile(`https:\/\/\w+\@\w+\.org\/([^\/.]*)\/([^\..]*)[\.git]?`)
+	httpsBbNoUser = regexp.MustCompile(`https:\/\/\w+\.org\/([^\/.]*)\/([^\..]*)[\.git]?`)
 	//httpsBbNoUserNodotGit = regexp.MustCompile(`https:\/\/\w+\.org\/([^\/.]*)\/([^\..]*[^\s-])`)
 
-	regexes = []*regexp.Regexp{sshGit, httpsGithub, httpsBb, httpsBbNoUser}
+	regexmaps = map[pb.SubCredType][]*regexp.Regexp{
+		pb.SubCredType_BITBUCKET: {bitbucketGit,httpsBb, httpsBbNoUser},
+		pb.SubCredType_GITHUB: {githubGit, httpsGithub},
+	}
 )
 
-func matchThis(data []byte) (string, error) {
-	for _, regex := range regexes {
-		if mtch := regex.FindSubmatch(data); mtch != nil {
-			// match should only be 2 matches + the original text....
-			if len(mtch) != 3 {
-				return "", errors.New("unexpected match length " + string(len(mtch)))
+func matchThis(data []byte) (string, pb.SubCredType, error) {
+	for vcsType, regexz := range regexmaps {
+		for _, regex := range regexz {
+			if mtch := regex.FindSubmatch(data); mtch != nil {
+				// match should only be 2 matches + the original text....
+				if len(mtch) != 3 {
+					return "", pb.SubCredType_NIL_SCT, errors.New("unexpected match length " + string(len(mtch)))
+				}
+				return fmt.Sprintf("%s/%s", string(mtch[1]), string(mtch[2])), vcsType, nil
 			}
-			return fmt.Sprintf("%s/%s", string(mtch[1]), string(mtch[2])), nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("did not find an account repo match for the remote origin url %s, please inspect url then contact developers to get new match added.", string(data)))
+	return "",  pb.SubCredType_NIL_SCT, errors.New(fmt.Sprintf("did not find an account repo match for the remote origin url %s, please inspect url then contact developers to get new match added.", string(data)))
 }
 
 // FindAcctRepo will attempt to run a git command and parse out the acct/repo from it.
-func FindAcctRepo() (acctRepo string, err error) {
+func FindAcctRepo() (acctRepo string, credType pb.SubCredType, err error) {
 	var cmdOut []byte
 	getOrigin := []string{"config", "--get", "remote.origin.url"}
 	if cmdOut, err = exec.Command(cmdName, getOrigin...).Output(); err != nil {

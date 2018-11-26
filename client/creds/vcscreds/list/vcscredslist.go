@@ -95,17 +95,37 @@ func NoDataHeader(ui cli.Ui) {
 	ui.Warn("\n--- No Admin Credentials Found ---\n")
 }
 
-func Prettify(cred *models.VCSCreds) string {
-	pretty := `ClientId: %s
+func prettifyGithub(cred *models.VCSCreds) string {
+	pretty := `AcctName: %s
+ClientSecret: %s
+SubType: %s
+Identifier: %s
+[%s]`
+	return fmt.Sprintf(pretty, cred.AcctName, cred.ClientSecret, cred.SubType, cred.Identifier, cred.SshFileLoc)
+}
+
+func prettifyBitbucket(cred *models.VCSCreds) string {
+	pretty := `AcctName: %s
+ClientId: %s
 ClientSecret: %s
 TokenURL: %s
-AcctName: %s
 SubType: %s
 Identifier: %s
 [%s]
 
 `
-	return fmt.Sprintf(pretty, cred.ClientId, cred.ClientSecret, cred.TokenURL, cred.AcctName, strings.ToLower(cred.SubType.String()), cred.Identifier, cred.SshFileLoc)
+	return fmt.Sprintf(pretty, cred.AcctName,  cred.ClientId, cred.ClientSecret, cred.TokenURL, strings.ToLower(cred.SubType.String()), cred.Identifier, cred.SshFileLoc)
+}
+
+func Prettify(cred *models.VCSCreds) string {
+	switch cred.SubType {
+	case models.SubCredType_GITHUB:
+		return prettifyGithub(cred)
+	case models.SubCredType_BITBUCKET:
+		return prettifyBitbucket(cred)
+	default:
+		return fmt.Sprintf("ERROR! UNKNOWN TYPE OF VCS CRED: %s", cred.SubType.String())
+	}
 }
 
 const synopsis = "List all credentials used for tracking repositories to build"

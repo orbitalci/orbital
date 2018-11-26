@@ -126,7 +126,7 @@ docker-build: ## build all images
 release: proto upload-clients upload-templates linux-werker docker-base docker-build ## build protos, install & upload clients, upload werker templates, install & upload linux werker, build docker base, build all images
 
 proto: ## build all protos
-	@cd models; ./build-protos.sh;
+	go generate ./models/...
 
 pushtags: versionexists ## tag built docker images with the VERSION and push all to nexus
 	@scripts/tag_and_push.sh $(VERSION)

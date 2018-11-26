@@ -79,7 +79,7 @@ func CreateTestPgDatabase(t *testing.T, port int) (cleanup func(t *testing.T), p
 	}
 	//var containerId string
 	//containerId = strings.Trim(outbe.String(), "\n")
-	t.Log("successfully started up test pg database on port " + fmt.Sprintf("%d", port))
+	t.Logf("successfully started up test pg database on port %d", port)
 	cleanup = func(t *testing.T) {
 		//createOrUpdateAuditFile(fmt.Sprintf("%s,delete", t.Name()))
 		t.Log("attempting to clean up db")

@@ -851,16 +851,18 @@ func (p *PostgresStorage) DeletePoll(account string, repo string) error {
 	return nil
 }
 
-func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
+func (p *PostgresStorage) GetAllPolls() ([]*pb.PollRequest, error) {
 	var err error
 	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "poll_table", "read")
-	var polls []*models.PollRequest
+	var polls []*pb.PollRequest
 	if err = p.Connect(); err != nil {
 		return nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	queryStr := `select account, repo, cron_string, last_cron_time, branches from polling_repos`
+	queryStr := `SELECT polling_repos.account, polling_repos.repo, polling_repos.cron_string, polling_repos.last_cron_time, polling_repos.branches, credentials.cred_sub_type 
+FROM polling_repos LEFT JOIN credentials
+	ON credentials_id = id;`
 	var stmt *sql.Stmt
 	stmt, err = p.db.Prepare(queryStr)
 	if err != nil {
@@ -875,10 +877,12 @@ func (p *PostgresStorage) GetAllPolls() ([]*models.PollRequest, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		pr := &models.PollRequest{}
-		if err = rows.Scan(&pr.Account, &pr.Repo, &pr.Cron, &pr.LastCron, &pr.Branches); err != nil {
+		pr := &pb.PollRequest{}
+		var tyme time.Time
+		if err = rows.Scan(&pr.Account, &pr.Repo, &pr.Cron, &tyme, &pr.Branches, &pr.Type); err != nil {
 			return nil, err
 		}
+		pr.LastCronTime = convertTimeToTimestamp(tyme)
 		polls = append(polls, pr)
 	}
 	return polls, rows.Err()
@@ -1190,6 +1194,51 @@ func (p *PostgresStorage) RetrieveCredBySubTypeAndAcct(scredType pb.SubCredType,
 		return nil, CredNotFound(acctName, scredType.String())
 	}
 	return creds, rows.Err()
+}
+
+func (p *PostgresStorage) GetVCSTypeFromAccount(account string) (pb.SubCredType, error){
+	var bad pb.SubCredType = pb.SubCredType_NIL_SCT
+	
+	//  I'm not sure if this form is compilable 
+	// const pb.SubCredType bad = pb.SubCredType_NIL_SCT
+	var err error
+	defer metricizeDbErr(err)
+	start := startTransaction()
+	defer finishTransaction(start, "credentials", "read")
+	if err = p.Connect(); err != nil {
+		return bad, errors.Wrap(err, "could not connect to postgres")
+	}
+	queryStr := `SELECT DISTINCT cred_sub_type FROM credentials WHERE 
+(cred_type,account)=($1,$2)`
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return bad, err
+	}
+	defer stmt.Close()
+	var rows *sql.Rows
+	rows, err = stmt.Query(pb.CredType_VCS, account)
+	if err != nil {
+		return bad, err
+	}
+	defer rows.Close()
+	var scts []pb.SubCredType
+	for rows.Next() {
+		var sct int32
+		err = rows.Scan(&sct)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return bad, CredNotFound(account, "any")
+			}
+			return bad, err
+		}
+		scts = append(scts, pb.SubCredType(sct))
+	}
+	if len(scts) != 1 {
+		return bad, MultipleVCSTypes(account, scts)
+	}
+	return scts[0], nil
 }
 
 

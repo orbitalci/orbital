@@ -45,7 +45,6 @@ func finishTransaction(start time.Time, table, crud string) {
 	dbDuration.WithLabelValues(table, crud).Observe(time.Since(start).Seconds())
 }
 
-
 // metricizeDbErr will check the type of error and increment the necessary prometheus metrics
 func metricizeDbErr(err error) {
 	switch err {

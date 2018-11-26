@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -40,16 +39,5 @@ func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*pb.
 		}
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
-	pollz := &pb.Polls{}
-	for _, pll := range polls {
-		pbpoll := &pb.PollRequest{
-			Account:      pll.Account,
-			Repo:         pll.Repo,
-			Cron:         pll.Cron,
-			Branches:     pll.Branches,
-			LastCronTime: &timestamp.Timestamp{Seconds: pll.LastCron.Unix(), Nanos: 0},
-		}
-		pollz.Polls = append(pollz.Polls, pbpoll)
-	}
-	return pollz, nil
+	return &pb.Polls{Polls: polls}, nil
 }

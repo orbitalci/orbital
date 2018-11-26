@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
+	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/ocelot/client/commandhelper"
 	models "github.com/shankj3/ocelot/models/pb"
@@ -116,39 +117,43 @@ func uploadCredential(ctx context.Context, client models.GuideOcelotClient, UI c
 	return err
 }
 
-// seems really unlikely that hashicorps tool will fail, but this way if it does its all in one
-// function.
-func getCredentialsFromUiAsk(UI cli.Ui) (creds *models.VCSCreds, errorConcat string) {
-	creds = &models.VCSCreds{}
-	var err error
-	if creds.ClientId, err = UI.Ask("Client ID: "); err != nil {
-		return nil, err.Error()
+func getCredentialsFromStdin(UI cli.Ui) (creds *models.VCSCreds, err error) {
+    creds = &models.VCSCreds{}
+	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
+		return
 	}
 	var unCastedSt string
 	if unCastedSt, err = UI.Ask("Type: "); err != nil {
-		return nil, err.Error()
+		return
 	}
 	if int32SubType, ok := models.SubCredType_value[strings.ToUpper(strings.Replace(unCastedSt, " ", "", -1))]; !ok {
-		errorConcat += "\n Type must be bitbucket|github"
+		err = errors.New("Type must be bitbucket|github")
+		return
 	} else {
 		creds.SubType = models.SubCredType(int32SubType)
 	}
-	if creds.AcctName, err = UI.Ask("Account Name: "); err != nil {
-		return nil, err.Error()
+	switch creds.SubType {
+	case models.SubCredType_BITBUCKET:
+		if creds.ClientId, err = UI.Ask("Client Key: "); err != nil {
+			return
+		}
+		if creds.ClientSecret, err = UI.AskSecret("Client Secret: "); err != nil {
+			return nil, err
+		}
+	case models.SubCredType_GITHUB:
+		creds.ClientId = "UNNECESSARY"
+		if creds.ClientSecret, err = UI.Ask("Personal Access Token: "); err != nil {
+			return
+		}
 	}
-	if creds.TokenURL, err = UI.Ask("OAuth token URL for repository: "); err != nil {
-		return nil, err.Error()
-	}
-	if creds.ClientSecret, err = UI.AskSecret("Secret for OAuth: "); err != nil {
-		return nil, err.Error()
-	}
-	return creds, errorConcat
+	return
+
 }
 
 func (c *cmd) runStdinUpload(ctx context.Context) int {
-	creds, errConcat := getCredentialsFromUiAsk(c.UI)
-	if errConcat != "" {
-		c.UI.Error(fmt.Sprint("Error recieving input: ", errConcat))
+	creds, err := getCredentialsFromStdin(c.UI)
+	if err != nil {
+		c.UI.Error(fmt.Sprint("Error recieving input: ", err.Error()))
 		return 1
 	}
 	if err := uploadCredential(ctx, c.config.Client, c.UI, creds); err != nil {
@@ -200,21 +205,34 @@ func (c *cmd) Help() string {
 const synopsis = "Add credentials or a set of them"
 const help = `
 Usage: ocelot creds vcs add
+  Detailed help for setup: https://github.com/shankj3/ocelot/wiki/client#initial-configuration
   Add one set of credentials or a list of them. Credentials may also need an SSH key file, if an ssh key path is populated, the file will be uploaded to vault and associated with the specified account/type. 
   You can specify a filename using:
     ocelot creds add vcs -credfile-loc=<yaml file>
   The client will expect that the yaml is a credentials object with an array of creds you would like to integrate with ocelot.
   For example:
     credentials:
-    - clientId: <OAUTH_CLIENT_ID>     ---> client id correlated with clientSecret
-      clientSecret: <OAUTH_SECRET>    ---> generated when you add an oauth access
-      tokenURL: <OAUTH_TOKEN_URL>     ---> e.g. https://bitbucket.org/site/oauth2/access_token
-      acctName: <ACCOUNT_NAME>        ---> e.g. level11consulting
-      type: <SCM_TYPE>                ---> e.g. bitbucket
-	  sshFileLoc: <SSH_KEY_FILE_PATH> ---> e.g. /home/mariannefeng/.ssh/id_rsa
+    - clientId: <OAUTH_CLIENT_ID>          ---> client id correlated with clientSecret
+      clientSecret: <OAUTH_SECRET>         ---> generated when you add an oauth access
+      acctName: <ACCOUNT_NAME>             ---> e.g. level11consulting
+      type: bitbucket
+	  sshFileLoc: <SSH_KEY_FILE_PATH>      ---> e.g. /home/mariannefeng/.ssh/id_rsa
+
+    - accessToken: <PERSONAL_ACCESS_TOKEN> ---> personal access token created in github
+      acctName: <ACCOUNT_NAME>             ---> e.g. level11consulting
+      type: github
+      sshFileLoc: <SSH_KEY_FILE_PATH>      ---> e.g. /home/mariannefeng/.ssh/id_rsa
 	
   sshFileLoc is not a required field, if you'd to add it later after a vcs account has already been added to ocelot, it can be uploaded via CLI like so:
     ocelot creds add vcs -acctname <ACCOUNT_NAME> -sshfile-loc <SSH_KEY_FILE_PATH> -type <SCM_TYPE>
 
-  Adds credentials for ocelot to use in tracking repositories
+  Bitbucket
+  ---------
+  Bitbucket will require creating an OAuth consumer in settings. When that is created, save the clientId and clientSecret and use those values to create this vcs credential. 
+  
+  Github
+  ------
+  With Github, instead of creating an OAuth consumer, you must create a personal access token for your account.
+  https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+  a ClientId will not be required, only this token. 
 `

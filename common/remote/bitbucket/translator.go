@@ -1,12 +1,14 @@
 package bitbucket
 
 import (
+	"bytes"
 	"errors"
 	"io"
 
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/ocelot/models"
 	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
 	"github.com/shankj3/ocelot/models/pb"
 )
@@ -20,11 +22,16 @@ type BBTranslate struct {
 }
 
 func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
+	var buf bytes.Buffer
+	// using tee so we can unmarshal to the pbb.PullRequest obj and also to the buffer, so that we can debug log webhooks
+	//   it is additional overhead, but the imo the debugging of the pr event is worth the cost
+	tee := io.TeeReader(reader, &buf)
 	pr := &pbb.PullRequest{}
-	err := bb.Unmarshaler.Unmarshal(reader, pr)
+	err := bb.Unmarshaler.Unmarshal(tee, pr)
 	if err != nil {
 		return nil, err
 	}
+	ocelog.Log().WithField("postBody", buf.String()).Debug("bitbucket PR event")
 	if pr.Pullrequest == nil {
 		return nil, errors.New("could not unmarshal into PR object, no fields matched")
 	}
@@ -64,11 +71,16 @@ func (bb *BBTranslate) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
 
 // TranslatePush will convert a push event from bitbucket into the VCS-generic push object.
 func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
+	var buf bytes.Buffer
+	// using tee so we can unmarshal to the RepoPush obj and also to the buffer, so that we can debug log webhooks
+	//   it is additional overhead, but the imo the debugging of the push event is worth the cost
+	tee := io.TeeReader(reader, &buf)
 	push := &pbb.RepoPush{}
-	err := bb.Unmarshaler.Unmarshal(reader, push)
+	err := bb.Unmarshaler.Unmarshal(tee, push)
 	if err != nil {
 		return nil, err
 	}
+	ocelog.Log().WithField("postBody", buf.String()).Debug("bitbucket push event")
 	if diff := deep.Equal(push, &pbb.RepoPush{}); diff == nil {
 		return nil, errors.New("could not unmarshal into push object, no fields matched")
 	}
@@ -90,6 +102,11 @@ func (bb *BBTranslate) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	for ind, commit := range changeset.Commits {
 		commits = append(commits, &pb.Commit{Hash: commit.Hash, Date: commit.Date, Message: commit.Message, Author: &pb.User{UserName: commit.Author.User.Username, DisplayName: commit.Author.User.DisplayName}})
 		last = ind
+	}
+	if changeset.GetNew() == nil {
+		unsupportedPush.WithLabelValues("no_new_changes").Inc()
+		ocelog.Log().Errorf("new is empty! nothing to do!")
+		return nil, models.DontBuildEvent(pb.SubCredType_BITBUCKET, "no new changes")
 	}
 	if changeset.New.Type != "branch" {
 		unsupportedPush.WithLabelValues(changeset.New.Type).Inc()

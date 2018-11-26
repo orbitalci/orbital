@@ -7,8 +7,7 @@ package mock_models
 import (
 	gomock "github.com/golang/mock/gomock"
 	net "github.com/shankj3/go-til/net"
-	pb "github.com/shankj3/ocelot/models/bitbucket/pb"
-	pb0 "github.com/shankj3/ocelot/models/pb"
+	pb "github.com/shankj3/ocelot/models/pb"
 	io "io"
 	reflect "reflect"
 )
@@ -34,6 +33,18 @@ func NewMockVCSHandler(ctrl *gomock.Controller) *MockVCSHandler {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockVCSHandler) EXPECT() *MockVCSHandlerMockRecorder {
 	return m.recorder
+}
+
+// GetVcsType mocks base method
+func (m *MockVCSHandler) GetVcsType() pb.SubCredType {
+	ret := m.ctrl.Call(m, "GetVcsType")
+	ret0, _ := ret[0].(pb.SubCredType)
+	return ret0
+}
+
+// GetVcsType indicates an expected call of GetVcsType
+func (mr *MockVCSHandlerMockRecorder) GetVcsType() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVcsType", reflect.TypeOf((*MockVCSHandler)(nil).GetVcsType))
 }
 
 // Walk mocks base method
@@ -117,48 +128,23 @@ func (mr *MockVCSHandlerMockRecorder) GetBaseURL() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBaseURL", reflect.TypeOf((*MockVCSHandler)(nil).GetBaseURL))
 }
 
-// FindWebhooks mocks base method
-func (m *MockVCSHandler) FindWebhooks(getWebhookURL string) bool {
-	ret := m.ctrl.Call(m, "FindWebhooks", getWebhookURL)
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// FindWebhooks indicates an expected call of FindWebhooks
-func (mr *MockVCSHandlerMockRecorder) FindWebhooks(getWebhookURL interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindWebhooks", reflect.TypeOf((*MockVCSHandler)(nil).FindWebhooks), getWebhookURL)
-}
-
-// GetRepoDetail mocks base method
-func (m *MockVCSHandler) GetRepoDetail(acctRepo string) (pb.PaginatedRepository_RepositoryValues, error) {
-	ret := m.ctrl.Call(m, "GetRepoDetail", acctRepo)
-	ret0, _ := ret[0].(pb.PaginatedRepository_RepositoryValues)
+// GetRepoLinks mocks base method
+func (m *MockVCSHandler) GetRepoLinks(acctRepo string) (*pb.Links, error) {
+	ret := m.ctrl.Call(m, "GetRepoLinks", acctRepo)
+	ret0, _ := ret[0].(*pb.Links)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRepoDetail indicates an expected call of GetRepoDetail
-func (mr *MockVCSHandlerMockRecorder) GetRepoDetail(acctRepo interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoDetail", reflect.TypeOf((*MockVCSHandler)(nil).GetRepoDetail), acctRepo)
-}
-
-// GetAllCommits mocks base method
-func (m *MockVCSHandler) GetAllCommits(acctRepo, branch string) (*pb.Commits, error) {
-	ret := m.ctrl.Call(m, "GetAllCommits", acctRepo, branch)
-	ret0, _ := ret[0].(*pb.Commits)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllCommits indicates an expected call of GetAllCommits
-func (mr *MockVCSHandlerMockRecorder) GetAllCommits(acctRepo, branch interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCommits", reflect.TypeOf((*MockVCSHandler)(nil).GetAllCommits), acctRepo, branch)
+// GetRepoLinks indicates an expected call of GetRepoLinks
+func (mr *MockVCSHandlerMockRecorder) GetRepoLinks(acctRepo interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoLinks", reflect.TypeOf((*MockVCSHandler)(nil).GetRepoLinks), acctRepo)
 }
 
 // GetAllBranchesLastCommitData mocks base method
-func (m *MockVCSHandler) GetAllBranchesLastCommitData(acctRepo string) ([]*pb0.BranchHistory, error) {
+func (m *MockVCSHandler) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error) {
 	ret := m.ctrl.Call(m, "GetAllBranchesLastCommitData", acctRepo)
-	ret0, _ := ret[0].([]*pb0.BranchHistory)
+	ret0, _ := ret[0].([]*pb.BranchHistory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -169,9 +155,9 @@ func (mr *MockVCSHandlerMockRecorder) GetAllBranchesLastCommitData(acctRepo inte
 }
 
 // GetCommit mocks base method
-func (m *MockVCSHandler) GetCommit(acctRepo, hash string) (*pb0.Commit, error) {
+func (m *MockVCSHandler) GetCommit(acctRepo, hash string) (*pb.Commit, error) {
 	ret := m.ctrl.Call(m, "GetCommit", acctRepo, hash)
-	ret0, _ := ret[0].(*pb0.Commit)
+	ret0, _ := ret[0].(*pb.Commit)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -182,9 +168,9 @@ func (mr *MockVCSHandlerMockRecorder) GetCommit(acctRepo, hash interface{}) *gom
 }
 
 // GetBranchLastCommitData mocks base method
-func (m *MockVCSHandler) GetBranchLastCommitData(acctRepo, branch string) (*pb0.BranchHistory, error) {
+func (m *MockVCSHandler) GetBranchLastCommitData(acctRepo, branch string) (*pb.BranchHistory, error) {
 	ret := m.ctrl.Call(m, "GetBranchLastCommitData", acctRepo, branch)
-	ret0, _ := ret[0].(*pb0.BranchHistory)
+	ret0, _ := ret[0].(*pb.BranchHistory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -195,9 +181,9 @@ func (mr *MockVCSHandlerMockRecorder) GetBranchLastCommitData(acctRepo, branch i
 }
 
 // GetCommitLog mocks base method
-func (m *MockVCSHandler) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb0.Commit, error) {
+func (m *MockVCSHandler) GetCommitLog(acctRepo, branch, lastHash string) ([]*pb.Commit, error) {
 	ret := m.ctrl.Call(m, "GetCommitLog", acctRepo, branch, lastHash)
-	ret0, _ := ret[0].([]*pb0.Commit)
+	ret0, _ := ret[0].([]*pb.Commit)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -218,19 +204,6 @@ func (m *MockVCSHandler) GetChangedFiles(acctRepo, latesthash, earliestHash stri
 // GetChangedFiles indicates an expected call of GetChangedFiles
 func (mr *MockVCSHandlerMockRecorder) GetChangedFiles(acctRepo, latesthash, earliestHash interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChangedFiles", reflect.TypeOf((*MockVCSHandler)(nil).GetChangedFiles), acctRepo, latesthash, earliestHash)
-}
-
-// GetPRCommits mocks base method
-func (m *MockVCSHandler) GetPRCommits(url string) ([]*pb0.Commit, error) {
-	ret := m.ctrl.Call(m, "GetPRCommits", url)
-	ret0, _ := ret[0].([]*pb0.Commit)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPRCommits indicates an expected call of GetPRCommits
-func (mr *MockVCSHandlerMockRecorder) GetPRCommits(url interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPRCommits", reflect.TypeOf((*MockVCSHandler)(nil).GetPRCommits), url)
 }
 
 // PostPRComment mocks base method
@@ -281,9 +254,9 @@ func (m *MockTranslator) EXPECT() *MockTranslatorMockRecorder {
 }
 
 // TranslatePush mocks base method
-func (m *MockTranslator) TranslatePush(reader io.Reader) (*pb0.Push, error) {
+func (m *MockTranslator) TranslatePush(reader io.Reader) (*pb.Push, error) {
 	ret := m.ctrl.Call(m, "TranslatePush", reader)
-	ret0, _ := ret[0].(*pb0.Push)
+	ret0, _ := ret[0].(*pb.Push)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -294,9 +267,9 @@ func (mr *MockTranslatorMockRecorder) TranslatePush(reader interface{}) *gomock.
 }
 
 // TranslatePR mocks base method
-func (m *MockTranslator) TranslatePR(reader io.Reader) (*pb0.PullRequest, error) {
+func (m *MockTranslator) TranslatePR(reader io.Reader) (*pb.PullRequest, error) {
 	ret := m.ctrl.Call(m, "TranslatePR", reader)
-	ret0, _ := ret[0].(*pb0.PullRequest)
+	ret0, _ := ret[0].(*pb.PullRequest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

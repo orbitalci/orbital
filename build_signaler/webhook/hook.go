@@ -26,7 +26,7 @@ func (pr *PullReqWerkerTeller) TellWerker(pullreq *pb.PullRequest, prData *pb.Pr
 		return errors.Wrap(err, "unable to get build configuration")
 
 	}
-	task := signal.BuildInitialWerkerTask(buildConf, pullreq.Source.Hash, token, pullreq.Source.Branch, pullreq.Source.Repo.AcctRepo, pb.SignaledBy_PULL_REQUEST, prData)
+	task := signal.BuildInitialWerkerTask(buildConf, pullreq.Source.Hash, token, pullreq.Source.Branch, pullreq.Source.Repo.AcctRepo, pb.SignaledBy_PULL_REQUEST, prData, handler.GetVcsType())
 
 	// todo: right now, we do not want to build out the changed files and commit messages, because those should just be done on push events
 	// maybe we should re-evaluate down the road? idk, just seems like duping that work if its done on push & pr...

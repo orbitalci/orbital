@@ -11,7 +11,7 @@ import (
 )
 
 const DefaultBitbucketURL = "https://x-token-auth:%s@bitbucket.org/%s.git"
-const DefaultGithubURL = ""
+const DefaultGithubURL = "https://%s@github.com/%s.git"
 
 type Bashable func(string) []string
 
@@ -79,7 +79,11 @@ func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s %s", b.OcelotDir(), werk.VcsToken, fmt.Sprintf(b.GetBbDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash, b.CloneDir(werk.CheckoutHash))
 		}
 	case pb.SubCredType_GITHUB:
-		ocelog.Log().Error("not implemented")
+		if b.GetGithubDownloadURL() != DefaultGithubURL {
+			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s %s", b.OcelotDir(), werk.VcsToken, b.GetGithubDownloadURL(), werk.CheckoutHash, b.CloneDir(werk.CheckoutHash))
+		} else {
+			downloadCmd = fmt.Sprintf("%s/bb_download.sh %s %s %s %s", b.OcelotDir(), werk.VcsToken, fmt.Sprintf(b.GetGithubDownloadURL(), werk.VcsToken, werk.FullName), werk.CheckoutHash, b.CloneDir(werk.CheckoutHash))
+		}
 	default:
 		ocelog.Log().Error("werker VCS type not recognized")
 	}

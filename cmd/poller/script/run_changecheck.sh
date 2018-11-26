@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 source /root/cronenv
-/bin/changecheck -acct-repo=$1 -branches=$2
+/bin/changecheck -acct-repo=$1 -branches=$2 -vcs-type=$3

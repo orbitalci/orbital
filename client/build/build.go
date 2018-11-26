@@ -1,14 +1,14 @@
 package build
 
 import (
+	"context"
+	"flag"
 	"fmt"
 
 	"github.com/mitchellh/cli"
 	help "github.com/shankj3/ocelot/client/commandhelper"
 	models "github.com/shankj3/ocelot/models/pb"
 
-	"context"
-	"flag"
 )
 
 const synopsis = "build a project hash"
@@ -33,6 +33,7 @@ type cmd struct {
 	flags  *flag.FlagSet
 	config *help.ClientConfig
 	Branch string
+	vcstyp string
 	force  bool
 	latest bool
 	*help.OcyHelper
@@ -61,11 +62,10 @@ func (c *cmd) Help() string {
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 	//TODO: trigger also by build id? Need to standardize across commands
-	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to build")
-	c.flags.StringVar(&c.Hash, "hash", "ERROR", "hash to build")
 	c.flags.StringVar(&c.Branch, "branch", "ERROR", "branch to build (only required if passing a previously un-built hash or overriding the branch associated with a previous build)")
 	c.flags.BoolVar(&c.force, "force", false, "force the build to be queued even if it is not one of the accepted branches")
 	c.flags.BoolVar(&c.latest, "latest", false, "use -latest to find the latest commit of the acct/repo at the branch denoted by -branch")
+	c.SetGitHelperFlags(c.flags)
 }
 
 func (c *cmd) Run(args []string) int {
@@ -86,6 +86,11 @@ func (c *cmd) Run(args []string) int {
 		help.Debuggit(c.UI, err.Error())
 		return 1
 	}
+	if err := c.DetectOrConvertVcsType(c.UI); err != nil {
+		help.Debuggit(c.UI, err.Error())
+		// if we can't set the vcs type rightn ow, that's alright. admin is going to try to figure out who owns this anyway
+		//return 1
+	}
 
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
 		help.Debuggit(c.UI, err.Error())
@@ -100,6 +105,7 @@ func (c *cmd) Run(args []string) int {
 		AcctRepo: c.AcctRepo,
 		Hash:     c.Hash,
 		Force:    c.force,
+		VcsType:  c.VcsType,
 	}
 
 	if c.Branch != "ERROR" && len(c.Branch) > 0 {

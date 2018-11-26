@@ -45,13 +45,17 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 
 	// get credentials and appropriate VCS handler for the build request's account / repository
 	stream.Send(RespWrap(fmt.Sprintf("Searching for VCS creds belonging to %s...", buildReq.AcctRepo)))
-	cfg, err := cred.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig)
+	cfg, err := cred.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig, buildReq.VcsType)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		if _, ok := err.(*common.FormatError); ok {
+		switch err.(type) {
+		case *common.FormatError:
 			return status.Error(codes.InvalidArgument, "Format error: "+err.Error())
+		case *storage.ErrMultipleVCSTypes:
+			return status.Error(codes.InvalidArgument, "There are multiple vcs types for that account. You must include the VcsType field to be able to retrieve credentials for this build. Original error: " + err.Error())
+		default:
+			return status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 		}
-		return status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap("Validating VCS Credentials..."))
@@ -155,7 +159,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	//		commits, err = handler.GetCommitLog(buildReq.AcctRepo, branch, sums[0].Hash)
 	//	}
 	//}
-	task := signal.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil)
+	task := signal.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil, handler.GetVcsType())
 	task.ChangesetData, err = signal.GenerateNoPreviousHeadChangeset(handler, buildReq.AcctRepo, buildBranch, buildHash)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to generate previous head changeset, changeset data will only include branch")
@@ -192,10 +196,10 @@ func (g *guideOcelotServer) getSignaler() *signal.Signaler {
 }
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
-	if repoAcct.Repo == "" || repoAcct.Account == "" {
-		return nil, status.Error(codes.InvalidArgument, "repo and account are required fields")
+	if repoAcct.Repo == "" || repoAcct.Account == "" || repoAcct.Type == pb.SubCredType_NIL_SCT {
+		return nil, status.Error(codes.InvalidArgument, "repo, account, and type are required fields")
 	}
-	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig)
+	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig, repoAcct.Type)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		if _, ok := err.(*common.FormatError); ok {
@@ -207,14 +211,13 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	if grpcErr != nil {
 		return nil, grpcErr
 	}
-	repoDetail, err := handler.GetRepoDetail(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
-	if repoDetail.Type == "error" || err != nil {
+	repoLinks, err := handler.GetRepoLinks(fmt.Sprintf("%s/%s", repoAcct.Account, repoAcct.Repo))
+	if err != nil {
 		return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
 	}
 
 	if g.hhBaseUrl != "" { handler.SetCallbackURL(g.hhBaseUrl) }
-	webhookURL := repoDetail.GetLinks().GetHooks().GetHref()
-	err = handler.CreateWebhook(webhookURL)
+	err = handler.CreateWebhook(repoLinks.Hooks)
 
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.Unavailable, errors.WithMessage(err, "Unable to create webhook").Error())
@@ -223,8 +226,8 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 }
 
 func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
-	if poll.Account == "" || poll.Repo == "" || poll.Cron == "" || poll.Branches == "" {
-		return nil, status.Error(codes.InvalidArgument, "account, repo, cron, and branches are required fields")
+	if poll.Account == "" || poll.Repo == "" || poll.Cron == "" || poll.Branches == "" || poll.Type == pb.SubCredType_NIL_SCT {
+		return nil, status.Error(codes.InvalidArgument, "account, repo, cron, branches, and type are required fields")
 	}
 	log.Log().Info("recieved poll request for ", poll.Account, poll.Repo, poll.Cron)
 	empti := &empty.Empty{}
@@ -241,11 +244,14 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) 
 		}
 	} else {
 		log.Log().Info("inserting poll in db")
-		// todo when swap to github + bitbucket, use new function for determining account instead of hardcoding in request
-		identififer, _ := pb.CreateVCSIdentifier(pb.SubCredType_BITBUCKET, poll.Account)
-		creddy, err := g.Storage.RetrieveCred(pb.SubCredType_BITBUCKET, identififer, poll.Account)
+		creddy, err := cred.GetVcsCreds(g.Storage, common.CreateAcctRepo(poll.Account, poll.Repo), g.RemoteConfig, poll.Type)
 		if err != nil {
-			msg := "unable to find credentials for account " + poll.Account
+			var msg string
+			if _, ok := err.(*storage.ErrMultipleVCSTypes); ok {
+				msg = "multiple vcs types for this account, please include the Type"
+			} else {
+				msg = "unable to find credentials for account " + poll.Account
+			}
 			log.IncludeErrField(err).Error(msg)
 			return empti, status.Error(codes.InvalidArgument, msg+": "+err.Error())
 		}

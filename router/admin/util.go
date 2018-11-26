@@ -2,6 +2,7 @@ package admin
 
 import (
 	ocenet "github.com/shankj3/go-til/net"
+	"github.com/shankj3/ocelot/common/remote/github"
 
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models/pb"
@@ -27,6 +28,12 @@ func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
 
 		bbHandler := bb.GetBitbucketHandler(config, bitbucketClient)
 		go bbHandler.Walk() //spawning walk in a different thread because we don't want client to wait if there's a lot of repos/files to check
+	case pb.SubCredType_GITHUB:
+		cli, _, err := github.GetGithubClient(config)
+		if err != nil {
+			return err
+		}
+		go cli.Walk()
 	default:
 		return unsupported
 	}

@@ -5,14 +5,13 @@ import (
 	"io"
 
 	ocenet "github.com/shankj3/go-til/net"
-	pb "github.com/shankj3/ocelot/models/pb"
-	// ugh stuck 4 now
-	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
+	"github.com/shankj3/ocelot/models/pb"
 )
 
 //go:generate mockgen -source vcshandler.go -destination mock_models/vcshandler.mock.go -package mock_models
 
 type VCSHandler interface {
+	GetVcsType() pb.SubCredType
 	//Walk will iterate over all repositories for specified vcs account, and create webhooks at specified webhook url
 	//if one does not yet exist
 	Walk() error
@@ -35,15 +34,16 @@ type VCSHandler interface {
 	//GetBaseURL returns the base URL for this handler
 	GetBaseURL() string
 
+	// commenting this out because it wasn't used
 	//FindWebhooks iterates over existing webhooks and returns true (matches our callback urls) if one already exists
-	FindWebhooks(getWebhookURL string) bool
+	//FindWebhooks(getWebhookURL string) bool
 
-	//Get Repository details by account name + repo name
-	GetRepoDetail(acctRepo string) (pbb.PaginatedRepository_RepositoryValues, error)
+	//Get Repository links by account name + repo name
+	GetRepoLinks(acctRepo string) (*pb.Links, error)
 
-	//todo: make this return []*pb.Commit to remove dependency on bitbucket models
-	//GetAllCommits returns a paginated list of commits corresponding with branch
-	GetAllCommits(acctRepo string, branch string) (*pbb.Commits, error)
+	// commenting out because i don't think this is used anywhere
+	//GetAllCommits returns a list of commits corresponding with branch
+	//GetAllCommits(acctRepo string, branch string) ([]*pb.Commit, error)
 
 	//GetAllBranchesLastCommitData returns a list of all active branches, their last hash, and the last commit datetime
 	GetAllBranchesLastCommitData(acctRepo string) ([]*pb.BranchHistory, error)
@@ -63,9 +63,10 @@ type VCSHandler interface {
 	//  return the changeset similar to git diff --name-only <latestHash>..<earliestHash>
 	GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error)
 
+	// commenting out because this method is never used
 	// GetPRCommits will return a list of commits for the given url for commits. It'll call the url from (e.g. bb or github),
 	//   unmarshal into its vcs-specific model, then translate to the global model to return a list of generic commits
-	GetPRCommits(url string) ([]*pb.Commit, error)
+	//GetPRCommits(url string) ([]*pb.Commit, error)
 
 	// PostPRComment will add a comment to a pr belonging to acct/repo acctRepo and id prId with a comment that is along the lines of
 	// Ocelot build has <status>.
@@ -81,6 +82,20 @@ type Translator interface {
 	//TranslatePush should take a reader body, unmarshal it to vcs-specific model, then translate it to the global PullRequest object
 	TranslatePR(reader io.Reader) (*pb.PullRequest, error)
 }
+
+type DontBuildThisEvent struct {
+	vcsType pb.SubCredType
+	// the event type (ie pull_request approved) that means that this build shouldn't occur
+	incorrectEventType string
+}
+func (dbe *DontBuildThisEvent) Error() string {
+	return fmt.Sprintf("this event has a type of %s witha vcs type of %s which has been flagged as not intended for build use", dbe.incorrectEventType, dbe.vcsType.String())
+}
+
+func DontBuildEvent(vcsType pb.SubCredType, incorrectEType string) error {
+	return &DontBuildThisEvent{vcsType:vcsType, incorrectEventType: incorrectEType}
+}
+
 
 type CommitNotFound struct {
 	hash     string

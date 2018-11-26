@@ -9,6 +9,7 @@ package main
 // 	 - update last_cron_time in db
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/shankj3/ocelot/build_signaler/poll"
 	"github.com/shankj3/ocelot/common"
 	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/version"
 )
 
@@ -33,15 +35,17 @@ type changeSetConfig struct {
 	Acct         string
 	Repo         string
 	Branches     []string
+	VcsType      pb.SubCredType
 }
 
 func configure() *changeSetConfig {
-	var loglevel, consuladdr, acctRepo, branches string
+	var loglevel, consuladdr, acctRepo, branches, vcsType string
 	var consulport int
 	flrg := flag.NewFlagSet("poller", flag.ExitOnError)
 	flrg.StringVar(&loglevel, "log-level", "info", "log level")
 	flrg.StringVar(&acctRepo, "acct-repo", "ERROR", "acct/repo to check changeset for")
 	flrg.StringVar(&branches, "branches", "ERROR", "comma separated list of branches to check for changesets")
+	flrg.StringVar(&vcsType, "vcs-type", "ERROR", fmt.Sprintf("%s", strings.Join(pb.CredType_VCS.SubtypesString(), "|")))
 	flrg.StringVar(&consuladdr, "consul-host", "localhost", "address of consul")
 	flrg.IntVar(&consulport, "consul-port", 8500, "port of consul")
 	flrg.Parse(os.Args[1:])
@@ -52,8 +56,14 @@ func configure() *changeSetConfig {
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to get instance of remote config, exiting")
 	}
-	if acctRepo == "ERROR" || branches == "ERROR" {
-		ocelog.Log().Fatal("-acct-repo and -branches is required")
+	if acctRepo == "ERROR" || branches == "ERROR" || vcsType == "ERROR" {
+		ocelog.Log().Fatal("-acct-repo, -branches, and -vcs-type are required")
+	}
+	var ok bool
+	var vcsTypeInt int32
+	vcsTypeInt, ok = pb.SubCredType_value[strings.ToUpper(vcsType)]
+	if !ok || pb.SubCredType(vcsTypeInt) == pb.SubCredType_NIL_SCT {
+		ocelog.Log().Fatalf("%s is not a vcs subcredtype, need %s", vcsType, strings.Join(pb.CredType_VCS.SubtypesString(), "|"))
 	}
 	branchList := strings.Split(branches, ",")
 	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator()}
@@ -78,7 +88,7 @@ func main() {
 		OcyValidator: conf.OcyValidator,
 		Store:        store,
 	}
-	checker := poll.NewChangeChecker(sig, conf.AcctRepo)
+	checker := poll.NewChangeChecker(sig, conf.AcctRepo, conf.VcsType)
 
 	if err := checker.SetAuth(); err != nil {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("could not get auth")

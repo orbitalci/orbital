@@ -54,7 +54,7 @@ type PollTable interface {
 	SetLastData(account string, repo string, lasthashes map[string]string) error
 	GetLastData(accountRepo string) (timestamp time.Time, hashes map[string]string, err error)
 	PollExists(account string, repo string) (bool, error)
-	GetAllPolls() ([]*models.PollRequest, error)
+	GetAllPolls() ([]*pb.PollRequest, error)
 	DeletePoll(account string, repo string) error
 }
 
@@ -69,6 +69,7 @@ type CredTable interface {
 	CredExists(credder pb.OcyCredder) (bool, error)
 	UpdateCred(credder pb.OcyCredder) error
 	DeleteCred(credder pb.OcyCredder) error
+	GetVCSTypeFromAccount(account string) (pb.SubCredType, error)
 }
 
 //GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
@@ -116,4 +117,21 @@ type ErrNotFound struct {
 
 func (e *ErrNotFound) Error() string {
 	return e.msg
+}
+
+func MultipleVCSTypes(account string, types []pb.SubCredType) *ErrMultipleVCSTypes {
+	return &ErrMultipleVCSTypes{account: account, types: types}
+}
+
+type ErrMultipleVCSTypes struct {
+	account string
+	types []pb.SubCredType
+}
+
+func (e *ErrMultipleVCSTypes) Error() string {
+	var stringTypes []string
+	for _, sct := range e.types {
+		stringTypes = append(stringTypes, sct.String())
+	}
+	return fmt.Sprintf("there are multiple vcs types to the account %s: %s", e.account, stringTypes)
 }
