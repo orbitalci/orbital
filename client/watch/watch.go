@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"strings"
 
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/ocelot/client/commandhelper"

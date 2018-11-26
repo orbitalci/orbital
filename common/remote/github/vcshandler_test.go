@@ -74,8 +74,18 @@ func TestGithubVCS_GetRepoLinks(t *testing.T) {
 func TestGithubVCS_CreateWebhook(t *testing.T) {
 	cli := getCliAuth(t)
 	hookUrl := "https://api.github.com/repos/shankj3/test-ocelot/hooks"
+	cli.SetCallbackURL("http://localhost:8000")
 	if err := cli.CreateWebhook(hookUrl); err != nil {
 		t.Error(err)
+	}
+}
+
+func TestGithubVCS_CreateWebhook_nocallback(t *testing.T) {
+	cli := getCli(t)
+	if err := cli.CreateWebhook("https://here.jeju"); err == nil {
+		t.Error("should not create webhook, callback url not set")
+	} else if _, ok := err.(*models.NoWebhookCallback); !ok {
+		t.Error("wrong error, should be of NoWebhookCallback type...", err.Error())
 	}
 }
 
@@ -173,13 +183,11 @@ func TestGithubVCS_checkForOcelotFile(t *testing.T) {
 
 func TestGithubVCS_StaticStuffs(t *testing.T) {
 	cli := getCli(t)
-	if cli.GetCallbackURL() != DefaultCallbackURL {
-		t.Error(test.StrFormatErrors("callback url wihtout being set", DefaultCallbackURL, cli.GetCallbackURL()))
-	}
 	cb := "http://hi.org"
+	expectedCb := "http://hi.org/github"
 	cli.SetCallbackURL(cb)
-	if cli.GetCallbackURL() != cb {
-		t.Error(test.StrFormatErrors("set callback url", cb, cli.GetCallbackURL()))
+	if cli.GetCallbackURL() != expectedCb {
+		t.Error(test.StrFormatErrors("set callback url", expectedCb, cli.GetCallbackURL()))
 	}
 	if burl := cli.GetBaseURL(); burl != DefaultBaseURL {
 		t.Error(test.StrFormatErrors("unset base url", DefaultBaseURL, burl))
