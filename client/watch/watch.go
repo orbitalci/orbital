@@ -53,7 +53,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.SetGitHelperFlags(c.flags, true, false, false)
+	c.SetGitHelperFlags(c.flags, true, false, true)
 }
 
 func (c *cmd) Run(args []string) int {
