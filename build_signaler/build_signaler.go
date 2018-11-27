@@ -29,8 +29,8 @@ func storeQueued(store storage.BuildSum, id int64) error {
 	return err
 }
 
-func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string) (int64, error) {
-	id, err := store.AddSumStart(hash, account, repo, branch)
+func storeSummaryToDb(store storage.BuildSum, hash, repo, branch, account string, by pb.SignaledBy, credId int64) (int64, error) {
+	id, err := store.AddSumStart(hash, account, repo, branch, by, credId)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to store summary details to db")
 		return 0, err

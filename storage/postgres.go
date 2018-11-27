@@ -108,7 +108,7 @@ func convertTimeToTimestamp(tyme time.Time) *timestamp.Timestamp {
 
 // AddSumStart updates the build_summary table with the initial information that you get from a webhook
 // returning the build id that postgres generates
-func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, branch string) (int64, error) {
+func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, branch string, by pb.SignaledBy, credentialsId int64) (int64, error) {
 	var err error
 	defer metricizeDbErr(err)
 	start := startTransaction()

@@ -2030,6 +2030,15 @@
         "status": {
           "$ref": "#/definitions/modelsBuildStatus",
           "title": "status is the current status of the build as known by the database"
+        },
+        "signaledBy": {
+          "$ref": "#/definitions/modelsSignaledBy",
+          "title": "signaledBy is what resulted in the build being queued: pull_request,push,poll,requested,subscribed"
+        },
+        "credentialsId": {
+          "type": "string",
+          "format": "int64",
+          "title": "credentialsId is the id of the credential in the cred table in db"
         }
       },
       "description": "BuildSummary represents the build_summary table in postgres\nit is a top level view of how a repository is \"doing\" in ocelot, ie build times, fail status.."
@@ -2344,6 +2353,17 @@
           }
         }
       }
+    },
+    "modelsSignaledBy": {
+      "type": "string",
+      "enum": [
+        "PULL_REQUEST",
+        "PUSH",
+        "POLL",
+        "REQUESTED",
+        "SUBSCRIBED"
+      ],
+      "default": "PULL_REQUEST"
     },
     "modelsStageStatus": {
       "type": "object",

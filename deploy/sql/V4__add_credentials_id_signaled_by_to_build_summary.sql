@@ -1,3 +1,10 @@
+/*
+this flyway version makes sure that:
+- the credentails id is unique
+- build_summary now has signaled_by enum and credentials_id columns
+- build_summary's signaled_by and credentials_id are seeded correctly
+*/
+
 ALTER TABLE credentials ADD UNIQUE (id);
 ALTER TABLE build_summary ADD COLUMN signaled_by SMALLINT;
 /*set all signaled_by to poll signal for now*/

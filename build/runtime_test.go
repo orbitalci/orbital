@@ -2,26 +2,35 @@ package build
 
 import (
 	"fmt"
+	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/ocelot/common"
 	util "github.com/shankj3/ocelot/common/testutil"
+	"github.com/shankj3/ocelot/models/pb"
 	"github.com/shankj3/ocelot/storage"
-	"os"
 	"testing"
 )
 
 //// func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {
 func Test_CheckIfBuildDone(t *testing.T) {
 	hash := "sup"
-	consu, serv := util.InitServerAndConsulet(t)
-	store := storage.CreateTestFileSystemStorage(t)
-	defer serv.Stop()
+	ctl := gomock.NewController(t)
+	consu := consul.NewMockConsuletty(ctl)
+	store := storage.NewMockBuildSum(ctl)
+	store.EXPECT().AddSumStart(hash, "1", "2", "3", pb.SignaledBy_POLL, int64(1)).Return(int64(18), nil)
+	store.EXPECT().UpdateSum(false, 10.7, int64(18)).Return(nil)
 	testAddFullBuildSummary(hash, store, t)
-	defer os.RemoveAll("./test-fixtures/storage")
+
+	consu.EXPECT().GetKeyValue(common.MakeBuildMapPath(hash)).Return(nil, nil).Times(1)
+	store.EXPECT().RetrieveLatestSum(hash).Return(&pb.BuildSummary{}, nil).Times(1)
 	done := CheckIfBuildDone(consu, store, hash)
 	if !done {
 		t.Error(test.GenericStrFormatErrors("build done", true, done))
 	}
+	consu.EXPECT().GetKeyValue(common.MakeBuildMapPath("nerd")).Return(nil, nil).Times(1)
+	store.EXPECT().RetrieveLatestSum("nerd").Return(nil, errors.New("np")).Times(1)
 	done = CheckIfBuildDone(consu, store, "nerd")
 	if done {
 		t.Error(test.GenericStrFormatErrors("build done", false, done))
@@ -29,7 +38,7 @@ func Test_CheckIfBuildDone(t *testing.T) {
 }
 
 func testAddFullBuildSummary(hash string, store storage.BuildSum, t *testing.T) {
-	id, err := store.AddSumStart(hash, "1", "2", "3")
+	id, err := store.AddSumStart(hash, "1", "2", "3", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
