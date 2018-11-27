@@ -12,8 +12,9 @@ import (
 
 const synopsis = "kill an active build for a hash"
 const help = `
-Usage: ocelot kill 
-	- hash <hash> [required] a partial or full hash of the build you'd like to kill'
+Usage: ocelot kill -hash=<active-building-hash-to-kill>
+
+	Kills an 
 `
 
 func New(ui cli.Ui) *cmd {
