@@ -70,6 +70,7 @@ enum SignaledBy {
     PUSH = 1;
     POLL = 2;
     REQUESTED = 3;
+    SUBSCRIBED = 4;
 }
 
 message WerkerTask {
