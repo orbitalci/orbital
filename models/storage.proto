@@ -56,3 +56,16 @@ message PollRequest {
     // internal use only
     map<string, string> lastHashes = 7;
 }
+
+
+message ActiveSubscriptions {
+    // subscribedToRepo is the repository that {{subscribingAcctRepo}} is watching for new builds
+    string subscribedToAcctRepo = 1;
+    // subscribingAcctRepo is the repo that is watching {{subscribedToRepo}} for new builds. when there is a new build of the {{subscribedToRepo}} that is successful, this subscribingAcctRepo will be queud for a new build as well
+    string subscribingAcctRepo = 2;
+    //branchQueueMap is a map of {branchToWatch:branchToQueue}. when branchToWatch gets updated with new build, then subscribingAcctRepo's branchToQueue's HEAD will be queued for a build.
+    map<string, string> branchQueueMap = 3;
+    google.protobuf.Timestamp insertTime = 4;
+    int64 id = 5;
+}
+
