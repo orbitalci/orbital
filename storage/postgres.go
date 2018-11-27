@@ -117,14 +117,14 @@ func (p *PostgresStorage) AddSumStart(hash string, account string, repo string, 
 		return 0, errors.New("could not connect to postgres: " + err.Error())
 	}
 	var id int64
-	query := `INSERT INTO build_summary(hash, account, repo, branch, status) values ($1,$2,$3,$4,$5) RETURNING id`
+	query := `INSERT INTO build_summary(hash, account, repo, branch, status, signaled_by, credentials_id) values ($1,$2,$3,$4,$5, $6, $7) RETURNING id`
 	var stmt *sql.Stmt
 	stmt, err = p.db.Prepare(query)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
-	if err = stmt.QueryRow(hash, account, repo, branch, pb.BuildStatus_NIL).Scan(&id); err != nil {
+	if err = stmt.QueryRow(hash, account, repo, branch, pb.BuildStatus_NIL, by, credentialsId).Scan(&id); err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return id, err
 	}
