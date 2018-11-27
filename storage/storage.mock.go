@@ -132,16 +132,16 @@ func (m *MockBuildSum) EXPECT() *MockBuildSumMockRecorder {
 }
 
 // AddSumStart mocks base method
-func (m *MockBuildSum) AddSumStart(hash, account, repo, branch string) (int64, error) {
-	ret := m.ctrl.Call(m, "AddSumStart", hash, account, repo, branch)
+func (m *MockBuildSum) AddSumStart(hash, account, repo, branch string, by pb.SignaledBy, credId int64) (int64, error) {
+	ret := m.ctrl.Call(m, "AddSumStart", hash, account, repo, branch, by, credId)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddSumStart indicates an expected call of AddSumStart
-func (mr *MockBuildSumMockRecorder) AddSumStart(hash, account, repo, branch interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSumStart", reflect.TypeOf((*MockBuildSum)(nil).AddSumStart), hash, account, repo, branch)
+func (mr *MockBuildSumMockRecorder) AddSumStart(hash, account, repo, branch, by, credId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSumStart", reflect.TypeOf((*MockBuildSum)(nil).AddSumStart), hash, account, repo, branch, by, credId)
 }
 
 // UpdateSum mocks base method
@@ -689,16 +689,16 @@ func (mr *MockOcelotStorageMockRecorder) RetrieveLastOutByHash(gitHash interface
 }
 
 // AddSumStart mocks base method
-func (m *MockOcelotStorage) AddSumStart(hash, account, repo, branch string) (int64, error) {
-	ret := m.ctrl.Call(m, "AddSumStart", hash, account, repo, branch)
+func (m *MockOcelotStorage) AddSumStart(hash, account, repo, branch string, by pb.SignaledBy, credId int64) (int64, error) {
+	ret := m.ctrl.Call(m, "AddSumStart", hash, account, repo, branch, by, credId)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddSumStart indicates an expected call of AddSumStart
-func (mr *MockOcelotStorageMockRecorder) AddSumStart(hash, account, repo, branch interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSumStart", reflect.TypeOf((*MockOcelotStorage)(nil).AddSumStart), hash, account, repo, branch)
+func (mr *MockOcelotStorageMockRecorder) AddSumStart(hash, account, repo, branch, by, credId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSumStart", reflect.TypeOf((*MockOcelotStorage)(nil).AddSumStart), hash, account, repo, branch, by, credId)
 }
 
 // UpdateSum mocks base method

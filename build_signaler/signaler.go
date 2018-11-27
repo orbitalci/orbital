@@ -1,6 +1,7 @@
 package build_signaler
 
 import (
+	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
@@ -62,8 +63,14 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 		log.Log().Info("kindly refusing to add to queue because this hash is already building")
 		return build.NoViability("this hash is already building in ocelot, therefore not adding to queue")
 	}
+	//get vcs cred to attach the database id to the build summary
+	vcsCred, err := credentials.GetVcsCreds(s.Store, task.FullName, s.RC, task.VcsType)
+	if err != nil {
+		log.IncludeErrField(err).Error("unable to get vcs creds")
+		return errors.Wrap(err, "unable to retrieve vcs creds")
+	}
 	// tell the database (and therefore all of ocelot) that this build is a-happening. or at least that it exists.
-	id, err := storeSummaryToDb(s.Store, task.CheckoutHash, repo, task.Branch, account)
+	id, err := storeSummaryToDb(s.Store, task.CheckoutHash, repo, task.Branch, account, task.SignaledBy, vcsCred.GetId())
 	if err != nil {
 		return err
 	}
@@ -80,8 +87,12 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
 		vaultToken, _ := s.RC.GetVault().CreateThrowawayToken()
 		updateWerkerTask(task, id, vaultToken)
-		s.Producer.WriteProto(task, build.DetermineTopic(task.BuildConf.MachineTag))
-		storeQueued(s.Store, id)
+		if err = s.Producer.WriteProto(task, build.DetermineTopic(task.BuildConf.MachineTag)); err != nil {
+			log.IncludeErrField(err).WithField("buildId", task.Id).Error("error writing proto msg for build")
+		}
+		if err = storeQueued(s.Store, id); err != nil {
+			log.IncludeErrField(err).WithField("buildId", task.Id).Error("error storing queued state")
+		}
 	}
 
 	if err := storeStageToDb(s.Store, sr); err != nil {
@@ -95,8 +106,11 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 //  If it isn't, it will store a FAILED VALIDATION with the validation errors.
 func (s *Signaler) validateAndQueue(task *pb.WerkerTask, sr *models.StageResult) error {
 	if err := s.OcyValidator.ValidateConfig(task.BuildConf, nil); err == nil {
-		s.Producer.WriteProto(task, build.DetermineTopic(task.BuildConf.MachineTag))
-		log.Log().Debug("told werker!")
+		if err := s.Producer.WriteProto(task, build.DetermineTopic(task.BuildConf.MachineTag)); err != nil {
+			log.IncludeErrField(err).WithField("buildId", task.Id).Error("error writing proto msg for build")
+		} else {
+			log.Log().Debug("told werker!")
+		}
 		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
 	} else {
 		PopulateStageResult(sr, 1, "Failed initial validation", err.Error())

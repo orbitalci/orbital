@@ -28,7 +28,21 @@ message BuildSummary {
     google.protobuf.Timestamp queueTime = 9;
     // status is the current status of the build as known by the database
     BuildStatus status = 10;
+    // signaledBy is what resulted in the build being queued: pull_request,push,poll,requested,subscribed
+    SignaledBy signaledBy = 11;
+    // credentialsId is the id of the credential in the cred table in db
+    int64 credentialsId = 12;
 }
+
+
+enum SignaledBy {
+    PULL_REQUEST = 0;
+    PUSH = 1;
+    POLL = 2;
+    REQUESTED = 3;
+    SUBSCRIBED = 4;
+}
+
 
 enum BuildStatus {
     NIL = 0;

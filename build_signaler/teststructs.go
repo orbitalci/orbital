@@ -137,7 +137,7 @@ type TestStorage struct {
 	stages  []*models.StageResult
 }
 
-func (ts *TestStorage) AddSumStart(hash, account, repo, branch string) (int64, error) {
+func (ts *TestStorage) AddSumStart(hash, account, repo, branch string, by pb.SignaledBy, credId int64) (int64, error) {
 	ts.summary = &pb.BuildSummary{Hash: hash, Account: account, Repo: repo, Branch: branch, BuildId: 12}
 	return 12, nil
 }

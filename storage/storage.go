@@ -28,7 +28,7 @@ type BuildOut interface {
 
 type BuildSum interface {
 	// AddSumStart will
-	AddSumStart(hash string, account string, repo string, branch string) (int64, error)
+	AddSumStart(hash string, account string, repo string, branch string, by pb.SignaledBy, credId int64) (int64, error)
 	UpdateSum(failed bool, duration float64, id int64) error
 	RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error)
 	RetrieveSum(gitHash string) ([]*pb.BuildSummary, error)
