@@ -6,7 +6,6 @@ import (
 	"github.com/namsral/flag"
 	cred "github.com/shankj3/ocelot/common/credentials"
 	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/storage"
 	"github.com/shankj3/ocelot/version"
 
 	"errors"
@@ -35,15 +34,6 @@ func strToWerkType(str string) models.WerkType {
 	}
 }
 
-func strToStorageImplement(str string) storage.BuildOut {
-	switch str {
-	case "filesystem":
-		return storage.NewFileBuildStorage("")
-	// as more are written, include here
-	default:
-		return storage.NewFileBuildStorage("")
-	}
-}
 
 // WerkerConf is all the configuration for the Werker to do its job properly. this is where the
 // storage type is set (ie filesystem, etc..) and the processor is set (ie Docker, kubernetes, etc..)

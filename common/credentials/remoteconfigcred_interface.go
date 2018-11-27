@@ -7,6 +7,8 @@ import (
 	"github.com/shankj3/ocelot/storage"
 )
 
+//go:generate mockgen -source remoteconfigcred_interface.go -destination remoteconfigcred_interface.mock.go -package credentials
+
 // RemoteConfigCred is the interface that remoteConfig requires credential structs to adhere to
 // to appropriately add things to consul and vault. Implementation can be seen in `admin/models/guideocelotmodels.go`.
 type RemoteConfigCred interface {

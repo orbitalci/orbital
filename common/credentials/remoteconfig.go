@@ -34,7 +34,6 @@ func init() {
 	prometheus.MustRegister(failedCredRetrieval)
 }
 
-//go:generate mockgen -source remoteconfig.go -destination remoteconfig.mock.go -package credentials
 
 // GetToken will check for a vault token first in the environment variable VAULT_TOKEN. If not found at the env var,
 // either the path given or the default path of /etc/vaulted/token will be searched to see if it exists. If it exists,
@@ -533,8 +532,6 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 
 	/// Can I just pass creds? This would be more convenient
 	switch typ {
-	case storage.FileSystem:
-		return storage.NewFileBuildStorage(creds.Location), nil
 	case storage.Postgres:
 		store := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
 		//ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)

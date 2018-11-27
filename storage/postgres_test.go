@@ -20,7 +20,9 @@ func Test_PostgresStorage(t *testing.T) {
 	cleanup, pw := CreateTestPgDatabase(t, port)
 	defer cleanup(t)
 	pg := NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
-	pg.Connect()
+	if err := pg.Connect(); err != nil {
+		t.Fatal(err)
+	}
 	defer PostgresTeardown(t, pg.db)
 	t.Run("get tracked repos", func(t *testing.T) { postgresStorage_GetTrackedRepos(t, pg) })
 	t.Run("add sum start", func(t *testing.T) { postgresStorage_AddSumStart(t, pg) })
@@ -53,7 +55,7 @@ func postgresStorage_AddSumStart(t *testing.T, pg *PostgresStorage) {
 		Repo:          "testRepo",
 		Branch:        "aBranch",
 	}
-	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch)
+	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch, pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -203,7 +205,7 @@ func postgresStorage_GetLastData(t *testing.T, pg *PostgresStorage) {
 }
 
 func postgresStorage_SetQueueTime(t *testing.T, pg *PostgresStorage) {
-	id, err := pg.AddSumStart("123", "account", "repo", "master")
+	id, err := pg.AddSumStart("123", "account", "repo", "master", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -221,7 +223,7 @@ func postgresStorage_SetQueueTime(t *testing.T, pg *PostgresStorage) {
 }
 
 func postgresStorage_StoreFailedValidation(t *testing.T, pg *PostgresStorage) {
-	id, err := pg.AddSumStart("123", "account", "repo", "master")
+	id, err := pg.AddSumStart("123", "account", "repo", "master", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -243,11 +245,11 @@ func postgresStorage_StoreFailedValidation(t *testing.T, pg *PostgresStorage) {
 }
 
 func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
-	_, err := pg.AddSumStart("abcbananahammock", "account", "repo", "master")
+	_, err := pg.AddSumStart("abcbananahammock", "account", "repo", "master", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = pg.AddSumStart("abcHonkeyTonkey", "account", "repo", "master")
+	_, err = pg.AddSumStart("abcHonkeyTonkey", "account", "repo", "master", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -266,17 +268,17 @@ func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
 }
 
 func postgresStorage_GetTrackedRepos(t *testing.T, pg *PostgresStorage) {
-	id, err := pg.AddSumStart("hash", "account", "repo", "branch")
+	id, err := pg.AddSumStart("hash", "account", "repo", "branch", pb.SignaledBy_POLL, 1)
 	if err != nil { t.Error(err) }
 	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
 
-	id, err = pg.AddSumStart("ha1sh", "account", "repo", "branch1")
+	id, err = pg.AddSumStart("ha1sh", "account", "repo", "branch1", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
 	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
 	time.Sleep(1)
-	id, err = pg.AddSumStart("hash2", "account1", "repo", "branch")
+	id, err = pg.AddSumStart("hash2", "account1", "repo", "branch", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -304,6 +306,7 @@ func postgresStorage_InsertCred(t *testing.T, pg *PostgresStorage) {
 		SubType:      pb.SubCredType_ENV,
 		AcctName:     "OCELOTRULES",
 		ClientSecret: "thiswontgetinserted",
+		Id: 1,
 	}
 	if err := pg.InsertCred(testCred1, true); err != nil {
 		t.Error(err)
@@ -368,7 +371,7 @@ func postgresStorage_GetLastSuccessfulBuildHash(t *testing.T, pg *PostgresStorag
 		{"hash7", "branch3", true},
 	}
 	for _, datum := range data {
-		id, err := pg.AddSumStart(datum.hash, "account", "repo", datum.branch)
+		id, err := pg.AddSumStart(datum.hash, "account", "repo", datum.branch, pb.SignaledBy_POLL, 1)
 		if err != nil {
 			t.Error(err)
 			return
