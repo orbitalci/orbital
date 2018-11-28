@@ -369,30 +369,24 @@ func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
 		return 0, errors.New("unable to get storage type from consul, err: " + err.Error())
 	}
 	if kv == nil {
-		ocelog.Log().Warning(fmt.Sprintf("there is no entry for storage type at the path \"%s\" in consul; using file system as the default.", common.StorageType))
-		return storage.FileSystem, nil
+		return 0, errors.Errorf("there is no entry for storage type at the path \"%s\" in consul, required", common.StorageType)
 	}
-
 	// ?: Is there an overall positive experience for making this value case-insensitive?
 	storageType := string(kv.Value)
 	switch storageType {
 	case "postgres":
 		return storage.Postgres, nil
-	case "filesystem":
-		return storage.FileSystem, nil
 	default:
 		return 0, errors.New("unknown storage type: " + storageType)
 	}
 }
 
-// GetStorageCreds initializes datastore info based on the configured storage type in Consul
 // FIXME: We're doing ourselves a disservice by forcing a user to pass in a *storage.Dest when we can handle this internally through rc
+// GetStorageCreds initializes datastore info based on the configured storage type in Consul
 func (rc *RemoteConfig) GetStorageCreds(typ *storage.Dest) (*StorageCreds, error) {
 	switch *typ {
 	case storage.Postgres:
 		return rc.getForPostgres()
-	case storage.FileSystem:
-		return rc.getForFilesystem()
 	default:
 		return nil, errors.New("Failed to get storage creds for Postgres or Filesystem. This shouldn't ever happen, but it did")
 	}
