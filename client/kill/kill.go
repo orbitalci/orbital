@@ -14,7 +14,7 @@ const synopsis = "kill an active build for a hash"
 const help = `
 Usage: ocelot kill -hash=<active-building-hash-to-kill>
 
-	Kills an 
+	Kills a build that is actively running in ocelot.
 `
 
 func New(ui cli.Ui) *cmd {
