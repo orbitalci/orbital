@@ -163,7 +163,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 		// don't return here, we still want to update the build_summary table
 	}
 	//update build_summary table
-	if err := w.Store.UpdateSum(fail, time.Now().Sub(start).Seconds(), werk.Id); err != nil {
+	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
 		return
 	}

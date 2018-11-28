@@ -96,8 +96,7 @@ func scanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageTy
 	buf := make([]byte, 0, 64*1024)
 	scanner.Buffer(buf, 1024*1024)
 	for scanner.Scan() {
-		resp := &pb.LineResponse{OutputLine: scanner.Text()}
-		stream.Send(resp)
+		SendStream(stream, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
 		log.IncludeErrField(err).Error("error encountered scanning from " + storageType)
@@ -126,8 +125,9 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 	}
 
 	if !build.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
+
 		errmsg := "build is not finished, use BuildRuntime method and stream from the werker registered"
-		stream.Send(&pb.LineResponse{OutputLine: errmsg})
+		SendStream(stream, errmsg)
 		return status.Error(codes.InvalidArgument, errmsg)
 	} else {
 		out, err = g.Storage.RetrieveLastOutByHash(bq.Hash)
