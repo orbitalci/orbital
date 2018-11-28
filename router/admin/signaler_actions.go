@@ -138,6 +138,19 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		}
 		return err
 	}
+
+	if buildBranch == signal.SubscriptionUpdateBranch && buildConf.GetSubscriptions() != nil {
+		stream.Send(RespWrap(fmt.Sprintf("There is a subscription block here and %s is the branch that controls updating active subscriptions, updating / adding now... ", signal.SubscriptionUpdateBranch)))
+		log.Log().WithField("hash", buildHash).WithField("acctRepo", buildReq.AcctRepo).Info("inserting or updating subscription")
+		if err = signal.CreateOrUpdateSubscription(buildConf, g.getSignaler(), buildReq.AcctRepo, handler.GetVcsType()); err != nil {
+			log.IncludeErrField(err).WithField("hash", buildHash).WithField("acctRepo", buildReq.AcctRepo).Error("unable to update subscriptions table")
+			stream.Send(RespWrap("Error occurred while updating subscription, going to continue with build. For edification, the error is : " + err.Error()))
+			// todo: not sure if we should return if this fails... seems like we should still want to build.
+		} else {
+			stream.Send(RespWrap("Successfully updated subscription."))
+			log.Log().WithField("hash", buildHash).WithField("acctRepo", buildReq.AcctRepo).Info("successfully inserted/updated subscription")
+		}
+	}
 	stream.Send(RespWrap(fmt.Sprintf("Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, models.CHECKMARK)))
 	stream.Send(RespWrap(fmt.Sprintf("Validating and queuing build data for %s...", buildReq.AcctRepo)))
 	// i was trying to make this work, but it ends up being really complicated considering that we're dealing with a DAG and (at least) bitbucket's api is not robust in this respect..

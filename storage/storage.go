@@ -72,6 +72,11 @@ type CredTable interface {
 	GetVCSTypeFromAccount(account string) (pb.SubCredType, error)
 }
 
+type SubscriptionsTable interface {
+	InsertOrUpdateActiveSubscription(subscriptions *pb.ActiveSubscription) (int64, error)
+	FindSubscribeesForRepo(acctRepo string, credType pb.SubCredType) ([]*pb.ActiveSubscription, error)
+}
+
 //GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
 type HealthyChkr interface {
 	Healthy() bool
@@ -84,6 +89,7 @@ type OcelotStorage interface {
 	Stringy
 	PollTable
 	CredTable
+	SubscriptionsTable
 	HealthyChkr
 	Close()
 }

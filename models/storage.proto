@@ -72,14 +72,24 @@ message PollRequest {
 }
 
 
-message ActiveSubscriptions {
+message ActiveSubscription {
     // subscribedToRepo is the repository that {{subscribingAcctRepo}} is watching for new builds
     string subscribedToAcctRepo = 1;
+    //subscribedToVcsType is the subcred vcs type of the repository that is being watched, ie bitbucket, github
+    SubCredType subscribedToVcsType = 2;
     // subscribingAcctRepo is the repo that is watching {{subscribedToRepo}} for new builds. when there is a new build of the {{subscribedToRepo}} that is successful, this subscribingAcctRepo will be queud for a new build as well
-    string subscribingAcctRepo = 2;
+    string subscribingAcctRepo = 3;
+    //subscribingVcsType is the subcred vcs type of the repo that is watching {{subscribedToRepo}}, ie bitbucket, github
+    SubCredType subscribingVcsType = 4;
     //branchQueueMap is a map of {branchToWatch:branchToQueue}. when branchToWatch gets updated with new build, then subscribingAcctRepo's branchToQueue's HEAD will be queued for a build.
-    map<string, string> branchQueueMap = 3;
-    google.protobuf.Timestamp insertTime = 4;
-    int64 id = 5;
+    map<string, string> branchQueueMap = 5;
+    //insertTime is the timestamp that the subscription was created.. may not be necessary? idk
+    google.protobuf.Timestamp insertTime = 6;
+    //id is id from database
+    int64 id = 7;
+    // alias is the alias from the subscriptions block of the "watching" (ie downstream) repo's ocelot.yml. the watching repo
+    //  will denote an alias for the repo it is watching upstream, and that alias will be used for setting environment variables
+    //  in the build.
+    string alias = 8;
 }
 

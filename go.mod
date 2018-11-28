@@ -18,7 +18,7 @@ require (
 	github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cenkalti/backoff v2.0.0+incompatible // indirect
-	github.com/circonus-labs/circonus-gometrics v2.2.4+incompatible // indirect
+	github.com/circonus-labs/circonus-gometrics v2.2.4+incompatible
 	github.com/circonus-labs/circonusllhist v0.1.2 // indirect
 	github.com/containerd/continuity v0.0.0-20181027224239-bea7585dbfac // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20181014144952-4e0d7dc8888f // indirect

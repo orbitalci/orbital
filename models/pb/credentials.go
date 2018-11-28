@@ -1,6 +1,7 @@
 package pb
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -426,6 +427,30 @@ func Contains(credType SubCredType, types []SubCredType) bool {
 		}
 	}
 	return false
+}
+
+//Value is an implementation of the sql.Valuer interface
+func (i SubCredType) Value() (driver.Value, error) {
+	return int32(i), nil
+}
+
+// Scan is an implementation of the sql.Scanner interface
+func (i *SubCredType) Scan(value interface{}) error {
+	// got from https://husobee.github.io/golang/database/2015/06/12/scanner-valuer.html
+	// if teh value is nil, then set value of pointer to SubCredType_NIL_SCT
+	if value == nil {
+		*i = SubCredType_NIL_SCT
+		return nil
+	}
+	if i32v, err := driver.Int32.ConvertValue(value); err == nil {
+		// if this is actually an int32, set the value of pointer to the SubCredType type cast of int32
+		if v, ok := i32v.(int32); ok {
+			*i = SubCredType(v)
+			return nil
+		}
+	}
+	// if these above haven't returned yet, return an error
+	return errors.New("failed to scan SubCredType")
 }
 
 func (i *SubCredType) MarshalJSON() ([]byte, error) {

@@ -1,9 +1,13 @@
 CREATE TABLE active_subscriptions (
-  subscribed_to_acct_repo character varying(500),
-  subscribing_acct_repo character varying(500),
+  subscribed_to_vcs_cred_type SMALLINT, /*subcredtype for the upstream acct/repo (ie bitbucket)*/
+  subscribed_to_repo character varying(150),
+  subscribing_vcs_cred_type SMALLINT, /*subcredtype for the downstream acct/repo (ie bitbucket)*/
+  subscribing_repo character varying(150),
   branch_queue_map jsonb,
   insert_time timestamp without time zone DEFAULT '1970-01-01 00:00:00',
-  id SERIAL PRIMARY KEY
+  alias character varying(25),
+  id SERIAL UNIQUE,
+  PRIMARY KEY (subscribed_to_repo, subscribed_to_vcs_cred_type, subscribing_repo, subscribing_vcs_cred_type)
 );
 
 CREATE TABLE subscription_data (
