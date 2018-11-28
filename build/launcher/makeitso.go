@@ -157,13 +157,13 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	if err != nil {
 		return
 	}
-	// post pr comments if its relevant, send notifications
+	// post pr comments if its relevant
 	if err := w.postFlight(ctx, werk, fail); err != nil {
 		ocelog.IncludeErrField(err).Error("could not execute post flight")
 		// don't return here, we still want to update the build_summary table
 	}
 	//update build_summary table
-	if err := w.Store.UpdateSum(fail, dura.Seconds(), werk.Id); err != nil {
+	if err := w.Store.UpdateSum(fail, time.Now().Sub(start).Seconds(), werk.Id); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't update summary in database")
 		return
 	}
@@ -182,6 +182,9 @@ func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) 
 	// we don't care if there is an error retrieving this, if it fails it'll return an empty value
 	// and that's what we want!
 	lastSuccessfulHash, _ := w.Store.GetLastSuccessfulBuildHash(acct, repo,werk.Branch)
+	if werk.SignaledBy == pb.SignaledBy_SUBSCRIBED {
+
+	}
 	paddedEnvs := []string{
 		fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash),
 		fmt.Sprintf("BUILD_ID=%d", werk.Id),
