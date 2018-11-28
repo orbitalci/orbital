@@ -15,10 +15,6 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
-func CreateTestFileSystemStorage(t *testing.T) BuildSum {
-	return NewFileBuildStorage("./test-fixtures/storage")
-}
-
 // create a test postgres database on port 5555 using the official docker image, create the tables, and insert some
 // seed data
 func insertDependentData(t *testing.T, pg *PostgresStorage) int64 {
@@ -32,7 +28,7 @@ func insertDependentData(t *testing.T, pg *PostgresStorage) int64 {
 		Repo:          "testRepo",
 		Branch:        "aBranch",
 	}
-	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch)
+	id, err := pg.AddSumStart(model.Hash, model.Account, model.Repo, model.Branch, pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}

@@ -3,6 +3,7 @@ option go_package = "pb";
 package models;
 
 import "creds.proto";
+import "storage.proto";
 import "vcshandler.proto";
 
 //this is a direct translation of the ocelot.yaml file
@@ -63,13 +64,6 @@ enum StageResultVal {
     PASS = 0;
     FAIL = 1;
     SKIP = 2;
-}
-
-enum SignaledBy {
-    PULL_REQUEST = 0;
-    PUSH = 1;
-    POLL = 2;
-    REQUESTED = 3;
 }
 
 message WerkerTask {
