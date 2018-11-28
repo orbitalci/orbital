@@ -75,6 +75,7 @@ type CredTable interface {
 type SubscriptionsTable interface {
 	InsertOrUpdateActiveSubscription(subscriptions *pb.ActiveSubscription) (int64, error)
 	FindSubscribeesForRepo(acctRepo string, credType pb.SubCredType) ([]*pb.ActiveSubscription, error)
+	GetSubscriptionData(subscribingAcctRepo string, subscribingBuildId int64, subscribingVcsType pb.SubCredType) (data *pb.SubscriptionUpstreamData, err error)
 }
 
 //GetCredAt(path string, hideSecret bool, rcc RemoteConfigCred) (map[string]RemoteConfigCred, error)
