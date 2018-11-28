@@ -140,3 +140,18 @@ message SubscriptionUpstreamData {
     //  in the build.
     string alias = 5;
 }
+
+message TaskBuilderEvent {
+    UpstreamTaskData subscription = 1;
+    string acctRepo = 2;
+    SubCredType vcsType = 3;
+    string branch = 4;
+    // if hash is empty, then build remote tip of {{branch}} j
+    string hash = 5;
+    SignaledBy by = 6;
+}
+
+message UpstreamTaskData {
+    int64 buildId = 1;
+    int64 activeSubscriptionId = 2;
+}

@@ -57,10 +57,18 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 			// the current building branch is not in the list of branches to trigger a downstream build off of, so don't to anything
 			continue
 		}
-		_ = fmt.Sprintf(branchToQueue)
+		//_ = fmt.Sprintf(branchToQueue)
 		log.Log().WithField("activeSubscription", subscribee).Info("found a subscribing account repo to this build/branch")
 		// todo: either directly queue build of the subscribee here or put the build on a werker-task-builder,
 		//  which the consumer of will use to generate a werker task and add it to the build queue (this pattern seems better)
+		taskBuilderData := &pb.TaskBuilderEvent{
+			Subscription: &pb.UpstreamTaskData{BuildId: werk.Id, ActiveSubscriptionId: subscribee.Id},
+			AcctRepo: subscribee.SubscribingAcctRepo,
+			VcsType: subscribee.SubscribingVcsType,
+			Branch: branchToQueue,
+			By: pb.SignaledBy_SUBSCRIBED,
+		}
+		_ = fmt.Sprintf("%#v", taskBuilderData)
 	}
 	return nil
 }
