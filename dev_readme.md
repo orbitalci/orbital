@@ -91,3 +91,22 @@ tj: building & running project & registrator alternative? or registrator?
 }```
 
 
+
+## flow for subscriptions 
+1. user commits to master of tracked branch (repoName: task-service) the subscriptions block of their ocelot.yml: 
+    subscriptions:
+    - acctRepo: level11consulting/pogo
+      alias: pogo
+      branchQueueMap: 
+      - master:master
+      - develop:develop
+2. when master is built, this subscription is picked up and stored in active_subscriptions table 
+3. task service continues to be committed to, and when it does normal build activities occur with no subscrition-related activity 
+4. level11consulting/pogo builds successfully in ocelot. 
+5. in the postFlight section of launcher for the most recent level11consulting/pogo build, where pr comments / notifications could occur, there is a check in the active subscriptions table.
+   - if there is no entry in the active_subscriptions table where subscribed_to_acct_repo='level11consulting/pogo', then nothing happens. 
+   - If there IS an entry:
+        - a new build will be queued for level11consulting/task-service, with its signaledBy being SUBSCRIBED
+        - new row in subscription_data created that associates build id of level11consulting/task-service with the build id of level11consulting/pogo
+
+builds triggered by subscriptions will be be treated largely as normal, except they will have more environment variables

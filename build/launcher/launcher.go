@@ -1,6 +1,7 @@
 package launcher
 
 import (
+	"github.com/shankj3/go-til/nsqpb"
 	"github.com/shankj3/ocelot/build/basher"
 	"github.com/shankj3/ocelot/build/integrations"
 	"github.com/shankj3/ocelot/build/valet"
@@ -23,6 +24,7 @@ type launcher struct {
 	handler      models.VCSHandler
 	integrations []integrations.StringIntegrator
 	binaryIntegs []integrations.BinaryIntegrator
+	producer     nsqpb.Producer
 }
 
 func NewLauncher(facts *models.WerkerFacts,
@@ -31,7 +33,8 @@ func NewLauncher(facts *models.WerkerFacts,
 	BuildCtxChan chan *models.BuildContext,
 	bshr *basher.Basher,
 	store storage.OcelotStorage,
-	bv *valet.Valet) *launcher {
+	bv *valet.Valet,
+	producer nsqpb.Producer) *launcher {
 	return &launcher{
 		WerkerFacts:  facts,
 		RemoteConf:   remoteConf,
@@ -43,5 +46,6 @@ func NewLauncher(facts *models.WerkerFacts,
 		infochan:     make(chan []byte),
 		integrations: getIntegrationList(),
 		binaryIntegs: getBinaryIntegList(bshr.LoopbackIp, facts.ServicePort),
+		producer:     producer,
 	}
 }

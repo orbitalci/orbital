@@ -2,8 +2,10 @@ package launcher
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/common/remote"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
@@ -43,6 +45,33 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 				return
 			}
 		}
+	}
+
+	subscribees, err := w.Store.FindSubscribeesForRepo(werk.FullName, werk.VcsType)
+	if err != nil {
+		return errors.Wrap(err, "unable to find subscribees for repo")
+	}
+	for _, subscribee := range subscribees {
+		branchToQueue, ok := subscribee.BranchQueueMap[werk.Branch]
+		if !ok {
+			// the current building branch is not in the list of branches to trigger a downstream build off of, so don't to anything
+			continue
+		}
+		//_ = fmt.Sprintf(branchToQueue)
+		log.Log().WithField("activeSubscription", subscribee).Info("found a subscribing account repo to this build/branch")
+		// todo: either directly queue build of the subscribee here or put the build on a werker-task-builder,
+		//  which the consumer of will use to generate a werker task and add it to the build queue (this pattern seems better)
+		taskBuilderData := &pb.TaskBuilderEvent{
+			Subscription: &pb.UpstreamTaskData{BuildId: werk.Id, ActiveSubscriptionId: subscribee.Id, Alias: subscribee.Alias},
+			AcctRepo: subscribee.SubscribingAcctRepo,
+			VcsType: subscribee.SubscribingVcsType,
+			Branch: branchToQueue,
+			By: pb.SignaledBy_SUBSCRIBED,
+		}
+		if err = w.producer.WriteProto(taskBuilderData, "taskbuilder"); err != nil {
+			log.IncludeErrField(err).WithField("activeSubscription", subscribee).Error("unable to write to task builder queue for building our a werker task")
+		}
+		_ = fmt.Sprintf("%#v", taskBuilderData)
 	}
 	return nil
 }
