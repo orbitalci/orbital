@@ -44,10 +44,8 @@ Vagrant.configure("2") do |config|
       # Install Protobuf 3.6+ with Snap
       sudo snap install protobuf --classic
 
-      #echo 'export GOROOT=$HOME/go' | sudo tee -a /etc/bash.bashrc
       echo 'export GOPATH=$HOME/go' | sudo tee -a /etc/bash.bashrc
       echo 'export GO111MODULE=on' | sudo tee -a /etc/bash.bashrc
-      #export GOROOT=$HOME/go
       export GOPATH=$HOME/go
       export GO111MODULE=on
       echo 'export PATH=$PATH:$GOROOT/bin' | sudo tee -a /etc/bash.bashrc
