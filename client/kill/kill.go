@@ -45,7 +45,7 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 //NOTE: this assumes that only one build is happening with this hash!!!!!
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.OcyHelper.Hash, "hash", "ERROR", "[REQUIRED] <hash> to kill")
+	c.SetGitHelperFlags(c.flags, false, true, false)
 }
 
 func (c *cmd) Run(args []string) int {
@@ -59,13 +59,11 @@ func (c *cmd) Run(args []string) int {
 	var build *models.BuildRuntimeInfo
 	var err error
 
-	if c.Hash == "ERROR" {
-		if err := c.OcyHelper.DetectHash(c.UI); err != nil {
-			commandhelper.Debuggit(c.UI, err.Error())
-			return 1
-		}
+	if err := c.OcyHelper.DetectHash(c.UI); err != nil {
+		commandhelper.Debuggit(c.UI, err.Error())
+		return 1
 	}
-
+	c.DebugOcyHelper(c.UI)
 	build, err = c.config.Client.FindWerker(ctx, &models.BuildReq{
 		Hash: c.Hash,
 	})

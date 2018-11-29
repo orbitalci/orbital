@@ -43,12 +43,9 @@ func (c *cmd) GetConfig() *commandhelper.ClientConfig {
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
 
-	c.flags.StringVar(&c.fileloc, "zip", "ERROR",
-		"Location of export Xcode profile zip to upload")
-	c.flags.StringVar(&c.account, "acct", "ERROR",
-		"Account name to file the xcode profile under.")
-	c.flags.StringVar(&c.identifier, "identifier", "ERROR",
-		"unique identifier for this ssh key")
+	c.flags.StringVar(&c.fileloc, "zip", "ERROR", "Location of export Xcode profile zip to upload")
+	c.flags.StringVar(&c.account, "acct", "ERROR", "Account name to file the xcode profile under.")
+	c.flags.StringVar(&c.identifier, "identifier", "ERROR", "unique identifier for this ssh key")
 	c.flags.StringVar(&c.profPw, "password", "ERROR", "password set when developer profile was exported from xcode")
 }
 

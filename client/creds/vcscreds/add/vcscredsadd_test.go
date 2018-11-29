@@ -85,10 +85,9 @@ Error: open THIS IS A TEST: no such file or directory`
 }
 
 func Test_cmd_Run_noYaml(t *testing.T) {
-	input := []byte(`fancy-frickin-identification
+	input := []byte(`lamb-shank
 bitbucket
-lamb-shank
-https://ocelot.perf/site/oauth2/access_token
+fancy-frickin-identification
 SHH-BE-QUIET-ITS-A-SECRET`)
 	cmd := testNew(input)
 	ctx := context.Background()
@@ -97,7 +96,6 @@ SHH-BE-QUIET-ITS-A-SECRET`)
 			{
 				ClientId:     "fancy-frickin-identification",
 				ClientSecret: "SHH-BE-QUIET-ITS-A-SECRET",
-				TokenURL:     "https://ocelot.perf/site/oauth2/access_token",
 				AcctName:     "lamb-shank",
 				SubType:      models.SubCredType_BITBUCKET,
 				SshFileLoc:   "THIS IS A TEST",

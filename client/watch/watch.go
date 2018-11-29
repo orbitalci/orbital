@@ -54,8 +54,7 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
-	c.flags.StringVar(&c.VcsTypeStr, "vcs-type", "ERROR", fmt.Sprintf("%s", strings.Join(models.CredType_VCS.SubtypesString(), "|")))
+	c.SetGitHelperFlags(c.flags, true, false, true)
 }
 
 func (c *cmd) Run(args []string) int {
@@ -73,7 +72,7 @@ func (c *cmd) Run(args []string) int {
 	if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
 		return 1
 	}
-
+	c.DebugOcyHelper(c.UI)
 	ctx := context.Background()
 	if err := commandhelper.CheckConnection(c, ctx); err != nil {
 		return 1

@@ -57,10 +57,9 @@ func (c *cmd) Help() string {
 
 func (c *cmd) init() {
 	c.flags = flag.NewFlagSet("", flag.ContinueOnError)
-	c.flags.StringVar(&c.AcctRepo, "acct-repo", "ERROR", "<account>/<repo> to watch")
 	c.flags.StringVar(&c.cron, "cron", "ERROR", "cron string for polling repo ")
 	c.flags.StringVar(&c.branches, "branches", "ERROR", "comma separated list of branches to poll vcs for")
-	c.flags.StringVar(&c.VcsTypeStr, "vcs-type", "ERROR", fmt.Sprintf("vcs type of <account>/<repo> (%s). if not passed, will attempt detect using git commands", strings.Join(models.CredType_VCS.SubtypesString(), "|")))
+	c.SetGitHelperFlags(c.flags, true, false, true)
 }
 
 func (c *cmd) Run(args []string) int {
@@ -79,6 +78,7 @@ func (c *cmd) Run(args []string) int {
 	if err := c.OcyHelper.SplitAndSetAcctRepo(c.UI); err != nil {
 		return 1
 	}
+	c.DebugOcyHelper(c.UI)
 	if c.cron == "ERROR" {
 		commandhelper.Debuggit(c.UI, strings.Join(args[:], ","))
 		c.UI.Error("-cron is a required flag")

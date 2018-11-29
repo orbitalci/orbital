@@ -44,9 +44,9 @@ func TestCmd_RunPathFileNoProcess(t *testing.T) {
 		ocelotFileLoc: pwd + "/test-fixtures/wrong-ocelot.yml",
 	}
 	cmdd.flags = flag.NewFlagSet("", flag.ContinueOnError)
-
+	dir, _ := os.Getwd()
 	var args []string
-	filepth := os.ExpandEnv("$HOME/go/src/github.com/shankj3/ocelot/client/validate/test-fixtures/wrong-ocelot.yml")
+	filepth := os.ExpandEnv(dir + "/test-fixtures/wrong-ocelot.yml")
 	expectedError := fmt.Sprintf(`Could not process file, please check make sure the file at %s exists
 Error: yaml: unmarshal errors:
   line 1: cannot unmarshal !!str `+"`wrong`"+` into pb.BuildConfig
@@ -54,7 +54,6 @@ Error: yaml: unmarshal errors:
 	if exit := cmdd.Run(args); exit != 1 {
 		t.Error("should exit with error code 1", exit)
 	}
-
 	errMsg := ui.ErrorWriter.String()
 	if strings.Compare(expectedError, errMsg) != 0 {
 		t.Errorf("output and expected not the same,  \n"+

@@ -41,9 +41,7 @@ func TestCmd_Run(t *testing.T) {
 				SubType:      models.SubCredType_BITBUCKET,
 			},
 			{
-				ClientId:     "fancy-trickin-identification",
 				ClientSecret: "SHH-BEE-QUIET-ITS-A-SECRET",
-				TokenURL:     "https://oqelot.perf/site/oauth2/access_token",
 				AcctName:     "lamf-shank",
 				Identifier:   "rowdy",
 				SubType:      models.SubCredType_GITHUB,
@@ -66,24 +64,20 @@ func TestCmd_Run(t *testing.T) {
 	expectedText := `
 --- Admin Credentials ---
 
+AcctName: lamb-shank
 ClientId: fancy-frickin-identification
 ClientSecret: SHH-BE-QUIET-ITS-A-SECRET
 TokenURL: https://ocelot.perf/site/oauth2/access_token
-AcctName: lamb-shank
 SubType: bitbucket
 Identifier: howdy
 [THIS IS A TEST]
 
 
-ClientId: fancy-trickin-identification
-ClientSecret: SHH-BEE-QUIET-ITS-A-SECRET
-TokenURL: https://oqelot.perf/site/oauth2/access_token
 AcctName: lamf-shank
-SubType: github
+ClientSecret: SHH-BEE-QUIET-ITS-A-SECRET
+SubType: GITHUB
 Identifier: rowdy
 [THIS IS A TEST]
-
-
 `
 	text := ui.OutputWriter.String()
 	if strings.Compare(expectedText, text) != 0 {
