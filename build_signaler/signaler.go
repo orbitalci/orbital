@@ -47,33 +47,33 @@ func (s *Signaler) CheckViableThenQueueAndStore(task *pb.WerkerTask, force bool,
 	return s.QueueAndStore(task)
 }
 
-// CheckTaskAndStore will check to make sure the task hash is not already building, then if it isn't it will store
-// the initial build_summary entry, returning the build id
-func (s *Signaler) CheckTaskAndStore(task *pb.WerkerTask) (id int64, err error){
+// QueueAndStore is the muscle; it will:
+//  - check if build in consul, if it is it will not add to queue and return a NotViable error
+//  - if the above doesn't return an error....
+//  - store the initial summary in the database
+//  - validate that the configuration is good and add to the queue. If the build configuration (ocelot.yml) is not good, then it will store in the database that it failed validation along with the reason why
+func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 	log.Log().Debug("Storing initial results in db")
 	account, repo, err := common.GetAcctRepo(task.FullName)
 	if err != nil {
-		return
+		return err
 	}
 	alreadyBuilding, err := build.CheckBuildInConsul(s.RC.GetConsul(), task.CheckoutHash)
 	if alreadyBuilding {
 		log.Log().Info("kindly refusing to add to queue because this hash is already building")
-		return id, build.NoViability("this hash is already building in ocelot, therefore not adding to queue")
+		return build.NoViability("this hash is already building in ocelot, therefore not adding to queue")
 	}
 	//get vcs cred to attach the database id to the build summary
 	vcsCred, err := credentials.GetVcsCreds(s.Store, task.FullName, s.RC, task.VcsType)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to get vcs creds")
-		return id, errors.Wrap(err, "unable to retrieve vcs creds")
+		return errors.Wrap(err, "unable to retrieve vcs creds")
 	}
 	// tell the database (and therefore all of ocelot) that this build is a-happening. or at least that it exists.
-	id, err = storeSummaryToDb(s.Store, task.CheckoutHash, repo, task.Branch, account, task.SignaledBy, vcsCred.GetId())
-	return id, err
-}
-
-//QueueIfGoodConfig wil make sure the build config (ocelot.yml) is valid, and store in teh build_summary table if it is not, along with the reason why it failed in the build_stage_details table.
-// if the build config is valid, then the werker task will be added to the build queue, and the build status in build summary will be changed to queued
-func (s *Signaler) QueueIfGoodConfig(id int64, task *pb.WerkerTask) error {
+	id, err := storeSummaryToDb(s.Store, task.CheckoutHash, repo, task.Branch, account, task.SignaledBy, vcsCred.GetId())
+	if err != nil {
+		return err
+	}
 	sr := getSignalerStageResult(id)
 
 	// after storing that this build was recived, check to make sure the build config is even worthy of our time
@@ -99,20 +99,6 @@ func (s *Signaler) QueueIfGoodConfig(id int64, task *pb.WerkerTask) error {
 		log.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err
 	}
-	return nil
-}
-
-// QueueAndStore is the muscle; it will:
-//  - check if build in consul, if it is it will not add to queue and return a NotViable error
-//  - if the above doesn't return an error....
-//  - store the initial summary in the database
-//  - validate that the configuration is good and add to the queue. If the build configuration (ocelot.yml) is not good, then it will store in the database that it failed validation along with the reason why
-func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
-	id, err := s.CheckTaskAndStore(task)
-	if err != nil {
-		return err
-	}
-	err = s.QueueIfGoodConfig(id, task)
 	return nil
 }
 

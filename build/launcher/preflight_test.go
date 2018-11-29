@@ -59,7 +59,7 @@ func TestLauncher_preFlight(t *testing.T) {
 	}
 	ctx := context.Background()
 	time.Sleep(5 * time.Second)
-	id, err := lnchr.Store.AddSumStart("123", "shankj3", "ocelot", "branch", 0, 0)
+	id, err := lnchr.Store.AddSumStart("123", "shankj3", "ocelot", "branch")
 	if err != nil {
 		t.Error(err)
 		return
