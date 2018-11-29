@@ -1,7 +1,6 @@
 module github.com/shankj3/ocelot
 
 require (
-	cloud.google.com/go v0.32.0 // indirect
 	code.cloudfoundry.org/bytefmt v0.0.0-20180906201452-2aa6f33b730c
 	github.com/Masterminds/semver v1.4.2 // indirect
 	github.com/Masterminds/vcs v1.12.0 // indirect

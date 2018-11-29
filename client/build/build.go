@@ -81,7 +81,7 @@ func (c *cmd) init() {
 	c.flags.StringVar(&c.Branch, "branch", "ERROR", "branch to build (only required if passing a previously un-built hash or overriding the branch associated with a previous build)")
 	c.flags.BoolVar(&c.force, "force", false, "force the build to be queued even if it is not one of the accepted branches")
 	c.flags.BoolVar(&c.latest, "latest", false, "use -latest to find the latest commit of the acct/repo at the branch denoted by -branch")
-	c.SetGitHelperFlags(c.flags)
+	c.SetGitHelperFlags(c.flags, true, true, true)
 }
 
 func (c *cmd) Run(args []string) int {
@@ -111,7 +111,7 @@ func (c *cmd) Run(args []string) int {
 	if err := c.SplitAndSetAcctRepo(c.UI); err != nil {
 		help.Debuggit(c.UI, err.Error())
 	}
-
+	c.DebugOcyHelper(c.UI)
 	ctx := context.Background()
 	if err := help.CheckConnection(c, ctx); err != nil {
 		return 1
