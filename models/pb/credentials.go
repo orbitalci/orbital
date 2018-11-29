@@ -11,6 +11,7 @@ import (
 )
 
 const ENV_SAFE = "^[a-zA-Z_]+$"
+var EnvSafeRegex = regexp.MustCompile(ENV_SAFE)
 
 //OcyCredder is an interface for interacting with credentials in Ocelot
 type OcyCredder interface {
@@ -293,11 +294,7 @@ func (m *GenericCreds) ValidateForInsert() *ValidationErr {
 		return Invalidate(strings.Join(errr, "\n"))
 	}
 	if m.SubType == SubCredType_ENV {
-		re, err := regexp.Compile(ENV_SAFE)
-		if err != nil {
-			return Invalidate("Unable to compile regex, error is: " + err.Error())
-		}
-		if !re.MatchString(m.GetIdentifier()) {
+		if !EnvSafeRegex.MatchString(m.GetIdentifier()) {
 			return Invalidate(fmt.Sprintf("Identifier for credential must be environment variable safe, ie it must match the regex pattern %s. Your credential Identifier, %s, does not.", ENV_SAFE, m.GetIdentifier()))
 		}
 	}
