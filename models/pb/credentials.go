@@ -431,7 +431,7 @@ func Contains(credType SubCredType, types []SubCredType) bool {
 
 //Value is an implementation of the sql.Valuer interface
 func (i SubCredType) Value() (driver.Value, error) {
-	return int32(i), nil
+	return int64(i), nil
 }
 
 // Scan is an implementation of the sql.Scanner interface
