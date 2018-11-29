@@ -444,13 +444,23 @@ func (i *SubCredType) Scan(value interface{}) error {
 	}
 	if i32v, err := driver.Int32.ConvertValue(value); err == nil {
 		// if this is actually an int32, set the value of pointer to the SubCredType type cast of int32
-		if v, ok := i32v.(int32); ok {
-			*i = SubCredType(v)
-			return nil
+		switch sct := i32v.(type) {
+		case int32:
+			fmt.Print("int32")
+			*i = SubCredType(sct)
+		case int64:
+			fmt.Print("int64")
+			*i = SubCredType(sct)
+		case int:
+			fmt.Print("int")
+			*i = SubCredType(sct)
+		default:
+			return errors.Errorf("unknown type %#v", sct)
 		}
+	} else {
+		return errors.Wrap(err, "unknown value.")
 	}
-	// if these above haven't returned yet, return an error
-	return errors.New("failed to scan SubCredType")
+	return nil
 }
 
 func (i *SubCredType) MarshalJSON() ([]byte, error) {

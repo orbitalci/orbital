@@ -101,13 +101,14 @@ select
 	build_summary.hash,
 	build_summary.account,
 	build_summary.repo,
+    build_summary.id,
 	active_subscriptions.alias
 from 
 	build_summary 
-inner join active_subscriptions on (CONCAT(build_summary.account, '/', build_summary.repo)) = active_subscriptions.subscribed_to_acct_repo
+inner join active_subscriptions on (CONCAT(build_summary.account, '/', build_summary.repo)) = active_subscriptions.subscribed_to_repo
 where 
 	build_summary.id = (select subscribed_to_build_id from subscription_data where build_id=$1)
-	and active_subscriptions.subscribing_acct_repo=$2;
+	and active_subscriptions.subscribing_repo=$2;
 `
 	var stmt *sql.Stmt
 	stmt, err = p.db.Prepare(queryStr)
@@ -118,7 +119,7 @@ where
 	defer stmt.Close()
 	row := stmt.QueryRow(subscribingBuildId, subscribingAcctRepo)
 	var subscriptionData = pb.SubscriptionUpstreamData{}
-	if err = row.Scan(&subscriptionData.Branch, &subscriptionData.Hash, &subscriptionData.Account, &subscriptionData.Repo, &subscriptionData.Alias); err != nil {
+	if err = row.Scan(&subscriptionData.Branch, &subscriptionData.Hash, &subscriptionData.Account, &subscriptionData.Repo, &subscriptionData.BuildId, &subscriptionData.Alias); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't scan to string variables")
 		return data, errors.Wrap(err, "couldn't scan to string variables")
 	}

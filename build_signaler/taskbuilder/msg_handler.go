@@ -15,6 +15,11 @@ import (
 	"github.com/shankj3/ocelot/models/pb"
 )
 
+const (
+	TaskBuilderTopic = "taskbuilder"
+	TaskBuilderChannel = "taskbuilder-channel"
+)
+
 func NewMsgHandler(topic string, rc credentials.CVRemoteConfig, store storage.OcelotStorage, producer nsqpb.Producer)  *MsgHandler {
 	return &MsgHandler{
 		Topic:   topic,
@@ -63,6 +68,7 @@ func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan 
 			return err
 		}
 		task := signal.BuildInitialWerkerTask(buildConf, taskBuild.Hash, token, taskBuild.Branch, taskBuild.AcctRepo, taskBuild.By, nil, handler.GetVcsType())
+		task.ChangesetData = &pb.ChangesetData{Branch: taskBuild.Branch, SubscriptionAlias: taskBuild.Subscription.Alias}
 		if queueError := m.Signaler.OcyValidator.ValidateViability(task.Branch, task.BuildConf.Branches, nil, false); queueError != nil {
 			logWithFields.WithField("error", queueError).Info("not queuing! this is fine, just doesn't fit requirements")
 			return queueError

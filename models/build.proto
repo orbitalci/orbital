@@ -120,6 +120,7 @@ message ChangesetData {
     repeated string filesChanged = 1;
     repeated string commitTexts = 2;
     string branch = 3;
+    string subscriptionAlias = 4;
 }
 
 
@@ -139,6 +140,9 @@ message SubscriptionUpstreamData {
     //  will denote an alias for the repo it is watching upstream, and that alias will be used for setting environment variables
     //  in the build.
     string alias = 5;
+    //buildId is the build id of the upstream build
+    int64 buildId = 6;
+
 }
 
 message TaskBuilderEvent {
@@ -154,4 +158,5 @@ message TaskBuilderEvent {
 message UpstreamTaskData {
     int64 buildId = 1;
     int64 activeSubscriptionId = 2;
+    string alias = 3;
 }
