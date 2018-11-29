@@ -4,7 +4,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/go-til/nsqpb"
 	"github.com/shankj3/ocelot/build"
 	"github.com/shankj3/ocelot/build/basher"
 	"github.com/shankj3/ocelot/build/builder/docker"
@@ -42,10 +41,9 @@ type WorkerMsgHandler struct {
 	Store        storage.OcelotStorage
 	BuildValet   *valet.Valet
 	RemoteConfig credentials.CVRemoteConfig
-	producer     nsqpb.Producer
 }
 
-func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, rc credentials.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext, producer nsqpb.Producer) *WorkerMsgHandler {
+func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, rc credentials.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
 	return &WorkerMsgHandler{
 		Topic:        topic,
 		Basher:       b,
@@ -55,7 +53,6 @@ func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Bash
 		BuildCtxChan: buildChan,
 		RemoteConfig: rc,
 		WerkerFacts:  facts,
-		producer:     producer,
 	}
 }
 
@@ -101,7 +98,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	default:
 		builder = docker.NewDockerBuilder(w.Basher)
 	}
-	launch := launcher.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildValet, w.producer)
+	launch := launcher.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildValet)
 	launch.MakeItSo(werkerTask, builder, finish, done)
 	return nil
 }

@@ -11,7 +11,6 @@ const (
 	Branch
 	Filepath
 	Text
-	Upstream
 )
 
 func (t TriggerType) Spawn() Section {
@@ -22,8 +21,6 @@ func (t TriggerType) Spawn() Section {
 		return &FilepathCondition{}
 	case Text:
 		return &TextCondition{}
-	case Upstream:
-		return &UpstreamCondition{}
 	default:
 		panic("shouldn't happen")
 	}
@@ -37,8 +34,6 @@ func convertTriggerType(str string) TriggerType {
 		return Filepath
 	case `\text`:
 		return Text
-	case `\upstream`:
-		return Upstream
 	default:
 		return TNone
 	}
