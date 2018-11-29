@@ -36,7 +36,6 @@ Vagrant.configure("2") do |config|
     end
 
     ocelot.vm.provision "shell", privileged: false, inline: <<-SHELL
-      #sudo apt-get install -y golang-go # TODO: Pin this to at least 1.10
       sudo apt install -y build-essential
 
       # Install Go 1.11+ with Snap
@@ -45,27 +44,16 @@ Vagrant.configure("2") do |config|
       # Install Protobuf 3.6+ with Snap
       sudo snap install protobuf --classic
 
-      echo 'export GOROOT=$HOME/go' | sudo tee -a /etc/bash.bashrc
-      #echo 'export GOPATH=$HOME/go' | sudo tee -a /etc/bash.bashrc
+      #echo 'export GOROOT=$HOME/go' | sudo tee -a /etc/bash.bashrc
+      echo 'export GOPATH=$HOME/go' | sudo tee -a /etc/bash.bashrc
       echo 'export GO111MODULE=on' | sudo tee -a /etc/bash.bashrc
-      export GOROOT=$HOME/go
-      #export GOPATH=$HOME/go
+      #export GOROOT=$HOME/go
+      export GOPATH=$HOME/go
       export GO111MODULE=on
       echo 'export PATH=$PATH:$GOROOT/bin' | sudo tee -a /etc/bash.bashrc
       export PATH=$PATH:$GOPATH/bin
 
       sudo chown -R $(id -u):$(id -g) $HOME/go
-
-      ## Install protobuf3
-      #pushd /tmp
-      #mkdir protoc_inst
-      #cd protoc_inst
-      #curl -OL https://github.com/google/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
-      #unzip protoc-3.6.1-linux-x86_64.zip -d protoc3
-      #sudo mv protoc3/bin/* /usr/local/bin/
-      #sudo mv protoc3/include/* /usr/local/include/
-      #popd
-      ##rm -rf /tmp/protoc_inst
 
       echo '# Ocelot configuration:' | sudo tee -a /etc/bashrc.bashrc
       echo 'export VAULT_TOKEN=ocelotdev' | sudo tee -a /etc/bash.bashrc
@@ -110,8 +98,6 @@ Vagrant.configure("2") do |config|
       go get -v -u golang.org/x/tools/cmd/stringer
       go get -v -u golang.org/x/tools/cmd/cover
 
-      # go generate ./...
-      mkdir -p models/github/pb
       make proto
       make local
     SHELL
