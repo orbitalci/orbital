@@ -88,7 +88,7 @@ func (p *PostgresStorage) InsertOrUpdateActiveSubscription(sub *pb.ActiveSubscri
 	return
 }
 
-func (p *PostgresStorage) GetSubscriptionData(subscribingAcctRepo string, subscribingBuildId int64, subscribingVcsType pb.SubCredType) (data *pb.SubscriptionUpstreamData, err error) {
+func (p *PostgresStorage) GetActiveSubscriptionData(subscribingAcctRepo string, subscribingBuildId int64, subscribingVcsType pb.SubCredType) (data *pb.SubscriptionUpstreamData, err error) {
 	defer metricizeDbErr(err)
 	start := startTransaction()
 	defer finishTransaction(start, "active_subscriptions", "read")
@@ -124,4 +124,27 @@ where
 	}
 	data = &subscriptionData
 	return
+}
+
+func (p *PostgresStorage) InsertSubscriptionData(upstreamBuildId, buildId, activeSubscriptionId int64) error {
+	var err error
+	defer metricizeDbErr(err)
+	start := startTransaction()
+	defer finishTransaction(start, "active_subscriptions", "read")
+	if err = p.Connect(); err != nil {
+		return errors.Wrap(err, "could not connect to postgres")
+	}
+	queryStr := `INSERT INTO subscription_data (build_id, active_subscriptions_id, subscribed_to_build_id) VALUES ($1,$2,$3)`
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return errors.Wrap(err, "couldn't prepare stmt")
+	}
+	defer stmt.Close()
+	if _, err = stmt.Exec(buildId, activeSubscriptionId, upstreamBuildId); err != nil {
+		ocelog.IncludeErrField(err).Error("unable to insert subscription_data")
+		return err
+	}
+	return nil
 }

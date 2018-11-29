@@ -68,6 +68,9 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 			Branch: branchToQueue,
 			By: pb.SignaledBy_SUBSCRIBED,
 		}
+		if err = w.producer.WriteProto(taskBuilderData, "taskbuilder"); err != nil {
+			log.IncludeErrField(err).WithField("activeSubscription", subscribee).Error("unable to write to task builder queue for building our a werker task")
+		}
 		_ = fmt.Sprintf("%#v", taskBuilderData)
 	}
 	return nil

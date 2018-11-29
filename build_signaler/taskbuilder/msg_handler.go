@@ -14,7 +14,8 @@ import (
 	signal "github.com/shankj3/ocelot/build_signaler"
 	"github.com/shankj3/ocelot/models/pb"
 )
-func NewMsgHandler(topic string, rc credentials.CVRemoteConfig, store storage.OcelotStorage, producer nsqpb.Producer) *MsgHandler {
+
+func NewMsgHandler(topic string, rc credentials.CVRemoteConfig, store storage.OcelotStorage, producer nsqpb.Producer)  *MsgHandler {
 	return &MsgHandler{
 		Topic:   topic,
 		Signaler: signal.NewSignaler(rc, deserialize.New(), producer, build.GetOcelotValidator(), store),
@@ -39,39 +40,52 @@ func (m *MsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish chan 
 	var err error
 	switch m.Topic {
 	case "taskbuilder":
+		logWithFields := log.Log().WithField("acctRepo", taskBuild.AcctRepo).WithField("vcsType", taskBuild.VcsType.String()).WithField("branch", taskBuild.Branch).WithField("subscription", taskBuild.Subscription)
 		vcs, err := credentials.GetVcsCreds(m.Store, taskBuild.AcctRepo, m.RC, taskBuild.VcsType)
 		if err != nil {
-			log.IncludeErrField(err).WithField("acctRepo", taskBuild.AcctRepo).WithField("vcsType", taskBuild.VcsType.String()).WithField("branch", taskBuild.Branch).Errorf("unable to get vcs creds")
+			logWithFields.WithField("error", err).Errorf("unable to get vcs creds")
 			return err
 		}
 		handler, token, err := remote.GetHandler(vcs)
 		if err != nil {
-			log.IncludeErrField(err).WithField("acctRepo", taskBuild.AcctRepo).WithField("vcsType", taskBuild.VcsType.String()).WithField("branch", taskBuild.Branch).Error("unable to get remote vcs handler")
+			logWithFields.WithField("error", err).Error("unable to get remote vcs handler")
 			return err
 		}
 		hist, err := handler.GetBranchLastCommitData(taskBuild.AcctRepo, taskBuild.Branch)
 		if err != nil {
-			log.IncludeErrField(err).WithField("acctRepo", taskBuild.AcctRepo).WithField("vcsType", taskBuild.VcsType.String()).WithField("branch", taskBuild.Branch).Error("unable to get last commit data")
+			logWithFields.WithField("error", err).Error("unable to get last commit data")
 			return err
 		}
 		taskBuild.Hash = hist.Hash
 		buildConf, err := signal.GetConfig(taskBuild.AcctRepo, taskBuild.Hash, m.Deserializer, handler)
 		if err != nil {
-			log.IncludeErrField(err).WithField("acctRepo", taskBuild.AcctRepo).WithField("vcsType", taskBuild.VcsType.String()).WithField("branch", taskBuild.Branch).Error("unable to get build config (ocelot.yml)")
+			logWithFields.WithField("error", err).Error("unable to get build config (ocelot.yml)")
 			return err
 		}
 		task := signal.BuildInitialWerkerTask(buildConf, taskBuild.Hash, token, taskBuild.Branch, taskBuild.AcctRepo, taskBuild.By, nil, handler.GetVcsType())
-		//fixme we can't actually use QueueAndStore, because we need to intercept the build id right after it stores and _before_ it queues. we will be storing that build id
-		// in the subscription_data table, so that when the build is queued and picked up the werker can query the table to get all the environment variables of the upstream build.
-		if err := m.Signaler.QueueAndStore(task); err != nil {
-			if _, ok := err.(*build.NotViable); !ok {
-				log.IncludeErrField(err).WithField("acctRepo", taskBuild.AcctRepo).WithField("vcsType", taskBuild.VcsType.String()).WithField("branch", taskBuild.Branch).Error("unable to queue and store")
+		if queueError := m.Signaler.OcyValidator.ValidateViability(task.Branch, task.BuildConf.Branches, nil, false); queueError != nil {
+			logWithFields.WithField("error", queueError).Info("not queuing! this is fine, just doesn't fit requirements")
+			return queueError
+		}
+		buildId, err := m.Signaler.CheckTaskAndStore(task)
+		if err != nil {
+			logWithFields.WithField("error", err).Error("unable to check task and store")
+			return err
+		}
+		if task.SignaledBy == pb.SignaledBy_SUBSCRIBED {
+			if err = m.Store.InsertSubscriptionData(taskBuild.Subscription.GetBuildId(), buildId, taskBuild.Subscription.GetActiveSubscriptionId()); err != nil {
+				logWithFields.WithField("error", err).Error("unable to insert into active subscriptions table")
+				// todo: not sure if we actually want to return here?
 				return err
 			}
-			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
 		}
+		if err = m.Signaler.QueueIfGoodConfig(buildId, task); err != nil {
+			logWithFields.Error("unable to check task and store")
+			return err
+		}
+		logWithFields.Info("successfully generated a werker task and added it to the werker queue for building.")
 	default:
-		err = errors.New("only supported topics are poll_please and no_poll_please")
+		err = errors.New("only supported topic is 'taskbuilder'")
 		log.IncludeErrField(err).Error()
 	}
 	return err
