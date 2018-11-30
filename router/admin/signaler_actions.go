@@ -138,16 +138,16 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		return err
 	}
 
-	if buildBranch == signal.SubscriptionUpdateBranch && buildConf.GetSubscriptions() != nil {
-		SendStream(stream, "There is a subscription block here and %s is the branch that controls updating active subscriptions, updating / adding now... ", signal.SubscriptionUpdateBranch)
+	if buildBranch == signal.SubscriptionUpdateBranch {
+		SendStream(stream, "There is a subscription block here and %s is the branch that controls updating active subscriptions, modifying / adding now... ", signal.SubscriptionUpdateBranch)
 		log.Log().WithField("hash", buildHash).WithField("acctRepo", buildReq.AcctRepo).Info("inserting or updating subscription")
-		if err = signal.CreateOrUpdateSubscription(buildConf, g.getSignaler(), buildReq.AcctRepo, handler.GetVcsType()); err != nil {
+		if err = signal.CreateOrModifySubscription(buildConf, g.getSignaler(), buildReq.AcctRepo, handler.GetVcsType()); err != nil {
 			log.IncludeErrField(err).WithField("hash", buildHash).WithField("acctRepo", buildReq.AcctRepo).Error("unable to update subscriptions table")
-			SendStream(stream, "Error occurred while updating subscription, going to continue with build. For edification, the error is : " + err.Error())
+			SendStream(stream, "Error occurred while modifying subscription, going to continue with build. For edification, the error is : " + err.Error())
 			// todo: not sure if we should return if this fails... seems like we should still want to build.
 		} else {
-			SendStream(stream, "Successfully updated subscription.")
-			log.Log().WithField("hash", buildHash).WithField("acctRepo", buildReq.AcctRepo).Info("successfully inserted/updated subscription")
+			SendStream(stream, "Successfully modified/added subscription.")
+			log.Log().WithField("hash", buildHash).WithField("acctRepo", buildReq.AcctRepo).Info("successfully inserted/modified subscription")
 		}
 	}
 	SendStream(stream, "Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, models.CHECKMARK)

@@ -33,9 +33,9 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 		return errors.Wrap(err, "unable to get build configuration")
 	}
 
-	if push.Branch == SubscriptionUpdateBranch && buildConf.GetSubscriptions() != nil {
+	if push.Branch == SubscriptionUpdateBranch {
 		ocelog.Log().WithField("hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).Info("inserting or updating subscription")
-		if err = CreateOrUpdateSubscription(buildConf, conf, push.Repo.AcctRepo, handler.GetVcsType()); err != nil {
+		if err = CreateOrModifySubscription(buildConf, conf, push.Repo.AcctRepo, handler.GetVcsType()); err != nil {
 			ocelog.IncludeErrField(err).WithField("hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).Error("unable to update subscriptions table")
 			// todo: not sure if we should return if this fails... seems like we should still want to build.
 		} else {

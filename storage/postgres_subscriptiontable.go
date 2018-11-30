@@ -88,6 +88,28 @@ func (p *PostgresStorage) InsertOrUpdateActiveSubscription(sub *pb.ActiveSubscri
 	return
 }
 
+func (p *PostgresStorage) DeleteAllActiveSubscriptionsForRepo(acctRepo string, vcsType pb.SubCredType) (err error) {
+	defer metricizeDbErr(err)
+	start := startTransaction()
+	defer finishTransaction(start, "active_subscriptions", "read")
+	if err = p.Connect(); err != nil {
+		return errors.Wrap(err, "could not connect to postgres")
+	}
+	queryStr := `DELETE FROM active_subscriptions 
+WHERE (subscribing_repo, subscribing_vcs_cred_type)=($1,$2);`
+	var stmt *sql.Stmt
+	stmt, err = p.db.Prepare(queryStr)
+	if err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't prepare stmt")
+		return errors.Wrap(err, "couldn't prepare stmt")
+	}
+	defer stmt.Close()
+	if _, err = stmt.Exec(acctRepo, vcsType); err != nil {
+		ocelog.IncludeErrField(err).Error("couldn't delete")
+	}
+	return
+}
+
 func (p *PostgresStorage) GetActiveSubscriptionData(subscribingAcctRepo string, subscribingBuildId int64, subscribingVcsType pb.SubCredType) (data *pb.SubscriptionUpstreamData, err error) {
 	defer metricizeDbErr(err)
 	start := startTransaction()

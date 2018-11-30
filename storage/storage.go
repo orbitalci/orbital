@@ -76,6 +76,7 @@ type SubscriptionsTable interface {
 	InsertOrUpdateActiveSubscription(subscriptions *pb.ActiveSubscription) (int64, error)
 	FindSubscribeesForRepo(acctRepo string, credType pb.SubCredType) ([]*pb.ActiveSubscription, error)
 	GetActiveSubscriptionData(subscribingAcctRepo string, subscribingBuildId int64, subscribingVcsType pb.SubCredType) (data *pb.SubscriptionUpstreamData, err error)
+	DeleteAllActiveSubscriptionsForRepo(acctRepo string, vcsType pb.SubCredType) error
 	InsertSubscriptionData(upstreamBuildId, buildId, activeSubscriptionId int64) error
 }
 
