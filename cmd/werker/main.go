@@ -21,6 +21,12 @@ provide results endpoint, way for server to access data
 package main
 
 import (
+	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/level11consulting/ocelot/build"
@@ -46,29 +52,13 @@ import (
 //listen will listen for messages for a specified topic. If a message is received, a
 //message worker handler is created to process the message
 func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan chan *models.Transport, buildChan chan *models.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
-	for {
-		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
-			ocelog.Log().Info("i am about to sleep for 10s because i couldn't find the topic "+topic+" at ", p.Config.LookupDAddress())
-			time.Sleep(10 * time.Second)
-		} else {
-			//mode := os.Getenv("ENV")
-			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
-			bshr, err := basher.NewBasher("", "", conf.LoopbackIp, build.GetOcyPrefixFromWerkerType(conf.WerkerType))
-			// if couldn't make a new basher, just panic
-			if err != nil {
-				panic("couldnt' create instance of basher, bailing: " + err.Error())
-			}
-			//if strings.EqualFold(mode, "dev") { //in dev mode, we download zip from werker
-			//	bshr.SetBbDownloadURL(conf.LoopbackIp + ":9090/dev")
-			//}
-
-			handler := listener.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan)
-			p.Handler = handler
-			p.ConsumeMessages(topic, "werker")
-			ocelog.Log().Info("Consuming messages for topic ", topic)
-			break
-		}
+	bshr, err := basher.NewBasher("", "", conf.LoopbackIp, build.GetOcyPrefixFromWerkerType(conf.WerkerType))
+	// if couldn't make a new basher, just panic
+	if err != nil {
+		panic("couldnt' create instance of basher, bailing: " + err.Error())
 	}
+	handler := listener.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan, nsqpb.GetInitProducer())
+	p.WaitThenConsume(topic, "werker", handler, 10)
 }
 
 func main() {

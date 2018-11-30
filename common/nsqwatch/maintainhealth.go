@@ -50,6 +50,10 @@ func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRe
 	nsqwatch.MaintainHealths()
 }
 
+func (nq *NsqWatch) AddConsumers(consumers []*nsqpb.ProtoConsume) {
+	nq.pConsumers = append(nq.pConsumers, consumers...)
+}
+
 // MaintainHealths checks to make sure that disk, remoteConfig, and storage connections are all healthy. If they are not,
 //  then nsq consumers will be paused, effectively blocking all builds. The consumers will be unpaused when all checks return
 //  to healthy state

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
@@ -74,17 +73,6 @@ func main() {
 }
 
 func consume(p *nsqpb.ProtoConsume, topic string) {
-	for {
-		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
-			ocelog.Log().Info("about to sleep for 10s because could not find topic ", topic)
-			time.Sleep(10 * time.Second)
-		} else {
-			ocelog.Log().Info("about to consume messages for topic ", topic)
-			handler := poll.NewMsgHandler(topic)
-			p.Handler = handler
-			p.ConsumeMessages(topic, "poller")
-			ocelog.Log().Info("consuming messages for topic ", topic)
-			break
-		}
-	}
+	handler := poll.NewMsgHandler(topic)
+	p.WaitThenConsume(topic, "poller", handler, 10)
 }

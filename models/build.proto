@@ -21,6 +21,7 @@ message BuildConfig {
     repeated string env = 5;
     repeated Stage stages = 7;
     Notifications notify = 8;
+    repeated Subscriptions subscriptions = 10;
 }
 
 message Stage {
@@ -57,6 +58,16 @@ message Result {
 
 message Triggers {
     repeated string branches = 1;
+}
+
+message Subscriptions {
+    string alias = 1;
+    // @inject_tag: yaml:"acctRepo"
+    string acctRepo = 2;
+    // @inject_tag: yaml:"acctVcsType"
+    SubCredType acctVcsType = 3;
+    //branches is a list of {{subscribedToBranch}}:{{subscribingBranch}} pairs (like docker ports)
+    repeated string branches = 4;
 }
 
 
@@ -109,4 +120,43 @@ message ChangesetData {
     repeated string filesChanged = 1;
     repeated string commitTexts = 2;
     string branch = 3;
+    string subscriptionAlias = 4;
+}
+
+
+// SubscriptionUpstreamData is all the build information of the upstream build that resulted in a trigger of a downstream build.
+// a build that is "watching" an upstream repo and that culminates in it building upon successful build of the upstream will have
+// these facts about the upstream repo to use as environment variables
+message SubscriptionUpstreamData {
+    // branch is the branch of the upstream repo that successfully built
+    string branch = 1;
+    // hash is the hash of the upstream repo that successfully built
+    string hash = 2;
+    // account is the account of the upstream repo that succesfully built
+    string account = 3;
+    //repo is the repo that successfully built
+    string repo = 4;
+    // alias is the alias from the subscriptions block of the "watching" (ie downstream) repo's ocelot.yml. the watching repo
+    //  will denote an alias for the repo it is watching upstream, and that alias will be used for setting environment variables
+    //  in the build.
+    string alias = 5;
+    //buildId is the build id of the upstream build
+    int64 buildId = 6;
+
+}
+
+message TaskBuilderEvent {
+    UpstreamTaskData subscription = 1;
+    string acctRepo = 2;
+    SubCredType vcsType = 3;
+    string branch = 4;
+    // if hash is empty, then build remote tip of {{branch}} j
+    string hash = 5;
+    SignaledBy by = 6;
+}
+
+message UpstreamTaskData {
+    int64 buildId = 1;
+    int64 activeSubscriptionId = 2;
+    string alias = 3;
 }

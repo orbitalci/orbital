@@ -2,11 +2,13 @@ package launcher
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/level11consulting/ocelot/common/remote"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
 )
 
 // getAndSetHandler will use the accesstoken and vcstype to generate a handler without autorefresh capability and set it to (*launcher).handler field. if (*launcher).handler is already set, will do nothing
@@ -44,7 +46,7 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 			}
 		}
 	}
-
+	
 	subscribees, err := w.Store.FindSubscribeesForRepo(werk.FullName, werk.VcsType)
 	if err != nil {
 		return errors.Wrap(err, "unable to find subscribees for repo")
@@ -59,15 +61,14 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 		log.Log().WithField("activeSubscription", subscribee).Info("found a subscribing account repo to this build/branch")
 		taskBuilderData := &pb.TaskBuilderEvent{
 			Subscription: &pb.UpstreamTaskData{BuildId: werk.Id, ActiveSubscriptionId: subscribee.Id, Alias: subscribee.Alias},
-			AcctRepo: subscribee.SubscribingAcctRepo,
-			VcsType: subscribee.SubscribingVcsType,
-			Branch: branchToQueue,
-			By: pb.SignaledBy_SUBSCRIBED,
+			AcctRepo:     subscribee.SubscribingAcctRepo,
+			VcsType:      subscribee.SubscribingVcsType,
+			Branch:       branchToQueue,
+			By:           pb.SignaledBy_SUBSCRIBED,
 		}
 		if err = w.producer.WriteProto(taskBuilderData, "taskbuilder"); err != nil {
 			log.IncludeErrField(err).WithField("activeSubscription", subscribee).Error("unable to write to task builder queue for building our a werker task")
 		}
-		_ = fmt.Sprintf("%#v", taskBuilderData)
 	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package pb
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 )
 
 const ENV_SAFE = "^[a-zA-Z_]+$"
+var EnvSafeRegex = regexp.MustCompile(ENV_SAFE)
 
 //OcyCredder is an interface for interacting with credentials in Ocelot
 type OcyCredder interface {
@@ -292,11 +294,7 @@ func (m *GenericCreds) ValidateForInsert() *ValidationErr {
 		return Invalidate(strings.Join(errr, "\n"))
 	}
 	if m.SubType == SubCredType_ENV {
-		re, err := regexp.Compile(ENV_SAFE)
-		if err != nil {
-			return Invalidate("Unable to compile regex, error is: " + err.Error())
-		}
-		if !re.MatchString(m.GetIdentifier()) {
+		if !EnvSafeRegex.MatchString(m.GetIdentifier()) {
 			return Invalidate(fmt.Sprintf("Identifier for credential must be environment variable safe, ie it must match the regex pattern %s. Your credential Identifier, %s, does not.", ENV_SAFE, m.GetIdentifier()))
 		}
 	}
@@ -426,6 +424,40 @@ func Contains(credType SubCredType, types []SubCredType) bool {
 		}
 	}
 	return false
+}
+
+//Value is an implementation of the sql.Valuer interface
+func (i SubCredType) Value() (driver.Value, error) {
+	return int64(i), nil
+}
+
+// Scan is an implementation of the sql.Scanner interface
+func (i *SubCredType) Scan(value interface{}) error {
+	// got from https://husobee.github.io/golang/database/2015/06/12/scanner-valuer.html
+	// if teh value is nil, then set value of pointer to SubCredType_NIL_SCT
+	if value == nil {
+		*i = SubCredType_NIL_SCT
+		return nil
+	}
+	if i32v, err := driver.Int32.ConvertValue(value); err == nil {
+		// if this is actually an int32, set the value of pointer to the SubCredType type cast of int32
+		switch sct := i32v.(type) {
+		case int32:
+			fmt.Print("int32")
+			*i = SubCredType(sct)
+		case int64:
+			fmt.Print("int64")
+			*i = SubCredType(sct)
+		case int:
+			fmt.Print("int")
+			*i = SubCredType(sct)
+		default:
+			return errors.Errorf("unknown type %#v", sct)
+		}
+	} else {
+		return errors.Wrap(err, "unknown value.")
+	}
+	return nil
 }
 
 func (i *SubCredType) MarshalJSON() ([]byte, error) {

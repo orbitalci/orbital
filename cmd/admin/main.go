@@ -1,10 +1,12 @@
 package main
 
 import (
-	//"encoding/json"
 	"fmt"
+	"os"
+
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
+<<<<<<< HEAD
 	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/common/secure_grpc"
 	//"github.com/level11consulting/ocelot/models/pb"
@@ -13,6 +15,16 @@ import (
 	"github.com/level11consulting/ocelot/version"
 	//"io/ioutil"
 	"os"
+=======
+	"github.com/shankj3/go-til/nsqpb"
+	"github.com/shankj3/ocelot/build_signaler/taskbuilder"
+	cred "github.com/shankj3/ocelot/common/credentials"
+	"github.com/shankj3/ocelot/common/secure_grpc"
+	//"github.com/shankj3/ocelot/models/pb"
+	"github.com/shankj3/ocelot/router/admin"
+	"github.com/shankj3/ocelot/storage"
+	"github.com/shankj3/ocelot/version"
+>>>>>>> trying to revert everything
 )
 
 func main() {
@@ -58,9 +70,17 @@ func main() {
 	//	fmt.Println("dumping everything")
 	//	dump_creds(store, configInstance, credDumpPath)
 	//}
+	go listenForTaskBuilders(configInstance, store)
 	defer cancel()
 	defer store.Close()
 	admin.Start(grpcServer, listener)
+}
+
+func listenForTaskBuilders(rc cred.CVRemoteConfig, store storage.OcelotStorage) {
+	consumer := nsqpb.NewDefaultProtoConsume()
+	producer := nsqpb.GetInitProducer()
+	buildHandler := taskbuilder.NewMsgHandler(taskbuilder.TaskBuilderTopic, rc, store, producer)
+	consumer.WaitThenConsume(taskbuilder.TaskBuilderTopic, taskbuilder.TaskBuilderChannel, buildHandler, 10)
 }
 
 /*

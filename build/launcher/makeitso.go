@@ -3,6 +3,7 @@ package launcher
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -157,7 +158,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 	if err != nil {
 		return
 	}
-	// post pr comments if its relevant, send notifications
+	// post pr comments if its relevant
 	if err := w.postFlight(ctx, werk, fail); err != nil {
 		ocelog.IncludeErrField(err).Error("could not execute post flight")
 		// don't return here, we still want to update the build_summary table
@@ -177,6 +178,8 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 //	- `GIT_BRANCH`
 //	- `WORKSPACE`
 //  - `GIT_PREVIOUS_SUCCESSFUL_COMMIT`
+// if the active build is one triggered by an upstream build, then variables from upstream build
+//  will also be injected
 func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) {
 	acct, repo, _ := common.GetAcctRepo(werk.FullName)
 	// we don't care if there is an error retrieving this, if it fails it'll return an empty value
@@ -191,8 +194,30 @@ func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) 
 		fmt.Sprintf("GIT_PREVIOUS_SUCCESSFUL_COMMIT=%s", lastSuccessfulHash),
 	}
 	paddedEnvs = append(paddedEnvs, werk.BuildConf.Env...)
+	if werk.SignaledBy == pb.SignaledBy_SUBSCRIBED {
+		upstreamData, err := w.Store.GetActiveSubscriptionData(werk.FullName, werk.Id, werk.VcsType)
+		if err != nil {
+			ocelog.IncludeErrField(err).Errorf("why?????????????????")
+			//fixme: addGlobalEnvVars should return an error?
+		} else {
+			paddedEnvs = append(paddedEnvs, createVarsFromUpstream(upstreamData)...)
+		}
+	}
 	builder.SetGlobalEnv(paddedEnvs)
 }
+
+func createVarsFromUpstream(upstream *pb.SubscriptionUpstreamData) []string {
+	// todo: should we be replacing bad characters? or validating that he alias is ok before adding it to db?
+	ocelog.Log().Debugf("upstream variables!!! %#v", upstream)
+	upAlias := strings.ToUpper(upstream.Alias)
+	return []string{
+		fmt.Sprintf("%s_GIT_HASH=%s", upAlias, upstream.Hash),
+		fmt.Sprintf("%s_BUILD_ID=%d", upAlias, upstream.BuildId),
+		fmt.Sprintf("%s_GIT_HASH_SHORT=%s", upAlias, upstream.Hash[:7]),
+		fmt.Sprintf("%s_GIT_BRANCH=%s", upAlias, upstream.Branch),
+	}
+}
+
 
 func (w *launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
 	dockerUuid := <-dockerChan
