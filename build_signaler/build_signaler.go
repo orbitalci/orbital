@@ -62,8 +62,15 @@ func GetConfig(repoFullName string, checkoutCommit string, deserializer *deseria
 	return conf, err
 }
 
-// CreateOrUpdateSubscription will build out an ActiveSubscription model and then create or update the the subscription in storage.
-func CreateOrUpdateSubscription(conf *pb.BuildConfig, signal *Signaler, subscribingAcctRepo string, subscribingVcsType pb.SubCredType) error {
+// CreateOrModifySubscription will build out an ActiveSubscription model and then create or modify the the subscription in storage. If
+// the subscriptions block is now empty, it will remove anything from the table
+func CreateOrModifySubscription(conf *pb.BuildConfig, signal *Signaler, subscribingAcctRepo string, subscribingVcsType pb.SubCredType) error {
+	if conf.GetSubscriptions() == nil || len(conf.GetSubscriptions()) == 0 {
+		log.Log().WithField("acctRepo", subscribingAcctRepo).WithField("vcsType", subscribingVcsType.String()).Info("deleting all entries for this acctrepo out of subscriptions table if they exist")
+		if err := signal.Store.DeleteAllActiveSubscriptionsForRepo(subscribingAcctRepo, subscribingVcsType); err != nil {
+			return errors.Wrap(err, "unable to delete active subs for repo")
+		}
+	}
 	for _, subscription := range conf.GetSubscriptions() {
 		sub := &pb.ActiveSubscription{
 			BranchQueueMap: make(map[string]string),
