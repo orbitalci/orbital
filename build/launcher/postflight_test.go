@@ -4,16 +4,22 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/net"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/nsqpb"
+	"github.com/level11consulting/ocelot/build_signaler/taskbuilder"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 func TestLauncher_postFlight(t *testing.T) {
 	lnchr := &launcher{}
 	ctx := context.Background()
+	ctl := gomock.NewController(t)
+	store := storage.NewMockOcelotStorage(ctl)
 	task := &pb.WerkerTask{
 		SignaledBy: pb.SignaledBy_PULL_REQUEST,
 		FullName:   "level11consulting/ocelot",
@@ -27,6 +33,8 @@ func TestLauncher_postFlight(t *testing.T) {
 		Id:           1023,
 		VcsType:      pb.SubCredType_BITBUCKET,
 	}
+	store.EXPECT().FindSubscribeesForRepo(task.FullName, task.VcsType).Return(nil, nil).Times(1)
+	lnchr.Store = store
 	lnchr.handler = &testHandler{failPostPR: true, cli: &testClient{}}
 	err := lnchr.postFlight(ctx, task, true)
 	if err == nil || err.Error() != "nah" {
@@ -39,6 +47,7 @@ func TestLauncher_postFlight(t *testing.T) {
 	}
 	handler := &testHandler{cli: &testClient{}}
 	lnchr.handler = handler
+	store.EXPECT().FindSubscribeesForRepo(task.FullName, task.VcsType).Return(nil, nil).Times(1)
 	err = lnchr.postFlight(ctx, task, false)
 	if err != nil {
 		t.Error("error should be nil, it is: " + err.Error())
@@ -57,6 +66,68 @@ func TestLauncher_postFlight(t *testing.T) {
 	err = lnchr.postFlight(ctx, task, false)
 	if err == nil {
 		t.Error("should have returned error from client's PostUrl")
+	}
+}
+
+func TestLauncher_postFlight_subscriptions(t *testing.T) {
+	lnchr := &launcher{}
+	ctx := context.Background()
+	ctl := gomock.NewController(t)
+	store := storage.NewMockOcelotStorage(ctl)
+	lnchr.Store = store
+	producer := nsqpb.NewMockProducer(ctl)
+	lnchr.producer = producer
+	lnchr.handler = &testHandler{cli: &testClient{}}
+	task := &pb.WerkerTask{
+		SignaledBy:   pb.SignaledBy_PUSH,
+		FullName:     "level11consulting/ocelot",
+		CheckoutHash: "1234",
+		Id:           1023,
+		Branch:       "master",
+		VcsType:      pb.SubCredType_BITBUCKET,
+	}
+	returnedSubs := []*pb.ActiveSubscription{
+		{
+			SubscribedToAcctRepo: "level11consulting/ocelot",
+			SubscribedToVcsType: pb.SubCredType_BITBUCKET,
+			SubscribingAcctRepo: "shankj3/go-til",
+			SubscribingVcsType: pb.SubCredType_GITHUB,
+			Id: 1,
+			Alias: "gotil",
+			BranchQueueMap: map[string]string{"master":"master", "develop":"develop"},
+		},
+		{
+			SubscribedToAcctRepo: "level11consulting/ocelot",
+			SubscribedToVcsType: pb.SubCredType_BITBUCKET,
+			SubscribingAcctRepo: "shankj3/ocytest",
+			SubscribingVcsType: pb.SubCredType_BITBUCKET,
+			Id: 2,
+			Alias: "ocytest",
+			BranchQueueMap: map[string]string{"master":"master", "develop":"develop"},
+		},
+	}
+	store.EXPECT().FindSubscribeesForRepo(task.FullName, task.VcsType).Return(returnedSubs, nil).Times(1)
+	gotil := &pb.TaskBuilderEvent{Subscription: &pb.UpstreamTaskData{BuildId: 1023, Alias: "gotil", ActiveSubscriptionId: 1}, AcctRepo: "shankj3/go-til", VcsType: pb.SubCredType_GITHUB, Branch: "master", By: pb.SignaledBy_SUBSCRIBED}
+	ocytest := &pb.TaskBuilderEvent{Subscription: &pb.UpstreamTaskData{BuildId: 1023, Alias: "ocytest", ActiveSubscriptionId: 2}, AcctRepo: "shankj3/ocytest", VcsType: pb.SubCredType_BITBUCKET, Branch: "master", By: pb.SignaledBy_SUBSCRIBED}
+	producer.EXPECT().WriteProto(gotil, taskbuilder.TaskBuilderTopic).Return(nil).Times(1)
+	producer.EXPECT().WriteProto(ocytest, taskbuilder.TaskBuilderTopic).Return(nil).Times(1)
+	if err := lnchr.postFlight(ctx, task, false); err != nil {
+		t.Fatal(err)
+	}
+	// now if the active build is a rando branch with no matchihng in the branch queue map, the producer shouldn't write any new werker task build events
+	task.Branch = "nosubscriptionsBranch"
+	store.EXPECT().FindSubscribeesForRepo(task.FullName, task.VcsType).Return(returnedSubs, nil).Times(1)
+	if err := lnchr.postFlight(ctx, task, false); err != nil {
+		t.Fatal(err)
+	}
+
+	// even if one of the task msgs fails, try to run the others.
+	task.Branch = "master"
+	store.EXPECT().FindSubscribeesForRepo(task.FullName, task.VcsType).Return(returnedSubs, nil).Times(1)
+	producer.EXPECT().WriteProto(gotil, taskbuilder.TaskBuilderTopic).Return(errors.New("woops this is bad error no good")).Times(1)
+	producer.EXPECT().WriteProto(ocytest, taskbuilder.TaskBuilderTopic).Return(nil).Times(1)
+	if err := lnchr.postFlight(ctx, task, false); err != nil {
+		t.Fatal(err)
 	}
 }
 

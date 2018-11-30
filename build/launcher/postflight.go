@@ -44,5 +44,30 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 			}
 		}
 	}
+
+	subscribees, err := w.Store.FindSubscribeesForRepo(werk.FullName, werk.VcsType)
+	if err != nil {
+		return errors.Wrap(err, "unable to find subscribees for repo")
+	}
+	for _, subscribee := range subscribees {
+		branchToQueue, ok := subscribee.BranchQueueMap[werk.Branch]
+		if !ok {
+			// the current building branch is not in the list of branches to trigger a downstream build off of, so don't to anything
+			continue
+		}
+		//_ = fmt.Sprintf(branchToQueue)
+		log.Log().WithField("activeSubscription", subscribee).Info("found a subscribing account repo to this build/branch")
+		taskBuilderData := &pb.TaskBuilderEvent{
+			Subscription: &pb.UpstreamTaskData{BuildId: werk.Id, ActiveSubscriptionId: subscribee.Id, Alias: subscribee.Alias},
+			AcctRepo: subscribee.SubscribingAcctRepo,
+			VcsType: subscribee.SubscribingVcsType,
+			Branch: branchToQueue,
+			By: pb.SignaledBy_SUBSCRIBED,
+		}
+		if err = w.producer.WriteProto(taskBuilderData, "taskbuilder"); err != nil {
+			log.IncludeErrField(err).WithField("activeSubscription", subscribee).Error("unable to write to task builder queue for building our a werker task")
+		}
+		_ = fmt.Sprintf("%#v", taskBuilderData)
+	}
 	return nil
 }
