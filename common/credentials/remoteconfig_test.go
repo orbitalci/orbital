@@ -181,23 +181,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	if shnak.GetRepoUrl() != repoCreds.GetRepoUrl() {
 		t.Error(test.StrFormatErrors("repo url", repoCreds.GetRepoUrl(), shnak.GetRepoUrl()))
 	}
-	// test storage type
-	// check that default will be file
-	storeType, err := testRemoteConfig.GetStorageType()
-	if err != nil {
-		t.Fatal("should be able to get storage type, err: " + err.Error())
-	}
-	if storeType != storage.FileSystem {
-		t.Error(test.GenericStrFormatErrors("type", storage.FileSystem, storeType))
-	}
-	consulServer.SetKV(t, "config/ocelot/storagetype", []byte("filesystem"))
-	storeType, err = testRemoteConfig.GetStorageType()
-	if err != nil {
-		t.Fatal("should be able to get storage type, err: " + err.Error())
-	}
-	if storeType != storage.FileSystem {
-		t.Error(test.GenericStrFormatErrors("store type enum", storage.FileSystem, storeType))
-	}
+	var storeType storage.Dest
 	consulServer.SetKV(t, "config/ocelot/storagetype", []byte("postgres"))
 	storeType, err = testRemoteConfig.GetStorageType()
 	if err != nil {
