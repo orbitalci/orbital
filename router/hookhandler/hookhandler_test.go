@@ -21,7 +21,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/ptypes/timestamp"
-	dto "github.com/prometheus/client_model/go"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/shankj3/ocelot/build"
@@ -196,7 +195,6 @@ func TestRepoPush_badTranslate(t *testing.T) {
 
 
 func TestRepoPush_werkerFailed(t *testing.T) {
-	failedToTellWerker.Set(0)
 	twoCommitPushFp := filepath.Join("test-fixtures", "two_commit_push.json")
 
 	twoCommitPush, err := os.Open(twoCommitPushFp)
@@ -245,11 +243,6 @@ func TestRepoPush_werkerFailed(t *testing.T) {
 	teller.EXPECT().TellWerker(push, hhc.Signaler, handler, "token", false, pb.SignaledBy_PUSH).Return(errors.New("wompy wompy no build 4u")).Times(1)
 	hhc.HandleBBEvent(resp, req)
 
-	metrik := &dto.Metric{}
-	failedToTellWerker.Write(metrik)
-	if *metrik.Counter.Value != 1 {
-		t.Error("failed to tell werker, counter for this metric shoudl bump up")
-	}
 }
 
 func TestHookHandlerContext_PullRequest_happy(t *testing.T) {
@@ -305,7 +298,6 @@ func TestHookHandlerContext_PullRequest_badwerker(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	failedToTellWerker.Set(0)
 	req := httptest.NewRequest("POST", "/bitbucket", prcreate)
 	resp := httptest.NewRecorder()
 	hhc, mockRC, _, mockStore, handler, _, teller := createMockedHHC(t)
@@ -341,12 +333,7 @@ func TestHookHandlerContext_PullRequest_badwerker(t *testing.T) {
 	}
 	teller.EXPECT().TellWerker(pr, prData, hhc.Signaler, handler, "token", false, pb.SignaledBy_PULL_REQUEST).Return(errors.New("nop nop nop nop")).Times(1)
 	hhc.PullRequest(resp, req, pb.SubCredType_BITBUCKET)
-	metrik := &dto.Metric{}
-	failedToTellWerker.Write(metrik)
 
-	if *metrik.Counter.Value != 1 {
-		t.Error("failed to tell werker, counter for this metric shoudl bump up")
-	}
 }
 
 func TestHookHandlerContext_HandleBBEvent_incompat(t *testing.T) {
