@@ -7,7 +7,7 @@ fi
 echo "prefix is \"${prefix}\""
 
 # If DBHOST is unset, check if it is passed as arg. Fallback to localhost
-if [ -z "${DBHOST}" ]; then
+if [[ -z "${DBHOST}" ]]; then
   DBHOST=$1
   if [ "${DBHOST}" == "" ]; then
       echo "using localhost as db host location"

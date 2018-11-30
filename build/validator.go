@@ -32,7 +32,7 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 	if len(config.BuildTool) == 0 {
 		return errors.New("BuildTool must be specified")
 	}
-	writeUIInfo(UI, "BuildTool is specified "+models.CHECKMARK)
+	writeUIInfo(UI, "BuildTool is specified %s", models.CHECKMARK)
 
 	// todo: add in checking if any machines match machinetag
 	if config.Image != "" {
@@ -45,9 +45,9 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 			}
 		}()
 		if err != nil {
-			writeUIError(UI, config.Image+" does not exist or credentials cannot be found")
+			writeUIError(UI, "%s does not exist or credentials cannot be found", config.Image)
 		} else {
-			writeUIInfo(UI, config.Image+" exists "+models.CHECKMARK)
+			writeUIInfo(UI, "%s exists %s", config.Image, models.CHECKMARK)
 		}
 	}
 
@@ -58,7 +58,7 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 		if ind == 0 {
 			writeUIInfo(UI, "Validating stages... ")
 		}
-		writeUIInfo(UI, "  " + stage.Name)
+		writeUIInfo(UI, "  %s", stage.Name)
 		if len(stage.Script) == 0 {
 			return errors.New("Script for stage " + stage.Name + "should not be empty")
 		}
@@ -68,10 +68,30 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 			}
 			_, err := trigger.Parse(triggy)
 			if err != nil {
-				writeUIError(UI, fmt.Sprintf("      - %s %s", triggy, models.FAILED))
+				writeUIError(UI, "      - %s %s", triggy, models.FAILED)
 				return errors.Wrap(err, "'triggers' conditions must follow spec, this one did not: " + triggy)
 			}
-			writeUIInfo(UI, fmt.Sprintf("      - %s %s", triggy, models.CHECKMARK))
+			writeUIInfo(UI, "      - %s %s", triggy, models.CHECKMARK)
+		}
+	}
+	for ind, subscription := range config.Subscriptions {
+		if ind == 0 {
+			writeUIInfo(UI, "Validating subscriptions...")
+		}
+		writeUIInfo(UI, "  Subscription %d:", ind+1)
+		if !pb.EnvSafeRegex.Match([]byte(subscription.Alias)) {
+			writeUIError(UI, "    Alias (%s) for subscription is not valid %s", subscription.Alias, models.FAILED)
+			return errors.Errorf("Alias for subscription must be environment variable safe, ie it must match the regex pattern %s. Your alias, %s, does not.", pb.ENV_SAFE, subscription.Alias)
+		}
+		writeUIInfo(UI, "    Alias (%s) for subscription is valid %s", subscription.Alias, models.CHECKMARK)
+		writeUIInfo(UI, "    Validating branches...")
+		for _, branchmap := range subscription.Branches {
+			split := strings.Split(branchmap, ":")
+			if len(split) != 2 {
+				writeUIError(UI, "      - %s %s", branchmap, models.FAILED)
+				return errors.Errorf("Unparseable branch mapping for %s, must be in format {{subscribedToBranch}}:{{subscribingBranch}}")
+			}
+			writeUIInfo(UI, "      - %s %s", branchmap, models.CHECKMARK)
 		}
 	}
 	return err
@@ -137,14 +157,14 @@ func NoViability(msg string) *NotViable {
 	return &NotViable{msg: msg}
 }
 
-func writeUIInfo(ui cli.Ui, msg string) {
+func writeUIInfo(ui cli.Ui, msgFmt string, fmtVars ...interface{}) {
 	if ui != nil {
-		ui.Info(msg)
+		ui.Info(fmt.Sprintf(msgFmt, fmtVars...))
 	}
 }
 
-func writeUIError(ui cli.Ui, msg string) {
+func writeUIError(ui cli.Ui, msgFmt string, fmtVars ...interface{}) {
 	if ui != nil {
-		ui.Error(msg)
+		ui.Error(fmt.Sprintf(msgFmt, fmtVars...))
 	}
 }
