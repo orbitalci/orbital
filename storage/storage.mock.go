@@ -654,6 +654,18 @@ func (mr *MockSubscriptionsTableMockRecorder) GetActiveSubscriptionData(subscrib
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveSubscriptionData", reflect.TypeOf((*MockSubscriptionsTable)(nil).GetActiveSubscriptionData), subscribingAcctRepo, subscribingBuildId, subscribingVcsType)
 }
 
+// DeleteAllActiveSubscriptionsForRepo mocks base method
+func (m *MockSubscriptionsTable) DeleteAllActiveSubscriptionsForRepo(acctRepo string, vcsType pb.SubCredType) error {
+	ret := m.ctrl.Call(m, "DeleteAllActiveSubscriptionsForRepo", acctRepo, vcsType)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllActiveSubscriptionsForRepo indicates an expected call of DeleteAllActiveSubscriptionsForRepo
+func (mr *MockSubscriptionsTableMockRecorder) DeleteAllActiveSubscriptionsForRepo(acctRepo, vcsType interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllActiveSubscriptionsForRepo", reflect.TypeOf((*MockSubscriptionsTable)(nil).DeleteAllActiveSubscriptionsForRepo), acctRepo, vcsType)
+}
+
 // InsertSubscriptionData mocks base method
 func (m *MockSubscriptionsTable) InsertSubscriptionData(upstreamBuildId, buildId, activeSubscriptionId int64) error {
 	ret := m.ctrl.Call(m, "InsertSubscriptionData", upstreamBuildId, buildId, activeSubscriptionId)
@@ -1203,6 +1215,18 @@ func (m *MockOcelotStorage) GetActiveSubscriptionData(subscribingAcctRepo string
 // GetActiveSubscriptionData indicates an expected call of GetActiveSubscriptionData
 func (mr *MockOcelotStorageMockRecorder) GetActiveSubscriptionData(subscribingAcctRepo, subscribingBuildId, subscribingVcsType interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveSubscriptionData", reflect.TypeOf((*MockOcelotStorage)(nil).GetActiveSubscriptionData), subscribingAcctRepo, subscribingBuildId, subscribingVcsType)
+}
+
+// DeleteAllActiveSubscriptionsForRepo mocks base method
+func (m *MockOcelotStorage) DeleteAllActiveSubscriptionsForRepo(acctRepo string, vcsType pb.SubCredType) error {
+	ret := m.ctrl.Call(m, "DeleteAllActiveSubscriptionsForRepo", acctRepo, vcsType)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllActiveSubscriptionsForRepo indicates an expected call of DeleteAllActiveSubscriptionsForRepo
+func (mr *MockOcelotStorageMockRecorder) DeleteAllActiveSubscriptionsForRepo(acctRepo, vcsType interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllActiveSubscriptionsForRepo", reflect.TypeOf((*MockOcelotStorage)(nil).DeleteAllActiveSubscriptionsForRepo), acctRepo, vcsType)
 }
 
 // InsertSubscriptionData mocks base method
