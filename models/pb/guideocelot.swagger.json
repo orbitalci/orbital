@@ -324,6 +324,44 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "Subtypes are ENV, HELM_REPO.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "clientSecret",
+            "description": "clientSecret is the secret associated with the integration cred.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -443,6 +481,44 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "Subtypes are ENV, HELM_REPO.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "clientSecret",
+            "description": "clientSecret is the secret associated with the integration cred.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -628,6 +704,44 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "k8sContents",
+            "description": "k8scontents is the contents of the kubeconfig file.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "@inject_tag: yaml:\"subType\"\nthere is currently only one subtype for k8SCreds, and it is KUBECONF.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -819,6 +933,51 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "There is currently only one subType that is valid for Integrations, and it is SLACK.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "clientSecret",
+            "description": "clientSecret is the secret associated with the integration cred.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "detailUrlBase",
+            "description": "detailUrlBase is the base url for an ocelot ui. when building the notification, will\n  add {{detailUrlBase}}/repos/{{account}}/{{repo}}/{{buildId}}.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -1018,6 +1177,58 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "username",
+            "description": "username of repository.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "description": "password of repository.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "repoUrl",
+            "description": "@inject_tag: yaml:\"repoUrl\"\nrepoUrl is the url that is associated with that repository, for example hub.docker.io.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subType",
+            "description": "@inject_tag: yaml:\"subType\"\nthere are two subtypes that are valid for RepoCreds: DOCKER, NEXUS.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -1204,6 +1415,45 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "privateKey",
+            "description": "the contents of the private key.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "subType",
+            "description": "There is only one subType taht is valid for SSHKeyWrapper, and it is SSHKEY.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "id",
+            "description": "id is credentials id from database.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -1581,6 +1831,51 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "cron",
+            "description": "cron is the cron string that will determine how often a check for changes should occur.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "branches",
+            "description": "branches tells ocelot which branches should be checked for changes.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": "type is the vcs subcredtype, ie github|bitbucket.\n\n - BITBUCKET: / VCS ///\n - NEXUS: / REPO ///\n - KUBECONF: / K8S ///\n - SSHKEY: / SSH ///\n - SLACK: / NOTIFY ///\n - DEVPROFILE: / APPLE ///\n - ENV: / GENERIC ///",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIL_SCT",
+              "BITBUCKET",
+              "GITHUB",
+              "NEXUS",
+              "MAVEN",
+              "DOCKER",
+              "MINIO",
+              "KUBECONF",
+              "SSHKEY",
+              "SLACK",
+              "DEVPROFILE",
+              "ENV",
+              "HELM_REPO"
+            ],
+            "default": "NIL_SCT"
+          },
+          {
+            "name": "lastCronTime",
+            "description": "internal use only.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [

@@ -2,10 +2,8 @@ package launcher
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/ocelot/common/remote"
 	"github.com/shankj3/ocelot/models"
 	"github.com/shankj3/ocelot/models/pb"
@@ -46,6 +44,7 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 			}
 		}
 	}
+<<<<<<< HEAD
 
 	subscribees, err := w.Store.FindSubscribeesForRepo(werk.FullName, werk.VcsType)
 	if err != nil {
@@ -71,5 +70,7 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 		}
 		_ = fmt.Sprintf("%#v", taskBuilderData)
 	}
+=======
+>>>>>>> de017d2f272153639265c30eff7a363387f55173
 	return nil
 }

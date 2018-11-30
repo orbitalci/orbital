@@ -64,7 +64,7 @@ func getTestingLauncher(t *testing.T) (*launcher, func(t *testing.T)) {
 	stream := make(chan *models.Transport, 1000)
 	buildCtx := make(chan *models.BuildContext, 1000)
 	bshr := getTestBasher(t)
-	launcher := NewLauncher(facts, remoteConf, stream, buildCtx, bshr, pg, valet, nil)
+	launcher := NewLauncher(facts, remoteConf, stream, buildCtx, bshr, pg, valet)
 	cleanitall := func(t *testing.T) {
 		cleanup(t)
 		credentials.TeardownVaultAndConsul(listener, testserver)

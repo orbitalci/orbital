@@ -106,7 +106,7 @@ func (p *parser) scan() error {
 }
 
 func MustStartWithAction() *ErrNotSupported {
-	return NotSupported("Directive must start with one of: '\\branch', '\\text', '\\filepath', '\\upstream'")
+	return NotSupported("Directive must start with one of: '\\branch', '\\text', '\\filepath'")
 }
 
 func CannotCombineSymbols() *ErrNotSupported {
