@@ -59,8 +59,6 @@ func (w *launcher) postFlight(ctx context.Context, werk *pb.WerkerTask, failed b
 		}
 		//_ = fmt.Sprintf(branchToQueue)
 		log.Log().WithField("activeSubscription", subscribee).Info("found a subscribing account repo to this build/branch")
-		// todo: either directly queue build of the subscribee here or put the build on a werker-task-builder,
-		//  which the consumer of will use to generate a werker task and add it to the build queue (this pattern seems better)
 		taskBuilderData := &pb.TaskBuilderEvent{
 			Subscription: &pb.UpstreamTaskData{BuildId: werk.Id, ActiveSubscriptionId: subscribee.Id, Alias: subscribee.Alias},
 			AcctRepo: subscribee.SubscribingAcctRepo,

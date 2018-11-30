@@ -592,6 +592,80 @@ func (mr *MockCredTableMockRecorder) GetVCSTypeFromAccount(account interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVCSTypeFromAccount", reflect.TypeOf((*MockCredTable)(nil).GetVCSTypeFromAccount), account)
 }
 
+// MockSubscriptionsTable is a mock of SubscriptionsTable interface
+type MockSubscriptionsTable struct {
+	ctrl     *gomock.Controller
+	recorder *MockSubscriptionsTableMockRecorder
+}
+
+// MockSubscriptionsTableMockRecorder is the mock recorder for MockSubscriptionsTable
+type MockSubscriptionsTableMockRecorder struct {
+	mock *MockSubscriptionsTable
+}
+
+// NewMockSubscriptionsTable creates a new mock instance
+func NewMockSubscriptionsTable(ctrl *gomock.Controller) *MockSubscriptionsTable {
+	mock := &MockSubscriptionsTable{ctrl: ctrl}
+	mock.recorder = &MockSubscriptionsTableMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockSubscriptionsTable) EXPECT() *MockSubscriptionsTableMockRecorder {
+	return m.recorder
+}
+
+// InsertOrUpdateActiveSubscription mocks base method
+func (m *MockSubscriptionsTable) InsertOrUpdateActiveSubscription(subscriptions *pb.ActiveSubscription) (int64, error) {
+	ret := m.ctrl.Call(m, "InsertOrUpdateActiveSubscription", subscriptions)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InsertOrUpdateActiveSubscription indicates an expected call of InsertOrUpdateActiveSubscription
+func (mr *MockSubscriptionsTableMockRecorder) InsertOrUpdateActiveSubscription(subscriptions interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertOrUpdateActiveSubscription", reflect.TypeOf((*MockSubscriptionsTable)(nil).InsertOrUpdateActiveSubscription), subscriptions)
+}
+
+// FindSubscribeesForRepo mocks base method
+func (m *MockSubscriptionsTable) FindSubscribeesForRepo(acctRepo string, credType pb.SubCredType) ([]*pb.ActiveSubscription, error) {
+	ret := m.ctrl.Call(m, "FindSubscribeesForRepo", acctRepo, credType)
+	ret0, _ := ret[0].([]*pb.ActiveSubscription)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindSubscribeesForRepo indicates an expected call of FindSubscribeesForRepo
+func (mr *MockSubscriptionsTableMockRecorder) FindSubscribeesForRepo(acctRepo, credType interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSubscribeesForRepo", reflect.TypeOf((*MockSubscriptionsTable)(nil).FindSubscribeesForRepo), acctRepo, credType)
+}
+
+// GetActiveSubscriptionData mocks base method
+func (m *MockSubscriptionsTable) GetActiveSubscriptionData(subscribingAcctRepo string, subscribingBuildId int64, subscribingVcsType pb.SubCredType) (*pb.SubscriptionUpstreamData, error) {
+	ret := m.ctrl.Call(m, "GetActiveSubscriptionData", subscribingAcctRepo, subscribingBuildId, subscribingVcsType)
+	ret0, _ := ret[0].(*pb.SubscriptionUpstreamData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetActiveSubscriptionData indicates an expected call of GetActiveSubscriptionData
+func (mr *MockSubscriptionsTableMockRecorder) GetActiveSubscriptionData(subscribingAcctRepo, subscribingBuildId, subscribingVcsType interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveSubscriptionData", reflect.TypeOf((*MockSubscriptionsTable)(nil).GetActiveSubscriptionData), subscribingAcctRepo, subscribingBuildId, subscribingVcsType)
+}
+
+// InsertSubscriptionData mocks base method
+func (m *MockSubscriptionsTable) InsertSubscriptionData(upstreamBuildId, buildId, activeSubscriptionId int64) error {
+	ret := m.ctrl.Call(m, "InsertSubscriptionData", upstreamBuildId, buildId, activeSubscriptionId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertSubscriptionData indicates an expected call of InsertSubscriptionData
+func (mr *MockSubscriptionsTableMockRecorder) InsertSubscriptionData(upstreamBuildId, buildId, activeSubscriptionId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSubscriptionData", reflect.TypeOf((*MockSubscriptionsTable)(nil).InsertSubscriptionData), upstreamBuildId, buildId, activeSubscriptionId)
+}
+
 // MockHealthyChkr is a mock of HealthyChkr interface
 type MockHealthyChkr struct {
 	ctrl     *gomock.Controller
@@ -1090,6 +1164,57 @@ func (m *MockOcelotStorage) GetVCSTypeFromAccount(account string) (pb.SubCredTyp
 // GetVCSTypeFromAccount indicates an expected call of GetVCSTypeFromAccount
 func (mr *MockOcelotStorageMockRecorder) GetVCSTypeFromAccount(account interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVCSTypeFromAccount", reflect.TypeOf((*MockOcelotStorage)(nil).GetVCSTypeFromAccount), account)
+}
+
+// InsertOrUpdateActiveSubscription mocks base method
+func (m *MockOcelotStorage) InsertOrUpdateActiveSubscription(subscriptions *pb.ActiveSubscription) (int64, error) {
+	ret := m.ctrl.Call(m, "InsertOrUpdateActiveSubscription", subscriptions)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InsertOrUpdateActiveSubscription indicates an expected call of InsertOrUpdateActiveSubscription
+func (mr *MockOcelotStorageMockRecorder) InsertOrUpdateActiveSubscription(subscriptions interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertOrUpdateActiveSubscription", reflect.TypeOf((*MockOcelotStorage)(nil).InsertOrUpdateActiveSubscription), subscriptions)
+}
+
+// FindSubscribeesForRepo mocks base method
+func (m *MockOcelotStorage) FindSubscribeesForRepo(acctRepo string, credType pb.SubCredType) ([]*pb.ActiveSubscription, error) {
+	ret := m.ctrl.Call(m, "FindSubscribeesForRepo", acctRepo, credType)
+	ret0, _ := ret[0].([]*pb.ActiveSubscription)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindSubscribeesForRepo indicates an expected call of FindSubscribeesForRepo
+func (mr *MockOcelotStorageMockRecorder) FindSubscribeesForRepo(acctRepo, credType interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSubscribeesForRepo", reflect.TypeOf((*MockOcelotStorage)(nil).FindSubscribeesForRepo), acctRepo, credType)
+}
+
+// GetActiveSubscriptionData mocks base method
+func (m *MockOcelotStorage) GetActiveSubscriptionData(subscribingAcctRepo string, subscribingBuildId int64, subscribingVcsType pb.SubCredType) (*pb.SubscriptionUpstreamData, error) {
+	ret := m.ctrl.Call(m, "GetActiveSubscriptionData", subscribingAcctRepo, subscribingBuildId, subscribingVcsType)
+	ret0, _ := ret[0].(*pb.SubscriptionUpstreamData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetActiveSubscriptionData indicates an expected call of GetActiveSubscriptionData
+func (mr *MockOcelotStorageMockRecorder) GetActiveSubscriptionData(subscribingAcctRepo, subscribingBuildId, subscribingVcsType interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveSubscriptionData", reflect.TypeOf((*MockOcelotStorage)(nil).GetActiveSubscriptionData), subscribingAcctRepo, subscribingBuildId, subscribingVcsType)
+}
+
+// InsertSubscriptionData mocks base method
+func (m *MockOcelotStorage) InsertSubscriptionData(upstreamBuildId, buildId, activeSubscriptionId int64) error {
+	ret := m.ctrl.Call(m, "InsertSubscriptionData", upstreamBuildId, buildId, activeSubscriptionId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertSubscriptionData indicates an expected call of InsertSubscriptionData
+func (mr *MockOcelotStorageMockRecorder) InsertSubscriptionData(upstreamBuildId, buildId, activeSubscriptionId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSubscriptionData", reflect.TypeOf((*MockOcelotStorage)(nil).InsertSubscriptionData), upstreamBuildId, buildId, activeSubscriptionId)
 }
 
 // Healthy mocks base method
