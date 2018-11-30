@@ -89,7 +89,7 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 			split := strings.Split(branchmap, ":")
 			if len(split) != 2 {
 				writeUIError(UI, "      - %s %s", branchmap, models.FAILED)
-				return errors.Errorf("Unparseable branch mapping for %s, must be in format {{subscribedToBranch}}:{{subscribingBranch}}")
+				return errors.Errorf("Unparseable branch mapping for %s, must be in format {{subscribedToBranch}}:{{subscribingBranch}}", branchmap)
 			}
 			writeUIInfo(UI, "      - %s %s", branchmap, models.CHECKMARK)
 		}
