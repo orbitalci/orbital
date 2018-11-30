@@ -118,6 +118,10 @@ func (tv *TestVault) CreateThrowawayToken() (string, error) {
 	return "token", nil
 }
 
+func (tv *TestVault) GetUserAuthData(user string) (map[string]interface{}, error) {
+	return map[string]interface{}{"data": "mysecretpassword"}, nil
+}
+
 type TestConsul struct {
 	consul.Consuletty
 	keyFound bool
@@ -155,6 +159,10 @@ func (ts *TestStorage) StoreFailedValidation(id int64) error {
 func (ts *TestStorage) AddStageDetail(result *models.StageResult) error {
 	ts.stages = append(ts.stages, result)
 	return nil
+}
+
+func (ts *TestStorage) RetrieveCred(subCredType pb.SubCredType, identifier, accountName string) (pb.OcyCredder, error) {
+	return &pb.VCSCreds{Id: 1234}, nil
 }
 
 type DummyVcsHandler struct {
@@ -197,4 +205,8 @@ func (d *DummyVcsHandler) Reset() {
 	d.ReturnCommit = nil
 	d.CommitNotFound = false
 	d.NotFound = false
+}
+
+func (d *DummyVcsHandler) GetVcsType() pb.SubCredType {
+	return pb.SubCredType_BITBUCKET
 }
