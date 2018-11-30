@@ -261,9 +261,12 @@ func TestRemoteConfig_Reconnect(t *testing.T) {
 	if err := testRemoteConfig.Reconnect(); err != nil {
 		t.Error("should be able to 'reconnect' as both vault and consul are up, instead error is ", err.Error())
 	}
-	vaultListener.Close()
+
+	if err := vaultListener.Close(); err != nil {
+		t.Fatal(err)
+	}
 	//vaultClient, err := ocevault.NewAuthedClient(token)
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	if err := testRemoteConfig.Reconnect(); err == nil {
 		t.Error("should not be able to 'reconnect' as vault is down.")
 	}
@@ -427,7 +430,7 @@ func TestRemoteConfig_GetStorageType(t *testing.T) {
 
 	// Consul StorageType unconfigured
 	storageType, err := testRemoteConfig.GetStorageType()
-	if err != nil {
+	if err == nil {
 		t.Error("This call should have failed, because Consul not fully initialized")
 	}
 

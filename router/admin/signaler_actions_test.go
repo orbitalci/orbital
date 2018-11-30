@@ -266,7 +266,7 @@ stages:
 `)
 
 func storageSuccessfulBuild(ocelotStorage *storage.MockOcelotStorage, hash, acct, repo, branch string) {
-	ocelotStorage.EXPECT().AddSumStart(hash, acct, repo, branch).Return(int64(1), nil).Times(1)
+	ocelotStorage.EXPECT().AddSumStart(hash, acct, repo, branch, gomock.Any(), gomock.Any()).Return(int64(1), nil).Times(1)
 	ocelotStorage.EXPECT().SetQueueTime(int64(1)).Return(nil).Times(1)
 	ocelotStorage.EXPECT().AddStageDetail(gomock.Any()).Return(nil).Times(1)
 }
@@ -344,7 +344,7 @@ func TestGuideOcelotServer_BuildRepoAndHash(t *testing.T) {
 		mockz.handler.EXPECT().GetFile("ocelot.yml", "level11consulting/ocelot", "123").Return(ocelotInvalid, nil)
 		mockz.handler.EXPECT().GetChangedFiles("level11consulting/ocelot", gomock.Any(), gomock.Any()).Return([]string{"ocelot.yml"}, nil)
 		mockz.handler.EXPECT().GetCommit("level11consulting/ocelot", "123").Return(&pb.Commit{Message:"hi", Hash: "123"}, nil).Times(1)
-		mockz.store.EXPECT().AddSumStart("123", "shankj3", "ocelot", "master").Return(int64(1), nil).Times(1)
+		mockz.store.EXPECT().AddSumStart("123", "level11consulting", "ocelot", "master", gomock.Any(), gomock.Any()).Return(int64(1), nil).Times(1)
 		mockz.store.EXPECT().StoreFailedValidation(int64(1)).Times(1)
 		mockz.store.EXPECT().AddStageDetail(gomock.Any()).Return(nil).Times(1)
 		streamer := &buildserv{}
