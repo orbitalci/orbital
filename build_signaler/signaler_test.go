@@ -6,11 +6,17 @@ import (
 	//"time"
 
 	"github.com/go-test/deep"
-	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/golang/mock/gomock"
+	"github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/deserialize"
+	"github.com/shankj3/go-til/nsqpb"
 	"github.com/shankj3/go-til/test"
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/go-til/vault"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 var goodConfig = &pb.BuildConfig{
@@ -68,54 +74,67 @@ func TestSignaler_queueAndStore(t *testing.T) {
 }
 
 func TestSignaler_queueAndStore_happypath(t *testing.T) {
-	sig := GetFakeSignaler(t, false)
-	task := &pb.WerkerTask{BuildConf: goodConfig, CheckoutHash: "1234", Branch: "dev", VcsToken: "token", FullName: "jessi/shank", Id: 12}
+	ctl := gomock.NewController(t)
+	rc := credentials.NewMockCVRemoteConfig(ctl)
+	store := storage.NewMockOcelotStorage(ctl)
+	producer := nsqpb.NewMockProducer(ctl)
+	consu := consul.NewMockConsuletty(ctl)
+	sig := &Signaler{
+		Producer: producer,
+		RC: rc,
+		Store: store,
+		OcyValidator: build.GetOcelotValidator(),
+		Deserializer: deserialize.New(),
+	}
+	//sig := GetFakeSignaler(t, false)
+	// the check and store part
+	rc.EXPECT().GetConsul().Return(consu).Times(1)
+	// set consul to return that a build is not currently happening
+	consu.EXPECT().GetKeyValue(gomock.Any()).Return(nil, nil)
+	rc.EXPECT().GetCred(store, pb.SubCredType_BITBUCKET, "BITBUCKET_jessi", "jessi", false).Return(&pb.VCSCreds{Id: int64(1)}, nil).Times(1)
+	store.EXPECT().AddSumStart("1234", "jessi", "shank", "dev", pb.SignaledBy_PUSH, int64(1)).Return(int64(2), nil).Times(1)
+	task := &pb.WerkerTask{BuildConf: goodConfig, CheckoutHash: "1234", Branch: "dev", FullName: "jessi/shank", VcsType: pb.SubCredType_BITBUCKET, SignaledBy: pb.SignaledBy_PUSH}
+	// now the queuing part
+	vlt := vault.NewMockVaulty(ctl)
+	rc.EXPECT().GetVault().Return(vlt).Times(1)
+	vlt.EXPECT().CreateThrowawayToken().Return("token", nil).Times(1)
+	producer.EXPECT().WriteProto(&pb.WerkerTask{BuildConf: goodConfig, CheckoutHash: "1234", Branch: "dev", VaultToken: "token", FullName: "jessi/shank", VcsType: pb.SubCredType_BITBUCKET, SignaledBy: pb.SignaledBy_PUSH, Id: 2}, "build_hi").Return(nil).Times(1)
+	store.EXPECT().SetQueueTime(int64(2)).Return(nil).Times(1)
+	// setting stage detail expect to gomock.Any() because can't predict start time and can't do dthis: &models.StageResult{BuildId: 2, Messages: []string{"Passed initial validation "+models.CHECKMARK}, Status: 0, Stage: "pre-build-validation", StageDuration: gomock.Any()}
+	store.EXPECT().AddStageDetail(gomock.Any()).Return(nil).Times(1)
 	err := sig.QueueAndStore(task)
 	if err != nil {
 		t.Error("should pass validation and store properly")
 	}
-	<-sig.Producer.(*TestSingleProducer).Done
-	if sig.Producer.(*TestSingleProducer).Message == nil || sig.Producer.(*TestSingleProducer).Topic == "" {
-		t.Error("should have produced a message")
-	}
-	expectedSummary := &pb.BuildSummary{BuildId: 12, Hash: "1234", Branch: "dev", Account: "jessi", Repo: "shank", Failed: false, QueueTime: &timestamp.Timestamp{Seconds: 0, Nanos: 0}}
-	if diff := deep.Equal(expectedSummary, sig.Store.(*TestStorage).summary); diff != nil {
-		t.Error(diff)
-	}
-	expectedStage := &models.StageResult{BuildId: 12, Stage: models.HOOKHANDLER_VALIDATION, StageDuration: -99.99, Messages: []string{"Passed initial validation " + models.CHECKMARK}, Status: 0}
-	liveStage := sig.Store.(*TestStorage).stages[0]
-	if expectedStage.BuildId != liveStage.BuildId {
-		t.Error(test.GenericStrFormatErrors("build id", expectedStage.BuildId, liveStage.BuildId))
-	}
-	if expectedStage.Status != liveStage.Status {
-		t.Error("stage should be marked as passed")
-	}
-	if diff := deep.Equal(expectedStage.Messages, liveStage.Messages); diff != nil {
-		t.Error(diff)
-	}
 }
 
 func TestSignaler_queueAndStore_invalid(t *testing.T) {
-	sig := GetFakeSignaler(t, false)
-	task := &pb.WerkerTask{BuildConf: badConfig, CheckoutHash: "1234", Branch: "dev", VcsToken: "token", FullName: "jessi/shank", Id: 12}
+	ctl := gomock.NewController(t)
+	rc := credentials.NewMockCVRemoteConfig(ctl)
+	store := storage.NewMockOcelotStorage(ctl)
+	producer := nsqpb.NewMockProducer(ctl)
+	consu := consul.NewMockConsuletty(ctl)
+	sig := &Signaler{
+		Producer: producer,
+		RC: rc,
+		Store: store,
+		OcyValidator: build.GetOcelotValidator(),
+		Deserializer: deserialize.New(),
+	}
+	//sig := GetFakeSignaler(t, false)
+	// the check and store part
+	rc.EXPECT().GetConsul().Return(consu).Times(1)
+	// set consul to return that a build is not currently happening
+	consu.EXPECT().GetKeyValue(gomock.Any()).Return(nil, nil)
+	rc.EXPECT().GetCred(store, pb.SubCredType_BITBUCKET, "BITBUCKET_jessi", "jessi", false).Return(&pb.VCSCreds{Id: int64(1)}, nil).Times(1)
+	store.EXPECT().AddSumStart("1234", "jessi", "shank", "dev", pb.SignaledBy_PUSH, int64(1)).Return(int64(2), nil).Times(1)
+	store.EXPECT().StoreFailedValidation(int64(2)).Return(nil).Times(1)
+	// setting stage detail expect to gomock.Any() because can't predict start time and can't do dthis: &models.StageResult{BuildId: 2, Messages: []string{"Passed initial validation "+models.CHECKMARK}, Status: 0, Stage: "pre-build-validation", StageDuration: gomock.Any()}
+	store.EXPECT().AddStageDetail(gomock.Any()).Return(nil).Times(1)
+	task := &pb.WerkerTask{BuildConf: badConfig, CheckoutHash: "1234", Branch: "dev", VcsToken: "token", FullName: "jessi/shank", VcsType: pb.SubCredType_BITBUCKET, SignaledBy: pb.SignaledBy_PUSH}
 	err := sig.QueueAndStore(task)
 	if err != nil {
 		t.Error("should not pass validation, but should not return an error")
-	}
-	expectedSummary := &pb.BuildSummary{BuildId: 12, Hash: "1234", Branch: "dev", Account: "jessi", Repo: "shank", Failed: true}
-	if diff := deep.Equal(expectedSummary, sig.Store.(*TestStorage).summary); diff != nil {
-		t.Error(diff)
-	}
-	expectedStage := &models.StageResult{BuildId: 12, Stage: models.HOOKHANDLER_VALIDATION, StageDuration: -99.99, Messages: []string{"Failed initial validation"}, Status: 1}
-	liveStage := sig.Store.(*TestStorage).stages[0]
-	if expectedStage.BuildId != liveStage.BuildId {
-		t.Error(test.GenericStrFormatErrors("build id", expectedStage.BuildId, liveStage.BuildId))
-	}
-	if expectedStage.Status != liveStage.Status {
-		t.Error("stage should be marked as failed")
-	}
-	if diff := deep.Equal(expectedStage.Messages, liveStage.Messages); diff != nil {
-		t.Error(diff)
 	}
 }
 
