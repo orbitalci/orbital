@@ -84,6 +84,7 @@ func TestPushWerkerTeller_TellWerker_PreviousHeadCommit(t *testing.T) {
 	changedFiles := []string{"ocelot.yml", "build.conf", "src/main/java/javathing.java"}
 	handler.EXPECT().GetFile("ocelot.yml", "level11consulting/ocelot", "123last").Times(1).Return(Buildfile, nil)
 	handler.EXPECT().GetChangedFiles("level11consulting/ocelot", "123last", "old_last").Times(1).Return(changedFiles, nil)
+	handler.EXPECT().GetVcsType().Return(pb.SubCredType_BITBUCKET).Times(1)
 	if err := cwt.TellWerker(push, signaler, handler, "token", false, pb.SignaledBy_PUSH); err != nil {
 		t.Error("should not fail, got " + err.Error())
 	}

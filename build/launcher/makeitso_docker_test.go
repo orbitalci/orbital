@@ -112,10 +112,10 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	launch.infochan = make(chan []byte, 1000)
 	launch.integrations = getIntegrationList()
 	_ = dckr.Exec(ctx, "Install bash", "", []string{}, []string{"/bin/sh", "-c", "apk -U --no-cache add bash"}, launch.infochan) // For the k8s test
-	result := launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, dckr, baseStage)
+	result := launch.doIntegrations(ctx, &pb.WerkerTask{FullName: "shankj3/ocelot", BuildConf: &pb.BuildConfig{BuildTool: "maven"}}, dckr, baseStage)
 	if result.Status == pb.StageResultVal_FAIL {
 		t.Log(result.Messages)
-		t.Error(result.Error)
+		t.Fatal(result.Error)
 	}
 	expectedMsgs := []string{
 		"completed preflight | integ | ssh keyfile integration stage ✓",
@@ -127,8 +127,11 @@ func TestLauncher_doIntegrations(t *testing.T) {
 	if diff := deep.Equal(expectedMsgs, result.Messages); diff != nil {
 		t.Error(diff)
 	}
-	result = launch.doIntegrations(ctx, &pb.WerkerTask{BuildConf: &pb.BuildConfig{BuildTool: "gala"}}, dckr, baseStage)
+	result = launch.doIntegrations(ctx, &pb.WerkerTask{FullName: "shankj3/ocelot", BuildConf: &pb.BuildConfig{BuildTool: "gala"}}, dckr, baseStage)
 	close(launch.infochan)
+	if result.Status == pb.StageResultVal_FAIL {
+		t.Fatal(result.Error)
+	}
 	expectedMsgs = []string{
 		"completed preflight | integ | ssh keyfile integration stage ✓",
 		"completed preflight | integ | docker login stage ✓",
@@ -140,7 +143,7 @@ func TestLauncher_doIntegrations(t *testing.T) {
 		i = <-launch.infochan
 		t.Log(string(i))
 		//t.Log(<-launch.infochan)
-		t.Error(diff)
+		t.Fatal(diff)
 	}
 	launch.infochan = make(chan []byte, 1000)
 	// check that docker config.json was properly rendered

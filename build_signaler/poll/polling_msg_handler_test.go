@@ -12,9 +12,9 @@ import (
 )
 
 func TestWriteCronFile_DeleteCronFile(t *testing.T) {
-	event := &pb.PollRequest{Account: "accOmns7f", Repo: "d8sfasdnc3", Cron: "* * * * *", Branches: "test,master,queue"}
+	event := &pb.PollRequest{Account: "accOmns7f", Repo: "d8sfasdnc3", Cron: "* * * * *", Branches: "test,master,queue", Type: pb.SubCredType_BITBUCKET}
 	WriteCronFile(event, "./test-fixtures")
-	expected := []byte("* * * * * root /bin/run_changecheck.sh accOmns7f/d8sfasdnc3 test,master,queue\n")
+	expected := []byte("* * * * * root /bin/run_changecheck.sh accOmns7f/d8sfasdnc3 test,master,queue BITBUCKET\n")
 	bytez, err := ioutil.ReadFile("./test-fixtures/accOmns7f_d8sfasdnc3")
 	if err != nil {
 		t.Log(os.Getwd())
