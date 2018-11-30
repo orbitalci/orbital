@@ -2,7 +2,6 @@ package launcher
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/level11consulting/ocelot/common/remote"
