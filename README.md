@@ -1,6 +1,6 @@
 # project ocelot
 
-Go to the [wiki](https://github.com/shankj3/ocelot/wiki) for documentation and architecture.
+Go to the [wiki](https://github.com/level11consulting/ocelot/wiki) for documentation and architecture.
 
 Ocelot is a distributed CI for running in container orchestration environments. It utilizes Vault, Consul, Postgres and NSQ and comes with a bangin' cli.
 
@@ -53,7 +53,7 @@ You can ssh into these VMs
 `vagrant ssh` & `vagrant ssh ocelot` will result in SSHing into the ocelot VM
 `vagrant ssh infra` will SSH into the infra VM
 
-The codebase will be located in `/home/vagrant/go/src/github.com/shankj3/ocelot`
+The codebase will be located in `/home/vagrant/go/src/github.com/level11consulting/ocelot`
 
 ### Validate connectivity on host
 To configure the `ocelot` cli to point at this development instance, you need to set these environment variables:
