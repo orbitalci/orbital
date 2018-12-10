@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func CompareCredWrappers(credWrapA *pb.CredWrapper, credWrapB *pb.CredWrapper) bool {

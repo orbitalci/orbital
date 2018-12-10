@@ -11,9 +11,9 @@ import (
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
 	"github.com/shankj3/go-til/vault"
-	"github.com/shankj3/ocelot/common"
-	pb "github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/common"
+	pb "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 
 	"testing"
 	"time"

@@ -9,9 +9,9 @@ package kubectl
 import (
 	"fmt"
 
-	"github.com/shankj3/ocelot/build/integrations"
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build/integrations"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func Create(loopbackip string, port string) integrations.BinaryIntegrator {

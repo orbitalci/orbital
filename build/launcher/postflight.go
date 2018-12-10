@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/shankj3/ocelot/common/remote"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common/remote"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 // getAndSetHandler will use the accesstoken and vcstype to generate a handler without autorefresh capability and set it to (*launcher).handler field. if (*launcher).handler is already set, will do nothing

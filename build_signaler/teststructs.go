@@ -11,11 +11,11 @@ import (
 	"github.com/shankj3/go-til/deserialize"
 	ocenet "github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/vault"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 var Buildfile = []byte(`image: golang:1.10.2-alpine3.7

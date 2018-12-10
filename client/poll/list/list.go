@@ -10,8 +10,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 	"github.com/olekukonko/tablewriter"
-	"github.com/shankj3/ocelot/client/commandhelper"
-	models "github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	models "github.com/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

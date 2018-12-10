@@ -8,9 +8,9 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/models"
-	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models"
+	pbb "github.com/level11consulting/ocelot/models/bitbucket/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func GetTranslator() *BBTranslate {

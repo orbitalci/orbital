@@ -6,10 +6,10 @@ import (
 	"time"
 
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common/trigger"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/common/trigger"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 // runStages runs the stages that are defined by the **user** ie what is in the ocelot.yml. Results will be stored in this stage as well.

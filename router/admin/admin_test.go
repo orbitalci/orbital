@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/common/secure_grpc"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/common/secure_grpc"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 func Test_prep(t *testing.T) {

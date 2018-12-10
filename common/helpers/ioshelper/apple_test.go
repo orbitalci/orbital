@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/shankj3/ocelot/common"
+	"github.com/level11consulting/ocelot/common"
 )
 
 func TestAppleKeychain_GetSecretsFromZip(t *testing.T) {

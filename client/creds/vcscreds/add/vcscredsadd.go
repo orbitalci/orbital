@@ -7,8 +7,8 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/deserialize"
-	"github.com/shankj3/ocelot/client/commandhelper"
-	models "github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	models "github.com/level11consulting/ocelot/models/pb"
 	"io/ioutil"
 	"strings"
 )
@@ -205,7 +205,7 @@ func (c *cmd) Help() string {
 const synopsis = "Add credentials or a set of them"
 const help = `
 Usage: ocelot creds vcs add
-  Detailed help for setup: https://github.com/shankj3/ocelot/wiki/client#initial-configuration
+  Detailed help for setup: https://github.com/level11consulting/ocelot/wiki/client#initial-configuration
   Add one set of credentials or a list of them. Credentials may also need an SSH key file, if an ssh key path is populated, the file will be uploaded to vault and associated with the specified account/type. 
   You can specify a filename using:
     ocelot creds add vcs -credfile-loc=<yaml file>

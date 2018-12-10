@@ -2,7 +2,7 @@ package testutil
 
 import (
 	"context"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc"
 	"io"
 )

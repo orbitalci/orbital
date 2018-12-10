@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	"github.com/mitchellh/cli"
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models"
-	protobuf "github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models"
+	protobuf "github.com/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc"
 )
 

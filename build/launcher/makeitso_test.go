@@ -1,14 +1,14 @@
 package launcher
 
 import (
-	"github.com/shankj3/ocelot/models"
+	"github.com/level11consulting/ocelot/models"
 	//"bytes"
 	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 // fixme: this test plz

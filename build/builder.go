@@ -6,9 +6,9 @@ import (
 	"io"
 	"strings"
 
-	cred "github.com/shankj3/ocelot/common/credentials"
-	pb "github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	pb "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 type RepoSetupFunc func(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error)

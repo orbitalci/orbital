@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/shankj3/ocelot/models/pb"
-	slack "github.com/shankj3/ocelot/models/slack/pb"
+	"github.com/level11consulting/ocelot/models/pb"
+	slack "github.com/level11consulting/ocelot/models/slack/pb"
 )
 
 const ocelotIcon = "https://78.media.tumblr.com/avatar_06e2167f3e45_128.pnj"

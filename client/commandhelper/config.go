@@ -2,7 +2,7 @@ package commandhelper
 
 import (
 	"fmt"
-	models "github.com/shankj3/ocelot/models/pb"
+	models "github.com/level11consulting/ocelot/models/pb"
 	"os"
 	"strconv"
 	"strings"
@@ -11,7 +11,7 @@ import (
 var Config *ClientConfig
 
 var (
-	// inject with -X github.com/shankj3/ocelot/client/commandhelper.AdminHost=my.ocelotadmin.com -X github.com/shankj3/ocelot/client/commandhelper.AdminPort=443
+	// inject with -X github.com/level11consulting/ocelot/client/commandhelper.AdminHost=my.ocelotadmin.com -X github.com/level11consulting/ocelot/client/commandhelper.AdminPort=443
 	AdminHost = "localhost"
 	AdminPort = "10000"
 )

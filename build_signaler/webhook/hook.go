@@ -3,10 +3,10 @@ package webhook
 import (
 	"github.com/pkg/errors"
 
-	"github.com/shankj3/ocelot/build"
-	signal "github.com/shankj3/ocelot/build_signaler"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build"
+	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"

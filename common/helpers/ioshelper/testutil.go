@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/shankj3/ocelot/common"
+	"github.com/level11consulting/ocelot/common"
 )
 
 func GetAndEncodeDevFolder(t *testing.T) map[string]string {

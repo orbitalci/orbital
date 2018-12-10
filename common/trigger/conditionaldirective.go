@@ -1,6 +1,6 @@
 package trigger
 
-import "github.com/shankj3/ocelot/models/pb"
+import "github.com/level11consulting/ocelot/models/pb"
 
 type ConditionalDirective struct {
 	Conditions []Section

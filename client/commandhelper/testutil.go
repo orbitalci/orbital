@@ -1,7 +1,7 @@
 package commandhelper
 
 import (
-	"github.com/shankj3/ocelot/common/testutil"
+	"github.com/level11consulting/ocelot/common/testutil"
 )
 
 func NewTestClientConfig(logLines []string) *ClientConfig {

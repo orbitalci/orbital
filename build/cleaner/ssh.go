@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common/helpers/sshhelper"
-	"github.com/shankj3/ocelot/models"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/common/helpers/sshhelper"
+	"github.com/level11consulting/ocelot/models"
 )
 
 type SSHCleaner struct {
