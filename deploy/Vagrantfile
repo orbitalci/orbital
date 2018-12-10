@@ -48,7 +48,7 @@ Vagrant.configure("2") do |config|
       echo 'export GO111MODULE=on' | sudo tee -a /etc/bash.bashrc
       export GOPATH=$HOME/go
       export GO111MODULE=on
-      echo 'export PATH=$PATH:$GOROOT/bin' | sudo tee -a /etc/bash.bashrc
+      echo 'export PATH=$PATH:$GOPATH/bin' | sudo tee -a /etc/bash.bashrc
       export PATH=$PATH:$GOPATH/bin
 
       sudo chown -R $(id -u):$(id -g) $HOME/go
