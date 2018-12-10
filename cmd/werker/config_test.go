@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/shankj3/go-til/test"
-	util "github.com/shankj3/ocelot/common/testutil"
-	"github.com/shankj3/ocelot/models"
+	util "github.com/level11consulting/ocelot/common/testutil"
+	"github.com/level11consulting/ocelot/models"
 	"os"
 	"testing"
 )

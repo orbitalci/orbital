@@ -14,11 +14,11 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/build/basher"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/basher"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func NewVagrant() *Vagrant {

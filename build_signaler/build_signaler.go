@@ -8,9 +8,9 @@ import (
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 func storeStageToDb(store storage.BuildStage, stageResult *models.StageResult) error {

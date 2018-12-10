@@ -3,7 +3,7 @@ package dockerconfig
 import (
 	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 
 	"bytes"
 	"testing"

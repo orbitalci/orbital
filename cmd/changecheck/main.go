@@ -17,13 +17,13 @@ import (
 	"github.com/shankj3/go-til/deserialize"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/shankj3/ocelot/build"
-	signal "github.com/shankj3/ocelot/build_signaler"
-	"github.com/shankj3/ocelot/build_signaler/poll"
-	"github.com/shankj3/ocelot/common"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/version"
+	"github.com/level11consulting/ocelot/build"
+	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/build_signaler/poll"
+	"github.com/level11consulting/ocelot/common"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/version"
 )
 
 type changeSetConfig struct {

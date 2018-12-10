@@ -8,9 +8,9 @@ import (
 	"github.com/google/go-github/v19/github"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/models"
+	"github.com/level11consulting/ocelot/models"
 
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 // newBranchBefore is the "before" field in github if a push event is a new branch

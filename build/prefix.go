@@ -6,7 +6,7 @@ package build
 import (
 	"fmt"
 
-	"github.com/shankj3/ocelot/models"
+	"github.com/level11consulting/ocelot/models"
 )
 
 // GetOcyPrefixFromWerkerType will return "" for anything that runs in a container because root access can be assumed

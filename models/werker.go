@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/shankj3/ocelot/common/du"
+	"github.com/level11consulting/ocelot/common/du"
 )
 
 type WerkType int

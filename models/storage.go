@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
-	//pb "github.com/shankj3/ocelot/admin/models"
+	//pb "github.com/level11consulting/ocelot/admin/models"
 )
 
 var (

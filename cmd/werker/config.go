@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/namsral/flag"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/version"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/version"
 
 	"errors"
 	"os"

@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
-//go:generate mockgen -source vcshandler.go -destination mock_models/vcshandler.mock.go -package mock_models
+////go:generate mockgen -source vcshandler.go -destination mock_models/vcshandler.mock.go -package mock_models
 
 type VCSHandler interface {
 	GetVcsType() pb.SubCredType

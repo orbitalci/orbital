@@ -4,9 +4,9 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/test"
-	util "github.com/shankj3/ocelot/common/testutil"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	util "github.com/level11consulting/ocelot/common/testutil"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 
 	"bytes"
 	"testing"

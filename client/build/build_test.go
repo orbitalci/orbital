@@ -10,8 +10,8 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
-	"github.com/shankj3/ocelot/client/commandhelper"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	"github.com/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -169,7 +169,7 @@ func TestCmd_Run_latest(t *testing.T) {
 		t.Log(string(ui.OutputWriter.Bytes()))
 	}
 	expected := &pb.BuildReq{
-		AcctRepo: "shankj3/ocelot",
+		AcctRepo: "level11consulting/ocelot",
 		VcsType:  pb.SubCredType_GITHUB,
 	}
 	if diff := deep.Equal(expected, clie.buildReq); diff != nil {

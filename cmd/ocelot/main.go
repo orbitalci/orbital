@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/mitchellh/cli"
-	"github.com/shankj3/ocelot/client"
-	"github.com/shankj3/ocelot/version"
+	"github.com/level11consulting/ocelot/client"
+	"github.com/level11consulting/ocelot/version"
 
 	"os"
 )

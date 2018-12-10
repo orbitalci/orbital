@@ -3,9 +3,9 @@ package admin
 import (
 	"github.com/shankj3/go-til/test"
 
-	cred "github.com/shankj3/ocelot/common/credentials"
-	am "github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	am "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 
 	"testing"
 )

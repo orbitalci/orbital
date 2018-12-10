@@ -8,10 +8,10 @@ import (
 
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
-	rt "github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/build/valet"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/storage"
+	rt "github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 type buildDatum struct {

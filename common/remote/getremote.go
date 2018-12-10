@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/shankj3/ocelot/common/remote/bitbucket"
-	"github.com/shankj3/ocelot/common/remote/github"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common/remote/bitbucket"
+	"github.com/level11consulting/ocelot/common/remote/github"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 	"golang.org/x/oauth2"
 )
 

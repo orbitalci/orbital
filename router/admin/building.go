@@ -7,10 +7,10 @@ import (
 	"fmt"
 
 	"github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash

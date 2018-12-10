@@ -12,9 +12,9 @@ import (
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 	ocevault "github.com/shankj3/go-til/vault"
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 var (

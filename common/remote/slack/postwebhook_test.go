@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
-	slack "github.com/shankj3/ocelot/models/slack/pb"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	slack "github.com/level11consulting/ocelot/models/slack/pb"
 )
 
 func TestThrowStatusWebhook(t *testing.T) {

@@ -8,13 +8,13 @@ import (
 	"github.com/go-test/deep"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/build/integrations"
-	"github.com/shankj3/ocelot/build/integrations/sshkey"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/integrations"
+	"github.com/level11consulting/ocelot/build/integrations/sshkey"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 func Test_downloadCodebase(t *testing.T) {
@@ -27,7 +27,7 @@ func Test_downloadCodebase(t *testing.T) {
 		VcsType:      pb.SubCredType_BITBUCKET,
 		CheckoutHash: "123",
 		VcsToken:     "token",
-		FullName:     "shankj3/ocelot",
+		FullName:     "level11consulting/ocelot",
 	}
 	logout := make(chan []byte, 100)
 	stage := build.InitStageUtil("test")
@@ -68,7 +68,7 @@ func TestLauncher_preFlight(t *testing.T) {
 		VcsType:      pb.SubCredType_BITBUCKET,
 		CheckoutHash: "123",
 		VcsToken:     "token",
-		FullName:     "shankj3/ocelot",
+		FullName:     "level11consulting/ocelot",
 		Branch:       "branch",
 		Id:           id,
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/shankj3/ocelot/models"
+	"github.com/level11consulting/ocelot/models"
 )
 
 //this interface handles build cleanup

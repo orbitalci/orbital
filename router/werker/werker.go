@@ -8,11 +8,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/shankj3/ocelot/build/streamer"
-	"github.com/shankj3/ocelot/build/valet"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build/streamer"
+	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc"
 )
 

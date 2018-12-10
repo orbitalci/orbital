@@ -2,8 +2,8 @@ package commandhelper
 
 import (
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/common/testutil"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common/testutil"
+	"github.com/level11consulting/ocelot/models/pb"
 
 	"testing"
 )
@@ -34,8 +34,8 @@ func TestFindAcctRepo(t *testing.T) {
 	if vcst != pb.SubCredType_GITHUB {
 		t.Error("should detect github")
 	}
-	if acctRepo != "shankj3/ocelot" {
-		t.Error(test.StrFormatErrors("detected acct/repo", "shankj3/ocelot", acctRepo))
+	if acctRepo != "level11consulting/ocelot" {
+		t.Error(test.StrFormatErrors("detected acct/repo", "level11consulting/ocelot", acctRepo))
 	}
 }
 

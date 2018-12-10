@@ -1,8 +1,8 @@
 package build_signaler
 
 import (
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 //go:generate mockgen -source werkerteller.go -destination werkerteller.mock.go -package build_signaler

@@ -2,13 +2,13 @@ package admin
 
 import (
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/shankj3/ocelot/common/remote/github"
+	"github.com/level11consulting/ocelot/common/remote/github"
 
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models/pb"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models/pb"
 
-	bb "github.com/shankj3/ocelot/common/remote/bitbucket"
-	"github.com/shankj3/ocelot/storage"
+	bb "github.com/level11consulting/ocelot/common/remote/bitbucket"
+	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

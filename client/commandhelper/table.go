@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
-	models "github.com/shankj3/ocelot/models/pb"
+	models "github.com/level11consulting/ocelot/models/pb"
 	"os"
 	"strings"
 )

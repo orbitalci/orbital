@@ -7,8 +7,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/net"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func TestLauncher_postFlight(t *testing.T) {
@@ -16,7 +16,7 @@ func TestLauncher_postFlight(t *testing.T) {
 	ctx := context.Background()
 	task := &pb.WerkerTask{
 		SignaledBy: pb.SignaledBy_PULL_REQUEST,
-		FullName:   "shankj3/ocelot",
+		FullName:   "level11consulting/ocelot",
 		PrData: &pb.PrWerkerData{
 			PrId: "2",
 			Urls: &pb.PrUrls{

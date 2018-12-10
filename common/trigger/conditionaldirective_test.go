@@ -5,7 +5,7 @@ import (
 	//"testing"
 	"testing"
 
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 /*

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 //BuildCred path will return "<creds>/vcs|repo|k8s/<subCredType(string)>/<identifier>"

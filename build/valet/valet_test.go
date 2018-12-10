@@ -8,16 +8,16 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/consul/testutil"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	util "github.com/shankj3/ocelot/common/testutil"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/common"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	util "github.com/level11consulting/ocelot/common/testutil"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 type recoveryCVRemoteConfig struct {

@@ -1,7 +1,7 @@
 package dockerconfig
 
 import (
-	"github.com/shankj3/ocelot/build/integrations"
+	"github.com/level11consulting/ocelot/build/integrations"
 )
 
 func Create() integrations.StringIntegrator {

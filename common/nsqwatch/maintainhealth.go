@@ -4,9 +4,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/common/du"
-	"github.com/shankj3/ocelot/storage"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/common/du"
+	"github.com/level11consulting/ocelot/storage"
 	"time"
 )
 

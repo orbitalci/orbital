@@ -5,7 +5,7 @@ import (
 	"os/exec"
 
 	"github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/build"
+	"github.com/level11consulting/ocelot/build"
 )
 
 // VagrantUp will run the command "vagrant up" from the vagrantDir specified. It will also save the output

@@ -5,11 +5,11 @@ import (
 	"time"
 
 	ocelog "github.com/shankj3/go-til/log"
-	signal "github.com/shankj3/ocelot/build_signaler"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/common/remote"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/common/remote"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func NewChangeChecker(signaler *signal.Signaler, acctRepo string, vcsType pb.SubCredType) *ChangeChecker {

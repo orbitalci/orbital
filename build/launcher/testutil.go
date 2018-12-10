@@ -9,13 +9,13 @@ import (
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/build/basher"
-	valet2 "github.com/shankj3/ocelot/build/valet"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/basher"
+	valet2 "github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 func getLoopbackIp(t *testing.T) string {
