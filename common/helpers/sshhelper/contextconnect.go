@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/shankj3/ocelot/models"
+	"github.com/level11consulting/ocelot/models"
 	"golang.org/x/crypto/ssh"
 )
 

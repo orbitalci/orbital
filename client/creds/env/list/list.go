@@ -8,8 +8,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
-	"github.com/shankj3/ocelot/client/commandhelper"
-	models "github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	models "github.com/level11consulting/ocelot/models/pb"
 )
 
 func New(ui cli.Ui) *cmd {

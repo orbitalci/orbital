@@ -7,8 +7,8 @@ import (
 	"net"
 	"time"
 
-	models "github.com/shankj3/ocelot/models/pb"
-	//"github.com/shankj3/ocelot/util/secure_grpc"
+	models "github.com/level11consulting/ocelot/models/pb"
+	//"github.com/level11consulting/ocelot/util/secure_grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

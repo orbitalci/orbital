@@ -3,7 +3,7 @@ package models
 import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 //ParseStagesByBuildId will combine the buildsummary + stages to a single object called "Status"

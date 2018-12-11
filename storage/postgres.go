@@ -11,9 +11,9 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"

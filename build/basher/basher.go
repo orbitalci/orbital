@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 const DefaultBitbucketURL = "https://x-token-auth:%s@bitbucket.org/%s.git"

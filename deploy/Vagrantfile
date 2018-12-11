@@ -8,7 +8,7 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
 
-  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/shankj3/ocelot/", type: "rsync"
+  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/level11consulting/ocelot/", type: "rsync"
 
   config.vm.define "infra" do |infra|
     infra.vm.box = "ubuntu/bionic64"
@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
     end
     # FIXME: Start with privileged: false
     infra.vm.provision "shell", inline: <<-SHELL
-      cd /home/vagrant/go/src/github.com/shankj3/ocelot/deploy/infra
+      cd /home/vagrant/go/src/github.com/level11consulting/ocelot/deploy/infra
       docker network create ocelot
       docker-compose -f postgres-docker-compose.yml up -d
       docker-compose -f nsq-docker-compose.yml up -d
@@ -82,9 +82,9 @@ Vagrant.configure("2") do |config|
       vault secrets disable secret
       vault secrets enable -path=secret -version=1 kv
 
-      /home/vagrant/go/src/github.com/shankj3/ocelot/scripts/setup-cv.sh
+      /home/vagrant/go/src/github.com/level11consulting/ocelot/scripts/setup-cv.sh
 
-      cd /home/vagrant/go/src/github.com/shankj3/ocelot/
+      cd /home/vagrant/go/src/github.com/level11consulting/ocelot/
       
       go mod tidy
       go get -v -u github.com/golang/protobuf/proto

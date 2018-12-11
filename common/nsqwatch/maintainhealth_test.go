@@ -2,8 +2,8 @@ package nsqwatch
 
 import (
 	"github.com/shankj3/go-til/nsqpb"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/storage"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/storage"
 	"time"
 	//"github.com/nsqio/go-nsq"
 	"testing"

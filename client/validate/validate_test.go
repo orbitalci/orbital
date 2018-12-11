@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/mitchellh/cli"
-	"github.com/shankj3/ocelot/common/testutil"
+	"github.com/level11consulting/ocelot/common/testutil"
 )
 
 func TestCmd_RunPathNoFile(t *testing.T) {

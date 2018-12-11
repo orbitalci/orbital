@@ -5,8 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mitchellh/cli"
-	"github.com/shankj3/ocelot/client/commandhelper"
-	models "github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	models "github.com/level11consulting/ocelot/models/pb"
 	"io"
 )
 

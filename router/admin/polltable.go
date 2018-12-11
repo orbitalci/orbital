@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {

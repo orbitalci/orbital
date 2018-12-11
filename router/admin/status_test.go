@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/consul"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 func TestGuideOcelotServer_GetStatus_hashPath(t *testing.T) {

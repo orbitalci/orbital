@@ -7,18 +7,18 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common/remote"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/common/remote"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/shankj3/go-til/log"
-	signal "github.com/shankj3/ocelot/build_signaler"
-	"github.com/shankj3/ocelot/common"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/common"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 var (

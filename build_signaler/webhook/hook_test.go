@@ -5,10 +5,10 @@ import (
 	//"strings"
 	"testing"
 
-	"github.com/shankj3/ocelot/build"
-	//"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/build_signaler"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build"
+	//"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func TestPRWerkerTeller_TellWerker(t *testing.T) {
@@ -20,22 +20,22 @@ func TestPRWerkerTeller_TellWerker(t *testing.T) {
 	//}
 	pr := &pb.PullRequest{
 		Destination: &pb.HeadData{Hash: "hash"},
-		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name: "ocelot"}},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot", Name: "ocelot"}},
 		Id: 12,
 	}
 	prwd := &pb.PrWerkerData{PrId: "12",}
 	err := prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
-	//err := prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
+	//err := prwt.TellWerker("hash", sig, "feature", handler, "token", "level11consulting/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
 		t.Error("error should not be nil")
 	}
-	if err.Error() != "no ocelot yaml found for repo shankj3/ocelot" {
+	if err.Error() != "no ocelot yaml found for repo level11consulting/ocelot" {
 		t.Error("should have bubbled up notfound error that vcshandler threw")
 	}
 	handler = &build_signaler.DummyVcsHandler{Fail: true}
 	pr = &pb.PullRequest{
 		Destination: &pb.HeadData{Hash: "hash"},
-		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name: "ocelot"}},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot", Name: "ocelot"}},
 	}
 	prwd = &pb.PrWerkerData{PrId: "12"}
 	err = prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
@@ -49,7 +49,7 @@ func TestPRWerkerTeller_TellWerker(t *testing.T) {
 	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.Buildfile}
 	pr = &pb.PullRequest{
 		Destination: &pb.HeadData{Hash: "hash"},
-		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name:"ocelot"}},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot", Name:"ocelot"}},
 	}
 	err = prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {
@@ -62,11 +62,11 @@ func TestPRWerkerTeller_TellWerker(t *testing.T) {
 	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.BuildFileMasterOnly}
 	pr = &pb.PullRequest{
 		Destination: &pb.HeadData{Hash: "hash", Branch: "master"},
-		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name: "ocelot"}, Branch: "feature"},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot", Name: "ocelot"}, Branch: "feature"},
 	}
 	prwd = &pb.PrWerkerData{PrId: "12"}
 	err = prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
-	//err = prwt.TellWerker("hash", sig, "feature", handler, "token", "shankj3/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
+	//err = prwt.TellWerker("hash", sig, "feature", handler, "token", "level11consulting/ocelot", []*pb.Commit{}, false, pb.SignaledBy_PULL_REQUEST)
 	if err != nil {
 		t.Error("the build file says master only for building branches, and this pr is being merged to master, therefore this should build and stfu. the error is: " + err.Error())
 	}
@@ -74,7 +74,7 @@ func TestPRWerkerTeller_TellWerker(t *testing.T) {
 	handler = &build_signaler.DummyVcsHandler{Filecontents: build_signaler.BuildFileMasterOnly}
 	pr = &pb.PullRequest{
 		Destination: &pb.HeadData{Hash: "hash", Branch: "feature2"},
-		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "shankj3/ocelot", Name: "ocelot"}, Branch: "feature2"},
+		Source: &pb.HeadData{Hash: "oldHash", Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot", Name: "ocelot"}, Branch: "feature2"},
 	}
 	err = prwt.TellWerker(pr, prwd, sig, handler, "token", false, pb.SignaledBy_PULL_REQUEST)
 	if err == nil {

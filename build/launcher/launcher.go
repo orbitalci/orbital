@@ -1,12 +1,12 @@
 package launcher
 
 import (
-	"github.com/shankj3/ocelot/build/basher"
-	"github.com/shankj3/ocelot/build/integrations"
-	"github.com/shankj3/ocelot/build/valet"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/integrations"
+	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 // create a struct that is werker msg handler creates when it receives a new nsq message

@@ -8,10 +8,10 @@ import (
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/shankj3/ocelot/build_signaler/poll"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/storage"
-	"github.com/shankj3/ocelot/version"
+	"github.com/level11consulting/ocelot/build_signaler/poll"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/ocelot/version"
 )
 
 func configure() cred.CVRemoteConfig {

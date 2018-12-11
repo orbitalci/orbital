@@ -19,8 +19,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/gorilla/mux"
-	"github.com/shankj3/ocelot/build/basher"
-	cleaner2 "github.com/shankj3/ocelot/build/cleaner"
+	"github.com/level11consulting/ocelot/build/basher"
+	cleaner2 "github.com/level11consulting/ocelot/build/cleaner"
 )
 
 func tarTemplates(t *testing.T) func(t *testing.T) {

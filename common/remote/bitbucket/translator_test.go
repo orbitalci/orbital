@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func TestBBTranslate_TranslatePR(t *testing.T) {

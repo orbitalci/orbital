@@ -10,12 +10,12 @@ import (
 
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/log"
-	brt "github.com/shankj3/ocelot/build"
-	c "github.com/shankj3/ocelot/build/cleaner"
-	"github.com/shankj3/ocelot/common"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/storage"
+	brt "github.com/level11consulting/ocelot/build"
+	c "github.com/level11consulting/ocelot/build/cleaner"
+	"github.com/level11consulting/ocelot/common"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/storage"
 
 	"github.com/google/uuid"
 )

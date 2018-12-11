@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/common"
+	"github.com/level11consulting/ocelot/common"
 )
 
 // Register will add all the appropriate build details that the admin needs to contact the werker for stream info

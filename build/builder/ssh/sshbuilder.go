@@ -10,13 +10,13 @@ import (
 	"sync"
 
 	"github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/build/basher"
-	"github.com/shankj3/ocelot/build/valet"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/common/helpers/sshhelper"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/valet"
+	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/common/helpers/sshhelper"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 type SSH struct {

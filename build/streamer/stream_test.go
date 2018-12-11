@@ -4,7 +4,7 @@ import (
 	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-	protobuf "github.com/shankj3/ocelot/models/pb"
+	protobuf "github.com/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc"
 	"testing"
 	"time"

@@ -23,17 +23,17 @@ package main
 import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/shankj3/ocelot/build"
+	"github.com/level11consulting/ocelot/build"
 
 	"sync"
 
-	"github.com/shankj3/ocelot/build/basher"
-	"github.com/shankj3/ocelot/build/listener"
-	"github.com/shankj3/ocelot/build/valet"
-	"github.com/shankj3/ocelot/common/nsqwatch"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/router/werker"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/listener"
+	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/common/nsqwatch"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/router/werker"
+	"github.com/level11consulting/ocelot/storage"
 
 	"fmt"
 	"os"

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func TestCreate(t *testing.T) {

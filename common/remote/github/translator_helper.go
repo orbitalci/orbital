@@ -4,7 +4,7 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/go-github/v19/github"
 
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func translatePushCommit(commit *github.PushEventCommit) (*pb.Commit) {

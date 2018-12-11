@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/shankj3/ocelot/client/commandhelper"
-	models "github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	models "github.com/level11consulting/ocelot/models/pb"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"

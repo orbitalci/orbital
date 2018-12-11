@@ -2,7 +2,7 @@ package commandhelper
 
 import (
 	"github.com/mitchellh/cli"
-	models "github.com/shankj3/ocelot/models/pb"
+	models "github.com/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc/status"
 
 	"context"

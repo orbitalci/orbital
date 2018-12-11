@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/shankj3/ocelot/common/testutil"
+	"github.com/level11consulting/ocelot/common/testutil"
 )
 
 func CreateSSHDockerContainer(t *testing.T, forwardPort string) (cleanup func(), ctx context.Context) {

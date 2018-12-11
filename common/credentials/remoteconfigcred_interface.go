@@ -3,8 +3,8 @@ package credentials
 import (
 	"github.com/shankj3/go-til/consul"
 	ocevault "github.com/shankj3/go-til/vault"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 )
 
 //go:generate mockgen -source remoteconfigcred_interface.go -destination remoteconfigcred_interface.mock.go -package credentials

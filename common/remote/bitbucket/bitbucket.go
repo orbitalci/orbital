@@ -13,10 +13,10 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models"
-	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models"
+	pbb "github.com/level11consulting/ocelot/models/bitbucket/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"

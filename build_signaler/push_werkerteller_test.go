@@ -7,10 +7,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/models/mock_models"
+	"github.com/level11consulting/ocelot/models/mock_models"
 
 	//"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func TestPushWerkerTeller_TellWerker(t *testing.T) {
@@ -22,7 +22,7 @@ func TestPushWerkerTeller_TellWerker(t *testing.T) {
 		HeadCommit: &pb.Commit{Hash: "hash"},
 		Branch: "branch",
 		Commits: commits,
-		Repo: &pb.Repo{AcctRepo: "shankj3/ocelot"},
+		Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot"},
 	}
 	handler.ChangedFiles = []string{"changedfile.conf"}
 	handler.ReturnCommit = &pb.Commit{Hash: "1234", Message: "this is my message"}
@@ -44,7 +44,7 @@ func TestPushWerkerTeller_TellWerker(t *testing.T) {
 	}
 	handler.NotFound = true
 	err = cwt.TellWerker(push, signaler, handler, "token", false, pb.SignaledBy_REQUESTED)
-	if err == nil || err.Error() != "no ocelot yaml found for repo shankj3/ocelot" {
+	if err == nil || err.Error() != "no ocelot yaml found for repo level11consulting/ocelot" {
 		t.Error("handler returned a file not found, shouldreturn an herror that ocelot yml can't be found")
 	}
 	handler.Reset()
@@ -75,15 +75,15 @@ func TestPushWerkerTeller_TellWerker_PreviousHeadCommit(t *testing.T) {
 	}
 	push := &pb.Push{
 		Commits: commits,
-		Repo: &pb.Repo{AcctRepo: "shankj3/ocelot"},
+		Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot"},
 		HeadCommit: commits[0],
 		PreviousHeadCommit: &pb.Commit{Hash: "old_last", Message: "finished that last pr!", Author: &pb.User{UserName:"jessi-shank", DisplayName: "jessi shank"}},
 		User: &pb.User{UserName:"jessi-shank", DisplayName: "jessi shank"},
 		Branch: "mybranchfornewstuffveryexcitingwoooooeeeeee",
 	}
 	changedFiles := []string{"ocelot.yml", "build.conf", "src/main/java/javathing.java"}
-	handler.EXPECT().GetFile("ocelot.yml", "shankj3/ocelot", "123last").Times(1).Return(Buildfile, nil)
-	handler.EXPECT().GetChangedFiles("shankj3/ocelot", "123last", "old_last").Times(1).Return(changedFiles, nil)
+	handler.EXPECT().GetFile("ocelot.yml", "level11consulting/ocelot", "123last").Times(1).Return(Buildfile, nil)
+	handler.EXPECT().GetChangedFiles("level11consulting/ocelot", "123last", "old_last").Times(1).Return(changedFiles, nil)
 	if err := cwt.TellWerker(push, signaler, handler, "token", false, pb.SignaledBy_PUSH); err != nil {
 		t.Error("should not fail, got " + err.Error())
 	}

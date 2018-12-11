@@ -8,7 +8,7 @@ RUN apk --update --no-cache add git protobuf-dev ca-certificates openssh python 
     go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
     go get -v -u github.com/favadi/protoc-go-inject-tag
 
-WORKDIR /go/src/github.com/shankj3/ocelot/
+WORKDIR /go/src/github.com/level11consulting/ocelot/
 COPY . .
 #RUN cd models && ./build-protos.sh && cd -
 #RUN make proto

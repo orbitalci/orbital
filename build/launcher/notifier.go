@@ -2,11 +2,11 @@ package launcher
 
 import (
 	"github.com/pkg/errors"
-	"github.com/shankj3/ocelot/build/notifiers"
-	"github.com/shankj3/ocelot/build/notifiers/slack"
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build/notifiers"
+	"github.com/level11consulting/ocelot/build/notifiers/slack"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func getNotifiers() []notifiers.Notifier {

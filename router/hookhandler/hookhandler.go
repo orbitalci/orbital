@@ -8,12 +8,12 @@ import (
 
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-	signal "github.com/shankj3/ocelot/build_signaler"
-	"github.com/shankj3/ocelot/build_signaler/webhook"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/common/remote"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/build_signaler/webhook"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/common/remote"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller, prTeller *webhook.PullReqWerkerTeller) *HookHandlerContext {

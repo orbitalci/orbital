@@ -7,10 +7,10 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
-	"github.com/shankj3/ocelot/common/helpers/dockrhelper"
-	"github.com/shankj3/ocelot/common/trigger"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common/helpers/dockrhelper"
+	"github.com/level11consulting/ocelot/common/trigger"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 //contains all validators for commands as recognized by ocelot <command> [args]

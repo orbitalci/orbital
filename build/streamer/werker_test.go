@@ -5,8 +5,8 @@ import (
 	"bytes"
 	consulet "github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/models"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/storage"
 	"testing"
 	"time"
 )

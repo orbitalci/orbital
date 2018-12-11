@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/shankj3/ocelot/common/helpers/ioshelper"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common/helpers/ioshelper"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 const (

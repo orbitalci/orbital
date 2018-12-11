@@ -6,10 +6,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/common"
-	util "github.com/shankj3/ocelot/common/testutil"
-	"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/common"
+	util "github.com/level11consulting/ocelot/common/testutil"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/storage"
 	"testing"
 )
 

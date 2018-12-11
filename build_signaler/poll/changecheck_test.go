@@ -9,10 +9,10 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/build_signaler"
-	"github.com/shankj3/ocelot/models"
-	pbb "github.com/shankj3/ocelot/models/bitbucket/pb"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/models"
+	pbb "github.com/level11consulting/ocelot/models/bitbucket/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 type fakeCommitLister struct {

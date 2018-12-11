@@ -7,10 +7,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
-	"github.com/shankj3/ocelot/client/commandhelper"
-	"github.com/shankj3/ocelot/client/creds/repocreds/list"
-	"github.com/shankj3/ocelot/client/creds/vcscreds/list"
-	models "github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	"github.com/level11consulting/ocelot/client/creds/repocreds/list"
+	"github.com/level11consulting/ocelot/client/creds/vcscreds/list"
+	models "github.com/level11consulting/ocelot/models/pb"
 )
 
 func New(ui cli.Ui) *cmd {

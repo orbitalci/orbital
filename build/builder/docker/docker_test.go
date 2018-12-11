@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/shankj3/go-til/test"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 // test that in docker, can run the InstallPackageDeps to multiple image types

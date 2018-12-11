@@ -17,10 +17,10 @@ import (
 
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/shankj3/ocelot/common"
-	"github.com/shankj3/ocelot/models"
-	gpb "github.com/shankj3/ocelot/models/github/pb"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/models"
+	gpb "github.com/level11consulting/ocelot/models/github/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 const DefaultBaseURL = "https://api.github.com/%s"
