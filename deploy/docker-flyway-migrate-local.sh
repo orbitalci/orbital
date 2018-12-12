@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-PG_HOST=10.1.70.173
+PG_HOST=192.168.56.78
 PG_PORT=5432
 PG_USER=postgres
 PG_PASSWORD=mysecretpassword

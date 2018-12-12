@@ -15,17 +15,19 @@ Vagrant.configure("2") do |config|
     infra.vm.provider :virtualbox do |vb|
       vb.name = "infra"
       vb.memory = "2048"
-    end
-    # FIXME: Start with privileged: false
-    infra.vm.provision "shell", inline: <<-SHELL
-      cd /home/vagrant/go/src/github.com/level11consulting/ocelot/deploy/infra
-      docker network create ocelot
-      docker-compose -f postgres-docker-compose.yml up -d
-      docker-compose -f nsq-docker-compose.yml up -d
-      docker-compose -f consul-docker-compose.yml up -d
-      docker-compose -f vault-docker-compose.yml up -d
-    SHELL
-    infra.vm.network "private_network", ip: "192.168.56.78"
+  end
+
+  # Use the vagrant provisioner to install Docker
+  config.vm.provision "docker" do |d|
+  end
+
+  # Use ansible to provision host
+  config.vm.provision "ansible" do |a|
+    a.playbook = "playbook.yml"
+  end
+
+  # Set static IP for this host  
+  infra.vm.network "private_network", ip: "192.168.56.78"
   end
 
   config.vm.define "ocelot", primary: true do |ocelot|
@@ -33,93 +35,26 @@ Vagrant.configure("2") do |config|
     ocelot.vm.provider :virtualbox do |vb|
       vb.name = "ocelot"
       vb.memory = "2048"
-    end
+  end
 
-    ocelot.vm.provision "shell", privileged: false, inline: <<-SHELL
-      sudo apt install -y build-essential
+  # Use the vagrant provisioner to install Docker
+  config.vm.provision "docker" do |d|
+  end
 
-      # Install Go 1.11+ with Snap
-      sudo snap install go --classic
+  # Use ansible to provision host
+  config.vm.provision "ansible" do |a|
+    a.playbook = "playbook.yml"
+  end
 
-      # Install Protobuf 3.6+ with Snap
-      sudo snap install protobuf --classic
-
-      echo 'export GOPATH=$HOME/go' | sudo tee -a /etc/bash.bashrc
-      echo 'export GO111MODULE=on' | sudo tee -a /etc/bash.bashrc
-      export GOPATH=$HOME/go
-      export GO111MODULE=on
-      echo 'export PATH=$PATH:$GOPATH/bin' | sudo tee -a /etc/bash.bashrc
-      export PATH=$PATH:$GOPATH/bin
-
-      sudo chown -R $(id -u):$(id -g) $HOME/go
-
-      echo '# Ocelot configuration:' | sudo tee -a /etc/bashrc.bashrc
-      echo 'export VAULT_TOKEN=ocelotdev' | sudo tee -a /etc/bash.bashrc
-      export VAULT_TOKEN=ocelotdev
-      echo 'export VAULT_ADDR=http://192.168.56.78:8200' | sudo tee -a /etc/bash.bashrc
-      export VAULT_ADDR=http://192.168.56.78:8200
-      echo 'export CONSUL_HTTP_ADDR=http://192.168.56.78:8500' | sudo tee -a /etc/bash.bashrc
-      export CONSUL_HTTP_ADDR=http://192.168.56.78:8500
-      echo 'export CONSUL_HOST=192.168.56.78' | sudo tee -a /etc/bash.bashrc
-      export CONSUL_HOST=192.168.56.78
-      echo 'export NSQLOOKUPD_IP=192.168.56.78' | sudo tee -a /etc/bash.bashrc
-      export NSQLOOKUPD_IP=192.168.56.78
-      echo 'export NSQD_IP=192.168.56.78' | sudo tee -a /etc/bash.bashrc
-      export NSQD_IP=192.168.56.78
-      echo 'export REGISTER_IP=192.168.12.34' | sudo tee -a /etc/bash.bashrc
-      export REGISTER_IP=192.168.12.34
-      echo 'export LOG_LEVEL=debug' | sudo tee -a /etc/bash.bashrc
-      export LOG_LEVEL=debug
-      echo 'export DBHOST=192.168.56.78' | sudo tee -a /etc/bash.bashrc
-      export DBHOST=192.168.56.78
-      echo 'export ADMIN_HOST=192.168.12.34' | sudo tee -a /etc/bash.bashrc
-      export ADMIN_HOST=192.168.12.34
-      echo 'export ADMIN_PORT=10000' | sudo tee -a /etc/bash.bashrc
-      export ADMIN_PORT=10000
-
-      # Set up Vault to use kv version 1, for now
-      # Unmount secret/
-      vault secrets disable secret
-      vault secrets enable -path=secret -version=1 kv
-
-      /home/vagrant/go/src/github.com/level11consulting/ocelot/scripts/setup-cv.sh
-
-      cd /home/vagrant/go/src/github.com/level11consulting/ocelot/
-      
-      go mod tidy
-      go get -v -u github.com/golang/protobuf/proto
-      go get -v -u github.com/golang/protobuf/protoc-gen-go
-      go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-      go get -v -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
-      go get -v -u github.com/favadi/protoc-go-inject-tag
-      go get -v -u github.com/golang/mock/mockgen
-      go get -v -u golang.org/x/tools/cmd/stringer
-      go get -v -u golang.org/x/tools/cmd/cover
-
-      make proto
-      make local
-    SHELL
-    ocelot.vm.network "private_network", ip: "192.168.12.34"
+  # Set static IP for this host  
+  ocelot.vm.network "private_network", ip: "192.168.12.34"
   end
 
   # NOTE: This outer provision block runs FIRST before inner blocks of the VMs above
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
-    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
-    sudo sh /tmp/get-docker.sh
-    sudo systemctl start docker
-    sudo usermod -aG docker $USER
-
-    sudo apt install -y docker-compose unzip
-
-    # Install Consul and Vault CLI
-    pushd /usr/local/bin
-    sudo wget https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
-    sudo wget https://releases.hashicorp.com/vault/0.11.1/vault_0.11.1_linux_amd64.zip
-    for z in `ls *.zip`; do sudo unzip ${z}; done
-    sudo rm *.zip
-    popd
-
-    vault -autocomplete-install
+    sudo apt-get update
+    sudo apt-get install -y software-properties-common
+    sudo apt-add-repository --yes --update ppa:ansible/ansible
+    sudo apt-get install -y ansible
   SHELL
-
 end
