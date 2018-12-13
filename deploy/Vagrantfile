@@ -23,7 +23,7 @@ Vagrant.configure("2") do |config|
 
   # Use ansible to provision host
   config.vm.provision "ansible" do |a|
-    a.playbook = "playbook.yml"
+    a.playbook = "infra-playbook.yml"
   end
 
   # Set static IP for this host  
@@ -43,7 +43,7 @@ Vagrant.configure("2") do |config|
 
   # Use ansible to provision host
   config.vm.provision "ansible" do |a|
-    a.playbook = "playbook.yml"
+    a.playbook = "ocelot-playbook.yml"
   end
 
   # Set static IP for this host  
