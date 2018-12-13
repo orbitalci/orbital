@@ -9,7 +9,7 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 )
 
-//go:generate mockgen -source vcshandler.go -destination mock_models/vcshandler.mock.go -package mock_models
+////go:generate mockgen -source vcshandler.go -destination mock_models/vcshandler.mock.go -package mock_models
 
 type VCSHandler interface {
 	GetVcsType() pb.SubCredType
