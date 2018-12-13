@@ -31,7 +31,16 @@ Future big wants:
 
 # Developers
 ## Getting started with Vagrant
-(Needs testing, more detail)
+
+### Requirements on host
+The following tools need to be installed on your host.
+
+* Vagrant
+* Virtualbox
+  * If you use a different Vagrant provider, you may need to set your `VAGRANT_DEFAULT_PROVIDER` environment variable.
+  * See [the Vagrant docs](https://www.vagrantup.com/docs/providers/default.html) for more detail
+* Ansible 2.7+
+
 From `deploy` directory:
 `vagrant up`
 
@@ -39,21 +48,38 @@ This will start 2 VMs. One for infra, one for ocelot components.
 (Tip: Automatically sync code from host environment into VMs with `vagrant rsync-auto` in another terminal window after running `vagrant up`)
 
 The ocelot VM will be at IP: `192.168.12.34`
+
 The infra VM will be at IP: `192.168.56.78`
 
 Infrastructure components run as Docker containers. (docker-compose files in `deploy/infra/`)
-Consul UI: http://192.168.56.78:8500
-Vault UI: http://192.168.56.78:8200 - Default token value: `ocelotdev`
-NSQAdmin UI: http://192.168.56.78:4147
-Postgres: 192.168.56.78:5432 - User name/Database name: `postgres`, Password: `mysecretpassword`
 
-When the Ocelot VM starts up, it will instantiate the infrastructure by running `scripts/setup-cv.sh`, and attempt to install the current codebase.
+* Consul UI: http://192.168.56.78:8500
+* Vault UI: http://192.168.56.78:8200 - Default token value: `ocelotdev`
+* NSQAdmin UI: http://192.168.56.78:4147
+* Postgres: 192.168.56.78:5432 - User name/Database name: `postgres`, Password: `mysecretpassword`
+
+When the Vagrant VMs starts up, it will call use Ansible on your host to instantiate the Infra and Ocelot VMs, and attempt to install the current codebase.
+
 
 You can ssh into these VMs
 `vagrant ssh` & `vagrant ssh ocelot` will result in SSHing into the ocelot VM
 `vagrant ssh infra` will SSH into the infra VM
 
 The codebase will be located in `/home/vagrant/go/src/github.com/level11consulting/ocelot`
+
+#### Known issues with Vagrant environment
+```
+ [WARNING]: Could not match supplied host pattern, ignoring: ocelot
+```
+* `vagrant up` races on some hosts, and Ansible provisioning fails
+  * Workaround: If ocelot + infra VMs are deployed, re-run the Ansible provisioning manually
+    1. `vagrant up infra --provision`
+    2. `vagrant up ocelot --provision` 
+* NSQ is not fully configured for Ocelot operation
+  * Workaround: Open up NSQAdmin UI. Create a topic `build` with a channel `werker`
+* Ocelot services are not started
+  * Workaround: `vagrant ssh` into the VM. Start `admin`, `werker`, `hookhandler` in the foreground.
+    * Terminal multiplexers like `screen` or `tmux` are installed, and using either them is strongly suggested.
 
 ### Validate connectivity on host
 To configure the `ocelot` cli to point at this development instance, you need to set these environment variables:
