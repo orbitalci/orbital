@@ -1,0 +1,36 @@
+- name: Install common tools
+  become: yes
+  package:
+    state: present
+    name: "{{ item }}"
+  loop:
+    - build-essential
+    - docker-compose
+    - unzip
+    - vim
+    - python-pip
+    - zip
+
+# FIXME: This should be split up to use get_url first, for checksum verification
+# https://learn.hashicorp.com/vault/operations/ops-deployment-guide
+- name: Download our Hashicorp dependencies
+  vars:
+    consul:
+      version: 1.2.3
+    vault:
+      version: 0.11.1
+  become: yes
+  unarchive:
+    src: "{{ item.url }}"
+    dest: /usr/local/bin 
+    creates: "{{ item.filepath }}"
+    remote_src: yes
+  loop:
+    - url: "https://releases.hashicorp.com/consul/{{ consul.version }}/consul_{{ consul.version }}_linux_amd64.zip"
+      filepath: /usr/local/bin/consul
+    - url: "https://releases.hashicorp.com/vault/{{ vault.version }}/vault_{{ vault.version }}_linux_amd64.zip"
+      filepath: /usr/local/bin/vault 
+
+# FIXME: Need to figure out what I can use to skip this if it doesn't need to be run.
+#- name: Install vault auto-complete
+#  shell: vault -autocomplete-install
