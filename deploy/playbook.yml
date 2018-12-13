@@ -183,10 +183,16 @@
   - name: The following `go mod tidy` will fail w/o creating the $GOPATH/pkg directory... do that.
     become: yes
     file:
-      path: /home/vagrant/go/pkg
+      path: "{{ item }}"
       state: directory
       owner: vagrant
       group: vagrant
+      recurse: yes
+    loop:
+      - /home/vagrant/go
+      - /home/vagrant/go/bin
+      - /home/vagrant/go/pkg
+      - /home/vagrant/go/src
 
   - name: Install Ocelot's go dependencies (may take a moment...)
     retries: 2
@@ -200,7 +206,6 @@
       executable: /bin/bash
 
   - name: Ocelot build dependency - protoc-gen-go
-    become: yes
     shell: |
       export GOPATH=/home/vagrant/go
       export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -213,7 +218,6 @@
       - github.com/golang/protobuf/protoc-gen-go
 
   - name: Ocelot build dependency - protoc-gen-grpc-gateway
-    become: yes
     shell: |
       export GOPATH=/home/vagrant/go
       export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -226,7 +230,6 @@
 
 
   - name: Ocelot build dependency - protoc-gen-swagger
-    become: yes
     shell: |
       export GOPATH=/home/vagrant/go
       export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -238,7 +241,6 @@
       - github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
   - name: Ocelot build dependency - protoc-go-inject-tag
-    become: yes
     shell: |
       export GOPATH=/home/vagrant/go
       export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -250,7 +252,6 @@
       - github.com/favadi/protoc-go-inject-tag
 
   - name: Ocelot build dependency - mockgen
-    become: yes
     shell: |
       export GOPATH=/home/vagrant/go
       export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -262,7 +263,6 @@
       - github.com/golang/mock/mockgen
 
   - name: Ocelot build dependency - stringer
-    become: yes
     shell: |
       export GOPATH=/home/vagrant/go
       export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -274,7 +274,6 @@
       - golang.org/x/tools/cmd/stringer
 
   - name: Ocelot build dependency - cover
-    become: yes
     shell: |
       export GOPATH=/home/vagrant/go
       export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -293,9 +292,7 @@
     args:
       chdir: /home/vagrant/go/src/github.com/level11consulting/ocelot
 
-  # XXX: Do we really need to run this as root?
   - name: Run local compile, and install locally
-    become: yes
     shell: |
       export GOPATH=/home/vagrant/go
       export GO111MODULE=on
