@@ -4,3 +4,4 @@
     method: POST
   loop:
     - http://192.168.56.78:4151/topic/create?topic=build
+    - http://192.168.56.78:4151/channel/create?topic=build&channel=werker
