@@ -20,6 +20,7 @@ services:
       - nsqlookupd
     command: >
       /nsqd
+      -broadcast-address 192.168.56.78
       -lookupd-tcp-address nsqlookupd:4160
     ports:
       - 4150:4150
