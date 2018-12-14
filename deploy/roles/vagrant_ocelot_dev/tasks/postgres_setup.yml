@@ -1,0 +1,10 @@
+- name: Run script for initializing Postgress w/ Flyway
+  shell: |
+    export PG_HOST=192.168.56.78
+    export PG_PORT=5432
+    export PG_USER=postgres
+    export PG_PASSWORD=mysecretpassword
+    ./docker-flyway-migrate.sh
+  args:
+    executable: /bin/bash
+    chdir: /home/vagrant/go/src/github.com/level11consulting/ocelot/deploy

@@ -1,0 +1,99 @@
+# FIXME: In Ansible 2.8, there will be a module for snap packages
+- name: Install golang
+  become: yes
+  command: snap install go --classic
+  args:
+    creates: /snap/bin/go
+
+- name: The following `go mod tidy` will fail w/o creating the $GOPATH/pkg directory... do that.
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: vagrant
+    group: vagrant
+    recurse: yes
+  loop:
+    - /home/vagrant/go
+    - /home/vagrant/go/bin
+    - /home/vagrant/go/pkg
+    - /home/vagrant/go/src
+
+- name: Ocelot build dependency - protoc-gen-go
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    go get -v -u {{ item }}
+  args:
+    executable: /bin/bash
+    creates: /home/vagrant/go/bin/protoc-gen-go
+  loop:
+    - github.com/golang/protobuf/proto
+    - github.com/golang/protobuf/protoc-gen-go
+
+- name: Ocelot build dependency - protoc-gen-grpc-gateway
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    go get -v -u {{ item }}
+  args:
+    executable: /bin/bash
+    creates: /home/vagrant/go/bin/protoc-gen-grpc-gateway
+  loop:
+    - github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+
+- name: Ocelot build dependency - protoc-gen-swagger
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    go get -v -u {{ item }}
+  args:
+    executable: /bin/bash
+    creates: /home/vagrant/go/bin/protoc-gen-swagger
+  loop:
+    - github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+
+- name: Ocelot build dependency - protoc-go-inject-tag
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    go get -v -u {{ item }}
+  args:
+    executable: /bin/bash
+    creates: /home/vagrant/go/bin/protoc-go-inject-tag
+  loop:
+    - github.com/favadi/protoc-go-inject-tag
+
+- name: Ocelot build dependency - mockgen
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    go get -v -u {{ item }}
+  args:
+    executable: /bin/bash
+    creates: /home/vagrant/go/bin/mockgen
+  loop:
+    - github.com/golang/mock/mockgen
+
+- name: Ocelot build dependency - stringer
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    go get -v -u {{ item }}
+  args:
+    executable: /bin/bash
+    creates: /home/vagrant/go/bin/stringer
+  loop:
+    - golang.org/x/tools/cmd/stringer
+
+- name: Ocelot build dependency - cover
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    go get -v -u {{ item }}
+  args:
+    executable: /bin/bash
+    creates: /home/vagrant/go/bin/cover
+  loop:
+    - golang.org/x/tools/cmd/cover
+

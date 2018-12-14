@@ -1,0 +1,6 @@
+- name: Run HTTP calls for initializing NSQ with build topic
+  uri:
+    url: "{{ item }}"
+    method: POST
+  loop:
+    - http://192.168.56.78:4151/topic/create?topic=build
