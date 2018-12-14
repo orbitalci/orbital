@@ -35,40 +35,40 @@ locals() {
     # Uncomment if you want to operate using the dynamic secrets
     # TODO: We should practice development using a user w/o superuser access
 
-    vault secrets enable database || true
-    vault write database/config/ocelot \
-        plugin_name=postgresql-database-plugin \
-        allowed_roles="ocelot" \
-        connection_url="postgresql://{{username}}:{{password}}@${DBHOST}:5432/?sslmode=disable" \
-        username="postgres" \
-        password="mysecretpassword"
+    #vault secrets enable database || true
+    #vault write database/config/ocelot \
+    #    plugin_name=postgresql-database-plugin \
+    #    allowed_roles="ocelot" \
+    #    connection_url="postgresql://{{username}}:{{password}}@${DBHOST}:5432/?sslmode=disable" \
+    #    username="postgres" \
+    #    password="mysecretpassword"
 
-    # Short TTLs, so we can experience token expiration/renewal more often
-    # Assuming we are using the default docker container's superuser + public schema
-    vault write database/roles/ocelot \
-        db_name=ocelot \
-        creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
-            GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
-        default_ttl="10m" \
-        max_ttl="1h"
-
-    # Example of tuning role to a more minimally scoped user using
+    ## Short TTLs, so we can experience token expiration/renewal more often
+    ## Assuming we are using the default docker container's superuser + public schema
     #vault write database/roles/ocelot \
     #    db_name=ocelot \
     #    creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
-    #        REVOKE ALL ON SCHEMA public FROM \"{{name}}\"; \
-    #        GRANT ocelot TO \"{{name}}\";" \
+    #        GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
     #    default_ttl="10m" \
     #    max_ttl="1h"
 
-    consul kv put ${prefix}config/ocelot/postgres/vault/secretsengine database
-    consul kv put ${prefix}config/ocelot/postgres/vault/rolename ocelot
+    ## Example of tuning role to a more minimally scoped user using
+    ##vault write database/roles/ocelot \
+    ##    db_name=ocelot \
+    ##    creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
+    ##        REVOKE ALL ON SCHEMA public FROM \"{{name}}\"; \
+    ##        GRANT ocelot TO \"{{name}}\";" \
+    ##    default_ttl="10m" \
+    ##    max_ttl="1h"
 
-    # Test that we can get dynamic creds from Vault
-    # In production, you will need to define policy for read to "database/creds/ocelot"
-    vault read database/creds/ocelot
+    #consul kv put ${prefix}config/ocelot/postgres/vault/secretsengine database
+    #consul kv put ${prefix}config/ocelot/postgres/vault/rolename ocelot
 
-    # Vault database secret engine END
+    ## Test that we can get dynamic creds from Vault
+    ## In production, you will need to define policy for read to "database/creds/ocelot"
+    #vault read database/creds/ocelot
+
+    ## Vault database secret engine END
 
 }
 

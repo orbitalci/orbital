@@ -5,16 +5,19 @@ import (
 	"os"
 	"time"
 
+	"net/url"
+
+	"github.com/level11consulting/orbitalci/build/buildeventhandler/pull/poll"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/storage"
+	"github.com/level11consulting/orbitalci/version"
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/build_signaler/poll"
-	cred "github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/version"
 )
 
-func configure() cred.CVRemoteConfig {
+// FIXME: consistency: consul's host and port, the var name for configInstance/rc
+func configure() config.CVRemoteConfig {
 	var loglevel, consuladdr string
 	var consulport int
 	flrg := flag.NewFlagSet("poller", flag.ExitOnError)
@@ -25,7 +28,13 @@ func configure() cred.CVRemoteConfig {
 	version.MaybePrintVersion(flrg.Args())
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
-	rc, err := cred.GetInstance(consuladdr, consulport, "")
+
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consuladdr, consulport))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+
+	rc, err := config.GetInstance(parsedConsulURL, "")
 	// todo: add getaddress() to consuletty
 	//ocelog.Log().Debug("consul address is ", rc.GetConsul().Config.Address)
 	if err != nil {

@@ -1,0 +1,27 @@
+- name: Install Orbital's go dependencies (may take a moment...)
+  retries: 2
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export GO111MODULE=on
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    go mod tidy
+  args:
+    chdir: /home/vagrant/orbitalci
+    executable: /bin/bash
+
+- name: Run code generation
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    make proto
+  args:
+    chdir: /home/vagrant/orbitalci
+
+- name: Run local compile, and install locally
+  shell: |
+    export GOPATH=/home/vagrant/go
+    export GO111MODULE=on
+    export PATH=$PATH:/snap/bin:$GOPATH/bin
+    make local
+  args:
+    chdir: /home/vagrant/orbitalci

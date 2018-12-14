@@ -1,0 +1,31 @@
+# Copy the env file
+- name: Install the Orbital default env vars
+  become: yes
+  copy:
+    src: /home/vagrant/orbitalci/deploy/systemd/orbital-vagrant.env
+    dest: /etc/default/orbital
+
+# Copy the systemd service files
+- name: Install the Orbital systemd service files
+  become: yes
+  copy:
+    src: /home/vagrant/orbitalci/deploy/systemd/orbital-{{ item }}.service
+    dest: /etc/systemd/system/
+  loop:
+    - admin
+    - hookhandler
+    - poller
+    - worker
+
+- name: Start Orbital server components
+  become: yes
+  systemd:
+    daemon-reload: yes
+    name: orbital-{{ item }}.service
+    state: started
+    enabled: yes
+  loop:
+    - admin
+    - hookhandler
+    - poller
+    - worker

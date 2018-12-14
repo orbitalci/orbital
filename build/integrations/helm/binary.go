@@ -8,9 +8,9 @@ package helm
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/helpers/buildscript/search"
+	"github.com/level11consulting/orbitalci/build/integrations"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func Create(loopbackip string, port string) integrations.BinaryIntegrator {
@@ -28,7 +28,7 @@ func (k *helmInteg) GenerateDownloadBashables() []string {
 }
 
 func (k *helmInteg) IsRelevant(wc *pb.BuildConfig) bool {
-	return common.BuildScriptsContainString(wc, "helm")
+	return search.BuildScriptsContainString(wc, "helm")
 }
 
 func (k *helmInteg) String() string {

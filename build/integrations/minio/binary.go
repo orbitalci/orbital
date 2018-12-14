@@ -7,9 +7,9 @@ package minio
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/helpers/buildscript/search"
+	"github.com/level11consulting/orbitalci/build/integrations"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func Create(loopbackip string, port string) integrations.BinaryIntegrator {
@@ -27,7 +27,7 @@ func (k *minioInteg) GenerateDownloadBashables() []string {
 }
 
 func (k *minioInteg) IsRelevant(wc *pb.BuildConfig) bool {
-	return common.BuildScriptsContainString(wc, "mc")
+	return search.BuildScriptsContainString(wc, "mc")
 }
 
 func (k *minioInteg) String() string {

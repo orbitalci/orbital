@@ -15,8 +15,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/integrations"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 type SSHKeyInt struct {

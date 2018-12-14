@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"net/url"
 	"strings"
 
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/version"
 	"github.com/namsral/flag"
-	cred "github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/version"
+	ocelog "github.com/shankj3/go-til/log"
 
 	"errors"
 	"os"
@@ -34,7 +37,6 @@ func strToWerkType(str string) models.WerkType {
 	}
 }
 
-
 // WerkerConf is all the configuration for the Werker to do its job properly. this is where the
 // storage type is set (ie filesystem, etc..) and the processor is set (ie Docker, kubernetes, etc..)
 type WerkerConf struct {
@@ -49,9 +51,10 @@ type WerkerConf struct {
 	//werkerProcessor builder.Processor
 	LogLevel string
 	//LoopBackIp      string
-	RemoteConfig cred.CVRemoteConfig
+	RemoteConfig config.CVRemoteConfig
 }
 
+// FIXME: consistency: consul's host and port, the var name for configInstance/rc
 // GetConf sets the configuration for the Werker. Its not thread safe, but that's
 // alright because it only happens on startup of the application
 func GetConf() (*WerkerConf, error) {
@@ -77,7 +80,7 @@ func GetConf() (*WerkerConf, error) {
 	flrg.StringVar(&tags, "tags", "", "comma separated list of tags for this build node")
 	// set flags for disk utility checks
 	flrg.StringVar(&werker.DiskUtilityHealthCheck.PauseThreshold, "disk-pause-threshold", "1G", "How much free disk can be left before the werker will error out and stop consuming messasges")
-	flrg.StringVar(&werker.DiskUtilityHealthCheck.Path, "disk-pause-path", "","Path at which to check for disk-pause-threshold")
+	flrg.StringVar(&werker.DiskUtilityHealthCheck.Path, "disk-pause-path", "", "Path at which to check for disk-pause-threshold")
 	// set flag for interval on which to run healthcheck
 	flrg.IntVar(&werker.HealthCheckInterval, "healthcheck-interval", 60, "Interval on which to make sure that remote config, storage system, and disk is not full")
 	// ssh werker configuration
@@ -95,7 +98,13 @@ func GetConf() (*WerkerConf, error) {
 	if werker.WerkerName == "" {
 		return nil, errors.New("could not get hostname from os.hostname() and no werker_name given")
 	}
-	rc, err := cred.GetInstance(consuladdr, consulport, "")
+
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consuladdr, consulport))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+
+	rc, err := config.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		return nil, errors.New("could not get instance of remote config; err: " + err.Error())
 	}

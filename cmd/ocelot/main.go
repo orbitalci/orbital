@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+
+	client "github.com/level11consulting/orbitalci/client/ui"
+	"github.com/level11consulting/orbitalci/version"
 	"github.com/mitchellh/cli"
-	"github.com/level11consulting/ocelot/client"
-	"github.com/level11consulting/ocelot/version"
 
 	"os"
 )

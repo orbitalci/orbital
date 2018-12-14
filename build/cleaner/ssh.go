@@ -3,10 +3,10 @@ package cleaner
 import (
 	"context"
 
+	"github.com/level11consulting/orbitalci/build/helpers/sshhelper"
+	"github.com/level11consulting/orbitalci/build/helpers/stringbuilder/workingdir"
+	"github.com/level11consulting/orbitalci/models"
 	"github.com/pkg/errors"
-	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/common/helpers/sshhelper"
-	"github.com/level11consulting/ocelot/models"
 )
 
 type SSHCleaner struct {
@@ -23,8 +23,8 @@ func (d *SSHCleaner) Cleanup(ctx context.Context, id string, logout chan []byte)
 	if id == "" {
 		return errors.New("id cannot be empty")
 	}
-	prefix := build.GetOcyPrefixFromWerkerType(models.SSH)
-	cloneDir := build.GetCloneDir(prefix, id)
+	prefix := workingdir.GetOcyPrefixFromWerkerType(models.SSH)
+	cloneDir := workingdir.GetCloneDir(prefix, id)
 	if logout != nil {
 		logout <- []byte("removing build directory " + cloneDir)
 	}

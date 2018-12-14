@@ -7,7 +7,7 @@ package mock_models
 import (
 	gomock "github.com/golang/mock/gomock"
 	net "github.com/shankj3/go-til/net"
-	pb "github.com/level11consulting/ocelot/models/pb"
+	pb "github.com/level11consulting/orbitalci/models/pb"
 	io "io"
 	reflect "reflect"
 )

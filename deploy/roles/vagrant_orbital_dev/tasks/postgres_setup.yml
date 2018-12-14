@@ -1,0 +1,10 @@
+- name: Run script for initializing Postgress w/ Flyway
+  shell: |
+    export PG_HOST={{ postgres.host }}
+    export PG_PORT={{ postgres.port }}
+    export PG_USER={{ postgres.user }}
+    export PG_PASSWORD={{ postgres.pass }}
+    ./docker-flyway-migrate.sh
+  args:
+    executable: /bin/bash
+    chdir: /home/vagrant/orbitalci/deploy

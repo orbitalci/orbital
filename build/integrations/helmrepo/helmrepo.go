@@ -9,9 +9,9 @@ package helmrepo
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/helpers/buildscript/search"
+	"github.com/level11consulting/orbitalci/build/integrations"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func Create() integrations.StringIntegrator {
@@ -34,7 +34,7 @@ func (k *HelmRepoInt) MakeBashable(encoded string) []string {
 }
 
 func (k *HelmRepoInt) IsRelevant(wc *pb.BuildConfig) bool {
-	return common.BuildScriptsContainString(wc, "helm")
+	return search.BuildScriptsContainString(wc, "helm")
 }
 
 func (k *HelmRepoInt) GenerateIntegrationString(creds []pb.OcyCredder) (string, error) {

@@ -8,12 +8,13 @@
 package dockerconfig
 
 import (
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/level11consulting/orbitalci/build/helpers/serde"
 )
 
 type auth map[string]string
@@ -40,7 +41,7 @@ func (d *DockrInt) GenerateIntegrationString(credz []pb.OcyCredder) (string, err
 	if err != nil {
 		return "", err
 	}
-	configEncoded := common.BitzToBase64(bitz)
+	configEncoded := serde.BitzToBase64(bitz)
 	d.dConfig = configEncoded
 	return configEncoded, err
 }
@@ -65,7 +66,7 @@ func RCtoDockerConfig(creds []pb.OcyCredder) ([]byte, error) {
 			return nil, errors.New("unable to cast as repo creds")
 		}
 		authstring := fmt.Sprintf("%s:%s", credx.Username, credx.Password)
-		b64authstring := common.StrToBase64(authstring)
+		b64authstring := serde.StrToBase64(authstring)
 		authz[credx.RepoUrl] = map[string]string{"auth": b64authstring}
 	}
 	config := &dockerConfigJson{

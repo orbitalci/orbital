@@ -1,6 +1,8 @@
-# Ansible 2.7.x
+# Ansible 2.8.x
 ---
 - hosts: infra 
+  vars:
+    infra_vagrant_ip: 192.168.56.78
   roles:
   - vagrant_common
-  - vagrant_ocelot_infra
+  - vagrant_orbital_infra

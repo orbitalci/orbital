@@ -2,9 +2,10 @@ package storage
 
 import (
 	"fmt"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
 	"time"
+
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 type Dest int
@@ -28,7 +29,7 @@ type BuildOut interface {
 
 type BuildSum interface {
 	// AddSumStart will
-	AddSumStart(hash string, account string, repo string, branch string, by pb.SignaledBy, credId int64) (int64, error)
+	AddSumStart(hash string, account string, repo string, branch string) (int64, error)
 	UpdateSum(failed bool, duration float64, id int64) error
 	RetrieveSumByBuildId(buildId int64) (*pb.BuildSummary, error)
 	RetrieveSum(gitHash string) ([]*pb.BuildSummary, error)
@@ -125,7 +126,7 @@ func MultipleVCSTypes(account string, types []pb.SubCredType) *ErrMultipleVCSTyp
 
 type ErrMultipleVCSTypes struct {
 	account string
-	types []pb.SubCredType
+	types   []pb.SubCredType
 }
 
 func (e *ErrMultipleVCSTypes) Error() string {

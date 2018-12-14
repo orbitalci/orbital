@@ -1,15 +1,11 @@
-version: "3.3"
+version: "3.5"
 services:
-  # Ocelot services
+  # Run `make docker-build` first before running docker-compose up
+  # Orbital services
   admin:
-    image: ocelot-admin
+    image: orbitalci
     container_name: admin
-    command: /admin -log-level=debug
-    build:
-      context: .
-      dockerfile: cmd/admin/Dockerfile
-      cache_from:
-        - golang:1.9-alpine
+    command: /usr/local/bin/admin -log-level=debug
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     logging:
@@ -19,22 +15,20 @@ services:
         max-file: "10"
     ports:
       - "10000:10000"
+    networks:
+      - orbital
     environment:
-      VAULT_TOKEN: ${VAULT_TOKEN}
-      VAULT_ADDR: http://vault:8200
-      CONSUL_HOST: http://consul
+      CONSUL_HOST: consul
+      CONSUL_HTTP_ADDR: http://consul:8500
       NSQLOOKUPD_IP: nsqlookupd
       NSQD_IP: nsqd
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_ADDR: http://vault:8200
 
   hookhandler:
-    image: ocelot-hookhandler
+    image: orbitalci
     container_name: hookhandler
-    command: /hookhandler 
-    build:
-      context: .
-      dockerfile: cmd/hookhandler/Dockerfile
-      cache_from:
-        - golang:1.9-alpine
+    command: /usr/local/bin/hookhandler
     logging:
       driver: "json-file"
       options:
@@ -42,28 +36,27 @@ services:
         max-file: "10"
     ports:
       - "8088:8088"
+    networks:
+      - orbital
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
-      VAULT_TOKEN: ${VAULT_TOKEN}
-      VAULT_ADDR: http://vault:8200
-      CONSUL_HOST: http://consul
+      CONSUL_HOST: consul
       LOG_LEVEL: debug
       NSQD_IP: nsqd
       NSQLOOKUPD_IP: nsqlookupd
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN}
 
   werker:
-    image: ocelot-werker
+    image: orbitalci
     container_name: werker
-    command: /werker -log-level debug
-    build:
-      context: .
-      dockerfile: cmd/werker/Dockerfile
-      cache_from:
-        - golang:1.9-alpine
+    command: /usr/local/bin/werker -log-level debug
     ports:
       - "9090:9090"
       - "9099:9099"
+    networks:
+      - orbital
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
@@ -81,29 +74,27 @@ services:
         max-file: "10"
 
   poller:
-    image: ocelot-poller
+    image: orbitalci
     container_name: poller
-    build:
-      context: .
-      dockerfile: cmd/poller/Dockerfile
-      cache_from:
-        - golang:1.9-alpine
+    command: /usr/local/bin/poller
+    networks:
+      - orbital
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
-      VAULT_TOKEN: ${VAULT_TOKEN}
-      VAULT_ADDR: http://vault:8200
-      CONSUL_HTTP_ADDR: http://consul:8500
       CONSUL_HOST: consul
+      CONSUL_HTTP_ADDR: http://consul:8500
       NSQD_IP: nsqd
       NSQLOOKUPD_IP: nsqlookupd
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN}
     logging:
       driver: "json-file"
       options:
         max-size: "200k"
         max-file: "10"
 
+# This network is created first starting deploy/infra/docker-compose.yml
 networks:
-  default:
-    external:
-      name: ocelot
+  orbital:
+    external: true

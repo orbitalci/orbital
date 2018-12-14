@@ -1,6 +1,0 @@
-# Ansible 2.7.x
----
-- hosts: ocelot
-  roles:
-  - vagrant_common
-  - vagrant_ocelot_dev

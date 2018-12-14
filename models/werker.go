@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/level11consulting/ocelot/common/du"
+	du "github.com/level11consulting/orbitalci/server/monitor/disk_usage"
 )
 
 type WerkType int
@@ -81,11 +81,11 @@ type SSHFacts struct {
 
 func (sf *SSHFacts) SetFlags(flg Flagger) {
 	sshOnly := " | ONLY VALID FOR SSH TYPE WERKERS"
-	flg.IntVar(&sf.Port, "ssh-port", 22, "port to ssh to for build exectuion" + sshOnly)
-	flg.StringVar(&sf.Host, "ssh-host", "", "host to ssh to for build execution" + sshOnly)
-	flg.StringVar(&sf.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution" + sshOnly)
-	flg.StringVar(&sf.User, "ssh-user", "root", "ssh user for build execution" + sshOnly)
-	flg.StringVar(&sf.Password, "ssh-password", "", "password for ssh user if no key file" + sshOnly)
+	flg.IntVar(&sf.Port, "ssh-port", 22, "port to ssh to for build exectuion"+sshOnly)
+	flg.StringVar(&sf.Host, "ssh-host", "", "host to ssh to for build execution"+sshOnly)
+	flg.StringVar(&sf.KeyFP, "ssh-private-key", "", "private key for using ssh for build execution"+sshOnly)
+	flg.StringVar(&sf.User, "ssh-user", "root", "ssh user for build execution"+sshOnly)
+	flg.StringVar(&sf.Password, "ssh-password", "", "password for ssh user if no key file"+sshOnly)
 }
 
 func (sf *SSHFacts) IsValid() bool {

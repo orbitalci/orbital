@@ -9,10 +9,10 @@ import (
 	"strings"
 	"syscall"
 
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/models"
+	protobuf "github.com/level11consulting/orbitalci/models/pb"
 	"github.com/mitchellh/cli"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models"
-	protobuf "github.com/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc"
 )
 
@@ -72,7 +72,7 @@ func (oh *OcyHelper) WriteUi(writer func(string), msg string) {
 // SplitAndSetAcctRepo will split up the AcctRepo field, and write an error to ui if it doesnt meet spec
 func (oh *OcyHelper) SplitAndSetAcctRepo(ui cli.Ui) (err error) {
 	Debuggit(ui, "splitting and setting acct repo")
-	oh.Account, oh.Repo, err = common.GetAcctRepo(oh.AcctRepo)
+	oh.Account, oh.Repo, err = stringbuilder.GetAcctRepo(oh.AcctRepo)
 	if err != nil {
 		oh.WriteUi(ui.Error, "flag -acct-repo must be in the format <account>/<repo>")
 		return err
@@ -89,11 +89,11 @@ func (oh *OcyHelper) DetectAcctRepo(ui cli.Ui) error {
 		oh.WriteUi(ui.Info, "Flag -acct-repo was not set, detecting account and repository using git commands")
 		acctRepo, _, err := FindAcctRepo()
 		if err != nil {
-			oh.WriteUi(ui.Error, "Unable to detect account/repo from git commands, please report and use the flags to get around this error. Error is: " + err.Error())
+			oh.WriteUi(ui.Error, "Unable to detect account/repo from git commands, please report and use the flags to get around this error. Error is: "+err.Error())
 			return err
 		}
 		oh.AcctRepo = acctRepo
-		oh.WriteUi(ui.Info, "Detected <account>/<repo> of " + acctRepo)
+		oh.WriteUi(ui.Info, "Detected <account>/<repo> of "+acctRepo)
 	}
 	return nil
 }
@@ -109,16 +109,16 @@ func (oh *OcyHelper) DetectOrConvertVcsType(ui cli.Ui) error {
 	if oh.VcsTypeStr == "ERROR" {
 		_, credType, err = FindAcctRepo()
 		if err != nil {
-			oh.WriteUi(ui.Error, "Unable to detect vcs-type from git commands, please report and use the flags to get around this error. Error is: " + err.Error())
+			oh.WriteUi(ui.Error, "Unable to detect vcs-type from git commands, please report and use the flags to get around this error. Error is: "+err.Error())
 			return err
 		}
 		oh.WriteUi(ui.Info, "Flag -vcs-type not set, detecting from git origin url")
 		oh.VcsType = credType
-		oh.WriteUi(ui.Info, "Detected vcs type of " + oh.VcsType.String())
+		oh.WriteUi(ui.Info, "Detected vcs type of "+oh.VcsType.String())
 	} else {
 		oh.VcsType, err = protobuf.VcsTypeStringToSubCredType(oh.VcsTypeStr)
 		if err != nil {
-			oh.WriteUi(ui.Error, "Unable to convert -vcs-type to VcsType enum. Error: " + err.Error())
+			oh.WriteUi(ui.Error, "Unable to convert -vcs-type to VcsType enum. Error: "+err.Error())
 			return err
 		}
 	}
@@ -166,7 +166,6 @@ func (oh *OcyHelper) HandleStreaming(ui cli.Ui, stream grpc.ClientStream) error 
 	}
 	return nil
 }
-
 
 func (oh *OcyHelper) DebugOcyHelper(ui cli.Ui) {
 	Debuggit(ui, fmt.Sprintf("%#v", oh))

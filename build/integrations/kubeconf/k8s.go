@@ -10,9 +10,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models/pb"
+
+	"github.com/level11consulting/orbitalci/build/helpers/serde"
+	"github.com/level11consulting/orbitalci/build/integrations"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func Create() integrations.StringIntegrator {
@@ -50,14 +51,14 @@ func (k *K8sInt) GenerateIntegrationString(creds []pb.OcyCredder) (string, error
 	}
 	multiCredsJson, _ := json.Marshal(multiCreds)
 
-	configEncoded := common.StrToBase64(string(multiCredsJson))
+	configEncoded := serde.StrToBase64(string(multiCredsJson))
 	k.k8sContents = configEncoded
 	return configEncoded, nil
 }
 
 // Deserialize k.k8sContents, and build multiple environment varialbes
 func (k *K8sInt) GetEnv() []string {
-	conf_json, _ := common.Base64ToBitz(k.k8sContents)
+	conf_json, _ := serde.Base64ToBitz(k.k8sContents)
 	configs := make(map[string]string)
 	json.Unmarshal([]byte(string(conf_json)), &configs)
 

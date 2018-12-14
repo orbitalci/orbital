@@ -9,9 +9,10 @@ package minioconfig
 import (
 	"encoding/json"
 
-	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/helpers/buildscript/search"
+	"github.com/level11consulting/orbitalci/build/helpers/serde"
+	"github.com/level11consulting/orbitalci/build/integrations"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func Create() integrations.StringIntegrator {
@@ -35,7 +36,7 @@ func (m *minioConf) GenerateIntegrationString(credz []pb.OcyCredder) (string, er
 	if err != nil {
 		return "", err
 	}
-	configEncoded := common.BitzToBase64(bitz)
+	configEncoded := serde.BitzToBase64(bitz)
 	m.mConf = configEncoded
 	return configEncoded, err
 }
@@ -45,7 +46,7 @@ func (m *minioConf) MakeBashable(encoded string) []string {
 }
 
 func (m *minioConf) IsRelevant(wc *pb.BuildConfig) bool {
-	return common.BuildScriptsContainString(wc, "mc")
+	return search.BuildScriptsContainString(wc, "mc")
 }
 
 func (m *minioConf) GetEnv() []string {

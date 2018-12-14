@@ -13,23 +13,25 @@ import (
 	"os"
 	"strings"
 
+	"net/url"
+
+	"github.com/level11consulting/orbitalci/build/buildeventhandler/pull/poll"
+	"github.com/level11consulting/orbitalci/build/buildeventhandler/push/buildjob"
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/client/buildconfigvalidator"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/version"
 	"github.com/namsral/flag"
 	"github.com/shankj3/go-til/deserialize"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/build"
-	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/build_signaler/poll"
-	"github.com/level11consulting/ocelot/common"
-	cred "github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/version"
 )
 
 type changeSetConfig struct {
-	RemoteConf cred.CVRemoteConfig
+	RemoteConf config.CVRemoteConfig
 	*deserialize.Deserializer
-	OcyValidator *build.OcelotValidator
+	OcyValidator *buildconfigvalidator.OcelotValidator
 	Producer     *nsqpb.PbProduce
 	AcctRepo     string
 	Acct         string
@@ -38,6 +40,7 @@ type changeSetConfig struct {
 	VcsType      pb.SubCredType
 }
 
+// FIXME: consistency: consul's host and port, the var name for configInstance/rc
 func configure() *changeSetConfig {
 	var loglevel, consuladdr, acctRepo, branches, vcsType string
 	var consulport int
@@ -52,7 +55,12 @@ func configure() *changeSetConfig {
 	version.MaybePrintVersion(flrg.Args())
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
-	rc, err := cred.GetInstance(consuladdr, consulport, "")
+
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consuladdr, consulport))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+	rc, err := config.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to get instance of remote config, exiting")
 	}
@@ -66,8 +74,8 @@ func configure() *changeSetConfig {
 		ocelog.Log().Fatalf("%s is not a vcs subcredtype, need %s", vcsType, strings.Join(pb.CredType_VCS.SubtypesString(), "|"))
 	}
 	branchList := strings.Split(branches, ",")
-	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator()}
-	conf.Acct, conf.Repo, err = common.GetAcctRepo(acctRepo)
+	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: buildconfigvalidator.GetOcelotValidator()}
+	conf.Acct, conf.Repo, err = stringbuilder.GetAcctRepo(acctRepo)
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}
@@ -81,7 +89,7 @@ func main() {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")
 	}
 	defer store.Close()
-	sig := &signal.Signaler{
+	sig := &buildjob.Signaler{
 		RC:           conf.RemoteConf,
 		Deserializer: conf.Deserializer,
 		Producer:     conf.Producer,

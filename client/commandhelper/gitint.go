@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 var (

@@ -1,20 +1,21 @@
 package main
 
 import (
-	//"encoding/json"
 	"fmt"
-	"github.com/namsral/flag"
-	ocelog "github.com/shankj3/go-til/log"
-	cred "github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/common/secure_grpc"
-	//"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/router/admin"
-	//"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/version"
-	//"io/ioutil"
+	"net/url"
 	"os"
+
+	"github.com/namsral/flag"
+
+	"github.com/level11consulting/orbitalci/server/grpc/admin"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/server/tls"
+	"github.com/level11consulting/orbitalci/version"
+
+	ocelog "github.com/shankj3/go-til/log"
 )
 
+// FIXME: consistency: consul's host and port, the var name for configInstance
 func main() {
 	//load properties
 	var port string
@@ -40,46 +41,27 @@ func main() {
 	serverRunsAt := fmt.Sprintf(":%v", port)
 	ocelog.Log().Debug(serverRunsAt)
 
-	configInstance, err := cred.GetInstance(consulHost, consulPort, "")
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consulHost, consulPort))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+
+	configInstance, err := config.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("could not talk to consul or vault, bailing")
 	}
-	var security secure_grpc.SecureGrpc
+	var security tls.SecureGrpc
 	if insecure {
-		security = secure_grpc.NewFakeSecure()
+		security = tls.NewFakeSecure()
 	} else {
-		security = secure_grpc.NewLeSecure()
+		security = tls.NewLeSecure()
 	}
 	grpcServer, listener, store, cancel, err := admin.GetGrpcServer(configInstance, security, serverRunsAt, port, gatewayPort, hookhandlerCallbackBase)
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("fatal")
 	}
-	//if credDumpPath, ok := os.LookupEnv("CRED_DUMP_PATH"); ok {
-	//	fmt.Println("dumping everything")
-	//	dump_creds(store, configInstance, credDumpPath)
-	//}
+
 	defer cancel()
 	defer store.Close()
 	admin.Start(grpcServer, listener)
 }
-
-/*
-//fyi this function should be uncommented and used if you want to easily migrate credentials between dbs.
-func dump_creds(store storage.OcelotStorage, configInstance cred.CVRemoteConfig, dumpLoc string) {
-	allCreds, _ := configInstance.GetAllCreds(store, false)
-
-	allSortedUp := make(map[string][]pb.OcyCredder)
-	for _, creddy := range allCreds {
-		credtypstr:= creddy.GetSubType().Parent().String()
-		_, ok := allSortedUp[credtypstr]
-		if !ok {
-			allSortedUp[credtypstr] = []pb.OcyCredder{creddy}
-		}
-		allSortedUp[credtypstr] = append(allSortedUp[credtypstr], creddy)
-	}
-	allCredsBytes, err := json.Marshal(allSortedUp)
-	if err != nil {
-		fmt.Println("couldnt dump")
-	}
-	ioutil.WriteFile(dumpLoc, allCredsBytes, 0644)
-}*/

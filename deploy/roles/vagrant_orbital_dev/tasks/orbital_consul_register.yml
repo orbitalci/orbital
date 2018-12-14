@@ -1,0 +1,17 @@
+- name: Register Orbital services into Consul
+  consul:
+    host: "{{ infra_vagrant_ip }}"
+    service_name: "{{ item.name }}"
+    service_address: "{{ orbital_vagrant_ip }}"
+    service_port: "{{ item.port }}"
+    tags:
+      - vagrant
+      - dev
+      - orbital
+  loop:
+    - name: admin
+      port: 10000
+    - name: werker
+      port: 9090
+    - name: hookhandler
+      port: 8088

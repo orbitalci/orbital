@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/go-test/deep"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/common"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 var expected = []byte(`{

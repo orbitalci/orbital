@@ -1,24 +1,29 @@
 package main
 
 import (
+	"fmt"
+	"net/url"
+	"os"
+	"strings"
+
 	"github.com/gorilla/mux"
+	"github.com/level11consulting/orbitalci/build/buildeventhandler/push/buildjob"
+	"github.com/level11consulting/orbitalci/build/buildeventhandler/push/webhook"
+	"github.com/level11consulting/orbitalci/client/buildconfigvalidator"
+	"github.com/level11consulting/orbitalci/client/newbuildjob"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/build/commiteventhandler"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/version"
 	"github.com/namsral/flag"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shankj3/go-til/deserialize"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/build"
-	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/build_signaler/webhook"
-	cred "github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/models/pb"
-	hh "github.com/level11consulting/ocelot/router/hookhandler"
-	"github.com/level11consulting/ocelot/version"
-	"os"
-	"strings"
 )
 
+// FIXME: consistency: consul's host and port, the var name for configInstance/remoteConfig
 func main() {
 	//ocelog.InitializeLog("debug")
 	defaultName, _ := os.Hostname()
@@ -41,7 +46,12 @@ func main() {
 		ocelog.Log().Warning("running on default port :8088")
 	}
 
-	remoteConfig, err := cred.GetInstance(consulHost, consulPort, "")
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consulHost, consulPort))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+
+	remoteConfig, err := config.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}
@@ -57,19 +67,19 @@ func main() {
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("couldn't get storage!")
 	}
-	signaler := &signal.Signaler{RC: remoteConfig, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator(), Store: store}
-	hookHandlerContext := hh.GetContext(signaler, &signal.PushWerkerTeller{}, &webhook.PullReqWerkerTeller{})
+	signaler := &buildjob.Signaler{RC: remoteConfig, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: buildconfigvalidator.GetOcelotValidator(), Store: store}
+	hookHandlerContext := commiteventhandler.GetContext(signaler, &newbuildjob.PushWerkerTeller{}, &webhook.PullReqWerkerTeller{})
 	defer store.Close()
 
 	startServer(hookHandlerContext, port)
 }
 
-func startServer(ctx *hh.HookHandlerContext, port string) {
+func startServer(ctx *commiteventhandler.HookHandlerContext, port string) {
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e
-	muxi.HandleFunc("/" + strings.ToLower(pb.SubCredType_BITBUCKET.String()), ctx.HandleBBEvent).Methods("POST")
-	muxi.HandleFunc("/" + strings.ToLower(pb.SubCredType_GITHUB.String()), ctx.HandleGHEvent).Methods("POST")
+	muxi.HandleFunc("/"+strings.ToLower(pb.SubCredType_BITBUCKET.String()), ctx.HandleBBEvent).Methods("POST")
+	muxi.HandleFunc("/"+strings.ToLower(pb.SubCredType_GITHUB.String()), ctx.HandleGHEvent).Methods("POST")
 	muxi.Handle("/metrics", promhttp.Handler())
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)
