@@ -1,0 +1,10 @@
+- name: Run script for initializing Consul + Vault
+  shell: |
+    export CONSUL_HTTP_ADDR=http://192.168.56.78:8500
+    export VAULT_ADDR=http://192.168.56.78:8200
+    export VAULT_TOKEN=ocelotdev
+    export DBHOST=192.168.56.78
+    ./setup-cv.sh
+  args:
+    executable: /bin/bash
+    chdir: /home/vagrant/go/src/github.com/level11consulting/ocelot/scripts

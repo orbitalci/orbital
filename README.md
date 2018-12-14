@@ -55,7 +55,7 @@ Infrastructure components run as Docker containers. (docker-compose files in `de
 
 * Consul UI: http://192.168.56.78:8500
 * Vault UI: http://192.168.56.78:8200 - Default token value: `ocelotdev`
-* NSQAdmin UI: http://192.168.56.78:4147
+* NSQAdmin UI: http://192.168.56.78:4171
 * Postgres: 192.168.56.78:5432 - User name/Database name: `postgres`, Password: `mysecretpassword`
 
 When the Vagrant VMs starts up, it will call use Ansible on your host to instantiate the Infra and Ocelot VMs, and attempt to install the current codebase.

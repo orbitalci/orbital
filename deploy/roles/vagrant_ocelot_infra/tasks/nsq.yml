@@ -1,0 +1,27 @@
+- name: Start NSQ services
+  docker_service:
+    state: present
+    project_src: ./go/src/github.com/level11consulting/ocelot/deploy/infra
+    files:
+      - nsq-docker-compose.yml
+
+- name: Register infra services into Consul
+  consul:
+    service_name: "{{ item.name }}"
+    service_address: 192.168.56.78
+    service_port: "{{ item.port }}"
+    tags:
+      - vagrant
+      - dev
+      - message-queue
+  loop:
+    - name: nsqd_tcp
+      port: 4150
+    - name: nsqd_http
+      port: 4151
+    - name: nsqlookupd_tcp
+      port: 4160
+    - name: nsqlookupd_http
+      port: 4161
+    - name: nsqadmin
+      port: 4171

@@ -1,6 +1,5 @@
 version: "3.3"
 services:
-  # Copied directly from ./util/nsqpb/docker-compose.yml, modified with logging
   nsqlookupd:
     image: nsqio/nsq
     container_name: nsqlookupd
@@ -21,7 +20,6 @@ services:
       - nsqlookupd
     command: >
       /nsqd
-      -broadcast-address localhost
       -lookupd-tcp-address nsqlookupd:4160
     ports:
       - 4150:4150

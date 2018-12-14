@@ -31,8 +31,9 @@ require (
 	github.com/shankj3/go-til v0.4.3
 	github.com/stevvooe/resumable v0.0.0-20180830230917-22b14a53ba50 // indirect
 	golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
-	golang.org/x/net v0.0.0-20181129055619-fae4c4e3ad76 // indirect
+	golang.org/x/net v0.0.0-20181129055619-fae4c4e3ad76
 	golang.org/x/oauth2 v0.0.0-20181128211412-28207608b838
+	google.golang.org/genproto v0.0.0-20181127195345-31ac5d88444a
 	google.golang.org/grpc v1.16.0
 	gopkg.in/yaml.v2 v2.2.2
 )

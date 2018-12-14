@@ -1,14 +1,9 @@
 version: "3.3"
 services:
-  # Copied directly from ./docs/docker-compose/vault-consul/docker-compose.yml, with volume paths slightly modified, and with logging
   vault:
-#    depends_on:
-#      - consul
-    image: vault:0.11.1
+    image: vault:1.0.0
     container_name: vault
     hostname: vault
-#    links:
-#      - consul:consul
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
       VAULT_DEV_ROOT_TOKEN_ID: ocelotdev

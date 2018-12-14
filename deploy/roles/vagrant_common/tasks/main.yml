@@ -11,6 +11,14 @@
     - python-pip
     - zip
 
+- name: Install python modules that Ansible requires
+  pip:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - docker
+    - python-consul
+
 # FIXME: This should be split up to use get_url first, for checksum verification
 # https://learn.hashicorp.com/vault/operations/ops-deployment-guide
 - name: Download our Hashicorp dependencies

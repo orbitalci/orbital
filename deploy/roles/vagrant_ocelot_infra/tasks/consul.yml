@@ -1,0 +1,20 @@
+- name: Start Consul
+  docker_service:
+    state: present
+    project_src: ./go/src/github.com/level11consulting/ocelot/deploy/infra
+    files:
+      - consul-docker-compose.yml
+
+# This will mostly accomplish adding tags
+- name: Register Consul service into Consul
+  consul:
+    service_name: "{{ item.name }}"
+    service_address: 192.168.56.78
+    service_port: "{{ item.port }}"
+    tags:
+      - vagrant
+      - dev
+      - configuration
+  loop:
+    - name: consul
+      port: 8500

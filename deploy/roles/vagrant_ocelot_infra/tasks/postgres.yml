@@ -1,0 +1,19 @@
+- name: Start postgres
+  docker_service:
+    state: present
+    project_src: ./go/src/github.com/level11consulting/ocelot/deploy/infra
+    files:
+      - postgres-docker-compose.yml
+
+- name: Register Postgre service into Consul
+  consul:
+    service_name: "{{ item.name }}"
+    service_address: 192.168.56.78
+    service_port: "{{ item.port }}"
+    tags:
+      - vagrant
+      - dev
+      - database
+  loop:
+    - name: postgres
+      port: 5432
