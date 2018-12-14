@@ -12,6 +12,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "infra" do |infra|
     infra.vm.box = "ubuntu/bionic64"
+    infra.vm.hostname = "infra"
     infra.vm.provider :virtualbox do |vb|
       vb.name = "infra"
       vb.memory = "2048"
@@ -32,6 +33,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "ocelot", primary: true do |ocelot|
     ocelot.vm.box = "ubuntu/bionic64"
+    ocelot.vm.hostname = "ocelot"
     ocelot.vm.provider :virtualbox do |vb|
       vb.name = "ocelot"
       vb.memory = "2048"
