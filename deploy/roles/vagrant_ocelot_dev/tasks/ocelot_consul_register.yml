@@ -1,8 +1,8 @@
 - name: Register Ocelot services into Consul
   consul:
-    host: 192.168.56.78
+    host: "{{ infra_vagrant_ip }}"
     service_name: "{{ item.name }}"
-    service_address: 192.168.12.34
+    service_address: "{{ ocelot_vagrant_ip }}"
     service_port: "{{ item.port }}"
     tags:
       - vagrant

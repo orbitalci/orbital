@@ -17,6 +17,11 @@
     nsq:
       lookupd_ip: "{{ infra_vagrant_ip }}"
       nsqd_ip: "{{ infra_vagrant_ip }}"
+    postgres:
+      host: "{{ infra_vagrant_ip }}"
+      port: 5432
+      user: postgres
+      pass: mysecretpassword
     ocelot:
       register_ip: "{{ ocelot_vagrant_ip }}"
       log_level: debug
