@@ -8,7 +8,7 @@
 - name: Register Vault service into Consul
   consul:
     service_name: "{{ item.name }}"
-    service_address: 192.168.56.78
+    service_address: "{{ infra_vagrant_ip }}"
     service_port: "{{ item.port }}"
     tags:
       - vagrant
