@@ -1,9 +1,9 @@
 - name: Run script for initializing Postgress w/ Flyway
   shell: |
-    export PG_HOST=192.168.56.78
-    export PG_PORT=5432
-    export PG_USER=postgres
-    export PG_PASSWORD=mysecretpassword
+    export PG_HOST={{ postgres.host }}
+    export PG_PORT={{ postgres.port }}
+    export PG_USER={{ postgres.user }}
+    export PG_PASSWORD={{ postgres.pass }}
     ./docker-flyway-migrate.sh
   args:
     executable: /bin/bash
