@@ -17,8 +17,12 @@ import (
 	"github.com/level11consulting/ocelot/version"
 	"os"
 	"strings"
+	"net/url"
+	"fmt"
 )
 
+
+// FIXME: consistency: consul's host and port, the var name for configInstance/remoteConfig
 func main() {
 	//ocelog.InitializeLog("debug")
 	defaultName, _ := os.Hostname()
@@ -41,7 +45,12 @@ func main() {
 		ocelog.Log().Warning("running on default port :8088")
 	}
 
-	remoteConfig, err := cred.GetInstance(consulHost, consulPort, "")
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("%s:%s", consulHost, consulPort))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+
+	remoteConfig, err := cred.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}

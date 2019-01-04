@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"net/url"
 )
 
 // SetStoragePostgres Instantiates Consul and Vault instances with configuration values for postgresql server usage for static or dynamic credentials
@@ -143,7 +144,12 @@ func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testu
 
 	//setup consul for testing
 	testServer, host, port := TestSetupConsul(t)
-	remoteConfig, err := GetInstance(host, port, token)
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("%s:%d",host, port))
+	if parsedErr != nil {
+		t.Error(parsedErr)
+	}
+
+	remoteConfig, err := GetInstance(parsedConsulURL, token)
 	if err != nil {
 		t.Error(err)
 	}
