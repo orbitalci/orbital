@@ -12,8 +12,10 @@ import (
 	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/version"
+	"net/url"
 )
 
+// FIXME: consistency: consul's host and port, the var name for configInstance/rc
 func configure() cred.CVRemoteConfig {
 	var loglevel, consuladdr string
 	var consulport int
@@ -25,7 +27,13 @@ func configure() cred.CVRemoteConfig {
 	version.MaybePrintVersion(flrg.Args())
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
-	rc, err := cred.GetInstance(consuladdr, consulport, "")
+
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("%s:%s", consuladdr, consulport))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+
+	rc, err := cred.GetInstance(parsedConsulURL, "")
 	// todo: add getaddress() to consuletty
 	//ocelog.Log().Debug("consul address is ", rc.GetConsul().Config.Address)
 	if err != nil {

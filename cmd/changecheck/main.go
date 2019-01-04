@@ -24,6 +24,7 @@ import (
 	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/version"
+	"net/url"
 )
 
 type changeSetConfig struct {
@@ -38,6 +39,7 @@ type changeSetConfig struct {
 	VcsType      pb.SubCredType
 }
 
+// FIXME: consistency: consul's host and port, the var name for configInstance/rc
 func configure() *changeSetConfig {
 	var loglevel, consuladdr, acctRepo, branches, vcsType string
 	var consulport int
@@ -52,7 +54,11 @@ func configure() *changeSetConfig {
 	version.MaybePrintVersion(flrg.Args())
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
-	rc, err := cred.GetInstance(consuladdr, consulport, "")
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("%s:%s", consuladdr, consulport))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+	rc, err := cred.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to get instance of remote config, exiting")
 	}

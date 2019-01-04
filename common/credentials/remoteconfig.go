@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
+	"net/url"
+	"strconv"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 	ocevault "github.com/shankj3/go-til/vault"
@@ -16,24 +16,6 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
 )
-
-var (
-	failedCredRetrieval = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "ocelot_failed_cred",
-			Help: "number of times ocelot is unable to interact with cred store",
-		},
-		// interaction_type: create | read | update | delete
-		// cred_type: subcredType.String()
-		// is_secret: bool , whether or not interacting with secret store or insecure cred store
-		[]string{"cred_type", "interaction_type", "is_secret"},
-	)
-)
-
-func init() {
-	prometheus.MustRegister(failedCredRetrieval)
-}
-
 
 // GetToken will check for a vault token first in the environment variable VAULT_TOKEN. If not found at the env var,
 // either the path given or the default path of /etc/vaulted/token will be searched to see if it exists. If it exists,
@@ -59,17 +41,19 @@ func GetToken(path string) (string, error) {
 
 }
 
+
 //GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
 //this will talk to consul using reasonable defaults (localhost:8500)
 // FIXME: This condense consulHost and consulPort into a single connection string
 //if token is an empty string, vault will be initialized with $VAULT_TOKEN
-func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfig, error) {
+func GetInstance(consulURI *url.URL, token string) (CVRemoteConfig, error) {
 	remoteConfig := &RemoteConfig{}
 
 	// FIXME: If we are reading from CONSUL_HTTP_ADDR, we may encounter Unix socket paths. For now, let's pretend our perfect world is always http
 
 	//intialize consul
-	if consulHost == "" && consulPort == 0 {
+	var portInt, _ = strconv.Atoi(consulURI.Port())
+	if consulURI.Hostname() == "" && portInt == 0 {
 		consulet, err := consul.Default()
 		if err != nil {
 			return nil, err
@@ -77,7 +61,8 @@ func GetInstance(consulHost string, consulPort int, token string) (CVRemoteConfi
 		remoteConfig.Consul = consulet
 	} else {
 
-		consulet, err := consul.New(consulHost, consulPort)
+		// This is certainly an area to refactor in the future
+		consulet, err := consul.New(consulURI.Hostname(), portInt)
 		remoteConfig.Consul = consulet
 		if err != nil {
 			return nil, err
@@ -167,35 +152,6 @@ func (rc *RemoteConfig) Reconnect() error {
 // BuildCredKey returns the key for the map[string]RemoteConfigCred map that GetCredAt returns.
 func BuildCredKey(credType string, acctName string) string {
 	return credType + "/" + acctName
-}
-
-// AddSSHKey adds repo ssh private key to vault at the usual vault path + /ssh
-func (rc *RemoteConfig) AddSSHKey(path string, sshKeyFile []byte) (err error) {
-	if rc.Vault != nil {
-		secret := buildSecretPayload(string(sshKeyFile))
-		if _, err = rc.Vault.AddUserAuthData(path+"/ssh", secret); err != nil {
-			return
-		}
-	} else {
-		err = errors.New("no connection to vault, unable to add SSH Key")
-	}
-	return
-}
-
-// CheckSSHKeyExists returns a boolean indicating whether or not an ssh key has been uploaded
-func (rc *RemoteConfig) CheckSSHKeyExists(path string) error {
-	var err error
-
-	if rc.Vault != nil {
-		_, err := rc.Vault.GetUserAuthData(path + "/ssh")
-		if err != nil {
-			return err
-		}
-	} else {
-		err = errors.New("no connection to vault, unable to add SSH Key")
-	}
-
-	return err
 }
 
 func (rc *RemoteConfig) deletePassword(scType pb.SubCredType, acctName, identifier string) error {
@@ -391,118 +347,6 @@ func (rc *RemoteConfig) GetStorageCreds(typ *storage.Dest) (*StorageCreds, error
 		return nil, errors.New("Failed to get storage creds for Postgres or Filesystem. This shouldn't ever happen, but it did")
 	}
 }
-
-// getForPostgres Reads configuration from Consul
-func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
-
-	// Credentials for Postgres may come from 2 mutually exclusive areas in Vault
-	// Either creds are static, and stored as a KV secret in vault
-	// Or creds are dynamic, and managed by vault's database secret engine
-
-	// The desired default behavior is to use static secrets. Don't error out if Vault settings aren't in Consul
-	postgresVaultConf, _ := rc.Consul.GetKeyValues(common.PostgresVaultConf)
-
-	postgresVaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
-	postgresVaultRole := ""
-	for _, vconf := range postgresVaultConf {
-		switch vconf.Key {
-		case common.PostgresVaultSecretsEngine:
-			if dbConfigType := string(vconf.Value); dbConfigType != "kv" && dbConfigType != "database" {
-				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine: " + dbConfigType)
-			}
-			postgresVaultBackend = string(vconf.Value)
-		case common.PostgresVaultRoleName:
-			postgresVaultRole = string(vconf.Value)
-		}
-	}
-
-	storeConfig := &StorageCreds{}
-
-	kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
-	if len(kvconfig) == 0 || err != nil {
-		errorMsg := fmt.Sprintf("unable to get postgres creds from consul")
-		if err != nil {
-			return storeConfig, errors.Wrap(err, errorMsg)
-		}
-		return nil, errors.New(errorMsg)
-	}
-
-	for _, pair := range kvconfig {
-		switch pair.Key {
-		case common.PostgresDatabaseName:
-			storeConfig.DbName = string(pair.Value)
-		case common.PostgresLocation:
-			storeConfig.Location = string(pair.Value)
-		case common.PostgresPort:
-			// todo: check for err
-			storeConfig.Port, _ = strconv.Atoi(string(pair.Value))
-		}
-	}
-
-	switch postgresVaultBackend {
-	case "kv":
-		ocelog.Log().Info("Static Postgres creds")
-		kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
-		if len(kvconfig) == 0 || err != nil {
-			errorMsg := fmt.Sprintf("unable to get postgres location from consul")
-			if err != nil {
-				return &StorageCreds{}, errors.Wrap(err, errorMsg)
-			}
-			return &StorageCreds{}, errors.New(errorMsg)
-		}
-		for _, pair := range kvconfig {
-			switch pair.Key {
-			case common.PostgresUsername:
-				storeConfig.User = string(pair.Value)
-			}
-		}
-
-		secrets, err := rc.Vault.GetVaultData(common.PostgresPasswordLoc)
-		if len(secrets) == 0 || err != nil {
-			errorMsg := fmt.Sprintf("unable to get postgres password from consul")
-			if err != nil {
-				return &StorageCreds{}, errors.Wrap(err, errorMsg)
-			}
-			return &StorageCreds{}, errors.New(errorMsg)
-		}
-
-		// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
-		storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
-
-	case "database":
-		ocelog.Log().Info("Dynamic Postgres creds")
-		secrets, err := rc.Vault.GetVaultSecret(fmt.Sprintf("database/creds/%s", postgresVaultRole))
-		if err != nil {
-			errorMsg := fmt.Sprintf("unable to get dynamic postgres creds from vault")
-			if err != nil {
-				return &StorageCreds{}, errors.Wrap(err, errorMsg)
-			}
-			return &StorageCreds{}, errors.New(errorMsg)
-		}
-
-		storeConfig.User = fmt.Sprintf("%v", secrets.Data["username"].(string))
-		storeConfig.Password = fmt.Sprintf("%v", secrets.Data["password"].(string))
-
-		//ocelog.Log().Debugf("Dynamic postgres creds from Vault: %v", secrets)
-
-		// Kick of a lease renewal goroutine
-		go rc.Vault.RenewLeaseForever(secrets)
-	}
-
-	return storeConfig, nil
-}
-
-func (rc *RemoteConfig) getForFilesystem() (*StorageCreds, error) {
-	pair, err := rc.Consul.GetKeyValue(common.FilesystemDir)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get save directory from consul")
-	}
-	return &StorageCreds{Location: string(pair.Value)}, nil
-}
-
-//func (t *typ) GetStorageCreds() {
-//}
 
 /////// We want to clean up the calls that use/switch on typ, and creds.
 /////// The new storage should be cleaned up to take storage.OcelotStorage, instead of the elements within

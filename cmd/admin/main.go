@@ -3,18 +3,22 @@ package main
 import (
 	//"encoding/json"
 	"fmt"
-	"github.com/namsral/flag"
-	ocelog "github.com/shankj3/go-til/log"
+
 	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/common/secure_grpc"
+	"github.com/namsral/flag"
+	ocelog "github.com/shankj3/go-til/log"
+
 	//"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/router/admin"
 	//"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/version"
 	//"io/ioutil"
+	"net/url"
 	"os"
 )
 
+// FIXME: consistency: consul's host and port, the var name for configInstance
 func main() {
 	//load properties
 	var port string
@@ -40,7 +44,12 @@ func main() {
 	serverRunsAt := fmt.Sprintf(":%v", port)
 	ocelog.Log().Debug(serverRunsAt)
 
-	configInstance, err := cred.GetInstance(consulHost, consulPort, "")
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("%s:%s", consulHost, consulPort))
+	if parsedErr != nil {
+		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
+	}
+
+	configInstance, err := cred.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("could not talk to consul or vault, bailing")
 	}
