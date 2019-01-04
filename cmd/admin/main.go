@@ -44,7 +44,7 @@ func main() {
 	serverRunsAt := fmt.Sprintf(":%v", port)
 	ocelog.Log().Debug(serverRunsAt)
 
-	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("%s:%s", consulHost, consulPort))
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consulHost, consulPort))
 	if parsedErr != nil {
 		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
 	}

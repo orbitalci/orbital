@@ -144,7 +144,7 @@ func TestSetupVaultAndConsul(t *testing.T) (CVRemoteConfig, net.Listener, *testu
 
 	//setup consul for testing
 	testServer, host, port := TestSetupConsul(t)
-	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("%s:%d",host, port))
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d",host, port))
 	if parsedErr != nil {
 		t.Error(parsedErr)
 	}

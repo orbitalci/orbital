@@ -28,7 +28,7 @@ func configure() cred.CVRemoteConfig {
 	ocelog.InitializeLog(loglevel)
 	ocelog.Log().Debug()
 
-	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("%s:%s", consuladdr, consulport))
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consuladdr, consulport))
 	if parsedErr != nil {
 		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
 	}
