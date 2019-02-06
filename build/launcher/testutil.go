@@ -49,7 +49,7 @@ func getTestingLauncher(t *testing.T) (*launcher, func(t *testing.T)) {
 	remoteConf, listener, testserver := credentials.TestSetupVaultAndConsul(t)
 	port := 5496
 	cleanup, pw := storage.CreateTestPgDatabase(t, port)
-	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	pg, _ := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	uid := uuid.New()
 	valet := valet2.NewValet(remoteConf, uid, models.Docker, pg, nil)
 	loopIp := getLoopbackIp(t)

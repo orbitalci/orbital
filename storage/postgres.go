@@ -14,30 +14,42 @@ import (
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"net/url"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
 
-func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc string) *PostgresStorage {
-	pg := &PostgresStorage{
-		user:     user,
-		password: pw,
-		location: loc,
-		port:     port,
-		dbLoc:    dbLoc,
+// NewPostgresStorage take all the connection info and returns a *PostgresStorage
+func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc string) (*PostgresStorage, error) {
+
+	userpass := url.UserPassword(user, pw)
+	url, _ := url.Parse(fmt.Sprintf("postgres://%s:%d/%d", loc, port, dbLoc))
+
+	url.User = userpass
+
+	pg := &PostgresStorage {
+		url : *url,
 	}
-	//if err := pg.Connect(); err != nil {
-	//	return pg, err
-	//}
-	return pg
+
+	if err := pg.Connect(); err != nil {
+		return pg, err
+	}
+	return pg, nil
 }
 
+// url.Url and url.UserInfo
+//type PostgresStorage struct {
+//	user     string
+//	password string
+//	location string
+//	port     int
+//	dbLoc    string
+//	db       *sql.DB
+//	once     sync.Once
+//}
+//
 type PostgresStorage struct {
-	user     string
-	password string
-	location string
-	port     int
-	dbLoc    string
+	url		 url.URL
 	db       *sql.DB
 	once     sync.Once
 }
@@ -45,7 +57,11 @@ type PostgresStorage struct {
 func (p *PostgresStorage) Connect() error {
 	p.once.Do(func() {
 		var err error
-		if p.db, err = sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.user, p.dbLoc, p.password, p.location, p.port)); err != nil {
+
+		// TODO, check if password is set
+		var password, _ = p.url.User.Password();
+
+		if p.db, err = sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.url.User.Username() , password, p.url.Host, p.url.Port())); err != nil {
 			// todo: not sure if we should _kill_ everything.
 			ocelog.IncludeErrField(err).Error("couldn't get postgres connection")
 			return
@@ -1243,5 +1259,5 @@ func (p *PostgresStorage) GetVCSTypeFromAccount(account string) (pb.SubCredType,
 
 
 func (p *PostgresStorage) StorageType() string {
-	return fmt.Sprintf("Postgres Database at %s", p.location)
+	return fmt.Sprintf("Postgres Database at %s", p.url.Host)
 }

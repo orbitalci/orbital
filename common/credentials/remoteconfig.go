@@ -371,7 +371,7 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	/// Can I just pass creds? This would be more convenient
 	switch typ {
 	case storage.Postgres:
-		store := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+		store, _ := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
 		//ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
 
 		return store, store.Connect()
