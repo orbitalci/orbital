@@ -9,12 +9,6 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/lib/pq"
 	ocelog "github.com/shankj3/go-til/log"
-<<<<<<< HEAD
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
-=======
->>>>>>> trying to revert everything
 )
 
 const TimeFormat = "2006-01-02 15:04:05"

@@ -6,25 +6,15 @@ import (
 
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
-<<<<<<< HEAD
+	"github.com/shankj3/go-til/nsqpb"
 	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/common/secure_grpc"
 	//"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/router/admin"
-	//"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/version"
+	"github.com/level11consulting/ocelot/build_signaler/taskbuilder"
 	//"io/ioutil"
-	"os"
-=======
-	"github.com/shankj3/go-til/nsqpb"
-	"github.com/shankj3/ocelot/build_signaler/taskbuilder"
-	cred "github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/common/secure_grpc"
-	//"github.com/shankj3/ocelot/models/pb"
-	"github.com/shankj3/ocelot/router/admin"
-	"github.com/shankj3/ocelot/storage"
-	"github.com/shankj3/ocelot/version"
->>>>>>> trying to revert everything
 )
 
 func main() {

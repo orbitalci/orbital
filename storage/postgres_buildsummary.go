@@ -8,7 +8,7 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 // AddSumStart updates the build_summary table with the initial information that you get from a webhook

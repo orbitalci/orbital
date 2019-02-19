@@ -30,9 +30,6 @@ import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/level11consulting/ocelot/build"
-
-	"sync"
-
 	"github.com/level11consulting/ocelot/build/basher"
 	"github.com/level11consulting/ocelot/build/listener"
 	"github.com/level11consulting/ocelot/build/valet"
@@ -40,13 +37,6 @@ import (
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/router/werker"
 	"github.com/level11consulting/ocelot/storage"
-
-	"fmt"
-	"os"
-	"os/signal"
-	//"strings"
-	"syscall"
-	"time"
 )
 
 //listen will listen for messages for a specified topic. If a message is received, a

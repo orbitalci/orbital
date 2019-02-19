@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/models"
+	"github.com/level11consulting/ocelot/models"
 )
 
 // AddStageDetail will store the stage data along with a starttime and duration to db

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 func (p *PostgresStorage) FindSubscribeesForRepo(acctRepo string, credType pb.SubCredType) ([]*pb.ActiveSubscription, error) {

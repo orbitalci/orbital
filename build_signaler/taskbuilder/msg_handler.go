@@ -6,13 +6,13 @@ import (
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/shankj3/ocelot/build"
-	"github.com/shankj3/ocelot/common/credentials"
-	"github.com/shankj3/ocelot/common/remote"
-	"github.com/shankj3/ocelot/storage"
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/common/remote"
+	"github.com/level11consulting/ocelot/storage"
 
-	signal "github.com/shankj3/ocelot/build_signaler"
-	"github.com/shankj3/ocelot/models/pb"
+	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/models/pb"
 )
 
 const (
