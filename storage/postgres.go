@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"net/url"
+
 	"github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -27,8 +29,8 @@ func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc stri
 
 	url.User = userpass
 
-	pg := &PostgresStorage {
-		url : *url,
+	pg := &PostgresStorage{
+		url: *url,
 	}
 
 	if err := pg.Connect(); err != nil {
@@ -49,9 +51,9 @@ func NewPostgresStorage(user string, pw string, loc string, port int, dbLoc stri
 //}
 //
 type PostgresStorage struct {
-	url		 url.URL
-	db       *sql.DB
-	once     sync.Once
+	url  url.URL
+	db   *sql.DB
+	once sync.Once
 }
 
 func (p *PostgresStorage) Connect() error {
@@ -59,9 +61,9 @@ func (p *PostgresStorage) Connect() error {
 		var err error
 
 		// TODO, check if password is set
-		var password, _ = p.url.User.Password();
+		var password, _ = p.url.User.Password()
 
-		if p.db, err = sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.url.User.Username() , password, p.url.Host, p.url.Port())); err != nil {
+		if p.db, err = sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.url.User.Username(), password, p.url.Host, p.url.Port())); err != nil {
 			// todo: not sure if we should _kill_ everything.
 			ocelog.IncludeErrField(err).Error("couldn't get postgres connection")
 			return

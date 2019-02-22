@@ -7,7 +7,7 @@
 # you're doing.
 Vagrant.configure("2") do |config|
 
-  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/level11consulting/ocelot/", type: "rsync"
+  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/level11consulting/ocelot/", type: "virtualbox"
 
   config.vm.define "infra" do |infra|
     infra.vm.box = "ubuntu/bionic64"
