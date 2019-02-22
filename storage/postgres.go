@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
 	"net/url"
-
 	"github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -16,7 +14,6 @@ import (
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
-	"net/url"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
