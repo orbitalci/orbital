@@ -2,9 +2,6 @@ package credentials
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
 	"net/url"
 	"strconv"
 
@@ -17,39 +14,9 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 )
 
-// GetToken will check for a vault token first in the environment variable VAULT_TOKEN. If not found at the env var,
-// either the path given or the default path of /etc/vaulted/token will be searched to see if it exists. If it exists,
-// its contents will be read and returned as the vault token. for kubernetes support
-func GetToken(path string) (string, error) {
-	defaultPath := "/etc/vaulted/token"
-	if path == "" {
-		path = defaultPath
-	}
-	var token string
-	if token = os.Getenv("VAULT_TOKEN"); token != "" {
-		return token, nil
-	} else {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return "", errors.New("$VAULT_TOKEN not set and no token found at filepath " + path)
-		}
-		tokenB, err := ioutil.ReadFile(path)
-		if err != nil {
-			return "", errors.WithMessage(err, fmt.Sprintf("File exists at %s but could not be read", path))
-		}
-		return strings.TrimSpace(string(tokenB)), nil
-	}
-
-}
-
-
-//GetInstance returns a new instance of ConfigConsult. If consulHot and consulPort are empty,
-//this will talk to consul using reasonable defaults (localhost:8500)
-// FIXME: This condense consulHost and consulPort into a single connection string
-//if token is an empty string, vault will be initialized with $VAULT_TOKEN
-func GetInstance(consulURI *url.URL, token string) (CVRemoteConfig, error) {
+//GetInstance attempts to connect to Consul and Vault, returns a new instance remoteConfig
+func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) {
 	remoteConfig := &RemoteConfig{}
-
-	// FIXME: If we are reading from CONSUL_HTTP_ADDR, we may encounter Unix socket paths. For now, let's pretend our perfect world is always http
 
 	//intialize consul
 	var portInt, _ = strconv.Atoi(consulURI.Port())
@@ -70,16 +37,13 @@ func GetInstance(consulURI *url.URL, token string) (CVRemoteConfig, error) {
 	}
 
 	//initialize vault
-	if token == "" {
-		// right now, only search for token at default path
-		var err error
-		token, err = GetToken("")
+		vaultToken, err := getVaultToken(vaultToken)
 
 		if err != nil {
 			return nil, err
 		}
-	}
-	vaultClient, err := ocevault.NewAuthedClient(token)
+
+	vaultClient, err := ocevault.NewAuthedClient(vaultToken)
 	if err != nil {
 		return nil, err
 	}
@@ -87,11 +51,6 @@ func GetInstance(consulURI *url.URL, token string) (CVRemoteConfig, error) {
 
 	return remoteConfig, nil
 }
-//
-//type CredStore struct {
-//	RC    CVRemoteConfig
-//	Store storage.CredTable
-//}
 
 // RemoteConfig returns a struct with client handlers for Consul and Vault. Mainly for passing around after authenticating
 type RemoteConfig struct {
@@ -99,26 +58,7 @@ type RemoteConfig struct {
 	Vault  ocevault.Vaulty
 }
 
-// GetConsul returns the local consul client handler
-func (rc *RemoteConfig) GetConsul() consul.Consuletty {
-	return rc.Consul
-}
-
-// SetConsul sets the local consul client handler
-func (rc *RemoteConfig) SetConsul(consl consul.Consuletty) {
-	rc.Consul = consl
-}
-
-// GetVault returns the local vault client handler
-func (rc *RemoteConfig) GetVault() ocevault.Vaulty {
-	return rc.Vault
-}
-
-// SetVault sets the local vault client handler
-func (rc *RemoteConfig) SetVault(vault ocevault.Vaulty) {
-	rc.Vault = vault
-}
-
+// Healthy returns the status of whether Vault and Consul are currently connected
 func (rc *RemoteConfig) Healthy() bool {
 	vaultConnected := true
 	_, err := rc.Vault.GetVaultData("secret/data/config/ocelot/here")
@@ -149,8 +89,8 @@ func (rc *RemoteConfig) Reconnect() error {
 	return nil
 }
 
-// BuildCredKey returns the key for the map[string]RemoteConfigCred map that GetCredAt returns.
-func BuildCredKey(credType string, acctName string) string {
+// buildCredKey returns the key for the map[string]RemoteConfigCred map that GetCredAt returns.
+func buildCredKey(credType string, acctName string) string {
 	return credType + "/" + acctName
 }
 
@@ -179,6 +119,7 @@ func (rc *RemoteConfig) DeleteCred(store storage.CredTable, anyCred pb.OcyCredde
 	return err
 }
 
+// FIXME: For consistency, this should be renamed to something like GetCred, but unique... Make it clear what is a Cred and a Password
 //GetPassword will return to you the vault password at specified path
 func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error) {
 	credPath := BuildCredPath(scType, acctName, ocyCredType, identifier)
