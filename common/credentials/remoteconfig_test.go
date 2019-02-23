@@ -17,6 +17,7 @@ import (
 
 	"testing"
 	"time"
+	"net/url"
 )
 
 //func TestRemoteConfig_ErrorHandling(t *testing.T) {
@@ -42,7 +43,10 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 	port := 5439
 	cleanup, pw := storage.CreateTestPgDatabase(t, port)
 	defer cleanup(t)
-	pg := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	pg,err := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	if err != nil {
+		t.Error(test.GenericStrFormatErrors("Connecting to Postgres", nil, err))
+	}
 	adminConfig := &pb.VCSCreds{
 		ClientSecret: "top-secret",
 		ClientId:     "beeswax",
@@ -51,7 +55,7 @@ func TestRemoteConfig_OneGiantCredTest(t *testing.T) {
 		Identifier:   "123",
 		SubType:      pb.SubCredType_GITHUB,
 	}
-	err := testRemoteConfig.AddCreds(pg, adminConfig, true)
+	err = testRemoteConfig.AddCreds(pg, adminConfig, true)
 	if err != nil {
 		t.Error(test.GenericStrFormatErrors("first adding creds to consul", nil, err))
 	}
@@ -357,10 +361,10 @@ func TestRemoteConfig_DeleteCred(t *testing.T) {
 
 }
 
-func TestRemoteConfig_BuildCredKey(t *testing.T) {
+func TestRemoteConfig_buildCredKey(t *testing.T) {
 
 	expectedCredKey := "credType/acctName"
-	returnedCredKey := BuildCredKey("credType", "acctName")
+	returnedCredKey := buildCredKey("credType", "acctName")
 
 	if returnedCredKey != expectedCredKey {
 		t.Error("expected: "+returnedCredKey+"got :", expectedCredKey)
@@ -374,7 +378,12 @@ func TestRemoteConfig_GetSetConsulVault(t *testing.T) {
 	consulPortNull := 0
 	vaultTokenNull := ""
 
-	badRC, baderr := GetInstance(consulHostNull, consulPortNull, vaultTokenNull)
+	parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consulHostNull, consulPortNull))
+	if parsedErr != nil {
+		t.Error("failed parsing consul uri, bailing")
+	}
+
+	badRC, baderr := GetInstance(parsedConsulURL, vaultTokenNull)
 
 	expectedRemoteConfigString := "*credentials.RemoteConfig"
 	remoteConfigString := fmt.Sprintf("%T", badRC)
@@ -401,7 +410,7 @@ func TestRemoteConfig_GetSetConsulVault(t *testing.T) {
 
 }
 
-func TestRemoteConfig_GetToken(t *testing.T) {
+func TestRemoteConfig_getVaultToken(t *testing.T) {
 	oldToken := os.Getenv("VAULT_TOKEN")
 
 	if oldToken != "" {
@@ -411,7 +420,7 @@ func TestRemoteConfig_GetToken(t *testing.T) {
 		}
 	}
 
-	badToken, badErr := GetToken("")
+	badToken, badErr := getVaultToken("")
 
 	if badToken != "" || badErr == nil {
 		t.Error("VAULT_TOKEN env var isn't set. This token should be empty")
@@ -426,7 +435,7 @@ func TestRemoteConfig_GetToken(t *testing.T) {
 	// 	t.Error("VAULT_TOKEN should be empty, and a real filepath w/o a token")
 	// }
 
-	somethingToken, somethingErr := GetToken("/usr/share/dict/words")
+	somethingToken, somethingErr := getVaultToken("/usr/share/dict/words")
 	if somethingToken == "" || somethingErr != nil {
 		t.Error("Assuming /usr/share/dict/words exists, this token should be set to a real value")
 	}
@@ -608,7 +617,12 @@ func TestRemoteConfig_GetStorageCreds(t *testing.T) {
 		consulHack := strings.Split(testRemoteConfig.GetConsul().(*consul.Consulet).Config.Address, ":")
 		consulHackPort, _ := strconv.Atoi(consulHack[1])
 
-		vagrantRemoteConfig, err := GetInstance(consulHack[0], consulHackPort, vagrantVaultToken)
+		parsedConsulURL, parsedErr := url.Parse(fmt.Sprintf("consul://%s:%d", consulHack[0], consulHackPort))
+		if parsedErr != nil {
+			t.Error("failed parsing consul uri, bailing")
+		}
+
+		vagrantRemoteConfig, err := GetInstance(parsedConsulURL, vagrantVaultToken)
 		if err != nil {
 			t.Error("Failed trying to initialize vagrant remote config")
 		}
