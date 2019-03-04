@@ -12,6 +12,7 @@ import (
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/ocelot/storage_postgres"
 )
 
 //GetInstance attempts to connect to Consul and Vault, returns a new instance remoteConfig
@@ -312,7 +313,7 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	/// Can I just pass creds? This would be more convenient
 	switch typ {
 	case storage.Postgres:
-		store, _ := storage.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+		store, _ := storage_postgres.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
 		//ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
 
 		return store, store.Connect()

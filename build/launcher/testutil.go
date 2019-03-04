@@ -16,6 +16,7 @@ import (
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/ocelot/storage_postgres"
 )
 
 func getLoopbackIp(t *testing.T) string {
@@ -49,7 +50,7 @@ func getTestingLauncher(t *testing.T) (*launcher, func(t *testing.T)) {
 	remoteConf, listener, testserver := credentials.TestSetupVaultAndConsul(t)
 	port := 5496
 	cleanup, pw := storage.CreateTestPgDatabase(t, port)
-	pg, _ := storage.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
+	pg, _ := storage_postgres.NewPostgresStorage("postgres", pw, "localhost", port, "postgres")
 	uid := uuid.New()
 	valet := valet2.NewValet(remoteConf, uid, models.Docker, pg, nil)
 	loopIp := getLoopbackIp(t)

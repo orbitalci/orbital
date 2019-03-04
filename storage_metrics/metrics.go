@@ -1,4 +1,4 @@
-package storage
+package storage_metrics
 
 import (
 	"database/sql"
@@ -26,7 +26,6 @@ var (
 	}, []string{"error_type"})
 )
 
-
 func init() {
 	prometheus.MustRegister(activeRequests, dbDuration, databaseFailed)
 	// seed data
@@ -35,18 +34,18 @@ func init() {
 	databaseFailed.WithLabelValues("ErrTxDone").Add(0)
 }
 
-func startTransaction() time.Time {
+func StartTransaction() time.Time {
 	activeRequests.Inc()
 	return time.Now()
 }
 
-func finishTransaction(start time.Time, table, crud string) {
+func FinishTransaction(start time.Time, table, crud string) {
 	activeRequests.Dec()
 	dbDuration.WithLabelValues(table, crud).Observe(time.Since(start).Seconds())
 }
 
-// metricizeDbErr will check the type of error and increment the necessary prometheus metrics
-func metricizeDbErr(err error) {
+// MetricizeDbErr will check the type of error and increment the necessary prometheus metrics
+func MetricizeDbErr(err error) {
 	switch err {
 	case driver.ErrBadConn:
 		databaseFailed.WithLabelValues("ErrBadCon").Inc()
