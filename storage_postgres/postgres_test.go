@@ -1,4 +1,4 @@
-package storage
+package storage_postgres
 
 import (
 	"github.com/go-test/deep"
