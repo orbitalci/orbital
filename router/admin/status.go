@@ -15,7 +15,19 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 )
 
+
+// FIXME: Not using the protobuf message will let us move error handling code somewhere else. Possibly even squash this into 3 cases?
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
+// We handle 4 cases to identify a build id, then we use the BUILD_FOUND goto label to initialize `result`.
+// Providing a build id
+// Providing a partial git hash (Partial from the front of the hash)
+// Providing an account and repo name, which returns the first summary in the list (perhaps this is the latest?)
+// Providing a "partial repo", which ends up deriving an account, and then continues to reimplement the 3rd case
+//
+// When we initialize `result`, we are getting "stage detail" with the build id. (Possibly all of the output?)
+// We then parse the output.
+// We do some other mysterious check for if a build is in consul, and set some flag on `result`
+// Then we do an implicit bare return. Which is a thing in go, which could be easier to read if this weren't such a long function.
 func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery) (result *pb.Status, err error) {
 	var buildSum *pb.BuildSummary
 	switch {
@@ -32,6 +44,7 @@ func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery
 			return nil, handleStorageError(err)
 		}
 		goto BUILD_FOUND
+
 	case len(query.AcctName) > 0 && len(query.RepoName) > 0:
 		buildSums, err := g.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
 		if err != nil {
