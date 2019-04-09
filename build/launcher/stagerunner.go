@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
-	ocelog "github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/trigger"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 // runStages runs the stages that are defined by the **user** ie what is in the ocelot.yml. Results will be stored in this stage as well.
@@ -103,7 +103,6 @@ func handleTriggers(task *pb.WerkerTask, store storage.BuildStage, stage *pb.Sta
 	}
 	return
 }
-
 
 func storeSkipped(store storage.BuildStage, stage *pb.Stage, id int64) (err error) {
 	result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_SKIP, Error: "", Messages: []string{"skipping because the current changeset does not meet the trigger conditions"}}
