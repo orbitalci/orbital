@@ -5,12 +5,12 @@ import (
 	"io"
 	"strings"
 
-	"github.com/mitchellh/cli"
-	"github.com/pkg/errors"
-	"github.com/level11consulting/ocelot/common/helpers/dockrhelper"
+	"github.com/level11consulting/ocelot/build/helpers/dockrhelper"
 	"github.com/level11consulting/ocelot/common/trigger"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/mitchellh/cli"
+	"github.com/pkg/errors"
 )
 
 //contains all validators for commands as recognized by ocelot <command> [args]
@@ -58,7 +58,7 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 		if ind == 0 {
 			writeUIInfo(UI, "Validating stages... ")
 		}
-		writeUIInfo(UI, "  " + stage.Name)
+		writeUIInfo(UI, "  "+stage.Name)
 		if len(stage.Script) == 0 {
 			return errors.New("Script for stage " + stage.Name + "should not be empty")
 		}
@@ -69,7 +69,7 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 			_, err := trigger.Parse(triggy)
 			if err != nil {
 				writeUIError(UI, fmt.Sprintf("      - %s %s", triggy, models.FAILED))
-				return errors.Wrap(err, "'triggers' conditions must follow spec, this one did not: " + triggy)
+				return errors.Wrap(err, "'triggers' conditions must follow spec, this one did not: "+triggy)
 			}
 			writeUIInfo(UI, fmt.Sprintf("      - %s %s", triggy, models.CHECKMARK))
 		}

@@ -14,7 +14,7 @@ import (
 
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/basher"
-	"github.com/level11consulting/ocelot/common/helpers/dockrhelper"
+	"github.com/level11consulting/ocelot/build/helpers/dockrhelper"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 

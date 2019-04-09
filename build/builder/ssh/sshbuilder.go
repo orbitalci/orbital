@@ -9,14 +9,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/helpers/sshhelper"
 	"github.com/level11consulting/ocelot/build/valet"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/common/helpers/sshhelper"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
+	"github.com/shankj3/go-til/log"
 )
 
 type SSH struct {

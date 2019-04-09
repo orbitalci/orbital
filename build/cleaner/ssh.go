@@ -3,10 +3,10 @@ package cleaner
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/common/helpers/sshhelper"
+	"github.com/level11consulting/ocelot/build/helpers/sshhelper"
 	"github.com/level11consulting/ocelot/models"
+	"github.com/pkg/errors"
 )
 
 type SSHCleaner struct {
