@@ -1,7 +1,6 @@
 package common
 
 import (
-	"encoding/base64"
 	"strings"
 
 	"github.com/level11consulting/ocelot/models/pb"
@@ -17,18 +16,6 @@ type NoCreds struct {
 
 func (n *NoCreds) Error() string {
 	return n.msg
-}
-
-func BitzToBase64(bits []byte) string {
-	return base64.StdEncoding.EncodeToString(bits)
-}
-
-func StrToBase64(str string) string {
-	return base64.StdEncoding.EncodeToString([]byte(str))
-}
-
-func Base64ToBitz(b64string string) ([]byte, error) {
-	return base64.StdEncoding.DecodeString(b64string)
 }
 
 // BuildScriptsContainString will check all stages' script lines for the existence of the specified desiredString

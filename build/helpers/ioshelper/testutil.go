@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/build/helpers/serde"
 )
 
 func GetAndEncodeDevFolder(t *testing.T) map[string]string {
@@ -17,18 +17,18 @@ func GetAndEncodeDevFolder(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	encoded := common.BitzToBase64(aProfile)
+	encoded := serde.BitzToBase64(aProfile)
 	profiles["prof1.mobileprovision"] = encoded
 	prof2, err := ioutil.ReadFile(filepath.Join(dir, "test-fixtures/developer/profiles/prof2.mobileprovision"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	profiles["prof2.mobileprovision"] = common.BitzToBase64(prof2)
+	profiles["prof2.mobileprovision"] = serde.BitzToBase64(prof2)
 	identity, err := ioutil.ReadFile(filepath.Join(dir, "/test-fixtures/developer/identities/id1.p12"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	profiles["id1.p12"] = common.BitzToBase64(identity)
+	profiles["id1.p12"] = serde.BitzToBase64(identity)
 
 	return profiles
 }
