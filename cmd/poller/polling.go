@@ -9,14 +9,14 @@ import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/level11consulting/ocelot/build_signaler/poll"
-	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/version"
 	"net/url"
 )
 
 // FIXME: consistency: consul's host and port, the var name for configInstance/rc
-func configure() cred.CVRemoteConfig {
+func configure() config.CVRemoteConfig {
 	var loglevel, consuladdr string
 	var consulport int
 	flrg := flag.NewFlagSet("poller", flag.ExitOnError)
@@ -33,7 +33,7 @@ func configure() cred.CVRemoteConfig {
 		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
 	}
 
-	rc, err := cred.GetInstance(parsedConsulURL, "")
+	rc, err := config.GetInstance(parsedConsulURL, "")
 	// todo: add getaddress() to consuletty
 	//ocelog.Log().Debug("consul address is ", rc.GetConsul().Config.Address)
 	if err != nil {

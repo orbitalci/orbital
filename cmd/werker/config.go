@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
@@ -51,7 +51,7 @@ type WerkerConf struct {
 	//werkerProcessor builder.Processor
 	LogLevel string
 	//LoopBackIp      string
-	RemoteConfig cred.CVRemoteConfig
+	RemoteConfig config.CVRemoteConfig
 }
 
 // FIXME: consistency: consul's host and port, the var name for configInstance/rc
@@ -104,7 +104,7 @@ func GetConf() (*WerkerConf, error) {
 		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
 	}
 
-	rc, err := cred.GetInstance(parsedConsulURL, "")
+	rc, err := config.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		return nil, errors.New("could not get instance of remote config; err: " + err.Error())
 	}

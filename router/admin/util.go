@@ -1,11 +1,11 @@
 package admin
 
 import (
-	ocenet "github.com/shankj3/go-til/net"
 	"github.com/level11consulting/ocelot/common/remote/github"
+	ocenet "github.com/shankj3/go-til/net"
 
-	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
 
 	bb "github.com/level11consulting/ocelot/common/remote/bitbucket"
 	"github.com/level11consulting/ocelot/storage"
@@ -44,7 +44,7 @@ func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
 	return err
 }
 
-func SetupRCCCredentials(remoteConf cred.CVRemoteConfig, store storage.CredTable, config pb.OcyCredder) error {
+func SetupRCCCredentials(remoteConf config.CVRemoteConfig, store storage.CredTable, config pb.OcyCredder) error {
 	//right now, we will always overwrite
 	err := remoteConf.AddCreds(store, config, true)
 	return err

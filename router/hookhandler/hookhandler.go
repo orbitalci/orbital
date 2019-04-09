@@ -10,7 +10,7 @@ import (
 	ocenet "github.com/shankj3/go-til/net"
 	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/build_signaler/webhook"
-	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/common/remote"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -61,7 +61,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		}
 		ocelog.Log().Infof("NEW COMMITS ARE IN! %s", commits)
 	}
-	cred, err := credentials.GetVcsCreds(hhc.Store, push.Repo.AcctRepo, hhc.RC, vcsType)
+	cred, err := config.GetVcsCreds(hhc.Store, push.Repo.AcctRepo, hhc.RC, vcsType)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get creds")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get creds, err: ", err)
@@ -101,7 +101,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
-	cred, err := credentials.GetVcsCreds(hhc.Store, pr.Source.Repo.AcctRepo, hhc.RC, vcsType)
+	cred, err := config.GetVcsCreds(hhc.Store, pr.Source.Repo.AcctRepo, hhc.RC, vcsType)
 	if err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't get creds")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not get creds, err: ", err)

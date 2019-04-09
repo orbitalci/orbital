@@ -5,20 +5,20 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/common/remote"
+	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/shankj3/go-til/log"
 	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/common"
-	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/log"
 )
 
 var (
@@ -45,14 +45,14 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 
 	// get credentials and appropriate VCS handler for the build request's account / repository
 	SendStream(stream, "Searching for VCS creds belonging to %s...", buildReq.AcctRepo)
-	cfg, err := cred.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig, buildReq.VcsType)
+	cfg, err := config.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig, buildReq.VcsType)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		switch err.(type) {
 		case *common.FormatError:
 			return status.Error(codes.InvalidArgument, "Format error: "+err.Error())
 		case *storage.ErrMultipleVCSTypes:
-			return status.Error(codes.InvalidArgument, "There are multiple vcs types for that account. You must include the VcsType field to be able to retrieve credentials for this build. Original error: " + err.Error())
+			return status.Error(codes.InvalidArgument, "There are multiple vcs types for that account. You must include the VcsType field to be able to retrieve credentials for this build. Original error: "+err.Error())
 		default:
 			return status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 		}
@@ -202,7 +202,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	if g.hhBaseUrl == "" {
 		return &empty.Empty{}, status.Error(codes.Unimplemented, "Admin is not configured with a hookhandler callback url to register webhooks with. Contact your administrator to run the ocelot admin service with the flag -hookhandler-url-base set to a url that can be accessed via a webhook for VCS push/pullrequest events.")
 	}
-	cfg, err := cred.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig, repoAcct.Type)
+	cfg, err := config.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig, repoAcct.Type)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		if _, ok := err.(*common.FormatError); ok {
@@ -246,7 +246,7 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) 
 		}
 	} else {
 		log.Log().Info("inserting poll in db")
-		creddy, err := cred.GetVcsCreds(g.Storage, common.CreateAcctRepo(poll.Account, poll.Repo), g.RemoteConfig, poll.Type)
+		creddy, err := config.GetVcsCreds(g.Storage, common.CreateAcctRepo(poll.Account, poll.Repo), g.RemoteConfig, poll.Type)
 		if err != nil {
 			var msg string
 			if _, ok := err.(*storage.ErrMultipleVCSTypes); ok {

@@ -13,7 +13,7 @@ import (
 	brt "github.com/level11consulting/ocelot/build"
 	c "github.com/level11consulting/ocelot/build/cleaner"
 	"github.com/level11consulting/ocelot/common"
-	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/storage"
 
@@ -31,7 +31,7 @@ const (
 // Valet is the overseer of builds. It handles registration of when the build is started, what stage it is actively on,
 // when to close the channel that signifies to nsqpb to stop refreshing the status of the message
 type Valet struct {
-	RemoteConfig cred.CVRemoteConfig
+	RemoteConfig config.CVRemoteConfig
 	store        storage.OcelotStorage
 	WerkerUuid   uuid.UUID
 	doneChannels map[string]chan int
@@ -40,7 +40,7 @@ type Valet struct {
 	c.Cleaner
 }
 
-func NewValet(rc cred.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage, facts *models.SSHFacts) *Valet {
+func NewValet(rc config.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage, facts *models.SSHFacts) *Valet {
 	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store: store}
 	valet.Cleaner = c.GetNewCleaner(werkerType, facts)
 	valet.ContextValet = NewContextValet()

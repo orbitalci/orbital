@@ -12,14 +12,15 @@ import (
 	"strings"
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/level11consulting/ocelot/common/secure_grpc"
+	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
+	creds "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/storage"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
-	cred "github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/common/secure_grpc"
-	models "github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
 
 	//"github.com/level11consulting/ocelot/util/handler"
 	//"github.com/level11consulting/ocelot/util/secure_grpc"
@@ -37,14 +38,14 @@ func Start(grpcServer *grpc.Server, listener net.Listener) {
 	}
 }
 
-func GetGrpcServer(configInstance cred.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string, hhBaseUrl string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
+func GetGrpcServer(configInstance config.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string, hhBaseUrl string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
 	//initializes our "context" - guideOcelotServer
 	//store := cred.GetOcelotStorage()
 	store, err := configInstance.GetOcelotStorage()
 	if err != nil {
 		return nil, nil, nil, nil, errors.WithMessage(err, "could not get ocelot storage")
 	}
-	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), cred.GetValidator(), cred.GetRepoValidator(), store, hhBaseUrl)
+	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), creds.GetValidator(), creds.GetRepoValidator(), store, hhBaseUrl)
 	//gateway
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
@@ -136,9 +137,6 @@ func serveSwagger(w http.ResponseWriter, r *http.Request) {
 //	// see example here: https://github.com/mycodesmells/golang-examples/blob/master/grpc/cmd/server/main.go
 //	ocenet.JSONApiError(w, runtime.HTTPStatusFromCode(grpc.Code(err)), "", err)
 //}
-
-
-
 
 type Sendy interface {
 	Send(response *models.LineResponse) error

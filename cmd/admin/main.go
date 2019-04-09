@@ -4,7 +4,7 @@ import (
 	//"encoding/json"
 	"fmt"
 
-	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/common/secure_grpc"
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
@@ -49,7 +49,7 @@ func main() {
 		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
 	}
 
-	configInstance, err := cred.GetInstance(parsedConsulURL, "")
+	configInstance, err := config.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("could not talk to consul or vault, bailing")
 	}

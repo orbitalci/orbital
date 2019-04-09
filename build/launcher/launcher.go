@@ -4,7 +4,7 @@ import (
 	"github.com/level11consulting/ocelot/build/basher"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/build/valet"
-	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/storage"
 )
@@ -13,7 +13,7 @@ import (
 
 type launcher struct {
 	*models.WerkerFacts
-	RemoteConf   credentials.CVRemoteConfig
+	RemoteConf   config.CVRemoteConfig
 	infochan     chan []byte
 	StreamChan   chan *models.Transport
 	BuildCtxChan chan *models.BuildContext
@@ -26,7 +26,7 @@ type launcher struct {
 }
 
 func NewLauncher(facts *models.WerkerFacts,
-	remoteConf credentials.CVRemoteConfig,
+	remoteConf config.CVRemoteConfig,
 	streamChan chan *models.Transport,
 	BuildCtxChan chan *models.BuildContext,
 	bshr *basher.Basher,

@@ -1,4 +1,4 @@
-package credentials
+package config
 
 import (
 	"github.com/shankj3/go-til/consul"

@@ -1,18 +1,19 @@
-package credentials
+package config
 
 import (
 	"fmt"
 	"net/url"
 	"strconv"
 
-	"github.com/pkg/errors"
-	"github.com/shankj3/go-til/consul"
-	ocelog "github.com/shankj3/go-til/log"
-	ocevault "github.com/shankj3/go-til/vault"
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/storage/postgres"
+	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/consul"
+	ocelog "github.com/shankj3/go-til/log"
+	ocevault "github.com/shankj3/go-til/vault"
+	"github.com/level11consulting/ocelot/common/credentials"
 )
 
 //GetInstance attempts to connect to Consul and Vault, returns a new instance remoteConfig
@@ -38,11 +39,11 @@ func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) 
 	}
 
 	//initialize vault
-		vaultToken, err := getVaultToken(vaultToken)
+	vaultToken, err := getVaultToken(vaultToken)
 
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
 	vaultClient, err := ocevault.NewAuthedClient(vaultToken)
 	if err != nil {
@@ -96,7 +97,7 @@ func buildCredKey(credType string, acctName string) string {
 }
 
 func (rc *RemoteConfig) deletePassword(scType pb.SubCredType, acctName, identifier string) error {
-	credPath := BuildCredPath(scType, acctName, scType.Parent(), identifier)
+	credPath := credentials.BuildCredPath(scType, acctName, scType.Parent(), identifier)
 	ocelog.Log().Debug("CREDPATH=", credPath)
 	if err := rc.Vault.DeletePath(credPath); err != nil {
 		return errors.WithMessage(err, "Unable to delete password for user "+acctName+" w/ identifier "+identifier)
@@ -123,7 +124,7 @@ func (rc *RemoteConfig) DeleteCred(store storage.CredTable, anyCred pb.OcyCredde
 // FIXME: For consistency, this should be renamed to something like GetCred, but unique... Make it clear what is a Cred and a Password
 //GetPassword will return to you the vault password at specified path
 func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error) {
-	credPath := BuildCredPath(scType, acctName, ocyCredType, identifier)
+	credPath := credentials.BuildCredPath(scType, acctName, ocyCredType, identifier)
 	ocelog.Log().Debug("CREDPATH=", credPath)
 	authData, err := rc.Vault.GetUserAuthData(credPath)
 	if err != nil {
@@ -142,7 +143,7 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 // AddCreds adds repo integration creds to storage + vault
 func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error) {
 	if rc.Vault != nil {
-		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
+		path := credentials.BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
 
 		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
@@ -161,7 +162,7 @@ func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder,
 
 func (rc *RemoteConfig) UpdateCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
 	if rc.Vault != nil {
-		path := BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
+		path := credentials.BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
 
 		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {

@@ -6,12 +6,12 @@ import (
 	"io"
 	"strings"
 
-	cred "github.com/level11consulting/ocelot/common/credentials"
 	pb "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 )
 
-type RepoSetupFunc func(rc cred.CVRemoteConfig, store storage.CredTable, accountName string) (string, error)
+type RepoSetupFunc func(rc config.CVRemoteConfig, store storage.CredTable, accountName string) (string, error)
 type RepoExecFunc func(string) []string
 
 type Builder interface {
@@ -21,7 +21,7 @@ type Builder interface {
 	SetGlobalEnv(envs []string)
 	// for after that, if an integration calls for an environment variable to be set (i.e. the creds option for uploading env vars for use)
 	AddGlobalEnvs(envs []string)
-	Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
+	Setup(ctx context.Context, logout chan []byte, dockerId chan string, werk *pb.WerkerTask, rc config.CVRemoteConfig, werkerPort string) (res *pb.Result, uuid string)
 	Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result
 	ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *StageUtil, logout chan []byte) *pb.Result
 	GetContainerId() string

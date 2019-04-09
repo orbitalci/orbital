@@ -1,4 +1,4 @@
-package credentials
+package config
 
 import (
 	"github.com/pkg/errors"

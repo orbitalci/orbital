@@ -2,8 +2,6 @@ package listener
 
 import (
 	"github.com/golang/protobuf/proto"
-	"github.com/prometheus/client_golang/prometheus"
-	ocelog "github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/basher"
 	"github.com/level11consulting/ocelot/build/builder/docker"
@@ -11,10 +9,12 @@ import (
 	"github.com/level11consulting/ocelot/build/builder/ssh"
 	"github.com/level11consulting/ocelot/build/launcher"
 	"github.com/level11consulting/ocelot/build/valet"
-	"github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/prometheus/client_golang/prometheus"
+	ocelog "github.com/shankj3/go-til/log"
 
 	//"runtime/debug"
 	"fmt"
@@ -40,10 +40,10 @@ type WorkerMsgHandler struct {
 	Basher       *basher.Basher
 	Store        storage.OcelotStorage
 	BuildValet   *valet.Valet
-	RemoteConfig credentials.CVRemoteConfig
+	RemoteConfig config.CVRemoteConfig
 }
 
-func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, rc credentials.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
+func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, rc config.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
 	return &WorkerMsgHandler{
 		Topic:        topic,
 		Basher:       b,

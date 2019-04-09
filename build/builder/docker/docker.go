@@ -7,16 +7,17 @@ import (
 	"io"
 	"strings"
 
+	"github.com/level11consulting/ocelot/models"
 	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/vault"
-	"github.com/level11consulting/ocelot/models"
 
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/basher"
-	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/common/helpers/dockrhelper"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
+	creds "github.com/level11consulting/ocelot/common/credentials"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -69,7 +70,7 @@ func (d *Docker) GetContainerId() string {
 //  It mounts the docker socket to allow for docker builds within the container. It then starts the container with the initial command of downloading
 //  all the ocelot related files and installing necessary packages, and attaches logout to the output so the logs can be stored with teh rest of the build
 //  logs
-func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
+func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc config.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	var setupMessages []string
 
 	su := build.InitStageUtil("setup")
@@ -126,7 +127,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 		Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 		//Binds: []string{ homeDirectory + ":/.ocelot", "/var/run/docker.sock:/var/run/docker.sock"},
 		NetworkMode: "host",
-		Init: &init,
+		Init:        &init,
 	}
 
 	resp, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
@@ -212,7 +213,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	ocelog.Log().Debug("identifier is ", identifier)
 	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR=" + vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
-		cred.BuildCredPath(sctType, acctName, pb.CredType_VCS, identifier)), logout)
+		creds.BuildCredPath(sctType, acctName, pb.CredType_VCS, identifier)), logout)
 	if len(result.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
 		result.Messages = append(setupMessages, result.Messages...)
