@@ -1,10 +1,12 @@
-package nsqwatch
+package circuitbreaker
 
 import (
-	"github.com/shankj3/go-til/nsqpb"
+	"time"
+
 	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/storage"
-	"time"
+	"github.com/shankj3/go-til/nsqpb"
+
 	//"github.com/nsqio/go-nsq"
 	"testing"
 )
