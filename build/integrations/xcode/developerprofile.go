@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/level11consulting/ocelot/common/helpers/ioshelper"
+	"github.com/level11consulting/ocelot/build/helpers/ioshelper"
 	"github.com/level11consulting/ocelot/models/pb"
 )
 

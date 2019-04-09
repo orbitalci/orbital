@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/level11consulting/ocelot/common/helpers/ioshelper"
+	"github.com/level11consulting/ocelot/build/helpers/ioshelper"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/shankj3/go-til/log"

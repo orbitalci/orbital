@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/shankj3/go-til/test"
+	"github.com/level11consulting/ocelot/build/helpers/ioshelper"
 	"github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/common/helpers/ioshelper"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/test"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
