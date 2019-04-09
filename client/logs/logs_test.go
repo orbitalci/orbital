@@ -1,13 +1,14 @@
-package output
+package logs
 
 import (
 	"context"
 	"flag"
-	"github.com/mitchellh/cli"
-	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/client/commandhelper"
 	"strings"
 	"testing"
+
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	"github.com/mitchellh/cli"
+	"github.com/shankj3/go-til/test"
 )
 
 func TestCmd_fromStorage(t *testing.T) {
