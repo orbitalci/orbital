@@ -1,13 +1,14 @@
-package output
+package logs
 
 import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/mitchellh/cli"
+	"io"
+
 	"github.com/level11consulting/ocelot/client/commandhelper"
 	models "github.com/level11consulting/ocelot/models/pb"
-	"io"
+	"github.com/mitchellh/cli"
 )
 
 const synopsis = "stream logs on running or completed build"

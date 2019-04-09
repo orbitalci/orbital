@@ -1,7 +1,6 @@
 package client
 
 import (
-	"github.com/mitchellh/cli"
 	"github.com/level11consulting/ocelot/client/build"
 	"github.com/level11consulting/ocelot/client/creds/apple"
 	"github.com/level11consulting/ocelot/client/creds/apple/applelist"
@@ -16,6 +15,7 @@ import (
 	"github.com/level11consulting/ocelot/client/creds/ssh"
 	"github.com/level11consulting/ocelot/client/init"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/mitchellh/cli"
 
 	"github.com/level11consulting/ocelot/client/creds"
 	"github.com/level11consulting/ocelot/client/creds/notify/notifyadd"
@@ -35,7 +35,7 @@ import (
 	"github.com/level11consulting/ocelot/client/creds/vcscreds/add"
 	"github.com/level11consulting/ocelot/client/creds/vcscreds/list"
 	"github.com/level11consulting/ocelot/client/kill"
-	"github.com/level11consulting/ocelot/client/output"
+	"github.com/level11consulting/ocelot/client/logs"
 	"github.com/level11consulting/ocelot/client/poll/add"
 	"github.com/level11consulting/ocelot/client/poll/delete"
 	"github.com/level11consulting/ocelot/client/poll/list"
@@ -91,19 +91,19 @@ func init() {
 		"creds helmrepo add":     func() (cli.Command, error) { return helmrepoadd.New(ui), nil },
 		"creds helmrepo list":    func() (cli.Command, error) { return helmrepolist.New(ui), nil },
 		"creds helmrepo  delete": func() (cli.Command, error) { return delete.New(ui, pb.CredType_GENERIC), nil },
-		"init":        func() (cli.Command, error) { return ocyinit.New(ui), nil },
-		"logs":        func() (cli.Command, error) { return output.New(ui), nil },
-		"summary":     func() (cli.Command, error) { return summary.New(ui), nil },
-		"validate":    func() (cli.Command, error) { return validate.New(ui), nil },
-		"status":      func() (cli.Command, error) { return status.New(ui), nil },
-		"watch":       func() (cli.Command, error) { return watch.New(ui), nil },
-		"build":       func() (cli.Command, error) { return build.New(ui), nil },
-		"poll":        func() (cli.Command, error) { return polladd.New(ui), nil },
-		"poll delete": func() (cli.Command, error) { return polldelete.New(ui), nil },
-		"poll list":   func() (cli.Command, error) { return polllist.New(ui), nil },
-		"kill":        func() (cli.Command, error) { return kill.New(ui), nil },
-		"version":     func() (cli.Command, error) { return version.New(ui, verHuman), nil },
-		"repos":       func() (cli.Command, error) { return repos.New(), nil },
-		"repos list":  func() (cli.Command, error) { return reposlist.New(ui), nil },
+		"init":                   func() (cli.Command, error) { return ocyinit.New(ui), nil },
+		"logs":                   func() (cli.Command, error) { return logs.New(ui), nil },
+		"summary":                func() (cli.Command, error) { return summary.New(ui), nil },
+		"validate":               func() (cli.Command, error) { return validate.New(ui), nil },
+		"status":                 func() (cli.Command, error) { return status.New(ui), nil },
+		"watch":                  func() (cli.Command, error) { return watch.New(ui), nil },
+		"build":                  func() (cli.Command, error) { return build.New(ui), nil },
+		"poll":                   func() (cli.Command, error) { return polladd.New(ui), nil },
+		"poll delete":            func() (cli.Command, error) { return polldelete.New(ui), nil },
+		"poll list":              func() (cli.Command, error) { return polllist.New(ui), nil },
+		"kill":                   func() (cli.Command, error) { return kill.New(ui), nil },
+		"version":                func() (cli.Command, error) { return version.New(ui, verHuman), nil },
+		"repos":                  func() (cli.Command, error) { return repos.New(), nil },
+		"repos list":             func() (cli.Command, error) { return reposlist.New(ui), nil },
 	}
 }
