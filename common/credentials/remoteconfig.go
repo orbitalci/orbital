@@ -12,7 +12,7 @@ import (
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/storage_postgres"
+	"github.com/level11consulting/ocelot/storage/postgres"
 )
 
 //GetInstance attempts to connect to Consul and Vault, returns a new instance remoteConfig

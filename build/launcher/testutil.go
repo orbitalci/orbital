@@ -16,7 +16,7 @@ import (
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/storage_postgres"
+	"github.com/level11consulting/ocelot/storage/postgres"
 )
 
 func getLoopbackIp(t *testing.T) string {
