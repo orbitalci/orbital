@@ -7,7 +7,7 @@ import (
 
 	"github.com/level11consulting/ocelot/models/pb"
 	storage_error "github.com/level11consulting/ocelot/storage/error"
-	metrics "github.com/level11consulting/ocelot/storage_metrics"
+	metrics "github.com/level11consulting/ocelot/storage/metrics"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 )

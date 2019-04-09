@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 
-	metrics "github.com/level11consulting/ocelot/storage_metrics"
+	metrics "github.com/level11consulting/ocelot/storage/metrics"
 )
 
 /*
