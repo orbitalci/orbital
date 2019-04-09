@@ -8,14 +8,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shankj3/go-til/consul"
-	"github.com/shankj3/go-til/log"
 	brt "github.com/level11consulting/ocelot/build"
 	c "github.com/level11consulting/ocelot/build/cleaner"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/log"
+
+	consulkv "github.com/level11consulting/ocelot/server/config/consul"
 
 	"github.com/google/uuid"
 )
@@ -153,6 +154,7 @@ func (v *Valet) RemoveAllTrace() {
 		log.Log().WithField("werkerId", v.WerkerUuid.String()).Info("successfully unregistered")
 	}
 }
+
 //MakeItSoDed is a defer recovery function for when the werker has panicked
 func (v *Valet) MakeItSoDed(finish chan int) {
 	if rec := recover(); rec != nil {
@@ -217,7 +219,7 @@ func (v *Valet) SignalRecvDed() {
 // 		ci/builds/<werkerId>/<hash>/*
 func Delete(consulete consul.Consuletty, gitHash string) (err error) {
 	//paths := &Identifiers{GitHash: gitHash}
-	pairPath := common.MakeBuildMapPath(gitHash)
+	pairPath := consulkv.MakeBuildMapPath(gitHash)
 	kv, err := consulete.GetKeyValue(pairPath)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get kv error!")
@@ -228,7 +230,7 @@ func Delete(consulete consul.Consuletty, gitHash string) (err error) {
 		return
 	}
 	log.Log().WithField("gitHash", gitHash).Info("WERKERID IS: ", string(kv.Value))
-	if err = consulete.RemoveValues(common.MakeBuildPath(string(kv.Value), gitHash)); err != nil {
+	if err = consulete.RemoveValues(consulkv.MakeBuildPath(string(kv.Value), gitHash)); err != nil {
 		return
 	}
 	err = consulete.RemoveValue(pairPath)

@@ -1,8 +1,10 @@
-package common
+package consul
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/level11consulting/ocelot/common"
 )
 
 const (
@@ -30,51 +32,51 @@ const (
 )
 
 func MakeBuildPath(werkerId string, gitHash string) string {
-	return GetPrefix() + fmt.Sprintf(buildPath, werkerId, gitHash)
+	return common.GetPrefix() + fmt.Sprintf(buildPath, werkerId, gitHash)
 }
 
 func MakeBuildWerkerIdPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(buildIdOnly, werkerId)
+	return common.GetPrefix() + fmt.Sprintf(buildIdOnly, werkerId)
 }
 
 func MakeBuildSummaryIdPath(werkerId string, gitHash string) string {
-	return GetPrefix() + fmt.Sprintf(buildSummaryId, werkerId, gitHash)
+	return common.GetPrefix() + fmt.Sprintf(buildSummaryId, werkerId, gitHash)
 }
 
 func MakeBuildStagePath(werkerId string, gitHash string) string {
-	return GetPrefix() + fmt.Sprintf(bldCurrentStage, werkerId, gitHash)
+	return common.GetPrefix() + fmt.Sprintf(bldCurrentStage, werkerId, gitHash)
 }
 
 func MakeBuildStartpath(werkerId string, gitHash string) string {
-	return GetPrefix() + fmt.Sprintf(bldStartTime, werkerId, gitHash)
+	return common.GetPrefix() + fmt.Sprintf(bldStartTime, werkerId, gitHash)
 }
 
 func MakeDockerUuidPath(werkerId string, gitHash string) string {
-	return GetPrefix() + fmt.Sprintf(BuildDockerUuid, werkerId, gitHash)
+	return common.GetPrefix() + fmt.Sprintf(BuildDockerUuid, werkerId, gitHash)
 }
 
 func MakeBuildMapPath(gitHash string) string {
-	return GetPrefix() + fmt.Sprintf(WerkerBuildMap, gitHash)
+	return common.GetPrefix() + fmt.Sprintf(WerkerBuildMap, gitHash)
 }
 
 func MakeWerkerLocPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(werkerLocation, werkerId)
+	return common.GetPrefix() + fmt.Sprintf(werkerLocation, werkerId)
 }
 
 func MakeWerkerIpPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(WerkerIp, werkerId)
+	return common.GetPrefix() + fmt.Sprintf(WerkerIp, werkerId)
 }
 
 func MakeWerkerGrpcPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(WerkerGrpc, werkerId)
+	return common.GetPrefix() + fmt.Sprintf(WerkerGrpc, werkerId)
 }
 
 func MakeWerkerWsPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(WerkerWs, werkerId)
+	return common.GetPrefix() + fmt.Sprintf(WerkerWs, werkerId)
 }
 
 func MakeWerkerTagsPath(werkerId string) string {
-	return GetPrefix() + fmt.Sprintf(WerkerTags, werkerId)
+	return common.GetPrefix() + fmt.Sprintf(WerkerTags, werkerId)
 }
 
 // ParseGenericBuildPath will return the werkerId and hash out of a key related to the build path
@@ -82,7 +84,7 @@ func MakeWerkerTagsPath(werkerId string) string {
 // ie: ci/builds/<werkerId>/<hash>/docker_uuid
 func ParseGenericBuildPath(buildPath string) (werkerId string, hash string, key string) {
 	var shift int
-	if GetPrefix() != "" {
+	if common.GetPrefix() != "" {
 		shift = 1
 	}
 	split := strings.Split(buildPath, "/")
@@ -104,7 +106,7 @@ func ParseBuildMapPath(path string) (hash string) {
 // must be fully qualified key path, not prefix
 func ParseWerkerLocPath(path string) (werkerId string) {
 	var shift int
-	if GetPrefix() != "" {
+	if common.GetPrefix() != "" {
 		shift = 1
 	}
 	split := strings.Split(path, "/")
