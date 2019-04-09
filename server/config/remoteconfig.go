@@ -6,14 +6,15 @@ import (
 	"strconv"
 
 	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config/consul"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/storage/postgres"
 	"github.com/pkg/errors"
-	"github.com/shankj3/go-til/consul"
+	consullib "github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 	ocevault "github.com/shankj3/go-til/vault"
-	"github.com/level11consulting/ocelot/common/credentials"
 )
 
 //GetInstance attempts to connect to Consul and Vault, returns a new instance remoteConfig
@@ -23,7 +24,7 @@ func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) 
 	//intialize consul
 	var portInt, _ = strconv.Atoi(consulURI.Port())
 	if consulURI.Hostname() == "" && portInt == 0 {
-		consulet, err := consul.Default()
+		consulet, err := consullib.Default()
 		if err != nil {
 			return nil, err
 		}
@@ -31,7 +32,7 @@ func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) 
 	} else {
 
 		// This is certainly an area to refactor in the future
-		consulet, err := consul.New(consulURI.Hostname(), portInt)
+		consulet, err := consullib.New(consulURI.Hostname(), portInt)
 		remoteConfig.Consul = consulet
 		if err != nil {
 			return nil, err
@@ -56,7 +57,7 @@ func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) 
 
 // RemoteConfig returns a struct with client handlers for Consul and Vault. Mainly for passing around after authenticating
 type RemoteConfig struct {
-	Consul consul.Consuletty
+	Consul consullib.Consuletty
 	Vault  ocevault.Vaulty
 }
 
@@ -263,12 +264,12 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 
 // GetStorageType reads from consul at common.StorageType, and returns a handle for the configured storage.
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
-	kv, err := rc.Consul.GetKeyValue(common.StorageType)
+	kv, err := rc.Consul.GetKeyValue(consul.StorageType)
 	if err != nil {
 		return 0, errors.New("unable to get storage type from consul, err: " + err.Error())
 	}
 	if kv == nil {
-		return 0, errors.Errorf("there is no entry for storage type at the path \"%s\" in consul, required", common.StorageType)
+		return 0, errors.Errorf("there is no entry for storage type at the path \"%s\" in consul, required", consul.StorageType)
 	}
 	// ?: Is there an overall positive experience for making this value case-insensitive?
 	storageType := string(kv.Value)
