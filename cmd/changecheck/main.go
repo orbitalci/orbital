@@ -21,14 +21,14 @@ import (
 	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/build_signaler/poll"
 	"github.com/level11consulting/ocelot/common"
-	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/version"
 	"net/url"
 )
 
 type changeSetConfig struct {
-	RemoteConf cred.CVRemoteConfig
+	RemoteConf config.CVRemoteConfig
 	*deserialize.Deserializer
 	OcyValidator *build.OcelotValidator
 	Producer     *nsqpb.PbProduce
@@ -59,7 +59,7 @@ func configure() *changeSetConfig {
 	if parsedErr != nil {
 		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
 	}
-	rc, err := cred.GetInstance(parsedConsulURL, "")
+	rc, err := config.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to get instance of remote config, exiting")
 	}

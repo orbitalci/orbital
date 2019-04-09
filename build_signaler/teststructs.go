@@ -12,7 +12,7 @@ import (
 	ocenet "github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/vault"
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
@@ -89,7 +89,7 @@ stages:
 `)
 
 func GetFakeSignaler(t *testing.T, inConsul bool) *Signaler {
-	cred := &credentials.RemoteConfig{Consul: &TestConsul{keyFound: inConsul}, Vault: &TestVault{}}
+	cred := &config.RemoteConfig{Consul: &TestConsul{keyFound: inConsul}, Vault: &TestVault{}}
 	dese := deserialize.New()
 	valid := &build.OcelotValidator{}
 	store := &TestStorage{}

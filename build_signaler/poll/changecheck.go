@@ -4,12 +4,12 @@ import (
 	"errors"
 	"time"
 
-	ocelog "github.com/shankj3/go-til/log"
 	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/common/remote"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 func NewChangeChecker(signaler *signal.Signaler, acctRepo string, vcsType pb.SubCredType) *ChangeChecker {
@@ -17,7 +17,7 @@ func NewChangeChecker(signaler *signal.Signaler, acctRepo string, vcsType pb.Sub
 		Signaler: signaler,
 		AcctRepo: acctRepo,
 		pTeller:  &signal.PushWerkerTeller{},
-		vcsType: vcsType,
+		vcsType:  vcsType,
 	}
 }
 
@@ -32,7 +32,7 @@ type ChangeChecker struct {
 
 // SetAuth retrieves VCS credentials based on the account, then creates a VCS handler with it.
 func (w *ChangeChecker) SetAuth() error {
-	cfg, err := credentials.GetVcsCreds(w.Store, w.AcctRepo, w.RC, w.vcsType)
+	cfg, err := config.GetVcsCreds(w.Store, w.AcctRepo, w.RC, w.vcsType)
 	if err != nil {
 		return errors.New("couldn't get vcs creds, error: " + err.Error())
 	}
@@ -59,7 +59,7 @@ func (w *ChangeChecker) generatePush(acctRepo, previousHash, latestHash, branch 
 			return nil, errors.New("no commits in push, nothing to do")
 		}
 		previousHeadCommit = commits[commitNum-1]
-		pushcommits = commits[0:commitNum-1]
+		pushcommits = commits[0 : commitNum-1]
 		newHeadCommit = commits[0]
 	} else {
 		previousHeadCommit = nil
@@ -67,10 +67,10 @@ func (w *ChangeChecker) generatePush(acctRepo, previousHash, latestHash, branch 
 		newHeadCommit = &pb.Commit{Hash: latestHash}
 	}
 	return &pb.Push{
-		Commits: pushcommits,
-		Branch: branch,
-		Repo: &pb.Repo{AcctRepo: acctRepo},
-		HeadCommit: newHeadCommit,
+		Commits:            pushcommits,
+		Branch:             branch,
+		Repo:               &pb.Repo{AcctRepo: acctRepo},
+		HeadCommit:         newHeadCommit,
 		PreviousHeadCommit: previousHeadCommit,
 	}, nil
 }
@@ -113,7 +113,7 @@ func (w *ChangeChecker) HandleAllBranches(branchLastHashes map[string]string) er
 					WithField("db last hash", lastHash).
 					WithField("most recent hash", branchHist.Hash).
 					Info("hashes are not the same, telling werker...")
-				writtenPush, err := w.generatePush(w.AcctRepo,  lastHash, "", branchHist.Branch)
+				writtenPush, err := w.generatePush(w.AcctRepo, lastHash, "", branchHist.Branch)
 				if err != nil {
 					return err
 				}

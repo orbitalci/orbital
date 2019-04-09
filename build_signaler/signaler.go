@@ -1,20 +1,20 @@
 package build_signaler
 
 import (
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
 
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 )
 
-func NewSignaler(RC credentials.CVRemoteConfig, dese *deserialize.Deserializer, producer nsqpb.Producer, ocyValidator *build.OcelotValidator, store storage.OcelotStorage) *Signaler {
+func NewSignaler(RC config.CVRemoteConfig, dese *deserialize.Deserializer, producer nsqpb.Producer, ocyValidator *build.OcelotValidator, store storage.OcelotStorage) *Signaler {
 	return &Signaler{
 		RC:           RC,
 		Deserializer: dese,
@@ -25,7 +25,7 @@ func NewSignaler(RC credentials.CVRemoteConfig, dese *deserialize.Deserializer, 
 }
 
 type Signaler struct {
-	RC credentials.CVRemoteConfig
+	RC config.CVRemoteConfig
 	*deserialize.Deserializer
 	Producer     nsqpb.Producer
 	OcyValidator *build.OcelotValidator
@@ -64,7 +64,7 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 		return build.NoViability("this hash is already building in ocelot, therefore not adding to queue")
 	}
 	//get vcs cred to attach the database id to the build summary
-	vcsCred, err := credentials.GetVcsCreds(s.Store, task.FullName, s.RC, task.VcsType)
+	vcsCred, err := config.GetVcsCreds(s.Store, task.FullName, s.RC, task.VcsType)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to get vcs creds")
 		return errors.Wrap(err, "unable to retrieve vcs creds")

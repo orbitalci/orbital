@@ -1,4 +1,4 @@
-package credentials
+package config
 
 import (
 	"github.com/prometheus/client_golang/prometheus"

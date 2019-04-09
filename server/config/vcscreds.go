@@ -1,4 +1,4 @@
-package credentials
+package config
 
 import (
 	"github.com/level11consulting/ocelot/common"

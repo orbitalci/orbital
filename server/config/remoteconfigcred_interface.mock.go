@@ -2,15 +2,16 @@
 // Source: remoteconfigcred_interface.go
 
 // Package credentials is a generated GoMock package.
-package credentials
+package config
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
-	consul "github.com/shankj3/go-til/consul"
-	vault "github.com/shankj3/go-til/vault"
 	pb "github.com/level11consulting/ocelot/models/pb"
 	storage "github.com/level11consulting/ocelot/storage"
-	reflect "reflect"
+	consul "github.com/shankj3/go-til/consul"
+	vault "github.com/shankj3/go-til/vault"
 )
 
 // MockRemoteConfigCred is a mock of RemoteConfigCred interface

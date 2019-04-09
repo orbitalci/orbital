@@ -1,26 +1,26 @@
 package main
 
 import (
+	"fmt"
+	"net/url"
+	"os"
+	"strings"
+
 	"github.com/gorilla/mux"
+	"github.com/level11consulting/ocelot/build"
+	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/build_signaler/webhook"
+	"github.com/level11consulting/ocelot/models/pb"
+	hh "github.com/level11consulting/ocelot/router/hookhandler"
+	"github.com/level11consulting/ocelot/server/config"
+	"github.com/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shankj3/go-til/deserialize"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/build"
-	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/build_signaler/webhook"
-	cred "github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/models/pb"
-	hh "github.com/level11consulting/ocelot/router/hookhandler"
-	"github.com/level11consulting/ocelot/version"
-	"os"
-	"strings"
-	"net/url"
-	"fmt"
 )
-
 
 // FIXME: consistency: consul's host and port, the var name for configInstance/remoteConfig
 func main() {
@@ -50,7 +50,7 @@ func main() {
 		ocelog.IncludeErrField(parsedErr).Fatal("failed parsing consul uri, bailing")
 	}
 
-	remoteConfig, err := cred.GetInstance(parsedConsulURL, "")
+	remoteConfig, err := config.GetInstance(parsedConsulURL, "")
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}
@@ -77,8 +77,8 @@ func startServer(ctx *hh.HookHandlerContext, port string) {
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e
-	muxi.HandleFunc("/" + strings.ToLower(pb.SubCredType_BITBUCKET.String()), ctx.HandleBBEvent).Methods("POST")
-	muxi.HandleFunc("/" + strings.ToLower(pb.SubCredType_GITHUB.String()), ctx.HandleGHEvent).Methods("POST")
+	muxi.HandleFunc("/"+strings.ToLower(pb.SubCredType_BITBUCKET.String()), ctx.HandleBBEvent).Methods("POST")
+	muxi.HandleFunc("/"+strings.ToLower(pb.SubCredType_GITHUB.String()), ctx.HandleGHEvent).Methods("POST")
 	muxi.Handle("/metrics", promhttp.Handler())
 	n := ocenet.InitNegroni("hookhandler", muxi)
 	n.Run(":" + port)

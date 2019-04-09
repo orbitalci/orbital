@@ -1,10 +1,10 @@
-package credentials
+package config
 
 import (
-	"github.com/shankj3/go-til/consul"
-	ocevault "github.com/shankj3/go-til/vault"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/consul"
+	ocevault "github.com/shankj3/go-til/vault"
 )
 
 //go:generate mockgen -source remoteconfigcred_interface.go -destination remoteconfigcred_interface.mock.go -package credentials
@@ -22,7 +22,6 @@ type RemoteConfigCred interface {
 	BuildCredPath(credType string, acctName string) string
 	Spawn() RemoteConfigCred
 }
-
 
 type StorageCreds struct {
 	User         string

@@ -14,7 +14,7 @@ import (
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/basher"
 	"github.com/level11consulting/ocelot/build/valet"
-	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/common/helpers/exechelper"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -51,7 +51,7 @@ func (e *Exec) Init(ctx context.Context, hash string, logout chan []byte) *pb.Re
 }
 
 // Setup for the Exec werker type will send off the checkout hash as the "docker id" on the docker id channel
-func (e *Exec) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc cred.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
+func (e *Exec) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc config.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	log.Log().Infof("setting up hash %s", werk.CheckoutHash)
 	dockerIdChan <- werk.CheckoutHash
 	var setupMessages []string

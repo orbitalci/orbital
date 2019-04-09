@@ -4,7 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	cred "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/common/du"
 	"github.com/level11consulting/ocelot/storage"
 	"time"
@@ -33,13 +33,13 @@ func init() {
 type NsqWatch struct {
 	interval   int64
 	pConsumers []*nsqpb.ProtoConsume
-	remoteConf cred.HealthyMaintainer
+	remoteConf config.HealthyMaintainer
 	store      storage.HealthyChkr
 	paused     bool
 	diskUtilityCheck *du.HealthChecker
 }
 
-func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc cred.CVRemoteConfig, store storage.OcelotStorage, duHealthChecker *du.HealthChecker) {
+func WatchAndPause(interval int64, consumers []*nsqpb.ProtoConsume, rc config.CVRemoteConfig, store storage.OcelotStorage, duHealthChecker *du.HealthChecker) {
 	nsqwatch := &NsqWatch{
 		interval:         interval,
 		pConsumers:       consumers,
