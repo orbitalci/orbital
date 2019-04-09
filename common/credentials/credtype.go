@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config/consul"
 )
 
 //BuildCred path will return "<creds>/vcs|repo|k8s/<subCredType(string)>/<identifier>"
@@ -31,6 +31,6 @@ func BuildCredPath(scType pb.SubCredType, AcctName string, ocyCredType pb.CredTy
 	default:
 		panic("only repo|vcs|k8s|apple|ssh|notify|generic, got " + ocyCredType.String())
 	}
-	path := fmt.Sprintf(pattern, common.ConfigPath, AcctName, strings.ToLower(scType.String()), identifier)
+	path := fmt.Sprintf(pattern, consul.ConfigPath, AcctName, strings.ToLower(scType.String()), identifier)
 	return path
 }

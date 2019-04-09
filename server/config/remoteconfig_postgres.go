@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/server/config/consul"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 )
@@ -17,25 +17,25 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	// Or creds are dynamic, and managed by vault's database secret engine
 
 	// The desired default behavior is to use static secrets. Don't error out if Vault settings aren't in Consul
-	postgresVaultConf, _ := rc.Consul.GetKeyValues(common.PostgresVaultConf)
+	postgresVaultConf, _ := rc.Consul.GetKeyValues(consul.PostgresVaultConf)
 
 	postgresVaultBackend := "kv" // The default backend is "kv" if left unconfigured in Consul
 	postgresVaultRole := ""
 	for _, vconf := range postgresVaultConf {
 		switch vconf.Key {
-		case common.PostgresVaultSecretsEngine:
+		case consul.PostgresVaultSecretsEngine:
 			if dbConfigType := string(vconf.Value); dbConfigType != "kv" && dbConfigType != "database" {
 				return &StorageCreds{}, errors.New("Unsupported Vault DB Secret Engine: " + dbConfigType)
 			}
 			postgresVaultBackend = string(vconf.Value)
-		case common.PostgresVaultRoleName:
+		case consul.PostgresVaultRoleName:
 			postgresVaultRole = string(vconf.Value)
 		}
 	}
 
 	storeConfig := &StorageCreds{}
 
-	kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
+	kvconfig, err := rc.Consul.GetKeyValues(consul.PostgresCredLoc)
 	if len(kvconfig) == 0 || err != nil {
 		errorMsg := fmt.Sprintf("unable to get postgres creds from consul")
 		if err != nil {
@@ -46,11 +46,11 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 
 	for _, pair := range kvconfig {
 		switch pair.Key {
-		case common.PostgresDatabaseName:
+		case consul.PostgresDatabaseName:
 			storeConfig.DbName = string(pair.Value)
-		case common.PostgresLocation:
+		case consul.PostgresLocation:
 			storeConfig.Location = string(pair.Value)
-		case common.PostgresPort:
+		case consul.PostgresPort:
 			// todo: check for err
 			storeConfig.Port, _ = strconv.Atoi(string(pair.Value))
 		}
@@ -59,7 +59,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 	switch postgresVaultBackend {
 	case "kv":
 		ocelog.Log().Info("Static Postgres creds")
-		kvconfig, err := rc.Consul.GetKeyValues(common.PostgresCredLoc)
+		kvconfig, err := rc.Consul.GetKeyValues(consul.PostgresCredLoc)
 		if len(kvconfig) == 0 || err != nil {
 			errorMsg := fmt.Sprintf("unable to get postgres location from consul")
 			if err != nil {
@@ -69,12 +69,12 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		}
 		for _, pair := range kvconfig {
 			switch pair.Key {
-			case common.PostgresUsername:
+			case consul.PostgresUsername:
 				storeConfig.User = string(pair.Value)
 			}
 		}
 
-		secrets, err := rc.Vault.GetVaultData(common.PostgresPasswordLoc)
+		secrets, err := rc.Vault.GetVaultData(consul.PostgresPasswordLoc)
 		if len(secrets) == 0 || err != nil {
 			errorMsg := fmt.Sprintf("unable to get postgres password from consul")
 			if err != nil {
@@ -84,7 +84,7 @@ func (rc *RemoteConfig) getForPostgres() (*StorageCreds, error) {
 		}
 
 		// making name clientsecret because i feel like there must be a way for us to genericize remoteConfig
-		storeConfig.Password = fmt.Sprintf("%v", secrets[common.PostgresPasswordKey])
+		storeConfig.Password = fmt.Sprintf("%v", secrets[consul.PostgresPasswordKey])
 
 	case "database":
 		ocelog.Log().Info("Dynamic Postgres creds")
