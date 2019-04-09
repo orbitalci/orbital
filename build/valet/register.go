@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	consulkv "github.com/level11consulting/ocelot/server/config/consul"
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/level11consulting/ocelot/common"
 )
 
 // Register will add all the appropriate build details that the admin needs to contact the werker for stream info
@@ -22,16 +22,16 @@ import (
 func Register(consulete consul.Consuletty, ip, grpcPort, wsPort string, tags []string) (werkerId uuid.UUID, err error) {
 	werkerId = uuid.New()
 	strId := werkerId.String()
-	if err = consulete.AddKeyValue(common.MakeWerkerIpPath(strId), []byte(ip)); err != nil {
+	if err = consulete.AddKeyValue(consulkv.MakeWerkerIpPath(strId), []byte(ip)); err != nil {
 		return
 	}
-	if err = consulete.AddKeyValue(common.MakeWerkerGrpcPath(strId), []byte(grpcPort)); err != nil {
+	if err = consulete.AddKeyValue(consulkv.MakeWerkerGrpcPath(strId), []byte(grpcPort)); err != nil {
 		return
 	}
-	if err = consulete.AddKeyValue(common.MakeWerkerWsPath(strId), []byte(wsPort)); err != nil {
+	if err = consulete.AddKeyValue(consulkv.MakeWerkerWsPath(strId), []byte(wsPort)); err != nil {
 		return
 	}
-	if err = consulete.AddKeyValue(common.MakeWerkerTagsPath(strId), []byte(strings.Join(tags, ","))); err != nil {
+	if err = consulete.AddKeyValue(consulkv.MakeWerkerTagsPath(strId), []byte(strings.Join(tags, ","))); err != nil {
 		return
 	}
 	return
@@ -39,13 +39,13 @@ func Register(consulete consul.Consuletty, ip, grpcPort, wsPort string, tags []s
 
 //UnRegister deletes all values out of the kv store that are related to the werkerId's specific configuration
 func UnRegister(consulete consul.Consuletty, werkerId string) error {
-	err := consulete.RemoveValues(common.MakeWerkerLocPath(werkerId))
+	err := consulete.RemoveValues(consulkv.MakeWerkerLocPath(werkerId))
 	return err
 }
 
 // RegisterStartedBuild creates an entry in consul that maps the git hash to the werker's uuid so that clients can find the werker for live streaming
 func RegisterStartedBuild(consulete consul.Consuletty, werkerId string, gitHash string) error {
-	if err := consulete.AddKeyValue(common.MakeBuildMapPath(gitHash), []byte(werkerId)); err != nil {
+	if err := consulete.AddKeyValue(consulkv.MakeBuildMapPath(gitHash), []byte(werkerId)); err != nil {
 		return err
 	}
 	return nil
@@ -54,7 +54,7 @@ func RegisterStartedBuild(consulete consul.Consuletty, werkerId string, gitHash 
 // RegisterBuild will add the mapping of docker uuid (or unique identifier, w/e) to the associated werkerId/commit build
 func RegisterBuild(consulete consul.Consuletty, werkerId string, gitHash string, dockerUuid string) error {
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("docker_uuid", dockerUuid).Info("registering build")
-	err := consulete.AddKeyValue(common.MakeDockerUuidPath(werkerId, gitHash), []byte(dockerUuid))
+	err := consulete.AddKeyValue(consulkv.MakeDockerUuidPath(werkerId, gitHash), []byte(dockerUuid))
 	return err
 }
 
@@ -62,18 +62,18 @@ func RegisterBuild(consulete consul.Consuletty, werkerId string, gitHash string,
 func RegisterBuildSummaryId(consulete consul.Consuletty, werkerId string, gitHash string, buildId int64) error {
 	str := fmt.Sprintf("%d", buildId)
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("buildId", buildId).Info("registering build")
-	err := consulete.AddKeyValue(common.MakeBuildSummaryIdPath(werkerId, gitHash), []byte(str))
+	err := consulete.AddKeyValue(consulkv.MakeBuildSummaryIdPath(werkerId, gitHash), []byte(str))
 	return err
 }
 
 func RegisterBuildStage(consulete consul.Consuletty, werkerId string, gitHash string, buildStage string) error {
 	ocelog.Log().WithField("werker_id", werkerId).WithField("git_hash", gitHash).WithField("buildStage", buildStage).Info("registering build")
-	err := consulete.AddKeyValue(common.MakeBuildStagePath(werkerId, gitHash), []byte(buildStage))
+	err := consulete.AddKeyValue(consulkv.MakeBuildStagePath(werkerId, gitHash), []byte(buildStage))
 	return err
 }
 
 func RegisterStageStartTime(consulete consul.Consuletty, werkerId string, gitHash string, start time.Time) error {
 	str := fmt.Sprintf("%d", start.Unix()) // todo: figure out a better way to do this conversion using bit shifting or something because i know this isnt the "right" way to do it
-	err := consulete.AddKeyValue(common.MakeBuildStartpath(werkerId, gitHash), []byte(str))
+	err := consulete.AddKeyValue(consulkv.MakeBuildStartpath(werkerId, gitHash), []byte(str))
 	return err
 }

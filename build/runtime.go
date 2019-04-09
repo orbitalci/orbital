@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/level11consulting/ocelot/models/pb"
+	consulkv "github.com/level11consulting/ocelot/server/config/consul"
+	"github.com/level11consulting/ocelot/storage"
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
 )
 
 type HashRuntime struct {
@@ -23,7 +23,7 @@ type HashRuntime struct {
 //GetBuildRuntime will return BuildRuntimeInfo about matching partial git hashes.
 //It does this by first asking consul for state of builds, and then db storage
 func GetBuildRuntime(consulete consul.Consuletty, gitHash string) (map[string]*pb.BuildRuntimeInfo, error) {
-	mapPath := common.MakeBuildMapPath(gitHash)
+	mapPath := consulkv.MakeBuildMapPath(gitHash)
 	pairs, err := consulete.GetKeyValues(mapPath)
 	if err != nil {
 		return nil, err
@@ -33,9 +33,9 @@ func GetBuildRuntime(consulete consul.Consuletty, gitHash string) (map[string]*p
 		return rt, &ErrBuildDone{"no build found in consul"}
 	}
 	for _, pair := range pairs {
-		fullHash := common.ParseBuildMapPath(pair.Key)
+		fullHash := consulkv.ParseBuildMapPath(pair.Key)
 		werkerId := string(pair.Value)
-		locPairs, err := consulete.GetKeyValues(common.MakeWerkerLocPath(werkerId))
+		locPairs, err := consulete.GetKeyValues(consulkv.MakeWerkerLocPath(werkerId))
 		if err != nil {
 			// todo: wrap these errors so we know where they came from / at what action
 			return nil, err
@@ -67,7 +67,7 @@ func GetBuildRuntime(consulete consul.Consuletty, gitHash string) (map[string]*p
 // CheckIfBuildDone will check in consul to make sure there is nothing in runtime configuration anymore,
 // then it will makes sure it can find it in storage
 func CheckIfBuildDone(consulete consul.Consuletty, summary storage.BuildSum, gitHash string) bool {
-	kv, err := consulete.GetKeyValue(common.MakeBuildMapPath(gitHash))
+	kv, err := consulete.GetKeyValue(consulkv.MakeBuildMapPath(gitHash))
 	if err != nil {
 		ocelog.IncludeErrField(err).Error()
 		return false
@@ -91,7 +91,7 @@ func CheckIfBuildDone(consulete consul.Consuletty, summary storage.BuildSum, git
 
 func GetWerkerActiveBuilds(consulete consul.Consuletty, werkerId string) (hashes []string, err error) {
 	// todo: allow for a different separator? will we ever be using a different one? probably not, but technically you can...
-	keys, err := consulete.GetKeys(common.MakeBuildWerkerIdPath(werkerId))
+	keys, err := consulete.GetKeys(consulkv.MakeBuildWerkerIdPath(werkerId))
 	if err != nil {
 		return
 	}
@@ -101,7 +101,7 @@ func GetWerkerActiveBuilds(consulete consul.Consuletty, werkerId string) (hashes
 		//ind := strings.LastIndex(key, "/")
 		//hashInd := strings.LastIndex(key[:ind+1], "/")
 		//hashes = append(hashes, key[hashInd+1:])
-		_, hash, _ := common.ParseGenericBuildPath(key)
+		_, hash, _ := consulkv.ParseGenericBuildPath(key)
 		_, ok := s[hash]
 		if !ok {
 			hashes = append(hashes, hash)
@@ -112,7 +112,7 @@ func GetWerkerActiveBuilds(consulete consul.Consuletty, werkerId string) (hashes
 }
 
 func CheckBuildInConsul(consulete consul.Consuletty, hash string) (exists bool, err error) {
-	pairPath := common.MakeBuildMapPath(hash)
+	pairPath := consulkv.MakeBuildMapPath(hash)
 	kv, err := consulete.GetKeyValue(pairPath)
 	if err != nil {
 		return
@@ -124,13 +124,13 @@ func CheckBuildInConsul(consulete consul.Consuletty, hash string) (exists bool, 
 }
 
 func GetHashRuntimesByWerker(consulete consul.Consuletty, werkerId string) (hrts map[string]*HashRuntime, err error) {
-	pairs, err := consulete.GetKeyValues(common.MakeBuildWerkerIdPath(werkerId))
+	pairs, err := consulete.GetKeyValues(consulkv.MakeBuildWerkerIdPath(werkerId))
 	hrts = make(map[string]*HashRuntime)
 	if err != nil {
 		return
 	}
 	for _, pair := range pairs {
-		_, hash, key := common.ParseGenericBuildPath(pair.Key)
+		_, hash, key := consulkv.ParseGenericBuildPath(pair.Key)
 		_, ok := hrts[hash]
 		if !ok {
 			hrts[hash] = &HashRuntime{
@@ -138,15 +138,15 @@ func GetHashRuntimesByWerker(consulete consul.Consuletty, werkerId string) (hrts
 			}
 		}
 		switch key {
-		case common.DockerUuidKey:
+		case consulkv.DockerUuidKey:
 			hrts[hash].DockerUuid = string(pair.Value)
-		case common.SummaryId:
+		case consulkv.SummaryId:
 			var id int64
 			id, err = convertArrayToInt(pair.Value)
 			hrts[hash].BuildId = id
-		case common.CurrentStage:
+		case consulkv.CurrentStage:
 			hrts[hash].CurrentStage = string(pair.Value)
-		case common.StartTime:
+		case consulkv.StartTime:
 			var unix int64
 			unix, err = convertArrayToInt(pair.Value)
 			startTime := time.Unix(unix, 0)
@@ -157,12 +157,12 @@ func GetHashRuntimesByWerker(consulete consul.Consuletty, werkerId string) (hrts
 }
 
 func GetDockerUuidsByWerkerId(consulete consul.Consuletty, werkerId string) (uuids []string, err error) {
-	pairs, err := consulete.GetKeyValues(common.MakeBuildWerkerIdPath(werkerId))
+	pairs, err := consulete.GetKeyValues(consulkv.MakeBuildWerkerIdPath(werkerId))
 	if err != nil {
 		return
 	}
 	for _, pair := range pairs {
-		if strings.Contains(pair.Key, common.DockerUuidKey) {
+		if strings.Contains(pair.Key, consulkv.DockerUuidKey) {
 			uuids = append(uuids, string(pair.Value))
 		}
 	}

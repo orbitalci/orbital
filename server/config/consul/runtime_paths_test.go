@@ -1,8 +1,9 @@
-package common
+package consul
 
 import (
-	"github.com/shankj3/go-til/test"
 	"testing"
+
+	"github.com/shankj3/go-til/test"
 )
 
 var idAndHashTests = []struct {
