@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/build/helpers/serde"
 )
 
 func NewKeychain() *AppleKeychain {
@@ -75,13 +75,13 @@ func (a *AppleKeychain) GetSecretsFromZip(profileReadre SizeReader, profPass str
 		fn := secretFile.FileInfo().Name()
 		switch {
 		case strings.Contains(fn, ".mobileprovision"):
-			a.MobileProvisions[fn] = common.BitzToBase64(bytec)
+			a.MobileProvisions[fn] = serde.BitzToBase64(bytec)
 		case strings.Contains(fn, ".p12"):
-			a.PrivateKeys[fn] = common.BitzToBase64(bytec)
+			a.PrivateKeys[fn] = serde.BitzToBase64(bytec)
 		case strings.Contains(fn, ".keychain"):
-			a.accountsKeychain = common.BitzToBase64(bytec)
+			a.accountsKeychain = serde.BitzToBase64(bytec)
 		case strings.Contains(fn, ".plist"):
-			a.accountsPlist = common.BitzToBase64(bytec)
+			a.accountsPlist = serde.BitzToBase64(bytec)
 		default:
 			return errors.New("unsupported file: " + fn)
 		}

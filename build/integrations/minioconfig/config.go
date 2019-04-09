@@ -9,6 +9,7 @@ package minioconfig
 import (
 	"encoding/json"
 
+	"github.com/level11consulting/ocelot/build/helpers/serde"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -35,7 +36,7 @@ func (m *minioConf) GenerateIntegrationString(credz []pb.OcyCredder) (string, er
 	if err != nil {
 		return "", err
 	}
-	configEncoded := common.BitzToBase64(bitz)
+	configEncoded := serde.BitzToBase64(bitz)
 	m.mConf = configEncoded
 	return configEncoded, err
 }
