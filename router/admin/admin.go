@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/level11consulting/ocelot/common/secure_grpc"
+	"github.com/level11consulting/ocelot/server/secure_grpc"
 	models "github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	creds "github.com/level11consulting/ocelot/common/credentials"

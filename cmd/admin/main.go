@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/common/secure_grpc"
+	"github.com/level11consulting/ocelot/server/secure_grpc"
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
 
