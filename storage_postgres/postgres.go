@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 
-	metrics "github.com/level11consulting/ocelot/storage_metrics"
+	metrics "github.com/level11consulting/ocelot/storage/metrics"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
@@ -142,7 +142,6 @@ func convertTimeToTimestamp(tyme time.Time) *timestamp.Timestamp {
 //  additional_fields jsonb
 //);
 //
-
 
 func (p *PostgresStorage) StorageType() string {
 	return fmt.Sprintf("Postgres Database at %s", p.url.Host)
