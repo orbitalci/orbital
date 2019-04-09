@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/level11consulting/ocelot/build/helpers/dockrhelper"
-	"github.com/level11consulting/ocelot/common/trigger"
+	"github.com/level11consulting/ocelot/build/trigger"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"

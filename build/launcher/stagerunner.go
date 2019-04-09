@@ -7,7 +7,7 @@ import (
 
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/common/trigger"
+	"github.com/level11consulting/ocelot/build/trigger"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
 )
