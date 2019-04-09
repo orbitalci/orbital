@@ -21,23 +21,24 @@ provide results endpoint, way for server to access data
 package main
 
 import (
+	"github.com/level11consulting/ocelot/build"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/build"
 
 	"sync"
 
 	"github.com/level11consulting/ocelot/build/basher"
 	"github.com/level11consulting/ocelot/build/listener"
 	"github.com/level11consulting/ocelot/build/valet"
-	"github.com/level11consulting/ocelot/common/nsqwatch"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/router/werker"
 	"github.com/level11consulting/ocelot/storage"
-
+	"github.com/level11consulting/ocelot/server/monitor/circuitbreaker"
+	
 	"fmt"
 	"os"
 	"os/signal"
+
 	//"strings"
 	"syscall"
 	"time"
@@ -115,7 +116,7 @@ func main() {
 		go listen(protoConsume, topic, conf, streamingTunnel, buildCtxTunnel, buildValet, store)
 		protoConsumers = append(protoConsumers, protoConsume)
 	}
-	go nsqwatch.WatchAndPause(int64(conf.HealthCheckInterval), protoConsumers, conf.RemoteConfig, store, conf.DiskUtilityHealthCheck)
+	go circuitbreaker.WatchAndPause(int64(conf.HealthCheckInterval), protoConsumers, conf.RemoteConfig, store, conf.DiskUtilityHealthCheck)
 	go werker.ServeMe(streamingTunnel, conf.WerkerFacts, store, buildValet.ContextValet)
 	go buildValet.ListenBuilds(buildCtxTunnel, sync.Mutex{})
 	for _, consumer := range protoConsumers {

@@ -1,6 +1,6 @@
 // +build windows
 
-package du
+package disk_usage
 
 import (
 	"syscall"

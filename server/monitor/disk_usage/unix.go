@@ -1,6 +1,6 @@
 // +build darwin dragonfly freebsd linux netbsd openbsd
 
-package du
+package disk_usage
 
 //https://github.com/StalkR/goircbot/blob/master/lib/disk/space_unix.go
 

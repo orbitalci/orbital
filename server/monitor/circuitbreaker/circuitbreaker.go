@@ -1,13 +1,14 @@
-package nsqwatch
+package circuitbreaker
 
 import (
+	"time"
+
+	"github.com/level11consulting/ocelot/server/config"
+	du "github.com/level11consulting/ocelot/server/monitor/disk_usage"
+	"github.com/level11consulting/ocelot/storage"
 	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/common/du"
-	"github.com/level11consulting/ocelot/storage"
-	"time"
 )
 
 var (
@@ -31,11 +32,11 @@ func init() {
 // NsqWatch is for keeping an eye on Ocelot's dependencies and pausing the reception of messages
 //  from NSQ if any other dependency goes down. the `paused` bool will be switched to true if the queue is shut down temporarily.
 type NsqWatch struct {
-	interval   int64
-	pConsumers []*nsqpb.ProtoConsume
-	remoteConf config.HealthyMaintainer
-	store      storage.HealthyChkr
-	paused     bool
+	interval         int64
+	pConsumers       []*nsqpb.ProtoConsume
+	remoteConf       config.HealthyMaintainer
+	store            storage.HealthyChkr
+	paused           bool
 	diskUtilityCheck *du.HealthChecker
 }
 

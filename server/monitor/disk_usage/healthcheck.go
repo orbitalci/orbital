@@ -1,4 +1,4 @@
-package du
+package disk_usage
 
 import (
 	"code.cloudfoundry.org/bytefmt"
@@ -7,7 +7,7 @@ import (
 
 type HealthChecker struct {
 	PauseThreshold string
-	Path 		   string
+	Path           string
 }
 
 func (hc *HealthChecker) Healthy() error {

@@ -1,4 +1,4 @@
-package du
+package disk_usage
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 
 func TestHealthChecker_Healthy(t *testing.T) {
 	hc := &HealthChecker{
-		Path: "/var/lib",
+		Path:           "/var/lib",
 		PauseThreshold: "1B",
 	}
 	err := hc.Healthy()
