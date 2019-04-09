@@ -9,9 +9,9 @@ package minioconfig
 import (
 	"encoding/json"
 
+	"github.com/level11consulting/ocelot/build/helpers/buildscript"
 	"github.com/level11consulting/ocelot/build/helpers/serde"
 	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models/pb"
 )
 
@@ -46,7 +46,7 @@ func (m *minioConf) MakeBashable(encoded string) []string {
 }
 
 func (m *minioConf) IsRelevant(wc *pb.BuildConfig) bool {
-	return common.BuildScriptsContainString(wc, "mc")
+	return buildscript.BuildScriptsContainString(wc, "mc")
 }
 
 func (m *minioConf) GetEnv() []string {
