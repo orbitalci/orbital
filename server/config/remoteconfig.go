@@ -6,15 +6,15 @@ import (
 	"strconv"
 
 	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/server/config/consul"
+	consulkv "github.com/level11consulting/ocelot/server/config/consul"
+	vaultkv "github.com/level11consulting/ocelot/server/config/vault"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/storage/postgres"
 	"github.com/pkg/errors"
-	consullib "github.com/shankj3/go-til/consul"
+	gotilconsul "github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
-	ocevault "github.com/shankj3/go-til/vault"
+	gotilvault "github.com/shankj3/go-til/vault"
 )
 
 //GetInstance attempts to connect to Consul and Vault, returns a new instance remoteConfig
@@ -24,7 +24,7 @@ func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) 
 	//intialize consul
 	var portInt, _ = strconv.Atoi(consulURI.Port())
 	if consulURI.Hostname() == "" && portInt == 0 {
-		consulet, err := consullib.Default()
+		consulet, err := gotilconsul.Default()
 		if err != nil {
 			return nil, err
 		}
@@ -32,7 +32,7 @@ func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) 
 	} else {
 
 		// This is certainly an area to refactor in the future
-		consulet, err := consullib.New(consulURI.Hostname(), portInt)
+		consulet, err := gotilconsul.New(consulURI.Hostname(), portInt)
 		remoteConfig.Consul = consulet
 		if err != nil {
 			return nil, err
@@ -46,7 +46,7 @@ func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) 
 		return nil, err
 	}
 
-	vaultClient, err := ocevault.NewAuthedClient(vaultToken)
+	vaultClient, err := gotilvault.NewAuthedClient(vaultToken)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +57,8 @@ func GetInstance(consulURI *url.URL, vaultToken string) (CVRemoteConfig, error) 
 
 // RemoteConfig returns a struct with client handlers for Consul and Vault. Mainly for passing around after authenticating
 type RemoteConfig struct {
-	Consul consullib.Consuletty
-	Vault  ocevault.Vaulty
+	Consul gotilconsul.Consuletty
+	Vault  gotilvault.Vaulty
 }
 
 // Healthy returns the status of whether Vault and Consul are currently connected
@@ -66,7 +66,7 @@ func (rc *RemoteConfig) Healthy() bool {
 	vaultConnected := true
 	_, err := rc.Vault.GetVaultData("secret/data/config/ocelot/here")
 	if err != nil {
-		if _, ok := err.(*ocevault.ErrNotFound); !ok {
+		if _, ok := err.(*gotilvault.ErrNotFound); !ok {
 			vaultConnected = false
 		}
 	}
@@ -81,7 +81,7 @@ func (rc *RemoteConfig) Healthy() bool {
 func (rc *RemoteConfig) Reconnect() error {
 	_, err := rc.Vault.GetVaultData("secret/data/config/ocelot/here")
 	if err != nil {
-		if _, ok := err.(*ocevault.ErrNotFound); !ok {
+		if _, ok := err.(*gotilvault.ErrNotFound); !ok {
 			return err
 		}
 	}
@@ -98,7 +98,7 @@ func buildCredKey(credType string, acctName string) string {
 }
 
 func (rc *RemoteConfig) deletePassword(scType pb.SubCredType, acctName, identifier string) error {
-	credPath := credentials.BuildCredPath(scType, acctName, scType.Parent(), identifier)
+	credPath := vaultkv.BuildCredPath(scType, acctName, scType.Parent(), identifier)
 	ocelog.Log().Debug("CREDPATH=", credPath)
 	if err := rc.Vault.DeletePath(credPath); err != nil {
 		return errors.WithMessage(err, "Unable to delete password for user "+acctName+" w/ identifier "+identifier)
@@ -125,7 +125,7 @@ func (rc *RemoteConfig) DeleteCred(store storage.CredTable, anyCred pb.OcyCredde
 // FIXME: For consistency, this should be renamed to something like GetCred, but unique... Make it clear what is a Cred and a Password
 //GetPassword will return to you the vault password at specified path
 func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyCredType pb.CredType, identifier string) (string, error) {
-	credPath := credentials.BuildCredPath(scType, acctName, ocyCredType, identifier)
+	credPath := vaultkv.BuildCredPath(scType, acctName, ocyCredType, identifier)
 	ocelog.Log().Debug("CREDPATH=", credPath)
 	authData, err := rc.Vault.GetUserAuthData(credPath)
 	if err != nil {
@@ -144,7 +144,7 @@ func (rc *RemoteConfig) GetPassword(scType pb.SubCredType, acctName string, ocyC
 // AddCreds adds repo integration creds to storage + vault
 func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder, overwriteOk bool) (err error) {
 	if rc.Vault != nil {
-		path := credentials.BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
+		path := vaultkv.BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
 
 		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
@@ -163,7 +163,7 @@ func (rc *RemoteConfig) AddCreds(store storage.CredTable, anyCred pb.OcyCredder,
 
 func (rc *RemoteConfig) UpdateCreds(store storage.CredTable, anyCred pb.OcyCredder) (err error) {
 	if rc.Vault != nil {
-		path := credentials.BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
+		path := vaultkv.BuildCredPath(anyCred.GetSubType(), anyCred.GetAcctName(), anyCred.GetSubType().Parent(), anyCred.GetIdentifier())
 
 		dataWrapper := buildSecretPayload(anyCred.GetClientSecret())
 		if _, err = rc.Vault.AddUserAuthData(path, dataWrapper); err != nil {
@@ -264,12 +264,12 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 
 // GetStorageType reads from consul at common.StorageType, and returns a handle for the configured storage.
 func (rc *RemoteConfig) GetStorageType() (storage.Dest, error) {
-	kv, err := rc.Consul.GetKeyValue(consul.StorageType)
+	kv, err := rc.Consul.GetKeyValue(consulkv.StorageType)
 	if err != nil {
 		return 0, errors.New("unable to get storage type from consul, err: " + err.Error())
 	}
 	if kv == nil {
-		return 0, errors.Errorf("there is no entry for storage type at the path \"%s\" in consul, required", consul.StorageType)
+		return 0, errors.Errorf("there is no entry for storage type at the path \"%s\" in consul, required", consulkv.StorageType)
 	}
 	// ?: Is there an overall positive experience for making this value case-insensitive?
 	storageType := string(kv.Value)

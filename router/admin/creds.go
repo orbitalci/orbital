@@ -6,11 +6,12 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/shankj3/go-til/log"
-	cred "github.com/level11consulting/ocelot/common/credentials"
 	"github.com/level11consulting/ocelot/common/helpers/ioshelper"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/log"
+
+	vaultkv "github.com/level11consulting/ocelot/server/config/vault"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,7 +30,7 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 
 	for _, v := range creds {
 		vcsCred := v.(*pb.VCSCreds)
-		sshKeyPath := cred.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.SubType.Parent(), v.GetIdentifier())
+		sshKeyPath := vaultkv.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.SubType.Parent(), v.GetIdentifier())
 		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
 		if err != nil {
 			vcsCred.SshFileLoc = "No SSH Key"
@@ -270,7 +271,7 @@ func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper 
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.InvalidArgument, err.Error())
 	}
-	sshKeyPath := cred.BuildCredPath(sshKeyWrapper.SubType, sshKeyWrapper.AcctName, sshKeyWrapper.SubType.Parent(), identifier)
+	sshKeyPath := vaultkv.BuildCredPath(sshKeyWrapper.SubType, sshKeyWrapper.AcctName, sshKeyWrapper.SubType.Parent(), identifier)
 	err = g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())

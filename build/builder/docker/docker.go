@@ -17,11 +17,12 @@ import (
 	"github.com/level11consulting/ocelot/common/helpers/dockrhelper"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
-	creds "github.com/level11consulting/ocelot/common/credentials"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+
+	vaultkv "github.com/level11consulting/ocelot/server/config/vault"
 )
 
 var (
@@ -213,7 +214,7 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	ocelog.Log().Debug("identifier is ", identifier)
 	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR=" + vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
-		creds.BuildCredPath(sctType, acctName, pb.CredType_VCS, identifier)), logout)
+		vaultkv.BuildCredPath(sctType, acctName, pb.CredType_VCS, identifier)), logout)
 	if len(result.Error) > 0 {
 		ocelog.Log().Error("an err happened trying to download ssh key", result.Error)
 		result.Messages = append(setupMessages, result.Messages...)
