@@ -9,7 +9,7 @@ package helmrepo
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/helpers/buildscript"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/search"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/models/pb"
 )
@@ -34,7 +34,7 @@ func (k *HelmRepoInt) MakeBashable(encoded string) []string {
 }
 
 func (k *HelmRepoInt) IsRelevant(wc *pb.BuildConfig) bool {
-	return buildscript.BuildScriptsContainString(wc, "helm")
+	return search.BuildScriptsContainString(wc, "helm")
 }
 
 func (k *HelmRepoInt) GenerateIntegrationString(creds []pb.OcyCredder) (string, error) {

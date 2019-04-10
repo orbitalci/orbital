@@ -1,4 +1,4 @@
-package credentials
+package validate
 
 import (
 	"strings"

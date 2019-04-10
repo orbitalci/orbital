@@ -1,9 +1,10 @@
-package credentials
+package validate
 
 import (
-	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/models/pb"
 	"testing"
+
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
 )
 
 func TestAdminValidator_ValidateConfig(t *testing.T) {

@@ -9,7 +9,7 @@ package kubectl
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/helpers/buildscript"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/search"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/models/pb"
 )
@@ -29,7 +29,7 @@ func (k *kubectlInteg) GenerateDownloadBashables() []string {
 }
 
 func (k *kubectlInteg) IsRelevant(wc *pb.BuildConfig) bool {
-	return buildscript.BuildScriptsContainString(wc, "kubectl")
+	return search.BuildScriptsContainString(wc, "kubectl")
 }
 
 func (k *kubectlInteg) String() string {

@@ -1,4 +1,4 @@
-package buildscript
+package search
 
 import (
 	"strings"
