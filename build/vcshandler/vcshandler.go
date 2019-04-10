@@ -1,12 +1,12 @@
-package remote
+package vcshandler
 
 import (
 	"context"
 	"errors"
 	"strings"
 
-	"github.com/level11consulting/ocelot/common/remote/bitbucket"
-	"github.com/level11consulting/ocelot/common/remote/github"
+	"github.com/level11consulting/ocelot/build/vcshandler/bitbucket"
+	"github.com/level11consulting/ocelot/build/vcshandler/github"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"golang.org/x/oauth2"
