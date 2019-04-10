@@ -30,6 +30,7 @@ func maybeStrip(output []byte, stripAnsi bool) []byte {
 	}
 	return output
 }
+
 // End regex copy/paste
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Builds, error) {
