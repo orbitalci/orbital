@@ -23,6 +23,8 @@ const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 
 const TokenUrl = "https://bitbucket.org/site/oauth2/access_token"
 
+var bitbucketEvents = []string{"repo:push", "pullrequest:approved", "pullrequest:updated"}
+
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
 func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 	cfg.TokenURL = TokenUrl
@@ -248,7 +250,7 @@ func (bb *Bitbucket) CreateWebhook(webhookURL string) error {
 			Description: "marianne did this",
 			Active:      true,
 			Url:         bb.GetCallbackURL(),
-			Events:      common.BitbucketEvents,
+			Events:      bitbucketEvents,
 		}
 		webhookStr, err := bb.Marshaler.MarshalToString(newWebhook)
 		if err != nil {
