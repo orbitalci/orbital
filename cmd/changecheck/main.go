@@ -16,7 +16,7 @@ import (
 	"net/url"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
+	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/build_signaler/poll"
 	"github.com/level11consulting/ocelot/models/pb"
