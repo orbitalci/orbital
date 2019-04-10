@@ -13,18 +13,19 @@ import (
 	"os"
 	"strings"
 
+	"net/url"
+
+	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
+	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/build_signaler/poll"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
+	"github.com/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
 	"github.com/shankj3/go-til/deserialize"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/build"
-	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/build_signaler/poll"
-	"github.com/level11consulting/ocelot/common"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/version"
-	"net/url"
 )
 
 type changeSetConfig struct {
@@ -74,7 +75,7 @@ func configure() *changeSetConfig {
 	}
 	branchList := strings.Split(branches, ",")
 	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator()}
-	conf.Acct, conf.Repo, err = common.GetAcctRepo(acctRepo)
+	conf.Acct, conf.Repo, err = stringbuilder.GetAcctRepo(acctRepo)
 	if err != nil {
 		ocelog.Log().Fatal(err)
 	}

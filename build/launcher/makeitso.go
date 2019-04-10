@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	ocelog "github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
 	"github.com/level11consulting/ocelot/build/valet"
-	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/prometheus/client_golang/prometheus"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 var (
@@ -178,10 +178,10 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 //	- `WORKSPACE`
 //  - `GIT_PREVIOUS_SUCCESSFUL_COMMIT`
 func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) {
-	acct, repo, _ := common.GetAcctRepo(werk.FullName)
+	acct, repo, _ := stringbuilder.GetAcctRepo(werk.FullName)
 	// we don't care if there is an error retrieving this, if it fails it'll return an empty value
 	// and that's what we want!
-	lastSuccessfulHash, _ := w.Store.GetLastSuccessfulBuildHash(acct, repo,werk.Branch)
+	lastSuccessfulHash, _ := w.Store.GetLastSuccessfulBuildHash(acct, repo, werk.Branch)
 	paddedEnvs := []string{
 		fmt.Sprintf("GIT_HASH=%s", werk.CheckoutHash),
 		fmt.Sprintf("BUILD_ID=%d", werk.Id),

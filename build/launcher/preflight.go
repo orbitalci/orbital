@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	ocelog "github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 //preFlight will run all of the ocelot-specific setup stages that are not explicitly tied to the builder implementations' setup.
@@ -22,7 +23,7 @@ func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder b
 	start := time.Now()
 	prefly := build.InitStageUtil("PREFLIGHT")
 	preflightResult := &pb.Result{Stage: prefly.GetStage(), Status: pb.StageResultVal_PASS}
-	acct, _, err := common.GetAcctRepo(werk.FullName)
+	acct, _, err := stringbuilder.GetAcctRepo(werk.FullName)
 	if err != nil {
 		return bailOut, err
 	}

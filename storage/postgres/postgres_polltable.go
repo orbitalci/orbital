@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
 	"github.com/level11consulting/ocelot/models/pb"
 	metrics "github.com/level11consulting/ocelot/storage/metrics"
 	"github.com/pkg/errors"
@@ -92,7 +92,7 @@ func (p *PostgresStorage) GetLastData(accountRepo string) (timestamp time.Time, 
 
 		return time.Now(), nil, errors.New("could not connect to postgres: " + err.Error())
 	}
-	account, repo, err := common.GetAcctRepo(accountRepo)
+	account, repo, err := stringbuilder.GetAcctRepo(accountRepo)
 	if err != nil {
 		return time.Now(), nil, err
 	}

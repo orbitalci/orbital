@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
 	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -33,7 +33,7 @@ func init() {
 }
 
 func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot_BuildRepoAndHashServer) error {
-	acct, repo, err := common.GetAcctRepo(buildReq.AcctRepo)
+	acct, repo, err := stringbuilder.GetAcctRepo(buildReq.AcctRepo)
 	if err != nil {
 		return status.Error(codes.InvalidArgument, "Bad format of acctRepo, must be account/repo")
 	}
@@ -49,7 +49,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		switch err.(type) {
-		case *common.FormatError:
+		case *stringbuilder.FormatError:
 			return status.Error(codes.InvalidArgument, "Format error: "+err.Error())
 		case *storage.ErrMultipleVCSTypes:
 			return status.Error(codes.InvalidArgument, "There are multiple vcs types for that account. You must include the VcsType field to be able to retrieve credentials for this build. Original error: "+err.Error())
@@ -205,7 +205,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	cfg, err := config.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig, repoAcct.Type)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		if _, ok := err.(*common.FormatError); ok {
+		if _, ok := err.(*stringbuilder.FormatError); ok {
 			return nil, status.Error(codes.InvalidArgument, "Format error: "+err.Error())
 		}
 		return nil, status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
@@ -246,7 +246,7 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) 
 		}
 	} else {
 		log.Log().Info("inserting poll in db")
-		creddy, err := config.GetVcsCreds(g.Storage, common.CreateAcctRepo(poll.Account, poll.Repo), g.RemoteConfig, poll.Type)
+		creddy, err := config.GetVcsCreds(g.Storage, stringbuilder.CreateAcctRepo(poll.Account, poll.Repo), g.RemoteConfig, poll.Type)
 		if err != nil {
 			var msg string
 			if _, ok := err.(*storage.ErrMultipleVCSTypes); ok {
