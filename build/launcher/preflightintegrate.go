@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
+	accountrepo "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
+	nocreds "github.com/level11consulting/ocelot/build/helpers/stringbuilder/nocreds"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/build/integrations/dockerconfig"
 	"github.com/level11consulting/ocelot/build/integrations/helm"
@@ -17,7 +18,6 @@ import (
 	"github.com/level11consulting/ocelot/build/integrations/nexusm2"
 	"github.com/level11consulting/ocelot/build/integrations/sshkey"
 	"github.com/level11consulting/ocelot/build/integrations/xcode"
-	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	ocelog "github.com/shankj3/go-til/log"
@@ -46,7 +46,7 @@ func getBinaryIntegList(loopbackHost, loopbackPort string) []integrations.Binary
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
 func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder, baseStage *build.StageUtil) (result *pb.Result) {
-	accountName, _, err := stringbuilder.GetAcctRepo(werk.FullName)
+	accountName, _, err := accountrepo.GetAcctRepo(werk.FullName)
 	if err != nil {
 		result.Status = pb.StageResultVal_FAIL
 		result.Error = err.Error()
@@ -124,7 +124,7 @@ func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bl
 }
 
 func handleIntegrationErr(err error, integrationName string, stage *build.StageUtil, msgs []string) *pb.Result {
-	_, ok := err.(*common.NoCreds)
+	_, ok := err.(*nocreds.NoCreds)
 	if !ok {
 		ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)
 		return &pb.Result{

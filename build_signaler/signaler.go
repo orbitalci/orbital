@@ -9,7 +9,7 @@ import (
 	"github.com/shankj3/go-til/nsqpb"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
+	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 )

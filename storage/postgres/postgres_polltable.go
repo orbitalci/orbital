@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
+	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/models/pb"
 	metrics "github.com/level11consulting/ocelot/storage/metrics"
 	"github.com/pkg/errors"

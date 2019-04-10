@@ -1,7 +1,7 @@
 package launcher
 
 import (
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
+	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/build/notifiers"
 	"github.com/level11consulting/ocelot/build/notifiers/slack"
 	"github.com/level11consulting/ocelot/models"

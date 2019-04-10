@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
+	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
 

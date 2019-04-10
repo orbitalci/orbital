@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
-	"github.com/level11consulting/ocelot/common"
+	accountrepo "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
+	nocreds "github.com/level11consulting/ocelot/build/helpers/stringbuilder/nocreds"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	ocelog "github.com/shankj3/go-til/log"
@@ -23,7 +23,7 @@ func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder b
 	start := time.Now()
 	prefly := build.InitStageUtil("PREFLIGHT")
 	preflightResult := &pb.Result{Stage: prefly.GetStage(), Status: pb.StageResultVal_PASS}
-	acct, _, err := stringbuilder.GetAcctRepo(werk.FullName)
+	acct, _, err := accountrepo.GetAcctRepo(werk.FullName)
 	if err != nil {
 		return bailOut, err
 	}
@@ -79,7 +79,7 @@ func (w *launcher) mapOrStoreStageResults(subStageResult *pb.Result, parentResul
 func (w *launcher) handleEnvSecrets(ctx context.Context, builder build.Builder, accountName string, stage *build.StageUtil) *pb.Result {
 	creds, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, pb.SubCredType_ENV, accountName, false)
 	if err != nil {
-		if _, ok := err.(*common.NoCreds); ok {
+		if _, ok := err.(*nocreds.NoCreds); ok {
 			return &pb.Result{Status: pb.StageResultVal_PASS, Messages: []string{fmt.Sprintf("no env vars for %s %s", accountName, models.CHECKMARK)}, Stage: stage.GetStage()}
 		}
 		return &pb.Result{Error: err.Error(), Status: pb.StageResultVal_FAIL, Messages: []string{"could not get env secrets " + models.FAILED}, Stage: stage.GetStage()}

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
 	models "github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/server/secure_grpc"
@@ -20,7 +21,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
-	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
 
 	//"github.com/level11consulting/ocelot/util/handler"
 	//"github.com/level11consulting/ocelot/util/secure_grpc"

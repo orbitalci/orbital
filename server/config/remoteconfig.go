@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/level11consulting/ocelot/common"
+	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/nocreds"
 	"github.com/level11consulting/ocelot/models/pb"
 	consulkv "github.com/level11consulting/ocelot/server/config/consul"
 	vaultkv "github.com/level11consulting/ocelot/server/config/vault"
@@ -248,7 +248,7 @@ func (rc *RemoteConfig) GetCredsBySubTypeAndAcct(store storage.CredTable, stype 
 	creds, err := store.RetrieveCredBySubTypeAndAcct(stype, accountName)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
-			return nil, common.NCErr(fmt.Sprintf("credentials not found for account %s and integration %s", accountName, "kubeconf"))
+			return nil, stringbuilder.NCErr(fmt.Sprintf("credentials not found for account %s and integration %s", accountName, "kubeconf"))
 		}
 		failedCredRetrieval.WithLabelValues(stype.String(), "read", "false")
 		return nil, err

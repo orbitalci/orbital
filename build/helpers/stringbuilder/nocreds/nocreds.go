@@ -1,4 +1,4 @@
-package common
+package stringbuilder
 
 func NCErr(msg string) *NoCreds {
 	return &NoCreds{msg: msg}
