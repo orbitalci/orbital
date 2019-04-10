@@ -8,7 +8,7 @@ package helm
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/helpers/buildscript"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/search"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/models/pb"
 )
@@ -28,7 +28,7 @@ func (k *helmInteg) GenerateDownloadBashables() []string {
 }
 
 func (k *helmInteg) IsRelevant(wc *pb.BuildConfig) bool {
-	return buildscript.BuildScriptsContainString(wc, "helm")
+	return search.BuildScriptsContainString(wc, "helm")
 }
 
 func (k *helmInteg) String() string {

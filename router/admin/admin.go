@@ -12,15 +12,15 @@ import (
 	"strings"
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/level11consulting/ocelot/server/secure_grpc"
 	models "github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
-	creds "github.com/level11consulting/ocelot/common/credentials"
+	"github.com/level11consulting/ocelot/server/secure_grpc"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
 
 	//"github.com/level11consulting/ocelot/util/handler"
 	//"github.com/level11consulting/ocelot/util/secure_grpc"
@@ -45,7 +45,7 @@ func GetGrpcServer(configInstance config.CVRemoteConfig, secure secure_grpc.Secu
 	if err != nil {
 		return nil, nil, nil, nil, errors.WithMessage(err, "could not get ocelot storage")
 	}
-	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), creds.GetValidator(), creds.GetRepoValidator(), store, hhBaseUrl)
+	guideOcelotServer := NewGuideOcelotServer(configInstance, deserialize.New(), validate.GetValidator(), validate.GetRepoValidator(), store, hhBaseUrl)
 	//gateway
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)

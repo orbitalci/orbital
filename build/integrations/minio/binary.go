@@ -7,7 +7,7 @@ package minio
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/helpers/buildscript"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/search"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/models/pb"
 )
@@ -27,7 +27,7 @@ func (k *minioInteg) GenerateDownloadBashables() []string {
 }
 
 func (k *minioInteg) IsRelevant(wc *pb.BuildConfig) bool {
-	return buildscript.BuildScriptsContainString(wc, "mc")
+	return search.BuildScriptsContainString(wc, "mc")
 }
 
 func (k *minioInteg) String() string {
