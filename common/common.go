@@ -2,14 +2,8 @@ package common
 
 import (
 	"fmt"
-	"os"
-	"reflect"
 	"strings"
-	"sync"
 )
-
-var once sync.Once
-var prefix string
 
 // helper
 func GetAcctRepo(fullName string) (acct string, repo string, err error) {
@@ -36,25 +30,4 @@ type FormatError struct {
 
 func (f *FormatError) Error() string {
 	return f.err
-}
-
-func GetPrefix() string {
-	once.Do(func() {
-		prefix = os.Getenv("PATH_PREFIX")
-		if prefix != "" {
-			prefix = prefix + "/"
-		}
-	})
-	return prefix
-}
-
-
-// helper for converting a quasi-set to an array of strings of the keys
-func GetMapStringKeys(stringMap map[string]bool) []string {
-	keys := reflect.ValueOf(stringMap).MapKeys()
-	strkeys := make([]string, len(keys))
-	for i := 0; i < len(keys); i++ {
-		strkeys[i] = keys[i].String()
-	}
-	return strkeys
 }

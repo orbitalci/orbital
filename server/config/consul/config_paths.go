@@ -1,11 +1,25 @@
 package consul
 
 import (
-	"github.com/level11consulting/ocelot/common"
+	"os"
+	"sync"
 )
 
+var once sync.Once
+var prefix string
+
+func GetPrefix() string {
+	once.Do(func() {
+		prefix = os.Getenv("PATH_PREFIX")
+		if prefix != "" {
+			prefix = prefix + "/"
+		}
+	})
+	return prefix
+}
+
 var (
-	OcyConfigBase = common.GetPrefix() + "config/ocelot"
+	OcyConfigBase = GetPrefix() + "config/ocelot"
 	StorageType   = OcyConfigBase + "/storagetype"
 
 	//// For configuring how we get Postgres credentials
@@ -30,5 +44,5 @@ var (
 
 	FilesystemConfigLoc = OcyConfigBase + "/filesystem"
 	FilesystemDir       = FilesystemConfigLoc + "/savedirec"
-	ConfigPath          = common.GetPrefix() + "creds"
+	ConfigPath          = GetPrefix() + "creds"
 )
