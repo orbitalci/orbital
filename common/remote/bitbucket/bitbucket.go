@@ -8,15 +8,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
-	ocelog "github.com/shankj3/go-til/log"
-	ocenet "github.com/shankj3/go-til/net"
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	pbb "github.com/level11consulting/ocelot/models/bitbucket/pb"
 	"github.com/level11consulting/ocelot/models/pb"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
 )
 
 const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
@@ -24,6 +25,16 @@ const DefaultRepoBaseURL = "https://api.bitbucket.org/2.0/repositories/%v"
 const TokenUrl = "https://bitbucket.org/site/oauth2/access_token"
 
 var bitbucketEvents = []string{"repo:push", "pullrequest:approved", "pullrequest:updated"}
+
+// helper for converting a quasi-set to an array of strings of the keys
+func getMapStringKeys(stringMap map[string]bool) []string {
+	keys := reflect.ValueOf(stringMap).MapKeys()
+	strkeys := make([]string, len(keys))
+	for i := 0; i < len(keys); i++ {
+		strkeys[i] = keys[i].String()
+	}
+	return strkeys
+}
 
 //Returns VCS handler for pulling source code and auth token if exists (auth token is needed for code download)
 func GetBitbucketClient(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
@@ -109,10 +120,10 @@ func (bb *Bitbucket) GetFile(filePath string, fullRepoName string, commitHash st
 
 func translateBbCommit(commit *pbb.Commit) *pb.Commit {
 	return &pb.Commit{
-		Hash: commit.Hash,
+		Hash:    commit.Hash,
 		Message: commit.Message,
-		Date: commit.Date,
-		Author: &pb.User{UserName: commit.Author.User.Username},
+		Date:    commit.Date,
+		Author:  &pb.User{UserName: commit.Author.User.Username},
 	}
 }
 
@@ -177,10 +188,10 @@ func (bb *Bitbucket) GetRepoLinks(acctRepo string) (*pb.Links, error) {
 	}
 
 	links := &pb.Links{
-		Commits: repoVal.Links.Commits.Href,
-		Branches: repoVal.Links.Branches.Href,
-		Tags: repoVal.Links.Tags.Href,
-		Hooks: repoVal.Links.Hooks.Href,
+		Commits:      repoVal.Links.Commits.Href,
+		Branches:     repoVal.Links.Branches.Href,
+		Tags:         repoVal.Links.Tags.Href,
+		Hooks:        repoVal.Links.Hooks.Href,
 		Pullrequests: repoVal.Links.Pullrequests.Href,
 	}
 	return links, nil
@@ -441,7 +452,7 @@ func (bb *Bitbucket) GetChangedFiles(acctRepo, latestHash, earliestHash string) 
 		}
 		urll = diff.GetNext()
 	}
-	changedFiles = common.GetMapStringKeys(changedFileSet)
+	changedFiles = getMapStringKeys(changedFileSet)
 	return
 }
 
