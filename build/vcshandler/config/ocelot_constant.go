@@ -1,3 +1,3 @@
-package common
+package config
 
 const BuildFileName = "ocelot.yml"

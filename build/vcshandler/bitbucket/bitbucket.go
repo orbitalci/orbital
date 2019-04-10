@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/level11consulting/ocelot/build/vcshandler/config"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	pbb "github.com/level11consulting/ocelot/models/bitbucket/pb"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -334,7 +334,7 @@ func (bb Bitbucket) recurseOverFiles(sourceFileUrl string, webhookUrl string) er
 		return err
 	}
 	for _, v := range repositories.GetValues() {
-		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == common.BuildFileName {
+		if v.GetType() == "commit_file" && len(v.GetAttributes()) == 0 && v.GetPath() == config.BuildFileName {
 			ocelog.Log().Debug("holy crap we actually an ocelot.yml file")
 			err = bb.CreateWebhook(webhookUrl)
 			if err != nil {

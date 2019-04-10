@@ -15,12 +15,12 @@ import (
 	"github.com/google/go-github/v19/github"
 	"github.com/pkg/errors"
 
-	ocelog "github.com/shankj3/go-til/log"
-	ocenet "github.com/shankj3/go-til/net"
-	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/build/vcshandler/config"
 	"github.com/level11consulting/ocelot/models"
 	gpb "github.com/level11consulting/ocelot/models/github/pb"
 	"github.com/level11consulting/ocelot/models/pb"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
 )
 
 const DefaultBaseURL = "https://api.github.com/%s"
@@ -40,33 +40,33 @@ func GetGithubFromHttpClient(cli *http.Client) models.VCSHandler {
 	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
 	return &githubVCS{
 		Unmarshaler: unmarshaler,
-		Client: &ocenet.OAuthClient{AuthClient: cli, Unmarshaler: unmarshaler},
-		Marshaler: jsonpb.Marshaler{},
+		Client:      &ocenet.OAuthClient{AuthClient: cli, Unmarshaler: unmarshaler},
+		Marshaler:   jsonpb.Marshaler{},
 	}
 }
 
 func GetGithubHandler(cred *pb.VCSCreds, cli ocenet.HttpClient) *githubVCS {
 	return &githubVCS{
-		Client:        cli,
-		Marshaler:     jsonpb.Marshaler{},
-		Unmarshaler:   jsonpb.Unmarshaler{AllowUnknownFields: true},
-		credConfig:    cred,
-		ghClient:      github.NewClient(cli.GetAuthClient()),
-		ctx:           context.Background(),
+		Client:      cli,
+		Marshaler:   jsonpb.Marshaler{},
+		Unmarshaler: jsonpb.Unmarshaler{AllowUnknownFields: true},
+		credConfig:  cred,
+		ghClient:    github.NewClient(cli.GetAuthClient()),
+		ctx:         context.Background(),
 	}
 }
 
 type githubVCS struct {
-	CallbackURL   string
-	Client 		  ocenet.HttpClient
-	ghClient      *github.Client
-	ctx           context.Context
-	Marshaler     jsonpb.Marshaler
-	Unmarshaler   jsonpb.Unmarshaler
-	credConfig    *pb.VCSCreds
-	baseUrl       string
+	CallbackURL string
+	Client      ocenet.HttpClient
+	ghClient    *github.Client
+	ctx         context.Context
+	Marshaler   jsonpb.Marshaler
+	Unmarshaler jsonpb.Unmarshaler
+	credConfig  *pb.VCSCreds
+	baseUrl     string
 	// for testing
-	setCommentId  int64
+	setCommentId int64
 }
 
 func (gh *githubVCS) GetVcsType() pb.SubCredType {
@@ -136,7 +136,7 @@ func (gh *githubVCS) recurseOverRepos(pageNum int) error {
 //checkForOcelotFile will attempt to retrieve the http status of a request for a file at the path `ocelot.yml`. It will
 // return the status code which can then be checked for if the file exists
 func (gh *githubVCS) checkForOcelotFile(contentsUrl string) (int, error) {
-	resp, err := gh.Client.GetUrlResponse(getUrlForFileFromContentsUrl(contentsUrl, common.BuildFileName))
+	resp, err := gh.Client.GetUrlResponse(getUrlForFileFromContentsUrl(contentsUrl, config.BuildFileName))
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to see if ocelot.yml exists")
 	}
@@ -176,7 +176,7 @@ func (gh *githubVCS) CreateWebhook(hookUrl string) error {
 			return nil
 		}
 	}
-	err = errors.New(resp.Status +": "+ ghErr.Message)
+	err = errors.New(resp.Status + ": " + ghErr.Message)
 	ocelog.IncludeErrField(err).Error("unable to create webhook!")
 	return err
 }
@@ -212,10 +212,10 @@ func (gh *githubVCS) GetRepoLinks(acctRepo string) (*pb.Links, error) {
 	}
 	defer resp.Body.Close()
 	links := &pb.Links{
-		Commits: repository.GetCommitsURL(),
-		Branches: repository.GetBranchesURL(),
-		Tags: repository.GetTagsURL(),
-		Hooks: repository.GetHooksURL(),
+		Commits:      repository.GetCommitsURL(),
+		Branches:     repository.GetBranchesURL(),
+		Tags:         repository.GetTagsURL(),
+		Hooks:        repository.GetHooksURL(),
 		Pullrequests: repository.GetPullsURL(),
 	}
 	logWithFields.Debug("got repo links")
@@ -244,7 +244,6 @@ func (gh *githubVCS) GetAllBranchesLastCommitData(acctRepo string) ([]*pb.Branch
 	}
 	return branchesHistory, nil
 }
-
 
 func (gh *githubVCS) GetBranchLastCommitData(acctRepo, branch string) (history *pb.BranchHistory, err error) {
 	logWithFields := ocelog.Log().WithField("acctRepo", acctRepo).WithField("branch", branch)
@@ -352,7 +351,7 @@ func (gh *githubVCS) getIssueComment(account, repo string, commentID int64) erro
 
 func (gh *githubVCS) GetChangedFiles(acctRepo, latesthash, earliestHash string) ([]string, error) {
 	if earliestHash == "" {
-		earliestHash = latesthash+"~1"
+		earliestHash = latesthash + "~1"
 	}
 	logWithFields := ocelog.Log().WithField("acctRepo", acctRepo).WithField("latestHash", latesthash).WithField("earliestHash", earliestHash)
 	logWithFields.Debug("getting changed files")
