@@ -9,7 +9,7 @@ import (
 	"github.com/shankj3/go-til/nsqpb"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 )
@@ -54,7 +54,7 @@ func (s *Signaler) CheckViableThenQueueAndStore(task *pb.WerkerTask, force bool,
 //  - validate that the configuration is good and add to the queue. If the build configuration (ocelot.yml) is not good, then it will store in the database that it failed validation along with the reason why
 func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 	log.Log().Debug("Storing initial results in db")
-	account, repo, err := common.GetAcctRepo(task.FullName)
+	account, repo, err := stringbuilder.GetAcctRepo(task.FullName)
 	if err != nil {
 		return err
 	}

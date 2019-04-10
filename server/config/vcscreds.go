@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/level11consulting/ocelot/common"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
 
@@ -10,7 +10,7 @@ import (
 
 // GetVcsCreds will retrieve a VCSCred for account name / bitbucket vcs type
 func GetVcsCreds(store storage.CredTable, repoFullName string, remoteConfig CVRemoteConfig, credType pb.SubCredType) (*pb.VCSCreds, error) {
-	acctName, _, err := common.GetAcctRepo(repoFullName)
+	acctName, _, err := stringbuilder.GetAcctRepo(repoFullName)
 	if err != nil {
 		return nil, err
 	}

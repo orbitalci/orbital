@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	ocelog "github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/build/integrations/dockerconfig"
 	"github.com/level11consulting/ocelot/build/integrations/helm"
@@ -20,6 +20,7 @@ import (
 	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 // todo: idk where to put this? where to instantiate integrations.. probably should just be a part of launcher?
@@ -45,7 +46,7 @@ func getBinaryIntegList(loopbackHost, loopbackPort string) []integrations.Binary
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
 func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder, baseStage *build.StageUtil) (result *pb.Result) {
-	accountName, _, err := common.GetAcctRepo(werk.FullName)
+	accountName, _, err := stringbuilder.GetAcctRepo(werk.FullName)
 	if err != nil {
 		result.Status = pb.StageResultVal_FAIL
 		result.Error = err.Error()

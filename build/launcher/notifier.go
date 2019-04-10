@@ -1,12 +1,12 @@
 package launcher
 
 import (
-	"github.com/pkg/errors"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder"
 	"github.com/level11consulting/ocelot/build/notifiers"
 	"github.com/level11consulting/ocelot/build/notifiers/slack"
-	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/pkg/errors"
 )
 
 func getNotifiers() []notifiers.Notifier {
@@ -15,7 +15,7 @@ func getNotifiers() []notifiers.Notifier {
 
 // doNotifications will notify everything you want it to. should be called at the end of a build
 func (w *launcher) doNotifications(werk *pb.WerkerTask) error {
-	accountName, _, err := common.GetAcctRepo(werk.FullName)
+	accountName, _, err := stringbuilder.GetAcctRepo(werk.FullName)
 	if err != nil {
 		return errors.Wrap(err, "unable to split full name into acct/repo")
 	}
