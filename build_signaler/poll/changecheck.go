@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/level11consulting/ocelot/build/vcshandler"
 	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/common/remote"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -36,7 +36,7 @@ func (w *ChangeChecker) SetAuth() error {
 	if err != nil {
 		return errors.New("couldn't get vcs creds, error: " + err.Error())
 	}
-	handler, token, err := remote.GetHandler(cfg)
+	handler, token, err := vcshandler.GetHandler(cfg)
 	if err != nil {
 		return errors.New("could not get remote client, error: " + err.Error())
 	}

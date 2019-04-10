@@ -3,17 +3,17 @@ package launcher
 import (
 	"context"
 
-	"github.com/pkg/errors"
-	"github.com/level11consulting/ocelot/common/remote"
+	"github.com/level11consulting/ocelot/build/vcshandler"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/pkg/errors"
 )
 
 // getAndSetHandler will use the accesstoken and vcstype to generate a handler without autorefresh capability and set it to (*launcher).handler field. if (*launcher).handler is already set, will do nothing
 func (w *launcher) getAndSetHandler(ctx context.Context, accessToken string, vcsType pb.SubCredType) (err error) {
 	if w.handler == nil {
 		var handler models.VCSHandler
-		handler, err = remote.GetHandlerWithToken(ctx, accessToken, vcsType)
+		handler, err = vcshandler.GetHandlerWithToken(ctx, accessToken, vcsType)
 		if err != nil {
 			return
 		}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/common/remote"
+	"github.com/level11consulting/ocelot/build/vcshandler"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
@@ -182,7 +182,7 @@ func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, str
 	if g.handler != nil {
 		return g.handler, "token", nil
 	}
-	handler, token, err := remote.GetHandler(cfg)
+	handler, token, err := vcshandler.GetHandler(cfg)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return nil, token, status.Errorf(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s", cfg.AcctName, err.Error())

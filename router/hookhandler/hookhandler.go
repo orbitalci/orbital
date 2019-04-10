@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"strings"
 
-	ocelog "github.com/shankj3/go-til/log"
-	ocenet "github.com/shankj3/go-til/net"
+	"github.com/level11consulting/ocelot/build/vcshandler"
 	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/build_signaler/webhook"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/common/remote"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
 )
 
 func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller, prTeller *webhook.PullReqWerkerTeller) *HookHandlerContext {
@@ -23,8 +23,8 @@ func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller, prTeller 
 //HookHandlerContext contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*signal.Signaler
-	pTeller  	   signal.CommitPushWerkerTeller
-	prTeller 	   signal.PRWerkerTeller
+	pTeller        signal.CommitPushWerkerTeller
+	prTeller       signal.PRWerkerTeller
 	testingHandler models.VCSHandler
 }
 
@@ -32,13 +32,13 @@ func (hhc *HookHandlerContext) getHandler(cred *pb.VCSCreds) (models.VCSHandler,
 	if hhc.testingHandler != nil {
 		return hhc.testingHandler, "token", nil
 	}
-	return remote.GetHandler(cred)
+	return vcshandler.GetHandler(cred)
 }
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
 	hookRecieves.WithLabelValues(vcsType.String(), "push").Inc()
-	translator, err := remote.GetRemoteTranslator(vcsType)
+	translator, err := vcshandler.GetRemoteTranslator(vcsType)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not get translator, err: ", err)
 		return
@@ -85,7 +85,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
 	hookRecieves.WithLabelValues(vcsType.String(), "pullrequest").Inc()
-	translator, err := remote.GetRemoteTranslator(vcsType)
+	translator, err := vcshandler.GetRemoteTranslator(vcsType)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not get translator, err: ", err)
 		return
