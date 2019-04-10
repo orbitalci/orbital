@@ -6,15 +6,31 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/common"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"regexp"
 )
+
+// Moved this regex in here because we only use it in this file
+const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+const gradle = `.*<[=|-]{13}> [0-9]+% (CONFIGURING|EXECUTING|INITIALIZING|WAITING) \[([0-9]+m )?[0-9]+s\]>.*\n`
+
+var re = regexp.MustCompile(ansi)
+var regrad = regexp.MustCompile(gradle)
+
+func maybeStrip(output []byte, stripAnsi bool) []byte {
+	if stripAnsi {
+		return regrad.ReplaceAll(re.ReplaceAll(output, []byte("")), []byte(""))
+	}
+	return output
+}
+// End regex copy/paste
 
 func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Builds, error) {
 	start := startRequest()
@@ -88,7 +104,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 func scanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageType string, stripAnsi bool) error {
 	var cleanedOutput []byte
 	if stripAnsi {
-		cleanedOutput = common.MaybeStrip(out.Output, stripAnsi)
+		cleanedOutput = maybeStrip(out.Output, stripAnsi)
 	} else {
 		cleanedOutput = out.Output
 	}
