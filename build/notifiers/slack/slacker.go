@@ -3,7 +3,6 @@ package slack
 import (
 	"net/http"
 
-	"github.com/level11consulting/ocelot/common/remote/slack"
 	"github.com/level11consulting/ocelot/models/pb"
 )
 
@@ -12,7 +11,7 @@ func Create() *Slacker {
 }
 
 type Slacker struct {
-	client slack.Poster
+	client Poster
 }
 
 func (s *Slacker) SubType() pb.SubCredType {
@@ -54,7 +53,7 @@ func (s *Slacker) RunIntegration(slackCreds []pb.OcyCredder, fullResult *pb.Stat
 	for _, slackCred := range slackCreds {
 		slacky := slackCred.(*pb.NotifyCreds)
 		if slackCred.GetIdentifier() == notifications.Slack.Identifier {
-			err := slack.ThrowStatusWebhook(s.client, slackCred.GetClientSecret(), notifications.Slack.Channel, fullResult, slacky.DetailUrlBase)
+			err := ThrowStatusWebhook(s.client, slackCred.GetClientSecret(), notifications.Slack.Channel, fullResult, slacky.DetailUrlBase)
 			if err != nil {
 				return err
 			}
