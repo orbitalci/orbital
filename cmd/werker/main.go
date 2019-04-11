@@ -21,7 +21,6 @@ provide results endpoint, way for server to access data
 package main
 
 import (
-	"github.com/level11consulting/ocelot/build"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
 
@@ -29,12 +28,13 @@ import (
 
 	"github.com/level11consulting/ocelot/build/builder/shell"
 	werkerevent "github.com/level11consulting/ocelot/build/eventhandler/werker"
+	"github.com/level11consulting/ocelot/build/helpers/messageservice"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder/workingdir"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/server/grpc/werker"
 	"github.com/level11consulting/ocelot/server/monitor/circuitbreaker"
 	"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/build/helpers/messageservice"
 
 	"fmt"
 	"os"
@@ -55,7 +55,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 		} else {
 			//mode := os.Getenv("ENV")
 			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
-			bshr, err := shell.NewBasher("", "", conf.LoopbackIp, build.GetOcyPrefixFromWerkerType(conf.WerkerType))
+			bshr, err := shell.NewBasher("", "", conf.LoopbackIp, workingdir.GetOcyPrefixFromWerkerType(conf.WerkerType))
 			// if couldn't make a new basher, just panic
 			if err != nil {
 				panic("couldnt' create instance of basher, bailing: " + err.Error())

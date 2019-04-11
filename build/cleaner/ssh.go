@@ -3,8 +3,8 @@ package cleaner
 import (
 	"context"
 
-	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/helpers/sshhelper"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder/workingdir"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/pkg/errors"
 )
@@ -23,8 +23,8 @@ func (d *SSHCleaner) Cleanup(ctx context.Context, id string, logout chan []byte)
 	if id == "" {
 		return errors.New("id cannot be empty")
 	}
-	prefix := build.GetOcyPrefixFromWerkerType(models.SSH)
-	cloneDir := build.GetCloneDir(prefix, id)
+	prefix := workingdir.GetOcyPrefixFromWerkerType(models.SSH)
+	cloneDir := workingdir.GetCloneDir(prefix, id)
 	if logout != nil {
 		logout <- []byte("removing build directory " + cloneDir)
 	}

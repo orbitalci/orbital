@@ -1,7 +1,7 @@
 /*
-prefix.go handles everything related to generating a prefix for the .ocelot / clone directory
+workingdir.go handles everything related to generating a prefix for the .ocelot / clone directory
 */
-package build
+package workingdir
 
 import (
 	"fmt"

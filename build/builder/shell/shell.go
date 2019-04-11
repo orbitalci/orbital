@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder/workingdir"
 	"github.com/level11consulting/ocelot/models/pb"
 	ocelog "github.com/shankj3/go-til/log"
 )
@@ -129,13 +129,13 @@ func (b *Basher) CDAndRunCmds(cmds []string, commitHash string) []string {
 }
 
 func (b *Basher) OcelotDir() string {
-	return build.GetOcelotDir(b.ocelotPrefix)
+	return workingdir.GetOcelotDir(b.ocelotPrefix)
 }
 
 func (b *Basher) PrefixDir() string {
-	return build.GetPrefixDir(b.ocelotPrefix)
+	return workingdir.GetPrefixDir(b.ocelotPrefix)
 }
 
 func (b *Basher) CloneDir(hash string) string {
-	return build.GetCloneDir(b.ocelotPrefix, hash)
+	return workingdir.GetCloneDir(b.ocelotPrefix, hash)
 }
