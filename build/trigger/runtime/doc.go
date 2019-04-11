@@ -9,4 +9,4 @@
 		- match text in commit messages
    		- match branch
 */
-package trigger
+package runtime

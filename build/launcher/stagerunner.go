@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/trigger"
+	"github.com/level11consulting/ocelot/build/trigger/runtime"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
 	ocelog "github.com/shankj3/go-til/log"
@@ -66,7 +66,7 @@ func handleTriggers(task *pb.WerkerTask, store storage.BuildStage, stage *pb.Sta
 			// return false, the block is empty and there is nothing to check
 			return
 		}
-		branchGood, err := trigger.BranchRegexOk(task.Branch, stage.Trigger.Branches)
+		branchGood, err := runtime.BranchRegexOk(task.Branch, stage.Trigger.Branches)
 		if err != nil {
 			result := &pb.Result{Stage: stage.Name, Status: pb.StageResultVal_FAIL, Error: err.Error(), Messages: []string{"failed to check if current branch fit the trigger criteria"}}
 			// not sure if we should store, but i think its good visibility especially for right now
@@ -85,8 +85,8 @@ func handleTriggers(task *pb.WerkerTask, store storage.BuildStage, stage *pb.Sta
 	if stage.Triggers != nil {
 		var passed bool
 		for _, triggerString := range stage.Triggers {
-			var condition *trigger.ConditionalDirective
-			condition, err = trigger.Parse(triggerString)
+			var condition *runtime.ConditionalDirective
+			condition, err = runtime.Parse(triggerString)
 			if err != nil {
 				return
 			}

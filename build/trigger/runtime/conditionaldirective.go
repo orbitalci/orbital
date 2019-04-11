@@ -1,4 +1,4 @@
-package trigger
+package runtime
 
 import "github.com/level11consulting/ocelot/models/pb"
 

@@ -1,11 +1,13 @@
-package secure_grpc
+package tls
 
 import (
 	"crypto/tls"
 	"crypto/x509"
+
 	//"github.com/philips/grpc-gateway-example/insecure"
-	"google.golang.org/grpc/credentials"
 	"io/ioutil"
+
+	"google.golang.org/grpc/credentials"
 )
 
 type leSecure struct {

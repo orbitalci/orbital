@@ -1,4 +1,4 @@
-package trigger
+package runtime
 
 import (
 	"fmt"
@@ -54,15 +54,14 @@ func TestConditionalDirective_Passes(t *testing.T) {
 		Branch: "fix/thisiskewl",
 	}
 
-	var directives = []struct{
+	var directives = []struct {
 		cd         *ConditionalDirective
 		shouldPass bool
 	}{
 		{
 			cd: &ConditionalDirective{
-					Conditions: []Section{
-						&BranchCondition{acceptedBranches: []string{`fix\/.*`},
-					},
+				Conditions: []Section{
+					&BranchCondition{acceptedBranches: []string{`fix\/.*`}},
 				},
 			},
 			shouldPass: true,
@@ -71,8 +70,8 @@ func TestConditionalDirective_Passes(t *testing.T) {
 			cd: &ConditionalDirective{
 				Conditions: []Section{
 					&BranchCondition{acceptedBranches: []string{`fix\/.*`, `master`, `develop`}, logical: Or},
-					},
 				},
+			},
 			shouldPass: true,
 		},
 		{
@@ -124,11 +123,10 @@ func TestConditionalDirective_Passes(t *testing.T) {
 			},
 			shouldPass: true,
 		},
-
 	}
 
 	for ind, tc := range directives {
-		t.Run(fmt.Sprintf("%d", ind), func(t *testing.T){
+		t.Run(fmt.Sprintf("%d", ind), func(t *testing.T) {
 			if didPass := tc.cd.IsFulfilled(td); didPass != tc.shouldPass {
 				t.Errorf("should pass is %v, got %v", tc.shouldPass, didPass)
 			}

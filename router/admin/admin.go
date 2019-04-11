@@ -15,7 +15,7 @@ import (
 	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
 	models "github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/server/secure_grpc"
+	"github.com/level11consulting/ocelot/server/tls"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -28,8 +28,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-//TODO: floe integration? putting this note here so we remember
-
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
 func Start(grpcServer *grpc.Server, listener net.Listener) {
 	err := grpcServer.Serve(listener)
@@ -38,7 +36,7 @@ func Start(grpcServer *grpc.Server, listener net.Listener) {
 	}
 }
 
-func GetGrpcServer(configInstance config.CVRemoteConfig, secure secure_grpc.SecureGrpc, serverRunsAt string, port string, httpPort string, hhBaseUrl string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
+func GetGrpcServer(configInstance config.CVRemoteConfig, secure tls.SecureGrpc, serverRunsAt string, port string, httpPort string, hhBaseUrl string) (*grpc.Server, net.Listener, storage.OcelotStorage, func(), error) {
 	//initializes our "context" - guideOcelotServer
 	//store := cred.GetOcelotStorage()
 	store, err := configInstance.GetOcelotStorage()
