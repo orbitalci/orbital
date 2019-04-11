@@ -1,16 +1,17 @@
-package build
+package runtime
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
-	"github.com/shankj3/go-til/consul"
-	"github.com/shankj3/go-til/test"
 	"github.com/level11consulting/ocelot/common"
 	util "github.com/level11consulting/ocelot/common/testutil"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
-	"testing"
+	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/test"
 )
 
 //// func CheckIfBuildDone(consulete *consul.Consulet, gitHash string) bool {

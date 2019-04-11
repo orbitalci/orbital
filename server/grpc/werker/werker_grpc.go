@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	rt "github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/cleaner"
 	"github.com/level11consulting/ocelot/build/streaminglogs"
 	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/shankj3/go-til/log"
@@ -44,7 +44,7 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 		// remove container
 		stream.Send(wrap("Performing build cleanup..."))
 
-		hashes, err := rt.GetHashRuntimesByWerker(w.consul, w.Uuid.String())
+		hashes, err := runtime.GetHashRuntimesByWerker(w.consul, w.Uuid.String())
 		if err != nil {
 			log.IncludeErrField(err).Error("unable to retrieve active builds from consul")
 			return status.Error(codes.Internal, err.Error())

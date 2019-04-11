@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	metrics "github.com/level11consulting/ocelot/server/metrics/admin"
@@ -45,9 +45,9 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 
 	if len(bq.Hash) > 0 {
 		//find matching hashes in consul by git hash
-		buildRtInfo, err = build.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
+		buildRtInfo, err = runtime.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
 		if err != nil {
-			if _, ok := err.(*build.ErrBuildDone); !ok {
+			if _, ok := err.(*runtime.ErrBuildDone); !ok {
 				log.IncludeErrField(err).Error("could not get build runtime")
 				return nil, status.Error(codes.Internal, "could not get build runtime, err: "+err.Error())
 			} else {
@@ -142,7 +142,7 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 		return scanLog(out, stream, g.Storage.StorageType(), bq.Strip)
 	}
 
-	if !build.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
+	if !runtime.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
 
 		errmsg := "build is not finished, use BuildRuntime method and stream from the werker registered"
 		SendStream(stream, errmsg)
@@ -161,9 +161,9 @@ func (g *guideOcelotServer) FindWerker(ctx context.Context, br *pb.BuildReq) (*p
 	defer metrics.FinishRequest(start)
 	if len(br.Hash) > 0 {
 		//find matching hashes in consul by git hash
-		buildRtInfo, err := build.GetBuildRuntime(g.RemoteConfig.GetConsul(), br.Hash)
+		buildRtInfo, err := runtime.GetBuildRuntime(g.RemoteConfig.GetConsul(), br.Hash)
 		if err != nil {
-			if _, ok := err.(*build.ErrBuildDone); !ok {
+			if _, ok := err.(*runtime.ErrBuildDone); !ok {
 				return nil, status.Errorf(codes.Internal, "could not get build runtime, err: %s", err.Error())
 			}
 			return nil, status.Error(codes.InvalidArgument, "werker not found for request as it has already finished ")

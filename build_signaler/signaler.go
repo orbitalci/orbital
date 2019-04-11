@@ -11,6 +11,7 @@ import (
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/helpers/messageservice"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 )
@@ -59,7 +60,7 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 	if err != nil {
 		return err
 	}
-	alreadyBuilding, err := build.CheckBuildInConsul(s.RC.GetConsul(), task.CheckoutHash)
+	alreadyBuilding, err := runtime.CheckBuildInConsul(s.RC.GetConsul(), task.CheckoutHash)
 	if alreadyBuilding {
 		log.Log().Info("kindly refusing to add to queue because this hash is already building")
 		return build.NoViability("this hash is already building in ocelot, therefore not adding to queue")

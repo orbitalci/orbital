@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	rt "github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/shankj3/go-til/consul"
@@ -66,7 +66,7 @@ func (sp *StreamPack) PumpBundle(stream Streamable, hash string, done chan int) 
 		}
 	}()
 	// determine whether to get from out or off infoReader
-	if rt.CheckIfBuildDone(sp.Consul, sp.Store, hash) {
+	if runtime.CheckIfBuildDone(sp.Consul, sp.Store, hash) {
 		ocelog.Log().Debugf("build %s is done, getting from appCtx", hash)
 		latestSummary, err := sp.Store.RetrieveLatestSum(hash)
 		if err != nil {
