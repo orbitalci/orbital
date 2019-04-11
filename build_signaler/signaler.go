@@ -9,6 +9,7 @@ import (
 	"github.com/shankj3/go-til/nsqpb"
 
 	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/helpers/messageservice"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
@@ -87,7 +88,7 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
 		vaultToken, _ := s.RC.GetVault().CreateThrowawayToken()
 		updateWerkerTask(task, id, vaultToken)
-		if err = s.Producer.WriteProto(task, build.DetermineTopic(task.BuildConf.MachineTag)); err != nil {
+		if err = s.Producer.WriteProto(task, messageservice.DetermineTopic(task.BuildConf.MachineTag)); err != nil {
 			log.IncludeErrField(err).WithField("buildId", task.Id).Error("error writing proto msg for build")
 		}
 		if err = storeQueued(s.Store, id); err != nil {
@@ -106,7 +107,7 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 //  If it isn't, it will store a FAILED VALIDATION with the validation errors.
 func (s *Signaler) validateAndQueue(task *pb.WerkerTask, sr *models.StageResult) error {
 	if err := s.OcyValidator.ValidateConfig(task.BuildConf, nil); err == nil {
-		if err := s.Producer.WriteProto(task, build.DetermineTopic(task.BuildConf.MachineTag)); err != nil {
+		if err := s.Producer.WriteProto(task, messageservice.DetermineTopic(task.BuildConf.MachineTag)); err != nil {
 			log.IncludeErrField(err).WithField("buildId", task.Id).Error("error writing proto msg for build")
 		} else {
 			log.Log().Debug("told werker!")
