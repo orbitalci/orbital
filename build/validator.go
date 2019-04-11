@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/level11consulting/ocelot/build/helpers/dockrhelper"
-	"github.com/level11consulting/ocelot/build/trigger"
+	"github.com/level11consulting/ocelot/build/trigger/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/mitchellh/cli"
@@ -66,7 +66,7 @@ func (ov *OcelotValidator) ValidateConfig(config *pb.BuildConfig, UI cli.Ui) err
 			if ind == 0 {
 				writeUIInfo(UI, "    Validating trigger strings...")
 			}
-			_, err := trigger.Parse(triggy)
+			_, err := runtime.Parse(triggy)
 			if err != nil {
 				writeUIError(UI, fmt.Sprintf("      - %s %s", triggy, models.FAILED))
 				return errors.Wrap(err, "'triggers' conditions must follow spec, this one did not: "+triggy)
@@ -88,7 +88,7 @@ func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []stri
 		return nil
 	}
 	// next, check if branch has a regex match with any of the buildable branches
-	branchOk, err := trigger.BranchRegexOk(branch, buildBranches)
+	branchOk, err := runtime.BranchRegexOk(branch, buildBranches)
 
 	if err != nil {
 		return err
@@ -111,7 +111,7 @@ func (ov *OcelotValidator) ValidateViability(branch string, buildBranches []stri
 }
 
 func (ov *OcelotValidator) ValidateBranchAgainstConf(buildConf *pb.BuildConfig, branch string) error {
-	branchOk, err := trigger.BranchRegexOk(branch, buildConf.Branches)
+	branchOk, err := runtime.BranchRegexOk(branch, buildConf.Branches)
 	if err != nil {
 		return err
 	}

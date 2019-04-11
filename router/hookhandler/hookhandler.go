@@ -12,6 +12,7 @@ import (
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
+	metrics "github.com/level11consulting/ocelot/server/metrics/hookhandler"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 )
@@ -37,7 +38,7 @@ func (hhc *HookHandlerContext) getHandler(cred *pb.VCSCreds) (models.VCSHandler,
 
 // On receive of repo push, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
-	hookRecieves.WithLabelValues(vcsType.String(), "push").Inc()
+	metrics.HookRecieves.WithLabelValues(vcsType.String(), "push").Inc()
 	translator, err := vcshandler.GetRemoteTranslator(vcsType)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not get translator, err: ", err)
@@ -50,7 +51,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
-		failedTranslation.WithLabelValues("push").Inc()
+		metrics.FailedTranslation.WithLabelValues("push").Inc()
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
@@ -74,7 +75,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if err := hhc.pTeller.TellWerker(push, hhc.Signaler, handler, token, false, pb.SignaledBy_PUSH); err != nil {
-		failedToTellWerker.Inc()
+		metrics.FailedToTellWerker.Inc()
 		ocelog.IncludeErrField(err).WithField("hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).WithField("branch", push.Branch).Error("unable to tell werker")
 		return
 	}
@@ -84,7 +85,7 @@ func (hhc *HookHandlerContext) RepoPush(w http.ResponseWriter, r *http.Request, 
 // TODO: need to pass active PR branch to validator, but gonna get RepoPush handler working first
 // On receive of pull request, marshal the json to an object then build the appropriate pipeline config and put on NSQ queue.
 func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Request, vcsType pb.SubCredType) {
-	hookRecieves.WithLabelValues(vcsType.String(), "pullrequest").Inc()
+	metrics.HookRecieves.WithLabelValues(vcsType.String(), "pullrequest").Inc()
 	translator, err := vcshandler.GetRemoteTranslator(vcsType)
 	if err != nil {
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not get translator, err: ", err)
@@ -97,7 +98,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
-		failedTranslation.WithLabelValues("pullrequest").Inc()
+		metrics.FailedTranslation.WithLabelValues("pullrequest").Inc()
 		ocenet.JSONApiError(w, http.StatusBadRequest, "could not translate to proto.message, err: ", err)
 		return
 	}
@@ -125,7 +126,7 @@ func (hhc *HookHandlerContext) PullRequest(w http.ResponseWriter, r *http.Reques
 		PrId: fmt.Sprintf("%d", pr.Id),
 	}
 	if err = hhc.prTeller.TellWerker(pr, prData, hhc.Signaler, handler, token, false, pb.SignaledBy_PULL_REQUEST); err != nil {
-		failedToTellWerker.Inc()
+		metrics.FailedToTellWerker.Inc()
 		ocelog.IncludeErrField(err).Error("couldn't get commits for PR ")
 		ocenet.JSONApiError(w, http.StatusInternalServerError, "could not commits for PR, err: ", err)
 	}
@@ -140,7 +141,7 @@ func (hhc *HookHandlerContext) HandleBBEvent(w http.ResponseWriter, r *http.Requ
 		"pullrequest:updated":
 		hhc.PullRequest(w, r, pb.SubCredType_BITBUCKET)
 	default:
-		unprocessibleEvent.WithLabelValues(r.Header.Get("X-Event-Key"), pb.SubCredType_BITBUCKET.String())
+		metrics.UnprocessibleEvent.WithLabelValues(r.Header.Get("X-Event-Key"), pb.SubCredType_BITBUCKET.String())
 		ocelog.Log().Errorf("No support for Bitbucket event %s", r.Header.Get("X-Event-Key"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
@@ -153,7 +154,7 @@ func (hhc *HookHandlerContext) HandleGHEvent(w http.ResponseWriter, r *http.Requ
 	case "pull_request":
 		hhc.PullRequest(w, r, pb.SubCredType_GITHUB)
 	default:
-		unprocessibleEvent.WithLabelValues(r.Header.Get("X-GitHub-Event"), pb.SubCredType_GITHUB.String())
+		metrics.UnprocessibleEvent.WithLabelValues(r.Header.Get("X-GitHub-Event"), pb.SubCredType_GITHUB.String())
 		ocelog.Log().Errorf("No support for Github event %s", r.Header.Get("X-GitHub-Event"))
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}

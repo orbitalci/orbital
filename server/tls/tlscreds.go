@@ -1,7 +1,8 @@
-package secure_grpc
+package tls
 
 import (
 	"crypto/tls"
+
 	"google.golang.org/grpc/credentials"
 )
 

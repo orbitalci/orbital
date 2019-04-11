@@ -3,10 +3,10 @@ package postgres
 import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/shankj3/go-til/test"
-	util "github.com/level11consulting/ocelot/common/testutil"
+	util "github.com/level11consulting/ocelot/build/helpers/testutil"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
 
 	"bytes"
 	"testing"
@@ -269,20 +269,28 @@ func postgresStorage_RetrieveHashStartsWith(t *testing.T, pg *PostgresStorage) {
 
 func postgresStorage_GetTrackedRepos(t *testing.T, pg *PostgresStorage) {
 	id, err := pg.AddSumStart("hash", "account", "repo", "branch", pb.SignaledBy_POLL, 1)
-	if err != nil { t.Error(err) }
-	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
+	if err != nil {
+		t.Error(err)
+	}
+	if err = pg.SetQueueTime(id); err != nil {
+		t.Error(err)
+	}
 
 	id, err = pg.AddSumStart("ha1sh", "account", "repo", "branch1", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
-	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
+	if err = pg.SetQueueTime(id); err != nil {
+		t.Error(err)
+	}
 	time.Sleep(1)
 	id, err = pg.AddSumStart("hash2", "account1", "repo", "branch", pb.SignaledBy_POLL, 1)
 	if err != nil {
 		t.Error(err)
 	}
-	if err = pg.SetQueueTime(id); err != nil { t.Error(err) }
+	if err = pg.SetQueueTime(id); err != nil {
+		t.Error(err)
+	}
 
 	repos, err := pg.GetTrackedRepos()
 	if err != nil {
@@ -306,7 +314,7 @@ func postgresStorage_InsertCred(t *testing.T, pg *PostgresStorage) {
 		SubType:      pb.SubCredType_ENV,
 		AcctName:     "OCELOTRULES",
 		ClientSecret: "thiswontgetinserted",
-		Id: 1,
+		Id:           1,
 	}
 	if err := pg.InsertCred(testCred1, true); err != nil {
 		t.Error(err)
@@ -353,10 +361,9 @@ func postgresStorage_DeleteCred(t *testing.T, pg *PostgresStorage) {
 	}
 }
 
-
 func postgresStorage_GetLastSuccessfulBuildHash(t *testing.T, pg *PostgresStorage) {
-	var data = []struct{
-		hash string
+	var data = []struct {
+		hash   string
 		branch string
 		failed bool
 	}{

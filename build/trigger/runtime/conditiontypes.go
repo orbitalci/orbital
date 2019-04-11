@@ -1,8 +1,8 @@
-package trigger
+package runtime
 
 import (
 	"strings"
-	
+
 	"github.com/level11consulting/ocelot/models/pb"
 )
 

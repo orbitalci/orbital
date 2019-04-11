@@ -18,12 +18,12 @@ var (
 	})
 )
 
-func startRequest() time.Time {
+func StartRequest() time.Time {
 	activeRequests.Inc()
 	return time.Now()
 }
 
-func finishRequest(startTime time.Time) {
+func FinishRequest(startTime time.Time) {
 	requestProcessTime.Observe(time.Since(startTime).Seconds())
 	activeRequests.Dec()
 }
