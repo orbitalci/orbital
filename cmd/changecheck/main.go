@@ -16,9 +16,9 @@ import (
 	"net/url"
 
 	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/eventhandler/pull/poll"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/build_signaler/poll"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/version"

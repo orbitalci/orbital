@@ -28,7 +28,7 @@ import (
 	"sync"
 
 	"github.com/level11consulting/ocelot/build/builder/shell"
-	"github.com/level11consulting/ocelot/build/listener"
+	werkerevent "github.com/level11consulting/ocelot/build/eventhandler/werker"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/server/grpc/werker"
@@ -63,7 +63,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 			//	bshr.SetBbDownloadURL(conf.LoopbackIp + ":9090/dev")
 			//}
 
-			handler := listener.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan)
+			handler := werkerevent.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan)
 			p.Handler = handler
 			p.ConsumeMessages(topic, "werker")
 			ocelog.Log().Info("Consuming messages for topic ", topic)

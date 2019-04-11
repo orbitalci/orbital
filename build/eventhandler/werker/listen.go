@@ -1,4 +1,4 @@
-package listener
+package werkerevent
 
 import (
 	"github.com/golang/protobuf/proto"
