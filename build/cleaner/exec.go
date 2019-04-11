@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/pkg/errors"
-	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/helpers/stringbuilder/workingdir"
 	"github.com/level11consulting/ocelot/models"
+	"github.com/pkg/errors"
 )
 
 type ExecCleaner struct {
@@ -14,7 +14,7 @@ type ExecCleaner struct {
 }
 
 func NewExecCleaner() *ExecCleaner {
-	return &ExecCleaner{prefix: build.GetOcyPrefixFromWerkerType(models.Exec)}
+	return &ExecCleaner{prefix: workingdir.GetOcyPrefixFromWerkerType(models.Exec)}
 }
 
 func (e *ExecCleaner) Cleanup(ctx context.Context, id string, logout chan []byte) error {
@@ -24,7 +24,7 @@ func (e *ExecCleaner) Cleanup(ctx context.Context, id string, logout chan []byte
 	if id == "" {
 		return errors.New("id cannot be empty")
 	}
-	cloneDir := build.GetCloneDir(e.prefix, id)
+	cloneDir := workingdir.GetCloneDir(e.prefix, id)
 	if logout != nil {
 		logout <- []byte("removing build directory " + cloneDir)
 	}
