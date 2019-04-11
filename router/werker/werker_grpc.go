@@ -8,7 +8,7 @@ import (
 	"github.com/shankj3/go-til/log"
 	rt "github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/cleaner"
-	"github.com/level11consulting/ocelot/build/streamer"
+	"github.com/level11consulting/ocelot/build/streaminglogs"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -29,7 +29,7 @@ func (w *WerkerServer) BuildInfo(request *pb.Request, stream pb.Build_BuildInfoS
 	//stream.Send(wrap(w.Conf.WerkerName))
 	//stream.Send(wrap(w.Conf.RegisterIP))
 	pumpDone := make(chan int)
-	streamable := &streamer.BuildStreamableServer{Build_BuildInfoServer: stream}
+	streamable := &streaminglogs.BuildStreamableServer{Build_BuildInfoServer: stream}
 	go w.streamPack.PumpBundle(streamable, request.Hash, pumpDone)
 	<-pumpDone
 	return nil

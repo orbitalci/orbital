@@ -1,44 +1,21 @@
 package werker
 
 import (
-	//"encoding/json"
-	//"net/http"
-	//"time"
-
-	consulet "github.com/shankj3/go-til/consul"
-	ocelog "github.com/shankj3/go-til/log"
-	"github.com/level11consulting/ocelot/build/streamer"
+	"github.com/level11consulting/ocelot/build/streaminglogs"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/storage"
+	consulet "github.com/shankj3/go-til/consul"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 type WerkerContext struct {
 	*models.WerkerFacts
 	consul     *consulet.Consulet
 	store      storage.OcelotStorage
-	streamPack *streamer.StreamPack
+	streamPack *streaminglogs.StreamPack
 	killValet  *valet.ContextValet
 }
-
-//
-//func (w *WerkerContext) dumpData(wr http.ResponseWriter, r *http.Request) {
-//	ocelog.Log().Info("writing out data for buildInfo")
-//	wr.Header().Set("content-type", "application/json")
-//	dataMap := make(map[string]int)
-//	dataMap["time"] = int(time.Now().Unix())
-//	wr.WriteHeader(http.StatusOK)
-//	for hash, bytearray := range w.buildInfo {
-//		dataMap[hash] = len(bytearray.GetData())
-//	}
-//	bit, err := json.Marshal(dataMap)
-//	if err != nil {
-//		ocelog.IncludeErrField(err).Error("couldn't marshal for dump")
-//		wr.WriteHeader(http.StatusInternalServerError)
-//		return
-//	}
-//	wr.Write(bit)
-//}
 
 func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, contextValet *valet.ContextValet) *WerkerContext {
 	werkerConsul, err := consulet.Default()
