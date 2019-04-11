@@ -34,6 +34,7 @@ import (
 	"github.com/level11consulting/ocelot/server/grpc/werker"
 	"github.com/level11consulting/ocelot/server/monitor/circuitbreaker"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/ocelot/build/helpers/messageservice"
 
 	"fmt"
 	"os"
@@ -104,7 +105,7 @@ func main() {
 	}()
 	// start protoConsumers
 	var protoConsumers []*nsqpb.ProtoConsume
-	supportedTopics := build.GetTopics(conf.tags)
+	supportedTopics := messageservice.GetTopics(conf.tags)
 	ocelog.Log().Debug("topics!", supportedTopics)
 
 	for _, topic := range supportedTopics {

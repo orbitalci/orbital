@@ -1,4 +1,4 @@
-package build
+package messageservice
 
 const (
 	DEFAULT = "build"
