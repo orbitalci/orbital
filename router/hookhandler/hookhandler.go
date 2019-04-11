@@ -1,14 +1,13 @@
 package hookhandler
 
-//todo: break out signaling logic and put in signaler
 import (
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/level11consulting/ocelot/build/eventhandler/push/webhook"
 	"github.com/level11consulting/ocelot/build/vcshandler"
 	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/build_signaler/webhook"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"

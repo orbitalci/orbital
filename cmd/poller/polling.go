@@ -5,14 +5,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/namsral/flag"
-	ocelog "github.com/shankj3/go-til/log"
-	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/build_signaler/poll"
+	"net/url"
+
+	"github.com/level11consulting/ocelot/build/eventhandler/pull/poll"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/version"
-	"net/url"
+	"github.com/namsral/flag"
+	ocelog "github.com/shankj3/go-til/log"
+	"github.com/shankj3/go-til/nsqpb"
 )
 
 // FIXME: consistency: consul's host and port, the var name for configInstance/rc

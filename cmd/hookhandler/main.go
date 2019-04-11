@@ -8,8 +8,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/build/eventhandler/push/webhook"
 	signal "github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/build_signaler/webhook"
 	"github.com/level11consulting/ocelot/models/pb"
 	hh "github.com/level11consulting/ocelot/router/hookhandler"
 	"github.com/level11consulting/ocelot/server/config"
