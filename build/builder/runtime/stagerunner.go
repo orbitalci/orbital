@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/level11consulting/ocelot/build"
+	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	"github.com/level11consulting/ocelot/build/trigger/runtime"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
@@ -14,7 +14,7 @@ import (
 
 // runStages runs the stages that are defined by the **user** ie what is in the ocelot.yml. Results will be stored in this stage as well.
 //   runStages will return whether any of the stages failed, the amount of time it took to run all the stages, and errors (if any)
-func (w *launcher) runStages(ctx context.Context, werk *pb.WerkerTask, builder build.Builder) (fail bool, dura time.Duration, err error) {
+func (w *launcher) runStages(ctx context.Context, werk *pb.WerkerTask, builder builderinterface.Builder) (fail bool, dura time.Duration, err error) {
 	//all stages listed inside of the projects's ocelot.yml are executed + stored here
 	fail = false
 	start := time.Now()

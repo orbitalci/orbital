@@ -2,7 +2,7 @@ package werkerevent
 
 import (
 	"github.com/golang/protobuf/proto"
-	"github.com/level11consulting/ocelot/build"
+	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	"github.com/level11consulting/ocelot/build/builder/runtime"
 	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/builder/type/docker"
@@ -81,7 +81,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	// set goroutine for watching for results and logging them (for rn)
 	// cant add go watchForResults here bc can't call method on interface until it's been cast properly.
 	//
-	var builder build.Builder
+	var builder builderinterface.Builder
 	switch w.WerkerType {
 	case models.Docker:
 		builder = docker.NewDockerBuilder(w.Basher)

@@ -1,4 +1,4 @@
-package build
+package buildinterface
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	shellinterface "github.com/level11consulting/ocelot/build/builder/shell/interface"
 	pb "github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
@@ -15,7 +16,7 @@ type RepoSetupFunc func(rc config.CVRemoteConfig, store storage.CredTable, accou
 type RepoExecFunc func(string) []string
 
 type Builder interface {
-	OcyBash
+	shellinterface.OcyBash
 	Init(ctx context.Context, hash string, logout chan []byte) *pb.Result
 	// for during setup stage, on instantiation of build
 	SetGlobalEnv(envs []string)

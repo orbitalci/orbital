@@ -12,7 +12,7 @@ import (
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/vault"
 
-	"github.com/level11consulting/ocelot/build"
+	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/helpers/dockrhelper"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -47,7 +47,7 @@ type Docker struct {
 	*shell.Basher
 }
 
-func NewDockerBuilder(b *shell.Basher) build.Builder {
+func NewDockerBuilder(b *shell.Basher) builderinterface.Builder {
 	return &Docker{Log: nil, ContainerId: "", globalEnvs: nil, extraGlobalEnvs: nil, DockerClient: nil, Basher: b}
 }
 
@@ -74,7 +74,7 @@ func (d *Docker) GetContainerId() string {
 func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan string, werk *pb.WerkerTask, rc config.CVRemoteConfig, werkerPort string) (*pb.Result, string) {
 	var setupMessages []string
 
-	su := build.InitStageUtil("setup")
+	su := builderinterface.InitStageUtil("setup")
 
 	logout <- []byte(su.GetStageLabel() + "Setting up...")
 	cli, err := client.NewEnvClient()
@@ -247,7 +247,7 @@ func (d *Docker) AddGlobalEnvs(envs []string) {
 }
 
 // ExecuteIntegration will basically run Execute but without the cd and run cmds because we are generating the scripts in the code
-func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan []byte) *pb.Result {
+func (d *Docker) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *builderinterface.StageUtil, logout chan []byte) *pb.Result {
 	return d.Exec(ctx, stgUtil.GetStage(), stgUtil.GetStageLabel(), stage.Env, stage.Script, logout)
 }
 
@@ -261,7 +261,7 @@ func (d *Docker) Execute(ctx context.Context, stage *pb.Stage, logout chan []byt
 		}
 	}
 
-	su := build.InitStageUtil(stage.Name)
+	su := builderinterface.InitStageUtil(stage.Name)
 	return d.Exec(ctx, su.GetStage(), su.GetStageLabel(), stage.Env, d.CDAndRunCmds(stage.Script, commitHash), logout)
 }
 

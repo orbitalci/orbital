@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/level11consulting/ocelot/build"
+	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/helpers/exechelper"
 	"github.com/level11consulting/ocelot/build/valet"
@@ -22,14 +22,14 @@ import (
 
 type Exec struct {
 	killer     *valet.ContextValet
-	stage      *build.StageUtil
+	stage      *builderinterface.StageUtil
 	globalEnvs []string
 
 	*shell.Basher
 	*models.WerkerFacts
 }
 
-func NewExecBuilder(b *shell.Basher, facts *models.WerkerFacts) build.Builder {
+func NewExecBuilder(b *shell.Basher, facts *models.WerkerFacts) builderinterface.Builder {
 	return &Exec{Basher: b, WerkerFacts: facts}
 }
 
@@ -55,7 +55,7 @@ func (e *Exec) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan 
 	log.Log().Infof("setting up hash %s", werk.CheckoutHash)
 	dockerIdChan <- werk.CheckoutHash
 	var setupMessages []string
-	su := build.InitStageUtil("setup")
+	su := builderinterface.InitStageUtil("setup")
 	cmd := e.SleeplessDownloadTemplateFiles(e.RegisterIP, e.ServicePort)
 	downloadTemplates := e.execute(ctx, su, []string{}, []string{cmd}, logout)
 	if downloadTemplates.Status == pb.StageResultVal_FAIL {
@@ -70,11 +70,11 @@ func (e *Exec) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan 
 
 func (e *Exec) Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	//cmd := exec.CommandContext(ctx, )
-	su := build.InitStageUtil(actions.Name)
+	su := builderinterface.InitStageUtil(actions.Name)
 	return e.execute(ctx, su, actions.Env, e.CDAndRunCmds(actions.Script, commitHash), logout)
 }
 
-func (e *Exec) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan []byte) *pb.Result {
+func (e *Exec) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *builderinterface.StageUtil, logout chan []byte) *pb.Result {
 	return e.execute(ctx, stgUtil, stage.Env, stage.Script, logout)
 }
 
@@ -115,7 +115,7 @@ func prepCmds(cmds []string) (prepped [3]string) {
 }
 
 // execute will attempt to organize the cmd list in a /bin/sh -c format, then will execute the command while piping the stdout and stderr to the logout channel
-func (e *Exec) execute(ctx context.Context, stage *build.StageUtil, env []string, cmds []string, logout chan []byte) *pb.Result {
+func (e *Exec) execute(ctx context.Context, stage *builderinterface.StageUtil, env []string, cmds []string, logout chan []byte) *pb.Result {
 	e.stage = stage
 	var err error
 	messages := []string{"starting stage " + stage.GetStage()}

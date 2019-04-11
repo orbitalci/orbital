@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/level11consulting/ocelot/build"
+	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
@@ -63,7 +63,7 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 
 // MakeItSo is the bread and butter of the werker. It registers the build with consul, ensures notifications, stores all the build data
 //  in the OcelotStorage implementation, and runs all the stages both setup and ones defined by the user.
-func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, done chan int) {
+func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder builderinterface.Builder, finish, done chan int) {
 	startBuild()
 	start := time.Now()
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
@@ -177,7 +177,7 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder build.Builder, finish, 
 //	- `GIT_BRANCH`
 //	- `WORKSPACE`
 //  - `GIT_PREVIOUS_SUCCESSFUL_COMMIT`
-func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder build.Builder) {
+func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder builderinterface.Builder) {
 	acct, repo, _ := stringbuilder.GetAcctRepo(werk.FullName)
 	// we don't care if there is an error retrieving this, if it fails it'll return an empty value
 	// and that's what we want!
