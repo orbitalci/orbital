@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/level11consulting/ocelot/build"
+	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/helpers/sshhelper"
 	"github.com/level11consulting/ocelot/build/valet"
@@ -23,7 +23,7 @@ type SSH struct {
 	*shell.Basher
 	killer *valet.ContextValet
 	cnxn   *sshhelper.Channel
-	stage  *build.StageUtil
+	stage  *builderinterface.StageUtil
 	*models.WerkerFacts
 }
 
@@ -31,7 +31,7 @@ type SSH struct {
 // establish a connection, as it should. It requires more than the docker builder say, because this ssh conneciton
 // isn't a "clean" builder, unfortunately. It is not destroyed afterword, so we need things like hash to know what to clean up
 // once the build process has completed.
-func NewSSHBuilder(b *shell.Basher, facts *models.WerkerFacts) (build.Builder, error) {
+func NewSSHBuilder(b *shell.Basher, facts *models.WerkerFacts) (builderinterface.Builder, error) {
 	return &SSH{Basher: b, WerkerFacts: facts}, nil
 }
 
@@ -65,7 +65,7 @@ func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan s
 	log.Log().Infof("setting up hash %s", werk.CheckoutHash)
 	dockerIdChan <- werk.CheckoutHash
 	var setupMessages []string
-	su := build.InitStageUtil("setup")
+	su := builderinterface.InitStageUtil("setup")
 	cmd := h.SleeplessDownloadTemplateFiles(h.RegisterIP, h.ServicePort)
 	downloadTemplates := h.execute(ctx, su, []string{}, []string{cmd}, logout)
 	if downloadTemplates.Status == pb.StageResultVal_FAIL {
@@ -80,11 +80,11 @@ func (h *SSH) Setup(ctx context.Context, logout chan []byte, dockerIdChan chan s
 
 func (h *SSH) Execute(ctx context.Context, actions *pb.Stage, logout chan []byte, commitHash string) *pb.Result {
 	//cmd := exec.CommandContext(ctx, )
-	su := build.InitStageUtil(actions.Name)
+	su := builderinterface.InitStageUtil(actions.Name)
 	return h.execute(ctx, su, actions.Env, h.CDAndRunCmds(actions.Script, commitHash), logout)
 }
 
-func (h *SSH) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *build.StageUtil, logout chan []byte) *pb.Result {
+func (h *SSH) ExecuteIntegration(ctx context.Context, stage *pb.Stage, stgUtil *builderinterface.StageUtil, logout chan []byte) *pb.Result {
 	return h.execute(ctx, stgUtil, stage.Env, stage.Script, logout)
 }
 
@@ -114,7 +114,7 @@ func unwrapCommand(cmds []string) []string {
 	return []string{cmds[2]}
 }
 
-func (h *SSH) execute(ctx context.Context, stage *build.StageUtil, env []string, cmds []string, logout chan []byte) *pb.Result {
+func (h *SSH) execute(ctx context.Context, stage *builderinterface.StageUtil, env []string, cmds []string, logout chan []byte) *pb.Result {
 	if len(cmds) >= 2 && strings.Contains(cmds[1], "-c") {
 		cmds = unwrapCommand(cmds)
 	}

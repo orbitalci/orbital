@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build"
+	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	accountrepo "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	nocreds "github.com/level11consulting/ocelot/build/helpers/stringbuilder/nocreds"
 	"github.com/level11consulting/ocelot/build/integrations"
@@ -45,7 +45,7 @@ func getBinaryIntegList(loopbackHost, loopbackPort string) []integrations.Binary
 }
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
-func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr build.Builder, baseStage *build.StageUtil) (result *pb.Result) {
+func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr builderinterface.Builder, baseStage *builderinterface.StageUtil) (result *pb.Result) {
 	accountName, _, err := accountrepo.GetAcctRepo(werk.FullName)
 	if err != nil {
 		result.Status = pb.StageResultVal_FAIL
@@ -54,12 +54,12 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 	}
 	result = &pb.Result{}
 	var integMessages []string
-	stage := build.CreateSubstage(baseStage, "INTEG")
+	stage := builderinterface.CreateSubstage(baseStage, "INTEG")
 	for _, integ := range w.integrations {
 		if !integ.IsRelevant(werk.BuildConf) {
 			continue
 		}
-		subStage := build.CreateSubstage(stage, integ.String())
+		subStage := builderinterface.CreateSubstage(stage, integ.String())
 		credz, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, integ.SubType(), accountName, false)
 		if err != nil {
 			result = handleIntegrationErr(err, integ.String(), subStage, result.Messages)
@@ -99,11 +99,11 @@ func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr
 
 // downloadBinaries runs all the binary integrations that are associated with this build. the binary integrations are defined by
 //  getBinaryIntegList.
-func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bldr build.Builder, wc *pb.BuildConfig) (result *pb.Result) {
+func (w *launcher) downloadBinaries(ctx context.Context, su *builderinterface.StageUtil, bldr builderinterface.Builder, wc *pb.BuildConfig) (result *pb.Result) {
 	var integMessages []string
 	result = &pb.Result{}
 	for _, binaryI := range w.binaryIntegs {
-		subStage := build.CreateSubstage(su, binaryI.String())
+		subStage := builderinterface.CreateSubstage(su, binaryI.String())
 		if binaryI.IsRelevant(wc) {
 			stg := &pb.Stage{Name: subStage.Stage, Script: binaryI.GenerateDownloadBashables()}
 			result = bldr.ExecuteIntegration(ctx, stg, subStage, w.infochan)
@@ -123,7 +123,7 @@ func (w *launcher) downloadBinaries(ctx context.Context, su *build.StageUtil, bl
 	return
 }
 
-func handleIntegrationErr(err error, integrationName string, stage *build.StageUtil, msgs []string) *pb.Result {
+func handleIntegrationErr(err error, integrationName string, stage *builderinterface.StageUtil, msgs []string) *pb.Result {
 	_, ok := err.(*nocreds.NoCreds)
 	if !ok {
 		ocelog.IncludeErrField(err).Error("returning failed setup because repo integration failed for: ", integrationName)

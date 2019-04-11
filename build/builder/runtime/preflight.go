@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/level11consulting/ocelot/build"
+	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	accountrepo "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	nocreds "github.com/level11consulting/ocelot/build/helpers/stringbuilder/nocreds"
 	"github.com/level11consulting/ocelot/models"
@@ -19,9 +19,9 @@ import (
 //		- download binaries (kubectl, etc...)
 //		- download codebase for building
 //   all the substages above will be rolled into one stage for storage: PREFLIGHT
-func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder build.Builder) (bailOut bool, err error) {
+func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder builderinterface.Builder) (bailOut bool, err error) {
 	start := time.Now()
-	prefly := build.InitStageUtil("PREFLIGHT")
+	prefly := builderinterface.InitStageUtil("PREFLIGHT")
 	preflightResult := &pb.Result{Stage: prefly.GetStage(), Status: pb.StageResultVal_PASS}
 	acct, _, err := accountrepo.GetAcctRepo(werk.FullName)
 	if err != nil {
@@ -60,7 +60,7 @@ func (w *launcher) mapOrStoreStageResults(subStageResult *pb.Result, parentResul
 	bailOut = subStageResult.Status == pb.StageResultVal_FAIL
 	var preppedmessages []string
 	for _, msg := range subStageResult.Messages {
-		preppedmessages = append(preppedmessages, build.InitStageUtil(subStageResult.Stage).GetStageLabel()+msg)
+		preppedmessages = append(preppedmessages, builderinterface.InitStageUtil(subStageResult.Stage).GetStageLabel()+msg)
 	}
 	parentResult.Messages = append(parentResult.Messages, subStageResult.Messages...)
 	if bailOut {
@@ -76,7 +76,7 @@ func (w *launcher) mapOrStoreStageResults(subStageResult *pb.Result, parentResul
 
 // handleEnvSecrets will grab all environment type credentials from storage / secret store and add them as global environment variables for
 // 	the entire build.
-func (w *launcher) handleEnvSecrets(ctx context.Context, builder build.Builder, accountName string, stage *build.StageUtil) *pb.Result {
+func (w *launcher) handleEnvSecrets(ctx context.Context, builder builderinterface.Builder, accountName string, stage *builderinterface.StageUtil) *pb.Result {
 	creds, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, pb.SubCredType_ENV, accountName, false)
 	if err != nil {
 		if _, ok := err.(*nocreds.NoCreds); ok {
@@ -93,7 +93,7 @@ func (w *launcher) handleEnvSecrets(ctx context.Context, builder build.Builder, 
 }
 
 //downloadCodebase will download the code that will be built
-func downloadCodebase(ctx context.Context, task *pb.WerkerTask, builder build.Builder, su *build.StageUtil, logChan chan []byte) *pb.Result {
+func downloadCodebase(ctx context.Context, task *pb.WerkerTask, builder builderinterface.Builder, su *builderinterface.StageUtil, logChan chan []byte) *pb.Result {
 	var setupMessages []string
 	setupMessages = append(setupMessages, "attempting to download codebase...")
 	stage := &pb.Stage{

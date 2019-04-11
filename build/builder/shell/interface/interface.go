@@ -1,4 +1,4 @@
-package build
+package shellinterface
 
 import (
 	"github.com/level11consulting/ocelot/models/pb"
