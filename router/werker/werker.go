@@ -8,7 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/level11consulting/ocelot/build/streamer"
+	"github.com/level11consulting/ocelot/build/streaminglogs"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -20,7 +20,7 @@ import (
 func ServeMe(transportChan chan *models.Transport, conf *models.WerkerFacts, store storage.OcelotStorage, killValet *valet.ContextValet) {
 	// todo: defer a recovery here
 	werkStream := getWerkerContext(conf, store, killValet)
-	streamPack := streamer.GetStreamPack(werkStream.store, werkStream.consul)
+	streamPack := streaminglogs.GetStreamPack(werkStream.store, werkStream.consul)
 	werkStream.streamPack = streamPack
 	ocelog.Log().Debug("saving build info channels to in memory map")
 	go streamPack.ListenTransport(transportChan)

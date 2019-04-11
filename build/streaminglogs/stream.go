@@ -1,4 +1,4 @@
-package streamer
+package streaminglogs
 
 import (
 	"bufio"

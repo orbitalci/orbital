@@ -1,4 +1,4 @@
-package streamer
+package streaminglogs
 
 import (
 	"github.com/level11consulting/ocelot/models/pb"

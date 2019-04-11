@@ -1,13 +1,14 @@
-package streamer
+package streaminglogs
 
 import (
-	"github.com/go-test/deep"
-	"github.com/shankj3/go-til/log"
-	ocenet "github.com/shankj3/go-til/net"
-	protobuf "github.com/level11consulting/ocelot/models/pb"
-	"google.golang.org/grpc"
 	"testing"
 	"time"
+
+	"github.com/go-test/deep"
+	protobuf "github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
+	"google.golang.org/grpc"
 )
 
 var testData = [][]byte{
