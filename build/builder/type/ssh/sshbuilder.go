@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/helpers/sshhelper"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
@@ -20,7 +20,7 @@ import (
 )
 
 type SSH struct {
-	*basher.Basher
+	*shell.Basher
 	killer *valet.ContextValet
 	cnxn   *sshhelper.Channel
 	stage  *build.StageUtil
@@ -31,7 +31,7 @@ type SSH struct {
 // establish a connection, as it should. It requires more than the docker builder say, because this ssh conneciton
 // isn't a "clean" builder, unfortunately. It is not destroyed afterword, so we need things like hash to know what to clean up
 // once the build process has completed.
-func NewSSHBuilder(b *basher.Basher, facts *models.WerkerFacts) (build.Builder, error) {
+func NewSSHBuilder(b *shell.Basher, facts *models.WerkerFacts) (build.Builder, error) {
 	return &SSH{Basher: b, WerkerFacts: facts}, nil
 }
 

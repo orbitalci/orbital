@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
@@ -17,7 +17,7 @@ type launcher struct {
 	infochan     chan []byte
 	StreamChan   chan *models.Transport
 	BuildCtxChan chan *models.BuildContext
-	Basher       *basher.Basher
+	Basher       *shell.Basher
 	Store        storage.OcelotStorage
 	BuildValet   *valet.Valet
 	handler      models.VCSHandler
@@ -29,7 +29,7 @@ func NewLauncher(facts *models.WerkerFacts,
 	remoteConf config.CVRemoteConfig,
 	streamChan chan *models.Transport,
 	BuildCtxChan chan *models.BuildContext,
-	bshr *basher.Basher,
+	bshr *shell.Basher,
 	store storage.OcelotStorage,
 	bv *valet.Valet) *launcher {
 	return &launcher{

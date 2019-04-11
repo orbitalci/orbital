@@ -1,13 +1,13 @@
-package basher
+package shell
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 
-	ocelog "github.com/shankj3/go-til/log"
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/models/pb"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 const DefaultBitbucketURL = "https://x-token-auth:%s@bitbucket.org/%s.git"

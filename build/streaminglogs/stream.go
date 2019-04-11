@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/level11consulting/ocelot/storage"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"strconv"
 	"time"
+
+	"github.com/level11consulting/ocelot/storage"
+	"github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (

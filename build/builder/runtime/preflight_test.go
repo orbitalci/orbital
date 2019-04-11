@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
-	"github.com/pkg/errors"
-	"github.com/shankj3/go-til/test"
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/integrations"
 	"github.com/level11consulting/ocelot/build/integrations/sshkey"
@@ -15,6 +13,8 @@ import (
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/test"
 )
 
 func Test_downloadCodebase(t *testing.T) {

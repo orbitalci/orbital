@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/shankj3/go-til/log"
 	rt "github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/cleaner"
 	"github.com/level11consulting/ocelot/build/streaminglogs"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

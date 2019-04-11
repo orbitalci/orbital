@@ -3,12 +3,13 @@ package streaminglogs
 import (
 	"bufio"
 	"bytes"
-	consulet "github.com/shankj3/go-til/consul"
-	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/storage"
 	"testing"
 	"time"
+
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/storage"
+	consulet "github.com/shankj3/go-til/consul"
+	"github.com/shankj3/go-til/test"
 )
 
 var tests = [][]byte{
