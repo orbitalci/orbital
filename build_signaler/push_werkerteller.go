@@ -2,17 +2,16 @@ package build_signaler
 
 import (
 	"github.com/pkg/errors"
-	
+
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 
-	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 )
 
-
-type PushWerkerTeller struct {}
+type PushWerkerTeller struct{}
 
 // TellWerker will get config off of the HeadCommit Hash, Build the werker task object based off of the push head commit data,
 // retrieve and generate changeset data from bitbucket to get the files changes / commit messages in the push, then it will add all of that
@@ -45,7 +44,7 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 		return errors.Wrap(err, "did not queue because unable to contact vcs repo to get changelist data")
 	}
 	if err = conf.CheckViableThenQueueAndStore(task, force, push.Commits); err != nil {
-		if _, ok := err.(*build.NotViable); ok {
+		if _, ok := err.(*buildconfigvalidator.NotViable); ok {
 			return errors.New("did not queue because it shouldn't be queued. explanation: " + err.Error())
 		}
 		ocelog.IncludeErrField(err).Warn("something went awry trying to queue and store")
@@ -81,4 +80,3 @@ func GenerateNoPreviousHeadChangeset(handler models.VCSHandler, acctRepo, branch
 	}
 	return &pb.ChangesetData{Branch: branch, FilesChanged: changedFiles, CommitTexts: []string{text.Message}}, nil
 }
-

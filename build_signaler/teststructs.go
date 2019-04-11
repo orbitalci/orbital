@@ -7,15 +7,15 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/consul/api"
+	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/ocelot/server/config"
+	"github.com/level11consulting/ocelot/storage"
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/deserialize"
 	ocenet "github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/vault"
-	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
 )
 
 var Buildfile = []byte(`image: golang:1.10.2-alpine3.7
@@ -91,7 +91,7 @@ stages:
 func GetFakeSignaler(t *testing.T, inConsul bool) *Signaler {
 	cred := &config.RemoteConfig{Consul: &TestConsul{keyFound: inConsul}, Vault: &TestVault{}}
 	dese := deserialize.New()
-	valid := &build.OcelotValidator{}
+	valid := &buildconfigvalidator.OcelotValidator{}
 	store := &TestStorage{}
 	produ := &TestSingleProducer{Done: make(chan int, 1)}
 	return NewSignaler(cred, dese, produ, valid, store)
@@ -158,14 +158,15 @@ func (ts *TestStorage) AddStageDetail(result *models.StageResult) error {
 }
 
 type DummyVcsHandler struct {
-	Fail         bool
-	Filecontents []byte
-	ChangedFiles []string
-	ReturnCommit *pb.Commit
+	Fail           bool
+	Filecontents   []byte
+	ChangedFiles   []string
+	ReturnCommit   *pb.Commit
 	CommitNotFound bool
 	models.VCSHandler
 	NotFound bool
 }
+
 //fixme: need to add handler.GetChangedFiles and handler.GetCommit
 
 func (d *DummyVcsHandler) GetFile(filePath string, fullRepoName string, commitHash string) (bytez []byte, err error) {

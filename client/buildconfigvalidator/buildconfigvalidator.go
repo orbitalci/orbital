@@ -1,4 +1,4 @@
-package build
+package buildconfigvalidator
 
 import (
 	"fmt"

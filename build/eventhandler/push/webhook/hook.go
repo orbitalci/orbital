@@ -3,8 +3,8 @@ package webhook
 import (
 	"github.com/pkg/errors"
 
-	"github.com/level11consulting/ocelot/build"
 	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 
@@ -12,7 +12,7 @@ import (
 	ocenet "github.com/shankj3/go-til/net"
 )
 
-type PullReqWerkerTeller struct {}
+type PullReqWerkerTeller struct{}
 
 // TellWerker will use the pullRequest COMMITS url to retrieve all commits associated with
 func (pr *PullReqWerkerTeller) TellWerker(pullreq *pb.PullRequest, prData *pb.PrWerkerData, signaler *signal.Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
@@ -45,9 +45,9 @@ func (pr *PullReqWerkerTeller) TellWerker(pullreq *pb.PullRequest, prData *pb.Pr
 		return errors.Wrap(err, "did not queue because it shouldn't be queued, as there is a validation error")
 	}
 	if err = signaler.QueueAndStore(task); err != nil {
-		if _, ok := err.(*build.NotViable); ok {
+		if _, ok := err.(*buildconfigvalidator.NotViable); ok {
 			ocelog.IncludeErrField(err).Warn("fyi, this pull request is not valid for a build!! it will not be queued!!")
-			return build.NoViability(errors.Wrap(err, "did not queue because it shouldn't be queued, as there is a validation error").Error())
+			return buildconfigvalidator.NoViability(errors.Wrap(err, "did not queue because it shouldn't be queued, as there is a validation error").Error())
 		}
 		ocelog.IncludeErrField(err).Warn("something went awry trying to queue and store")
 		return errors.Wrap(err, "unable to queue or store")

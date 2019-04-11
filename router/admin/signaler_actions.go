@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/vcshandler"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -13,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -166,7 +166,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		SendStream(stream, "Unable to retrieve files changed for this commit, triggers for stages will only be off of branch and not commit message or files changed.")
 	}
 	if err = g.getSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
-		if _, ok := err.(*build.NotViable); ok {
+		if _, ok := err.(*buildconfigvalidator.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
 			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Use Force if you want to override. Error is: "+err.Error())
 		}

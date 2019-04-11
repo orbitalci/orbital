@@ -15,10 +15,10 @@ import (
 
 	"net/url"
 
-	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/eventhandler/pull/poll"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/version"
@@ -31,7 +31,7 @@ import (
 type changeSetConfig struct {
 	RemoteConf config.CVRemoteConfig
 	*deserialize.Deserializer
-	OcyValidator *build.OcelotValidator
+	OcyValidator *buildconfigvalidator.OcelotValidator
 	Producer     *nsqpb.PbProduce
 	AcctRepo     string
 	Acct         string
@@ -74,7 +74,7 @@ func configure() *changeSetConfig {
 		ocelog.Log().Fatalf("%s is not a vcs subcredtype, need %s", vcsType, strings.Join(pb.CredType_VCS.SubtypesString(), "|"))
 	}
 	branchList := strings.Split(branches, ",")
-	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: build.GetOcelotValidator()}
+	conf := &changeSetConfig{RemoteConf: rc, AcctRepo: acctRepo, Branches: branchList, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: buildconfigvalidator.GetOcelotValidator()}
 	conf.Acct, conf.Repo, err = stringbuilder.GetAcctRepo(acctRepo)
 	if err != nil {
 		ocelog.Log().Fatal(err)

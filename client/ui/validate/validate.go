@@ -4,15 +4,16 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/mitchellh/cli"
-	"github.com/shankj3/go-til/deserialize"
-	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/client/commandhelper"
-	models "github.com/level11consulting/ocelot/models/pb"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
+	"github.com/level11consulting/ocelot/client/commandhelper"
+	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/mitchellh/cli"
+	"github.com/shankj3/go-til/deserialize"
 )
 
 func New(ui cli.Ui) *cmd {
@@ -67,7 +68,7 @@ func (c *cmd) validateOcelotYaml(ctx context.Context, ocelotFile string) int {
 		return 1
 	}
 
-	validator := build.GetOcelotValidator()
+	validator := buildconfigvalidator.GetOcelotValidator()
 	err = validator.ValidateConfig(conf, c.UI)
 	if err != nil {
 		c.UI.Error(fmt.Sprintf("Invalid ocelot.yml file: %s", err.Error()))
