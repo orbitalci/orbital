@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	brt "github.com/level11consulting/ocelot/build"
 	c "github.com/level11consulting/ocelot/build/cleaner"
+	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
@@ -63,7 +63,7 @@ func (v *Valet) Reset(newStage string, hash string) error {
 // runtime state. It will then save each build's current stage details with an
 func (v *Valet) StoreInterrupt(typ Interrupt) {
 	consulet := v.RemoteConfig.GetConsul()
-	hrts, err := brt.GetHashRuntimesByWerker(consulet, v.WerkerUuid.String())
+	hrts, err := runtime.GetHashRuntimesByWerker(consulet, v.WerkerUuid.String())
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to get hash runtimes")
 		return
@@ -124,7 +124,7 @@ func (v *Valet) StartBuild(consulet consul.Consuletty, hash string, id int64) er
 //   It also looks up all active builds associated with the werker id and clears them out of consul before finally deregistering itself as a werker in consul.
 func (v *Valet) RemoveAllTrace() {
 	consulet := v.RemoteConfig.GetConsul()
-	uuids, err := brt.GetDockerUuidsByWerkerId(consulet, v.WerkerUuid.String())
+	uuids, err := runtime.GetDockerUuidsByWerkerId(consulet, v.WerkerUuid.String())
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to get docker uuids? is nothing sacred?!")
 		return
@@ -134,7 +134,7 @@ func (v *Valet) RemoveAllTrace() {
 		v.Cleanup(ctx, uid, nil)
 	}
 	log.Log().Info("cleaned up docker remnants")
-	hashes, err := brt.GetWerkerActiveBuilds(consulet, v.WerkerUuid.String())
+	hashes, err := runtime.GetWerkerActiveBuilds(consulet, v.WerkerUuid.String())
 	if err != nil {
 		log.IncludeErrField(err).Error("could not get active builds for werker")
 		return

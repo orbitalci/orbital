@@ -9,12 +9,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/shankj3/go-til/log"
-	"github.com/level11consulting/ocelot/build"
+	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/log"
 )
-
 
 // FIXME: Not using the protobuf message will let us move error handling code somewhere else. Possibly even squash this into 3 cases?
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
@@ -100,7 +99,7 @@ BUILD_FOUND:
 	}
 	result = models.ParseStagesByBuildId(buildSum, stageResults)
 	// idk if htis is necessary anymore
-	inConsul, err := build.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
+	inConsul, err := runtime.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
 	if err != nil {
 		return nil, status.Error(codes.Unavailable, "An error occurred checking build status in consul. Cannot retrieve status at this time.\n\n"+err.Error())
 	}
