@@ -1,4 +1,4 @@
-package launcher
+package runtime
 
 import (
 	"github.com/level11consulting/ocelot/models"
@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/shankj3/go-til/test"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
 )
 
 // fixme: this test plz
@@ -72,7 +72,7 @@ func Test_handleTriggers(t *testing.T) {
 		store       *dummyBuildStage
 		shouldError bool
 	}{
-		{&pb.WerkerTask{Branch: "boogaloo"},true, &dummyBuildStage{details: []*models.StageResult{}}, false},
+		{&pb.WerkerTask{Branch: "boogaloo"}, true, &dummyBuildStage{details: []*models.StageResult{}}, false},
 		{&pb.WerkerTask{Branch: "alks;djf"}, true, &dummyBuildStage{details: []*models.StageResult{}, fail: true}, true},
 		{&pb.WerkerTask{Branch: "vibranium"}, false, &dummyBuildStage{details: []*models.StageResult{}}, false},
 	}

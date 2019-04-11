@@ -7,7 +7,7 @@ import (
 	"github.com/level11consulting/ocelot/build/builder/type/docker"
 	"github.com/level11consulting/ocelot/build/builder/type/exec"
 	"github.com/level11consulting/ocelot/build/builder/type/ssh"
-	"github.com/level11consulting/ocelot/build/launcher"
+	"github.com/level11consulting/ocelot/build/builder/runtime"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -98,7 +98,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	default:
 		builder = docker.NewDockerBuilder(w.Basher)
 	}
-	launch := launcher.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildValet)
+	launch := runtime.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildValet)
 	launch.MakeItSo(werkerTask, builder, finish, done)
 	return nil
 }
