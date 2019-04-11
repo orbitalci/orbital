@@ -8,8 +8,8 @@ import (
 	"github.com/shankj3/go-til/nsqpb"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
+	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
@@ -21,7 +21,7 @@ type guideOcelotServer struct {
 	Deserializer   *deserialize.Deserializer
 	AdminValidator *validate.AdminValidator
 	RepoValidator  *validate.RepoValidator
-	OcyValidator   *build.OcelotValidator
+	OcyValidator   *buildconfigvalidator.OcelotValidator
 	Storage        storage.OcelotStorage
 	Producer       nsqpb.Producer
 	handler        models.VCSHandler
@@ -37,7 +37,7 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
 	// purdier to me anyway
 	guideOcelotServer := &guideOcelotServer{
-		OcyValidator:   build.GetOcelotValidator(),
+		OcyValidator:   buildconfigvalidator.GetOcelotValidator(),
 		RemoteConfig:   config,
 		Deserializer:   d,
 		AdminValidator: adminV,

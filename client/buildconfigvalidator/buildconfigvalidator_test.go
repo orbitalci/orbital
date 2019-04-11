@@ -1,4 +1,4 @@
-package build
+package buildconfigvalidator
 
 import (
 	"io/ioutil"
@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shankj3/go-til/test"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
 )
 
 var badConfigTests = []struct {
