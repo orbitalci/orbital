@@ -31,7 +31,7 @@ import (
 	"github.com/level11consulting/ocelot/build/listener"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/router/werker"
+	"github.com/level11consulting/ocelot/server/grpc/werker"
 	"github.com/level11consulting/ocelot/server/monitor/circuitbreaker"
 	"github.com/level11consulting/ocelot/storage"
 
