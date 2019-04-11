@@ -5,14 +5,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	ocelog "github.com/shankj3/go-til/log"
-	ocenet "github.com/shankj3/go-til/net"
 	"github.com/level11consulting/ocelot/build/streaminglogs"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	ocelog "github.com/shankj3/go-til/log"
+	ocenet "github.com/shankj3/go-til/net"
 	"google.golang.org/grpc"
 )
 

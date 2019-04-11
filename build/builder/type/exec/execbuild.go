@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/helpers/exechelper"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
@@ -25,11 +25,11 @@ type Exec struct {
 	stage      *build.StageUtil
 	globalEnvs []string
 
-	*basher.Basher
+	*shell.Basher
 	*models.WerkerFacts
 }
 
-func NewExecBuilder(b *basher.Basher, facts *models.WerkerFacts) build.Builder {
+func NewExecBuilder(b *shell.Basher, facts *models.WerkerFacts) build.Builder {
 	return &Exec{Basher: b, WerkerFacts: facts}
 }
 

@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shankj3/go-til/consul"
-	ocelog "github.com/shankj3/go-til/log"
 	rt "github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/shankj3/go-til/consul"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 type buildDatum struct {

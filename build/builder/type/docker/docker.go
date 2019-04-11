@@ -13,7 +13,7 @@ import (
 	"github.com/shankj3/go-til/vault"
 
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/helpers/dockrhelper"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -44,10 +44,10 @@ type Docker struct {
 	DockerClient    *client.Client
 	globalEnvs      []string
 	extraGlobalEnvs []string
-	*basher.Basher
+	*shell.Basher
 }
 
-func NewDockerBuilder(b *basher.Basher) build.Builder {
+func NewDockerBuilder(b *shell.Basher) build.Builder {
 	return &Docker{Log: nil, ContainerId: "", globalEnvs: nil, extraGlobalEnvs: nil, DockerClient: nil, Basher: b}
 }
 

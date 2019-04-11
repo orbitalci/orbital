@@ -3,11 +3,11 @@ package listener
 import (
 	"github.com/golang/protobuf/proto"
 	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/basher"
+	"github.com/level11consulting/ocelot/build/builder/runtime"
+	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/builder/type/docker"
 	"github.com/level11consulting/ocelot/build/builder/type/exec"
 	"github.com/level11consulting/ocelot/build/builder/type/ssh"
-	"github.com/level11consulting/ocelot/build/builder/runtime"
 	"github.com/level11consulting/ocelot/build/valet"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -37,13 +37,13 @@ type WorkerMsgHandler struct {
 	infochan     chan []byte
 	StreamChan   chan *models.Transport
 	BuildCtxChan chan *models.BuildContext
-	Basher       *basher.Basher
+	Basher       *shell.Basher
 	Store        storage.OcelotStorage
 	BuildValet   *valet.Valet
 	RemoteConfig config.CVRemoteConfig
 }
 
-func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *basher.Basher, st storage.OcelotStorage, bv *valet.Valet, rc config.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
+func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *shell.Basher, st storage.OcelotStorage, bv *valet.Valet, rc config.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
 	return &WorkerMsgHandler{
 		Topic:        topic,
 		Basher:       b,

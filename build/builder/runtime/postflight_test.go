@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/pkg/errors"
-	"github.com/shankj3/go-til/net"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/net"
 )
 
 func TestLauncher_postFlight(t *testing.T) {
