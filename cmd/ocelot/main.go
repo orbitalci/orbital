@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/mitchellh/cli"
-	"github.com/level11consulting/ocelot/client"
+
+	client "github.com/level11consulting/ocelot/client/ui"
 	"github.com/level11consulting/ocelot/version"
+	"github.com/mitchellh/cli"
 
 	"os"
 )

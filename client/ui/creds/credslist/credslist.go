@@ -6,11 +6,11 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/mitchellh/cli"
 	"github.com/level11consulting/ocelot/client/commandhelper"
-	"github.com/level11consulting/ocelot/client/creds/repocreds/list"
-	"github.com/level11consulting/ocelot/client/creds/vcscreds/list"
+	"github.com/level11consulting/ocelot/client/ui/creds/repocreds/list"
+	"github.com/level11consulting/ocelot/client/ui/creds/vcscreds/list"
 	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/mitchellh/cli"
 )
 
 func New(ui cli.Ui) *cmd {
