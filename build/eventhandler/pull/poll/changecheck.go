@@ -4,25 +4,27 @@ import (
 	"errors"
 	"time"
 
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/build/vcshandler"
 	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/client/newbuildjob"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	ocelog "github.com/shankj3/go-til/log"
 )
 
-func NewChangeChecker(signaler *signal.Signaler, acctRepo string, vcsType pb.SubCredType) *ChangeChecker {
+func NewChangeChecker(signaler *buildjob.Signaler, acctRepo string, vcsType pb.SubCredType) *ChangeChecker {
 	return &ChangeChecker{
 		Signaler: signaler,
 		AcctRepo: acctRepo,
-		pTeller:  &signal.PushWerkerTeller{},
+		pTeller:  &newbuildjob.PushWerkerTeller{},
 		vcsType:  vcsType,
 	}
 }
 
 type ChangeChecker struct {
-	*signal.Signaler
+	*buildjob.Signaler
 	handler  models.VCSHandler
 	token    string
 	AcctRepo string

@@ -3,7 +3,8 @@ package webhook
 import (
 	"github.com/pkg/errors"
 
-	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/download"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -15,8 +16,8 @@ import (
 type PullReqWerkerTeller struct{}
 
 // TellWerker will use the pullRequest COMMITS url to retrieve all commits associated with
-func (pr *PullReqWerkerTeller) TellWerker(pullreq *pb.PullRequest, prData *pb.PrWerkerData, signaler *signal.Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
-	buildConf, err := signal.GetConfig(pullreq.Source.Repo.AcctRepo, pullreq.Source.Hash, signaler.Deserializer, handler)
+func (pr *PullReqWerkerTeller) TellWerker(pullreq *pb.PullRequest, prData *pb.PrWerkerData, signaler *buildjob.Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
+	buildConf, err := download.GetConfig(pullreq.Source.Repo.AcctRepo, pullreq.Source.Hash, signaler.Deserializer, handler)
 	if err != nil {
 		if err == ocenet.FileNotFound {
 			ocelog.IncludeErrField(err).Error("no ocelot.yml")
@@ -26,7 +27,7 @@ func (pr *PullReqWerkerTeller) TellWerker(pullreq *pb.PullRequest, prData *pb.Pr
 		return errors.Wrap(err, "unable to get build configuration")
 
 	}
-	task := signal.BuildInitialWerkerTask(buildConf, pullreq.Source.Hash, token, pullreq.Source.Branch, pullreq.Source.Repo.AcctRepo, pb.SignaledBy_PULL_REQUEST, prData, handler.GetVcsType())
+	task := buildjob.BuildInitialWerkerTask(buildConf, pullreq.Source.Hash, token, pullreq.Source.Branch, pullreq.Source.Repo.AcctRepo, pb.SignaledBy_PULL_REQUEST, prData, handler.GetVcsType())
 
 	// todo: right now, we do not want to build out the changed files and commit messages, because those should just be done on push events
 	// maybe we should re-evaluate down the road? idk, just seems like duping that work if its done on push & pr...

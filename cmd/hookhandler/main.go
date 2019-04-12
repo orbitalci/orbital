@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/build/eventhandler/push/webhook"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
-	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/client/newbuildjob"
 	"github.com/level11consulting/ocelot/models/pb"
 	hh "github.com/level11consulting/ocelot/router/hookhandler"
 	"github.com/level11consulting/ocelot/server/config"
@@ -66,8 +67,8 @@ func main() {
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("couldn't get storage!")
 	}
-	signaler := &signal.Signaler{RC: remoteConfig, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: buildconfigvalidator.GetOcelotValidator(), Store: store}
-	hookHandlerContext := hh.GetContext(signaler, &signal.PushWerkerTeller{}, &webhook.PullReqWerkerTeller{})
+	signaler := &buildjob.Signaler{RC: remoteConfig, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: buildconfigvalidator.GetOcelotValidator(), Store: store}
+	hookHandlerContext := hh.GetContext(signaler, &newbuildjob.PushWerkerTeller{}, &webhook.PullReqWerkerTeller{})
 	defer store.Close()
 
 	startServer(hookHandlerContext, port)

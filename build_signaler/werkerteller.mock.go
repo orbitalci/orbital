@@ -5,10 +5,12 @@
 package build_signaler
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
 	models "github.com/level11consulting/ocelot/models"
 	pb "github.com/level11consulting/ocelot/models/pb"
-	reflect "reflect"
 )
 
 // MockCommitPushWerkerTeller is a mock of CommitPushWerkerTeller interface
@@ -35,7 +37,7 @@ func (m *MockCommitPushWerkerTeller) EXPECT() *MockCommitPushWerkerTellerMockRec
 }
 
 // TellWerker mocks base method
-func (m *MockCommitPushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
+func (m *MockCommitPushWerkerTeller) TellWerker(push *pb.Push, conf *buildjob.Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
 	ret := m.ctrl.Call(m, "TellWerker", push, conf, handler, token, force, sigBy)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -70,7 +72,7 @@ func (m *MockPRWerkerTeller) EXPECT() *MockPRWerkerTellerMockRecorder {
 }
 
 // TellWerker mocks base method
-func (m *MockPRWerkerTeller) TellWerker(push *pb.PullRequest, prData *pb.PrWerkerData, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
+func (m *MockPRWerkerTeller) TellWerker(push *pb.PullRequest, prData *pb.PrWerkerData, conf *buildjob.Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error {
 	ret := m.ctrl.Call(m, "TellWerker", push, prData, conf, handler, token, force, sigBy)
 	ret0, _ := ret[0].(error)
 	return ret0

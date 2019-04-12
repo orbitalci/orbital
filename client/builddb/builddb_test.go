@@ -1,11 +1,11 @@
-package build_signaler
+package builddb
 
 import (
 	"testing"
 
 	"github.com/go-test/deep"
-	"github.com/shankj3/go-til/deserialize"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/deserialize"
 )
 
 var expectedBuildConf = &pb.BuildConfig{

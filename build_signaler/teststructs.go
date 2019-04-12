@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/consul/api"
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -88,13 +89,13 @@ stages:
 
 `)
 
-func GetFakeSignaler(t *testing.T, inConsul bool) *Signaler {
+func GetFakeSignaler(t *testing.T, inConsul bool) *buildjob.Signaler {
 	cred := &config.RemoteConfig{Consul: &TestConsul{keyFound: inConsul}, Vault: &TestVault{}}
 	dese := deserialize.New()
 	valid := &buildconfigvalidator.OcelotValidator{}
 	store := &TestStorage{}
 	produ := &TestSingleProducer{Done: make(chan int, 1)}
-	return NewSignaler(cred, dese, produ, valid, store)
+	return buildjob.NewSignaler(cred, dese, produ, valid, store)
 }
 
 type TestSingleProducer struct {

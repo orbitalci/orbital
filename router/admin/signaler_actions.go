@@ -11,9 +11,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/download"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
-	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/client/newbuildjob"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -127,7 +129,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 	// get build config to do build validation, that this branch is appropriate,
 	SendStream(stream, "Retrieving ocelot.yml for %s...", buildReq.AcctRepo)
-	buildConf, err := signal.GetConfig(buildReq.AcctRepo, buildHash, g.Deserializer, handler)
+	buildConf, err := download.GetConfig(buildReq.AcctRepo, buildHash, g.Deserializer, handler)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get bb config")
 		if err.Error() == "could not find raw data at url" {
@@ -158,8 +160,8 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	//		commits, err = handler.GetCommitLog(buildReq.AcctRepo, branch, sums[0].Hash)
 	//	}
 	//}
-	task := signal.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil, handler.GetVcsType())
-	task.ChangesetData, err = signal.GenerateNoPreviousHeadChangeset(handler, buildReq.AcctRepo, buildBranch, buildHash)
+	task := buildjob.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil, handler.GetVcsType())
+	task.ChangesetData, err = newbuildjob.GenerateNoPreviousHeadChangeset(handler, buildReq.AcctRepo, buildBranch, buildHash)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to generate previous head changeset, changeset data will only include branch")
 		task.ChangesetData = &pb.ChangesetData{Branch: buildBranch}
@@ -190,8 +192,8 @@ func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, str
 	return handler, token, nil
 }
 
-func (g *guideOcelotServer) getSignaler() *signal.Signaler {
-	return signal.NewSignaler(g.RemoteConfig, g.Deserializer, g.Producer, g.OcyValidator, g.Storage)
+func (g *guideOcelotServer) getSignaler() *buildjob.Signaler {
+	return buildjob.NewSignaler(g.RemoteConfig, g.Deserializer, g.Producer, g.OcyValidator, g.Storage)
 }
 
 func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
