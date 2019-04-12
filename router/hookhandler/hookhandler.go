@@ -8,8 +8,8 @@ import (
 	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/build/eventhandler/push/webhook"
 	"github.com/level11consulting/ocelot/build/vcshandler"
-	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/client/newbuildjob"
+	"github.com/level11consulting/ocelot/client/werkerinterface"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -25,8 +25,8 @@ func GetContext(sig *buildjob.Signaler, teller *newbuildjob.PushWerkerTeller, pr
 //HookHandlerContext contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
 	*buildjob.Signaler
-	pTeller        signal.CommitPushWerkerTeller
-	prTeller       signal.PRWerkerTeller
+	pTeller        werkerinterface.CommitPushWerkerTeller
+	prTeller       werkerinterface.PRWerkerTeller
 	testingHandler models.VCSHandler
 }
 
