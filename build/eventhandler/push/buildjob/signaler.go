@@ -1,4 +1,4 @@
-package build_signaler
+package buildjob
 
 import (
 	"github.com/level11consulting/ocelot/models"
@@ -11,6 +11,7 @@ import (
 	"github.com/level11consulting/ocelot/build/helpers/messageservice"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
+	"github.com/level11consulting/ocelot/client/builddb"
 	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
@@ -72,32 +73,32 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 		return errors.Wrap(err, "unable to retrieve vcs creds")
 	}
 	// tell the database (and therefore all of ocelot) that this build is a-happening. or at least that it exists.
-	id, err := storeSummaryToDb(s.Store, task.CheckoutHash, repo, task.Branch, account, task.SignaledBy, vcsCred.GetId())
+	id, err := builddb.StoreSummaryToDb(s.Store, task.CheckoutHash, repo, task.Branch, account, task.SignaledBy, vcsCred.GetId())
 	if err != nil {
 		return err
 	}
-	sr := getSignalerStageResult(id)
+	sr := builddb.GetSignalerStageResult(id)
 
 	// after storing that this build was recived, check to make sure the build config is even worthy of our time
 	if err := s.OcyValidator.ValidateConfig(task.BuildConf, nil); err != nil {
-		PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
+		builddb.PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
 		err = s.Store.StoreFailedValidation(id)
 		if err != nil {
 			log.IncludeErrField(err).Error("unable to update summary!")
 		}
 	} else {
-		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
+		builddb.PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
 		vaultToken, _ := s.RC.GetVault().CreateThrowawayToken()
 		updateWerkerTask(task, id, vaultToken)
 		if err = s.Producer.WriteProto(task, messageservice.DetermineTopic(task.BuildConf.MachineTag)); err != nil {
 			log.IncludeErrField(err).WithField("buildId", task.Id).Error("error writing proto msg for build")
 		}
-		if err = storeQueued(s.Store, id); err != nil {
+		if err = builddb.StoreQueued(s.Store, id); err != nil {
 			log.IncludeErrField(err).WithField("buildId", task.Id).Error("error storing queued state")
 		}
 	}
 
-	if err := storeStageToDb(s.Store, sr); err != nil {
+	if err := builddb.StoreStageToDb(s.Store, sr); err != nil {
 		log.IncludeErrField(err).Error("unable to add hookhandler stage details")
 		return err
 	}
@@ -113,9 +114,9 @@ func (s *Signaler) validateAndQueue(task *pb.WerkerTask, sr *models.StageResult)
 		} else {
 			log.Log().Debug("told werker!")
 		}
-		PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
+		builddb.PopulateStageResult(sr, 0, "Passed initial validation "+models.CHECKMARK, "")
 	} else {
-		PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
+		builddb.PopulateStageResult(sr, 1, "Failed initial validation", err.Error())
 		return err
 	}
 	return nil

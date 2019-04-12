@@ -16,8 +16,8 @@ import (
 	"net/url"
 
 	"github.com/level11consulting/ocelot/build/eventhandler/pull/poll"
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -89,7 +89,7 @@ func main() {
 		ocelog.IncludeErrField(err).WithField("acctRepo", conf.AcctRepo).Fatal("couldn't get storage")
 	}
 	defer store.Close()
-	sig := &signal.Signaler{
+	sig := &buildjob.Signaler{
 		RC:           conf.RemoteConf,
 		Deserializer: conf.Deserializer,
 		Producer:     conf.Producer,

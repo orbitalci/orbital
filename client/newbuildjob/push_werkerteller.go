@@ -1,4 +1,4 @@
-package build_signaler
+package newbuildjob
 
 import (
 	"github.com/pkg/errors"
@@ -6,6 +6,8 @@ import (
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
+	"github.com/level11consulting/ocelot/build/helpers/buildscript/download"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -16,13 +18,13 @@ type PushWerkerTeller struct{}
 // TellWerker will get config off of the HeadCommit Hash, Build the werker task object based off of the push head commit data,
 // retrieve and generate changeset data from bitbucket to get the files changes / commit messages in the push, then it will add all of that
 // to nsq so a werker node can swoop by and pick it up
-func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) (err error) {
+func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *buildjob.Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) (err error) {
 	ocelog.Log().WithField("current HEAD hash", push.HeadCommit.Hash).WithField("acctRepo", push.Repo.AcctRepo).WithField("branch", push.Branch).Infof("new build from push of type %s coming in", sigBy.String())
 	if token == "" {
 		return errors.New("token cannot be empty")
 	}
 	var buildConf *pb.BuildConfig
-	buildConf, err = GetConfig(push.Repo.AcctRepo, push.HeadCommit.Hash, conf.Deserializer, handler)
+	buildConf, err = download.GetConfig(push.Repo.AcctRepo, push.HeadCommit.Hash, conf.Deserializer, handler)
 	if err != nil {
 		if err == ocenet.FileNotFound {
 			ocelog.IncludeErrField(err).Error("no ocelot.yml")
@@ -31,7 +33,7 @@ func (pwt *PushWerkerTeller) TellWerker(push *pb.Push, conf *Signaler, handler m
 		ocelog.IncludeErrField(err).Error("couldn't get ocelot.yml")
 		return errors.Wrap(err, "unable to get build configuration")
 	}
-	task := BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil, handler.GetVcsType())
+	task := buildjob.BuildInitialWerkerTask(buildConf, push.HeadCommit.Hash, token, push.Branch, push.Repo.AcctRepo, sigBy, nil, handler.GetVcsType())
 	if push.PreviousHeadCommit == nil {
 
 		task.ChangesetData, err = GenerateNoPreviousHeadChangeset(handler, push.Repo.AcctRepo, push.Branch, push.HeadCommit.Hash)

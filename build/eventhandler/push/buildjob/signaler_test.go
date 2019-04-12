@@ -1,16 +1,17 @@
-package build_signaler
+package buildjob
 
 import (
 	"strings"
 	"testing"
+
 	//"time"
 
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/shankj3/go-til/test"
 	"github.com/level11consulting/ocelot/build"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/shankj3/go-til/test"
 )
 
 var goodConfig = &pb.BuildConfig{

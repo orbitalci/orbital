@@ -1,4 +1,4 @@
-package build_signaler
+package newbuildjob
 
 import (
 	"strings"
@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/shankj3/go-til/test"
 	"github.com/level11consulting/ocelot/models/mock_models"
+	"github.com/shankj3/go-til/test"
 
 	//"github.com/shankj3/go-til/test"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -20,9 +20,9 @@ func TestPushWerkerTeller_TellWerker(t *testing.T) {
 	var commits []*pb.Commit
 	push := &pb.Push{
 		HeadCommit: &pb.Commit{Hash: "hash"},
-		Branch: "branch",
-		Commits: commits,
-		Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot"},
+		Branch:     "branch",
+		Commits:    commits,
+		Repo:       &pb.Repo{AcctRepo: "level11consulting/ocelot"},
 	}
 	handler.ChangedFiles = []string{"changedfile.conf"}
 	handler.ReturnCommit = &pb.Commit{Hash: "1234", Message: "this is my message"}
@@ -61,25 +61,24 @@ func TestPushWerkerTeller_TellWerker(t *testing.T) {
 	}
 }
 
-
 func TestPushWerkerTeller_TellWerker_PreviousHeadCommit(t *testing.T) {
 	ctl := gomock.NewController(t)
 	handler := mock_models.NewMockVCSHandler(ctl)
 	signaler := GetFakeSignaler(t, false)
 	cwt := &PushWerkerTeller{}
 	commits := []*pb.Commit{
-		{Hash: "123last", Message: "mymessage is greaat", Author: &pb.User{UserName:"jessi-shank", DisplayName: "jessi shank"}},
-		{Hash: "123secondLast", Message: "changing stuff its fine", Author: &pb.User{UserName:"jessi-shank", DisplayName: "jessi shank"}},
-		{Hash: "123thirdlat", Message: "changing up some config", Author: &pb.User{UserName:"jessi-shank", DisplayName: "jessi shank"}},
-		{Hash: "first", Message: "touching some new files!", Author: &pb.User{UserName:"jessi-shank", DisplayName: "jessi shank"}},
+		{Hash: "123last", Message: "mymessage is greaat", Author: &pb.User{UserName: "jessi-shank", DisplayName: "jessi shank"}},
+		{Hash: "123secondLast", Message: "changing stuff its fine", Author: &pb.User{UserName: "jessi-shank", DisplayName: "jessi shank"}},
+		{Hash: "123thirdlat", Message: "changing up some config", Author: &pb.User{UserName: "jessi-shank", DisplayName: "jessi shank"}},
+		{Hash: "first", Message: "touching some new files!", Author: &pb.User{UserName: "jessi-shank", DisplayName: "jessi shank"}},
 	}
 	push := &pb.Push{
-		Commits: commits,
-		Repo: &pb.Repo{AcctRepo: "level11consulting/ocelot"},
-		HeadCommit: commits[0],
-		PreviousHeadCommit: &pb.Commit{Hash: "old_last", Message: "finished that last pr!", Author: &pb.User{UserName:"jessi-shank", DisplayName: "jessi shank"}},
-		User: &pb.User{UserName:"jessi-shank", DisplayName: "jessi shank"},
-		Branch: "mybranchfornewstuffveryexcitingwoooooeeeeee",
+		Commits:            commits,
+		Repo:               &pb.Repo{AcctRepo: "level11consulting/ocelot"},
+		HeadCommit:         commits[0],
+		PreviousHeadCommit: &pb.Commit{Hash: "old_last", Message: "finished that last pr!", Author: &pb.User{UserName: "jessi-shank", DisplayName: "jessi shank"}},
+		User:               &pb.User{UserName: "jessi-shank", DisplayName: "jessi shank"},
+		Branch:             "mybranchfornewstuffveryexcitingwoooooeeeeee",
 	}
 	changedFiles := []string{"ocelot.yml", "build.conf", "src/main/java/javathing.java"}
 	handler.EXPECT().GetFile("ocelot.yml", "level11consulting/ocelot", "123last").Times(1).Return(Buildfile, nil)

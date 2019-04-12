@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/build/eventhandler/push/webhook"
 	"github.com/level11consulting/ocelot/build/vcshandler"
 	signal "github.com/level11consulting/ocelot/build_signaler"
+	"github.com/level11consulting/ocelot/client/newbuildjob"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -16,13 +18,13 @@ import (
 	ocenet "github.com/shankj3/go-til/net"
 )
 
-func GetContext(sig *signal.Signaler, teller *signal.PushWerkerTeller, prTeller *webhook.PullReqWerkerTeller) *HookHandlerContext {
+func GetContext(sig *buildjob.Signaler, teller *newbuildjob.PushWerkerTeller, prTeller *webhook.PullReqWerkerTeller) *HookHandlerContext {
 	return &HookHandlerContext{Signaler: sig, pTeller: teller, prTeller: prTeller}
 }
 
 //HookHandlerContext contains long lived resources. See bottom for getters/setters
 type HookHandlerContext struct {
-	*signal.Signaler
+	*buildjob.Signaler
 	pTeller        signal.CommitPushWerkerTeller
 	prTeller       signal.PRWerkerTeller
 	testingHandler models.VCSHandler
