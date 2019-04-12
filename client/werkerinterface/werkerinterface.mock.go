@@ -2,7 +2,7 @@
 // Source: werkerteller.go
 
 // Package build_signaler is a generated GoMock package.
-package build_signaler
+package werkerinterface
 
 import (
 	reflect "reflect"

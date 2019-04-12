@@ -1,4 +1,4 @@
-package build_signaler
+package werkerinterface
 
 import (
 	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
@@ -6,7 +6,7 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 )
 
-//go:generate mockgen -source werkerteller.go -destination werkerteller.mock.go -package build_signaler
+//go:generate mockgen -source werkerinterface.go -destination werkerteller.mock.go -package werkerinterface
 
 type CommitPushWerkerTeller interface {
 	TellWerker(push *pb.Push, conf *buildjob.Signaler, handler models.VCSHandler, token string, force bool, sigBy pb.SignaledBy) error

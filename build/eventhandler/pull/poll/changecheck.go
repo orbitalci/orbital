@@ -6,8 +6,8 @@ import (
 
 	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/build/vcshandler"
-	signal "github.com/level11consulting/ocelot/build_signaler"
 	"github.com/level11consulting/ocelot/client/newbuildjob"
+	"github.com/level11consulting/ocelot/client/werkerinterface"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -29,7 +29,7 @@ type ChangeChecker struct {
 	token    string
 	AcctRepo string
 	vcsType  pb.SubCredType
-	pTeller  signal.CommitPushWerkerTeller
+	pTeller  werkerinterface.CommitPushWerkerTeller
 }
 
 // SetAuth retrieves VCS credentials based on the account, then creates a VCS handler with it.
