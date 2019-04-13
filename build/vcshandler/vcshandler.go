@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/level11consulting/ocelot/build/vcshandler/bitbucket"
-	"github.com/level11consulting/ocelot/build/vcshandler/github"
+	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/bitbucket"
+	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/github"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"golang.org/x/oauth2"
