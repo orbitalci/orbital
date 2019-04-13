@@ -1,7 +1,7 @@
 package werkerinterface
 
 import (
-	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
+	"github.com/level11consulting/ocelot/build/buildeventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 )

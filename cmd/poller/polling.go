@@ -7,7 +7,7 @@ import (
 
 	"net/url"
 
-	"github.com/level11consulting/ocelot/build/eventhandler/pull/poll"
+	"github.com/level11consulting/ocelot/build/buildeventhandler/pull/poll"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/version"
