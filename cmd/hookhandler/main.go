@@ -12,7 +12,7 @@ import (
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/client/newbuildjob"
 	"github.com/level11consulting/ocelot/models/pb"
-	hh "github.com/level11consulting/ocelot/router/hookhandler"
+	"github.com/level11consulting/ocelot/build/commiteventhandler"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/version"
 	"github.com/namsral/flag"
@@ -68,13 +68,13 @@ func main() {
 		ocelog.IncludeErrField(err).Fatal("couldn't get storage!")
 	}
 	signaler := &buildjob.Signaler{RC: remoteConfig, Deserializer: deserialize.New(), Producer: nsqpb.GetInitProducer(), OcyValidator: buildconfigvalidator.GetOcelotValidator(), Store: store}
-	hookHandlerContext := hh.GetContext(signaler, &newbuildjob.PushWerkerTeller{}, &webhook.PullReqWerkerTeller{})
+	hookHandlerContext := commiteventhandler.GetContext(signaler, &newbuildjob.PushWerkerTeller{}, &webhook.PullReqWerkerTeller{})
 	defer store.Close()
 
 	startServer(hookHandlerContext, port)
 }
 
-func startServer(ctx *hh.HookHandlerContext, port string) {
+func startServer(ctx *commiteventhandler.HookHandlerContext, port string) {
 	muxi := mux.NewRouter()
 
 	// handleBBevent can take push/pull/ w/e
