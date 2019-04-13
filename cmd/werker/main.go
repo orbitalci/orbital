@@ -27,7 +27,7 @@ import (
 	"sync"
 
 	"github.com/level11consulting/ocelot/build/builder/shell"
-	werkerevent "github.com/level11consulting/ocelot/build/eventhandler/werker"
+	werkerevent "github.com/level11consulting/ocelot/build/buildeventhandler/werker"
 	"github.com/level11consulting/ocelot/build/helpers/messageservice"
 	"github.com/level11consulting/ocelot/build/helpers/stringbuilder/workingdir"
 	"github.com/level11consulting/ocelot/build/valet"

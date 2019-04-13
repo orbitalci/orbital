@@ -15,8 +15,8 @@ import (
 
 	"net/url"
 
-	"github.com/level11consulting/ocelot/build/eventhandler/pull/poll"
-	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
+	"github.com/level11consulting/ocelot/build/buildeventhandler/pull/poll"
+	"github.com/level11consulting/ocelot/build/buildeventhandler/push/buildjob"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models/pb"

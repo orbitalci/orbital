@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
+	"github.com/level11consulting/ocelot/build/buildeventhandler/push/buildjob"
 	models "github.com/level11consulting/ocelot/models"
 	pb "github.com/level11consulting/ocelot/models/pb"
 )

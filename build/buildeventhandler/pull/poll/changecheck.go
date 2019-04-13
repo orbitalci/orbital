@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/level11consulting/ocelot/build/eventhandler/push/buildjob"
+	"github.com/level11consulting/ocelot/build/buildeventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/build/vcshandler"
 	"github.com/level11consulting/ocelot/client/newbuildjob"
 	"github.com/level11consulting/ocelot/client/werkerinterface"
