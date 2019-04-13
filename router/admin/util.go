@@ -1,13 +1,13 @@
 package admin
 
 import (
-	"github.com/level11consulting/ocelot/build/vcshandler/github"
+	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/github"
 	ocenet "github.com/shankj3/go-til/net"
 
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 
-	bb "github.com/level11consulting/ocelot/build/vcshandler/bitbucket"
+	bb "github.com/level11consulting/ocelot/build/vcshandler/gitprovider/bitbucket"
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
