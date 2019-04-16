@@ -5,15 +5,28 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
+	metrics "github.com/level11consulting/ocelot/server/metrics/admin"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/log"
 )
+
+type StatusInterface interface {
+	CheckConn(context.Context, *empty.Empty) (*empty.Empty, error)
+	GetStatus(context.Context, *pb.StatusQuery) (*pb.Status, error)
+	Logs(*pb.BuildQuery, pb.GuideOcelot_LogsServer) error
+	LastFewSummaries(context.Context, *pb.RepoAccount) (*pb.Summaries, error)
+}
+
+// for checking if the server is reachable
+func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
 
 // FIXME: Not using the protobuf message will let us move error handling code somewhere else. Possibly even squash this into 3 cases?
 //StatusByHash will retrieve you the status (build summary + stages) of a partial git hash
@@ -105,4 +118,60 @@ BUILD_FOUND:
 	}
 	result.IsInConsul = inConsul
 	return
+}
+
+// Logs will stream logs from storage. If the build is not complete, an InvalidArgument gRPC error will be returned
+//   If the BuildQuery's BuildId is > 0, then logs will be retrieved from storage via the buildId. If this is not the case,
+//   then the latest log entry from the hash will be retrieved and streamed.
+func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
+	start := metrics.StartRequest()
+	defer metrics.FinishRequest(start)
+	if bq.Hash == "" && bq.BuildId == 0 {
+		return status.Error(codes.InvalidArgument, "must request with either a hash or a buildId")
+	}
+	var out models.BuildOutput
+	var err error
+	if bq.BuildId != 0 {
+		out, err = g.Storage.RetrieveOut(bq.BuildId)
+		if err != nil {
+			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrive from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
+		}
+		return scanLog(out, stream, g.Storage.StorageType(), bq.Strip)
+	}
+
+	if !runtime.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
+
+		errmsg := "build is not finished, use BuildRuntime method and stream from the werker registered"
+		SendStream(stream, errmsg)
+		return status.Error(codes.InvalidArgument, errmsg)
+	} else {
+		out, err = g.Storage.RetrieveLastOutByHash(bq.Hash)
+		if err != nil {
+			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
+		}
+		return scanLog(out, stream, g.Storage.StorageType(), bq.Strip)
+	}
+}
+
+
+func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *pb.RepoAccount) (*pb.Summaries, error) {
+	if repoAct.Repo == "" || repoAct.Account == "" || repoAct.Limit == 0 {
+		return nil, status.Error(codes.InvalidArgument, "repo, account, and limit are required fields")
+	}
+	var summaries = &pb.Summaries{}
+	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
+	if err != nil {
+		log.IncludeErrField(err).Error()
+		return nil, handleStorageError(err)
+	}
+	log.Log().Debug("successfully retrieved last few summaries")
+	if len(modelz) == 0 {
+		return nil, status.Error(codes.NotFound, "no entries found")
+	}
+	for _, model := range modelz {
+		summaries.Sums = append(summaries.Sums, model)
+	}
+	//fmt.Println(summaries)
+	return summaries, nil
+
 }
