@@ -1,13 +1,11 @@
 package admin
 
 import (
-	"context"
 
 	"github.com/level11consulting/ocelot/models"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/nsqpb"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
 	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -28,10 +26,7 @@ type guideOcelotServer struct {
 	hhBaseUrl      string
 }
 
-// for checking if the server is reachable
-func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
-}
+
 
 func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deserializer, adminV *validate.AdminValidator, repoV *validate.RepoValidator, storage storage.OcelotStorage, hhBaseUrl string) pb.GuideOcelotServer {
 	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
