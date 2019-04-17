@@ -35,6 +35,11 @@ type Signaler struct {
 	Store        storage.OcelotStorage
 }
 
+
+func (s *Signaler) GetSignaler() *Signaler {
+	return NewSignaler(s.RC, s.Deserializer, s.Producer, s.OcyValidator, s.Store)
+}
+
 // CheckViableThenQueueAndStore is a dumb name, but i can't think of a better one. it will first
 //- check if the build is "viable", ie if it is in the accepted branches list and none of the commits contain a skip Message. if it isn't, it won't queue and will return a NotViable error
 //- will then run QueueAndStore, which will:

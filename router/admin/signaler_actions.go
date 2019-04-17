@@ -6,7 +6,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/level11consulting/ocelot/build/buildeventhandler/push/buildjob"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/shankj3/go-til/log"
@@ -23,8 +22,4 @@ func (g *OcelotServerAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, strin
 		return nil, token, status.Errorf(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s", cfg.AcctName, err.Error())
 	}
 	return handler, token, nil
-}
-
-func (g *OcelotServerAPI) GetSignaler() *buildjob.Signaler {
-	return buildjob.NewSignaler(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Deserializer, g.DeprecatedHandler.Producer, g.DeprecatedHandler.OcyValidator, g.DeprecatedHandler.Storage)
 }
