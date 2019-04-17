@@ -14,6 +14,7 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
+	storage_error "github.com/level11consulting/ocelot/storage/error"
 	"github.com/shankj3/go-til/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -86,7 +87,7 @@ func (g *BuildAPI) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Bui
 		if err != nil {
 			return &pb.Builds{
 				Builds: buildRtInfo,
-			}, HandleStorageError(err)
+			}, storage_error.HandleStorageError(err)
 		}
 
 		for _, bild := range dbResults {
@@ -108,7 +109,7 @@ func (g *BuildAPI) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Bui
 		if err != nil {
 			return &pb.Builds{
 				Builds: buildRtInfo,
-			}, HandleStorageError(err)
+			}, storage_error.HandleStorageError(err)
 		}
 
 		buildRtInfo[buildSum.Hash] = &pb.BuildRuntimeInfo{
