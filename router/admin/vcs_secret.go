@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"errors"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -11,6 +12,9 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	ocenet "github.com/shankj3/go-til/net"
+	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/bitbucket"
+	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/github"
 )
 
 type VcsSecret interface {
@@ -21,6 +25,36 @@ type VcsSecret interface {
 	VCSCredExists(context.Context, *pb.VCSCreds) (*pb.Exists, error)
     SetVCSPrivateKey(context.Context, *pb.SSHKeyWrapper) (*empty.Empty, error)
 }
+
+/// Copy/pasted entirely from router/admin/util.go
+var Unsupported = errors.New("currently only bitbucket is supported")
+//when new configurations are added to the config channel, create bitbucket client and webhooks
+func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
+	gos := gosss.(*OcelotServerAPI)
+	//hehe right now we only have bitbucket
+	switch config.SubType {
+	case pb.SubCredType_BITBUCKET:
+		bitbucketClient := &ocenet.OAuthClient{}
+		bitbucketClient.Setup(config)
+
+		bbHandler := bitbucket.GetBitbucketHandler(config, bitbucketClient)
+		go bbHandler.Walk() //spawning walk in a different thread because we don't want client to wait if there's a lot of repos/files to check
+	case pb.SubCredType_GITHUB:
+		cli, _, err := github.GetGithubClient(config)
+		if err != nil {
+			return err
+		}
+		go cli.Walk()
+	default:
+		return Unsupported
+	}
+
+	config.Identifier = config.BuildIdentifier()
+	//right now, we will always overwrite
+	err := gos.DeprecatedHandler.RemoteConfig.AddCreds(gos.DeprecatedHandler.Storage, config, true)
+	return err
+}
+
 
 func (g *OcelotServerAPI) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*pb.CredWrapper, error) {
 	credWrapper := &pb.CredWrapper{}
@@ -62,7 +96,7 @@ func (g *OcelotServerAPI) SetVCSCreds(ctx context.Context, credentials *pb.VCSCr
 
 	err = SetupCredentials(g, credentials)
 	if err != nil {
-		if err == unsupported {
+		if err == Unsupported {
 			return nil, status.Error(codes.Unimplemented, "bitbucket is currently the only supported vcs type")
 		}
 		if er, ok := err.(*pb.ValidationErr); ok {
