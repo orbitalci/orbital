@@ -316,7 +316,7 @@ func (rc *RemoteConfig) GetOcelotStorage() (storage.OcelotStorage, error) {
 	switch typ {
 	case storage.Postgres:
 		store, _ := postgres.NewPostgresStorage(creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
-		//ocelog.Log().Debugf("user %s pw %s loc %s port %s db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
+		ocelog.Log().Debugf("user %s pw %s loc %s port %d db %s", creds.User, creds.Password, creds.Location, creds.Port, creds.DbName)
 
 		return store, store.Connect()
 	default:
