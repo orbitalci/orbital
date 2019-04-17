@@ -13,12 +13,26 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/ocelot/build/vcshandler"
 )
 
 type RepoInterface interface {
 	PollSchedule
 	WatchRepo(context.Context, *pb.RepoAccount) (*empty.Empty, error)
 	GetTrackedRepos(context.Context, *empty.Empty) (*pb.AcctRepos, error)
+}
+
+func (g *OcelotServerAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
+	if g.DeprecatedHandler.handler != nil {
+		return g.DeprecatedHandler.handler, "token", nil
+	}
+	handler, token, err := vcshandler.GetHandler(cfg)
+	if err != nil {
+		log.IncludeErrField(err).Error()
+		return nil, token, status.Errorf(codes.Internal, "Unable to retrieve the bitbucket client config for %s. \n Error: %s", cfg.AcctName, err.Error())
+	}
+	return handler, token, nil
 }
 
 func (g *OcelotServerAPI) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
