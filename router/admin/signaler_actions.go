@@ -3,7 +3,6 @@ package admin
 import (
 
 	"github.com/level11consulting/ocelot/build/vcshandler"
-	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -12,17 +11,6 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/shankj3/go-til/log"
 )
-
-var (
-	triggeredBuilds = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "admin_triggered_builds",
-		Help: "builds triggered by a call to admin",
-	}, []string{"account", "repository"})
-)
-
-func init() {
-	prometheus.MustRegister(triggeredBuilds)
-}
 
 // getHandler returns a grpc status.Error
 func (g *OcelotServerAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
