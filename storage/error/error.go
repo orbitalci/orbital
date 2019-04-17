@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/level11consulting/ocelot/models/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -52,4 +54,12 @@ func (e *ErrMultipleVCSTypes) Error() string {
 		stringTypes = append(stringTypes, sct.String())
 	}
 	return fmt.Sprintf("there are multiple vcs types to the account %s: %s", e.account, stringTypes)
+}
+
+// handleStorageError  will attempt to decipher if err is not found. if so, iwll set the appropriate grpc status code and return new grpc status error
+func HandleStorageError(err error) error {
+	if _, ok := err.(*ErrNotFound); ok {
+		return status.Error(codes.NotFound, err.Error())
+	}
+	return status.Error(codes.Internal, err.Error())
 }
