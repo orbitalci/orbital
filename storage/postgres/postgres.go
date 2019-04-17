@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -63,8 +64,10 @@ func (p *PostgresStorage) Connect() error {
 
 		// TODO, check if password is set
 		var password, _ = p.url.User.Password()
+		var parsed_path = strings.Replace(p.url.Path, "/", "", -1)
 
-		if p.db, err = sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", p.url.User.Username(), password, p.url.Host, p.url.Port())); err != nil {
+		//ocelog.Log().Debugf(fmt.Sprintf("DEBUG: user=%s dbname=%s password=%s host=%s port=%s sslmode=disable", p.url.User.Username(), parsed_path, password, p.url.Hostname(), p.url.Port()))
+		if p.db, err = sql.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%s sslmode=disable", p.url.User.Username(), parsed_path, password, p.url.Hostname(), p.url.Port())); err != nil {
 			// todo: not sure if we should _kill_ everything.
 			ocelog.IncludeErrField(err).Error("couldn't get postgres connection")
 			return
