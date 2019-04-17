@@ -26,6 +26,7 @@ import (
 	//"github.com/level11consulting/ocelot/util/secure_grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
+	"github.com/level11consulting/ocelot/build/streaminglogs"
 )
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
@@ -142,7 +143,7 @@ type Sendy interface {
 
 //SendStream will send a message formatted by strFmt string with variables fmtVars... will log error if it finds it
 func SendStream(sendy Sendy, strFmt string, fmtVars ...interface{}) {
-	if err := sendy.Send(RespWrap(fmt.Sprintf(strFmt, fmtVars...))); err != nil {
+	if err := sendy.Send(streaminglogs.RespWrap(fmt.Sprintf(strFmt, fmtVars...))); err != nil {
 		log.IncludeErrField(err).Error("error sending stream")
 	}
 }
