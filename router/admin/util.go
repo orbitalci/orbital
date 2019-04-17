@@ -1,48 +1,15 @@
 package admin
 
 import (
-	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/github"
-	ocenet "github.com/shankj3/go-til/net"
 
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 
-	bb "github.com/level11consulting/ocelot/build/vcshandler/gitprovider/bitbucket"
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"errors"
 )
-
-var unsupported = errors.New("currently only bitbucket is supported")
-
-//when new configurations are added to the config channel, create bitbucket client and webhooks
-func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
-	gos := gosss.(*OcelotServerAPI)
-	//hehe right now we only have bitbucket
-	switch config.SubType {
-	case pb.SubCredType_BITBUCKET:
-		bitbucketClient := &ocenet.OAuthClient{}
-		bitbucketClient.Setup(config)
-
-		bbHandler := bb.GetBitbucketHandler(config, bitbucketClient)
-		go bbHandler.Walk() //spawning walk in a different thread because we don't want client to wait if there's a lot of repos/files to check
-	case pb.SubCredType_GITHUB:
-		cli, _, err := github.GetGithubClient(config)
-		if err != nil {
-			return err
-		}
-		go cli.Walk()
-	default:
-		return unsupported
-	}
-
-	config.Identifier = config.BuildIdentifier()
-	//right now, we will always overwrite
-	err := gos.DeprecatedHandler.RemoteConfig.AddCreds(gos.DeprecatedHandler.Storage, config, true)
-	return err
-}
 
 func SetupRCCCredentials(remoteConf config.CVRemoteConfig, store storage.CredTable, config pb.OcyCredder) error {
 	//right now, we will always overwrite
