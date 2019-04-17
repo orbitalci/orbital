@@ -30,7 +30,7 @@ func appleNastiness(zipFile []byte, devProfilePassword string) (parsed []byte, e
 	return appleKeychain, nil
 }
 
-func (g *guideOcelotServer) SetAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
+func (g *OcelotServerAPI) SetAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
 	vempty := &empty.Empty{}
 	if creds.GetSubType().Parent() != pb.CredType_APPLE {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of apple type: "+strings.Join(pb.CredType_APPLE.SubtypesString(), " | "))
@@ -51,7 +51,7 @@ func (g *guideOcelotServer) SetAppleCreds(ctx context.Context, creds *pb.AppleCr
 	return vempty, nil
 }
 
-func (g *guideOcelotServer) GetAppleCreds(ctx context.Context, empty2 *empty.Empty) (*pb.AppleCredsWrapper, error) {
+func (g *OcelotServerAPI) GetAppleCreds(ctx context.Context, empty2 *empty.Empty) (*pb.AppleCredsWrapper, error) {
 	wrapper := &pb.AppleCredsWrapper{}
 	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_APPLE, true)
 	if err != nil {
@@ -69,8 +69,8 @@ func (g *guideOcelotServer) GetAppleCreds(ctx context.Context, empty2 *empty.Emp
 	return wrapper, nil
 }
 
-func (g *guideOcelotServer) GetAppleCred(ctx context.Context, creds *pb.AppleCreds) (*pb.AppleCreds, error) {
-	creddy, err := g.getAnyCred(creds)
+func (g *OcelotServerAPI) GetAppleCred(ctx context.Context, creds *pb.AppleCreds) (*pb.AppleCreds, error) {
+	creddy, err := g.GetAnyCred(creds)
 	if err != nil {
 		return nil, err
 	}
@@ -81,15 +81,15 @@ func (g *guideOcelotServer) GetAppleCred(ctx context.Context, creds *pb.AppleCre
 	return apple, nil
 }
 
-func (g *guideOcelotServer) UpdateAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
+func (g *OcelotServerAPI) UpdateAppleCreds(ctx context.Context, creds *pb.AppleCreds) (*empty.Empty, error) {
 	var err error
 	creds.AppleSecrets, err = appleNastiness(creds.AppleSecrets, creds.AppleSecretsPassword)
 	if err != nil {
 		return nil, err
 	}
-	return g.updateAnyCred(ctx, creds)
+	return g.UpdateAnyCred(ctx, creds)
 }
 
-func (g *guideOcelotServer) AppleCredExists(ctx context.Context, creds *pb.AppleCreds) (*pb.Exists, error) {
-	return g.checkAnyCredExists(ctx, creds)
+func (g *OcelotServerAPI) AppleCredExists(ctx context.Context, creds *pb.AppleCreds) (*pb.Exists, error) {
+	return g.CheckAnyCredExists(ctx, creds)
 }

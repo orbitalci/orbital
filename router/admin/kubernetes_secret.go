@@ -19,7 +19,7 @@ type KubernetesSecret interface {
 	DeleteK8SCreds(context.Context, *pb.K8SCreds) (*empty.Empty, error)
 }
 
-func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
+func (g *OcelotServerAPI) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_K8S {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of k8s type: "+strings.Join(pb.CredType_K8S.SubtypesString(), " | "))
 	}
@@ -36,7 +36,7 @@ func (g *guideOcelotServer) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds)
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*pb.K8SCredsWrapper, error) {
+func (g *OcelotServerAPI) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*pb.K8SCredsWrapper, error) {
 	credWrapper := &pb.K8SCredsWrapper{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_K8S, true)
 	if err != nil {
@@ -52,8 +52,8 @@ func (g *guideOcelotServer) GetK8SCreds(ctx context.Context, empti *empty.Empty)
 	return credWrapper, nil
 }
 
-func (g *guideOcelotServer) GetK8SCred(ctx context.Context, credentials *pb.K8SCreds) (*pb.K8SCreds, error) {
-	creddy, err := g.getAnyCred(credentials)
+func (g *OcelotServerAPI) GetK8SCred(ctx context.Context, credentials *pb.K8SCreds) (*pb.K8SCreds, error) {
+	creddy, err := g.GetAnyCred(credentials)
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +64,14 @@ func (g *guideOcelotServer) GetK8SCred(ctx context.Context, credentials *pb.K8SC
 	return repo, nil
 }
 
-func (g *guideOcelotServer) UpdateK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
-	return g.updateAnyCred(ctx, creds)
+func (g *OcelotServerAPI) UpdateK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
+	return g.UpdateAnyCred(ctx, creds)
 }
 
-func (g *guideOcelotServer) K8SCredExists(ctx context.Context, creds *pb.K8SCreds) (*pb.Exists, error) {
-	return g.checkAnyCredExists(ctx, creds)
+func (g *OcelotServerAPI) K8SCredExists(ctx context.Context, creds *pb.K8SCreds) (*pb.Exists, error) {
+	return g.CheckAnyCredExists(ctx, creds)
 }
 
-func (g *guideOcelotServer) DeleteK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
-	return g.deleteAnyCred(ctx, creds, pb.CredType_K8S)
+func (g *OcelotServerAPI) DeleteK8SCreds(ctx context.Context, creds *pb.K8SCreds) (*empty.Empty, error) {
+	return g.DeleteAnyCred(ctx, creds, pb.CredType_K8S)
 }

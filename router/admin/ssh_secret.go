@@ -20,15 +20,15 @@ type SshSecret interface {
 	DeleteSSHCreds(context.Context, *pb.SSHKeyWrapper) (*empty.Empty, error)
 }
 
-func (g *guideOcelotServer) UpdateSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
-	return g.updateAnyCred(ctx, creds)
+func (g *OcelotServerAPI) UpdateSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+	return g.UpdateAnyCred(ctx, creds)
 }
 
-func (g *guideOcelotServer) SSHCredExists(ctx context.Context, creds *pb.SSHKeyWrapper) (*pb.Exists, error) {
-	return g.checkAnyCredExists(ctx, creds)
+func (g *OcelotServerAPI) SSHCredExists(ctx context.Context, creds *pb.SSHKeyWrapper) (*pb.Exists, error) {
+	return g.CheckAnyCredExists(ctx, creds)
 }
 
-func (g *guideOcelotServer) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+func (g *OcelotServerAPI) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_SSH {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of ssh type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
@@ -44,7 +44,7 @@ func (g *guideOcelotServer) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWra
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHWrap, error) {
+func (g *OcelotServerAPI) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHWrap, error) {
 	credWrapper := &pb.SSHWrap{}
 	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_SSH, true)
 	if err != nil {
@@ -62,8 +62,8 @@ func (g *guideOcelotServer) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHW
 	return credWrapper, nil
 }
 
-func (g *guideOcelotServer) GetSSHCred(ctx context.Context, credentials *pb.SSHKeyWrapper) (*pb.SSHKeyWrapper, error) {
-	creddy, err := g.getAnyCred(credentials)
+func (g *OcelotServerAPI) GetSSHCred(ctx context.Context, credentials *pb.SSHKeyWrapper) (*pb.SSHKeyWrapper, error) {
+	creddy, err := g.GetAnyCred(credentials)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +74,6 @@ func (g *guideOcelotServer) GetSSHCred(ctx context.Context, credentials *pb.SSHK
 	return ssh, nil
 }
 
-func (g *guideOcelotServer) DeleteSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
-	return g.deleteAnyCred(ctx, creds, pb.CredType_SSH)
+func (g *OcelotServerAPI) DeleteSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+	return g.DeleteAnyCred(ctx, creds, pb.CredType_SSH)
 }

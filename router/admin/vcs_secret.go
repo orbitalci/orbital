@@ -22,7 +22,7 @@ type VcsSecret interface {
     SetVCSPrivateKey(context.Context, *pb.SSHKeyWrapper) (*empty.Empty, error)
 }
 
-func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*pb.CredWrapper, error) {
+func (g *OcelotServerAPI) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*pb.CredWrapper, error) {
 	credWrapper := &pb.CredWrapper{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_VCS, true)
 
@@ -50,7 +50,7 @@ func (g *guideOcelotServer) GetVCSCreds(ctx context.Context, msg *empty.Empty) (
 	return credWrapper, nil
 }
 
-func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
+func (g *OcelotServerAPI) SetVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
 	if credentials.SubType.Parent() != pb.CredType_VCS {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of vcs type: "+strings.Join(pb.CredType_VCS.SubtypesString(), " | "))
 	}
@@ -74,8 +74,8 @@ func (g *guideOcelotServer) SetVCSCreds(ctx context.Context, credentials *pb.VCS
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) GetVCSCred(ctx context.Context, credentials *pb.VCSCreds) (*pb.VCSCreds, error) {
-	creddy, err := g.getAnyCred(credentials)
+func (g *OcelotServerAPI) GetVCSCred(ctx context.Context, credentials *pb.VCSCreds) (*pb.VCSCreds, error) {
+	creddy, err := g.GetAnyCred(credentials)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (g *guideOcelotServer) GetVCSCred(ctx context.Context, credentials *pb.VCSC
 	return vcs, nil
 }
 
-func (g *guideOcelotServer) getAnyCred(credder pb.OcyCredder) (pb.OcyCredder, error) {
+func (g *OcelotServerAPI) GetAnyCred(credder pb.OcyCredder) (pb.OcyCredder, error) {
 	if credder.GetSubType() == 0 || credder.GetAcctName() == "" || credder.GetIdentifier() == "" {
 		return nil, status.Error(codes.InvalidArgument, "subType, acctName, and identifier are required fields")
 	}
@@ -103,17 +103,17 @@ func (g *guideOcelotServer) getAnyCred(credder pb.OcyCredder) (pb.OcyCredder, er
 	return creddy, nil
 }
 
-func (g *guideOcelotServer) UpdateVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
+func (g *OcelotServerAPI) UpdateVCSCreds(ctx context.Context, credentials *pb.VCSCreds) (*empty.Empty, error) {
 	credentials.Identifier = credentials.BuildIdentifier()
-	return g.updateAnyCred(ctx, credentials)
+	return g.UpdateAnyCred(ctx, credentials)
 }
 
-func (g *guideOcelotServer) VCSCredExists(ctx context.Context, credentials *pb.VCSCreds) (*pb.Exists, error) {
+func (g *OcelotServerAPI) VCSCredExists(ctx context.Context, credentials *pb.VCSCreds) (*pb.Exists, error) {
 	credentials.Identifier = credentials.BuildIdentifier()
-	return g.checkAnyCredExists(ctx, credentials)
+	return g.CheckAnyCredExists(ctx, credentials)
 }
  
-func (g *guideOcelotServer) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *pb.SSHKeyWrapper) (*empty.Empty, error) {
+func (g *OcelotServerAPI) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *pb.SSHKeyWrapper) (*empty.Empty, error) {
 	identifier, err := pb.CreateVCSIdentifier(sshKeyWrapper.SubType, sshKeyWrapper.AcctName)
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.InvalidArgument, err.Error())

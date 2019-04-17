@@ -27,7 +27,7 @@ type BuildInterface interface {
 	FindWerker(context.Context, *pb.BuildReq) (*pb.BuildRuntimeInfo, error)
 }
 
-func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Builds, error) {
+func (g *OcelotServerAPI) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (*pb.Builds, error) {
 	start := metrics.StartRequest()
 	defer metrics.FinishRequest(start)
 	if bq.Hash == "" && bq.BuildId == 0 {
@@ -94,7 +94,7 @@ func (g *guideOcelotServer) BuildRuntime(ctx context.Context, bq *pb.BuildQuery)
 	return builds, err
 }
 
-func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot_BuildRepoAndHashServer) error {
+func (g *OcelotServerAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot_BuildRepoAndHashServer) error {
 	acct, repo, err := stringbuilder.GetAcctRepo(buildReq.AcctRepo)
 	if err != nil {
 		return status.Error(codes.InvalidArgument, "Bad format of acctRepo, must be account/repo")
@@ -121,7 +121,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	}
 	SendStream(stream, "Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)
 	SendStream(stream, "Validating VCS Credentials...")
-	handler, token, grpcErr := g.getHandler(cfg)
+	handler, token, grpcErr := g.GetHandler(cfg)
 	if grpcErr != nil {
 		return grpcErr
 	}
@@ -209,7 +209,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 		task.ChangesetData = &pb.ChangesetData{Branch: buildBranch}
 		SendStream(stream, "Unable to retrieve files changed for this commit, triggers for stages will only be off of branch and not commit message or files changed.")
 	}
-	if err = g.getSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
+	if err = g.GetSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
 		if _, ok := err.(*buildconfigvalidator.NotViable); ok {
 			log.Log().Info("not queuing because i'm not supposed to, explanation: " + err.Error())
 			return status.Error(codes.InvalidArgument, "This failed build queue validation and therefore will not be built. Use Force if you want to override. Error is: "+err.Error())
@@ -221,7 +221,7 @@ func (g *guideOcelotServer) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Gu
 	return nil
 }
 
-func (g *guideOcelotServer) FindWerker(ctx context.Context, br *pb.BuildReq) (*pb.BuildRuntimeInfo, error) {
+func (g *OcelotServerAPI) FindWerker(ctx context.Context, br *pb.BuildReq) (*pb.BuildRuntimeInfo, error) {
 	start := metrics.StartRequest()
 	defer metrics.FinishRequest(start)
 	if len(br.Hash) > 0 {

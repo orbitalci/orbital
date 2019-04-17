@@ -24,7 +24,7 @@ type StatusInterface interface {
 }
 
 // for checking if the server is reachable
-func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*empty.Empty, error) {
+func (g *OcelotServerAPI) CheckConn(ctx context.Context, msg *empty.Empty) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }
 
@@ -40,7 +40,7 @@ func (g *guideOcelotServer) CheckConn(ctx context.Context, msg *empty.Empty) (*e
 // We then parse the output.
 // We do some other mysterious check for if a build is in consul, and set some flag on `result`
 // Then we do an implicit bare return. Which is a thing in go, which could be easier to read if this weren't such a long function.
-func (g *guideOcelotServer) GetStatus(ctx context.Context, query *pb.StatusQuery) (result *pb.Status, err error) {
+func (g *OcelotServerAPI) GetStatus(ctx context.Context, query *pb.StatusQuery) (result *pb.Status, err error) {
 	var buildSum *pb.BuildSummary
 	switch {
 	case query.BuildId != 0:
@@ -123,7 +123,7 @@ BUILD_FOUND:
 // Logs will stream logs from storage. If the build is not complete, an InvalidArgument gRPC error will be returned
 //   If the BuildQuery's BuildId is > 0, then logs will be retrieved from storage via the buildId. If this is not the case,
 //   then the latest log entry from the hash will be retrieved and streamed.
-func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
+func (g *OcelotServerAPI) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServer) error {
 	start := metrics.StartRequest()
 	defer metrics.FinishRequest(start)
 	if bq.Hash == "" && bq.BuildId == 0 {
@@ -136,7 +136,7 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 		if err != nil {
 			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrive from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		return scanLog(out, stream, g.Storage.StorageType(), bq.Strip)
+		return ScanLog(out, stream, g.Storage.StorageType(), bq.Strip)
 	}
 
 	if !runtime.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
@@ -149,12 +149,12 @@ func (g *guideOcelotServer) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsSe
 		if err != nil {
 			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		return scanLog(out, stream, g.Storage.StorageType(), bq.Strip)
+		return ScanLog(out, stream, g.Storage.StorageType(), bq.Strip)
 	}
 }
 
 
-func (g *guideOcelotServer) LastFewSummaries(ctx context.Context, repoAct *pb.RepoAccount) (*pb.Summaries, error) {
+func (g *OcelotServerAPI) LastFewSummaries(ctx context.Context, repoAct *pb.RepoAccount) (*pb.Summaries, error) {
 	if repoAct.Repo == "" || repoAct.Account == "" || repoAct.Limit == 0 {
 		return nil, status.Error(codes.InvalidArgument, "repo, account, and limit are required fields")
 	}
