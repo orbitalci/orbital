@@ -46,21 +46,21 @@ func (g *OcelotServerAPI) GetStatus(ctx context.Context, query *pb.StatusQuery) 
 	case query.BuildId != 0:
 		buildSum, err = g.DeprecatedHandler.Storage.RetrieveSumByBuildId(query.BuildId)
 		if err != nil {
-			return nil, handleStorageError(err)
+			return nil, HandleStorageError(err)
 		}
 		goto BUILD_FOUND
 	case len(query.Hash) > 0:
 		partialHash := query.Hash
 		buildSum, err = g.DeprecatedHandler.Storage.RetrieveLatestSum(partialHash)
 		if err != nil {
-			return nil, handleStorageError(err)
+			return nil, HandleStorageError(err)
 		}
 		goto BUILD_FOUND
 
 	case len(query.AcctName) > 0 && len(query.RepoName) > 0:
 		buildSums, err := g.DeprecatedHandler.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
 		if err != nil {
-			return nil, handleStorageError(err)
+			return nil, HandleStorageError(err)
 		}
 		if len(buildSums) == 1 {
 			buildSum = buildSums[0]
@@ -78,13 +78,13 @@ func (g *OcelotServerAPI) GetStatus(ctx context.Context, query *pb.StatusQuery) 
 	case len(query.PartialRepo) > 0:
 		buildSums, err := g.DeprecatedHandler.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
 		if err != nil {
-			return nil, handleStorageError(err)
+			return nil, HandleStorageError(err)
 		}
 
 		if len(buildSums) == 1 {
 			buildSumz, err := g.DeprecatedHandler.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
 			if err != nil {
-				return nil, handleStorageError(err)
+				return nil, HandleStorageError(err)
 			}
 			buildSum = buildSumz[0]
 			goto BUILD_FOUND
@@ -108,7 +108,7 @@ func (g *OcelotServerAPI) GetStatus(ctx context.Context, query *pb.StatusQuery) 
 BUILD_FOUND:
 	stageResults, err := g.DeprecatedHandler.Storage.RetrieveStageDetail(buildSum.BuildId)
 	if err != nil {
-		return nil, handleStorageError(err)
+		return nil, HandleStorageError(err)
 	}
 	result = models.ParseStagesByBuildId(buildSum, stageResults)
 	// idk if htis is necessary anymore
@@ -162,7 +162,7 @@ func (g *OcelotServerAPI) LastFewSummaries(ctx context.Context, repoAct *pb.Repo
 	modelz, err := g.DeprecatedHandler.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
 		log.IncludeErrField(err).Error()
-		return nil, handleStorageError(err)
+		return nil, HandleStorageError(err)
 	}
 	log.Log().Debug("successfully retrieved last few summaries")
 	if len(modelz) == 0 {
