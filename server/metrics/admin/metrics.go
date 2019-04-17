@@ -27,3 +27,14 @@ func FinishRequest(startTime time.Time) {
 	requestProcessTime.Observe(time.Since(startTime).Seconds())
 	activeRequests.Dec()
 }
+
+var (
+	TriggeredBuilds = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "admin_triggered_builds",
+		Help: "builds triggered by a call to admin",
+	}, []string{"account", "repository"})
+)
+
+func init() {
+	prometheus.MustRegister(TriggeredBuilds)
+}

@@ -130,7 +130,7 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 	if err != nil {
 		return status.Error(codes.InvalidArgument, "Bad format of acctRepo, must be account/repo")
 	}
-	triggeredBuilds.WithLabelValues(acct, repo).Inc()
+	metrics.TriggeredBuilds.WithLabelValues(acct, repo).Inc()
 
 	if buildReq == nil || len(buildReq.AcctRepo) == 0 {
 		return status.Error(codes.InvalidArgument, "please pass a valid account/repo_name and hash")
