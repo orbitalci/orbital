@@ -24,7 +24,7 @@ type VcsSecret interface {
 
 func (g *OcelotServerAPI) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*pb.CredWrapper, error) {
 	credWrapper := &pb.CredWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_VCS, true)
+	creds, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_VCS, true)
 
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
@@ -36,7 +36,7 @@ func (g *OcelotServerAPI) GetVCSCreds(ctx context.Context, msg *empty.Empty) (*p
 	for _, v := range creds {
 		vcsCred := v.(*pb.VCSCreds)
 		sshKeyPath := vaultkv.BuildCredPath(vcsCred.SubType, vcsCred.AcctName, vcsCred.SubType.Parent(), v.GetIdentifier())
-		err := g.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
+		err := g.DeprecatedHandler.RemoteConfig.CheckSSHKeyExists(sshKeyPath)
 		if err != nil {
 			vcsCred.SshFileLoc = "No SSH Key"
 		} else {
@@ -55,7 +55,7 @@ func (g *OcelotServerAPI) SetVCSCreds(ctx context.Context, credentials *pb.VCSCr
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of vcs type: "+strings.Join(pb.CredType_VCS.SubtypesString(), " | "))
 	}
 
-	err := g.AdminValidator.ValidateConfig(credentials)
+	err := g.DeprecatedHandler.AdminValidator.ValidateConfig(credentials)
 	if _, ok := err.(*pb.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.InvalidArgument, "VCS Creds failed validation. Errors are: "+err.Error())
 	}
@@ -90,7 +90,7 @@ func (g *OcelotServerAPI) GetAnyCred(credder pb.OcyCredder) (pb.OcyCredder, erro
 	if credder.GetSubType() == 0 || credder.GetAcctName() == "" || credder.GetIdentifier() == "" {
 		return nil, status.Error(codes.InvalidArgument, "subType, acctName, and identifier are required fields")
 	}
-	creddy, err := g.RemoteConfig.GetCred(g.Storage, credder.GetSubType(), credder.GetIdentifier(), credder.GetAcctName(), true)
+	creddy, err := g.DeprecatedHandler.RemoteConfig.GetCred(g.DeprecatedHandler.Storage, credder.GetSubType(), credder.GetIdentifier(), credder.GetAcctName(), true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, fmt.Sprintf("Credential %s/%s of Type %s Not Found", credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType()))
@@ -119,7 +119,7 @@ func (g *OcelotServerAPI) SetVCSPrivateKey(ctx context.Context, sshKeyWrapper *p
 		return &empty.Empty{}, status.Error(codes.InvalidArgument, err.Error())
 	}
 	sshKeyPath := vaultkv.BuildCredPath(sshKeyWrapper.SubType, sshKeyWrapper.AcctName, sshKeyWrapper.SubType.Parent(), identifier)
-	err = g.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
+	err = g.DeprecatedHandler.RemoteConfig.AddSSHKey(sshKeyPath, sshKeyWrapper.PrivateKey)
 	if err != nil {
 		return &empty.Empty{}, status.Error(codes.Internal, err.Error())
 	}

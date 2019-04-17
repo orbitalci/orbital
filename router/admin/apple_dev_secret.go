@@ -41,7 +41,7 @@ func (g *OcelotServerAPI) SetAppleCreds(ctx context.Context, creds *pb.AppleCred
 		return nil, err
 	}
 
-	if err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds); err != nil {
+	if err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds); err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return vempty, status.Error(codes.InvalidArgument, "Apple creds upload failed validation, errors are: "+err.Error())
 		}
@@ -53,7 +53,7 @@ func (g *OcelotServerAPI) SetAppleCreds(ctx context.Context, creds *pb.AppleCred
 
 func (g *OcelotServerAPI) GetAppleCreds(ctx context.Context, empty2 *empty.Empty) (*pb.AppleCredsWrapper, error) {
 	wrapper := &pb.AppleCredsWrapper{}
-	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_APPLE, true)
+	credz, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_APPLE, true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, err.Error())

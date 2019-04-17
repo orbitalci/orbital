@@ -12,7 +12,7 @@ import (
 )
 
 func (g *OcelotServerAPI) CheckAnyCredExists(ctx context.Context, creds pb.OcyCredder) (*pb.Exists, error) {
-	exists, err := g.Storage.CredExists(creds)
+	exists, err := g.DeprecatedHandler.Storage.CredExists(creds)
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "Unable to reach cred table to check if cred %s/%s/%s exists. Error: %s", creds.GetAcctName(), creds.GetSubType().String(), creds.GetIdentifier(), err.Error())
 	}
@@ -20,7 +20,7 @@ func (g *OcelotServerAPI) CheckAnyCredExists(ctx context.Context, creds pb.OcyCr
 }
 
 func (g *OcelotServerAPI) UpdateAnyCred(ctx context.Context, creds pb.OcyCredder) (*empty.Empty, error) {
-	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
+	if err := g.DeprecatedHandler.RemoteConfig.UpdateCreds(g.DeprecatedHandler.Storage, creds); err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Errorf(codes.InvalidArgument, "%s cred failed validation. Errors are: %s", creds.GetSubType().Parent(), err.Error())
 		}
@@ -48,11 +48,11 @@ func (g *OcelotServerAPI) DeleteAnyCred(ctx context.Context, creds pb.OcyCredder
 		return empti, status.Error(codes.InvalidArgument, errmsg)
 	}
 
-	if exists, _ := g.Storage.CredExists(creds); !exists {
+	if exists, _ := g.DeprecatedHandler.Storage.CredExists(creds); !exists {
 		return empti, status.Error(codes.NotFound, "not found")
 	}
 
-	if err := g.RemoteConfig.DeleteCred(g.Storage, creds); err != nil {
+	if err := g.DeprecatedHandler.RemoteConfig.DeleteCred(g.DeprecatedHandler.Storage, creds); err != nil {
 		return empti, status.Error(codes.Internal, err.Error())
 	}
 	return empti, nil

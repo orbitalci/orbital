@@ -26,8 +26,8 @@ func init() {
 
 // getHandler returns a grpc status.Error
 func (g *OcelotServerAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
-	if g.handler != nil {
-		return g.handler, "token", nil
+	if g.DeprecatedHandler.handler != nil {
+		return g.DeprecatedHandler.handler, "token", nil
 	}
 	handler, token, err := vcshandler.GetHandler(cfg)
 	if err != nil {
@@ -38,5 +38,5 @@ func (g *OcelotServerAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, strin
 }
 
 func (g *OcelotServerAPI) GetSignaler() *buildjob.Signaler {
-	return buildjob.NewSignaler(g.RemoteConfig, g.Deserializer, g.Producer, g.OcyValidator, g.Storage)
+	return buildjob.NewSignaler(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Deserializer, g.DeprecatedHandler.Producer, g.DeprecatedHandler.OcyValidator, g.DeprecatedHandler.Storage)
 }

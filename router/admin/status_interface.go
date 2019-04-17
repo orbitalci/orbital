@@ -44,21 +44,21 @@ func (g *OcelotServerAPI) GetStatus(ctx context.Context, query *pb.StatusQuery) 
 	var buildSum *pb.BuildSummary
 	switch {
 	case query.BuildId != 0:
-		buildSum, err = g.Storage.RetrieveSumByBuildId(query.BuildId)
+		buildSum, err = g.DeprecatedHandler.Storage.RetrieveSumByBuildId(query.BuildId)
 		if err != nil {
 			return nil, handleStorageError(err)
 		}
 		goto BUILD_FOUND
 	case len(query.Hash) > 0:
 		partialHash := query.Hash
-		buildSum, err = g.Storage.RetrieveLatestSum(partialHash)
+		buildSum, err = g.DeprecatedHandler.Storage.RetrieveLatestSum(partialHash)
 		if err != nil {
 			return nil, handleStorageError(err)
 		}
 		goto BUILD_FOUND
 
 	case len(query.AcctName) > 0 && len(query.RepoName) > 0:
-		buildSums, err := g.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
+		buildSums, err := g.DeprecatedHandler.Storage.RetrieveLastFewSums(query.RepoName, query.AcctName, 1)
 		if err != nil {
 			return nil, handleStorageError(err)
 		}
@@ -76,13 +76,13 @@ func (g *OcelotServerAPI) GetStatus(ctx context.Context, query *pb.StatusQuery) 
 			return nil, status.Error(codes.InvalidArgument, uhOh.Error())
 		}
 	case len(query.PartialRepo) > 0:
-		buildSums, err := g.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
+		buildSums, err := g.DeprecatedHandler.Storage.RetrieveAcctRepo(strings.TrimSpace(query.PartialRepo))
 		if err != nil {
 			return nil, handleStorageError(err)
 		}
 
 		if len(buildSums) == 1 {
-			buildSumz, err := g.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
+			buildSumz, err := g.DeprecatedHandler.Storage.RetrieveLastFewSums(buildSums[0].Repo, buildSums[0].Account, 1)
 			if err != nil {
 				return nil, handleStorageError(err)
 			}
@@ -106,13 +106,13 @@ func (g *OcelotServerAPI) GetStatus(ctx context.Context, query *pb.StatusQuery) 
 		return nil, status.Error(codes.InvalidArgument, "either hash is required, acctName and repoName is required, or partialRepo is required")
 	}
 BUILD_FOUND:
-	stageResults, err := g.Storage.RetrieveStageDetail(buildSum.BuildId)
+	stageResults, err := g.DeprecatedHandler.Storage.RetrieveStageDetail(buildSum.BuildId)
 	if err != nil {
 		return nil, handleStorageError(err)
 	}
 	result = models.ParseStagesByBuildId(buildSum, stageResults)
 	// idk if htis is necessary anymore
-	inConsul, err := runtime.CheckBuildInConsul(g.RemoteConfig.GetConsul(), buildSum.Hash)
+	inConsul, err := runtime.CheckBuildInConsul(g.DeprecatedHandler.RemoteConfig.GetConsul(), buildSum.Hash)
 	if err != nil {
 		return nil, status.Error(codes.Unavailable, "An error occurred checking build status in consul. Cannot retrieve status at this time.\n\n"+err.Error())
 	}
@@ -132,24 +132,24 @@ func (g *OcelotServerAPI) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsServ
 	var out models.BuildOutput
 	var err error
 	if bq.BuildId != 0 {
-		out, err = g.Storage.RetrieveOut(bq.BuildId)
+		out, err = g.DeprecatedHandler.Storage.RetrieveOut(bq.BuildId)
 		if err != nil {
-			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrive from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
+			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrive from %s. \nError: %s", g.DeprecatedHandler.Storage.StorageType(), err.Error()))
 		}
-		return ScanLog(out, stream, g.Storage.StorageType(), bq.Strip)
+		return ScanLog(out, stream, g.DeprecatedHandler.Storage.StorageType(), bq.Strip)
 	}
 
-	if !runtime.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
+	if !runtime.CheckIfBuildDone(g.DeprecatedHandler.RemoteConfig.GetConsul(), g.DeprecatedHandler.Storage, bq.Hash) {
 
 		errmsg := "build is not finished, use BuildRuntime method and stream from the werker registered"
 		SendStream(stream, errmsg)
 		return status.Error(codes.InvalidArgument, errmsg)
 	} else {
-		out, err = g.Storage.RetrieveLastOutByHash(bq.Hash)
+		out, err = g.DeprecatedHandler.Storage.RetrieveLastOutByHash(bq.Hash)
 		if err != nil {
-			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
+			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.DeprecatedHandler.Storage.StorageType(), err.Error()))
 		}
-		return ScanLog(out, stream, g.Storage.StorageType(), bq.Strip)
+		return ScanLog(out, stream, g.DeprecatedHandler.Storage.StorageType(), bq.Strip)
 	}
 }
 
@@ -159,7 +159,7 @@ func (g *OcelotServerAPI) LastFewSummaries(ctx context.Context, repoAct *pb.Repo
 		return nil, status.Error(codes.InvalidArgument, "repo, account, and limit are required fields")
 	}
 	var summaries = &pb.Summaries{}
-	modelz, err := g.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
+	modelz, err := g.DeprecatedHandler.Storage.RetrieveLastFewSums(repoAct.Repo, repoAct.Account, repoAct.Limit)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		return nil, handleStorageError(err)

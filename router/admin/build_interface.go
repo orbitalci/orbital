@@ -38,7 +38,7 @@ func (g *OcelotServerAPI) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (
 
 	if len(bq.Hash) > 0 {
 		//find matching hashes in consul by git hash
-		buildRtInfo, err = runtime.GetBuildRuntime(g.RemoteConfig.GetConsul(), bq.Hash)
+		buildRtInfo, err = runtime.GetBuildRuntime(g.DeprecatedHandler.RemoteConfig.GetConsul(), bq.Hash)
 		if err != nil {
 			if _, ok := err.(*runtime.ErrBuildDone); !ok {
 				log.IncludeErrField(err).Error("could not get build runtime")
@@ -50,7 +50,7 @@ func (g *OcelotServerAPI) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (
 		}
 
 		//add matching hashes in db if exists and add acctname/repo to ones found in consul
-		dbResults, err := g.Storage.RetrieveHashStartsWith(bq.Hash)
+		dbResults, err := g.DeprecatedHandler.Storage.RetrieveHashStartsWith(bq.Hash)
 
 		if err != nil {
 			return &pb.Builds{
@@ -73,7 +73,7 @@ func (g *OcelotServerAPI) BuildRuntime(ctx context.Context, bq *pb.BuildQuery) (
 	//fixme: this is no longer valid to assume that just because the buildId is passed that the build is done. builds are added to the db from the _start_ of the build.
 	//if a valid build id passed, go ask db for entries
 	if bq.BuildId > 0 {
-		buildSum, err := g.Storage.RetrieveSumByBuildId(bq.BuildId)
+		buildSum, err := g.DeprecatedHandler.Storage.RetrieveSumByBuildId(bq.BuildId)
 		if err != nil {
 			return &pb.Builds{
 				Builds: buildRtInfo,
@@ -107,7 +107,7 @@ func (g *OcelotServerAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Guid
 
 	// get credentials and appropriate VCS handler for the build request's account / repository
 	SendStream(stream, "Searching for VCS creds belonging to %s...", buildReq.AcctRepo)
-	cfg, err := config.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig, buildReq.VcsType)
+	cfg, err := config.GetVcsCreds(g.DeprecatedHandler.Storage, buildReq.AcctRepo, g.DeprecatedHandler.RemoteConfig, buildReq.VcsType)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		switch err.(type) {
@@ -131,7 +131,7 @@ func (g *OcelotServerAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Guid
 	var hashPreviouslyBuilt bool
 	var buildSum *pb.BuildSummary
 	if buildReq.Hash != "" {
-		buildSum, err = g.Storage.RetrieveLatestSum(buildReq.Hash)
+		buildSum, err = g.DeprecatedHandler.Storage.RetrieveLatestSum(buildReq.Hash)
 		if err != nil {
 			if _, ok := err.(*storage.ErrNotFound); !ok {
 				log.IncludeErrField(err).Error("could not retrieve latest build summary")
@@ -189,7 +189,7 @@ func (g *OcelotServerAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.Guid
 	}
 	// get build config to do build validation, that this branch is appropriate,
 	SendStream(stream, "Retrieving ocelot.yml for %s...", buildReq.AcctRepo)
-	buildConf, err := download.GetConfig(buildReq.AcctRepo, buildHash, g.Deserializer, handler)
+	buildConf, err := download.GetConfig(buildReq.AcctRepo, buildHash, g.DeprecatedHandler.Deserializer, handler)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get bb config")
 		if err.Error() == "could not find raw data at url" {
@@ -226,7 +226,7 @@ func (g *OcelotServerAPI) FindWerker(ctx context.Context, br *pb.BuildReq) (*pb.
 	defer metrics.FinishRequest(start)
 	if len(br.Hash) > 0 {
 		//find matching hashes in consul by git hash
-		buildRtInfo, err := runtime.GetBuildRuntime(g.RemoteConfig.GetConsul(), br.Hash)
+		buildRtInfo, err := runtime.GetBuildRuntime(g.DeprecatedHandler.RemoteConfig.GetConsul(), br.Hash)
 		if err != nil {
 			if _, ok := err.(*runtime.ErrBuildDone); !ok {
 				return nil, status.Errorf(codes.Internal, "could not get build runtime, err: %s", err.Error())

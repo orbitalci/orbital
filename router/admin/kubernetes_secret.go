@@ -25,7 +25,7 @@ func (g *OcelotServerAPI) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (
 	}
 	// no validation necessary, its a file upload
 
-	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "K8s Creds failed validation. Errors are: "+err.Error())
@@ -38,7 +38,7 @@ func (g *OcelotServerAPI) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (
 
 func (g *OcelotServerAPI) GetK8SCreds(ctx context.Context, empti *empty.Empty) (*pb.K8SCredsWrapper, error) {
 	credWrapper := &pb.K8SCredsWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_K8S, true)
+	creds, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_K8S, true)
 	if err != nil {
 		// todo: this needs to check for a not found error from storage as well
 		return credWrapper, status.Errorf(codes.Internal, "unable to get k8s creds! error: %s", err.Error())

@@ -24,7 +24,7 @@ func (g *OcelotServerAPI) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCr
 	if creds.SubType.Parent() != pb.CredType_NOTIFIER {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of notifier type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
-	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Notify Creds Upload failed validation. Errors are: "+err.Error())
@@ -56,7 +56,7 @@ func (g *OcelotServerAPI) GetNotifyCred(ctx context.Context, creds *pb.NotifyCre
 
 func (g *OcelotServerAPI) GetNotifyCreds(ctx context.Context, empty2 *empty.Empty) (*pb.NotifyWrap, error) {
 	credWrapper := &pb.NotifyWrap{}
-	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_NOTIFIER, true)
+	credz, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_NOTIFIER, true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, err.Error())
