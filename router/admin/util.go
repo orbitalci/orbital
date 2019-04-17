@@ -19,7 +19,7 @@ var unsupported = errors.New("currently only bitbucket is supported")
 
 //when new configurations are added to the config channel, create bitbucket client and webhooks
 func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
-	gos := gosss.(*guideOcelotServer)
+	gos := gosss.(*OcelotServerAPI)
 	//hehe right now we only have bitbucket
 	switch config.SubType {
 	case pb.SubCredType_BITBUCKET:

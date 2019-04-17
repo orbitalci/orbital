@@ -33,7 +33,7 @@ func maybeStrip(output []byte, stripAnsi bool) []byte {
 
 // scanLog will create a scanner out of the buildOutput byte data and send it over the GuideOcelot logs stream.
 //   will return a grpc error if something goes wrong
-func scanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageType string, stripAnsi bool) error {
+func ScanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageType string, stripAnsi bool) error {
 	var cleanedOutput []byte
 	if stripAnsi {
 		cleanedOutput = maybeStrip(out.Output, stripAnsi)

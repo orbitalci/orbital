@@ -19,7 +19,7 @@ type GenericSecret interface {
 	DeleteGenericCreds(context.Context, *pb.GenericCreds) (*empty.Empty, error)
 }
 
-func (g *guideOcelotServer) GetGenericCreds(ctx context.Context, empty *empty.Empty) (*pb.GenericWrap, error) {
+func (g *OcelotServerAPI) GetGenericCreds(ctx context.Context, empty *empty.Empty) (*pb.GenericWrap, error) {
 	credz := &pb.GenericWrap{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_GENERIC, true)
 	if err != nil {
@@ -37,7 +37,7 @@ func (g *guideOcelotServer) GetGenericCreds(ctx context.Context, empty *empty.Em
 	return credz, nil
 }
 
-func (g *guideOcelotServer) SetGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
+func (g *OcelotServerAPI) SetGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_GENERIC {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of generic type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
@@ -51,14 +51,14 @@ func (g *guideOcelotServer) SetGenericCreds(ctx context.Context, creds *pb.Gener
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) DeleteGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
-	return g.deleteAnyCred(ctx, creds, pb.CredType_GENERIC)
+func (g *OcelotServerAPI) DeleteGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
+	return g.DeleteAnyCred(ctx, creds, pb.CredType_GENERIC)
 }
 
-func (g *guideOcelotServer) GenericCredExists(ctx context.Context, creds *pb.GenericCreds) (*pb.Exists, error) {
-	return g.checkAnyCredExists(ctx, creds)
+func (g *OcelotServerAPI) GenericCredExists(ctx context.Context, creds *pb.GenericCreds) (*pb.Exists, error) {
+	return g.CheckAnyCredExists(ctx, creds)
 }
 
-func (g *guideOcelotServer) UpdateGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
-	return g.updateAnyCred(ctx, creds)
+func (g *OcelotServerAPI) UpdateGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
+	return g.UpdateAnyCred(ctx, creds)
 }

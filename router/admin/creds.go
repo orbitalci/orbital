@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (g *guideOcelotServer) checkAnyCredExists(ctx context.Context, creds pb.OcyCredder) (*pb.Exists, error) {
+func (g *OcelotServerAPI) CheckAnyCredExists(ctx context.Context, creds pb.OcyCredder) (*pb.Exists, error) {
 	exists, err := g.Storage.CredExists(creds)
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "Unable to reach cred table to check if cred %s/%s/%s exists. Error: %s", creds.GetAcctName(), creds.GetSubType().String(), creds.GetIdentifier(), err.Error())
@@ -19,7 +19,7 @@ func (g *guideOcelotServer) checkAnyCredExists(ctx context.Context, creds pb.Ocy
 	return &pb.Exists{Exists: exists}, nil
 }
 
-func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds pb.OcyCredder) (*empty.Empty, error) {
+func (g *OcelotServerAPI) UpdateAnyCred(ctx context.Context, creds pb.OcyCredder) (*empty.Empty, error) {
 	if err := g.RemoteConfig.UpdateCreds(g.Storage, creds); err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Errorf(codes.InvalidArgument, "%s cred failed validation. Errors are: %s", creds.GetSubType().Parent(), err.Error())
@@ -29,7 +29,7 @@ func (g *guideOcelotServer) updateAnyCred(ctx context.Context, creds pb.OcyCredd
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) deleteAnyCred(ctx context.Context, creds pb.OcyCredder, parentType pb.CredType) (*empty.Empty, error) {
+func (g *OcelotServerAPI) DeleteAnyCred(ctx context.Context, creds pb.OcyCredder, parentType pb.CredType) (*empty.Empty, error) {
 	// make sure we have all the fields we need to be able to accurately delete the credential.
 	// try to intelligently deduce what subType teh cred is, but error out if that isn't possible
 	empti := &empty.Empty{}

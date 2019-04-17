@@ -20,7 +20,7 @@ type NotifierSecret interface {
 	DeleteNotifyCreds(context.Context, *pb.NotifyCreds) (*empty.Empty, error)
 }
 
-func (g *guideOcelotServer) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+func (g *OcelotServerAPI) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_NOTIFIER {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of notifier type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
@@ -34,16 +34,16 @@ func (g *guideOcelotServer) SetNotifyCreds(ctx context.Context, creds *pb.Notify
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) NotifyCredExists(ctx context.Context, creds *pb.NotifyCreds) (*pb.Exists, error) {
-	return g.checkAnyCredExists(ctx, creds)
+func (g *OcelotServerAPI) NotifyCredExists(ctx context.Context, creds *pb.NotifyCreds) (*pb.Exists, error) {
+	return g.CheckAnyCredExists(ctx, creds)
 }
 
-func (g *guideOcelotServer) UpdateNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
-	return g.updateAnyCred(ctx, creds)
+func (g *OcelotServerAPI) UpdateNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+	return g.UpdateAnyCred(ctx, creds)
 }
 
-func (g *guideOcelotServer) GetNotifyCred(ctx context.Context, creds *pb.NotifyCreds) (*pb.NotifyCreds, error) {
-	creddy, err := g.getAnyCred(creds)
+func (g *OcelotServerAPI) GetNotifyCred(ctx context.Context, creds *pb.NotifyCreds) (*pb.NotifyCreds, error) {
+	creddy, err := g.GetAnyCred(creds)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (g *guideOcelotServer) GetNotifyCred(ctx context.Context, creds *pb.NotifyC
 	return notifier, nil
 }
 
-func (g *guideOcelotServer) GetNotifyCreds(ctx context.Context, empty2 *empty.Empty) (*pb.NotifyWrap, error) {
+func (g *OcelotServerAPI) GetNotifyCreds(ctx context.Context, empty2 *empty.Empty) (*pb.NotifyWrap, error) {
 	credWrapper := &pb.NotifyWrap{}
 	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_NOTIFIER, true)
 	if err != nil {
@@ -72,6 +72,6 @@ func (g *guideOcelotServer) GetNotifyCreds(ctx context.Context, empty2 *empty.Em
 	return credWrapper, nil
 }
 
-func (g *guideOcelotServer) DeleteNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
-	return g.deleteAnyCred(ctx, creds, pb.CredType_NOTIFIER)
+func (g *OcelotServerAPI) DeleteNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+	return g.DeleteAnyCred(ctx, creds, pb.CredType_NOTIFIER)
 }

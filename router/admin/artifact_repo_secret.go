@@ -20,7 +20,7 @@ type ArtifactRepoSecret interface {
 	DeleteRepoCreds(context.Context, *pb.RepoCreds) (*empty.Empty, error)
 }
 
-func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*pb.RepoCredWrapper, error) {
+func (g *OcelotServerAPI) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*pb.RepoCredWrapper, error) {
 	credWrapper := &pb.RepoCredWrapper{}
 	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_REPO, true)
 
@@ -40,8 +40,8 @@ func (g *guideOcelotServer) GetRepoCreds(ctx context.Context, msg *empty.Empty) 
 	return credWrapper, nil
 }
 
-func (g *guideOcelotServer) GetRepoCred(ctx context.Context, credentials *pb.RepoCreds) (*pb.RepoCreds, error) {
-	creddy, err := g.getAnyCred(credentials)
+func (g *OcelotServerAPI) GetRepoCred(ctx context.Context, credentials *pb.RepoCreds) (*pb.RepoCreds, error) {
+	creddy, err := g.GetAnyCred(credentials)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (g *guideOcelotServer) GetRepoCred(ctx context.Context, credentials *pb.Rep
 	return repo, nil
 }
 
-func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
+func (g *OcelotServerAPI) SetRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_REPO {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of repo type: "+strings.Join(pb.CredType_REPO.SubtypesString(), " | "))
 	}
@@ -70,14 +70,14 @@ func (g *guideOcelotServer) SetRepoCreds(ctx context.Context, creds *pb.RepoCred
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) UpdateRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
-	return g.updateAnyCred(ctx, creds)
+func (g *OcelotServerAPI) UpdateRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
+	return g.UpdateAnyCred(ctx, creds)
 }
 
-func (g *guideOcelotServer) RepoCredExists(ctx context.Context, creds *pb.RepoCreds) (*pb.Exists, error) {
-	return g.checkAnyCredExists(ctx, creds)
+func (g *OcelotServerAPI) RepoCredExists(ctx context.Context, creds *pb.RepoCreds) (*pb.Exists, error) {
+	return g.CheckAnyCredExists(ctx, creds)
 }
 
-func (g *guideOcelotServer) DeleteRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
-	return g.deleteAnyCred(ctx, creds, pb.CredType_REPO)
+func (g *OcelotServerAPI) DeleteRepoCreds(ctx context.Context, creds *pb.RepoCreds) (*empty.Empty, error) {
+	return g.DeleteAnyCred(ctx, creds, pb.CredType_REPO)
 }

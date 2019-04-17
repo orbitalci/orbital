@@ -21,7 +21,7 @@ type SecretInterface interface {
 	GetAllCreds(context.Context, *empty.Empty) (*pb.AllCredsWrapper, error)
 }
 
-func (g *guideOcelotServer) GetAllCreds(ctx context.Context, msg *empty.Empty) (*pb.AllCredsWrapper, error) {
+func (g *OcelotServerAPI) GetAllCreds(ctx context.Context, msg *empty.Empty) (*pb.AllCredsWrapper, error) {
 	allCreds := &pb.AllCredsWrapper{}
 	repoCreds, err := g.GetRepoCreds(ctx, msg)
 	if err != nil {

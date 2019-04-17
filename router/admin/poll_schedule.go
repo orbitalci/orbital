@@ -20,7 +20,7 @@ type PollSchedule interface {
 	ListPolledRepos(context.Context, *empty.Empty) (*pb.Polls, error)
 }
 
-func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
+func (g *OcelotServerAPI) PollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
 	if poll.Account == "" || poll.Repo == "" || poll.Cron == "" || poll.Branches == "" || poll.Type == pb.SubCredType_NIL_SCT {
 		return nil, status.Error(codes.InvalidArgument, "account, repo, cron, branches, and type are required fields")
 	}
@@ -65,7 +65,7 @@ func (g *guideOcelotServer) PollRepo(ctx context.Context, poll *pb.PollRequest) 
 	return empti, nil
 }
 
-func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
+func (g *OcelotServerAPI) DeletePollRepo(ctx context.Context, poll *pb.PollRequest) (*empty.Empty, error) {
 	if poll.Account == "" || poll.Repo == "" {
 		return nil, status.Error(codes.InvalidArgument, "account and repo are required fields")
 	}
@@ -84,7 +84,7 @@ func (g *guideOcelotServer) DeletePollRepo(ctx context.Context, poll *pb.PollReq
 }
 
 // todo: add acct/repo action later
-func (g *guideOcelotServer) ListPolledRepos(context.Context, *empty.Empty) (*pb.Polls, error) {
+func (g *OcelotServerAPI) ListPolledRepos(context.Context, *empty.Empty) (*pb.Polls, error) {
 	polls, err := g.Storage.GetAllPolls()
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {

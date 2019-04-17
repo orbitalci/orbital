@@ -21,7 +21,7 @@ type RepoInterface interface {
 	GetTrackedRepos(context.Context, *empty.Empty) (*pb.AcctRepos, error)
 }
 
-func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
+func (g *OcelotServerAPI) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
 	if repoAcct.Repo == "" || repoAcct.Account == "" || repoAcct.Type == pb.SubCredType_NIL_SCT {
 		return nil, status.Error(codes.InvalidArgument, "repo, account, and type are required fields")
 	}
@@ -37,7 +37,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 		}
 		return nil, status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 	}
-	handler, _, grpcErr := g.getHandler(cfg)
+	handler, _, grpcErr := g.GetHandler(cfg)
 	if grpcErr != nil {
 		return nil, grpcErr
 	}
@@ -54,7 +54,7 @@ func (g *guideOcelotServer) WatchRepo(ctx context.Context, repoAcct *pb.RepoAcco
 	return &empty.Empty{}, nil
 }
 
-func (g *guideOcelotServer) GetTrackedRepos(ctx context.Context, empty *empty.Empty) (*pb.AcctRepos, error) {
+func (g *OcelotServerAPI) GetTrackedRepos(ctx context.Context, empty *empty.Empty) (*pb.AcctRepos, error) {
 	repos, err := g.Storage.GetTrackedRepos()
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {

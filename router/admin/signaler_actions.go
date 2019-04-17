@@ -25,7 +25,7 @@ func init() {
 }
 
 // getHandler returns a grpc status.Error
-func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
+func (g *OcelotServerAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
 	if g.handler != nil {
 		return g.handler, "token", nil
 	}
@@ -37,6 +37,6 @@ func (g *guideOcelotServer) getHandler(cfg *pb.VCSCreds) (models.VCSHandler, str
 	return handler, token, nil
 }
 
-func (g *guideOcelotServer) getSignaler() *buildjob.Signaler {
+func (g *OcelotServerAPI) GetSignaler() *buildjob.Signaler {
 	return buildjob.NewSignaler(g.RemoteConfig, g.Deserializer, g.Producer, g.OcyValidator, g.Storage)
 }
