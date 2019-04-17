@@ -11,6 +11,7 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/ocelot/router/admin/anycred"
 )
 
 //this is our grpc server, it responds to client requests
@@ -28,6 +29,7 @@ type guideOcelotServer struct {
 
 type OcelotServerAPI struct {
 	DeprecatedHandler *guideOcelotServer
+	anycred.AnyCredAPI // This is a hack. Revisit once stable
 	BuildAPI
 }
 
@@ -45,6 +47,11 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		hhBaseUrl:      hhBaseUrl,
 	}
 
+	anyCredApi := anycred.AnyCredAPI {
+		Storage:        storage,	
+		RemoteConfig:   config,
+	}
+
 	buildApi := BuildAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
@@ -53,5 +60,5 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		OcyValidator:   buildconfigvalidator.GetOcelotValidator(),
 	}
 
-	return &OcelotServerAPI{ guideOcelotServer, buildApi }
+	return &OcelotServerAPI{ guideOcelotServer, anyCredApi, buildApi }
 }
