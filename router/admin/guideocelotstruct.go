@@ -28,8 +28,8 @@ type guideOcelotServer struct {
 
 type OcelotServerAPI struct {
 	DeprecatedHandler *guideOcelotServer
+	BuildAPI
 }
-
 
 func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deserializer, adminV *validate.AdminValidator, repoV *validate.RepoValidator, storage storage.OcelotStorage, hhBaseUrl string) pb.GuideOcelotServer {
 	// changing to this style of instantiation cuz thread safe (idk read it on some best practices, it just looks
@@ -45,7 +45,13 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		hhBaseUrl:      hhBaseUrl,
 	}
 
+	buildApi := BuildAPI {
+		Storage:        storage,	
+		RemoteConfig:   config,
+		Deserializer:   d,
+		Producer:       nsqpb.GetInitProducer(),
+		OcyValidator:   buildconfigvalidator.GetOcelotValidator(),
+	}
 
-
-	return &OcelotServerAPI{ DeprecatedHandler: guideOcelotServer }
+	return &OcelotServerAPI{ guideOcelotServer, buildApi }
 }
