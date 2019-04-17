@@ -34,7 +34,7 @@ func (g *OcelotServerAPI) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapp
 	}
 	// no validation necessary, its a file upload
 
-	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.InvalidArgument, "SSH Creds Upload failed validation. Errors are: "+err.Error())
@@ -46,7 +46,7 @@ func (g *OcelotServerAPI) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapp
 
 func (g *OcelotServerAPI) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHWrap, error) {
 	credWrapper := &pb.SSHWrap{}
-	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_SSH, true)
+	credz, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_SSH, true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, err.Error())

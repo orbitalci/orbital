@@ -27,7 +27,7 @@ type guideOcelotServer struct {
 }
 
 type OcelotServerAPI struct {
-	*guideOcelotServer
+	DeprecatedHandler *guideOcelotServer
 }
 
 
@@ -47,5 +47,5 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 
 
 
-	return &OcelotServerAPI{ guideOcelotServer }
+	return &OcelotServerAPI{ DeprecatedHandler: guideOcelotServer }
 }

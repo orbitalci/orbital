@@ -21,7 +21,7 @@ type GenericSecret interface {
 
 func (g *OcelotServerAPI) GetGenericCreds(ctx context.Context, empty *empty.Empty) (*pb.GenericWrap, error) {
 	credz := &pb.GenericWrap{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_GENERIC, true)
+	creds, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_GENERIC, true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -41,7 +41,7 @@ func (g *OcelotServerAPI) SetGenericCreds(ctx context.Context, creds *pb.Generic
 	if creds.SubType.Parent() != pb.CredType_GENERIC {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of generic type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
-	err := SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Generic Creds Upload failed validation. Errors are: "+err.Error())

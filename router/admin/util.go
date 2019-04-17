@@ -40,7 +40,7 @@ func SetupCredentials(gosss pb.GuideOcelotServer, config *pb.VCSCreds) error {
 
 	config.Identifier = config.BuildIdentifier()
 	//right now, we will always overwrite
-	err := gos.RemoteConfig.AddCreds(gos.Storage, config, true)
+	err := gos.DeprecatedHandler.RemoteConfig.AddCreds(gos.DeprecatedHandler.Storage, config, true)
 	return err
 }
 

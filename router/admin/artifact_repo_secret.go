@@ -22,7 +22,7 @@ type ArtifactRepoSecret interface {
 
 func (g *OcelotServerAPI) GetRepoCreds(ctx context.Context, msg *empty.Empty) (*pb.RepoCredWrapper, error) {
 	credWrapper := &pb.RepoCredWrapper{}
-	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_REPO, true)
+	creds, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_REPO, true)
 
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); !ok {
@@ -56,11 +56,11 @@ func (g *OcelotServerAPI) SetRepoCreds(ctx context.Context, creds *pb.RepoCreds)
 	if creds.SubType.Parent() != pb.CredType_REPO {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of repo type: "+strings.Join(pb.CredType_REPO.SubtypesString(), " | "))
 	}
-	err := g.RepoValidator.ValidateConfig(creds)
+	err := g.DeprecatedHandler.RepoValidator.ValidateConfig(creds)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed repo creds validation! error: %s", err.Error())
 	}
-	err = SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	err = SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if _, ok := err.(*pb.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.InvalidArgument, "Repo Creds failed validation. Errors are: "+err.Error())
 	}
