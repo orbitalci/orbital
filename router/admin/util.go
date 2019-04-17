@@ -17,11 +17,6 @@ func SetupRCCCredentials(remoteConf config.CVRemoteConfig, store storage.CredTab
 	return err
 }
 
-//RespWrap will wrap streaming messages in a LineResponse object to be sent by the server stream
-func RespWrap(msg string) *pb.LineResponse {
-	return &pb.LineResponse{OutputLine: msg}
-}
-
 // handleStorageError  will attempt to decipher if err is not found. if so, iwll set the appropriate grpc status code and return new grpc status error
 func HandleStorageError(err error) error {
 	if _, ok := err.(*storage.ErrNotFound); ok {
