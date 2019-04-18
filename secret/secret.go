@@ -1,4 +1,4 @@
-package admin
+package secret
 
 import (
 
@@ -14,11 +14,3 @@ func SetupRCCCredentials(remoteConf config.CVRemoteConfig, store storage.CredTab
 	err := remoteConf.AddCreds(store, config, true)
 	return err
 }
-
-//// handleStorageError  will attempt to decipher if err is not found. if so, iwll set the appropriate grpc status code and return new grpc status error
-//func HandleStorageError(err error) error {
-//	if _, ok := err.(*storage.ErrNotFound); ok {
-//		return status.Error(codes.NotFound, err.Error())
-//	}
-//	return status.Error(codes.Internal, err.Error())
-//}

@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/level11consulting/ocelot/build/helpers/ioshelper"
+	"github.com/level11consulting/ocelot/secret"
 )
 
 type AppleDevSecret interface {
@@ -41,7 +42,7 @@ func (g *OcelotServerAPI) SetAppleCreds(ctx context.Context, creds *pb.AppleCred
 		return nil, err
 	}
 
-	if err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds); err != nil {
+	if err := secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds); err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return vempty, status.Error(codes.InvalidArgument, "Apple creds upload failed validation, errors are: "+err.Error())
 		}

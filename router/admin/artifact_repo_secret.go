@@ -9,6 +9,7 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/level11consulting/ocelot/secret"
 )
 
 type ArtifactRepoSecret interface {
@@ -60,7 +61,7 @@ func (g *OcelotServerAPI) SetRepoCreds(ctx context.Context, creds *pb.RepoCreds)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed repo creds validation! error: %s", err.Error())
 	}
-	err = SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
+	err = secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if _, ok := err.(*pb.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.InvalidArgument, "Repo Creds failed validation. Errors are: "+err.Error())
 	}

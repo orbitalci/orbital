@@ -8,6 +8,7 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/level11consulting/ocelot/secret"
 )
 
 type KubernetesSecret interface {
@@ -25,7 +26,7 @@ func (g *OcelotServerAPI) SetK8SCreds(ctx context.Context, creds *pb.K8SCreds) (
 	}
 	// no validation necessary, its a file upload
 
-	err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
+	err := secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "K8s Creds failed validation. Errors are: "+err.Error())

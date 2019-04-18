@@ -9,6 +9,7 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/level11consulting/ocelot/secret"
 )
 
 type GenericSecret interface {
@@ -41,7 +42,7 @@ func (g *OcelotServerAPI) SetGenericCreds(ctx context.Context, creds *pb.Generic
 	if creds.SubType.Parent() != pb.CredType_GENERIC {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of generic type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
-	err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
+	err := secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Generic Creds Upload failed validation. Errors are: "+err.Error())
