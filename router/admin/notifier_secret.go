@@ -9,6 +9,7 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/level11consulting/ocelot/secret"
 )
 
 type NotifierSecret interface {
@@ -24,7 +25,7 @@ func (g *OcelotServerAPI) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCr
 	if creds.SubType.Parent() != pb.CredType_NOTIFIER {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of notifier type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
-	err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
+	err := secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Notify Creds Upload failed validation. Errors are: "+err.Error())

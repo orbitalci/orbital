@@ -9,6 +9,7 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/level11consulting/ocelot/secret"
 )
 
 type SshSecret interface {
@@ -34,7 +35,7 @@ func (g *OcelotServerAPI) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapp
 	}
 	// no validation necessary, its a file upload
 
-	err := SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
+	err := secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.InvalidArgument, "SSH Creds Upload failed validation. Errors are: "+err.Error())
