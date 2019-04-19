@@ -38,6 +38,7 @@ type OcelotServerAPI struct {
 	NotifierSecretAPI
 	PollScheduleAPI
 	RepoInterfaceAPI
+	SshSecretAPI
 }
 
 func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deserializer, adminV *validate.AdminValidator, repoV *validate.RepoValidator, storage storage.OcelotStorage, hhBaseUrl string) pb.GuideOcelotServer {
@@ -105,6 +106,11 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		HhBaseUrl:      hhBaseUrl,
 	}
 
+	sshSecretAPI := SshSecretAPI {
+		Storage:        storage,	
+		RemoteConfig:   config,
+	}
+
 	return &OcelotServerAPI{ 
 		guideOcelotServer,
 		anyCredAPI,
@@ -116,5 +122,6 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		notifierSecretAPI,
 		pollScheduleAPI,
 		repoInterfaceAPI,
+		sshSecretAPI,
 	}
 }

@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"fmt"
 	"context"
 	"strings"
 
@@ -10,6 +11,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/level11consulting/ocelot/secret"
+	"github.com/level11consulting/ocelot/router/admin/anycred"
+	"github.com/level11consulting/ocelot/server/config"
 )
 
 type SshSecret interface {
@@ -21,21 +24,37 @@ type SshSecret interface {
 	DeleteSSHCreds(context.Context, *pb.SSHKeyWrapper) (*empty.Empty, error)
 }
 
-func (g *OcelotServerAPI) UpdateSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
-	return g.UpdateAnyCred(ctx, creds)
+type SshSecretAPI struct {
+	SshSecret
+	RemoteConfig   config.CVRemoteConfig
+	Storage        storage.OcelotStorage
 }
 
-func (g *OcelotServerAPI) SSHCredExists(ctx context.Context, creds *pb.SSHKeyWrapper) (*pb.Exists, error) {
-	return g.CheckAnyCredExists(ctx, creds)
+func (g *SshSecretAPI) UpdateSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.UpdateAnyCred(ctx, creds)
 }
 
-func (g *OcelotServerAPI) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+func (g *SshSecretAPI) SSHCredExists(ctx context.Context, creds *pb.SSHKeyWrapper) (*pb.Exists, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.CheckAnyCredExists(ctx, creds)
+}
+
+func (g *SshSecretAPI) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_SSH {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of ssh type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
 	// no validation necessary, its a file upload
 
-	err := secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
+	err := secret.SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.InvalidArgument, "SSH Creds Upload failed validation. Errors are: "+err.Error())
@@ -45,9 +64,9 @@ func (g *OcelotServerAPI) SetSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapp
 	return &empty.Empty{}, nil
 }
 
-func (g *OcelotServerAPI) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHWrap, error) {
+func (g *SshSecretAPI) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHWrap, error) {
 	credWrapper := &pb.SSHWrap{}
-	credz, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_SSH, true)
+	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_SSH, true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -63,7 +82,7 @@ func (g *OcelotServerAPI) GetSSHCreds(context.Context, *empty.Empty) (*pb.SSHWra
 	return credWrapper, nil
 }
 
-func (g *OcelotServerAPI) GetSSHCred(ctx context.Context, credentials *pb.SSHKeyWrapper) (*pb.SSHKeyWrapper, error) {
+func (g *SshSecretAPI) GetSSHCred(ctx context.Context, credentials *pb.SSHKeyWrapper) (*pb.SSHKeyWrapper, error) {
 	creddy, err := g.GetAnyCred(credentials)
 	if err != nil {
 		return nil, err
@@ -75,6 +94,28 @@ func (g *OcelotServerAPI) GetSSHCred(ctx context.Context, credentials *pb.SSHKey
 	return ssh, nil
 }
 
-func (g *OcelotServerAPI) DeleteSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
-	return g.DeleteAnyCred(ctx, creds, pb.CredType_SSH)
+func (g *SshSecretAPI) DeleteSSHCreds(ctx context.Context, creds *pb.SSHKeyWrapper) (*empty.Empty, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.DeleteAnyCred(ctx, creds, pb.CredType_SSH)
+}
+
+func (g *SshSecretAPI) GetAnyCred(credder pb.OcyCredder) (pb.OcyCredder, error) {
+	if credder.GetSubType() == 0 || credder.GetAcctName() == "" || credder.GetIdentifier() == "" {
+		return nil, status.Error(codes.InvalidArgument, "subType, acctName, and identifier are required fields")
+	}
+	creddy, err := g.RemoteConfig.GetCred(g.Storage, credder.GetSubType(), credder.GetIdentifier(), credder.GetAcctName(), true)
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Credential %s/%s of Type %s Not Found", credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType()))
+		}
+		if _, ok := err.(*pb.ValidationErr); ok {
+			return nil, status.Error(codes.InvalidArgument, "Invalid arguments, error: "+err.Error())
+		}
+		return nil, status.Error(codes.Unavailable, "Credential interface not available, error: "+err.Error())
+	}
+	return creddy, nil
 }
