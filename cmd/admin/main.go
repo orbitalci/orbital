@@ -7,7 +7,7 @@ import (
 
 	"github.com/namsral/flag"
 
-	"github.com/level11consulting/ocelot/router/admin"
+	"github.com/level11consulting/ocelot/server/grpc/admin"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/server/tls"
 	"github.com/level11consulting/ocelot/version"
