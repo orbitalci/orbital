@@ -17,16 +17,10 @@ import (
 type OcelotServerAPI struct {
 	anycred.AnyCredAPI // This is a hack. Revisit once stable
 	BuildAPI
-	AppleDevSecretAPI
-	ArtifactRepoSecretAPI
-	GenericSecretAPI
-	KubernetesSecretAPI
-	NotifierSecretAPI
 	PollScheduleAPI
 	RepoInterfaceAPI
-	SshSecretAPI
 	StatusInterfaceAPI
-	VcsSecretAPI
+	SecretInterfaceAPI
 }
 
 func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deserializer, adminV *validate.AdminValidator, repoV *validate.RepoValidator, storage storage.OcelotStorage, hhBaseUrl string) pb.GuideOcelotServer {
@@ -98,18 +92,22 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		AdminValidator: adminV,
 	}
 
+	secretInterfaceAPI := SecretInterfaceAPI {
+		AppleDevSecretAPI: appleDevSecretAPI,
+		ArtifactRepoSecretAPI: artifactRepoSecretAPI,
+		GenericSecretAPI: genericSecretAPI,
+		KubernetesSecretAPI: kubernetesSecretAPI,
+		NotifierSecretAPI: notifierSecretAPI,
+		SshSecretAPI: sshSecretAPI,
+		VcsSecretAPI: vcsSecretAPI,
+	}
+
 	return &OcelotServerAPI{ 
 		anyCredAPI,
 		buildAPI,
-		appleDevSecretAPI,
-		artifactRepoSecretAPI,
-		genericSecretAPI,
-		kubernetesSecretAPI,
-		notifierSecretAPI,
 		pollScheduleAPI,
 		repoInterfaceAPI,
-		sshSecretAPI,
 		statusInterfaceAPI,
-		vcsSecretAPI,
+		secretInterfaceAPI,
 	}
 }

@@ -11,17 +11,27 @@ import (
 )
 
 type SecretInterface interface {
-	//KubernetesSecret
-	//NotifierSecret
-	//SshSecret
-	//VcsSecret
-	//AppleDevSecret
-	//GenericSecret
-	//ArtifactRepoSecret
+	AppleDevSecret
+	ArtifactRepoSecret
+	GenericSecret
+	KubernetesSecret
+	NotifierSecret
+	SshSecret
+	VcsSecret
 	GetAllCreds(context.Context, *empty.Empty) (*pb.AllCredsWrapper, error)
 }
 
-func (g *OcelotServerAPI) GetAllCreds(ctx context.Context, msg *empty.Empty) (*pb.AllCredsWrapper, error) {
+type SecretInterfaceAPI struct {
+	AppleDevSecretAPI
+	ArtifactRepoSecretAPI
+	GenericSecretAPI
+	KubernetesSecretAPI
+	NotifierSecretAPI
+	SshSecretAPI
+	VcsSecretAPI
+}
+
+func (g *SecretInterfaceAPI) GetAllCreds(ctx context.Context, msg *empty.Empty) (*pb.AllCredsWrapper, error) {
 	allCreds := &pb.AllCredsWrapper{}
 	repoCreds, err := g.GetRepoCreds(ctx, msg)
 	if err != nil {
