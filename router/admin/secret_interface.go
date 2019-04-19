@@ -11,13 +11,13 @@ import (
 )
 
 type SecretInterface interface {
-	KubernetesSecret
-	NotifierSecret
-	SshSecret
-	VcsSecret
-	AppleDevSecret
-	GenericSecret
-	ArtifactRepoSecret
+	//KubernetesSecret
+	//NotifierSecret
+	//SshSecret
+	//VcsSecret
+	//AppleDevSecret
+	//GenericSecret
+	//ArtifactRepoSecret
 	GetAllCreds(context.Context, *empty.Empty) (*pb.AllCredsWrapper, error)
 }
 
