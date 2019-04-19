@@ -33,7 +33,7 @@ type OcelotServerAPI struct {
 	secret.SecretInterfaceAPI
 }
 
-func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deserializer, adminV *validate.AdminValidator, repoV *validate.RepoValidator, storage storage.OcelotStorage, hhBaseUrl string) pb.GuideOcelotServer {
+func NewOcelotServer(config config.CVRemoteConfig, d *deserialize.Deserializer, adminV *validate.AdminValidator, repoV *validate.RepoValidator, storage storage.OcelotStorage, hhBaseUrl string) pb.GuideOcelotServer {
 
 	anyCredAPI := anycred.AnyCredAPI {
 		Storage:        storage,	
