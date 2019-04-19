@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/level11consulting/ocelot/secret"
+	"github.com/level11consulting/ocelot/server/config"
+	"github.com/level11consulting/ocelot/router/admin/anycred"
 )
 
 type GenericSecret interface {
@@ -20,9 +22,15 @@ type GenericSecret interface {
 	DeleteGenericCreds(context.Context, *pb.GenericCreds) (*empty.Empty, error)
 }
 
-func (g *OcelotServerAPI) GetGenericCreds(ctx context.Context, empty *empty.Empty) (*pb.GenericWrap, error) {
+type GenericSecretAPI struct {
+	GenericSecret
+	RemoteConfig   config.CVRemoteConfig
+	Storage        storage.OcelotStorage
+}
+
+func (g *GenericSecretAPI) GetGenericCreds(ctx context.Context, empty *empty.Empty) (*pb.GenericWrap, error) {
 	credz := &pb.GenericWrap{}
-	creds, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_GENERIC, true)
+	creds, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_GENERIC, true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -38,11 +46,11 @@ func (g *OcelotServerAPI) GetGenericCreds(ctx context.Context, empty *empty.Empt
 	return credz, nil
 }
 
-func (g *OcelotServerAPI) SetGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
+func (g *GenericSecretAPI) SetGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_GENERIC {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of generic type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
-	err := secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
+	err := secret.SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Generic Creds Upload failed validation. Errors are: "+err.Error())
@@ -52,14 +60,29 @@ func (g *OcelotServerAPI) SetGenericCreds(ctx context.Context, creds *pb.Generic
 	return &empty.Empty{}, nil
 }
 
-func (g *OcelotServerAPI) DeleteGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
-	return g.DeleteAnyCred(ctx, creds, pb.CredType_GENERIC)
+func (g *GenericSecretAPI) DeleteGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.DeleteAnyCred(ctx, creds, pb.CredType_GENERIC)
 }
 
-func (g *OcelotServerAPI) GenericCredExists(ctx context.Context, creds *pb.GenericCreds) (*pb.Exists, error) {
-	return g.CheckAnyCredExists(ctx, creds)
+func (g *GenericSecretAPI) GenericCredExists(ctx context.Context, creds *pb.GenericCreds) (*pb.Exists, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.CheckAnyCredExists(ctx, creds)
 }
 
-func (g *OcelotServerAPI) UpdateGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
-	return g.UpdateAnyCred(ctx, creds)
+func (g *GenericSecretAPI) UpdateGenericCreds(ctx context.Context, creds *pb.GenericCreds) (*empty.Empty, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.UpdateAnyCred(ctx, creds)
 }
