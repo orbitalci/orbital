@@ -1,4 +1,4 @@
-package admin
+package scanoutput
 
 import (
 	"bufio"
@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"regexp"
+	"github.com/level11consulting/ocelot/server/grpc/admin/sendstream"
 )
 
 // Moved this regex in here because we only use it in this file
@@ -44,7 +45,7 @@ func ScanLog(out models.BuildOutput, stream pb.GuideOcelot_LogsServer, storageTy
 	buf := make([]byte, 0, 64*1024)
 	scanner.Buffer(buf, 1024*1024)
 	for scanner.Scan() {
-		SendStream(stream, scanner.Text())
+		sendstream.SendStream(stream, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
 		log.IncludeErrField(err).Error("error encountered scanning from " + storageType)

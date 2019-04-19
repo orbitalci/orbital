@@ -22,11 +22,8 @@ import (
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 
-	//"github.com/level11consulting/ocelot/util/handler"
-	//"github.com/level11consulting/ocelot/util/secure_grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
-	"github.com/level11consulting/ocelot/build/streaminglogs"
 )
 
 //Start will kick off our grpc server so it's ready to receive requests over both grpc and http
@@ -127,23 +124,4 @@ func serveSwagger(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(dir)
 	p = path.Join(dir, p)
 	http.ServeFile(w, r, p)
-}
-
-//
-////TODO: how to propagate error codes up????
-////TODO: cast this back to MY error type and set status
-//func CustomErrorHandler(ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
-//	// see example here: https://github.com/mycodesmells/golang-examples/blob/master/grpc/cmd/server/main.go
-//	ocenet.JSONApiError(w, runtime.HTTPStatusFromCode(grpc.Code(err)), "", err)
-//}
-
-type Sendy interface {
-	Send(response *models.LineResponse) error
-}
-
-//SendStream will send a message formatted by strFmt string with variables fmtVars... will log error if it finds it
-func SendStream(sendy Sendy, strFmt string, fmtVars ...interface{}) {
-	if err := sendy.Send(streaminglogs.RespWrap(fmt.Sprintf(strFmt, fmtVars...))); err != nil {
-		log.IncludeErrField(err).Error("error sending stream")
-	}
 }
