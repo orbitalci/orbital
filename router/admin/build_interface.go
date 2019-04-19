@@ -23,6 +23,7 @@ import (
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/level11consulting/ocelot/build/vcshandler"
+	"github.com/level11consulting/ocelot/server/grpc/admin/sendstream"
 )
 
 type BuildInterface interface {
@@ -138,7 +139,7 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 	}
 
 	// get credentials and appropriate VCS handler for the build request's account / repository
-	SendStream(stream, "Searching for VCS creds belonging to %s...", buildReq.AcctRepo)
+	sendstream.SendStream(stream, "Searching for VCS creds belonging to %s...", buildReq.AcctRepo)
 	cfg, err := config.GetVcsCreds(g.Storage, buildReq.AcctRepo, g.RemoteConfig, buildReq.VcsType)
 	if err != nil {
 		log.IncludeErrField(err).Error()
@@ -151,13 +152,13 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 			return status.Error(codes.Internal, "Could not retrieve vcs creds: "+err.Error())
 		}
 	}
-	SendStream(stream, "Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)
-	SendStream(stream, "Validating VCS Credentials...")
+	sendstream.SendStream(stream, "Successfully found VCS credentials belonging to %s %s", buildReq.AcctRepo, models.CHECKMARK)
+	sendstream.SendStream(stream, "Validating VCS Credentials...")
 	handler, token, grpcErr := g.GetHandler(cfg)
 	if grpcErr != nil {
 		return grpcErr
 	}
-	SendStream(stream, "Successfully used VCS Credentials to obtain a token %s", models.CHECKMARK)
+	sendstream.SendStream(stream, "Successfully used VCS Credentials to obtain a token %s", models.CHECKMARK)
 	// see if this request's hash has already been built before. if it has, then that means that we can validate the acct/repo in the db against the buildreq one.
 	// it also means we can do some partial hash matching, as well as selecting the branch that is associated with the commit if it isn't passed in as request param
 	var hashPreviouslyBuilt bool
@@ -169,7 +170,7 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 				log.IncludeErrField(err).Error("could not retrieve latest build summary")
 				return status.Error(codes.Internal, fmt.Sprintf("Unable to connect to the database, therefore this operation is not available at this time."))
 			}
-			SendStream(stream, "There are no previous builds starting with hash %s...", buildReq.Hash)
+			sendstream.SendStream(stream, "There are no previous builds starting with hash %s...", buildReq.Hash)
 		}
 
 		hashPreviouslyBuilt = err == nil
@@ -197,7 +198,7 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 		}
 		buildBranch = buildReq.Branch
 		buildHash = hist.Hash
-		SendStream(stream, "Building branch %s with the latest commit in VCS, which is %s", buildBranch, buildHash)
+		sendstream.SendStream(stream, "Building branch %s with the latest commit in VCS, which is %s", buildBranch, buildHash)
 	// user passed hash and branch, if its been built before use the old build to get the full hash, set the request branch / hash
 	case buildReq.Hash != "" && buildReq.Branch != "":
 		if hashPreviouslyBuilt {
@@ -206,7 +207,7 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 			buildHash = buildReq.Hash
 		}
 		buildBranch = buildReq.Branch
-		SendStream(stream, "Building with given hash %s and branch %s", buildHash, buildBranch)
+		sendstream.SendStream(stream, "Building with given hash %s and branch %s", buildHash, buildBranch)
 	// use previously looked up build of this hash to get branch info for build
 	case buildReq.Hash != "" && buildReq.Branch == "":
 		if !hashPreviouslyBuilt {
@@ -214,13 +215,13 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 			log.IncludeErrField(noBranchErr).Error("branch len is 0")
 			return status.Error(codes.InvalidArgument, noBranchErr.Error())
 		}
-		SendStream(stream, "No branch was passed, using `%s` from build #%v instead...", buildSum.Branch, buildSum.BuildId)
+		sendstream.SendStream(stream, "No branch was passed, using `%s` from build #%v instead...", buildSum.Branch, buildSum.BuildId)
 		buildHash = buildSum.Hash
 		buildBranch = buildSum.Branch
-		SendStream(stream, "Found a previous build starting with hash %s, now building branch %s %s", buildReq.Hash, buildBranch, models.CHECKMARK)
+		sendstream.SendStream(stream, "Found a previous build starting with hash %s, now building branch %s %s", buildReq.Hash, buildBranch, models.CHECKMARK)
 	}
 	// get build config to do build validation, that this branch is appropriate,
-	SendStream(stream, "Retrieving ocelot.yml for %s...", buildReq.AcctRepo)
+	sendstream.SendStream(stream, "Retrieving ocelot.yml for %s...", buildReq.AcctRepo)
 	buildConf, err := download.GetConfig(buildReq.AcctRepo, buildHash, g.Deserializer, handler)
 	if err != nil {
 		log.IncludeErrField(err).Error("couldn't get bb config")
@@ -231,15 +232,15 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 		}
 		return err
 	}
-	SendStream(stream, "Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, models.CHECKMARK)
-	SendStream(stream, "Validating and queuing build data for %s...", buildReq.AcctRepo)
+	sendstream.SendStream(stream, "Successfully retrieved ocelot.yml for %s %s", buildReq.AcctRepo, models.CHECKMARK)
+	sendstream.SendStream(stream, "Validating and queuing build data for %s...", buildReq.AcctRepo)
 
 	task := buildjob.BuildInitialWerkerTask(buildConf, buildHash, token, buildBranch, buildReq.AcctRepo, pb.SignaledBy_REQUESTED, nil, handler.GetVcsType())
 	task.ChangesetData, err = newbuildjob.GenerateNoPreviousHeadChangeset(handler, buildReq.AcctRepo, buildBranch, buildHash)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to generate previous head changeset, changeset data will only include branch")
 		task.ChangesetData = &pb.ChangesetData{Branch: buildBranch}
-		SendStream(stream, "Unable to retrieve files changed for this commit, triggers for stages will only be off of branch and not commit message or files changed.")
+		sendstream.SendStream(stream, "Unable to retrieve files changed for this commit, triggers for stages will only be off of branch and not commit message or files changed.")
 	}
 	if err = g.GetSignaler().CheckViableThenQueueAndStore(task, buildReq.Force, nil); err != nil {
 		if _, ok := err.(*buildconfigvalidator.NotViable); ok {
@@ -249,7 +250,7 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 		log.IncludeErrField(err).Error("couldn't add to build queue or store in db")
 		return status.Error(codes.InvalidArgument, "Couldn't add to build queue or store in DB, err: "+err.Error())
 	}
-	SendStream(stream, "Build started for %s belonging to %s %s", buildHash, buildReq.AcctRepo, models.CHECKMARK)
+	sendstream.SendStream(stream, "Build started for %s belonging to %s %s", buildHash, buildReq.AcctRepo, models.CHECKMARK)
 	return nil
 }
 

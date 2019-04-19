@@ -1,4 +1,4 @@
-package admin
+package status
 
 import (
 	"context"
@@ -16,6 +16,8 @@ import (
 	"github.com/shankj3/go-til/log"
 	storage_error "github.com/level11consulting/ocelot/storage/error"
 	"github.com/level11consulting/ocelot/server/config"
+	"github.com/level11consulting/ocelot/server/grpc/admin/sendstream"
+	"github.com/level11consulting/ocelot/server/grpc/admin/scanoutput"
 	"github.com/level11consulting/ocelot/storage"
 )
 
@@ -145,20 +147,20 @@ func (g *StatusInterfaceAPI) Logs(bq *pb.BuildQuery, stream pb.GuideOcelot_LogsS
 		if err != nil {
 			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrive from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		return ScanLog(out, stream, g.Storage.StorageType(), bq.Strip)
+		return scanoutput.ScanLog(out, stream, g.Storage.StorageType(), bq.Strip)
 	}
 
 	if !runtime.CheckIfBuildDone(g.RemoteConfig.GetConsul(), g.Storage, bq.Hash) {
 
 		errmsg := "build is not finished, use BuildRuntime method and stream from the werker registered"
-		SendStream(stream, errmsg)
+		sendstream.SendStream(stream, errmsg)
 		return status.Error(codes.InvalidArgument, errmsg)
 	} else {
 		out, err = g.Storage.RetrieveLastOutByHash(bq.Hash)
 		if err != nil {
 			return status.Error(codes.Internal, fmt.Sprintf("Unable to retrieve from %s. \nError: %s", g.Storage.StorageType(), err.Error()))
 		}
-		return ScanLog(out, stream, g.Storage.StorageType(), bq.Strip)
+		return scanoutput.ScanLog(out, stream, g.Storage.StorageType(), bq.Strip)
 	}
 }
 
