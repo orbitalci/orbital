@@ -33,6 +33,8 @@ type OcelotServerAPI struct {
 	BuildAPI
 	AppleDevSecretAPI
 	ArtifactRepoSecretAPI
+	GenericSecretAPI
+	KubernetesSecretAPI
 }
 
 func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deserializer, adminV *validate.AdminValidator, repoV *validate.RepoValidator, storage storage.OcelotStorage, hhBaseUrl string) pb.GuideOcelotServer {
@@ -72,12 +74,25 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		RemoteConfig:   config,
 		RepoValidator:  repoV,
 	}
-	
+
+	genericSecretAPI := GenericSecretAPI {
+		Storage:        storage,	
+		RemoteConfig:   config,
+	}
+
+	kubernetesSecretAPI := KubernetesSecretAPI {
+		Storage:        storage,	
+		RemoteConfig:   config,
+	}
+
+
 	return &OcelotServerAPI{ 
 		guideOcelotServer,
 		anyCredAPI,
 		buildAPI,
 		appleDevSecretAPI,
 		artifactRepoSecretAPI,
+		genericSecretAPI,
+		kubernetesSecretAPI,
 	}
 }
