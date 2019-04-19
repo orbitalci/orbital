@@ -18,14 +18,22 @@ import (
 )
 
 type RepoInterface interface {
-	PollSchedule
+	//PollSchedule
 	WatchRepo(context.Context, *pb.RepoAccount) (*empty.Empty, error)
 	GetTrackedRepos(context.Context, *empty.Empty) (*pb.AcctRepos, error)
 }
 
-func (g *OcelotServerAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
-	if g.DeprecatedHandler.handler != nil {
-		return g.DeprecatedHandler.handler, "token", nil
+type RepoInterfaceAPI struct {
+	RepoInterface
+	RemoteConfig   config.CVRemoteConfig
+	Storage        storage.OcelotStorage
+	Handler        models.VCSHandler
+	HhBaseUrl      string
+}
+
+func (g *RepoInterfaceAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, string, error) {
+	if g.Handler != nil {
+		return g.Handler, "token", nil
 	}
 	handler, token, err := vcshandler.GetHandler(cfg)
 	if err != nil {
@@ -35,15 +43,15 @@ func (g *OcelotServerAPI) GetHandler(cfg *pb.VCSCreds) (models.VCSHandler, strin
 	return handler, token, nil
 }
 
-func (g *OcelotServerAPI) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
+func (g *RepoInterfaceAPI) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccount) (*empty.Empty, error) {
 	if repoAcct.Repo == "" || repoAcct.Account == "" || repoAcct.Type == pb.SubCredType_NIL_SCT {
 		return nil, status.Error(codes.InvalidArgument, "repo, account, and type are required fields")
 	}
 	// check to make sure url for webhook exists before trying anything fancy
-	if g.DeprecatedHandler.hhBaseUrl == "" {
+	if g.HhBaseUrl == "" {
 		return &empty.Empty{}, status.Error(codes.Unimplemented, "Admin is not configured with a hookhandler callback url to register webhooks with. Contact your administrator to run the ocelot admin service with the flag -hookhandler-url-base set to a url that can be accessed via a webhook for VCS push/pullrequest events.")
 	}
-	cfg, err := config.GetVcsCreds(g.DeprecatedHandler.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.DeprecatedHandler.RemoteConfig, repoAcct.Type)
+	cfg, err := config.GetVcsCreds(g.Storage, repoAcct.Account+"/"+repoAcct.Repo, g.RemoteConfig, repoAcct.Type)
 	if err != nil {
 		log.IncludeErrField(err).Error()
 		if _, ok := err.(*stringbuilder.FormatError); ok {
@@ -59,7 +67,7 @@ func (g *OcelotServerAPI) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccoun
 	if err != nil {
 		return &empty.Empty{}, status.Errorf(codes.Unavailable, "could not get repository detail at %s/%s", repoAcct.Account, repoAcct.Repo)
 	}
-	handler.SetCallbackURL(g.DeprecatedHandler.hhBaseUrl)
+	handler.SetCallbackURL(g.HhBaseUrl)
 	err = handler.CreateWebhook(repoLinks.Hooks)
 
 	if err != nil {
@@ -68,8 +76,8 @@ func (g *OcelotServerAPI) WatchRepo(ctx context.Context, repoAcct *pb.RepoAccoun
 	return &empty.Empty{}, nil
 }
 
-func (g *OcelotServerAPI) GetTrackedRepos(ctx context.Context, empty *empty.Empty) (*pb.AcctRepos, error) {
-	repos, err := g.DeprecatedHandler.Storage.GetTrackedRepos()
+func (g *RepoInterfaceAPI) GetTrackedRepos(ctx context.Context, empty *empty.Empty) (*pb.AcctRepos, error) {
+	repos, err := g.Storage.GetTrackedRepos()
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, "could not find any account/repos in the database")
