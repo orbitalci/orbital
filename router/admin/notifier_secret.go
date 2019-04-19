@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"fmt"
 	"context"
 	"strings"
 
@@ -10,6 +11,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/level11consulting/ocelot/secret"
+	"github.com/level11consulting/ocelot/router/admin/anycred"
+	"github.com/level11consulting/ocelot/server/config"
 )
 
 type NotifierSecret interface {
@@ -21,11 +24,17 @@ type NotifierSecret interface {
 	DeleteNotifyCreds(context.Context, *pb.NotifyCreds) (*empty.Empty, error)
 }
 
-func (g *OcelotServerAPI) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+type NotifierSecretAPI struct {
+	NotifierSecret
+	RemoteConfig   config.CVRemoteConfig
+	Storage        storage.OcelotStorage
+}
+
+func (g *NotifierSecretAPI) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
 	if creds.SubType.Parent() != pb.CredType_NOTIFIER {
 		return nil, status.Error(codes.InvalidArgument, "Subtype must be of notifier type: "+strings.Join(pb.CredType_SSH.SubtypesString(), " | "))
 	}
-	err := secret.SetupRCCCredentials(g.DeprecatedHandler.RemoteConfig, g.DeprecatedHandler.Storage, creds)
+	err := secret.SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
 	if err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return &empty.Empty{}, status.Error(codes.FailedPrecondition, "Notify Creds Upload failed validation. Errors are: "+err.Error())
@@ -35,15 +44,25 @@ func (g *OcelotServerAPI) SetNotifyCreds(ctx context.Context, creds *pb.NotifyCr
 	return &empty.Empty{}, nil
 }
 
-func (g *OcelotServerAPI) NotifyCredExists(ctx context.Context, creds *pb.NotifyCreds) (*pb.Exists, error) {
-	return g.CheckAnyCredExists(ctx, creds)
+func (g *NotifierSecretAPI) NotifyCredExists(ctx context.Context, creds *pb.NotifyCreds) (*pb.Exists, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.CheckAnyCredExists(ctx, creds)
 }
 
-func (g *OcelotServerAPI) UpdateNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
-	return g.UpdateAnyCred(ctx, creds)
+func (g *NotifierSecretAPI) UpdateNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.UpdateAnyCred(ctx, creds)
 }
 
-func (g *OcelotServerAPI) GetNotifyCred(ctx context.Context, creds *pb.NotifyCreds) (*pb.NotifyCreds, error) {
+func (g *NotifierSecretAPI) GetNotifyCred(ctx context.Context, creds *pb.NotifyCreds) (*pb.NotifyCreds, error) {
 	creddy, err := g.GetAnyCred(creds)
 	if err != nil {
 		return nil, err
@@ -55,9 +74,9 @@ func (g *OcelotServerAPI) GetNotifyCred(ctx context.Context, creds *pb.NotifyCre
 	return notifier, nil
 }
 
-func (g *OcelotServerAPI) GetNotifyCreds(ctx context.Context, empty2 *empty.Empty) (*pb.NotifyWrap, error) {
+func (g *NotifierSecretAPI) GetNotifyCreds(ctx context.Context, empty2 *empty.Empty) (*pb.NotifyWrap, error) {
 	credWrapper := &pb.NotifyWrap{}
-	credz, err := g.DeprecatedHandler.RemoteConfig.GetCredsByType(g.DeprecatedHandler.Storage, pb.CredType_NOTIFIER, true)
+	credz, err := g.RemoteConfig.GetCredsByType(g.Storage, pb.CredType_NOTIFIER, true)
 	if err != nil {
 		if _, ok := err.(*storage.ErrNotFound); ok {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -73,6 +92,28 @@ func (g *OcelotServerAPI) GetNotifyCreds(ctx context.Context, empty2 *empty.Empt
 	return credWrapper, nil
 }
 
-func (g *OcelotServerAPI) DeleteNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
-	return g.DeleteAnyCred(ctx, creds, pb.CredType_NOTIFIER)
+func (g *NotifierSecretAPI) DeleteNotifyCreds(ctx context.Context, creds *pb.NotifyCreds) (*empty.Empty, error) {
+	anyCredAPI := anycred.AnyCredAPI {
+		Storage:        g.Storage,	
+		RemoteConfig:   g.RemoteConfig,
+	}
+
+	return anyCredAPI.DeleteAnyCred(ctx, creds, pb.CredType_NOTIFIER)
+}
+
+func (g *NotifierSecretAPI) GetAnyCred(credder pb.OcyCredder) (pb.OcyCredder, error) {
+	if credder.GetSubType() == 0 || credder.GetAcctName() == "" || credder.GetIdentifier() == "" {
+		return nil, status.Error(codes.InvalidArgument, "subType, acctName, and identifier are required fields")
+	}
+	creddy, err := g.RemoteConfig.GetCred(g.Storage, credder.GetSubType(), credder.GetIdentifier(), credder.GetAcctName(), true)
+	if err != nil {
+		if _, ok := err.(*storage.ErrNotFound); ok {
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Credential %s/%s of Type %s Not Found", credder.GetAcctName(), credder.GetIdentifier(), credder.GetSubType()))
+		}
+		if _, ok := err.(*pb.ValidationErr); ok {
+			return nil, status.Error(codes.InvalidArgument, "Invalid arguments, error: "+err.Error())
+		}
+		return nil, status.Error(codes.Unavailable, "Credential interface not available, error: "+err.Error())
+	}
+	return creddy, nil
 }
