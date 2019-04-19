@@ -1,4 +1,4 @@
-package admin
+package appledev
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 	"github.com/level11consulting/ocelot/build/helpers/ioshelper"
 	"github.com/level11consulting/ocelot/secret/legacy"
 	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/router/admin/anycred"
+	"github.com/level11consulting/ocelot/secret/anycred"
 )
 
 type AppleDevSecret interface {

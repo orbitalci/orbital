@@ -1,4 +1,4 @@
-package admin
+package vcs
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/github"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
-	"github.com/level11consulting/ocelot/router/admin/anycred"
+	"github.com/level11consulting/ocelot/secret/anycred"
 )
 
 type VcsSecret interface {
