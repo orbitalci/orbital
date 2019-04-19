@@ -1,4 +1,4 @@
-package admin
+package secret
 
 import (
 	"context"
@@ -8,30 +8,37 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/level11consulting/ocelot/router/admin/anycred"
+	"github.com/level11consulting/ocelot/secret/anycred"
+	"github.com/level11consulting/ocelot/secret/appledev"
+	"github.com/level11consulting/ocelot/secret/artifactrepo"
+	"github.com/level11consulting/ocelot/secret/generic"
+	"github.com/level11consulting/ocelot/secret/kubernetes"
+	"github.com/level11consulting/ocelot/secret/notifier"
+	"github.com/level11consulting/ocelot/secret/ssh"
+	"github.com/level11consulting/ocelot/secret/vcs"
 )
 
 type SecretInterface interface {
 	anycred.AnyCred
-	AppleDevSecret
-	ArtifactRepoSecret
-	GenericSecret
-	KubernetesSecret
-	NotifierSecret
-	SshSecret
-	VcsSecret
+	appledev.AppleDevSecret
+	artifactrepo.ArtifactRepoSecret
+	generic.GenericSecret
+	kubernetes.KubernetesSecret
+	notifier.NotifierSecret
+	ssh.SshSecret
+	vcs.VcsSecret
 	GetAllCreds(context.Context, *empty.Empty) (*pb.AllCredsWrapper, error)
 }
 
 type SecretInterfaceAPI struct {
 	anycred.AnyCredAPI // This is a legacy catch-all hack
-	AppleDevSecretAPI
-	ArtifactRepoSecretAPI
-	GenericSecretAPI
-	KubernetesSecretAPI
-	NotifierSecretAPI
-	SshSecretAPI
-	VcsSecretAPI
+	appledev.AppleDevSecretAPI
+	artifactrepo.ArtifactRepoSecretAPI
+	generic.GenericSecretAPI
+	kubernetes.KubernetesSecretAPI
+	notifier.NotifierSecretAPI
+	ssh.SshSecretAPI
+	vcs.VcsSecretAPI
 }
 
 func (g *SecretInterfaceAPI) GetAllCreds(ctx context.Context, msg *empty.Empty) (*pb.AllCredsWrapper, error) {

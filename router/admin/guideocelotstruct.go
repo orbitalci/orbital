@@ -10,7 +10,16 @@ import (
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/router/admin/anycred"
+	"github.com/level11consulting/ocelot/secret"
+	"github.com/level11consulting/ocelot/secret/anycred"
+	"github.com/level11consulting/ocelot/secret/appledev"
+	"github.com/level11consulting/ocelot/secret/artifactrepo"
+	"github.com/level11consulting/ocelot/secret/generic"
+	"github.com/level11consulting/ocelot/secret/kubernetes"
+	"github.com/level11consulting/ocelot/secret/notifier"
+	"github.com/level11consulting/ocelot/secret/ssh"
+	"github.com/level11consulting/ocelot/secret/vcs"
+
 )
 
 //this is our grpc server, it responds to client requests
@@ -18,7 +27,7 @@ type OcelotServerAPI struct {
 	BuildAPI
 	RepoInterfaceAPI
 	StatusInterfaceAPI
-	SecretInterfaceAPI
+	secret.SecretInterfaceAPI
 }
 
 func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deserializer, adminV *validate.AdminValidator, repoV *validate.RepoValidator, storage storage.OcelotStorage, hhBaseUrl string) pb.GuideOcelotServer {
@@ -36,28 +45,28 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		OcyValidator:   buildconfigvalidator.GetOcelotValidator(),
 	}
 
-	appleDevSecretAPI := AppleDevSecretAPI {
+	appleDevSecretAPI := appledev.AppleDevSecretAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 	}
 
-	artifactRepoSecretAPI := ArtifactRepoSecretAPI {
+	artifactRepoSecretAPI := artifactrepo.ArtifactRepoSecretAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 		RepoValidator:  repoV,
 	}
 
-	genericSecretAPI := GenericSecretAPI {
+	genericSecretAPI := generic.GenericSecretAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 	}
 
-	kubernetesSecretAPI := KubernetesSecretAPI {
+	kubernetesSecretAPI := kubernetes.KubernetesSecretAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 	}
 
-	notifierSecretAPI := NotifierSecretAPI {
+	notifierSecretAPI := notifier.NotifierSecretAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 	}
@@ -75,7 +84,7 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		HhBaseUrl:      hhBaseUrl,
 	}
 
-	sshSecretAPI := SshSecretAPI {
+	sshSecretAPI := ssh.SshSecretAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 	}
@@ -85,13 +94,13 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		RemoteConfig:   config,
 	}
 
-	vcsSecretAPI := VcsSecretAPI {
+	vcsSecretAPI := vcs.VcsSecretAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 		AdminValidator: adminV,
 	}
 
-	secretInterfaceAPI := SecretInterfaceAPI {
+	secretInterfaceAPI := secret.SecretInterfaceAPI {
 		AnyCredAPI: anyCredAPI,
 		AppleDevSecretAPI: appleDevSecretAPI,
 		ArtifactRepoSecretAPI: artifactRepoSecretAPI,

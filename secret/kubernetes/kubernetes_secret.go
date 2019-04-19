@@ -1,4 +1,4 @@
-package admin
+package kubernetes
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/level11consulting/ocelot/secret/legacy"
-	"github.com/level11consulting/ocelot/router/admin/anycred"
+	"github.com/level11consulting/ocelot/secret/anycred"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
 )
