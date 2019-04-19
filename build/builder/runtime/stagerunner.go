@@ -25,7 +25,7 @@ func (w *launcher) runStages(ctx context.Context, werk *pb.WerkerTask, builder b
 		} else if shouldSkip {
 			continue
 		}
-		w.BuildValet.Reset(stage.Name, werk.CheckoutHash)
+		w.BuildMonitor.Reset(stage.Name, werk.CheckoutHash)
 		stageStart := time.Now()
 		stageResult := builder.Execute(ctx, stage, w.infochan, werk.CheckoutHash)
 		ocelog.Log().WithField("hash", werk.CheckoutHash).Info("finished stage: ", stage.Name)

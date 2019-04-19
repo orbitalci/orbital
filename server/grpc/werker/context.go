@@ -2,7 +2,7 @@ package werker
 
 import (
 	"github.com/level11consulting/ocelot/build/streaminglogs"
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/storage"
 	consulet "github.com/shankj3/go-til/consul"
@@ -14,10 +14,10 @@ type WerkerContext struct {
 	consul     *consulet.Consulet
 	store      storage.OcelotStorage
 	streamPack *streaminglogs.StreamPack
-	killValet  *valet.ContextValet
+	buildReaper  *buildmonitor.BuildReaper
 }
 
-func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, contextValet *valet.ContextValet) *WerkerContext {
+func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, buildReaper *buildmonitor.BuildReaper) *WerkerContext {
 	werkerConsul, err := consulet.Default()
 	if err != nil {
 		ocelog.IncludeErrField(err)
@@ -25,7 +25,7 @@ func getWerkerContext(conf *models.WerkerFacts, store storage.OcelotStorage, con
 	werkerCtx := &WerkerContext{
 		WerkerFacts: conf,
 		consul:      werkerConsul,
-		killValet:   contextValet,
+		buildReaper:   buildReaper,
 		store:       store,
 	}
 	return werkerCtx

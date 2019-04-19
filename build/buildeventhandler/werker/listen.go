@@ -8,7 +8,7 @@ import (
 	"github.com/level11consulting/ocelot/build/builder/type/docker"
 	"github.com/level11consulting/ocelot/build/builder/type/exec"
 	"github.com/level11consulting/ocelot/build/builder/type/ssh"
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -39,16 +39,16 @@ type WorkerMsgHandler struct {
 	BuildCtxChan chan *models.BuildContext
 	Basher       *shell.Basher
 	Store        storage.OcelotStorage
-	BuildValet   *valet.Valet
+	BuildMonitor   *buildmonitor.BuildMonitor
 	RemoteConfig config.CVRemoteConfig
 }
 
-func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *shell.Basher, st storage.OcelotStorage, bv *valet.Valet, rc config.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
+func NewWorkerMsgHandler(topic string, facts *models.WerkerFacts, b *shell.Basher, st storage.OcelotStorage, bm *buildmonitor.BuildMonitor, rc config.CVRemoteConfig, tunnel chan *models.Transport, buildChan chan *models.BuildContext) *WorkerMsgHandler {
 	return &WorkerMsgHandler{
 		Topic:        topic,
 		Basher:       b,
 		Store:        st,
-		BuildValet:   bv,
+		BuildMonitor:   bm,
 		StreamChan:   tunnel,
 		BuildCtxChan: buildChan,
 		RemoteConfig: rc,
@@ -98,7 +98,7 @@ func (w WorkerMsgHandler) UnmarshalAndProcess(msg []byte, done chan int, finish 
 	default:
 		builder = docker.NewDockerBuilder(w.Basher)
 	}
-	launch := runtime.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildValet)
+	launch := runtime.NewLauncher(w.WerkerFacts, w.RemoteConfig, w.StreamChan, w.BuildCtxChan, w.Basher, w.Store, w.BuildMonitor)
 	launch.MakeItSo(werkerTask, builder, finish, done)
 	return nil
 }

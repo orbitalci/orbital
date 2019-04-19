@@ -30,7 +30,7 @@ import (
 	werkerevent "github.com/level11consulting/ocelot/build/buildeventhandler/werker"
 	"github.com/level11consulting/ocelot/build/helpers/messageservice"
 	"github.com/level11consulting/ocelot/build/helpers/stringbuilder/workingdir"
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/server/grpc/werker"
 	"github.com/level11consulting/ocelot/server/monitor/circuitbreaker"
@@ -47,7 +47,7 @@ import (
 
 //listen will listen for messages for a specified topic. If a message is received, a
 //message worker handler is created to process the message
-func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan chan *models.Transport, buildChan chan *models.BuildContext, bv *valet.Valet, store storage.OcelotStorage) {
+func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan chan *models.Transport, buildChan chan *models.BuildContext, bm *buildmonitor.BuildMonitor, store storage.OcelotStorage) {
 	for {
 		if !nsqpb.LookupTopic(p.Config.LookupDAddress(), topic) {
 			ocelog.Log().Info("i am about to sleep for 10s because i couldn't find the topic "+topic+" at ", p.Config.LookupDAddress())
@@ -64,7 +64,7 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 			//	bshr.SetBbDownloadURL(conf.LoopbackIp + ":9090/dev")
 			//}
 
-			handler := werkerevent.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bv, conf.RemoteConfig, streamingChan, buildChan)
+			handler := werkerevent.NewWorkerMsgHandler(topic, conf.WerkerFacts, bshr, store, bm, conf.RemoteConfig, streamingChan, buildChan)
 			p.Handler = handler
 			p.ConsumeMessages(topic, "werker")
 			ocelog.Log().Info("Consuming messages for topic ", topic)
@@ -90,18 +90,18 @@ func main() {
 		ocelog.IncludeErrField(err).Fatal("COULD NOT GET OCELOT STORAGE! BAILING!")
 	}
 	consulet := conf.RemoteConfig.GetConsul()
-	uuid, err := valet.Register(consulet, conf.RegisterIP, conf.GrpcPort, conf.ServicePort, conf.tags)
+	uuid, err := buildmonitor.Register(consulet, conf.RegisterIP, conf.GrpcPort, conf.ServicePort, conf.tags)
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to register werker with consul, this is vital. BAILING!")
 	}
 	conf.Uuid = uuid
 	// kick off ctl-c signal handling
-	buildValet := valet.NewValet(conf.RemoteConfig, conf.Uuid, conf.WerkerType, store, conf.Ssh)
+	buildMonitor := buildmonitor.NewBuildMonitor(conf.RemoteConfig, conf.Uuid, conf.WerkerType, store, conf.Ssh)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		buildValet.SignalRecvDed()
+		buildMonitor.SignalRecvDed()
 	}()
 	// start protoConsumers
 	var protoConsumers []*nsqpb.ProtoConsume
@@ -114,12 +114,12 @@ func main() {
 		// eg:
 		//   protoConsume.Config.MaxInFlight = GetFromEnv
 		ocelog.Log().Debug("I AM ABOUT TO LISTEN")
-		go listen(protoConsume, topic, conf, streamingTunnel, buildCtxTunnel, buildValet, store)
+		go listen(protoConsume, topic, conf, streamingTunnel, buildCtxTunnel, buildMonitor, store)
 		protoConsumers = append(protoConsumers, protoConsume)
 	}
 	go circuitbreaker.WatchAndPause(int64(conf.HealthCheckInterval), protoConsumers, conf.RemoteConfig, store, conf.DiskUtilityHealthCheck)
-	go werker.ServeMe(streamingTunnel, conf.WerkerFacts, store, buildValet.ContextValet)
-	go buildValet.ListenBuilds(buildCtxTunnel, sync.Mutex{})
+	go werker.ServeMe(streamingTunnel, conf.WerkerFacts, store, buildMonitor.BuildReaper)
+	go buildMonitor.ListenBuilds(buildCtxTunnel, sync.Mutex{})
 	for _, consumer := range protoConsumers {
 		<-consumer.StopChan
 	}

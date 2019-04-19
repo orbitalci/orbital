@@ -1,4 +1,4 @@
-package valet
+package buildmonitor
 
 import (
 	"context"
@@ -29,41 +29,41 @@ const (
 	Panic
 )
 
-// Valet is the overseer of builds. It handles registration of when the build is started, what stage it is actively on,
+// BuildMonitor is the overseer of builds. It handles registration of when the build is started, what stage it is actively on,
 // when to close the channel that signifies to nsqpb to stop refreshing the status of the message
-type Valet struct {
+type BuildMonitor struct {
 	RemoteConfig config.CVRemoteConfig
 	store        storage.OcelotStorage
 	WerkerUuid   uuid.UUID
 	doneChannels map[string]chan int
-	*ContextValet
+	*BuildReaper
 	sync.Mutex
 	c.Cleaner
 }
 
-func NewValet(rc config.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage, facts *models.SSHFacts) *Valet {
-	valet := &Valet{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store: store}
-	valet.Cleaner = c.GetNewCleaner(werkerType, facts)
-	valet.ContextValet = NewContextValet()
-	return valet
+func NewBuildMonitor(rc config.CVRemoteConfig, uid uuid.UUID, werkerType models.WerkType, store storage.OcelotStorage, facts *models.SSHFacts) *BuildMonitor {
+	buildmonitor := &BuildMonitor{RemoteConfig: rc, WerkerUuid: uid, doneChannels: make(map[string]chan int), store: store}
+	buildmonitor.Cleaner = c.GetNewCleaner(werkerType, facts)
+	buildmonitor.BuildReaper = NewBuildReaper()
+	return buildmonitor 
 }
 
 // Reset will set the build stage for the runtime of the hash, and it will add a start time.
-func (v *Valet) Reset(newStage string, hash string) error {
-	consulet := v.RemoteConfig.GetConsul()
-	err := RegisterBuildStage(consulet, v.WerkerUuid.String(), hash, newStage)
+func (bm *BuildMonitor) Reset(newStage string, hash string) error {
+	consulet := bm.RemoteConfig.GetConsul()
+	err := RegisterBuildStage(consulet, bm.WerkerUuid.String(), hash, newStage)
 	if err != nil {
 		return err
 	}
-	err = RegisterStageStartTime(consulet, v.WerkerUuid.String(), hash, time.Now())
+	err = RegisterStageStartTime(consulet, bm.WerkerUuid.String(), hash, time.Now())
 	return err
 }
 
 // StoreInterrupt will look up in consul all of the associated active builds with the werker and their current
 // runtime state. It will then save each build's current stage details with an
-func (v *Valet) StoreInterrupt(typ Interrupt) {
-	consulet := v.RemoteConfig.GetConsul()
-	hrts, err := runtime.GetHashRuntimesByWerker(consulet, v.WerkerUuid.String())
+func (bm *BuildMonitor) StoreInterrupt(typ Interrupt) {
+	consulet := bm.RemoteConfig.GetConsul()
+	hrts, err := runtime.GetHashRuntimesByWerker(consulet, bm.WerkerUuid.String())
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to get hash runtimes")
 		return
@@ -86,18 +86,18 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 			Messages:      messages,
 			StartTime:     hrt.StageStart,
 		}
-		if err := v.store.AddStageDetail(detail); err != nil {
+		if err := bm.store.AddStageDetail(detail); err != nil {
 			log.IncludeErrField(err).Error("couldn't store stage detail!")
 		} else {
 			log.Log().Info("updated stage detail")
 		}
-		sum, err := v.store.RetrieveSumByBuildId(hrt.BuildId)
+		sum, err := bm.store.RetrieveSumByBuildId(hrt.BuildId)
 		if err != nil {
 			log.IncludeErrField(err).Error("could not retrieve summary for update")
 		}
 		buildTime := time.Unix(sum.BuildTime.Seconds, int64(sum.BuildTime.Nanos))
 		fullDuration := time.Since(buildTime).Seconds()
-		if err := v.store.UpdateSum(true, fullDuration, hrt.BuildId); err != nil {
+		if err := bm.store.UpdateSum(true, fullDuration, hrt.BuildId); err != nil {
 			log.IncludeErrField(err).Error("couldn't update summary in database")
 		} else {
 			log.Log().Info("updated summary table in database")
@@ -106,14 +106,14 @@ func (v *Valet) StoreInterrupt(typ Interrupt) {
 }
 
 // StartBuild will register the uuid, hash, and database id into consul, as well as update the werker_id:hash kv in consul.
-func (v *Valet) StartBuild(consulet consul.Consuletty, hash string, id int64) error {
+func (bm *BuildMonitor) StartBuild(consulet consul.Consuletty, hash string, id int64) error {
 	var err error
-	if err = RegisterBuildSummaryId(consulet, v.WerkerUuid.String(), hash, id); err != nil {
+	if err = RegisterBuildSummaryId(consulet, bm.WerkerUuid.String(), hash, id); err != nil {
 		log.IncludeErrField(err).Error("could not register build summary id into consul! huge deal!")
 		return err
 	}
 
-	if err = RegisterStartedBuild(consulet, v.WerkerUuid.String(), hash); err != nil {
+	if err = RegisterStartedBuild(consulet, bm.WerkerUuid.String(), hash); err != nil {
 		log.IncludeErrField(err).Error("couldn't register build")
 		return err
 	}
@@ -122,19 +122,19 @@ func (v *Valet) StartBuild(consulet consul.Consuletty, hash string, id int64) er
 
 // RemoveAllTrace gets all the docker uuids running according to this werker id and attempts to kill and remove the associated containers.
 //   It also looks up all active builds associated with the werker id and clears them out of consul before finally deregistering itself as a werker in consul.
-func (v *Valet) RemoveAllTrace() {
-	consulet := v.RemoteConfig.GetConsul()
-	uuids, err := runtime.GetDockerUuidsByWerkerId(consulet, v.WerkerUuid.String())
+func (bm *BuildMonitor) RemoveAllTrace() {
+	consulet := bm.RemoteConfig.GetConsul()
+	uuids, err := runtime.GetDockerUuidsByWerkerId(consulet, bm.WerkerUuid.String())
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to get docker uuids? is nothing sacred?!")
 		return
 	}
 	ctx := context.Background()
 	for _, uid := range uuids {
-		v.Cleanup(ctx, uid, nil)
+		bm.Cleanup(ctx, uid, nil)
 	}
 	log.Log().Info("cleaned up docker remnants")
-	hashes, err := runtime.GetWerkerActiveBuilds(consulet, v.WerkerUuid.String())
+	hashes, err := runtime.GetWerkerActiveBuilds(consulet, bm.WerkerUuid.String())
 	if err != nil {
 		log.IncludeErrField(err).Error("could not get active builds for werker")
 		return
@@ -148,21 +148,21 @@ func (v *Valet) RemoveAllTrace() {
 		}
 	}
 	log.Log().Info("unregister-ing myself with consul as a werker")
-	if err := UnRegister(consulet, v.WerkerUuid.String()); err != nil {
-		log.IncludeErrField(err).WithField("werkerId", v.WerkerUuid.String()).Error("unable to remove werker location register out of consul.")
+	if err := UnRegister(consulet, bm.WerkerUuid.String()); err != nil {
+		log.IncludeErrField(err).WithField("werkerId", bm.WerkerUuid.String()).Error("unable to remove werker location register out of consul.")
 	} else {
-		log.Log().WithField("werkerId", v.WerkerUuid.String()).Info("successfully unregistered")
+		log.Log().WithField("werkerId", bm.WerkerUuid.String()).Info("successfully unregistered")
 	}
 }
 
 //MakeItSoDed is a defer recovery function for when the werker has panicked
-func (v *Valet) MakeItSoDed(finish chan int) {
+func (bm *BuildMonitor) MakeItSoDed(finish chan int) {
 	if rec := recover(); rec != nil {
 		defer os.Exit(1)
 		fmt.Println(rec)
 		log.Log().WithField("stack", string(debug.Stack())).Error("recovering from panic")
-		v.StoreInterrupt(Panic)
-		v.RemoveAllTrace()
+		bm.StoreInterrupt(Panic)
+		bm.RemoveAllTrace()
 	}
 	finish <- 1
 	log.Log().Error("shutting down")
@@ -170,34 +170,34 @@ func (v *Valet) MakeItSoDed(finish chan int) {
 	os.Exit(1)
 }
 
-//RegisterDoneChan will write the nsq done channel to the in-memory map associated with this valet
-func (v *Valet) RegisterDoneChan(hash string, done chan int) {
-	v.Lock()
-	defer v.Unlock()
-	_, ok := v.doneChannels[hash]
+//RegisterDoneChan will write the nsq done channel to the in-memory map associated with this buildmonitor
+func (bm *BuildMonitor) RegisterDoneChan(hash string, done chan int) {
+	bm.Lock()
+	defer bm.Unlock()
+	_, ok := bm.doneChannels[hash]
 	if ok {
 		// not sure if this would happen ever
 		log.Log().WithField("hash", hash).Warning("fyi! overwriting hash done channel!")
 	}
-	v.doneChannels[hash] = done
+	bm.doneChannels[hash] = done
 }
 
-//UnregisterDoneChan will delete the done channel associated with the given hash out of the in-memory map associated with this valet
-func (v *Valet) UnregisterDoneChan(hash string) {
-	v.Lock()
-	defer v.Unlock()
-	_, ok := v.doneChannels[hash]
+//UnregisterDoneChan will delete the done channel associated with the given hash out of the in-memory map associated with this buildmonitor
+func (bm *BuildMonitor) UnregisterDoneChan(hash string) {
+	bm.Lock()
+	defer bm.Unlock()
+	_, ok := bm.doneChannels[hash]
 	if !ok {
 		log.Log().WithField("hash", hash).Warning("fyi! hash wasn't found in done channel map!")
 	}
-	delete(v.doneChannels, hash)
+	delete(bm.doneChannels, hash)
 
 }
 
 //CallDoneForEverything will iterate over every entry in the in-memory done map and and call "done" on it (ie send an integer over the channel)
-func (v *Valet) CallDoneForEverything() {
+func (bm *BuildMonitor) CallDoneForEverything() {
 	// this will add to every done channel in its doneChannels map, triggering the nsqpb library to call Finish()
-	for _, done := range v.doneChannels {
+	for _, done := range bm.doneChannels {
 		done <- 1
 	}
 }
@@ -205,11 +205,11 @@ func (v *Valet) CallDoneForEverything() {
 //SignalRecvDed is responsible for closing out all active work when a werker has recieved a signal (SIGKILL, etc). It will store in the database
 // that it has been interrupted for every acssociated active build, it will call done for every nsq active connection, and it will delete all its
 // entries out of the database, then it will finally exit w/ code 0
-func (v *Valet) SignalRecvDed() {
+func (bm *BuildMonitor) SignalRecvDed() {
 	log.Log().Info("received interrupt, cleaning up after myself...")
-	v.StoreInterrupt(Signal)
-	v.CallDoneForEverything()
-	v.RemoveAllTrace()
+	bm.StoreInterrupt(Signal)
+	bm.CallDoneForEverything()
+	bm.RemoveAllTrace()
 	os.Exit(0)
 }
 

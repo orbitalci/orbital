@@ -1,4 +1,4 @@
-package valet
+package buildmonitor
 
 import (
 	"fmt"

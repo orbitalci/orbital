@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/storage"
@@ -104,7 +104,7 @@ func (sp *StreamPack) processTransport(transport *models.Transport) {
 	//}
 	ocelog.Log().Debugf("removing hash %s from readerCache, channelDict, and consul", transport.Hash)
 	delete(sp.BuildInfo, transport.Hash)
-	if err := valet.Delete(sp.Consul, transport.Hash); err != nil {
+	if err := buildmonitor.Delete(sp.Consul, transport.Hash); err != nil {
 		ocelog.IncludeErrField(err).Error("could not recursively delete values from consul")
 	}
 
