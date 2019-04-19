@@ -22,11 +22,12 @@ import (
 	"github.com/level11consulting/ocelot/repo"
 	"github.com/level11consulting/ocelot/repo/poll"
 	"github.com/level11consulting/ocelot/server/grpc/admin/status"
+	"github.com/level11consulting/ocelot/build"
 )
 
 //this is our grpc server, it responds to client requests
 type OcelotServerAPI struct {
-	BuildAPI
+	build.BuildAPI
 	repo.RepoInterfaceAPI
 	status.StatusInterfaceAPI
 	secret.SecretInterfaceAPI
@@ -39,7 +40,7 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		RemoteConfig:   config,
 	}
 
-	buildAPI := BuildAPI {
+	buildAPI := build.BuildAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 		Deserializer:   d,
