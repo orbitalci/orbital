@@ -19,13 +19,15 @@ import (
 	"github.com/level11consulting/ocelot/secret/notifier"
 	"github.com/level11consulting/ocelot/secret/ssh"
 	"github.com/level11consulting/ocelot/secret/vcs"
+	"github.com/level11consulting/ocelot/repo"
+	"github.com/level11consulting/ocelot/repo/poll"
 
 )
 
 //this is our grpc server, it responds to client requests
 type OcelotServerAPI struct {
 	BuildAPI
-	RepoInterfaceAPI
+	repo.RepoInterfaceAPI
 	StatusInterfaceAPI
 	secret.SecretInterfaceAPI
 }
@@ -71,13 +73,13 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 		RemoteConfig:   config,
 	}
 
-	pollScheduleAPI := PollScheduleAPI {
+	pollScheduleAPI := poll.PollScheduleAPI {
 		Storage:        storage,	
 		RemoteConfig:   config,
 		Producer:       nsqpb.GetInitProducer(),
 	}
 
-	repoInterfaceAPI := RepoInterfaceAPI {
+	repoInterfaceAPI := repo.RepoInterfaceAPI {
 		PollScheduleAPI:pollScheduleAPI,
 		RemoteConfig:   config,
 		Storage:        storage,	

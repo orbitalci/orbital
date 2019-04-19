@@ -1,4 +1,4 @@
-package admin
+package repo
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/build/vcshandler"
+	"github.com/level11consulting/ocelot/repo/poll"
 )
 
 type RepoInterface interface {
@@ -24,7 +25,7 @@ type RepoInterface interface {
 
 type RepoInterfaceAPI struct {
 	RepoInterface
-	PollScheduleAPI
+	poll.PollScheduleAPI
 	RemoteConfig   config.CVRemoteConfig
 	Storage        storage.OcelotStorage
 	Handler        models.VCSHandler
