@@ -8,9 +8,11 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/level11consulting/ocelot/router/admin/anycred"
 )
 
 type SecretInterface interface {
+	anycred.AnyCred
 	AppleDevSecret
 	ArtifactRepoSecret
 	GenericSecret
@@ -22,6 +24,7 @@ type SecretInterface interface {
 }
 
 type SecretInterfaceAPI struct {
+	anycred.AnyCredAPI // This is a legacy catch-all hack
 	AppleDevSecretAPI
 	ArtifactRepoSecretAPI
 	GenericSecretAPI

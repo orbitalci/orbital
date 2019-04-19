@@ -15,7 +15,6 @@ import (
 
 //this is our grpc server, it responds to client requests
 type OcelotServerAPI struct {
-	anycred.AnyCredAPI // This is a hack. Revisit once stable
 	BuildAPI
 	RepoInterfaceAPI
 	StatusInterfaceAPI
@@ -93,6 +92,7 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 	}
 
 	secretInterfaceAPI := SecretInterfaceAPI {
+		AnyCredAPI: anyCredAPI,
 		AppleDevSecretAPI: appleDevSecretAPI,
 		ArtifactRepoSecretAPI: artifactRepoSecretAPI,
 		GenericSecretAPI: genericSecretAPI,
@@ -103,7 +103,6 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 	}
 
 	return &OcelotServerAPI{ 
-		anyCredAPI,
 		buildAPI,
 		repoInterfaceAPI,
 		statusInterfaceAPI,
