@@ -7,7 +7,7 @@ import (
 
 	"github.com/level11consulting/ocelot/build/cleaner"
 	"github.com/level11consulting/ocelot/build/streaminglogs"
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/client/runtime"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
@@ -38,7 +38,7 @@ func (w *WerkerServer) BuildInfo(request *pb.Request, stream pb.Build_BuildInfoS
 //KillHash handles build kills
 func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashServer) error {
 	stream.Send(wrap(fmt.Sprintf("Checking active builds for %s...", request.Hash)))
-	if err := w.killValet.Kill(request.Hash); err == nil {
+	if err := w.buildReaper.Kill(request.Hash); err == nil {
 		stream.Send(wrap(fmt.Sprintf("An active build was found for %s, attempting to cancel...", request.Hash)))
 
 		// remove container
@@ -51,14 +51,14 @@ func (w *WerkerServer) KillHash(request *pb.Request, stream pb.Build_KillHashSer
 		}
 		build, ok := hashes[request.Hash]
 		if ok {
-			// this should be handled by valet, but docker doesn't handle killing a build that is expecting stdin (ie a request for for accepting integrity of an ssh key)
+			// this should be handled by buildmonitor, but docker doesn't handle killing a build that is expecting stdin (ie a request for for accepting integrity of an ssh key)
 			// fixme: figure our how to be able to do this, because just cancelling in the context in the stdin scenario doesn't trigger docker api to kill the container
 			err = w.Cleanup(context.Background(), build.DockerUuid, nil)
 			stream.Send(wrap(fmt.Sprintf("Successfully killed build for %s %s", request.Hash, models.CHECKMARK)))
 		} else {
 			stream.Send(wrap("Wow you killed your build before it even got to the setup stage??"))
 		}
-		if err = valet.Delete(w.consul, request.Hash); err != nil {
+		if err = buildmonitor.Delete(w.consul, request.Hash); err != nil {
 			log.IncludeErrField(err).Error("couldn't delete out of consul")
 			return errors.New("Couldn't delete build out of consul. Your build was killed, but cleanup didn't go as planned. Error: " + err.Error())
 		}

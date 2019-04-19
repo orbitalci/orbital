@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/level11consulting/ocelot/build/streaminglogs"
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
@@ -17,9 +17,9 @@ import (
 )
 
 //ServeMe will start HTTP Server as needed for streaming build output by hash
-func ServeMe(transportChan chan *models.Transport, conf *models.WerkerFacts, store storage.OcelotStorage, killValet *valet.ContextValet) {
+func ServeMe(transportChan chan *models.Transport, conf *models.WerkerFacts, store storage.OcelotStorage, buildReaper *buildmonitor.BuildReaper) {
 	// todo: defer a recovery here
-	werkStream := getWerkerContext(conf, store, killValet)
+	werkStream := getWerkerContext(conf, store, buildReaper)
 	streamPack := streaminglogs.GetStreamPack(werkStream.store, werkStream.consul)
 	werkStream.streamPack = streamPack
 	ocelog.Log().Debug("saving build info channels to in memory map")

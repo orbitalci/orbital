@@ -3,7 +3,7 @@ package runtime
 import (
 	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/storage"
@@ -19,7 +19,7 @@ type launcher struct {
 	BuildCtxChan chan *models.BuildContext
 	Basher       *shell.Basher
 	Store        storage.OcelotStorage
-	BuildValet   *valet.Valet
+	BuildMonitor   *buildmonitor.BuildMonitor
 	handler      models.VCSHandler
 	integrations []integrations.StringIntegrator
 	binaryIntegs []integrations.BinaryIntegrator
@@ -31,7 +31,7 @@ func NewLauncher(facts *models.WerkerFacts,
 	BuildCtxChan chan *models.BuildContext,
 	bshr *shell.Basher,
 	store storage.OcelotStorage,
-	bv *valet.Valet) *launcher {
+	bv *buildmonitor.BuildMonitor) *launcher {
 	return &launcher{
 		WerkerFacts:  facts,
 		RemoteConf:   remoteConf,
@@ -39,7 +39,7 @@ func NewLauncher(facts *models.WerkerFacts,
 		BuildCtxChan: BuildCtxChan,
 		Basher:       bshr,
 		Store:        store,
-		BuildValet:   bv,
+		BuildMonitor:   bv,
 		infochan:     make(chan []byte),
 		integrations: getIntegrationList(),
 		binaryIntegs: getBinaryIntegList(bshr.LoopbackIp, facts.ServicePort),

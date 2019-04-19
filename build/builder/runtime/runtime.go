@@ -7,7 +7,7 @@ import (
 
 	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/storage"
@@ -67,9 +67,9 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder builderinterface.Builde
 	startBuild()
 	start := time.Now()
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
-	w.BuildValet.RegisterDoneChan(werk.CheckoutHash, done)
-	defer w.BuildValet.MakeItSoDed(finish)
-	defer w.BuildValet.UnregisterDoneChan(werk.CheckoutHash)
+	w.BuildMonitor.RegisterDoneChan(werk.CheckoutHash, done)
+	defer w.BuildMonitor.MakeItSoDed(finish)
+	defer w.BuildMonitor.UnregisterDoneChan(werk.CheckoutHash)
 	defer func() {
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
@@ -121,19 +121,19 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder builderinterface.Builde
 	//update consul with active build data
 	consul := w.RemoteConf.GetConsul()
 	// if we can't register with consul, bail, just exit out. the maintainer will soon be pausing message flow anyway
-	if err := w.BuildValet.StartBuild(consul, werk.CheckoutHash, werk.Id); err != nil {
+	if err := w.BuildMonitor.StartBuild(consul, werk.CheckoutHash, werk.Id); err != nil {
 		return
 	}
 
 	setupStart := time.Now()
-	w.BuildValet.Reset("setup", werk.CheckoutHash)
+	w.BuildMonitor.Reset("setup", werk.CheckoutHash)
 
 	dockerIdChan := make(chan string)
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
 
 	// do setup stage
 	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.RemoteConf, w.ServicePort)
-	defer w.BuildValet.Cleanup(ctx, dockerUUid, w.infochan)
+	defer w.BuildMonitor.Cleanup(ctx, dockerUUid, w.infochan)
 	ocelog.Log().Info("finished setup")
 	setupDura := time.Now().Sub(setupStart)
 
@@ -197,7 +197,7 @@ func (w *launcher) addGlobalEnvVars(werk *pb.WerkerTask, builder builderinterfac
 func (w *launcher) listenForDockerUuid(dockerChan chan string, checkoutHash string) error {
 	dockerUuid := <-dockerChan
 
-	if err := valet.RegisterBuild(w.RemoteConf.GetConsul(), w.Uuid.String(), checkoutHash, dockerUuid); err != nil {
+	if err := buildmonitor.RegisterBuild(w.RemoteConf.GetConsul(), w.Uuid.String(), checkoutHash, dockerUuid); err != nil {
 		ocelog.IncludeErrField(err).Error("couldn't register build")
 		return err
 	}

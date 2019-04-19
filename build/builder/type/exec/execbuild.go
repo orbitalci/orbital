@@ -13,7 +13,7 @@ import (
 	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
 	"github.com/level11consulting/ocelot/build/builder/shell"
 	"github.com/level11consulting/ocelot/build/helpers/exechelper"
-	"github.com/level11consulting/ocelot/build/valet"
+	"github.com/level11consulting/ocelot/build/buildmonitor"
 	"github.com/level11consulting/ocelot/models"
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
@@ -21,7 +21,7 @@ import (
 )
 
 type Exec struct {
-	killer     *valet.ContextValet
+	killer     *buildmonitor.BuildReaper
 	stage      *builderinterface.StageUtil
 	globalEnvs []string
 
