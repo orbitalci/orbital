@@ -17,7 +17,6 @@ import (
 type OcelotServerAPI struct {
 	anycred.AnyCredAPI // This is a hack. Revisit once stable
 	BuildAPI
-	PollScheduleAPI
 	RepoInterfaceAPI
 	StatusInterfaceAPI
 	SecretInterfaceAPI
@@ -71,6 +70,7 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 	}
 
 	repoInterfaceAPI := RepoInterfaceAPI {
+		PollScheduleAPI:pollScheduleAPI,
 		RemoteConfig:   config,
 		Storage:        storage,	
 		HhBaseUrl:      hhBaseUrl,
@@ -105,7 +105,6 @@ func NewGuideOcelotServer(config config.CVRemoteConfig, d *deserialize.Deseriali
 	return &OcelotServerAPI{ 
 		anyCredAPI,
 		buildAPI,
-		pollScheduleAPI,
 		repoInterfaceAPI,
 		statusInterfaceAPI,
 		secretInterfaceAPI,

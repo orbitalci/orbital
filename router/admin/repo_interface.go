@@ -18,13 +18,13 @@ import (
 )
 
 type RepoInterface interface {
-	//PollSchedule
 	WatchRepo(context.Context, *pb.RepoAccount) (*empty.Empty, error)
 	GetTrackedRepos(context.Context, *empty.Empty) (*pb.AcctRepos, error)
 }
 
 type RepoInterfaceAPI struct {
 	RepoInterface
+	PollScheduleAPI
 	RemoteConfig   config.CVRemoteConfig
 	Storage        storage.OcelotStorage
 	Handler        models.VCSHandler
