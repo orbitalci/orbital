@@ -10,7 +10,7 @@ import (
 	"github.com/level11consulting/ocelot/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/level11consulting/ocelot/secret"
+	"github.com/level11consulting/ocelot/secret/legacy"
 	"github.com/level11consulting/ocelot/router/admin/anycred"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
@@ -72,7 +72,7 @@ func (g *ArtifactRepoSecretAPI) SetRepoCreds(ctx context.Context, creds *pb.Repo
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed repo creds validation! error: %s", err.Error())
 	}
-	err = secret.SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
+	err = legacy.SetupRCCCredentials(g.RemoteConfig, g.Storage, creds)
 	if _, ok := err.(*pb.ValidationErr); ok {
 		return &empty.Empty{}, status.Error(codes.InvalidArgument, "Repo Creds failed validation. Errors are: "+err.Error())
 	}

@@ -1,12 +1,9 @@
-package secret
+package legacy
 
 import (
-
 	"github.com/level11consulting/ocelot/models/pb"
 	"github.com/level11consulting/ocelot/server/config"
-
 	"github.com/level11consulting/ocelot/storage"
-
 )
 
 func SetupRCCCredentials(remoteConf config.CVRemoteConfig, store storage.CredTable, config pb.OcyCredder) error {

@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/level11consulting/ocelot/build/helpers/ioshelper"
-	"github.com/level11consulting/ocelot/secret"
+	"github.com/level11consulting/ocelot/secret/legacy"
 	"github.com/level11consulting/ocelot/server/config"
 	"github.com/level11consulting/ocelot/router/admin/anycred"
 )
@@ -51,7 +51,7 @@ func (g *AppleDevSecretAPI) SetAppleCreds(ctx context.Context, creds *pb.AppleCr
 		return nil, err
 	}
 
-	if err := secret.SetupRCCCredentials(g.RemoteConfig, g.Storage, creds); err != nil {
+	if err := legacy.SetupRCCCredentials(g.RemoteConfig, g.Storage, creds); err != nil {
 		if _, ok := err.(*pb.ValidationErr); ok {
 			return vempty, status.Error(codes.InvalidArgument, "Apple creds upload failed validation, errors are: "+err.Error())
 		}
