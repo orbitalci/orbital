@@ -6,7 +6,7 @@ package workingdir
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/orbitalci/models"
 )
 
 // GetOcyPrefixFromWerkerType will return "" for anything that runs in a container because root access can be assumed

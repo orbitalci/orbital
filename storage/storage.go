@@ -2,8 +2,8 @@ package storage
 
 import (
 	"fmt"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"time"
 )
 

@@ -8,10 +8,10 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/shankj3/go-til/log"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/server/config"
-	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/storage"
+	"github.com/level11consulting/orbitalci/server/config"
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
 	"github.com/shankj3/go-til/nsqpb"
 )
 

@@ -15,10 +15,10 @@ import (
 	"github.com/google/go-github/v19/github"
 	"github.com/pkg/errors"
 
-	"github.com/level11consulting/ocelot/build/vcshandler/config"
-	"github.com/level11consulting/ocelot/models"
-	gpb "github.com/level11consulting/ocelot/models/github/pb"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/vcshandler/config"
+	"github.com/level11consulting/orbitalci/models"
+	gpb "github.com/level11consulting/orbitalci/models/github/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 )

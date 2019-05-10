@@ -5,10 +5,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/level11consulting/ocelot/build/helpers/dockrhelper"
-	"github.com/level11consulting/ocelot/build/trigger/runtime"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/helpers/dockrhelper"
+	"github.com/level11consulting/orbitalci/build/trigger/runtime"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/mitchellh/cli"
 	"github.com/pkg/errors"
 )

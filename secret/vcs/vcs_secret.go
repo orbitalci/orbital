@@ -7,17 +7,17 @@ import (
 	"errors"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/level11consulting/ocelot/models/pb"
-	vaultkv "github.com/level11consulting/ocelot/server/config/vault"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/models/pb"
+	vaultkv "github.com/level11consulting/orbitalci/server/config/vault"
+	"github.com/level11consulting/orbitalci/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/bitbucket"
-	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/github"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/build/helpers/buildscript/validate"
-	"github.com/level11consulting/ocelot/secret/anycred"
+	"github.com/level11consulting/orbitalci/build/vcshandler/gitprovider/bitbucket"
+	"github.com/level11consulting/orbitalci/build/vcshandler/gitprovider/github"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/build/helpers/buildscript/validate"
+	"github.com/level11consulting/orbitalci/secret/anycred"
 )
 
 type VcsSecret interface {

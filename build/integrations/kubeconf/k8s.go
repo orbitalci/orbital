@@ -11,9 +11,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/helpers/serde"
-	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/helpers/serde"
+	"github.com/level11consulting/orbitalci/build/integrations"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func Create() integrations.StringIntegrator {

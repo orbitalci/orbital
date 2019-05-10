@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/go-til/deserialize"
-	"github.com/level11consulting/ocelot/client/commandhelper"
-	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/client/commandhelper"
+	models "github.com/level11consulting/orbitalci/models/pb"
 	"io/ioutil"
 	"strings"
 )

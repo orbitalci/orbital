@@ -1,7 +1,7 @@
 package streaminglogs
 
 import (
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 // mod for buildBuildInfoServer so that it plays nice with streamer package

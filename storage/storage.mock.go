@@ -6,8 +6,8 @@ package storage
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	models "github.com/level11consulting/ocelot/models"
-	pb "github.com/level11consulting/ocelot/models/pb"
+	models "github.com/level11consulting/orbitalci/models"
+	pb "github.com/level11consulting/orbitalci/models/pb"
 	reflect "reflect"
 	time "time"
 )

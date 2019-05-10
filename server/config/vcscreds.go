@@ -1,9 +1,9 @@
 package config
 
 import (
-	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/storage"
 
 	"github.com/pkg/errors"
 )

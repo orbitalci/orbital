@@ -3,7 +3,7 @@ package validate
 import (
 	"strings"
 
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 
 	"github.com/pkg/errors"
 )

@@ -1,4 +1,4 @@
-module github.com/level11consulting/ocelot
+module github.com/level11consulting/orbitalci
 
 require (
 	code.cloudfoundry.org/bytefmt v0.0.0-20180906201452-2aa6f33b730c
@@ -20,7 +20,6 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway v1.6.2
 	github.com/hashicorp/consul v1.4.0
-	github.com/hashicorp/vault v1.0.0-rc1
 	github.com/lib/pq v0.0.0-20181016162627-9eb73efc1fcc
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect

@@ -3,7 +3,7 @@ package storage_error
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

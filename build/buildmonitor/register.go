@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	consulkv "github.com/level11consulting/ocelot/server/config/consul"
+	consulkv "github.com/level11consulting/orbitalci/server/config/consul"
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 )

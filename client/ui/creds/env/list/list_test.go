@@ -8,9 +8,9 @@ import (
 	"github.com/go-test/deep"
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/client/commandhelper"
-	"github.com/level11consulting/ocelot/common/testutil"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/client/commandhelper"
+	"github.com/level11consulting/orbitalci/common/testutil"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 var creds = []*pb.GenericCreds{

@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/mitchellh/cli"
-	help "github.com/level11consulting/ocelot/client/commandhelper"
-	models "github.com/level11consulting/ocelot/models/pb"
+	help "github.com/level11consulting/orbitalci/client/commandhelper"
+	models "github.com/level11consulting/orbitalci/models/pb"
 
 )
 

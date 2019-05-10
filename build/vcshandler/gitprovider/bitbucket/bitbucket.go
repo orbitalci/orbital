@@ -11,11 +11,11 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/level11consulting/ocelot/build/vcshandler/config"
+	"github.com/level11consulting/orbitalci/build/vcshandler/config"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/level11consulting/ocelot/models"
-	pbb "github.com/level11consulting/ocelot/models/bitbucket/pb"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models"
+	pbb "github.com/level11consulting/orbitalci/models/bitbucket/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 	ocelog "github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"
 )

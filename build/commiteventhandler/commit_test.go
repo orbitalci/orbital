@@ -24,14 +24,14 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/nsqpb"
-	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/models/mock_models"
+	"github.com/level11consulting/orbitalci/build"
+	"github.com/level11consulting/orbitalci/build_signaler"
+	"github.com/level11consulting/orbitalci/common/credentials"
+	"github.com/level11consulting/orbitalci/models/mock_models"
 
-	//"github.com/level11consulting/ocelot/models/mock_models"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
+	//"github.com/level11consulting/orbitalci/models/mock_models"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/storage"
 )
 
 func createMockedHHC(t *testing.T) (*HookHandlerContext, *credentials.MockCVRemoteConfig, *nsqpb.MockProducer, *storage.MockOcelotStorage, *mock_models.MockVCSHandler, *build_signaler.MockCommitPushWerkerTeller, *build_signaler.MockPRWerkerTeller){

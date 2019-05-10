@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/storage"
 	"github.com/shankj3/go-til/consul"
 	ocevault "github.com/shankj3/go-til/vault"
 )

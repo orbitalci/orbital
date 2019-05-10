@@ -7,22 +7,22 @@ import (
 	"io"
 	"strings"
 
-	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/orbitalci/models"
 	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/vault"
 
-	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
-	"github.com/level11consulting/ocelot/build/builder/shell"
-	"github.com/level11consulting/ocelot/build/helpers/dockrhelper"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/server/config"
+	builderinterface "github.com/level11consulting/orbitalci/build/builder/interface"
+	"github.com/level11consulting/orbitalci/build/builder/shell"
+	"github.com/level11consulting/orbitalci/build/helpers/dockrhelper"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/server/config"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 
-	vaultkv "github.com/level11consulting/ocelot/server/config/vault"
+	vaultkv "github.com/level11consulting/orbitalci/server/config/vault"
 )
 
 var (

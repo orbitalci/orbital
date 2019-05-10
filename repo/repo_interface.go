@@ -6,16 +6,16 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/server/config"
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/server/config"
 	"github.com/shankj3/go-til/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/build/vcshandler"
-	"github.com/level11consulting/ocelot/repo/poll"
+	"github.com/level11consulting/orbitalci/storage"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/build/vcshandler"
+	"github.com/level11consulting/orbitalci/repo/poll"
 )
 
 type RepoInterface interface {

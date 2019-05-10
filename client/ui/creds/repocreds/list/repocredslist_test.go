@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"github.com/mitchellh/cli"
-	"github.com/level11consulting/ocelot/client/commandhelper"
-	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/client/commandhelper"
+	models "github.com/level11consulting/orbitalci/models/pb"
 	"strings"
 	"testing"
 )

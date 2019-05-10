@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
-	"github.com/level11consulting/ocelot/build/trigger/runtime"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
+	builderinterface "github.com/level11consulting/orbitalci/build/builder/interface"
+	"github.com/level11consulting/orbitalci/build/trigger/runtime"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/storage"
 	ocelog "github.com/shankj3/go-til/log"
 )
 

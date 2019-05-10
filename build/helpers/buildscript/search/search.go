@@ -3,7 +3,7 @@ package search
 import (
 	"strings"
 
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 // BuildScriptsContainString will check all stages' script lines for the existence of the specified desiredString

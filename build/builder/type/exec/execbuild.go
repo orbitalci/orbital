@@ -10,13 +10,13 @@ import (
 	"strings"
 	"sync"
 
-	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
-	"github.com/level11consulting/ocelot/build/builder/shell"
-	"github.com/level11consulting/ocelot/build/helpers/exechelper"
-	"github.com/level11consulting/ocelot/build/buildmonitor"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/server/config"
+	builderinterface "github.com/level11consulting/orbitalci/build/builder/interface"
+	"github.com/level11consulting/orbitalci/build/builder/shell"
+	"github.com/level11consulting/orbitalci/build/helpers/exechelper"
+	"github.com/level11consulting/orbitalci/build/buildmonitor"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/server/config"
 	"github.com/shankj3/go-til/log"
 )
 

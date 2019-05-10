@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	builderinterface "github.com/level11consulting/ocelot/build/builder/interface"
-	accountrepo "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	nocreds "github.com/level11consulting/ocelot/build/helpers/stringbuilder/nocreds"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	builderinterface "github.com/level11consulting/orbitalci/build/builder/interface"
+	accountrepo "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	nocreds "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/nocreds"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	ocelog "github.com/shankj3/go-til/log"
 )
 

@@ -6,10 +6,10 @@ import (
 	"io"
 	"strings"
 
-	shellinterface "github.com/level11consulting/ocelot/build/builder/shell/interface"
-	pb "github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/storage"
+	shellinterface "github.com/level11consulting/orbitalci/build/builder/shell/interface"
+	pb "github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/storage"
 )
 
 type RepoSetupFunc func(rc config.CVRemoteConfig, store storage.CredTable, accountName string) (string, error)

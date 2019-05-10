@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/net"
 )

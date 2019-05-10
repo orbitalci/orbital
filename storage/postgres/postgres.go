@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 
-	metrics "github.com/level11consulting/ocelot/storage/metrics"
+	metrics "github.com/level11consulting/orbitalci/storage/metrics"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"

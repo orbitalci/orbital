@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	ocenet "github.com/shankj3/go-til/net"

@@ -3,7 +3,7 @@ package slack
 import (
 	"net/http"
 
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func Create() *Slacker {

@@ -8,15 +8,15 @@ import (
 	"sync"
 	"time"
 
-	c "github.com/level11consulting/ocelot/build/cleaner"
-	"github.com/level11consulting/ocelot/client/runtime"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/storage"
+	c "github.com/level11consulting/orbitalci/build/cleaner"
+	"github.com/level11consulting/orbitalci/client/runtime"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/storage"
 	"github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/log"
 
-	consulkv "github.com/level11consulting/ocelot/server/config/consul"
+	consulkv "github.com/level11consulting/orbitalci/server/config/consul"
 
 	"github.com/google/uuid"
 )

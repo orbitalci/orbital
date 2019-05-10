@@ -1,9 +1,9 @@
 package legacy
 
 import (
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/storage"
 )
 
 func SetupRCCCredentials(remoteConf config.CVRemoteConfig, store storage.CredTable, config pb.OcyCredder) error {

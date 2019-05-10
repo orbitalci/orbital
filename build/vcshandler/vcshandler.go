@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/bitbucket"
-	"github.com/level11consulting/ocelot/build/vcshandler/gitprovider/github"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/vcshandler/gitprovider/bitbucket"
+	"github.com/level11consulting/orbitalci/build/vcshandler/gitprovider/github"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"golang.org/x/oauth2"
 )
 

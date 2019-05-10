@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/level11consulting/ocelot/server/config/consul"
+	"github.com/level11consulting/orbitalci/server/config/consul"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 )

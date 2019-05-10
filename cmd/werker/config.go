@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/version"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/version"
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
 

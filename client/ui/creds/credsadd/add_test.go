@@ -5,9 +5,9 @@ import (
 	"flag"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
-	"github.com/level11consulting/ocelot/client/commandhelper"
-	"github.com/level11consulting/ocelot/common/testutil"
-	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/client/commandhelper"
+	"github.com/level11consulting/orbitalci/common/testutil"
+	models "github.com/level11consulting/orbitalci/models/pb"
 	"testing"
 )
 

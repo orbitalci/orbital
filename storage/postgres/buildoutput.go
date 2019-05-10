@@ -3,11 +3,11 @@ package postgres
 import (
 	"database/sql"
 
-	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/orbitalci/models"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 
-	metrics "github.com/level11consulting/ocelot/storage/metrics"
+	metrics "github.com/level11consulting/orbitalci/storage/metrics"
 )
 
 /*

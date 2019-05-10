@@ -9,9 +9,9 @@ import (
 	"strings"
 	"syscall"
 
-	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	"github.com/level11consulting/ocelot/models"
-	protobuf "github.com/level11consulting/ocelot/models/pb"
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/models"
+	protobuf "github.com/level11consulting/orbitalci/models/pb"
 	"github.com/mitchellh/cli"
 	"google.golang.org/grpc"
 )

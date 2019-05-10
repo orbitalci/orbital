@@ -3,9 +3,9 @@ package postgres
 import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
-	util "github.com/level11consulting/ocelot/build/helpers/testutil"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	util "github.com/level11consulting/orbitalci/build/helpers/testutil"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/shankj3/go-til/test"
 
 	"bytes"

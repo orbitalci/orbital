@@ -4,18 +4,18 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/storage"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/level11consulting/ocelot/secret/anycred"
-	"github.com/level11consulting/ocelot/secret/appledev"
-	"github.com/level11consulting/ocelot/secret/artifactrepo"
-	"github.com/level11consulting/ocelot/secret/generic"
-	"github.com/level11consulting/ocelot/secret/kubernetes"
-	"github.com/level11consulting/ocelot/secret/notifier"
-	"github.com/level11consulting/ocelot/secret/ssh"
-	"github.com/level11consulting/ocelot/secret/vcs"
+	"github.com/level11consulting/orbitalci/secret/anycred"
+	"github.com/level11consulting/orbitalci/secret/appledev"
+	"github.com/level11consulting/orbitalci/secret/artifactrepo"
+	"github.com/level11consulting/orbitalci/secret/generic"
+	"github.com/level11consulting/orbitalci/secret/kubernetes"
+	"github.com/level11consulting/orbitalci/secret/notifier"
+	"github.com/level11consulting/orbitalci/secret/ssh"
+	"github.com/level11consulting/orbitalci/secret/vcs"
 )
 
 type SecretInterface interface {

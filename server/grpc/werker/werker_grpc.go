@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/cleaner"
-	"github.com/level11consulting/ocelot/build/streaminglogs"
-	"github.com/level11consulting/ocelot/build/buildmonitor"
-	"github.com/level11consulting/ocelot/client/runtime"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/cleaner"
+	"github.com/level11consulting/orbitalci/build/streaminglogs"
+	"github.com/level11consulting/orbitalci/build/buildmonitor"
+	"github.com/level11consulting/orbitalci/client/runtime"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/shankj3/go-til/log"
 
 	"google.golang.org/grpc/codes"

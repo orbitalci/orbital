@@ -1,20 +1,20 @@
 package buildjob
 
 import (
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/deserialize"
 	"github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"
 
-	"github.com/level11consulting/ocelot/build/helpers/messageservice"
-	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	"github.com/level11consulting/ocelot/client/buildconfigvalidator"
-	"github.com/level11consulting/ocelot/client/builddb"
-	"github.com/level11consulting/ocelot/client/runtime"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/build/helpers/messageservice"
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/client/buildconfigvalidator"
+	"github.com/level11consulting/orbitalci/client/builddb"
+	"github.com/level11consulting/orbitalci/client/runtime"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/storage"
 )
 
 func NewSignaler(RC config.CVRemoteConfig, dese *deserialize.Deserializer, producer nsqpb.Producer, ocyValidator *buildconfigvalidator.OcelotValidator, store storage.OcelotStorage) *Signaler {

@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"time"
 
-	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	"github.com/level11consulting/ocelot/models/pb"
-	metrics "github.com/level11consulting/ocelot/storage/metrics"
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/models/pb"
+	metrics "github.com/level11consulting/orbitalci/storage/metrics"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 )
