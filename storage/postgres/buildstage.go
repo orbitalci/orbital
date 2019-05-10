@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/level11consulting/ocelot/models"
-	storage_error "github.com/level11consulting/ocelot/storage/error"
-	metrics "github.com/level11consulting/ocelot/storage/metrics"
+	"github.com/level11consulting/orbitalci/models"
+	storage_error "github.com/level11consulting/orbitalci/storage/error"
+	metrics "github.com/level11consulting/orbitalci/storage/metrics"
 	"github.com/pkg/errors"
 	ocelog "github.com/shankj3/go-til/log"
 )

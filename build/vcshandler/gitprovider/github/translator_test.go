@@ -8,7 +8,7 @@ import (
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	//"github.com/pkg/errors"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 var testRepo = &pb.Repo{

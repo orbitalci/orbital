@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/level11consulting/ocelot/models/pb"
-	consulkv "github.com/level11consulting/ocelot/server/config/consul"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/models/pb"
+	consulkv "github.com/level11consulting/orbitalci/server/config/consul"
+	"github.com/level11consulting/orbitalci/storage"
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 )

@@ -3,9 +3,9 @@ package cleaner
 import (
 	"context"
 
-	"github.com/level11consulting/ocelot/build/helpers/sshhelper"
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder/workingdir"
-	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/orbitalci/build/helpers/sshhelper"
+	"github.com/level11consulting/orbitalci/build/helpers/stringbuilder/workingdir"
+	"github.com/level11consulting/orbitalci/models"
 	"github.com/pkg/errors"
 )
 

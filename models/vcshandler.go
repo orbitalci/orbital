@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	ocenet "github.com/shankj3/go-til/net"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 ////go:generate mockgen -source vcshandler.go -destination mock_models/vcshandler.mock.go -package mock_models

@@ -8,9 +8,9 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/shankj3/go-til/test"
 )
 

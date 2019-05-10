@@ -8,10 +8,10 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/basher"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build"
+	"github.com/level11consulting/orbitalci/build/basher"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func TestSSH_Initfail(t *testing.T) {

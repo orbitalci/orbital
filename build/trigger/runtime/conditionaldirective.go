@@ -1,6 +1,6 @@
 package runtime
 
-import "github.com/level11consulting/ocelot/models/pb"
+import "github.com/level11consulting/orbitalci/models/pb"
 
 type ConditionalDirective struct {
 	Conditions []Section

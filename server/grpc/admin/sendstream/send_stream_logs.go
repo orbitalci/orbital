@@ -3,8 +3,8 @@ package sendstream
 import (
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/streaminglogs"
-	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/streaminglogs"
+	models "github.com/level11consulting/orbitalci/models/pb"
 	"github.com/shankj3/go-til/log"
 )
 

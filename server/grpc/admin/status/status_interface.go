@@ -6,19 +6,19 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/level11consulting/ocelot/client/runtime"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
-	metrics "github.com/level11consulting/ocelot/server/metrics/admin"
+	"github.com/level11consulting/orbitalci/client/runtime"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
+	metrics "github.com/level11consulting/orbitalci/server/metrics/admin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"github.com/pkg/errors"
 	"github.com/shankj3/go-til/log"
-	storage_error "github.com/level11consulting/ocelot/storage/error"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/server/grpc/admin/sendstream"
-	"github.com/level11consulting/ocelot/server/grpc/admin/scanoutput"
-	"github.com/level11consulting/ocelot/storage"
+	storage_error "github.com/level11consulting/orbitalci/storage/error"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/server/grpc/admin/sendstream"
+	"github.com/level11consulting/orbitalci/server/grpc/admin/scanoutput"
+	"github.com/level11consulting/orbitalci/storage"
 )
 
 type StatusInterface interface {

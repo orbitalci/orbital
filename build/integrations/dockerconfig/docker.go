@@ -8,13 +8,13 @@
 package dockerconfig
 
 import (
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 
 	"encoding/json"
 	"errors"
 	"fmt"
 
-	"github.com/level11consulting/ocelot/build/helpers/serde"
+	"github.com/level11consulting/orbitalci/build/helpers/serde"
 )
 
 type auth map[string]string

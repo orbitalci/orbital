@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/storage"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

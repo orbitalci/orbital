@@ -1,7 +1,7 @@
 package streaminglogs
 
 import (
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 //RespWrap will wrap streaming messages in a LineResponse object to be sent by the server stream

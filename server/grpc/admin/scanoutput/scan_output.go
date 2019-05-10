@@ -5,15 +5,15 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/shankj3/go-til/log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"regexp"
-	"github.com/level11consulting/ocelot/server/grpc/admin/sendstream"
+	"github.com/level11consulting/orbitalci/server/grpc/admin/sendstream"
 )
 
 // Moved this regex in here because we only use it in this file

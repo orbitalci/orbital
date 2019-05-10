@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/storage"
 	consulet "github.com/shankj3/go-til/consul"
 	"github.com/shankj3/go-til/test"
 )

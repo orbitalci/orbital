@@ -4,7 +4,7 @@ import (
 	"flag"
 
 	"github.com/mitchellh/cli"
-	"github.com/level11consulting/ocelot/version"
+	"github.com/level11consulting/orbitalci/version"
 )
 
 func New(ui cli.Ui, version string) *cmd {

@@ -7,10 +7,10 @@ import (
 
 	"net/url"
 
-	"github.com/level11consulting/ocelot/build/buildeventhandler/pull/poll"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/storage"
-	"github.com/level11consulting/ocelot/version"
+	"github.com/level11consulting/orbitalci/build/buildeventhandler/pull/poll"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/storage"
+	"github.com/level11consulting/orbitalci/version"
 	"github.com/namsral/flag"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"

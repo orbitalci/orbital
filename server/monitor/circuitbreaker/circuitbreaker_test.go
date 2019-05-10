@@ -3,8 +3,8 @@ package circuitbreaker
 import (
 	"time"
 
-	cred "github.com/level11consulting/ocelot/common/credentials"
-	"github.com/level11consulting/ocelot/storage"
+	cred "github.com/level11consulting/orbitalci/common/credentials"
+	"github.com/level11consulting/orbitalci/storage"
 	"github.com/shankj3/go-til/nsqpb"
 
 	//"github.com/nsqio/go-nsq"

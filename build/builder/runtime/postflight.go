@@ -3,9 +3,9 @@ package runtime
 import (
 	"context"
 
-	"github.com/level11consulting/ocelot/build/vcshandler"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/vcshandler"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/pkg/errors"
 )
 

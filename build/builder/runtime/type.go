@@ -1,12 +1,12 @@
 package runtime
 
 import (
-	"github.com/level11consulting/ocelot/build/builder/shell"
-	"github.com/level11consulting/ocelot/build/integrations"
-	"github.com/level11consulting/ocelot/build/buildmonitor"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/server/config"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/build/builder/shell"
+	"github.com/level11consulting/orbitalci/build/integrations"
+	"github.com/level11consulting/orbitalci/build/buildmonitor"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/server/config"
+	"github.com/level11consulting/orbitalci/storage"
 )
 
 // create a struct that is werker msg handler creates when it receives a new nsq message

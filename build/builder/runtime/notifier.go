@@ -1,11 +1,11 @@
 package runtime
 
 import (
-	stringbuilder "github.com/level11consulting/ocelot/build/helpers/stringbuilder/accountrepo"
-	"github.com/level11consulting/ocelot/build/notifiers"
-	"github.com/level11consulting/ocelot/build/notifiers/slack"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	stringbuilder "github.com/level11consulting/orbitalci/build/helpers/stringbuilder/accountrepo"
+	"github.com/level11consulting/orbitalci/build/notifiers"
+	"github.com/level11consulting/orbitalci/build/notifiers/slack"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/pkg/errors"
 )
 

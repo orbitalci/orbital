@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/level11consulting/ocelot/build/buildmonitor"
-	"github.com/level11consulting/ocelot/client/runtime"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/build/buildmonitor"
+	"github.com/level11consulting/orbitalci/client/runtime"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/storage"
 	"github.com/shankj3/go-til/consul"
 	ocelog "github.com/shankj3/go-til/log"
 )

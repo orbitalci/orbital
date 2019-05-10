@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/level11consulting/ocelot/client/commandhelper"
+	"github.com/level11consulting/orbitalci/client/commandhelper"
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/go-til/test"
 )

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/orbitalci/models"
 	"github.com/shankj3/go-til/log"
 )
 

@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/level11consulting/ocelot/models/mock_models"
+	"github.com/level11consulting/orbitalci/models/mock_models"
 	"github.com/shankj3/go-til/test"
 
 	//"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func TestPushWerkerTeller_TellWerker(t *testing.T) {

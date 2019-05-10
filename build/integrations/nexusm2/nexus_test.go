@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 var expected = `<?xml version="1.0" encoding="UTF-8"?>

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/golang/protobuf/proto"
 	"github.com/shankj3/go-til/test"
-	pb "github.com/level11consulting/ocelot/models/pb"
+	pb "github.com/level11consulting/orbitalci/models/pb"
 
 	"io/ioutil"
 	"os"

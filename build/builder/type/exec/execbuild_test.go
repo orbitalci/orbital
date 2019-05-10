@@ -14,11 +14,11 @@ import (
 	"github.com/go-test/deep"
 	"github.com/google/uuid"
 	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build/basher"
-	"github.com/level11consulting/ocelot/common/testutil"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build"
+	"github.com/level11consulting/orbitalci/build/basher"
+	"github.com/level11consulting/orbitalci/common/testutil"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func setupExec(t *testing.T) *Exec {

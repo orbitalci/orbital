@@ -8,8 +8,8 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	pb "github.com/level11consulting/ocelot/models/pb"
-	storage "github.com/level11consulting/ocelot/storage"
+	pb "github.com/level11consulting/orbitalci/models/pb"
+	storage "github.com/level11consulting/orbitalci/storage"
 	consul "github.com/shankj3/go-til/consul"
 	vault "github.com/shankj3/go-til/vault"
 )

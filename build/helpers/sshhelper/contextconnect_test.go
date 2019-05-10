@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/models"
+	"github.com/level11consulting/orbitalci/models"
 )
 
 func Test_splitEnvs(t *testing.T) {

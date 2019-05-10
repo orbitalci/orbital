@@ -1,7 +1,7 @@
 package notifiers
 
 import (
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 // Interface for notifying on the status of a build

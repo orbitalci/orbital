@@ -10,9 +10,9 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
 	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/client/commandhelper"
-	"github.com/level11consulting/ocelot/common/testutil"
-	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/client/commandhelper"
+	"github.com/level11consulting/orbitalci/common/testutil"
+	models "github.com/level11consulting/orbitalci/models/pb"
 )
 
 // testNew will return the bare minimum. flags and fileloc of yaml will have to be set after instantiation

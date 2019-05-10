@@ -10,8 +10,8 @@ import (
 	"github.com/go-test/deep"
 	"github.com/shankj3/go-til/net"
 	"github.com/shankj3/go-til/test"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 const acctRepo = "shankj3/test-ocelot"

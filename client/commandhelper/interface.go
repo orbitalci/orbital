@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/cli"
-	models "github.com/level11consulting/ocelot/models/pb"
+	models "github.com/level11consulting/orbitalci/models/pb"
 	"google.golang.org/grpc/status"
 )
 

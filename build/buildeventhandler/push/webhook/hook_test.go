@@ -5,10 +5,10 @@ import (
 	//"strings"
 	"testing"
 
-	"github.com/level11consulting/ocelot/build"
-	//"github.com/level11consulting/ocelot/build"
-	"github.com/level11consulting/ocelot/build_signaler"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build"
+	//"github.com/level11consulting/orbitalci/build"
+	"github.com/level11consulting/orbitalci/build_signaler"
+	"github.com/level11consulting/orbitalci/models/pb"
 )
 
 func TestPRWerkerTeller_TellWerker(t *testing.T) {

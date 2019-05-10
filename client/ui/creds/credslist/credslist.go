@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/level11consulting/ocelot/client/commandhelper"
-	"github.com/level11consulting/ocelot/client/ui/creds/repocreds/list"
-	"github.com/level11consulting/ocelot/client/ui/creds/vcscreds/list"
-	models "github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/client/commandhelper"
+	"github.com/level11consulting/orbitalci/client/ui/creds/repocreds/list"
+	"github.com/level11consulting/orbitalci/client/ui/creds/vcscreds/list"
+	models "github.com/level11consulting/orbitalci/models/pb"
 	"github.com/mitchellh/cli"
 )
 

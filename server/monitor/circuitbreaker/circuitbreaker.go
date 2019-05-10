@@ -3,9 +3,9 @@ package circuitbreaker
 import (
 	"time"
 
-	"github.com/level11consulting/ocelot/server/config"
-	du "github.com/level11consulting/ocelot/server/monitor/disk_usage"
-	"github.com/level11consulting/ocelot/storage"
+	"github.com/level11consulting/orbitalci/server/config"
+	du "github.com/level11consulting/orbitalci/server/monitor/disk_usage"
+	"github.com/level11consulting/orbitalci/storage"
 	"github.com/prometheus/client_golang/prometheus"
 	ocelog "github.com/shankj3/go-til/log"
 	"github.com/shankj3/go-til/nsqpb"

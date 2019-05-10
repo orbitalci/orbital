@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/models/pb"
 
-	. "github.com/level11consulting/ocelot/storage/postgres"
+	. "github.com/level11consulting/orbitalci/storage/postgres"
 )
 
 // create a test postgres database on port 5555 using the official docker image, create the tables, and insert some

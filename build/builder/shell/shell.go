@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/level11consulting/ocelot/build/helpers/stringbuilder/workingdir"
-	"github.com/level11consulting/ocelot/models/pb"
+	"github.com/level11consulting/orbitalci/build/helpers/stringbuilder/workingdir"
+	"github.com/level11consulting/orbitalci/models/pb"
 	ocelog "github.com/shankj3/go-til/log"
 )
 

@@ -4,13 +4,13 @@ import (
 	"errors"
 	"time"
 
-	"github.com/level11consulting/ocelot/build/buildeventhandler/push/buildjob"
-	"github.com/level11consulting/ocelot/build/vcshandler"
-	"github.com/level11consulting/ocelot/client/newbuildjob"
-	"github.com/level11consulting/ocelot/client/werkerinterface"
-	"github.com/level11consulting/ocelot/models"
-	"github.com/level11consulting/ocelot/models/pb"
-	"github.com/level11consulting/ocelot/server/config"
+	"github.com/level11consulting/orbitalci/build/buildeventhandler/push/buildjob"
+	"github.com/level11consulting/orbitalci/build/vcshandler"
+	"github.com/level11consulting/orbitalci/client/newbuildjob"
+	"github.com/level11consulting/orbitalci/client/werkerinterface"
+	"github.com/level11consulting/orbitalci/models"
+	"github.com/level11consulting/orbitalci/models/pb"
+	"github.com/level11consulting/orbitalci/server/config"
 	ocelog "github.com/shankj3/go-til/log"
 )
 
