@@ -1,11 +1,11 @@
-- name: Start Vault
+- name: Start postgres
   docker_service:
     state: present
-    project_src: ./go/src/github.com/level11consulting/ocelot/deploy/infra
+    project_src: /home/vagrant/orbitalci/deploy/infra
     files:
-      - vault-docker-compose.yml
+      - postgres-docker-compose.yml
 
-- name: Register Vault service into Consul
+- name: Register Postgre service into Consul
   consul:
     service_name: "{{ item.name }}"
     service_address: "{{ infra_vagrant_ip }}"
@@ -13,7 +13,7 @@
     tags:
       - vagrant
       - dev
-      - secrets
+      - database
   loop:
-    - name: vault
-      port: 8200
+    - name: postgres
+      port: 5432

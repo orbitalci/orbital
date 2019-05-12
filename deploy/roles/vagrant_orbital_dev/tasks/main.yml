@@ -12,5 +12,5 @@
 - import_tasks: postgres_setup.yml
 - import_tasks: nsq_setup.yml
 
-- import_tasks: ocelot_build.yml
-- import_tasks: ocelot_consul_register.yml
+- import_tasks: orbital_build.yml
+- import_tasks: orbital_consul_register.yml

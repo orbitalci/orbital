@@ -1,4 +1,4 @@
-- name: Add Ocelot related environment variables into global bashrc
+- name: Add Orbital related environment variables into global bashrc
   become: yes
   blockinfile:
     path: /etc/bash.bashrc
@@ -25,12 +25,12 @@
     - env_var: "NSQD_IP"
       value: "{{ nsq.nsqd_ip }}"
     - env_var: "REGISTER_IP"
-      value: "{{ ocelot.register_ip }}"
+      value: "{{ orbital.register_ip }}"
     - env_var: "LOG_LEVEL"
-      value: "{{ ocelot.log_level }}"
+      value: "{{ orbital.log_level }}"
     - env_var: "DBHOST"
-      value: "{{ ocelot.dbhost }}"
+      value: "{{ orbital.dbhost }}"
     - env_var: "ADMIN_HOST"
-      value: "{{ ocelot.admin_host }}"
+      value: "{{ orbital.admin_host }}"
     - env_var: "ADMIN_PORT"
-      value: "{{ ocelot.admin_port }}"
+      value: "{{ orbital.admin_port }}"

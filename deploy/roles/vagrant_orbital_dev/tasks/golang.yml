@@ -19,7 +19,7 @@
     - /home/vagrant/go/pkg
     - /home/vagrant/go/src
 
-- name: Ocelot build dependency - protoc-gen-go
+- name: OrbitalCI build dependency - protoc-gen-go
   shell: |
     export GOPATH=/home/vagrant/go
     export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -31,7 +31,7 @@
     - github.com/golang/protobuf/proto
     - github.com/golang/protobuf/protoc-gen-go
 
-- name: Ocelot build dependency - protoc-gen-grpc-gateway
+- name: OrbitalCI build dependency - protoc-gen-grpc-gateway
   shell: |
     export GOPATH=/home/vagrant/go
     export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -42,7 +42,7 @@
   loop:
     - github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
-- name: Ocelot build dependency - protoc-gen-swagger
+- name: OrbitalCI build dependency - protoc-gen-swagger
   shell: |
     export GOPATH=/home/vagrant/go
     export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -53,7 +53,7 @@
   loop:
     - github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-- name: Ocelot build dependency - protoc-go-inject-tag
+- name: OrbitalCI build dependency - protoc-go-inject-tag
   shell: |
     export GOPATH=/home/vagrant/go
     export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -64,7 +64,7 @@
   loop:
     - github.com/favadi/protoc-go-inject-tag
 
-- name: Ocelot build dependency - mockgen
+- name: OrbitalCI build dependency - mockgen
   shell: |
     export GOPATH=/home/vagrant/go
     export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -75,7 +75,7 @@
   loop:
     - github.com/golang/mock/mockgen
 
-- name: Ocelot build dependency - stringer
+- name: OrbitalCI build dependency - stringer
   shell: |
     export GOPATH=/home/vagrant/go
     export PATH=$PATH:/snap/bin:$GOPATH/bin
@@ -86,7 +86,7 @@
   loop:
     - golang.org/x/tools/cmd/stringer
 
-- name: Ocelot build dependency - cover
+- name: OrbitalCI build dependency - cover
   shell: |
     export GOPATH=/home/vagrant/go
     export PATH=$PATH:/snap/bin:$GOPATH/bin

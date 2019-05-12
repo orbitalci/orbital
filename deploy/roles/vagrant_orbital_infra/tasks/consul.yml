@@ -1,7 +1,7 @@
 - name: Start Consul
   docker_service:
     state: present
-    project_src: ./go/src/github.com/level11consulting/ocelot/deploy/infra
+    project_src: /home/vagrant/orbitalci/deploy/infra
     files:
       - consul-docker-compose.yml
 

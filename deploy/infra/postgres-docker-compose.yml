@@ -13,4 +13,4 @@ services:
 networks:
   default:
     external:
-      name: ocelot
+      name: orbital
