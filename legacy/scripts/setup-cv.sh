@@ -35,13 +35,13 @@ locals() {
     # Uncomment if you want to operate using the dynamic secrets
     # TODO: We should practice development using a user w/o superuser access
 
-    #vault secrets enable database || true
-    #vault write database/config/ocelot \
-    #    plugin_name=postgresql-database-plugin \
-    #    allowed_roles="ocelot" \
-    #    connection_url="postgresql://{{username}}:{{password}}@${DBHOST}:5432/?sslmode=disable" \
-    #    username="postgres" \
-    #    password="mysecretpassword"
+    vault secrets enable database || true
+    vault write database/config/ocelot \
+        plugin_name=postgresql-database-plugin \
+        allowed_roles="ocelot" \
+        connection_url="postgresql://{{username}}:{{password}}@${DBHOST}:5432/?sslmode=disable" \
+        username="postgres" \
+        password="mysecretpassword"
 
     ## Short TTLs, so we can experience token expiration/renewal more often
     ## Assuming we are using the default docker container's superuser + public schema
