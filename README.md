@@ -1,8 +1,9 @@
-# OrbitalCI
+WIP
 
 OrbitalCI is a self-hostable continuous integration system written in Rust.
 
-All Continuous Integration systems are essentially fancy script executors. OrbitalCI is no different. What makes OrbitalCI different from other continuous integration systems?
+Start with docker-compose
+Start the infra containers first
 
 * OrbitalCI is a container-first builder as a strategy for reproducing builds w/o cache implicitly affecting the failure or success.
 * Users interact with OrbitalCI via command line interface. They can build, watch live logs and view history of their repo builds.
@@ -10,14 +11,13 @@ All Continuous Integration systems are essentially fancy script executors. Orbit
 * Other self-hosted or private infrastructure (such as artifact repositories or Slack organizations) are supported in your builds.
 
 Table of contents:
-- [OrbitalCI](#OrbitalCI)
-  - [Roadmap](#Roadmap)
-  - [Developers](#Developers)
-    - [Requirements on host](#Requirements-on-host)
-    - [Getting started with Vagrant](#Getting-started-with-Vagrant)
-      - [Requirements on host](#Requirements-on-host-1)
-    - [Getting started with Docker](#Getting-started-with-Docker)
-  - [Contributing](#Contributing)
+- [Roadmap](#Roadmap)
+- [Developers](#Developers)
+  - [Requirements on host](#Requirements-on-host)
+  - [Getting started with Vagrant](#Getting-started-with-Vagrant)
+    - [Requirements on host](#Requirements-on-host-1)
+  - [Getting started with Docker](#Getting-started-with-Docker)
+- [Contributing](#Contributing)
 
 ## Roadmap
 
