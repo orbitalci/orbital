@@ -1,4 +1,4 @@
-version: "3.5"
+ersion: "3.5"
 services:
   vault:
     image: vault:1.0.0
@@ -21,6 +21,13 @@ services:
       - ./docs/docker-compose/vault-consul/tools/wait-for-it.sh:/wait-for-it.sh
       - ./docs/docker-compose/vault-consul/config/vault:/config
       - ./docs/docker-compose/vault-consul/config/vault/policies:/policies
+    # TODO: Dev mode automatically uses kv version 2, which Orbital doesn't support yet. 
+    #       Either fix the code to support v2, or manually switch to v1 after starting.
+    #       Example workaround:
+    #       export VAULT_ADDR=http://0.0.0.0:8200
+    #       export VAULT_TOKEN=orbital
+    #       vault secrets disable secret
+    #       vault secrets enable -path=secret -version=1 kv
     entrypoint: vault server -dev
     #entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl
   consul:
@@ -73,7 +80,7 @@ services:
       - nsqlookupd
     command: >
       /nsqd
-      -broadcast-address 192.168.56.78
+      -broadcast-address nsqd
       -lookupd-tcp-address nsqlookupd:4160
     ports:
       - 4150:4150
