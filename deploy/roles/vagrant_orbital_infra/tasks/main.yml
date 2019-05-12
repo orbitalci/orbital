@@ -1,6 +1,7 @@
-- name: Create Ocelot docker network
+# This should be removed and handled within docker-compose.yml
+- name: Create Orbital docker network
   docker_network:
-    name: ocelot
+    name: orbital
 
 - import_tasks: consul.yml # This task should be first. The other tasks register into Consul
 - import_tasks: vault.yml

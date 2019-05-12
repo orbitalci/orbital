@@ -2,9 +2,9 @@
   shell: |
     export CONSUL_HTTP_ADDR=http://{{ infra_vagrant_ip }}:8500
     export VAULT_ADDR=http://{{ infra_vagrant_ip }}:8200
-    export VAULT_TOKEN=ocelotdev
+    export VAULT_TOKEN=orbital
     export DBHOST={{ infra_vagrant_ip }}
     ./setup-cv.sh
   args:
     executable: /bin/bash
-    chdir: /home/vagrant/go/src/github.com/level11consulting/ocelot/scripts
+    chdir: /home/vagrant/orbitalci/scripts

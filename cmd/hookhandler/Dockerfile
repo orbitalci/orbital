@@ -1,4 +1,4 @@
-FROM ocelot-build as builder
+FROM orbital-builder as builder
 
 ARG SERVICE_NAME=hookhandler
 WORKDIR /go/src/github.com/shankj3/ocelot/

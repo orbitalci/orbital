@@ -7,7 +7,7 @@
 # you're doing.
 Vagrant.configure("2") do |config|
 
-  config.vm.synced_folder "..", "/home/vagrant/go/src/github.com/level11consulting/ocelot/", type: "virtualbox"
+  config.vm.synced_folder "..", "/home/vagrant/orbitalci/", type: "virtualbox"
 
   config.vm.define "infra" do |infra|
     infra.vm.box = "ubuntu/bionic64"
@@ -30,11 +30,11 @@ Vagrant.configure("2") do |config|
   infra.vm.network "private_network", ip: "192.168.56.78"
   end
 
-  config.vm.define "ocelot", primary: true do |ocelot|
-    ocelot.vm.box = "ubuntu/bionic64"
-    ocelot.vm.hostname = "ocelot"
-    ocelot.vm.provider :virtualbox do |vb|
-      vb.name = "ocelot"
+  config.vm.define "orbital", primary: true do |orbital|
+    orbital.vm.box = "ubuntu/bionic64"
+    orbital.vm.hostname = "orbital"
+    orbital.vm.provider :virtualbox do |vb|
+      vb.name = "orbital"
       vb.memory = "2048"
   end
 
@@ -44,11 +44,11 @@ Vagrant.configure("2") do |config|
 
   # Use ansible to provision host
   config.vm.provision "ansible" do |a|
-    a.playbook = "ocelot-playbook.yml"
+    a.playbook = "orbital-playbook.yml"
   end
 
   # Set static IP for this host  
-  ocelot.vm.network "private_network", ip: "192.168.12.34"
+  orbital.vm.network "private_network", ip: "192.168.12.34"
   end
 
   # NOTE: This outer provision block runs FIRST before inner blocks of the VMs above

@@ -1,13 +1,13 @@
-- name: Register Ocelot services into Consul
+- name: Register Orbital services into Consul
   consul:
     host: "{{ infra_vagrant_ip }}"
     service_name: "{{ item.name }}"
-    service_address: "{{ ocelot_vagrant_ip }}"
+    service_address: "{{ orbital_vagrant_ip }}"
     service_port: "{{ item.port }}"
     tags:
       - vagrant
       - dev
-      - ocelot
+      - orbital
   loop:
     - name: admin
       port: 10000

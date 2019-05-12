@@ -1,8 +1,8 @@
 # Ansible 2.7.x
 ---
-- hosts: ocelot
+- hosts: orbital
   vars:
-    ocelot_vagrant_ip: 192.168.12.34
+    orbital_vagrant_ip: 192.168.12.34
     infra_vagrant_ip: 192.168.56.78
     path: $PATH:$GOPATH/bin
     go:
@@ -10,7 +10,7 @@
       use_modules: "on" # Beware. Unquoted, and this evaluates to "True"
     vault:
       addr: "http://{{ infra_vagrant_ip }}:8200"
-      token: ocelotdev
+      token: orbital
     consul:
       http_addr: "http://{{ infra_vagrant_ip }}:8500"
       host: "{{ infra_vagrant_ip }}"
@@ -22,12 +22,12 @@
       port: 5432
       user: postgres
       pass: mysecretpassword
-    ocelot:
-      register_ip: "{{ ocelot_vagrant_ip }}"
+    orbital:
+      register_ip: "{{ orbital_vagrant_ip }}"
       log_level: debug
       dbhost: "{{ infra_vagrant_ip }}"
-      admin_host: "{{ ocelot_vagrant_ip }}"
+      admin_host: "{{ orbital_vagrant_ip }}"
       admin_port: 10000
   roles:
   - vagrant_common
-  - vagrant_ocelot_dev
+  - vagrant_orbital_dev

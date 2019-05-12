@@ -1,4 +1,4 @@
-- name: Install Ocelot's go dependencies (may take a moment...)
+- name: Install Orbital's go dependencies (may take a moment...)
   retries: 2
   shell: |
     export GOPATH=/home/vagrant/go
@@ -6,7 +6,7 @@
     export PATH=$PATH:/snap/bin:$GOPATH/bin
     go mod tidy
   args:
-    chdir: ./go/src/github.com/level11consulting/ocelot
+    chdir: /home/vagrant/orbitalci
     executable: /bin/bash
 
 - name: Run code generation
@@ -15,7 +15,7 @@
     export PATH=$PATH:/snap/bin:$GOPATH/bin
     make proto
   args:
-    chdir: /home/vagrant/go/src/github.com/level11consulting/ocelot
+    chdir: /home/vagrant/orbitalci
 
 - name: Run local compile, and install locally
   shell: |
@@ -24,4 +24,4 @@
     export PATH=$PATH:/snap/bin:$GOPATH/bin
     make local
   args:
-    chdir: /home/vagrant/go/src/github.com/level11consulting/ocelot
+    chdir: /home/vagrant/orbitalci
