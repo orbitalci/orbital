@@ -1,3 +1,23 @@
+WIP
+
+Start with vagrant: vagrant up
+
+Start with docker-compose
+Start the infra containers first
+
+Manually fix vault to use v1
+    export VAULT_ADDR=http://0.0.0.0:8200
+    export VAULT_TOKEN=orbital
+    vault secrets disable secret
+    vault secrets enable -path=secret -version=1 kv
+
+Run setup-cv
+    export CONSUL_HTTP_ADDR=http://0.0.0.0:8500
+    export VAULT_ADDR=http://0.0.0.0:8200
+    export VAULT_TOKEN=orbital
+    export DBHOST=0.0.0.0
+    ./scripts/setup-cv.sh
+
 # project ocelot
 
 Go to the [wiki](https://github.com/level11consulting/ocelot/wiki) for documentation and architecture.
@@ -54,7 +74,7 @@ The infra VM will be at IP: `192.168.56.78`
 Infrastructure components run as Docker containers. (docker-compose files in `deploy/infra/`)
 
 * Consul UI: http://192.168.56.78:8500
-* Vault UI: http://192.168.56.78:8200 - Default token value: `ocelotdev`
+* Vault UI: http://192.168.56.78:8200 - Default token value: `orbital`
 * NSQAdmin UI: http://192.168.56.78:4171
 * Postgres: 192.168.56.78:5432 - User name/Database name: `postgres`, Password: `mysecretpassword`
 

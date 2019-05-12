@@ -18,12 +18,12 @@ services:
     networks:
       - orbital
     environment:
-      VAULT_TOKEN: ${VAULT_TOKEN}
-      VAULT_ADDR: http://vault:8200
-      CONSUL_HOST: http://consul:8500
+      CONSUL_HOST: consul
       CONSUL_HTTP_ADDR: http://consul:8500
       NSQLOOKUPD_IP: nsqlookupd
       NSQD_IP: nsqd
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_ADDR: http://vault:8200
 
   hookhandler:
     image: orbitalci
@@ -41,12 +41,12 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
-      VAULT_TOKEN: ${VAULT_TOKEN}
-      VAULT_ADDR: http://vault:8200
-      CONSUL_HOST: http://consul
+      CONSUL_HOST: consul
       LOG_LEVEL: debug
       NSQD_IP: nsqd
       NSQLOOKUPD_IP: nsqlookupd
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN}
 
   werker:
     image: orbitalci
@@ -82,12 +82,12 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
-      VAULT_TOKEN: ${VAULT_TOKEN}
-      VAULT_ADDR: http://vault:8200
-      CONSUL_HTTP_ADDR: http://consul:8500
       CONSUL_HOST: consul
+      CONSUL_HTTP_ADDR: http://consul:8500
       NSQD_IP: nsqd
       NSQLOOKUPD_IP: nsqlookupd
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN}
     logging:
       driver: "json-file"
       options:
