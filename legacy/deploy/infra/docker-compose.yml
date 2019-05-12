@@ -1,4 +1,4 @@
-version: "3.5"
+ersion: "3.5"
 services:
   vault:
     image: vault:1.1.2
