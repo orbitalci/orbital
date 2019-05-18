@@ -1,7 +1,7 @@
 version: "3.5"
 services:
   vault:
-    image: vault:1.0.0
+    image: vault:1.1.2
     container_name: vault
     hostname: vault
     environment:
@@ -26,7 +26,7 @@ services:
     #       vault secrets enable -path=secret -version=1 kv
     entrypoint: vault server -dev
   consul:
-    image: consul:1.4.0
+    image: consul:1.5.0
     container_name: consul
     hostname: consul
     command: agent -dev -client 0.0.0.0
