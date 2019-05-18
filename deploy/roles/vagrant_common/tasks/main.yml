@@ -5,10 +5,9 @@
     name: "{{ item }}"
   loop:
     - build-essential
-    - docker-compose
     - unzip
     - vim
-    - python-pip
+    - python3-pip
     - zip
 
 - name: Install python modules that Ansible requires
@@ -16,17 +15,18 @@
     name: "{{ item }}"
     state: present
   loop:
-    - docker
     - python-consul
+    - docker
+    - docker-compose
 
 # FIXME: This should be split up to use get_url first, for checksum verification
 # https://learn.hashicorp.com/vault/operations/ops-deployment-guide
 - name: Download our Hashicorp dependencies
   vars:
     consul:
-      version: 1.2.3
+      version: 1.5.0
     vault:
-      version: 0.11.1
+      version: 1.1.2
   become: yes
   unarchive:
     src: "{{ item.url }}"
