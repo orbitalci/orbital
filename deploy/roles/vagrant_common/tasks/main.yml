@@ -7,9 +7,11 @@
     - build-essential
     - unzip
     - vim
-    - python3-pip
+    - python-pip
     - zip
 
+# FIXME docker-compose returns segfault. The next step always fails on subsequent provisioned runs.
+#       Workaround: `vagrant destroy`, and re- `vagrant up`
 - name: Install python modules that Ansible requires
   pip:
     name: "{{ item }}"
@@ -17,14 +19,15 @@
   loop:
     - python-consul
     - docker
+    - docker-compose
 
-
-# Check for docker-compose, if it isn't installed then install it. Otherwise skip the step
-#- name: (Workaround) Docker-compose via pip seg faults, but still is successful? Go figure, but check on this later...
-#  pip:
-#    name: "docker-compose"
-#    state: present
-#  ignore_errors: yes
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
 
 # FIXME: This should be split up to use get_url first, for checksum verification
 # https://learn.hashicorp.com/vault/operations/ops-deployment-guide
