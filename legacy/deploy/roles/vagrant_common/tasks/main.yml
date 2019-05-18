@@ -7,7 +7,7 @@
     - build-essential
     - unzip
     - vim
-    - python-pip
+    - python3-pip
     - zip
 
 # FIXME docker-compose returns segfault. The next step always fails on subsequent provisioned runs.
