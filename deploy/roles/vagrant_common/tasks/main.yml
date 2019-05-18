@@ -17,7 +17,14 @@
   loop:
     - python-consul
     - docker
-    - docker-compose
+
+
+# Check for docker-compose, if it isn't installed then install it. Otherwise skip the step
+#- name: (Workaround) Docker-compose via pip seg faults, but still is successful? Go figure, but check on this later...
+#  pip:
+#    name: "docker-compose"
+#    state: present
+#  ignore_errors: yes
 
 # FIXME: This should be split up to use get_url first, for checksum verification
 # https://learn.hashicorp.com/vault/operations/ops-deployment-guide

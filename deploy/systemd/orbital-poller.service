@@ -1,0 +1,15 @@
+[Unit]
+Description=OrbitalCI Admin service
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/orbital
+
+User=vagrant
+WorkingDirectory=/home/vagrant
+ExecStart=/home/vagrant/go/bin/poller
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
