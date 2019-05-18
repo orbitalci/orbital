@@ -1,4 +1,4 @@
-ersion: "3.5"
+version: "3.5"
 services:
   vault:
     image: vault:1.1.2
@@ -17,10 +17,6 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
-    volumes:
-      - ./docs/docker-compose/vault-consul/tools/wait-for-it.sh:/wait-for-it.sh
-      - ./docs/docker-compose/vault-consul/config/vault:/config
-      - ./docs/docker-compose/vault-consul/config/vault/policies:/policies
     # TODO: Dev mode automatically uses kv version 2, which Orbital doesn't support yet. 
     #       Either fix the code to support v2, or manually switch to v1 after starting.
     #       Example workaround:
