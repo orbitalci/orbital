@@ -19,7 +19,14 @@
   loop:
     - python-consul
     - docker
-    - docker-compose
+
+
+# Check for docker-compose, if it isn't installed then install it. Otherwise skip the step
+#- name: (Workaround) Docker-compose via pip seg faults, but still is successful? Go figure, but check on this later...
+#  pip:
+#    name: "docker-compose"
+#    state: present
+#  ignore_errors: yes
 
 - name: Download docker-compose
   become: yes
