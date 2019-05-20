@@ -1,65 +1,43 @@
-WIP
+# OrbitalCI
 
-Start with vagrant: vagrant up
+OrbitalCI is a self-hostable continuous integration system.
 
-Start with docker-compose
-Start the infra containers first
+All Continuous Integration systems are essentially fancy script executors. OrbitalCI is no different. What makes OrbitalCI different from other continuous integration systems?
 
-Manually fix vault to use v1
-    export VAULT_ADDR=http://0.0.0.0:8200
-    export VAULT_TOKEN=orbital
-    vault secrets disable secret
-    vault secrets enable -path=secret -version=1 kv
+* OrbitalCI is a container-first builder as a strategy for reproducing builds w/o cache implicitly affecting the failure or success.
+* Users interact with OrbitalCI via command line interface. They can build, watch live logs and view history of their repo builds.
+* Build environments and build instructions are laid out in a yaml configuration file that lives in the root of your code repo.
+* Other self-hosted or private infrastructure (such as artifact repositories or Slack organizations) are supported in your builds.
 
-Run setup-cv
-    export CONSUL_HTTP_ADDR=http://0.0.0.0:8500
-    export VAULT_ADDR=http://0.0.0.0:8200
-    export VAULT_TOKEN=orbital
-    export DBHOST=0.0.0.0
-    ./scripts/setup-cv.sh
+The [wiki](https://github.com/level11consulting/orbitalci/wiki) has more in-depth documentation.
 
-# project ocelot
+Table of contents:
+- [OrbitalCI](#orbitalci)
+  - [Roadmap](#roadmap)
+  - [Developers](#developers)
+    - [Getting started with Vagrant](#getting-started-with-vagrant)
+      - [Requirements on host](#requirements-on-host)
+        - [Known issues with Vagrant environment](#known-issues-with-vagrant-environment)
+          - [vagrant up --provision fails on subsequent runs](#vagrant-up---provision-fails-on-subsequent-runs)
+      - [Validate connectivity on host](#validate-connectivity-on-host)
+    - [Getting started with Docker](#getting-started-with-docker)
+      - [Manual setup steps w/ Docker](#manual-setup-steps-w-docker)
+  - [Contributing](#contributing)
 
-Go to the [wiki](https://github.com/level11consulting/ocelot/wiki) for documentation and architecture.
+## Roadmap
 
-Ocelot is a distributed CI for running in container orchestration environments. It utilizes Vault, Consul, Postgres and NSQ and comes with a bangin' cli.
+OrbitalCI's roadmap is located [here](roadmap.md)
 
-
-Future big wants:
-- kuberentes werker nodes that interact with kube api
-- vagrant werker nodes
-- github integration
-
-## Prometheus exports:
-- ocelot_regex_failures
-- ocelot_build_clean_failed
-- ocelot_docker_api_errors_total
-- ocelot_active_builds
-- ocelot_build_duration_seconds
-- ocelot_build_count_total
-- ocelot_received_messages
-- ocelot_werker_stream_errors_total
-- ocelot_failed_cred
-- ocelot_bitbucket_failed_calls
-- ocelot_admin_request_proc_time
-- ocelot_admin_active_requests
-- admin_triggered_builds
-- ocelot_recieved_hooks
-- ocelot_db_active_requests
-- ocelot_db_transaction_duration
-- ocelot_db_sqllib_error
-
-# Developers
-## Getting started with Vagrant
-
-### Requirements on host
+## Developers
+### Getting started with Vagrant
+#### Requirements on host
 The following tools need to be installed on your host.
 
 * Vagrant
 * Virtualbox
   * If you use a different Vagrant provider, you may need to set your `VAGRANT_DEFAULT_PROVIDER` environment variable.
   * See [the Vagrant docs](https://www.vagrantup.com/docs/providers/default.html) for more detail
-* Ansible 2.7+
+* Ansible 2.8+
 
 From `deploy` directory:
 `vagrant up`
@@ -80,43 +58,79 @@ Infrastructure components run as Docker containers. (docker-compose files in `de
 
 When the Vagrant VMs starts up, it will call use Ansible on your host to instantiate the Infra and Ocelot VMs, and attempt to install the current codebase.
 
-
 You can ssh into these VMs
 `vagrant ssh` & `vagrant ssh ocelot` will result in SSHing into the ocelot VM
 `vagrant ssh infra` will SSH into the infra VM
 
-The codebase will be located in `/home/vagrant/go/src/github.com/level11consulting/ocelot`
+The codebase will be located in `/home/vagrant/orbitalci`
 
-#### Known issues with Vagrant environment
+##### Known issues with Vagrant environment
+###### vagrant up --provision fails on subsequent runs
 ```
- [WARNING]: Could not match supplied host pattern, ignoring: ocelot
-```
-* `vagrant up` races on some hosts, and Ansible provisioning fails
-  * Workaround: If ocelot + infra VMs are deployed, re-run the Ansible provisioning manually
-    1. `vagrant up infra --provision`
-    2. `vagrant up ocelot --provision` 
-* NSQ is not fully configured for Ocelot operation
-  * Workaround: Open up NSQAdmin UI. Create a topic `build` with a channel `werker`
-* Ocelot services are not started
-  * Workaround: `vagrant ssh` into the VM. Start `admin`, `werker`, `hookhandler` in the foreground.
-    * Terminal multiplexers like `screen` or `tmux` are installed, and using either them is strongly suggested.
+TASK [vagrant_common : Install python modules that Ansible requires] ***********
+changed: [infra] => (item=python-consul)
+changed: [infra] => (item=docker)
+changed: [infra] => (item=docker-compose)
 
-### Validate connectivity on host
+TASK [vagrant_common : Download docker-compose] ********************************
+```
+
+For unknown reasons, on a subsequent pip install of `docker-compose`, the installation segfaults and hangs the provision.
+
+Workaround:
+
+`vagrant destroy` to delete the vms, and then recreate the VMs with `vagrant up`.
+
+#### Validate connectivity on host
 To configure the `ocelot` cli to point at this development instance, you need to set these environment variables:
 
-`export ADMIN_HOST=192.168.12.34`
-`export ADMIN_PORT=10000`
+* `export ADMIN_HOST=192.168.12.34`
+* `export ADMIN_PORT=10000`
 
-## Getting started with Docker
-(Needs testing, more detail)
+### Getting started with Docker
 From the root of the repo:
-`make docker-base`
-`make docker-build`
-(Start the infrastructure containers - minimum: nsq, consul, vault, postgres)
-`docker-compose up`
+
+1. `make docker-build` # To build local docker images
+2. `make start-docker-infra` # Start the infrastructure containers
+3. Follow the manual steps below
+4. `make start-docker-orbital` # Start the orbital services
+
+#### Manual setup steps w/ Docker
+These steps require `consul` and `vault` to be installed on your host.
+
+Manually fix vault to use v1
+
+    export VAULT_ADDR=http://localhost:8200
+    export VAULT_TOKEN=orbital
+    vault secrets disable secret
+    vault secrets enable -path=secret -version=1 kv
+
+Run setup-cv
+
+    export CONSUL_HTTP_ADDR=http://localhost:8500
+    export VAULT_ADDR=http://localhost:8200
+    export VAULT_TOKEN=orbital
+    export DBHOST=db
+    ./scripts/setup-cv.sh
+
+Load database schema
+
+    export PG_HOST=db
+    export PG_PORT=5432
+    export PG_USER=postgres
+    export PG_PASSWORD=mysecretpassword
+    docker run --network orbital --rm -v $(pwd)/deploy/sql:/flyway/sql boxfuse/flyway migrate -url=jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_USER} -user=${PG_USER} -password=${PG_PASSWORD} -baselineOnMigrate=true 
 
 ## Contributing 
 
-### Interfaces / mocks 
+Fork the repo and issue a pull request.
 
-If you update any of the interfaces, you will also have to update the mocks generated by gomock and used for testing. Install [gomock](https://github.com/golang/mock) and then from root run `go generate ./...` 
+Inspired by the [Rust governance process](https://www.rust-lang.org/governance), large or potentially backwards incompatible changes should be socialized by opening an issue with the `RFC` label.
+
+Conversation aims to mainly occur in the Github issues. This process is being developed to provide transparency of intent when decisions are made. The desire is to allow stakeholders time to engage with objections, but have process to continue moving forward if there is a lack of response within a reasonable time period.
+
+When an RFC's details are worked out and ready for final comment, similar but less formal to Rust's governance, `RFC` issues, the issue opener, or the maintainers should call out in the comments stating final changes are in.
+
+At this point, more changes may be required due to new comments. But after 10 calendar days (at least 5 business days), code or additional design based on this RFC is acceptable.
+
+Updates to this process are welcome and should also be introduced via Github issue using `RFC` label. 
