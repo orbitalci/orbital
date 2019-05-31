@@ -1,4 +1,5 @@
-//ocelot creds k8s add -acct my_kewl_acct -name cluster_name -kubeconfig=/home/user/.kube/cluster-config.yaml
+//ocelot creds helmrepo add -acct my_kewl_acct -repo-name shankj3_charts -helm-url https://github.io/shankj3_helm_repository
+//ocelot creds helmrepo list -account <ACCT_NAME>
 
 extern crate structopt;
 use structopt::StructOpt;
@@ -9,12 +10,12 @@ pub struct AddOption {
     /// Account to add to. Defaults to auto-detect from current working directory
     #[structopt(name = "Account", long = "acct")]
     account: Option<String>,
-    /// Kubernetes cluster name (logical)
-    #[structopt(name = "Kubernetes cluster name", long)]
-    cluster_name: Option<String>,
-    /// File path to Kubernetes config file
-    #[structopt(name = "Kubernetes config (yaml)", short = "f", long = "file")]
-    file_path: Option<String>,
+    /// Helm repo name (logical)
+    #[structopt(name = "Helm repo name", long)]
+    helm_name: Option<String>,
+    /// Helm repo url
+    #[structopt(name = "Helm repo url", long)]
+    helm_url: Option<String>,
 }
 
 #[derive(Debug, StructOpt)]
@@ -50,5 +51,5 @@ pub struct SubOption {
 
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling Kubernetes creds");
+    println!("Placeholder for handling Helm repo creds");
 }
