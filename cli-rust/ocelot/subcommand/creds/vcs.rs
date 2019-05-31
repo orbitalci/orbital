@@ -3,6 +3,14 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
+pub struct VcsAddOption {
+    /// File path to yaml configuration file
+    #[structopt(name = "config file", short = "f", long = "file")]
+    file_path: Option<String>,
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab_case")]
 pub enum ResourceAction {
     /// Add a Version Control System
     Add(VcsAddOption),
@@ -14,15 +22,7 @@ pub enum ResourceAction {
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub struct VcsAddOption {
-    /// File path to yaml configuration file
-    #[structopt(name = "config file", short = "f", long = "file")]
-    file_path: Option<String>,
-}
-
-#[derive(Debug, StructOpt)]
-#[structopt(rename_all = "kebab_case")]
-pub struct VcsOptions {
+pub struct SubOption {
     #[structopt(flatten)]
     action: ResourceAction,
 
@@ -31,6 +31,6 @@ pub struct VcsOptions {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &VcsOptions) {
+pub fn subcommand_handler(args: &SubOption) {
     println!("Placeholder for handling VCS creds");
 }
