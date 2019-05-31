@@ -1,0 +1,10 @@
+[package]
+name = "ocelot-rs"
+version = "0.1.0"
+authors = ["T.J. Telan <tjtelan@level11.com>"]
+edition = "2018"
+
+[dependencies]
+structopt = "0.2"
+clap = "2.33"
+subcommand = { path = "subcommand" }
