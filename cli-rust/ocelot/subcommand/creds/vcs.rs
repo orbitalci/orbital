@@ -3,7 +3,7 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub struct VcsAddOption {
+pub struct AddOption {
     /// File path to yaml configuration file
     #[structopt(name = "config file", short = "f", long = "file")]
     file_path: Option<String>,
@@ -11,13 +11,23 @@ pub struct VcsAddOption {
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
+pub struct ListOption {
+    /// Account to add to. Defaults to auto-detect from current working directory
+    #[structopt(name = "Account", long = "acct")]
+    account: Option<String>,
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab_case")]
 pub enum ResourceAction {
     /// Add a Version Control System
-    Add(VcsAddOption),
+    Add(AddOption),
     /// Delete a Version Control System
+    #[structopt(alias = "rm")]
     Delete,
     /// List registered Version Control System
-    List,
+    #[structopt(alias = "ls")]
+    List(ListOption),
 }
 
 #[derive(Debug, StructOpt)]

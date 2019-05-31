@@ -1,4 +1,4 @@
-//ocelot creds k8s add -acct my_kewl_acct -name cluster_name -kubeconfig=/home/user/.kube/cluster-config.yaml
+//ocelot creds add -credfile-loc=<yaml file>
 
 extern crate structopt;
 use structopt::StructOpt;
@@ -9,11 +9,8 @@ pub struct AddOption {
     /// Account to add to. Defaults to auto-detect from current working directory
     #[structopt(name = "Account", long = "acct")]
     account: Option<String>,
-    /// Kubernetes cluster name (logical)
-    #[structopt(name = "Kubernetes cluster name", long)]
-    cluster_name: Option<String>,
-    /// File path to Kubernetes config file
-    #[structopt(name = "Kubernetes config (yaml)", short = "f", long = "file")]
+    /// File path to yaml containing artifact repo configuration
+    #[structopt(name = "Artifact repo yaml", short = "f", long = "file")]
     file_path: Option<String>,
 }
 
@@ -50,5 +47,5 @@ pub struct SubOption {
 
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling Kubernetes creds");
+    println!("Placeholder for handling Artifact repo creds");
 }
