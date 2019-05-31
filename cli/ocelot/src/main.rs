@@ -9,30 +9,40 @@ use structopt::StructOpt;
 // This is for autocompletion
 //use structopt::clap::Shell;
 
-use subcommand;
+use subcommand::{self,build_subcmd,action};
+
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab_case")]
+pub enum CredType {
+    Apple(action::ResourceAction),
+    Env(action::ResourceAction),
+    Helmrepo(action::ResourceAction),
+    K8s(action::ResourceAction),
+    Notify(action::ResourceAction),
+    Repo(action::ResourceAction),
+    Ssh(action::ResourceAction),
+    Vcs(subcommand::creds::vcs::VcsOptions),
+}
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum Command {
-    /// Trigger build for registered repo
-    Build(subcommand::build_subcmd::SubOption),
-    /// Manage credentials
-    Creds(subcommand::creds::CredType),
-    Init(subcommand::init::SubOption),
-    Cancel(subcommand::cancel::SubOption),
-    Logs(subcommand::logs::SubOption),
-    Poll(subcommand::poll::SubOption),
-    Repo(subcommand::repo::SubOption),
-    Status(subcommand::status::SubOption),
-    Summary(subcommand::summary::SubOption),
-    Validate(subcommand::validate::SubOption),
-    Version(subcommand::version::SubOption),
-    Watch(subcommand::watch::SubOption),
+    Build(build_subcmd::BuildOptions),
+    Creds(CredType),
+    Init,
+    Kill,
+    Logs,
+    Poll(action::ResourceAction),
+    Repos(action::ResourceAction),
+    Status,
+    Summary,
+    Validate,
+    Version,
+    Watch,
 }
 
-// TODO: Split the top-level options into a struct that we can pass to to the command handlers
 #[derive(Debug, StructOpt)]
-#[structopt(name = "ocelot")]
+#[structopt(name = "orb")]
 /// The OrbitalCI command line interface
 pub struct ApplicationArguments {
     #[structopt(subcommand)]
@@ -52,36 +62,36 @@ pub struct ApplicationArguments {
     pub nsqlookupd_addr: Option<String>,
 
     #[structopt(long = "debug")]
-    pub debug: bool,
+    pub debug : bool,
+
 }
 
-// TODO: Can we define traits to keep a tighter contract for creds?
+
 fn main() {
     // generate `bash` completions in "target" directory
-    //ApplicationArguments::clap().gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, "target");
+    //ApplicationArguments::clap().gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, "target");   
 
     let matches = ApplicationArguments::from_args();
 
     // Do stuff with the optional args
 
-    // TODO: Add in logic for getting backend connection info to pass into the subcommand handlers
-    // TODO: Subcommands should all return a Result<T>
-
     // Pass to the subcommand handlers
-    match matches.command {
-        Command::Build(a) => subcommand::build_subcmd::subcommand_handler(a),
-        Command::Creds(a) => subcommand::creds::subcommand_handler(a),
-        Command::Init(a) => subcommand::init::subcommand_handler(a),
-        Command::Cancel(a) => subcommand::cancel::subcommand_handler(a),
-        Command::Logs(a) => subcommand::logs::subcommand_handler(a),
-        Command::Poll(a) => subcommand::poll::subcommand_handler(a),
-        Command::Repo(a) => subcommand::repo::subcommand_handler(a),
-        Command::Status(a) => subcommand::status::subcommand_handler(a),
-        Command::Summary(a) => subcommand::summary::subcommand_handler(a),
-        Command::Validate(a) => subcommand::validate::subcommand_handler(a),
-        Command::Version(a) => subcommand::version::subcommand_handler(a),
-        Command::Watch(a) => subcommand::watch::subcommand_handler(a),
+    match &matches.command {
+        Command::Build(_) => {
+            build_subcmd::build();
+        },
+        Command::Creds(_n) => {},
+        Command::Init => {},
+        Command::Kill => {},
+        Command::Logs  => {},
+        Command::Poll(_n) => {},
+        Command::Repos(_n) => {},
+        Command::Status => {},
+        Command::Summary => {},
+        Command::Validate => {},
+        Command::Version => {},
+        Command::Watch => {},
     }
 
-    //println!("Full matches: {:?}", matches);
+    println!("Full matches: {:?}", matches);
 }

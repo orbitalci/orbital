@@ -8,26 +8,6 @@ edition = "2018"
 structopt = "0.2"
 clap = "2.33"
 
-# Ocelot api from protos
-ocelot_api = { path = "../ocelot_api" }
-
-# For build
-git2 = "0.9"
-git_meta = { path = "../git_meta" }
-itertools = "0.8"
-
-http = "0.1"
-tower-hyper = "0.1"
-hyper = "0.12"
-tower-grpc = "0.1"
-#tower-service = "0.2"
-tower-util = "0.1"
-tower-request-modifier = { git = "https://github.com/tower-rs/tower-http" }
-tokio = "0.1"
-futures = "0.1"
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.8"
-
 [lib]
 name = "subcommand"
 path = "mod.rs"
