@@ -20,7 +20,7 @@ pub struct BuildOptions {
     hash : Option<String>,
 }
 
-// Let's define the build options here
-pub fn build() {
+// Handle the command line control flow
+pub fn subcommand_handler() {
     println!("Placeholder for running build");
 }
