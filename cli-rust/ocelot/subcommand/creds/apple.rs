@@ -6,17 +6,6 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub enum ResourceAction {
-    /// Add Apple Developer account (as Xcode exported .developerprofile)
-    Add(AppleAddOption),
-    /// Delete a Apple Developer account
-    Delete,
-    /// List registered Apple Developer account(s)
-    List,
-}
-
-#[derive(Debug, StructOpt)]
-#[structopt(rename_all = "kebab_case")]
 pub struct AppleAddOption {
     /// Account to add to. Defaults to auto-detect from current working directory
     #[structopt(name = "Account", long = "acct")]
@@ -28,15 +17,26 @@ pub struct AppleAddOption {
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub struct AppleOptions {
+pub enum ResourceAction {
+    /// Add Apple Developer account (as Xcode exported .developerprofile)
+    Add(AppleAddOption),
+    /// Delete a Apple Developer account
+    Delete,
+    /// List registered Apple Developer account(s)
+    List,
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab_case")]
+pub struct SubOption {
     #[structopt(flatten)]
     action: ResourceAction,
 
-    #[structopt(long)]
-    acct: Option<String>,
+    #[structopt(name = "Account", long = "acct")]
+    account: Option<String>,
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &AppleOptions) {
+pub fn subcommand_handler(args: &SubOption) {
     println!("Placeholder for handling Apple developer creds");
 }
