@@ -20,12 +20,17 @@ pub struct BuildOptions {
     hash : Option<String>,
 }
 
+<<<<<<< HEAD
 // Let's define the build options here
 pub fn build() {
 <<<<<<< HEAD
     println!("Hello, world!");
 }
 =======
+=======
+// Handle the command line control flow
+pub fn subcommand_handler() {
+>>>>>>> Starting to wire the command line to a subcommand handler using a predictable pattern.
     println!("Placeholder for running build");
 }
 >>>>>>> Adding help text via docstrings.

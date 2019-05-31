@@ -29,3 +29,8 @@ pub struct VcsOptions {
     #[structopt(long)]
     acct: Option<String>,
 }
+
+// Handle the command line control flow
+pub fn subcommand_handler() {
+    println!("Placeholder for handling VCS creds");
+}
