@@ -9,15 +9,23 @@ use structopt::StructOpt;
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct BuildOptions {
+    /// Build provided account/repo. Otherwise try to auto-detect from current working directory
     #[structopt(long)]
     acct_repo: Option<String>,
-    #[structopt(long)]
-    hash : Option<String>,
+    /// Use provided branch. Default to current active branch
     #[structopt(long)]
     branch : Option<String>,
+    /// Build provided commit hash. Otherwise, default to HEAD commit of active branch
+    #[structopt(long)]
+    hash : Option<String>,
 }
 
 // Let's define the build options here
 pub fn build() {
+<<<<<<< HEAD
     println!("Hello, world!");
 }
+=======
+    println!("Placeholder for running build");
+}
+>>>>>>> Adding help text via docstrings.
