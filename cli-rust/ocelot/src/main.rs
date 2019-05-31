@@ -23,7 +23,8 @@ pub enum ResourceAction {
 #[structopt(rename_all = "kebab_case")]
 pub enum Command {
     /// Trigger build for registered repo
-    Build(subcommand::build_subcmd::BuildOptions),
+    Build(subcommand::build_subcmd::SubOption),
+    /// Manage credentials
     Creds(subcommand::creds::CredType),
     Init,
     Kill,
@@ -37,8 +38,9 @@ pub enum Command {
     Watch,
 }
 
+// FIXME: Need to think about how to pass any of the options to the subcommands
 #[derive(Debug, StructOpt)]
-#[structopt(name = "orb")]
+#[structopt(name = "ocelot")]
 /// The OrbitalCI command line interface
 pub struct ApplicationArguments {
     #[structopt(subcommand)]
@@ -74,17 +76,17 @@ fn main() {
 
     // Pass to the subcommand handlers
     match &matches.command {
-        Command::Build(_) => {
-            subcommand::build_subcmd::subcommand_handler();
+        Command::Build(a) => {
+            subcommand::build_subcmd::subcommand_handler(a);
         },
-        Command::Creds(t) => {
-            subcommand::creds::subcommand_handler(t);
+        Command::Creds(a) => {
+            subcommand::creds::subcommand_handler(a);
         },
         Command::Init => {},
         Command::Kill => {},
         Command::Logs  => {},
-        Command::Poll(_n) => {},
-        Command::Repos(_n) => {},
+        Command::Poll(_a) => {},
+        Command::Repos(_a) => {},
         Command::Status => {},
         Command::Summary => {},
         Command::Validate => {},
