@@ -6,7 +6,7 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub struct EnvAddOption {
+pub struct AddOption {
     /// Account to add to. Defaults to auto-detect from current working directory
     #[structopt(name = "Account", long = "acct")]
     account: Option<String>,
@@ -17,7 +17,7 @@ pub struct EnvAddOption {
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub struct EnvListOption {
+pub struct ListOption {
     /// Account to add to. Defaults to auto-detect from current working directory
     #[structopt(name = "Account", long = "acct")]
     account: Option<String>,
@@ -27,11 +27,13 @@ pub struct EnvListOption {
 #[structopt(rename_all = "kebab_case")]
 pub enum ResourceAction {
     /// 
-    Add(EnvAddOption),
+    Add(AddOption),
     /// 
+    #[structopt(alias = "rm")]
     Delete,
     /// 
-    List(EnvListOption),
+    #[structopt(alias = "ls")]
+    List(ListOption),
 }
 
 #[derive(Debug, StructOpt)]

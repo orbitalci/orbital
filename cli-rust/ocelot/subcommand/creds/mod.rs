@@ -1,33 +1,24 @@
 pub mod apple;
 pub mod env;
-pub mod helmrepo;
+pub mod helm;
 pub mod k8s;
-pub mod notify;
-pub mod repo;
+pub mod slack;
+pub mod artifact;
 pub mod ssh;
 pub mod vcs;
 
 use structopt::StructOpt;
-
-// FIXME: Delete this after we move this into each of the type handlers
-#[derive(Debug, StructOpt, Copy, Clone)]
-#[structopt(rename_all = "kebab_case")]
-pub enum ResourceAction {
-    Add,
-    Delete,
-    List,
-}
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum CredType {
     Apple(apple::SubOption),
     Env(env::SubOption),
-    Helmrepo(ResourceAction),
-    K8s(ResourceAction),
-    Notify(ResourceAction),
-    Repo(ResourceAction),
-    Ssh(ResourceAction),
+    Helm(helm::SubOption),
+    K8s(k8s::SubOption),
+    Slack(slack::SubOption),
+    Artifact(artifact::SubOption),
+    Ssh(ssh::SubOption),
     Vcs(vcs::SubOption),
 }
 
@@ -39,11 +30,11 @@ pub fn subcommand_handler(args: &CredType) {
     match args {
         CredType::Apple(a) => apple::subcommand_handler(a),
         CredType::Env(a) => env::subcommand_handler(a),
-        CredType::Helmrepo(a) => {},
-        CredType::K8s(a) => {},
-        CredType::Notify(a) => {},
-        CredType::Repo(a) => {},
-        CredType::Ssh(a) => {},
+        CredType::Helm(a) => helm::subcommand_handler(a),
+        CredType::K8s(a) => k8s::subcommand_handler(a),
+        CredType::Slack(a) => slack::subcommand_handler(a),
+        CredType::Artifact(a) => artifact::subcommand_handler(a),
+        CredType::Ssh(a) => ssh::subcommand_handler(a),
         CredType::Vcs(a) => vcs::subcommand_handler(a),
     }
 }
