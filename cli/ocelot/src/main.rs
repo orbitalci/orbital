@@ -9,31 +9,40 @@ use structopt::StructOpt;
 // This is for autocompletion
 //use structopt::clap::Shell;
 
-use subcommand::{self,build_subcmd,action};
+use subcommand;
+
+#[derive(Debug, StructOpt, Copy, Clone)]
+#[structopt(rename_all = "kebab_case")]
+pub enum ResourceAction {
+    Add,
+    Delete,
+    List,
+}
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum CredType {
-    Apple(action::ResourceAction),
-    Env(action::ResourceAction),
-    Helmrepo(action::ResourceAction),
-    K8s(action::ResourceAction),
-    Notify(action::ResourceAction),
-    Repo(action::ResourceAction),
-    Ssh(action::ResourceAction),
+    Apple(subcommand::creds::apple::AppleOptions),
+    Env(ResourceAction),
+    Helmrepo(ResourceAction),
+    K8s(ResourceAction),
+    Notify(ResourceAction),
+    Repo(ResourceAction),
+    Ssh(ResourceAction),
     Vcs(subcommand::creds::vcs::VcsOptions),
 }
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum Command {
-    Build(build_subcmd::BuildOptions),
+    /// Trigger build for registered repo
+    Build(subcommand::build_subcmd::BuildOptions),
     Creds(CredType),
     Init,
     Kill,
     Logs,
-    Poll(action::ResourceAction),
-    Repos(action::ResourceAction),
+    Poll(ResourceAction),
+    Repos(ResourceAction),
     Status,
     Summary,
     Validate,
@@ -78,7 +87,7 @@ fn main() {
     // Pass to the subcommand handlers
     match &matches.command {
         Command::Build(_) => {
-            build_subcmd::build();
+            subcommand::build_subcmd::build();
         },
         Command::Creds(_n) => {},
         Command::Init => {},

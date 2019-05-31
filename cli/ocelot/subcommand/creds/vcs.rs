@@ -1,8 +1,6 @@
 extern crate structopt;
 use structopt::StructOpt;
 
-//use super::super::action;
-
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum ResourceAction {
