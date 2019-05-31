@@ -35,3 +35,8 @@ pub struct AppleOptions {
     #[structopt(long)]
     acct: Option<String>,
 }
+
+// Handle the command line control flow
+pub fn subcommand_handler() {
+    println!("Placeholder for handling Apple developer creds");
+}
