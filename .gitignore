@@ -34,3 +34,10 @@ models/pb/storage.swagger.json
 *-console.log
 .vagrant/
 .vendor-new/
+
+backup/
+scripts/backup*
+*.snap
+*.txt
+
+target/
