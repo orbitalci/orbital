@@ -31,6 +31,6 @@ pub struct VcsOptions {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler() {
+pub fn subcommand_handler(args: &VcsOptions) {
     println!("Placeholder for handling VCS creds");
 }

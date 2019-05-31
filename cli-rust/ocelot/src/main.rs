@@ -21,23 +21,10 @@ pub enum ResourceAction {
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub enum CredType {
-    Apple(subcommand::creds::apple::AppleOptions),
-    Env(ResourceAction),
-    Helmrepo(ResourceAction),
-    K8s(ResourceAction),
-    Notify(ResourceAction),
-    Repo(ResourceAction),
-    Ssh(ResourceAction),
-    Vcs(subcommand::creds::vcs::VcsOptions),
-}
-
-#[derive(Debug, StructOpt)]
-#[structopt(rename_all = "kebab_case")]
 pub enum Command {
     /// Trigger build for registered repo
     Build(subcommand::build_subcmd::BuildOptions),
-    Creds(CredType),
+    Creds(subcommand::creds::CredType),
     Init,
     Kill,
     Logs,
@@ -76,6 +63,7 @@ pub struct ApplicationArguments {
 }
 
 
+// TODO: Can we define traits to keep a tighter contract for creds?
 fn main() {
     // generate `bash` completions in "target" directory
     //ApplicationArguments::clap().gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, "target");   
@@ -87,9 +75,11 @@ fn main() {
     // Pass to the subcommand handlers
     match &matches.command {
         Command::Build(_) => {
-            subcommand::build_subcmd::build();
+            subcommand::build_subcmd::subcommand_handler();
         },
-        Command::Creds(_n) => {},
+        Command::Creds(t) => {
+            subcommand::creds::subcommand_handler(t);
+        },
         Command::Init => {},
         Command::Kill => {},
         Command::Logs  => {},
@@ -102,5 +92,5 @@ fn main() {
         Command::Watch => {},
     }
 
-    println!("Full matches: {:?}", matches);
+    //println!("Full matches: {:?}", matches);
 }
