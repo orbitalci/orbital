@@ -1,4 +1,4 @@
-//ocelot creds k8s add -acct my_kewl_acct -name cluster_name -kubeconfig=/home/user/.kube/cluster-config.yaml
+//ocelot creds notify add --identifier L11_SLACK --acctname level11consulting --url https://hooks.slack.com/services/T0DFsdSBA/345PPRP9C/5hUe12345v6BrxfSJt --detail-url https://ocelot.mysite.io
 
 extern crate structopt;
 use structopt::StructOpt;
@@ -9,12 +9,12 @@ pub struct AddOption {
     /// Account to add to. Defaults to auto-detect from current working directory
     #[structopt(name = "Account", long = "acct")]
     account: Option<String>,
-    /// Kubernetes cluster name (logical)
-    #[structopt(name = "Kubernetes cluster name", long)]
-    cluster_name: Option<String>,
-    /// File path to Kubernetes config file
+    /// Kubernetes cluster name
+    #[structopt(name = "Slack org name", long)]
+    slack_name: Option<String>,
+    /// File path to yaml containing env vars
     #[structopt(name = "Kubernetes config (yaml)", short = "f", long = "file")]
-    file_path: Option<String>,
+    webhook_url: Option<String>,
 }
 
 #[derive(Debug, StructOpt)]
@@ -50,5 +50,5 @@ pub struct SubOption {
 
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling Kubernetes creds");
+    println!("Placeholder for handling Slack creds");
 }

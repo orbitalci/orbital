@@ -6,7 +6,7 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub struct AppleAddOption {
+pub struct AddOption {
     /// Account to add to. Defaults to auto-detect from current working directory
     #[structopt(name = "Account", long = "acct")]
     account: Option<String>,
@@ -17,13 +17,23 @@ pub struct AppleAddOption {
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
+pub struct ListOption {
+    /// Account to add to. Defaults to auto-detect from current working directory
+    #[structopt(name = "Account", long = "acct")]
+    account: Option<String>,
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab_case")]
 pub enum ResourceAction {
     /// Add Apple Developer account (as Xcode exported .developerprofile)
-    Add(AppleAddOption),
+    Add(AddOption),
     /// Delete a Apple Developer account
+    #[structopt(alias = "rm")]
     Delete,
     /// List registered Apple Developer account(s)
-    List,
+    #[structopt(alias = "ls")]
+    List(ListOption),
 }
 
 #[derive(Debug, StructOpt)]
