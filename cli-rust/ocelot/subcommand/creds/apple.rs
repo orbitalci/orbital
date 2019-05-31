@@ -37,6 +37,6 @@ pub struct AppleOptions {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler() {
+pub fn subcommand_handler(args: &AppleOptions) {
     println!("Placeholder for handling Apple developer creds");
 }
