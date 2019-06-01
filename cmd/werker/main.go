@@ -91,6 +91,9 @@ func main() {
 	}
 	consulet := conf.RemoteConfig.GetConsul()
 	uuid, err := buildmonitor.Register(consulet, conf.RegisterIP, conf.GrpcPort, conf.ServicePort, conf.tags)
+
+	ocelog.Log().Debug("Werker UUID is ", uuid)
+	
 	if err != nil {
 		ocelog.IncludeErrField(err).Fatal("unable to register werker with consul, this is vital. BAILING!")
 	}

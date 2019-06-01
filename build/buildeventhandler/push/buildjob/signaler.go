@@ -72,13 +72,14 @@ func (s *Signaler) QueueAndStore(task *pb.WerkerTask) error {
 		return buildconfigvalidator.NoViability("this hash is already building in ocelot, therefore not adding to queue")
 	}
 	//get vcs cred to attach the database id to the build summary
-	vcsCred, err := config.GetVcsCreds(s.Store, task.FullName, s.RC, task.VcsType)
+	_, err = config.GetVcsCreds(s.Store, task.FullName, s.RC, task.VcsType)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to get vcs creds")
 		return errors.Wrap(err, "unable to retrieve vcs creds")
 	}
+	//
 	// tell the database (and therefore all of ocelot) that this build is a-happening. or at least that it exists.
-	id, err := builddb.StoreSummaryToDb(s.Store, task.CheckoutHash, repo, task.Branch, account, task.SignaledBy, vcsCred.GetId())
+	id, err := builddb.StoreSummaryToDb(s.Store, task.CheckoutHash, repo, task.Branch, account)
 	if err != nil {
 		return err
 	}
