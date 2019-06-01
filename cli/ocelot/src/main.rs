@@ -11,14 +11,6 @@ use structopt::StructOpt;
 
 use subcommand;
 
-#[derive(Debug, StructOpt, Copy, Clone)]
-#[structopt(rename_all = "kebab_case")]
-pub enum ResourceAction {
-    Add,
-    Delete,
-    List,
-}
-
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum Command {
@@ -26,16 +18,15 @@ pub enum Command {
     Build(subcommand::build_subcmd::SubOption),
     /// Manage credentials
     Creds(subcommand::creds::CredType),
-    Init,
-    Kill,
-    Logs,
-    Poll(ResourceAction),
-    Repos(ResourceAction),
-    Status,
-    Summary,
-    Validate,
-    Version,
-    Watch,
+    Init(subcommand::init::SubOption),
+    Cancel(subcommand::cancel::SubOption),
+    Logs(subcommand::logs::SubOption),
+    Poll(subcommand::poll::SubOption),
+    Repo(subcommand::repo::SubOption),
+    Summary(subcommand::summary::SubOption),
+    Validate(subcommand::validate::SubOption),
+    Version(subcommand::version::SubOption),
+    Watch(subcommand::watch::SubOption),
 }
 
 // FIXME: Need to think about how to pass any of the options to the subcommands
@@ -64,7 +55,6 @@ pub struct ApplicationArguments {
 
 }
 
-
 // TODO: Can we define traits to keep a tighter contract for creds?
 fn main() {
     // generate `bash` completions in "target" directory
@@ -76,22 +66,17 @@ fn main() {
 
     // Pass to the subcommand handlers
     match &matches.command {
-        Command::Build(a) => {
-            subcommand::build_subcmd::subcommand_handler(a);
-        },
-        Command::Creds(a) => {
-            subcommand::creds::subcommand_handler(a);
-        },
-        Command::Init => {},
-        Command::Kill => {},
-        Command::Logs  => {},
-        Command::Poll(_a) => {},
-        Command::Repos(_a) => {},
-        Command::Status => {},
-        Command::Summary => {},
-        Command::Validate => {},
-        Command::Version => {},
-        Command::Watch => {},
+        Command::Build(a) => subcommand::build_subcmd::subcommand_handler(a),
+        Command::Creds(a) => subcommand::creds::subcommand_handler(a),
+        Command::Init(a) => subcommand::init::subcommand_handler(a),
+        Command::Cancel(a) => subcommand::cancel::subcommand_handler(a),
+        Command::Logs(a)  => subcommand::logs::subcommand_handler(a),
+        Command::Poll(a) => subcommand::poll::subcommand_handler(a),
+        Command::Repo(a) => subcommand::repo::subcommand_handler(a),
+        Command::Summary(a) => subcommand::summary::subcommand_handler(a),
+        Command::Validate(a) => subcommand::validate::subcommand_handler(a),
+        Command::Version(a) => subcommand::version::subcommand_handler(a),
+        Command::Watch(a) => subcommand::watch::subcommand_handler(a),
     }
 
     //println!("Full matches: {:?}", matches);
