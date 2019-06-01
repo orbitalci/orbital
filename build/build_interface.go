@@ -24,6 +24,7 @@ import (
 	"github.com/shankj3/go-til/nsqpb"
 	"github.com/level11consulting/orbitalci/build/vcshandler"
 	"github.com/level11consulting/orbitalci/server/grpc/admin/sendstream"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 type BuildInterface interface {
@@ -165,16 +166,21 @@ func (g *BuildAPI) BuildRepoAndHash(buildReq *pb.BuildReq, stream pb.GuideOcelot
 	var buildSum *pb.BuildSummary
 	if buildReq.Hash != "" {
 		buildSum, err = g.Storage.RetrieveLatestSum(buildReq.Hash)
-		if err != nil {
-			if _, ok := err.(*storage.ErrNotFound); !ok {
-				log.IncludeErrField(err).Error("could not retrieve latest build summary")
-				return status.Error(codes.Internal, fmt.Sprintf("Unable to connect to the database, therefore this operation is not available at this time."))
-			}
-			sendstream.SendStream(stream, "There are no previous builds starting with hash %s...", buildReq.Hash)
-		}
+
+		// FIXME: This prevents builds from happening the first time
+		//if err != nil {
+		//	if _, ok := err.(*storage.ErrNotFound); !ok {
+		//		log.IncludeErrField(err).Error("could not retrieve latest build summary")
+		//		return status.Error(codes.Internal, fmt.Sprintf("Unable to connect to the database, therefore this operation is not available at this time."))
+		//	}
+		//	sendstream.SendStream(stream, "There are no previous builds starting with hash %s...", buildReq.Hash)
+		//}
 
 		hashPreviouslyBuilt = err == nil
 	}
+
+	ocelog.Log().Debug("TEST TEST")
+	
 	// validate that hte request acct/repo is the same as an entry in the db. if this happens, we want to know about it.
 	if hashPreviouslyBuilt && (buildSum.Repo != repo || buildSum.Account != acct) {
 		mismatchErr := errors.New(fmt.Sprintf("The account/repo passed (%s) doesn't match with the account/repo (%s) associated with build #%v", buildReq.AcctRepo, buildSum.Account+"/"+buildSum.Repo, buildSum.BuildId))

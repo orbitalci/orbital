@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/level11consulting/orbitalci/models"
-	"github.com/level11consulting/orbitalci/models/pb"
 	"github.com/level11consulting/orbitalci/storage"
 	"github.com/shankj3/go-til/log"
 )
@@ -25,8 +24,8 @@ func StoreQueued(store storage.BuildSum, id int64) error {
 	return err
 }
 
-func StoreSummaryToDb(store storage.BuildSum, hash, repo, branch, account string, by pb.SignaledBy, credId int64) (int64, error) {
-	id, err := store.AddSumStart(hash, account, repo, branch, by, credId)
+func StoreSummaryToDb(store storage.BuildSum, hash, repo, branch, account string) (int64, error) {
+	id, err := store.AddSumStart(hash, account, repo, branch)
 	if err != nil {
 		log.IncludeErrField(err).Error("unable to store summary details to db")
 		return 0, err
