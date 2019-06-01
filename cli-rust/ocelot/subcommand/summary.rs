@@ -1,28 +1,28 @@
-//ocelot logs --hash <git_hash>
-// add --build-id
-// add --acct-repo
-
 extern crate structopt;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubOption {
-    /// Build ID
+    // build-id will provide the same functionality that the `status` subcommand did.
+    /// Retrieve status for specific build 
     #[structopt(name = "build id", long)]
     build_id: Option<u32>,
-    /// Retrieve logs for account/repo. Otherwise try to auto-detect from current working directory
+    /// Retrieve status for builds from the provided acct-repo
     #[structopt(long)]
     acct_repo: Option<String>,
-    /// Retrieve logs for the provided branch. Without build-id or hash, will default to latest commit in branch
+    /// Retrieve status for builds from the provided branch.
     #[structopt(long)]
     branch : Option<String>,
-    /// Retrieve logs for the provided commit hash. Otherwise, default to latest build
+    /// Retrieve status for builds with the provided commit hash
     #[structopt(long)]
     hash : Option<String>,
+    /// Limit to last N runs
+    #[structopt(long)]
+    limit : Option<u32>,
 }
 
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling logs");
+    println!("Placeholder for handling summary");
 }
