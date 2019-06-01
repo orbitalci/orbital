@@ -1,8 +1,3 @@
-//  ocelot poll delete -acct-repo level11consulting/ocelog
-//      -- I'm not sure we should force the --acct-repo flag
-// Should have add as a subcommand instead of the current functionality
-
-// ocelot poll list might want to filter by account
 
 extern crate structopt;
 use structopt::StructOpt;
@@ -17,10 +12,6 @@ pub struct AddOption {
     /// Use the provided acct-repo
     #[structopt(long)]
     acct_repo: Option<String>,
-
-    /// Cron string
-    #[structopt(long = "cron")]
-    cron_string : Option<String>,
 
     /// Comma-separated list of branches
     #[structopt(alias = "branches")]
@@ -46,12 +37,12 @@ pub struct DeleteOption {
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum ResourceAction {
-    /// Add a polling schedule
+    /// Register a git repo
     Add(AddOption),
-    /// Delete a polling schedule
+    /// Delete a registered git repo
     #[structopt(alias = "rm")]
     Delete(DeleteOption),
-    /// List the polling schedules
+    /// List the registered git repo(s) 
     #[structopt(alias = "ls")]
     List(ListOption),
 }
@@ -68,5 +59,5 @@ pub struct SubOption {
 
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling polling schedules");
+    println!("Placeholder for handling Git repos");
 }
