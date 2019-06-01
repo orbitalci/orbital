@@ -76,8 +76,9 @@ services:
       - nsqlookupd
     command: >
       /nsqd
-      -broadcast-address nsqd
-      -lookupd-tcp-address nsqlookupd:4160
+      -broadcast-address 192.168.56.78
+      -lookupd-tcp-address nsqlookupd:4160 
+      -lookupd-tcp-address 192.168.56.78:4160 
     ports:
       - 4150:4150
       - 4151:4151
@@ -95,6 +96,7 @@ services:
       - nsqlookupd
     command: >
       /nsqadmin
+      -broadcast-address 192.168.56.78
       -lookupd-http-address nsqlookupd:4161
       -lookupd-http-address 192.168.56.78:4161
     ports:
