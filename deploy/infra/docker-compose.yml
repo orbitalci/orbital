@@ -58,6 +58,7 @@ services:
     container_name: nsqlookupd
     command: >
       /nsqlookupd
+      -broadcast-address 192.168.56.78
     ports:
       - 4160:4160
       - 4161:4161
@@ -95,7 +96,6 @@ services:
       - nsqlookupd
     command: >
       /nsqadmin
-      -broadcast-address 192.168.56.78
       -lookupd-http-address nsqlookupd:4161
       -lookupd-http-address 192.168.56.78:4161
     ports:
