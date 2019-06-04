@@ -46,6 +46,14 @@ func getBinaryIntegList(loopbackHost, loopbackPort string) []integrations.Binary
 
 // doIntegrations will run all the integrations that (one day) are pertinent to the task at hand.
 func (w *launcher) doIntegrations(ctx context.Context, werk *pb.WerkerTask, bldr builderinterface.Builder, baseStage *builderinterface.StageUtil) (result *pb.Result) {
+
+	ocelog.Log().Debug("This step is when integrations run -- skipping...")
+	return &pb.Result{
+		Status: pb.StageResultVal_PASS,
+		Messages: []string{"This step is when integrations run -- skipping..." + models.CHECKMARK},
+		Stage: builderinterface.CreateSubstage(baseStage, "INTEG").GetStage(),
+	}
+
 	accountName, _, err := accountrepo.GetAcctRepo(werk.FullName)
 	if err != nil {
 		result.Status = pb.StageResultVal_FAIL

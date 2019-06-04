@@ -20,30 +20,40 @@ import (
 //		- download codebase for building
 //   all the substages above will be rolled into one stage for storage: PREFLIGHT
 func (w *launcher) preFlight(ctx context.Context, werk *pb.WerkerTask, builder builderinterface.Builder) (bailOut bool, err error) {
+	ocelog.Log().Debug("In Preflight stage")
 	start := time.Now()
 	prefly := builderinterface.InitStageUtil("PREFLIGHT")
 	preflightResult := &pb.Result{Stage: prefly.GetStage(), Status: pb.StageResultVal_PASS}
 	acct, _, err := accountrepo.GetAcctRepo(werk.FullName)
 	if err != nil {
+		ocelog.IncludeErrField(err).Error("Failed GetAcctRepo")
 		return bailOut, err
 	}
 	var result *pb.Result
+	ocelog.Log().Debug("Getting env secrets")
 	result = w.handleEnvSecrets(ctx, builder, acct, prefly)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
+		ocelog.IncludeErrField(err).Error("Failed mapOrStoreStageResults")
 		return
 	}
+	ocelog.Log().Debug("Downloading binaries")
 	result = w.downloadBinaries(ctx, prefly, builder, werk.BuildConf)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
+		ocelog.IncludeErrField(err).Error("Failed mapOrStoreStageResults")
 		return
 	}
+	ocelog.Log().Debug("Doing integrations")
 	result = w.doIntegrations(ctx, werk, builder, prefly)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
+		ocelog.IncludeErrField(err).Error("Failed mapOrStoreStageResults")
 		return
 	}
 
 	// download codebase to werker node
+	ocelog.Log().Debug("Downloading codebase")
 	result = downloadCodebase(ctx, werk, builder, prefly, w.infochan)
 	if bailOut, err = w.mapOrStoreStageResults(result, preflightResult, werk.Id, start); err != nil || bailOut {
+		ocelog.IncludeErrField(err).Error("Failed mapOrStoreStageResults")
 		return
 	}
 	if err = storeStageToDb(w.Store, werk.Id, preflightResult, start, time.Since(start).Seconds()); err != nil {
@@ -77,6 +87,11 @@ func (w *launcher) mapOrStoreStageResults(subStageResult *pb.Result, parentResul
 // handleEnvSecrets will grab all environment type credentials from storage / secret store and add them as global environment variables for
 // 	the entire build.
 func (w *launcher) handleEnvSecrets(ctx context.Context, builder builderinterface.Builder, accountName string, stage *builderinterface.StageUtil) *pb.Result {
+
+	ocelog.Log().Debug("Getting env vars")
+
+	return &pb.Result{Status: pb.StageResultVal_PASS, Messages: []string{"This is when environment vars get set in the build environment -- skipping... " + models.CHECKMARK}, Stage: stage.GetStage()}
+
 	creds, err := w.RemoteConf.GetCredsBySubTypeAndAcct(w.Store, pb.SubCredType_ENV, accountName, false)
 	if err != nil {
 		if _, ok := err.(*nocreds.NoCreds); ok {

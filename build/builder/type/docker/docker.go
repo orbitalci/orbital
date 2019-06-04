@@ -212,6 +212,15 @@ func (d *Docker) Setup(ctx context.Context, logout chan []byte, dockerIdChan cha
 	sctType := pb.SubCredType(werk.VcsType)
 	identifier, _ := pb.CreateVCSIdentifier(sctType, acctName)
 	ocelog.Log().Debug("identifier is ", identifier)
+
+
+	// What is even going on here?
+	/// Exec(ctx context.Context,
+	////	currStage string
+	///currStageStr string
+	///env []string
+	///cmds []string
+	///logout chan []byte) *pb.Result {
 	result := d.Exec(ctx, su.GetStage(), su.GetStageLabel(), []string{"VAULT_ADDR=" + vaultAddr}, d.DownloadSSHKey(
 		werk.VaultToken,
 		vaultkv.BuildCredPath(sctType, acctName, pb.CredType_VCS, identifier)), logout)

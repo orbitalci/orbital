@@ -94,7 +94,8 @@ func (b *Basher) DownloadCodebase(werk *pb.WerkerTask) []string {
 
 //DownloadSSHKey will using the vault token to try to download the ssh key located at the path + `/ssh`
 func (b *Basher) DownloadSSHKey(vaultKey, vaultPath string) []string {
-	return []string{"/bin/sh", "-c", fmt.Sprintf("%s/get_ssh_key.sh %s %s", b.OcelotDir(), vaultKey, vaultPath+"/ssh")}
+	//return []string{"/bin/sh", "-c", fmt.Sprintf("%s/get_ssh_key.sh %s %s", b.OcelotDir(), vaultKey, vaultPath+"/ssh")}
+	return []string{"/bin/sh", "-c", "echo This used to run get_ssh_key.sh -- skipping..."}
 }
 
 //DownloadTemplateFiles will download template files necessary to build containers from werker

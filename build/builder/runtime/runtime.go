@@ -54,6 +54,7 @@ func endBuild(werkType string, start time.Time) {
 	buildDurationHist.WithLabelValues(werkType).Observe(time.Since(start).Seconds())
 }
 
+// TODO: We should stream output to standard out
 // watchForResults sends the *Transport object over the transport channel for stream functions to process
 func (w *launcher) WatchForResults(hash string, dbId int64) {
 	ocelog.Log().Debugf("adding hash ( %s ) & infochan to transport channel", hash)
@@ -61,19 +62,30 @@ func (w *launcher) WatchForResults(hash string, dbId int64) {
 	w.StreamChan <- transport
 }
 
+
 // MakeItSo is the bread and butter of the werker. It registers the build with consul, ensures notifications, stores all the build data
 //  in the OcelotStorage implementation, and runs all the stages both setup and ones defined by the user.
 func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder builderinterface.Builder, finish, done chan int) {
-	startBuild()
-	start := time.Now()
+	
+	ocelog.Log().Info("Starting build")
+	// Gets timestamp, and increments metrics for prometheus
+	startTime := startBuild()
+
 	ocelog.Log().Debug("hash build ", werk.CheckoutHash)
+
+
 	w.BuildMonitor.RegisterDoneChan(werk.CheckoutHash, done)
+
+	// Cleanup function?
 	defer w.BuildMonitor.MakeItSoDed(finish)
+	// I think this is cleanup in Consul
 	defer w.BuildMonitor.UnregisterDoneChan(werk.CheckoutHash)
+
+	// TODO: Find ou
 	defer func() {
 		ocelog.Log().Info("calling done for nsqpb")
 		done <- 1
-		endBuild(w.WerkerType.String(), start)
+		endBuild(w.WerkerType.String(), startTime)
 	}()
 	// set up notifications to be executed on build completion
 	defer func() {
@@ -92,10 +104,16 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder builderinterface.Builde
 		CancelFunc: cancel,
 	}
 
+	// The pattern for using context.WithCancel is to defer calling its CancelFunc
 	defer cancel()
 
-	// start building with the Builder
+	// Get a protobuf (pb.Result) as defined by the Builder interface
+	// That is, build/type/docker, or build/type/exec, or build/type/ssh etc...
+	// For what it's worth, we don't use any of the parameters.
+	// This is just used to customize a single string in the pg.Result 
 	result := builder.Init(ctx, werk.CheckoutHash, w.infochan)
+
+
 	// at the end of the build, close out any build-length connections associated with build
 	defer func() {
 		if err := builder.Close(); err != nil {
@@ -128,10 +146,12 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder builderinterface.Builde
 	setupStart := time.Now()
 	w.BuildMonitor.Reset("setup", werk.CheckoutHash)
 
+	// Maintainer note:
+	// Is this what captures the output from docker's console?
 	dockerIdChan := make(chan string)
 	go w.listenForDockerUuid(dockerIdChan, werk.CheckoutHash)
 
-	// do setup stage
+	// START SETUP STAGE
 	setupResult, dockerUUid := builder.Setup(ctx, w.infochan, dockerIdChan, werk, w.RemoteConf, w.ServicePort)
 	defer w.BuildMonitor.Cleanup(ctx, dockerUUid, w.infochan)
 	ocelog.Log().Info("finished setup")
@@ -146,11 +166,15 @@ func (w *launcher) MakeItSo(werk *pb.WerkerTask, builder builderinterface.Builde
 		handleFailure(setupResult, w.Store, "setup", setupDura, werk.Id)
 		return
 	}
+	// END SETUP STAGE
 
+	// START PREFLIGHT STAGE
 	// run integrations, executable download, codebase download
 	if bailOut, err := w.preFlight(ctx, werk, builder); err != nil || bailOut {
 		return
 	}
+	// END PREFLIGHT STAGE
+
 
 	// run the actual stages outlined in the ocelot.yml
 	fail, dura, err := w.runStages(ctx, werk, builder)

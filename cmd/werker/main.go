@@ -55,6 +55,14 @@ func listen(p *nsqpb.ProtoConsume, topic string, conf *WerkerConf, streamingChan
 		} else {
 			//mode := os.Getenv("ENV")
 			ocelog.Log().Debug("I AM ABOUT TO LISTEN part 2")
+
+
+			// Maintainer notes
+			// The purpose of this function call is to help future code switching in the "Worker message handler" between
+			// * bitbucket and github
+			// * and different builder type contexts (docker, exec, etc)
+			// We should completely redo this configuration implementation so it isn't spaghetti.
+
 			bshr, err := shell.NewBasher("", "", conf.LoopbackIp, workingdir.GetOcyPrefixFromWerkerType(conf.WerkerType))
 			// if couldn't make a new basher, just panic
 			if err != nil {
