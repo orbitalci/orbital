@@ -29,7 +29,7 @@ pub enum Command {
     Watch(subcommand::watch::SubOption),
 }
 
-// FIXME: Need to think about how to pass any of the options to the subcommands
+// TODO: Split the top-level options into a struct that we can pass to to the command handlers
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ocelot")]
 /// The OrbitalCI command line interface
