@@ -4,6 +4,13 @@ extern crate clap;
 
 use structopt::StructOpt;
 
+use std::env;
+
+
+use git_meta::git_info;
+use git2::Repository;
+use itertools::structs::Format;
+
 //ocelot build -acct-repo <acct>/<repo> -hash <git_hash> -branch <branch> [-latest]
 
 #[derive(Debug, StructOpt)]
@@ -27,4 +34,26 @@ pub fn build() {
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
     println!("Placeholder for running build");
+
+    // Assume current directory for now
+    let path_to_repo = env::current_dir().unwrap();
+
+    // Get build information
+
+    // Parse remote from url
+    // We want this information before calling the backend
+    //
+    // Account, Repo
+    // Provider
+    // Remote Branch
+    // Hash, or HEAD if not specified
+    // Later: Env vars
+
+
+    let remote_url = git_info::git_remote_from_path(path_to_repo.to_str().unwrap());
+    println!("{:?}", remote_url);
+
+
+
+    // Get commit hash or choose HEAD
 }
