@@ -1,18 +1,14 @@
 [package]
-name = "subcommand"
+name = "git_meta"
 version = "0.1.0"
 authors = ["T.J. Telan <tjtelan@level11.com>"]
 edition = "2018"
 
 [dependencies]
-structopt = "0.2"
-clap = "2.33"
-
-# For build
 git2 = "0.9"
-git_meta = { path = "../git_meta" }
 itertools = "0.8"
+url = "1.7"
 
 [lib]
-name = "subcommand"
+name = "git_meta"
 path = "mod.rs"
