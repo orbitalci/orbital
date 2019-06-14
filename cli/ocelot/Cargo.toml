@@ -9,3 +9,6 @@ structopt = "0.2"
 clap = "2.33"
 subcommand = { path = "subcommand" }
 git_meta = { path = "git_meta" }
+
+[build-dependencies]
+tower-grpc-build = {version = "0.1", features = ["tower-hyper"]}
