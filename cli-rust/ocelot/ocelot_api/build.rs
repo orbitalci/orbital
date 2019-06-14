@@ -5,15 +5,15 @@ fn main() {
         .enable_client(true)
         .build(
             &[
-                "../../../models/build.proto",
-                "../../../models/creds.proto",
-                "../../../models/guideocelot.proto",
-                "../../../models/storage.proto",
-                "../../../models/vcshandler.proto",
+                "../../../oldmodels/build.proto",
+                "../../../oldmodels/creds.proto",
+                "../../../oldmodels/guideocelot.proto",
+                "../../../oldmodels/storage.proto",
+                "../../../oldmodels/vcshandler.proto",
                 // WONTFIX: Single namespace causes conflict w/ prost. We aren't implementing a werker anyway
                 //"../../../models/werkerserver.proto",
             ],
-            &["../../../models"],
+            &["../../../oldmodels"],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e));
 }
