@@ -8,3 +8,5 @@ edition = "2018"
 structopt = "0.2"
 clap = "2.33"
 subcommand = { path = "subcommand" }
+git_meta = { path = "git_meta" }
+ocelot_api = { path = "ocelot_api" }
