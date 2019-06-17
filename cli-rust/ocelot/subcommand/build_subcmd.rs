@@ -6,10 +6,16 @@ use structopt::StructOpt;
 
 use std::env;
 
-
+use ocelot_api;
 use git_meta::git_info::{self,GitSshRemote};
 use git2::Repository;
 use itertools::structs::Format;
+
+use futures::Future;
+use hyper::client::connect::{Destination, HttpConnector};
+use tower_grpc::Request;
+use tower_hyper::{client, util};
+use tower_util::MakeService;
 
 //ocelot build -acct-repo <acct>/<repo> -hash <git_hash> -branch <branch> [-latest]
 
@@ -69,24 +75,49 @@ pub fn subcommand_handler(args: &SubOption) {
     let git_info = git_info::get_git_info_from_path(&path_to_repo, &args.branch, &args.hash);
     println!("Git info: {:?}",git_info);
 
+    // Connect to Ocelot server via grpc
+    let uri: http::Uri = format!("http://192.168.12.34:10000").parse().unwrap();
+    let dst = Destination::try_from_uri(uri.clone()).unwrap();
 
+    let connector = util::Connector::new(HttpConnector::new(4));
+    let settings = client::Builder::new().http2_only(true).clone();
+    let mut make_client = client::Connect::with_builder(connector, settings);
 
+    let say_hello = make_client
+        .make_service(dst)
+        .map_err(|e| panic!("connect error: {:?}", e))
+        .and_then(move |conn| {
+            use ocelot_api::protobuf_api::api::client;
 
-    //let local_repo_ref = git_info::get_local_ref_from_path(path_to_repo.to_str().unwrap());
+            let conn = tower_request_modifier::Builder::new()
+                .set_origin(uri)
+                .build(conn)
+                .unwrap();
 
+            // Wait until the client is ready...
+            client::GuideOcelot::new(conn).ready()
+        })
+        .and_then(|mut client| {
+            use ocelot_api::protobuf_api::api::BuildReq;
 
-    //let remote_url = git_info::git_remote_from_ref(&local_repo_ref);
-    //println!("{:?}", remote_url);
+            // Send off a build info request
+            // Only supports bitbucket right now
+            client.build_repo_and_hash(Request::new(BuildReq {
+                acct_repo: format!("{}/{}",git_info.account,git_info.repo),
+                hash: git_info.id,
+                branch: git_info.branch,
+                force: false,
+                vcs_type: 1,
+            }))
+        })
+        .and_then(|response| {
+            println!("RESPONSE = {:?}", response);
+            Ok(())
+        })
+        .map_err(|e| {
+            println!("ERR = {:?}", e);
+        });
 
-    //// Going to assume we're only supporting SSH remotes for now
-    //let remote = git_info::git_remote_url_parse(&remote_url);
-    //println!("{:?}", remote);
+    tokio::run(say_hello);
 
-    //// Determine the specifics about what to build
-    //// Get branch
-    //// Get commit hash or choose HEAD
-    //let reference = git_info::get_local_ref(path_to_repo.to_str().unwrap(), &args.branch, &args.hash);
-    //let branch = git_info::get_working_branch(&local_repo_ref, &None);
-
-    //println!("{:?}", branch.unwrap().name());
 }
