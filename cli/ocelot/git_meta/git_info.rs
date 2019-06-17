@@ -15,11 +15,11 @@ pub fn get_local_repo_from_path(path : &str) -> Repository {
 // Clean this up with stronger types later
 #[derive(Debug,Default)]
 pub struct GitCommitContext {
-    provider : String,
-    branch : String,
-    id : String,
-    account : String,
-    repo : String,
+    pub provider : String,
+    pub branch : String,
+    pub id : String,
+    pub account : String,
+    pub repo : String,
 }
 
 // TODO: Implement an error type so this can return a Result
