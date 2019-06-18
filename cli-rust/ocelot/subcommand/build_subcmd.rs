@@ -87,7 +87,7 @@ pub fn subcommand_handler(args: &SubOption) {
         .make_service(dst)
         .map_err(|e| panic!("connect error: {:?}", e))
         .and_then(move |conn| {
-            use ocelot_api::protobuf_api::api::client;
+            use ocelot_api::protobuf_api::legacyapi::client;
 
             let conn = tower_request_modifier::Builder::new()
                 .set_origin(uri)
@@ -98,7 +98,7 @@ pub fn subcommand_handler(args: &SubOption) {
             client::GuideOcelot::new(conn).ready()
         })
         .and_then(|mut client| {
-            use ocelot_api::protobuf_api::api::BuildReq;
+            use ocelot_api::protobuf_api::legacyapi::BuildReq;
 
             // Send off a build info request
             // Only supports bitbucket right now
