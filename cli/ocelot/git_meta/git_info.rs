@@ -103,10 +103,10 @@ pub fn git_remote_url_parse(remote_url: &str) -> GitSshRemote {
     let repo_parsed = repo_parsed.split(".git").collect::<Vec<&str>>();
 
     GitSshRemote {
-        user: user_provider[0].to_string(),
-        provider: user_provider[1].to_string(),
-        account: acct_repo[0].to_string(),
-        repo: repo_parsed[0].to_string(),
+        user : user_provider[0].to_string(),
+        provider : user_provider[1].to_string(),
+        account : acct_repo[0].to_string(),
+        repo : repo_parsed[0].to_string(),
     }
 }
 
