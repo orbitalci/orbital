@@ -146,7 +146,7 @@ pub fn is_commit_in_branch<'repo>(r: &'repo Repository, commit: &Commit, branch:
     let branch_head = branch.get().peel_to_commit().unwrap();
 
     if branch_head.id() == commit.id() {
-        return true;
+        return true
     }
 
     let is_commit_in_branch = r.graph_descendant_of(branch_head.id(), commit.id());
