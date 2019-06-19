@@ -129,9 +129,13 @@ pub fn get_working_branch<'repo>(r : &'repo Repository, local_branch : &Option<S
 pub fn is_commit_in_branch<'repo>(r : &'repo Repository, commit : &Commit, branch : &Branch ) -> bool {
 
     let branch_head = branch.get().peel_to_commit().unwrap();
-    let is_commit_in_branch = r.graph_descendant_of(branch_head.id(), commit.id());
 
-    println!("is {:?} a decendent of {:?}: {:?}", &commit.id(), &branch_head.id(), is_commit_in_branch);
+    if branch_head.id() == commit.id() {
+        return true
+    }
+
+    let is_commit_in_branch = r.graph_descendant_of(branch_head.id(), commit.id());
+    //println!("is {:?} a decendent of {:?}: {:?}", &commit.id(), &branch_head.id(), is_commit_in_branch);
 
     is_commit_in_branch.unwrap()
 }
