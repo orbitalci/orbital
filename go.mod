@@ -22,7 +22,7 @@ require (
 	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/websocket v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/grpc-ecosystem/grpc-gateway v1.8.6
+	github.com/grpc-ecosystem/grpc-gateway v1.9.2
 	github.com/hashicorp/consul v1.4.0
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/lib/pq v0.0.0-20181016162627-9eb73efc1fcc
