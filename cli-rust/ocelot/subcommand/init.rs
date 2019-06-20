@@ -28,6 +28,19 @@ pub struct SubOption {
     slack: Option<bool>,
 }
 
+// TODO: Move all of these config structs to another crate. Perhaps the ocelot_api
+#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+struct OcelotNotifySlackBlock {
+    channel: String,
+    identifiers: String,
+    on: Vec<String>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
+struct OcelotNotify {
+    slack: OcelotNotifySlackBlock,
+}
+
 #[derive(Debug, PartialEq, Serialize, Deserialize, Default)]
 struct OcelotConfigStageTrigger {
     branches: Vec<String>,
@@ -45,6 +58,7 @@ struct OcelotConfigStage {
 struct OcelotConfig {
     version: String,
     build_tool: String,
+    notify: OcelotNotify,
     branches: Vec<String>,
     env: Vec<String>,
     stages: Vec<OcelotConfigStage>,
@@ -62,9 +76,18 @@ pub fn subcommand_handler(args: &SubOption) {
         script: ["echo hello world".to_string()].to_vec(),
     };
 
+    let ocelot_notify = OcelotNotify{
+        slack: OcelotNotifySlackBlock{
+            channel: "".to_string(),
+            identifiers: "".to_string(),
+            on: vec!("FAIL".to_string()),
+        },
+    };
+
     let ocelot_config = OcelotConfig {
         version: 1.to_string(),
         build_tool: "docker".to_string(),
+        notify: ocelot_notify,
         branches: vec!("master".to_string()),
         env: vec!(),
         stages: vec!(ocelot_stage),
