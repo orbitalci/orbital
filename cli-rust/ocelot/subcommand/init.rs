@@ -1,6 +1,23 @@
 extern crate structopt;
 use structopt::StructOpt;
 
+use std::env;
+
+use git_meta::git_info;
+use ocelot_api;
+
+use futures::Future;
+use hyper::client::connect::{Destination, HttpConnector};
+use tower_grpc::Request;
+use tower_hyper::{client, util};
+use tower_util::MakeService;
+
+use serde::{Deserialize, Serialize};
+
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
+
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubOption {
@@ -51,19 +68,21 @@ struct OcelotConfig {
 pub fn subcommand_handler(args: &SubOption) {
     println!("Placeholder for handling init");
 
-    let branch_trigger = OcelotConfigStageTrigger{branches: ["master".to_string()].to_vec()};
+    let branch_trigger = OcelotConfigStageTrigger {
+        branches: ["master".to_string()].to_vec(),
+    };
     let ocelot_stage = OcelotConfigStage {
         name: "Test".to_string(),
         trigger: branch_trigger,
-        env: vec!(),
+        env: vec![],
         script: ["echo hello world".to_string()].to_vec(),
     };
 
-    let ocelot_notify = OcelotNotify{
-        slack: OcelotNotifySlackBlock{
+    let ocelot_notify = OcelotNotify {
+        slack: OcelotNotifySlackBlock {
             channel: "".to_string(),
             identifiers: "".to_string(),
-            on: vec!("FAIL".to_string()),
+            on: vec!["FAIL".to_string()],
         },
     };
 
@@ -71,20 +90,18 @@ pub fn subcommand_handler(args: &SubOption) {
         version: 1.to_string(),
         build_tool: "docker".to_string(),
         notify: ocelot_notify,
-        branches: vec!("master".to_string()),
-        env: vec!(),
-        stages: vec!(ocelot_stage),
+        branches: vec!["master".to_string()],
+        env: vec![],
+        stages: vec![ocelot_stage],
     };
 
-    let mut config_default : OcelotConfig = Default::default();
+    let mut config_default: OcelotConfig = Default::default();
     config_default.stages = Vec::new();
 
     println!("Config: {:?}", serde_yaml::to_string(&ocelot_config));
 
     match Path::new("./ocelot.yml").exists() {
-        true => {
-            println!("ocelot.yml exists in path. Skipping")
-        }
+        true => println!("ocelot.yml exists in path. Skipping"),
         false => {
             println!("Create ocelot.yml");
             let mut file = File::create("ocelot.yml").unwrap();
