@@ -1,4 +1,3 @@
-
 extern crate structopt;
 use structopt::StructOpt;
 
@@ -48,7 +47,7 @@ pub enum ResourceAction {
     /// Delete a registered git repo
     #[structopt(alias = "rm")]
     Delete(DeleteOption),
-    /// List the registered git repo(s) 
+    /// List the registered git repo(s)
     #[structopt(alias = "ls")]
     List(ListOption),
 }
@@ -68,12 +67,8 @@ pub fn subcommand_handler(args: &SubOption) {
     println!("Placeholder for handling Git repos");
 
     match &args.action {
-        ResourceAction::Add(_) => {
-            println!("Note: There is no GRPC endpoint to add repos")
-        },
-        ResourceAction::Delete(_) => {
-            println!("Note: There is no GRPC endpoint to delete repos")
-        },
+        ResourceAction::Add(_) => println!("Note: There is no GRPC endpoint to add repos"),
+        ResourceAction::Delete(_) => println!("Note: There is no GRPC endpoint to delete repos"),
         ResourceAction::List(_) => {
             // TODO: Factor this out later
             // Connect to Ocelot server via grpc.
@@ -114,7 +109,6 @@ pub fn subcommand_handler(args: &SubOption) {
                 });
 
             tokio::run(repo_req);
-
-        },
+        }
     }
 }
