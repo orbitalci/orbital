@@ -16,10 +16,10 @@ pub struct SubOption {
     acct_repo: Option<String>,
     /// Retrieve logs for the provided branch. Without build-id or hash, will default to latest commit in branch
     #[structopt(long)]
-    branch : Option<String>,
+    branch: Option<String>,
     /// Retrieve logs for the provided commit hash. Otherwise, default to latest build
     #[structopt(long)]
-    hash : Option<String>,
+    hash: Option<String>,
 }
 
 // Handle the command line control flow
