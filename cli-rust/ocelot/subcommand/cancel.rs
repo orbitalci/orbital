@@ -15,7 +15,7 @@ pub struct SubOption {
     #[structopt(name = "build id", long)]
     build_id: Option<u32>,
 
-    /// Branch 
+    /// Branch
     #[structopt(name = "branch", long)]
     branch: Option<String>,
 }

@@ -1,9 +1,9 @@
 pub mod apple;
+pub mod artifact;
 pub mod env;
 pub mod helm;
 pub mod k8s;
 pub mod slack;
-pub mod artifact;
 pub mod ssh;
 pub mod vcs;
 
