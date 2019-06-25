@@ -15,11 +15,11 @@ pub fn get_local_repo_from_path(path: &str) -> Repository {
 // Clean this up with stronger types later
 #[derive(Debug, Default)]
 pub struct GitCommitContext {
-    pub provider : String,
-    pub branch : String,
-    pub id : String,
-    pub account : String,
-    pub repo : String,
+    pub provider: String,
+    pub branch: String,
+    pub id: String,
+    pub account: String,
+    pub repo: String,
 }
 
 // TODO: Implement an error type so this can return a Result
@@ -103,10 +103,10 @@ pub fn git_remote_url_parse(remote_url: &str) -> GitSshRemote {
     let repo_parsed = repo_parsed.split(".git").collect::<Vec<&str>>();
 
     GitSshRemote {
-        user : user_provider[0].to_string(),
-        provider : user_provider[1].to_string(),
-        account : acct_repo[0].to_string(),
-        repo : repo_parsed[0].to_string(),
+        user: user_provider[0].to_string(),
+        provider: user_provider[1].to_string(),
+        account: acct_repo[0].to_string(),
+        repo: repo_parsed[0].to_string(),
     }
 }
 
@@ -146,7 +146,7 @@ pub fn is_commit_in_branch<'repo>(r: &'repo Repository, commit: &Commit, branch:
     let branch_head = branch.get().peel_to_commit().unwrap();
 
     if branch_head.id() == commit.id() {
-        return true
+        return true;
     }
 
     let is_commit_in_branch = r.graph_descendant_of(branch_head.id(), commit.id());

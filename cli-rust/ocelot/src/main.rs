@@ -51,14 +51,13 @@ pub struct ApplicationArguments {
     pub nsqlookupd_addr: Option<String>,
 
     #[structopt(long = "debug")]
-    pub debug : bool,
-
+    pub debug: bool,
 }
 
 // TODO: Can we define traits to keep a tighter contract for creds?
 fn main() {
     // generate `bash` completions in "target" directory
-    //ApplicationArguments::clap().gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, "target");   
+    //ApplicationArguments::clap().gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, "target");
 
     let matches = ApplicationArguments::from_args();
 
@@ -70,7 +69,7 @@ fn main() {
         Command::Creds(a) => subcommand::creds::subcommand_handler(a),
         Command::Init(a) => subcommand::init::subcommand_handler(a),
         Command::Cancel(a) => subcommand::cancel::subcommand_handler(a),
-        Command::Logs(a)  => subcommand::logs::subcommand_handler(a),
+        Command::Logs(a) => subcommand::logs::subcommand_handler(a),
         Command::Poll(a) => subcommand::poll::subcommand_handler(a),
         Command::Repo(a) => subcommand::repo::subcommand_handler(a),
         Command::Summary(a) => subcommand::summary::subcommand_handler(a),
