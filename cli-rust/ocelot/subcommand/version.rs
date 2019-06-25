@@ -11,5 +11,7 @@ pub struct SubOption {
 
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling version");
+    const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
+
+    println!("Ocelot - Rust client v{}", VERSION.unwrap_or("unknown"));
 }
