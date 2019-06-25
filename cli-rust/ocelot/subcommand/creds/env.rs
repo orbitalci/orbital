@@ -26,12 +26,12 @@ pub struct ListOption {
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum ResourceAction {
-    /// 
+    ///
     Add(AddOption),
-    /// 
+    ///
     #[structopt(alias = "rm")]
     Delete,
-    /// 
+    ///
     #[structopt(alias = "ls")]
     List(ListOption),
 }
