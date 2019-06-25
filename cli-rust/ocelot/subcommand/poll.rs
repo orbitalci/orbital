@@ -5,8 +5,8 @@
 // ocelot poll list might want to filter by account
 
 extern crate structopt;
-use structopt::StructOpt;
 use std::env;
+use structopt::StructOpt;
 
 use futures::Future;
 use hyper::client::connect::{Destination, HttpConnector};
