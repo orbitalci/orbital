@@ -1,5 +1,4 @@
 fn main() {
-
     // Legacy api
     tower_grpc_build::Config::new()
         .enable_server(true)

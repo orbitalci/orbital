@@ -1,11 +1,10 @@
 /// This is named build_subcmd.rs bc we can't use build.rs due to overlapping with `cargo` features.
-
 use structopt::StructOpt;
 
 use std::env;
 
-use ocelot_api;
 use git_meta::git_info;
+use ocelot_api;
 
 use futures::Future;
 use hyper::client::connect::{Destination, HttpConnector};
@@ -28,7 +27,6 @@ pub struct SubOption {
     /// Path to local repo. Defaults to current working directory
     #[structopt(long)]
     path: Option<String>,
-    
 }
 
 // The goal of this command
@@ -43,7 +41,6 @@ pub struct SubOption {
 // TODO: Return a Result for the questionmark operator
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
-
     // Parse the following information from the local repo before calling the backend
     //
     // git provider Account name
@@ -54,19 +51,16 @@ pub fn subcommand_handler(args: &SubOption) {
     // Later: Env vars
 
     // Assume current directory for now
-    let path_to_repo = args.path.clone()
-                        .unwrap_or(
-                            env::current_dir()
-                            .unwrap().to_str()
-                            .unwrap()
-                            .to_string()
-                        );
+    let path_to_repo = args
+        .path
+        .clone()
+        .unwrap_or(env::current_dir().unwrap().to_str().unwrap().to_string());
 
     println!("Path to repo: {:?}", path_to_repo);
 
     // Get the git info from the path
     let git_info = git_info::get_git_info_from_path(&path_to_repo, &args.branch, &args.hash);
-    println!("Git info: {:?}",git_info);
+    println!("Git info: {:?}", git_info);
 
     // TODO: Factor this out later
     // Connect to Ocelot server via grpc.
@@ -97,7 +91,7 @@ pub fn subcommand_handler(args: &SubOption) {
             // Send off a build info request
             // Only supports bitbucket right now
             client.build_repo_and_hash(Request::new(BuildReq {
-                acct_repo: format!("{}/{}",git_info.account,git_info.repo),
+                acct_repo: format!("{}/{}", git_info.account, git_info.repo),
                 hash: git_info.id,
                 branch: git_info.branch,
                 force: false,
