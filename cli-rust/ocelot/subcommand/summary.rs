@@ -3,8 +3,8 @@ use structopt::StructOpt;
 
 use std::env;
 
-use ocelot_api;
 use git_meta::git_info;
+use ocelot_api;
 
 use futures::Future;
 use hyper::client::connect::{Destination, HttpConnector};
@@ -12,12 +12,11 @@ use tower_grpc::Request;
 use tower_hyper::{client, util};
 use tower_util::MakeService;
 
- 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubOption {
     // build-id will provide the same functionality that the `status` subcommand did.
-    /// Retrieve status for specific build 
+    /// Retrieve status for specific build
     #[structopt(name = "build id", long)]
     build_id: Option<u32>,
     /// Retrieve status for builds from the provided acct-repo
@@ -28,32 +27,28 @@ pub struct SubOption {
     //branch : Option<String>,
     /// Retrieve status for builds with the provided commit hash
     #[structopt(long)]
-    hash : Option<String>,
+    hash: Option<String>,
     /// Path to local repo. Defaults to current working directory
     #[structopt(long)]
     path: Option<String>,
     /// Limit to last N runs
     #[structopt(long)]
-    limit : Option<i32>,
+    limit: Option<i32>,
 }
 
 // Handle the command line control flow
 pub fn subcommand_handler(args: &SubOption) {
-
     // Assume current directory for now
-    let path_to_repo = args.path.clone()
-                        .unwrap_or(
-                            env::current_dir()
-                            .unwrap().to_str()
-                            .unwrap()
-                            .to_string()
-                        );
+    let path_to_repo = args
+        .path
+        .clone()
+        .unwrap_or(env::current_dir().unwrap().to_str().unwrap().to_string());
 
     println!("Path to repo: {:?}", path_to_repo);
 
     // Get the git info from the path
     let git_info = git_info::get_git_info_from_path(&path_to_repo, &None, &args.hash);
-    println!("Git info: {:?}",git_info);
+    println!("Git info: {:?}", git_info);
 
     let results_limit = args.limit.unwrap_or(10);
 
@@ -89,7 +84,7 @@ pub fn subcommand_handler(args: &SubOption) {
                 repo: git_info.repo,
                 account: git_info.account,
                 limit: results_limit,
-                r#type: 1
+                r#type: 1,
             }))
         })
         .and_then(|response| {
