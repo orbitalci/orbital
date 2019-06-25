@@ -1,6 +1,6 @@
 extern crate structopt;
-use structopt::StructOpt;
 use std::env;
+use structopt::StructOpt;
 
 use git_meta::git_info;
 use ocelot_api;
@@ -86,5 +86,4 @@ pub fn subcommand_handler(args: &SubOption) {
         });
 
     tokio::run(build_req);
-
 }

@@ -7,6 +7,7 @@ pub mod init;
 pub mod logs;
 pub mod poll;
 pub mod repo;
+pub mod status;
 pub mod summary;
 pub mod validate;
 pub mod version;
