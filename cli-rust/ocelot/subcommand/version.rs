@@ -13,5 +13,6 @@ pub struct SubOption {
 pub fn subcommand_handler(args: &SubOption) {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
+    // TODO: Having the Git commit would be really nice too
     println!("Ocelot - Rust client v{}", VERSION.unwrap_or("unknown"));
 }
