@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package protos;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+// Common Event Entites used for building the webhook payloads
+
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_userOwner
+message Owner {
+    string type = 1;
+    string username = 2;
+    // @inject_tag: yaml:"display_name"
+    string display_name = 4;
+    Links links = 3;
+}
+
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_repositoryRepository
+message Repository {
+    Links links = 1;
+    Project project = 2;
+    string fullName = 3 [json_name="full_name"];
+    string website = 4;
+    Owner owner = 5;
+    // omitted is_private and scm json tags.
+
+}
+
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Pullrequestevents
+message PullRequestEntity {
+    int64 id = 1;
+    string title = 2;
+    string description = 3;
+    string state = 4;
+    Owner author = 5;
+    PRInfo source = 6;
+    PRInfo destination = 7;
+    Commit mergeCommit = 8 [json_name="merge_commit"];
+    repeated Owner participants = 9;
+    repeated Owner reviewers = 10;
+    bool closeSourceBranch = 11 [json_name="close_source_branch"];
+    Owner closedBy = 12 [json_name="closed_by"];
+    string reason = 13;
+    google.protobuf.Timestamp createdAt = 14 [json_name="created_at"];
+    google.protobuf.Timestamp updatedOn = 15 [json_name="updated_on"];
+    Links links = 16;
+}
+
+message PRInfo {
+    message br {
+        string name = 1;
+    }
+    br branch = 1;
+    Commit commit = 2;
+    Repository repository = 3;
+}
+
+// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-entity_projectProject
+message Project {
+    string name = 1;
+    string uuid = 2;
+    Links links = 3;
+}
+
+
+message Changeset {
+    message Head { // git head
+        string type = 1;
+        string name = 2;
+        Commit target = 3;
+    } 
+    Head new = 1;
+    Head old = 2;
+    Links links = 3;
+    bool closed = 4;
+    bool created = 5;
+    bool forced = 6;
+    repeated Commit commits = 7;
+}
+
+message Commit {
+    string hash = 1;
+    Author author = 2;
+    string message = 3;
+    google.protobuf.Timestamp date = 4;
+    // ignoring the "parents" field
+    Links links = 5;
+    Repository repository = 6;
+}
+
+// /2.0/repositories/{username}/{repo_slug}/commits
+message Commits {
+    repeated Commit values = 1;
+    string next = 2;
+}
+
+// bitbucket api 1.0 
+// https://confluence.atlassian.com/bitbucket/src-resources-296095214.html
+message RepoSourceFile {
+    string node = 1;
+    string path = 2;
+    string data = 3;
+}
+
+message Author {
+    string raw = 1;
+    string type = 2;
+    Owner user = 3;
+}
+
+message PRComment {
+    string content = 1;
+    // @inject_tag: yaml:"rendered_content"
+    string rendered_content=2;
+}

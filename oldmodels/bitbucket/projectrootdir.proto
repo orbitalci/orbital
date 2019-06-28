@@ -1,0 +1,25 @@
+syntax = "proto3";
+import "common.proto";
+
+package protos;
+
+message PaginatedRootDirs {
+    double pagelen = 1;
+    double size = 2;
+
+    message SourceValues {
+        string path = 1;
+        string type = 2;
+        repeated string attributes = 3;
+
+        message SourceLinks {
+            LinkUrl self = 1;
+            LinkUrl meta = 2;
+        }
+        SourceLinks links = 4;
+    }
+
+    repeated SourceValues values = 3;
+    double page = 4;
+    string next = 5;
+}

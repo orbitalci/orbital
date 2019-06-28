@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package protos;
+
+import "google/protobuf/timestamp.proto";
+
+//https://developer.github.com/v3/repos/hooks/
+
+message Hook {
+    int64 id = 1;
+    string url = 2;
+    string test_url = 3;
+    string ping_url = 4;
+    repeated string events = 6;
+    bool active = 7;
+
+    message Config {
+        string url = 1;
+        string content_type = 2;
+    }
+
+    Config config = 8;
+    google.protobuf.Timestamp updated_at = 9;
+    google.protobuf.Timestamp created_at = 10;
+}
+
