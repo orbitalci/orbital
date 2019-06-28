@@ -1,112 +1,104 @@
 syntax = "proto3";
-option go_package = "pb";
-package models;
+package build;
 
-import "creds.proto";
-import "storage.proto";
-import "vcshandler.proto";
+import "google/protobuf/timestamp.proto";
 
-//this is a direct translation of the ocelot.yaml file
-message BuildConfig {
-    // either image or machineTag is required
-    // image is the docker image to run the build in
-    string image = 1;
-    // machineTag is the
-    // @inject_tag: yaml:"machineTag"
-    string machineTag = 9;
-    // @inject_tag: yaml:"buildTool"
-    string buildTool = 2;
-    repeated string packages = 3;
-    repeated string branches = 4;
-    repeated string env = 5;
-    repeated Stage stages = 7;
-    Notifications notify = 8;
+enum JOB_TRIGGER {
+    POLL = 0;
+    WEBHOOK = 1;
+    MANUAL = 2;
+    SUBSCRIBE_TRIGGER = 3;
+    COMMIT_MSG_TRIGGER = 4;
 }
 
-message Stage {
-    repeated string env = 1;
-    repeated string script = 2;
-    string name = 3;
-    // @inject_tag: yaml:"trigger"
-    Triggers trigger = 4;
-    // @inject_tag: yaml:"triggers"
-    repeated string Triggers = 5;
+enum JOB_STATE {
+    UNKNOWN = 0;
+    QUEUED = 1;
+    STARTING = 2;
+    RUNNING = 3;
+    FINISHING = 4;
+    CANCELLED = 5;
+    KILLED = 6;
+    FAILED = 7;
+    DONE = 8;
+    DELETED = 100;
 }
 
-// todo: move to a new notifications.proto?
-message Notifications {
-    Slack slack = 1;
+// Server returns a build_summary as response
+message build_start_request {
+    string remote_uri = 1;
+    string branch = 2;
+    string commit_ref = 3;
 }
 
-// todo: move to a new notifications.proto?
-message Slack {
-    // channel is which channel to post to. if empty, will be default channel set up by person who created url
-    string channel = 1;
-    //  identifier attached to url uploaded via `ocelot creds slack add`
-    string identifier = 2;
-    // on is what type of event to trigger a webhook on can be both PASS and FAIL
-    repeated StageResultVal on = 3;
+// Server returns a build_summary as response
+message build_stop_request {
+    int32 id = 1;
 }
 
-message Result {
-    string stage = 1;
-    StageResultVal status = 2;
-    string error = 3;
-    repeated string messages = 4;
+// NOTE: we don't know how to resolve if we have identically
+// named repos in the same org, but different providers like 
+// in both github and bitbucket
+message build_summary_request {
+    string org = 1;
+    string account = 2;
+    string repo = 3;
 }
 
-message Triggers {
-    repeated string branches = 1;
+message build_summary_response {
+    repeated build_summary summary = 1;
 }
 
-
-enum StageResultVal {
-    PASS = 0;
-    FAIL = 1;
-    SKIP = 2;
+message build_target {
+    int32 id = 1;
+    string git_hash = 2;
+    int32 registered_repo_id = 3;
+    int32 build_index = 4;
 }
 
-message WerkerTask {
-    string vaultToken = 1;
-    string checkoutHash = 2;
-    BuildConfig buildConf = 3;
-    string vcsToken = 4;
-    SubCredType vcsType = 9;
-    string fullName = 6;
-    int64 id = 7; // database id
-    string branch = 8;
-    SignaledBy signaledBy = 10;
-    // id from vcs to be able to access pull request later
-//    string prId = 11;
-    PrWerkerData prData = 12;
-    ChangesetData changesetData = 13;
+message build_summary {
+    int32 id = 1;
+    build_target build = 2;
+    JOB_TRIGGER job_trigger = 3;
+    google.protobuf.Timestamp queue_time = 4;
+    google.protobuf.Timestamp start_time = 5;
+    google.protobuf.Timestamp end_time = 6;
+    JOB_STATE build_state = 7;
 }
 
-//don't think we'll need PushBuildBundle/PRBuildBundle, but keep until I know for sure//
-//
-//message PushBuildBundle {
-//    BuildConfig config = 1;
-//    RepoPush pushData = 2;
-//    string vaultToken = 3;
-//    string checkoutHash = 4;
-//}
-//
-//message PRBuildBundle {
-//    BuildConfig config = 1;
-//    PullRequest prData = 2;
-//    string vaultToken = 3;
-//    string checkoutHash = 4;
-//}
+message build_stage {
+    int32 id = 1;
+    int32 build_summary_id = 2;
+    string stage = 3;
+    bytes output = 4;
+    google.protobuf.Timestamp start_time = 5;
+    google.protobuf.Timestamp end_time = 6;
+    string status = 7;
+    int32 exit_code = 8;
+}
 
+message build_log_request {
+    string org = 1;
+    string account = 2;
+    string repo = 3;
+    int32 index = 4;
+}
 
-//type ChangesetData struct {
-//filesChanged []string
-//commitTexts  []string
-//branch       string
-//}
+message build_log_response {
+    repeated build_stage stages = 1;
+}
 
-message ChangesetData {
-    repeated string filesChanged = 1;
-    repeated string commitTexts = 2;
-    string branch = 3;
+// Server returns build_summary as response
+message build_delete_request {
+    string org = 1;
+    string account = 2;
+    string repo = 3;
+    int32 index = 4;
+}
+
+service build_service {
+    rpc start_build (build_start_request) returns (build_summary);
+    rpc stop_build (build_stop_request) returns (build_summary);
+    rpc get_build_logs (build_log_request) returns (build_log_response);
+    rpc delete_build (build_delete_request) returns (build_summary);
 }
