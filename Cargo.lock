@@ -544,11 +544,15 @@ name = "ocelot_api"
 version = "0.1.0"
 dependencies = [
  "bytes 0.4.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
+ "http 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hyper 0.12.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost-types 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower-grpc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower-grpc-build 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower-hyper 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower-util 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
