@@ -126,14 +126,10 @@ pub enum Command {
 
     ///// Tools for OrbitalCI operators
     //Operator(OperatorResource),
-
     /// Create a stub orb.yml
     Init,
-
     ///// Print the version for orb
     //Version,
-
-
 }
 
 #[derive(Debug, StructOpt)]
@@ -156,18 +152,15 @@ pub struct ApplicationArguments {
     #[structopt(long = "nsqlookupd-addr")]
     pub nsqlookupd_addr: Option<String>,
 
-
     #[structopt(long = "debug")]
-    pub debug : bool,
-
+    pub debug: bool,
 }
 
 fn main() {
     // generate `bash` completions in "target" directory
-    ApplicationArguments::clap().gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, "target");   
+    ApplicationArguments::clap().gen_completions(env!("CARGO_PKG_NAME"), Shell::Bash, "target");
 
     let matches = ApplicationArguments::from_args();
-
 
     println!("{:?}", matches);
 }

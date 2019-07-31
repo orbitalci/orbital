@@ -27,8 +27,13 @@ pub struct SubOption {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling watch");
+pub fn subcommand_handler(args: SubOption) {
+    let uri = ocelot_api::client_util::get_client_uri();
+    let dst = Destination::try_from_uri(uri.clone()).unwrap();
+
+    let connector = util::Connector::new(HttpConnector::new(4));
+    let settings = client::Builder::new().http2_only(true).clone();
+    let mut make_client = client::Connect::with_builder(connector, settings);
 
     // Assume current directory for now
     let path_to_repo = args
@@ -42,16 +47,7 @@ pub fn subcommand_handler(args: &SubOption) {
     let git_info = git_info::get_git_info_from_path(&path_to_repo, &None, &None);
     println!("Git info: {:?}", git_info);
 
-    // TODO: Factor this out later
-    // Connect to Ocelot server via grpc.
-    let uri: http::Uri = format!("http://192.168.12.34:10000").parse().unwrap();
-    let dst = Destination::try_from_uri(uri.clone()).unwrap();
-
-    let connector = util::Connector::new(HttpConnector::new(4));
-    let settings = client::Builder::new().http2_only(true).clone();
-    let mut make_client = client::Connect::with_builder(connector, settings);
-
-    let build_req = make_client
+    let req = make_client
         .make_service(dst)
         .map_err(|e| panic!("connect error: {:?}", e))
         .and_then(move |conn| {
@@ -85,5 +81,5 @@ pub fn subcommand_handler(args: &SubOption) {
             println!("ERR = {:?}", e);
         });
 
-    tokio::run(build_req);
+    tokio::run(req);
 }

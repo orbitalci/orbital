@@ -17,13 +17,14 @@ pub enum CredType {
     Helm(helm::SubOption),
     K8s(k8s::SubOption),
     Slack(slack::SubOption),
+    #[structopt(alias = "repo")]
     Artifact(artifact::SubOption),
     Ssh(ssh::SubOption),
     Vcs(vcs::SubOption),
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &CredType) {
+pub fn subcommand_handler(args: CredType) {
     println!("Placeholder for handling creds");
     println!("{:?}", args);
 
