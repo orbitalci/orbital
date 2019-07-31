@@ -1,8 +1,6 @@
 extern crate structopt;
 use structopt::StructOpt;
 
-use std::env;
-
 use git_meta::git_info;
 use ocelot_api;
 
@@ -15,6 +13,9 @@ use tower_util::MakeService;
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubOption {
+    /// Status for provided account. Otherwise try to auto-detect from current working directory
+    #[structopt(long)]
+    account: Option<String>,
     // build-id will provide the same functionality that the `status` subcommand did.
     /// Retrieve status for specific build
     #[structopt(name = "build id", long)]
@@ -37,31 +38,21 @@ pub struct SubOption {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &SubOption) {
-    // Assume current directory for now
-    let path_to_repo = args
-        .path
-        .clone()
-        .unwrap_or(env::current_dir().unwrap().to_str().unwrap().to_string());
-
-    println!("Path to repo: {:?}", path_to_repo);
-
-    // Get the git info from the path
-    let git_info = git_info::get_git_info_from_path(&path_to_repo, &None, &args.hash);
-    println!("Git info: {:?}", git_info);
-
-    let results_limit = args.limit.unwrap_or(10);
-
-    // TODO: Factor this out later
-    // Connect to Ocelot server via grpc.
-    let uri: http::Uri = format!("http://192.168.12.34:10000").parse().unwrap();
+pub fn subcommand_handler(args: SubOption) {
+    let uri = ocelot_api::client_util::get_client_uri();
     let dst = Destination::try_from_uri(uri.clone()).unwrap();
 
     let connector = util::Connector::new(HttpConnector::new(4));
     let settings = client::Builder::new().http2_only(true).clone();
     let mut make_client = client::Connect::with_builder(connector, settings);
 
-    let summary_req = make_client
+    let path_to_repo = ocelot_api::client_util::get_repo(args.path.clone());
+    let git_info = git_info::get_git_info_from_path(&path_to_repo, &None, &None);
+    let account = args.account.unwrap_or(git_info.account.clone());
+
+    let results_limit = args.limit.unwrap_or(10);
+
+    let req = make_client
         .make_service(dst)
         .map_err(|e| panic!("connect error: {:?}", e))
         .and_then(move |conn| {
@@ -82,7 +73,7 @@ pub fn subcommand_handler(args: &SubOption) {
             // Only supports bitbucket right now
             client.last_few_summaries(Request::new(RepoAccount {
                 repo: git_info.repo,
-                account: git_info.account,
+                account: account,
                 limit: results_limit,
                 r#type: 1,
             }))
@@ -95,5 +86,5 @@ pub fn subcommand_handler(args: &SubOption) {
             println!("ERR = {:?}", e);
         });
 
-    tokio::run(summary_req);
+    tokio::run(req);
 }
