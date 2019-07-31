@@ -64,8 +64,11 @@ fn main() {
 
     // Do stuff with the optional args
 
+    // TODO: Add in logic for getting backend connection info to pass into the subcommand handlers
+    // TODO: Subcommands should all return a Result<T>
+
     // Pass to the subcommand handlers
-    match &matches.command {
+    match matches.command {
         Command::Build(a) => subcommand::build_subcmd::subcommand_handler(a),
         Command::Creds(a) => subcommand::creds::subcommand_handler(a),
         Command::Init(a) => subcommand::init::subcommand_handler(a),
