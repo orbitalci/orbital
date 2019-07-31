@@ -10,7 +10,7 @@ pub struct SubOption {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &SubOption) {
+pub fn subcommand_handler(_args: SubOption) {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
     // TODO: Having the Git commit would be really nice too

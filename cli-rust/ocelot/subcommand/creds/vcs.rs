@@ -1,16 +1,13 @@
 extern crate structopt;
 use structopt::StructOpt;
 
-use std::env;
+use git_meta::git_info;
 
 use futures::Future;
 use hyper::client::connect::{Destination, HttpConnector};
 use tower_grpc::Request;
 use tower_hyper::{client, util};
 use tower_util::MakeService;
-
-use std::fs::File;
-use std::io::prelude::*;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
@@ -28,7 +25,6 @@ pub struct AddOption {
     #[structopt(long)]
     path: Option<String>,
 }
-
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
@@ -70,43 +66,25 @@ pub struct SubOption {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling VCS creds");
+pub fn subcommand_handler(args: SubOption) {
+    let uri = ocelot_api::client_util::get_client_uri();
+    let dst = Destination::try_from_uri(uri.clone()).unwrap();
 
-    match &args.action {
+    let connector = util::Connector::new(HttpConnector::new(4));
+    let settings = client::Builder::new().http2_only(true).clone();
+    let mut make_client = client::Connect::with_builder(connector, settings);
+
+    match args.action {
         ResourceAction::Add(args) => {
-            use git_meta::git_info;
 
+            let path_to_repo = ocelot_api::client_util::get_repo(args.path.clone());
+            let git_info = git_info::get_git_info_from_path(&path_to_repo, &None, &None);
+            let account = args.account.unwrap_or(git_info.account);
+
+            let file_contents = ocelot_api::client_util::read_file(args.file_path.clone());
             let identifier = args.identifier.clone();
 
-            // Assume current directory for now
-            let path_to_repo = &args
-                .path
-                .clone()
-                .unwrap_or(env::current_dir().unwrap().to_str().unwrap().to_string());
-
-
-            // TODO: Parse a yaml file for the vcs additio
-            let mut file = File::open(&args.file_path.clone().unwrap()).unwrap();
-            let mut contents = String::new();
-            file.read_to_string(&mut contents).unwrap();
-
-            println!("Path to repo: {:?}", path_to_repo);
-
-            // Get the git info from the path
-            let git_info = git_info::get_git_info_from_path(&path_to_repo, &None, &None);
-            println!("Git info: {:?}", git_info);
-
-            // TODO: Factor this out later
-            // Connect to Ocelot server via grpc.
-            let uri: http::Uri = format!("http://192.168.12.34:10000").parse().unwrap();
-            let dst = Destination::try_from_uri(uri.clone()).unwrap();
-
-            let connector = util::Connector::new(HttpConnector::new(4));
-            let settings = client::Builder::new().http2_only(true).clone();
-            let mut make_client = client::Connect::with_builder(connector, settings);
-
-            let repo_req = make_client
+            let req = make_client
                 .make_service(dst)
                 .map_err(|e| panic!("connect error: {:?}", e))
                 .and_then(move |conn| {
@@ -121,17 +99,17 @@ pub fn subcommand_handler(args: &SubOption) {
                     client::GuideOcelot::new(conn).ready()
                 })
                 .and_then(move |mut client| {
-                    use ocelot_api::protobuf_api::legacyapi::VcsCreds;
                     use ocelot_api::protobuf_api::legacyapi::SubCredType;
+                    use ocelot_api::protobuf_api::legacyapi::VcsCreds;
 
                     let mut vcs_creds = VcsCreds::default();
 
                     // TODO: This needs to be completed
-                    vcs_creds.acct_name = git_info.account;
+                    vcs_creds.acct_name = account;
                     vcs_creds.sub_type = SubCredType::Bitbucket.into();
                     vcs_creds.identifier = identifier.to_string();
                     vcs_creds.client_id = "".to_string();
-                    vcs_creds.client_secret = "".to_string();
+                    vcs_creds.client_secret = file_contents.to_string();
                     vcs_creds.token_url = "".to_string();
 
                     // Send off a build info request
@@ -146,23 +124,11 @@ pub fn subcommand_handler(args: &SubOption) {
                     println!("ERR = {:?}", e);
                 });
 
-            tokio::run(repo_req);
-
-        },
-        ResourceAction::Delete(_) => {
-            println!("There is no grpc endpoint for deleting VCS")
-        },
-        ResourceAction::List(_) => {
-            // TODO: Factor this out later
-            // Connect to Ocelot server via grpc.
-            let uri: http::Uri = format!("http://192.168.12.34:10000").parse().unwrap();
-            let dst = Destination::try_from_uri(uri.clone()).unwrap();
-
-            let connector = util::Connector::new(HttpConnector::new(4));
-            let settings = client::Builder::new().http2_only(true).clone();
-            let mut make_client = client::Connect::with_builder(connector, settings);
-
-            let repo_req = make_client
+            tokio::run(req);
+        }
+        ResourceAction::Delete(_args) => println!("There is no grpc endpoint for deleting VCS"),
+        ResourceAction::List(_args) => {
+            let req = make_client
                 .make_service(dst)
                 .map_err(|e| panic!("connect error: {:?}", e))
                 .and_then(move |conn| {
@@ -176,9 +142,7 @@ pub fn subcommand_handler(args: &SubOption) {
                     // Wait until the client is ready...
                     client::GuideOcelot::new(conn).ready()
                 })
-                .and_then(move |mut client| {
-                    client.get_vcs_creds(Request::new(()))
-                })
+                .and_then(move |mut client| client.get_vcs_creds(Request::new(())))
                 .and_then(|response| {
                     println!("RESPONSE = {:?}", response);
                     Ok(())
@@ -187,9 +151,7 @@ pub fn subcommand_handler(args: &SubOption) {
                     println!("ERR = {:?}", e);
                 });
 
-            tokio::run(repo_req);
-        },
-
-
+            tokio::run(req);
+        }
     }
 }
