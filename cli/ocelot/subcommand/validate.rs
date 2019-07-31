@@ -10,6 +10,6 @@ pub struct SubOption {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &SubOption) {
+pub fn subcommand_handler(_args: SubOption) {
     println!("Placeholder for handling validation");
 }
