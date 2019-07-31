@@ -63,23 +63,19 @@ pub struct SubOption {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &SubOption) {
-    println!("Placeholder for handling Git repos");
+pub fn subcommand_handler(args: SubOption) {
+    let uri = ocelot_api::client_util::get_client_uri();
+    let dst = Destination::try_from_uri(uri.clone()).unwrap();
+
+    let connector = util::Connector::new(HttpConnector::new(4));
+    let settings = client::Builder::new().http2_only(true).clone();
+    let mut make_client = client::Connect::with_builder(connector, settings);
 
     match &args.action {
-        ResourceAction::Add(_) => println!("Note: There is no GRPC endpoint to add repos"),
-        ResourceAction::Delete(_) => println!("Note: There is no GRPC endpoint to delete repos"),
-        ResourceAction::List(_) => {
-            // TODO: Factor this out later
-            // Connect to Ocelot server via grpc.
-            let uri: http::Uri = format!("http://192.168.12.34:10000").parse().unwrap();
-            let dst = Destination::try_from_uri(uri.clone()).unwrap();
-
-            let connector = util::Connector::new(HttpConnector::new(4));
-            let settings = client::Builder::new().http2_only(true).clone();
-            let mut make_client = client::Connect::with_builder(connector, settings);
-
-            let repo_req = make_client
+        ResourceAction::Add(_args) => println!("Note: There is no GRPC endpoint to add repos"),
+        ResourceAction::Delete(_args) => println!("Note: There is no GRPC endpoint to delete repos"),
+        ResourceAction::List(_args) => {
+            let req = make_client
                 .make_service(dst)
                 .map_err(|e| panic!("connect error: {:?}", e))
                 .and_then(move |conn| {
@@ -94,7 +90,6 @@ pub fn subcommand_handler(args: &SubOption) {
                     client::GuideOcelot::new(conn).ready()
                 })
                 .and_then(move |mut client| {
-                    use ocelot_api::protobuf_api::legacyapi::RepoAccount;
 
                     // Send off a build info request
                     // Only supports bitbucket right now
@@ -108,7 +103,7 @@ pub fn subcommand_handler(args: &SubOption) {
                     println!("ERR = {:?}", e);
                 });
 
-            tokio::run(repo_req);
+            tokio::run(req);
         }
     }
 }
