@@ -1,17 +1,6 @@
 extern crate structopt;
 use structopt::StructOpt;
 
-use std::env;
-
-use git_meta::git_info;
-use ocelot_api;
-
-use futures::Future;
-use hyper::client::connect::{Destination, HttpConnector};
-use tower_grpc::Request;
-use tower_hyper::{client, util};
-use tower_util::MakeService;
-
 use serde::{Deserialize, Serialize};
 
 use std::fs::File;
@@ -65,7 +54,7 @@ struct OcelotConfig {
 }
 
 // Handle the command line control flow
-pub fn subcommand_handler(args: &SubOption) {
+pub fn subcommand_handler(_args: SubOption) {
     println!("Placeholder for handling init");
 
     let branch_trigger = OcelotConfigStageTrigger {
@@ -105,7 +94,7 @@ pub fn subcommand_handler(args: &SubOption) {
         false => {
             println!("Create ocelot.yml");
             let mut file = File::create("ocelot.yml").unwrap();
-            file.write_all(serde_yaml::to_string(&ocelot_config).unwrap().as_bytes());
+            let _ = file.write_all(serde_yaml::to_string(&ocelot_config).unwrap().as_bytes());
         }
     }
 }
