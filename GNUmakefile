@@ -99,5 +99,12 @@ proto: ## build all protos
 
 .PHONY: help
 
+# TODO: This needs to be documented in the README.
+# The rust build.rs relies on the google grpc libraries to be installed in this location
+init-googleapi-protos:
+	mkdir -p models/protos/vendor/
+	cd models/protos/vendor && \
+	git clone https://github.com/grpc-ecosystem/grpc-gateway.git
+
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
