@@ -13,7 +13,10 @@ fn main() {
                 // WONTFIX: Single namespace causes conflict w/ prost. We aren't implementing a werker anyway
                 //"../../../models/werkerserver.proto",
             ],
-            &["../../../models"],
+            &[
+                "../../../oldmodels",
+                "../../../models/protos/vendor/grpc-gateway/third_party/googleapis",
+            ],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e));
 }
