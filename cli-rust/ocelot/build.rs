@@ -4,7 +4,10 @@ fn main() {
         .enable_client(true)
         .build(
             &["../../oldmodels/build.proto"],
-            &["../../oldmodels"],
+            &[
+                "../../oldmodels",
+                "../../models/protos/vendor/grpc-gateway/third_party/googleapis",
+            ],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e));
 
@@ -13,7 +16,10 @@ fn main() {
         .enable_client(true)
         .build(
             &["../../oldmodels/creds.proto"],
-            &["../../oldmodels"],
+            &[
+                "../../oldmodels",
+                "../../models/protos/vendor/grpc-gateway/third_party/googleapis",
+            ],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e));
 
@@ -23,7 +29,10 @@ fn main() {
         .enable_client(true)
         .build(
             &["../../oldmodels/guideocelot.proto"],
-            &["../../oldmodels"],
+            &[
+                "../../oldmodels",
+                "../../models/protos/vendor/grpc-gateway/third_party/googleapis",
+            ],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e));
 
@@ -32,7 +41,10 @@ fn main() {
         .enable_client(true)
         .build(
             &["../../oldmodels/storage.proto"],
-            &["../../oldmodels"],
+            &[
+                "../../oldmodels",
+                "../../models/protos/vendor/grpc-gateway/third_party/googleapis",
+            ],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e));
 
@@ -41,7 +53,10 @@ fn main() {
         .enable_client(true)
         .build(
             &["../../oldmodels/vcshandler.proto"],
-            &["../../oldmodels"],
+            &[
+                "../../oldmodels",
+                "../../models/protos/vendor/grpc-gateway/third_party/googleapis",
+            ],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e));
 
@@ -51,7 +66,10 @@ fn main() {
         .enable_client(true)
         .build(
             &["../../oldmodels/werkerserver.proto"],
-            &["../../oldmodels"],
+            &[
+                "../../oldmodels",
+                "../../models/protos/vendor/grpc-gateway/third_party/googleapis",
+            ],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e));
 }
