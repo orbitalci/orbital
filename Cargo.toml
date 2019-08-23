@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "cli-rust/orb",
-    "cli-rust/ocelot",
+    "cli/orb",
+    "cli/ocelot",
 ]
