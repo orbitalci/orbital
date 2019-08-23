@@ -1,5 +1,5 @@
 [package]
-name = "ocelot_subcommand"
+name = "subcommand"
 version = "0.1.0"
 authors = ["T.J. Telan <tjtelan@level11.com>"]
 edition = "2018"
@@ -9,11 +9,11 @@ structopt = "0.2"
 clap = "2.33"
 
 # Ocelot api from protos
-ocelot_api = { path = "../../../models/ocelot_api" }
+ocelot_api = { path = "../ocelot_api" }
 
 # For build
-#git2 = "0.9"
-git_meta = { path = "../../../git_meta" }
+git2 = "0.9"
+git_meta = { path = "../git_meta" }
 itertools = "0.8"
 
 http = "0.1"
