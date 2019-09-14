@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // TODO: Rust's `build` module is special, and we can't override it. Need to reconcile the difference in the protos.
 pub mod builder {
     include!(concat!(env!("OUT_DIR"), "/build.rs"));
@@ -18,3 +19,8 @@ pub mod organization {
 pub mod state {
     include!(concat!(env!("OUT_DIR"), "/state.rs"));
 }
+=======
+pub mod legacyapi {
+    include!(concat!(env!("OUT_DIR"), "/build.rs"));
+}
+>>>>>>> pb-rework

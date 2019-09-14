@@ -64,6 +64,15 @@ You can ssh into these VMs
 
 The codebase will be located in `/home/vagrant/orbitalci`
 
+<<<<<<< HEAD
+=======
+OrbitalCI components are configured via Ansible, and start as systemd services so you can use `systemctl` or `journalctl` to interact.
+* `orbital-admin`
+* `orbital-hookhandler`
+* `orbital-poller`
+* `orbital-worker`
+
+>>>>>>> pb-rework
 ##### Known issues with Vagrant environment
 ###### vagrant up --provision fails on subsequent runs
 ```

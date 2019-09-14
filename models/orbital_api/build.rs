@@ -13,4 +13,8 @@ fn main() {
             &["../protos"],
         )
         .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e))
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> pb-rework
