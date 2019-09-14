@@ -10,10 +10,7 @@ tower-grpc = "0.1"
 prost = "0.5"
 prost-types = "0.5"
 bytes = "0.4"
-<<<<<<< HEAD
 futures = "0.1"
-=======
->>>>>>> pb-rework
 
 [lib]
 name = "orbital_api"
