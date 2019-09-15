@@ -9,7 +9,7 @@ structopt = "0.2"
 clap = "2.33"
 
 # Ocelot api from protos
-ocelot_api = { path = "../ocelot_api" }
+ocelot_api = { path = "../../../models/ocelot_api" }
 
 # For build
 git2 = "0.9"
