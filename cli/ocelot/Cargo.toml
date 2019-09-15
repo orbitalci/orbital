@@ -9,7 +9,7 @@ structopt = "0.2"
 clap = "2.33"
 subcommand = { path = "subcommand" }
 git_meta = { path = "git_meta" }
-ocelot_api = { path = "ocelot_api" }
+ocelot_api = { path = "../../models/ocelot_api" }
 
 [build-dependencies]
 tower-grpc-build = {version = "0.1", features = ["tower-hyper"]}
