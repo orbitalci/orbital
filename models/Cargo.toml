@@ -1,8 +1,0 @@
-[package]
-name = "orbital"
-version = "0.1.0"
-authors = ["evancramer <evancramer@level11.com>"]
-edition = "2018"
-
-[dependencies]
-orbital_api = { path = "orbital_api" }

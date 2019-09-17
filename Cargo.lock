@@ -614,13 +614,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "orbital"
-version = "0.1.0"
-dependencies = [
- "orbital_api 0.1.0",
-]
-
-[[package]]
 name = "orbital_api"
 version = "0.1.0"
 dependencies = [
