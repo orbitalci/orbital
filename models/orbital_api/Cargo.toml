@@ -1,0 +1,20 @@
+[package]
+name = "orbital_api"
+version = "0.1.0"
+authors = ["evancramer <evancramer@level11.com>"]
+edition = "2018"
+
+[dependencies]
+tower-hyper = "0.1"
+tower-grpc = "0.1"
+prost = "0.5"
+prost-types = "0.5"
+bytes = "0.4"
+futures = "0.1"
+
+[lib]
+name = "orbital_api"
+path = "mod.rs"
+
+[build-dependencies]
+tower-grpc-build = {version = "0.1", features = ["tower-hyper"]}

@@ -1,0 +1,142 @@
+- name: Install common tools
+  become: yes
+  package:
+    state: present
+    name: "{{ item }}"
+  loop:
+    - build-essential
+    - unzip
+    - vim
+    - python-pip
+    - zip
+
+# FIXME docker-compose returns segfault. The next step always fails on subsequent provisioned runs.
+#       Workaround: `vagrant destroy`, and re- `vagrant up`
+- name: Install python modules that Ansible requires
+  pip:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python-consul
+    - docker
+    - docker-compose
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+- name: Download docker-compose
+  become: yes
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    checksum: sha256:https://github.com/docker/compose/releases/download/1.24.0/docker-compose-Linux-x86_64.sha256
+    mode: '0750'
+
+# FIXME: This should be split up to use get_url first, for checksum verification
+# https://learn.hashicorp.com/vault/operations/ops-deployment-guide
+- name: Download our Hashicorp dependencies
+  vars:
+    consul:
+      version: 1.5.0
+    vault:
+      version: 1.1.2
+  become: yes
+  unarchive:
+    src: "{{ item.url }}"
+    dest: /usr/local/bin 
+    creates: "{{ item.filepath }}"
+    remote_src: yes
+  loop:
+    - url: "https://releases.hashicorp.com/consul/{{ consul.version }}/consul_{{ consul.version }}_linux_amd64.zip"
+      filepath: /usr/local/bin/consul
+    - url: "https://releases.hashicorp.com/vault/{{ vault.version }}/vault_{{ vault.version }}_linux_amd64.zip"
+      filepath: /usr/local/bin/vault 
+
+# FIXME: Need to figure out what I can use to skip this if it doesn't need to be run.
+#- name: Install vault auto-complete
+#  shell: vault -autocomplete-install
