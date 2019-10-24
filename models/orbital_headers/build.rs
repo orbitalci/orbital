@@ -8,7 +8,7 @@ fn main() {
                 "../protos/credential.proto",
                 "../protos/integration.proto",
                 "../protos/organization.proto",
-                "../protos/state.proto"
+                "../protos/state.proto",
             ],
             &["../protos"],
         )

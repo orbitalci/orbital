@@ -1,5 +1,9 @@
 [workspace]
 members = [
     "cli/orb",
-    "cli/ocelot",
+    "cli/orb/src/subcommand",
+    "services",
+    #"cli/ocelot",
+    #"cli/ocelot/subcommand",
+    "lib/git_meta",
 ]
