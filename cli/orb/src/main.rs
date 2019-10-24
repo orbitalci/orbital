@@ -1,49 +1,39 @@
-//#[macro_use]
-extern crate structopt;
-
-extern crate clap;
-
-use clap::arg_enum;
 use structopt::StructOpt;
 
-// This is for autocompletion
-use structopt::clap::Shell;
+extern crate clap;
+use std::io;
 
-use tower_grpc::{Request, Response};
-use futures::{future, Future, Stream};
+use subcommand::{self, GlobalOption, Subcommand, SubcommandContext, SubcommandError};
 
-use orbital_api::orbital_api::builder::{server, BuildSummary, BuildLogResponse, BuildDeleteRequest};
+fn main() -> Result<(), SubcommandError> {
+    let parsed = SubcommandContext::from_args();
 
-#[derive(Clone, Debug)]
-struct OrbitalApi;
-
-impl orbital_api::orbital_api::builder::server::BuildService for OrbitalApi {
-    type StartBuildFuture = future::FutureResult<Response<BuildSummary>, tower_grpc::Status>;
-    type StopBuildFuture = future::FutureResult<Response<BuildSummary>, tower_grpc::Status>;
-    type GetBuildLogsFuture = future::FutureResult<Response<BuildLogResponse>, tower_grpc::Status>;
-    type DeleteBuildFuture = future::FutureResult<Response<BuildSummary>, tower_grpc::Status>;
-
-    fn start_build(&mut self, request: Request<orbital_api::orbital_api::builder::BuildStartRequest>) -> Self::StartBuildFuture {
-        unimplemented!();
+    // Pass to the subcommand handlers
+    match parsed.subcommand {
+        Subcommand::Build(sub_option) => {
+            subcommand::build_cmd::subcommand_handler(parsed.global_option, sub_option)
+        }
+        Subcommand::Cancel => Err(SubcommandError::new("Not yet implemented")),
+        Subcommand::Logs => Err(SubcommandError::new("Not yet implemented")),
+        Subcommand::Org => Err(SubcommandError::new("Not yet implemented")),
+        Subcommand::Repo => Err(SubcommandError::new("Not yet implemented")),
+        Subcommand::Poll => Err(SubcommandError::new("Not yet implemented")),
+        Subcommand::Secret => Err(SubcommandError::new("Not yet implemented")),
+        Subcommand::Summary => Err(SubcommandError::new("Not yet implemented")),
+        Subcommand::Operator(sub_command) => {
+            subcommand::operator::subcommand_handler(parsed.global_option, sub_command)
+        }
+        Subcommand::Developer(sub_command) => {
+            subcommand::developer::subcommand_handler(parsed.global_option, sub_command)
+        }
+        Subcommand::Version => Err(SubcommandError::new("Not yet implemented")),
+        Subcommand::Completion(shell) => {
+            GlobalOption::clap().gen_completions_to(
+                env!("CARGO_PKG_NAME"),
+                shell.into(),
+                &mut io::stdout(),
+            );
+            Ok(())
+        }
     }
-
-    fn stop_build(&mut self, request: Request<orbital_api::orbital_api::builder::BuildStopRequest>) -> Self::StopBuildFuture {
-        unimplemented!();
-    }
-
-
-    fn get_build_logs(&mut self, request: Request<orbital_api::orbital_api::builder::BuildLogRequest>) -> Self::GetBuildLogsFuture {
-        unimplemented!();
-    }
-
-
-    fn delete_build(&mut self, request: Request<orbital_api::orbital_api::builder::BuildDeleteRequest>) -> Self::DeleteBuildFuture {
-        unimplemented!();
-    }
-
-}
-
-
-fn main() {
-    unimplemented!()
 }

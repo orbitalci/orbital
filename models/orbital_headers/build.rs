@@ -4,7 +4,7 @@ fn main() {
         .enable_client(true)
         .build(
             &[
-                "../protos/build_metadata.proto",
+                "../protos/build.proto",
                 "../protos/credential.proto",
                 "../protos/integration.proto",
                 "../protos/organization.proto",

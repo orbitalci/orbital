@@ -3,9 +3,10 @@ name = "orb"
 version = "0.1.0"
 authors = ["T.J. Telan <tjtelan@level11.com>"]
 edition = "2018"
+default-run = "orb"
 
 [dependencies]
-structopt = "0.2"
+structopt = "0.3.2"
 clap = "2.33"
 tower-hyper = "0.1"
 tower-grpc = "0.1"
@@ -13,4 +14,6 @@ prost = "0.5"
 prost-types = "0.5"
 bytes = "0.4"
 futures = "0.1"
-orbital_api = { path = "../../models/orbital_api" }
+orbital_headers = { path = "../../models/orbital_headers" }
+orbital_cli_subcommand = { path = "src/subcommand" }
+orbital_services = { path = "../../services"}
