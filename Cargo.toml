@@ -2,8 +2,8 @@
 members = [
     "cli/orb",
     "cli/orb/src/subcommand",
-    "services",
-    #"cli/ocelot",
-    #"cli/ocelot/subcommand",
+    "lib/config_parser",
+    "lib/container_builder",
     "lib/git_meta",
+    "services",
 ]

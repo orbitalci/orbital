@@ -6,6 +6,9 @@ SHELL = sh
 all: init-googleapi-protos
 	cargo build
 
+release: init-googleapi-protos
+	cargo build --release
+
 # Note: VSCode may automatically recreate your cargo target dir, for `rls`.
 clean:
 	cargo clean

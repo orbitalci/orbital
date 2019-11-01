@@ -4,6 +4,8 @@
 
 use git2::{Branch, BranchType, Commit, ObjectType, Repository};
 
+use log::debug;
+
 pub fn get_local_repo_from_path(path: &str) -> Result<Repository, git2::Error> {
     Repository::open(path)
 }
@@ -33,18 +35,18 @@ pub fn get_git_info_from_path(
     // TODO: Do this in two stages, we could support passing a remote branch, and then fall back to a local branch
     // Assuming we are passed a local branch from remote "origin", or nothing.
     // Let's make sure it resolves to a remote branch
-    let working_branch = get_working_branch(&local_repo, branch);
+    let working_branch = get_working_branch(&local_repo, branch)?
+        .name()?
+        .expect("Unable to extract branch name")
+        .to_string();
 
-    // TODO: This needs to respect the branch. Also, can I reuse the working branch?
-    let working_commit = get_target_commit(&local_repo, branch, commit_id);
+    let working_commit = get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id);
 
     commit.provider = remote_info.provider;
     commit.account = remote_info.account;
     commit.repo = remote_info.repo;
-    commit.branch = working_branch?
-        .name()?
-        .expect("Unable to extract branch name")
-        .to_string();
+    commit.branch = working_branch;
+
     commit.id = format!("{}", working_commit?.id());
 
     Ok(commit)
@@ -119,7 +121,7 @@ pub fn get_working_branch<'repo>(
         Some(branch) => {
             //println!("User passed branch: {:?}", branch);
             let b = r.find_branch(&branch, BranchType::Local)?;
-            println!("Returning given branch: {:?}", &b.name());
+            debug!("Returning given branch: {:?}", &b.name());
             Ok(b)
         }
         None => {
@@ -131,7 +133,7 @@ pub fn get_working_branch<'repo>(
             // Find the current local branch...
             let local_branch = Branch::wrap(head?);
 
-            println!("Returning HEAD branch: {:?}", local_branch.name()?);
+            debug!("Returning HEAD branch: {:?}", local_branch.name()?);
             r.find_branch(
                 local_branch
                     .name()?
@@ -178,6 +180,7 @@ pub fn get_target_commit<'repo>(
 
     match commit_id {
         Some(id) => {
+            debug!("Commit provided. Using {}", id);
             let oid = git2::Oid::from_str(id)?;
 
             let obj = r.find_object(oid, ObjectType::from_str("commit"))?;
@@ -191,6 +194,7 @@ pub fn get_target_commit<'repo>(
         }
         // We want the HEAD of the working branch
         None => {
+            debug!("No commit provided. Using HEAD commit");
             let commit = working_ref
                 .peel_to_commit()
                 .expect("Unable to retrieve HEAD commit object from working branch");

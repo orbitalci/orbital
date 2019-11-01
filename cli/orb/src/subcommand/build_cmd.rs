@@ -3,15 +3,14 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::builder::{client, BuildDeleteRequest, BuildLogResponse, BuildSummary};
+//use orbital_headers::builder::{client, BuildDeleteRequest, BuildLogResponse, BuildSummary};
+//use orbital_services::build_service;
 
 use futures::Future;
 use hyper::client::connect::{Destination, HttpConnector};
 use tower_grpc::Request;
 use tower_hyper;
 use tower_util::MakeService;
-
-use orbital_services::build_service;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]

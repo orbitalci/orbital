@@ -3,7 +3,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use futures::{future, Future, Stream};
+use futures::{Future, Stream};
 use orbital_services::build_service;
 
 use log::error;
@@ -20,7 +20,7 @@ pub struct SubcommandOption {
 
 pub fn subcommand_handler(
     _global_option: GlobalOption,
-    local_option: SubcommandOption,
+    _local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
     //let handler : build_service::OrbitalApi;
     let new_service =

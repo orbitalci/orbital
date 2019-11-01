@@ -5,6 +5,8 @@ use git_meta::git_info;
 
 use crate::{GlobalOption, SubcommandError};
 
+use log::debug;
+
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
@@ -18,7 +20,7 @@ pub fn subcommand_handler(
     local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
     if let Some(path) = local_option.path {
-        println!(
+        debug!(
             "Git path: {:?}",
             git_info::get_git_info_from_path(&path, &None, &None)
         );

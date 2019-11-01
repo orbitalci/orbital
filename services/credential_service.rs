@@ -1,9 +1,6 @@
-use futures::{future, Future, Stream};
-use orbital_headers::credential::{
-    server, VcsCredCreateRequest, VcsCredDeleteRequest, VcsCredEntry, VcsCredListRequest,
-    VcsCredListResponse, VcsCredUpdateRequest,
-};
-use tower_grpc::{Request, Response};
+use futures::future;
+use orbital_headers::credential::{VcsCredEntry, VcsCredListResponse};
+use tower_grpc::Response;
 
 #[derive(Clone, Debug)]
 struct OrbitalApi;
@@ -17,28 +14,28 @@ impl orbital_headers::credential::server::CredentialService for OrbitalApi {
 
     fn create_vcs_cred(
         &mut self,
-        request: tower_grpc::Request<orbital_headers::credential::VcsCredCreateRequest>,
+        _request: tower_grpc::Request<orbital_headers::credential::VcsCredCreateRequest>,
     ) -> Self::CreateVcsCredFuture {
         unimplemented!()
     }
 
     fn delete_vcs_cred(
         &mut self,
-        request: tower_grpc::Request<orbital_headers::credential::VcsCredDeleteRequest>,
+        _request: tower_grpc::Request<orbital_headers::credential::VcsCredDeleteRequest>,
     ) -> Self::DeleteVcsCredFuture {
         unimplemented!()
     }
 
     fn update_vcs_cred(
         &mut self,
-        request: tower_grpc::Request<orbital_headers::credential::VcsCredUpdateRequest>,
+        _request: tower_grpc::Request<orbital_headers::credential::VcsCredUpdateRequest>,
     ) -> Self::UpdateVcsCredFuture {
         unimplemented!()
     }
 
     fn list_vcs_creds(
         &mut self,
-        request: tower_grpc::Request<orbital_headers::credential::VcsCredListRequest>,
+        _request: tower_grpc::Request<orbital_headers::credential::VcsCredListRequest>,
     ) -> Self::ListVcsCredsFuture {
         unimplemented!()
     }

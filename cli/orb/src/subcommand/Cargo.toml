@@ -7,11 +7,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = "0.3.2"
+structopt = "0.3"
 clap = "2.33"
+container_builder = { path = "../../../../lib/container_builder" }
+config_parser = { path = "../../../../lib/config_parser" }
 git_meta = { path = "../../../../lib/git_meta" }
-shiplift = "0.5"
-tokio = "0.1.22"
+tokio = "0.1"
 orbital_headers = { path = "../../../../models/orbital_headers" }
 orbital_services = { path = "../../../../services" }
 tower-hyper = "0.1"

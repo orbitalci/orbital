@@ -1,5 +1,5 @@
-use futures::{future, Future, Stream};
-use orbital_headers::builder::{server, BuildDeleteRequest, BuildLogResponse, BuildSummary};
+use futures::future;
+use orbital_headers::builder::{BuildLogResponse, BuildSummary};
 use tower_grpc::{Request, Response};
 
 #[derive(Clone, Debug)]
@@ -13,7 +13,7 @@ impl orbital_headers::builder::server::BuildService for OrbitalApi {
 
     fn start_build(
         &mut self,
-        request: Request<orbital_headers::builder::BuildStartRequest>,
+        _request: Request<orbital_headers::builder::BuildStartRequest>,
     ) -> Self::StartBuildFuture {
         let response = Response::new(BuildSummary::default());
 
@@ -24,21 +24,21 @@ impl orbital_headers::builder::server::BuildService for OrbitalApi {
 
     fn stop_build(
         &mut self,
-        request: Request<orbital_headers::builder::BuildStopRequest>,
+        _request: Request<orbital_headers::builder::BuildStopRequest>,
     ) -> Self::StopBuildFuture {
         unimplemented!();
     }
 
     fn get_build_logs(
         &mut self,
-        request: Request<orbital_headers::builder::BuildLogRequest>,
+        _request: Request<orbital_headers::builder::BuildLogRequest>,
     ) -> Self::GetBuildLogsFuture {
         unimplemented!();
     }
 
     fn delete_build(
         &mut self,
-        request: Request<orbital_headers::builder::BuildDeleteRequest>,
+        _request: Request<orbital_headers::builder::BuildDeleteRequest>,
     ) -> Self::DeleteBuildFuture {
         unimplemented!();
     }

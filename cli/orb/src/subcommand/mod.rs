@@ -40,6 +40,17 @@ impl Error for SubcommandError {
     fn description(&self) -> &str {
         &self.details
     }
+
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        // Generic error, underlying cause isn't tracked.
+        None
+    }
+}
+
+impl From<Box<dyn Error>> for SubcommandError {
+    fn from(error: Box<dyn Error>) -> Self {
+        SubcommandError::new(&error.to_string())
+    }
 }
 
 #[derive(Debug, StructOpt)]
