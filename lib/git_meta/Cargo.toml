@@ -1,0 +1,16 @@
+[package]
+name = "git_meta"
+version = "0.1.0"
+authors = ["T.J. Telan <tjtelan@level11.com>"]
+edition = "2018"
+
+[dependencies]
+git2 = "0.10"
+itertools = "0.8"
+url = "2.1"
+log = "0.4"
+env_logger = "0.7"
+
+[lib]
+name = "git_meta"
+path = "mod.rs"

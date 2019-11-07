@@ -1,0 +1,117 @@
+syntax = "proto3";
+package integration;
+
+import "state.proto";
+
+// Integrations are pieces of data that passed, or integrated, into a build container, such as:
+//    * Environment Variables
+//    * Secrets such as passwords or encryption keys
+//    * notification callbacks
+//    * API keys for registries like docker, nexus, helm, etc
+
+enum SECRET_TYPE {
+    DOCKER_REGISTRY = 0;
+    NPM_REPO = 1;
+    PYPI_REGISTRY = 2;
+    MAVEN_REPO = 3;
+    SSH_PEM = 4;
+    HELP_REPO = 5;
+    KUBERNETES = 6;
+    APPLE_DEVELOPER = 7;
+    ENV_VAR = 8;
+    FILE = 9;
+}
+
+enum NOTIFY_TYPE {
+    SLACK = 0;
+    WEBHOOK = 1;
+}
+
+// Server returns secret_integration_entry as response
+message secret_integration_create_request {
+    string org = 1;
+    SECRET_TYPE secret_type = 2;
+    string secret = 3;
+}
+
+message secret_integration_entry {
+    int32 id = 1;
+    int32 org_id = 2;
+    SECRET_TYPE secret_type = 3;
+    state.ACTIVE_STATE active_state = 4;
+}
+
+// Server returns secret_integration_entry as response
+message secret_integration_delete_request {
+    string org = 1;
+    SECRET_TYPE secret_type = 2;
+}
+
+// Server returns secret_integration_entry as response
+message secret_integration_update_request {
+    string org = 1;
+    SECRET_TYPE secret_type = 2;
+    string secret = 3;
+    state.ACTIVE_STATE active_state = 4;
+}
+
+// Server returns secret_integration_list_response
+message secret_integration_list_request {
+    string org = 1;
+    SECRET_TYPE secret_type = 2;
+}
+
+message secret_integration_list_response {
+    repeated secret_integration_entry secret_integreation_entries = 1;
+}
+
+// Server returns secret_integration_entry as response
+message notify_integration_create_request {
+    string org = 1;
+    NOTIFY_TYPE notify_type = 2;
+    string secret = 3;
+    state.ACTIVE_STATE active_state = 4;
+}
+
+// Server returns secret_integration_entry as response
+message notify_integration_entry {
+    int32 id = 1;
+    int32 org_id = 2;
+    NOTIFY_TYPE notify_type = 3;
+    state.ACTIVE_STATE active_state = 4;
+}
+
+// Server returns secret_integration_entry as response
+message notify_integration_delete_request {
+    string org = 1;
+    NOTIFY_TYPE notify_type = 2;
+}
+
+// Server returns secret_integration_entry as response
+message notify_integration_update_request {
+    string org = 1;
+    NOTIFY_TYPE notify_type = 2;
+    string secret = 3;
+    state.ACTIVE_STATE active_state = 4;
+}
+
+// Server returns notify_integration_list_response
+message notify_integration_list_request {
+    string org = 1;
+    NOTIFY_TYPE notify_type = 2;
+}
+
+message notify_integration_list_response {
+    repeated notify_integration_entry notify_integration_entries = 1;
+}
+
+service integration_service {
+    rpc create_secret_integration(secret_integration_create_request) returns (secret_integration_entry);
+    rpc delete_secret_integration(secret_integration_delete_request) returns (secret_integration_entry);
+    rpc update_secret_integration(secret_integration_update_request) returns (secret_integration_entry);
+    rpc list_secret_integrations(secret_integration_list_request) returns (secret_integration_list_response);
+    rpc create_notify_integration(notify_integration_create_request) returns (notify_integration_entry);
+    rpc delete_notify_integration(notify_integration_delete_request) returns (notify_integration_entry);
+    rpc update_notify_integration(notify_integration_update_request) returns (notify_integration_entry);
+    rpc list_notify_integrations(notify_integration_list_request) returns (notify_integration_list_response);
+}
