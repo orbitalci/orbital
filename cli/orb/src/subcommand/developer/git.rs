@@ -7,6 +7,7 @@ use crate::{GlobalOption, SubcommandError};
 
 use log::debug;
 
+/// Local options for customizing git library call
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
@@ -15,6 +16,7 @@ pub struct SubcommandOption {
     path: Option<String>,
 }
 
+/// Expects `--path`. Attempts to open directory and parse repo for git metadata and prints to stdout
 pub fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,

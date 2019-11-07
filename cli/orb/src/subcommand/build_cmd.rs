@@ -3,15 +3,13 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-//use orbital_headers::builder::{client, BuildDeleteRequest, BuildLogResponse, BuildSummary};
-//use orbital_services::build_service;
-
 use futures::Future;
 use hyper::client::connect::{Destination, HttpConnector};
 use tower_grpc::Request;
 use tower_hyper;
 use tower_util::MakeService;
 
+/// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
@@ -20,11 +18,12 @@ pub struct SubcommandOption {
     path: Option<String>,
 }
 
+/// Generates gRPC `BuildStartRequest` object and connects to *currently hardcoded* gRPC server and sends a request to `BuildService` server.
 pub fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
-    let uri: http::Uri = format!("http://[::1]:50051").parse().unwrap();
+    let uri: http::Uri = format!("http://127.0.0.1:50051").parse().unwrap();
 
     let dst = Destination::try_from_uri(uri.clone()).unwrap();
     let connector = tower_hyper::util::Connector::new(HttpConnector::new(4));
@@ -35,7 +34,7 @@ pub fn subcommand_handler(
         .make_service(dst)
         .map_err(|e| panic!("connect error: {:?}", e))
         .and_then(move |conn| {
-            use orbital_headers::builder::client::BuildService;
+            use orbital_headers::build_metadata::client::BuildService;
 
             let conn = tower_request_modifier::Builder::new()
                 .set_origin(uri)
@@ -43,11 +42,10 @@ pub fn subcommand_handler(
                 .unwrap();
 
             // Wait until the client is ready...
-            //Greeter::new(conn).ready()
             BuildService::new(conn).ready()
         })
         .and_then(|mut client| {
-            use orbital_headers::builder::BuildStartRequest;
+            use orbital_headers::build_metadata::BuildStartRequest;
 
             client.start_build(Request::new(BuildStartRequest {
                 remote_uri: "What is in a name?".to_string(),

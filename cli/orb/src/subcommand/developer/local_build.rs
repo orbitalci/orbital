@@ -1,7 +1,7 @@
 extern crate structopt;
 use structopt::StructOpt;
 
-use config_parser::parser;
+use config_parser::yaml as parser;
 use container_builder::docker;
 use git_meta::git_info;
 
@@ -9,6 +9,7 @@ use log::debug;
 
 use crate::{GlobalOption, SubcommandError};
 
+/// Local options for customizing local docker build with orb
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
@@ -33,6 +34,9 @@ pub struct SubcommandOption {
     hash: Option<String>,
 }
 
+/// If `--path` not given, expects current working directory, and parses for git metadata
+/// Reads `orb.yml` from path. Pulls, creates and starts a container from the specified yaml.
+/// Loops over the command list and executes commands into the container
 pub fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,

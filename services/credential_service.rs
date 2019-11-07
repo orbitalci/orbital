@@ -1,41 +1,43 @@
-use futures::future;
-use orbital_headers::credential::{VcsCredEntry, VcsCredListResponse};
+use futures::future::FutureResult;
+use orbital_headers::credential::{
+    server::CredentialService, VcsCredCreateRequest, VcsCredDeleteRequest, VcsCredEntry,
+    VcsCredListRequest, VcsCredListResponse, VcsCredUpdateRequest,
+};
 use tower_grpc::Response;
 
-#[derive(Clone, Debug)]
-struct OrbitalApi;
+use super::OrbitalApi;
 
-impl orbital_headers::credential::server::CredentialService for OrbitalApi {
-    type CreateVcsCredFuture = future::FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
-    type DeleteVcsCredFuture = future::FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
-    type UpdateVcsCredFuture = future::FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
-    type ListVcsCredsFuture =
-        future::FutureResult<Response<VcsCredListResponse>, tower_grpc::Status>;
+/// Implementation of protobuf derived `CredentialService` trait
+impl CredentialService for OrbitalApi {
+    type CreateVcsCredFuture = FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
+    type DeleteVcsCredFuture = FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
+    type UpdateVcsCredFuture = FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
+    type ListVcsCredsFuture = FutureResult<Response<VcsCredListResponse>, tower_grpc::Status>;
 
     fn create_vcs_cred(
         &mut self,
-        _request: tower_grpc::Request<orbital_headers::credential::VcsCredCreateRequest>,
+        _request: tower_grpc::Request<VcsCredCreateRequest>,
     ) -> Self::CreateVcsCredFuture {
         unimplemented!()
     }
 
     fn delete_vcs_cred(
         &mut self,
-        _request: tower_grpc::Request<orbital_headers::credential::VcsCredDeleteRequest>,
+        _request: tower_grpc::Request<VcsCredDeleteRequest>,
     ) -> Self::DeleteVcsCredFuture {
         unimplemented!()
     }
 
     fn update_vcs_cred(
         &mut self,
-        _request: tower_grpc::Request<orbital_headers::credential::VcsCredUpdateRequest>,
+        _request: tower_grpc::Request<VcsCredUpdateRequest>,
     ) -> Self::UpdateVcsCredFuture {
         unimplemented!()
     }
 
     fn list_vcs_creds(
         &mut self,
-        _request: tower_grpc::Request<orbital_headers::credential::VcsCredListRequest>,
+        _request: tower_grpc::Request<VcsCredListRequest>,
     ) -> Self::ListVcsCredsFuture {
         unimplemented!()
     }

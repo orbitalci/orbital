@@ -5,6 +5,7 @@ use std::io;
 
 use subcommand::{self, GlobalOption, Subcommand, SubcommandContext, SubcommandError};
 
+/// Parse command line input, and route into one of the subcommand handlers along with global options
 fn main() -> Result<(), SubcommandError> {
     env_logger::init();
 
@@ -38,5 +39,4 @@ fn main() -> Result<(), SubcommandError> {
             Ok(())
         }
     }
-
 }

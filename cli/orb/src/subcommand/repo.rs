@@ -3,6 +3,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
+/// Local options for customizing repoyy request 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
@@ -11,6 +12,7 @@ pub struct SubcommandOption {
     path: Option<String>,
 }
 
+/// *Not yet implemented* Backend calls for managing repo resources
 pub fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,

@@ -7,10 +7,11 @@ use log::debug;
 
 use crate::{GlobalOption, SubcommandError};
 
+/// Local options for the Docker developer subcommand
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
-    /// Docker image
+    /// Docker image. If no tag provided, :latest will be assumed
     #[structopt(long)]
     image: Option<String>,
 
@@ -18,7 +19,7 @@ pub struct SubcommandOption {
     #[structopt(long)]
     container_id: Option<String>,
 
-    /// command
+    /// String command to execute in container. Will naively split on whitespace.
     #[structopt(long)]
     command: Option<String>,
 
@@ -30,31 +31,70 @@ pub struct SubcommandOption {
     #[structopt(long, short)]
     volume: Option<String>,
 
-    /// Pull, Create
+    /// Pull, Create, Start, Stop, Exec
     action: Action,
 }
 
+/// Represents the docker cli actions supported by Docker api wrapper
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub enum Action {
+    /// Wrapped call for `docker pull`
     Pull,
+    /// Wrapped call for `docker create`
     Create,
+    /// Wrapped call for `docker start`
     Start,
+    /// Wrapped call for `docker stop`
     Stop,
+    /// Wrapped call for `docker exec`
     Exec,
 }
 
+/// Naive parse of  a string to one of the supported Docker api actions
 impl FromStr for Action {
     type Err = String;
     fn from_str(action: &str) -> Result<Self, Self::Err> {
-        match action {
+        match action.to_ascii_lowercase().as_ref() {
             "pull" => Ok(Action::Pull),
             "create" => Ok(Action::Create),
+            "start" => Ok(Action::Start),
+            "stop" => Ok(Action::Stop),
+            "exec" => Ok(Action::Exec),
             _ => Err("Invalid action".to_string()),
         }
     }
 }
 
+/// Intended use for Orb developers to use the internal Docker api wrapper calls outside of a build context.
+/// # Pull
+/// Pull an image through the Docker api
+/// Expects `--image` to be provided, and uses the host Docker engine to pull the image.
+/// If no build tag is provided, then `:latest` will be assumed.
+///
+/// The equivalent `docker` command is `docker pull <image>`
+/// # Create
+/// Create a container running a given command of a given image.
+/// Expects `--image` and `--command` to be provided. Splits the command on whitespace, so beware of complex one-liners.
+/// By default, the host's docker socket is mounted into the container as `/var/run/docker.sock:/var/run/docker.sock`
+/// Returns a container id.
+///
+/// The equivalent `docker` command is `docker create <image> <command> [--env list] [--volume list]`
+/// # Start
+/// Starts a container from a given container id
+/// Expects `--container-id`
+///
+/// The equivalent `docker` command is `docker start <container id>`
+/// # Stop
+/// Stops a container from a given container id
+/// Expects `--container-id`
+///
+/// The equivalent `docker` command is `docker stop <container id>`
+/// # Exec
+/// Executes a given command into a running container by id
+/// Expects `--image` and `--command` to be provided. Splits the command on whitespace, so beware of complex one-liners.
+///
+/// The equivalent `docker` command is `docker exec <container id> <command>`
 pub fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package build;
+package build_metadata;
 
 import "google/protobuf/timestamp.proto";
 

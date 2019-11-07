@@ -7,7 +7,15 @@ use log::{debug, error};
 
 /// Returns a String to work around shiplift behavior that is different from the docker cli
 /// If we give shiplift an image w/o a tag, it'll download all the tags. Usually the intended behavior is to only pull latest
-fn image_tag_sanitizer(image: &str) -> Result<String, ()> {
+/// ```
+/// let injected_latest = container_builder::docker::image_tag_sanitizer("docker").unwrap();
+/// assert_eq!("docker:latest", injected_latest);
+///
+/// let tag_provided = container_builder::docker::image_tag_sanitizer("alpine:3").unwrap();
+/// assert_eq!("alpine:3", tag_provided);
+/// ```
+#[doc(test(no_crate_inject))]
+pub fn image_tag_sanitizer(image: &str) -> Result<String, ()> {
     let split = &image.split(":").collect::<Vec<_>>();
 
     match split.len() {
@@ -22,7 +30,7 @@ fn image_tag_sanitizer(image: &str) -> Result<String, ()> {
     }
 }
 
-/// Connect to the docker api and pull the provided image
+/// Connect to the docker engine and pull the provided image
 /// if no tag is provided with the image, ":latest" tag will be assumed
 pub fn container_pull(image: &str) -> Result<(), ()> {
     let docker = Docker::new();
@@ -42,9 +50,9 @@ pub fn container_pull(image: &str) -> Result<(), ()> {
     Ok(tokio::run(img_pull))
 }
 
-/// FIXME: Leaving hardcoded volumes, so this might break on another machine. Need to parameterize the source code path
-/// Returns the id of the container that is created
+/// Connect to the docker engine and create a container
 /// Currently assumes that source code gets mounted in container's /orbital-work directory
+/// Returns the id of the container that is created
 pub fn container_create(
     image: &str,
     command: Vec<&str>,
@@ -92,6 +100,7 @@ pub fn container_create(
     Ok(container.id)
 }
 
+/// Connect to the docker engine and start a created container with a given `container_id`
 pub fn container_start(container_id: &str) -> Result<(), ()> {
     let docker = Docker::new();
 
@@ -111,6 +120,7 @@ pub fn container_start(container_id: &str) -> Result<(), ()> {
     Ok(())
 }
 
+/// Connect to the docker engine and stop a running container with a given `container_id`
 pub fn container_stop(container_id: &str) -> Result<(), ()> {
     let docker = Docker::new();
     let stop_container = docker
@@ -126,6 +136,7 @@ pub fn container_stop(container_id: &str) -> Result<(), ()> {
     Ok(())
 }
 
+/// Connect to the docker engine and execute commands in a running container with a given `container_id`
 pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<(), ()> {
     let docker = Docker::new();
 

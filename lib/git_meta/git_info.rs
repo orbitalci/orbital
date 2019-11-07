@@ -6,20 +6,16 @@ use git2::{Branch, BranchType, Commit, ObjectType, Repository};
 
 use log::debug;
 
+use super::{GitCommitContext, GitSshRemote};
+
+/// Returns a `git2::Repository` from a given repo directory path
 pub fn get_local_repo_from_path(path: &str) -> Result<Repository, git2::Error> {
     Repository::open(path)
 }
 
-// Clean this up with stronger types later
-#[derive(Debug, Default)]
-pub struct GitCommitContext {
-    pub provider: String,
-    pub branch: String,
-    pub id: String,
-    pub account: String,
-    pub repo: String,
-}
-
+/// Returns a `GitCommitContext` after parsing metadata from a repo
+/// If branch is not provided, current checked out branch will be used
+/// If commit id is not provided, the HEAD of the branch will be used
 pub fn get_git_info_from_path(
     path: &str,
     branch: &Option<String>,
@@ -52,6 +48,7 @@ pub fn get_git_info_from_path(
     Ok(commit)
 }
 
+/// Returns the remote url after opening and validating repo from the local path
 pub fn git_remote_from_path(path: &str) -> Result<String, git2::Error> {
     let r = get_local_repo_from_path(path)?;
     let remote_url: String = r
@@ -63,6 +60,7 @@ pub fn git_remote_from_path(path: &str) -> Result<String, git2::Error> {
     Ok(remote_url)
 }
 
+/// Returns the remote url from the `git2::Repository` struct
 pub fn git_remote_from_repo(local_repo: &Repository) -> Result<String, git2::Error> {
     let remote_url: String = local_repo
         .find_remote("origin")?
@@ -73,18 +71,11 @@ pub fn git_remote_from_repo(local_repo: &Repository) -> Result<String, git2::Err
     Ok(remote_url)
 }
 
-#[derive(Debug)]
-pub struct GitSshRemote {
-    user: String,
-    provider: String,
-    account: String,
-    repo: String,
-}
-
 // FIXME: This parser fails to select the correct account and repo names on azure ssh repo uris. Off by one
 // Example
 // ssh: git@ssh.dev.azure.com:v3/organization/project/repo
 // http: https://organization@dev.azure.com/organization/project/_git/repo
+/// Return a `GitSshRemote` after parsing a remote url from a git repo
 pub fn git_remote_url_parse(remote_url: &str) -> GitSshRemote {
     // TODO: We will want to see if we can parse w/ Url, since git repos might use HTTPS
     //let http_url = Url::parse(remote_url);
@@ -109,8 +100,8 @@ pub fn git_remote_url_parse(remote_url: &str) -> GitSshRemote {
     }
 }
 
-// Assuming we are probably dealing with someone's local branch and it needs to be mapped to a remote branch
-// If we haven't passed one in, use the active branch
+/// Return the `git2::Branch` struct for a local repo (as opposed to a remote repo)
+/// If `local_branch` is not provided, we'll select the current active branch, based on HEAD
 pub fn get_working_branch<'repo>(
     r: &'repo Repository,
     local_branch: &Option<String>,
@@ -146,6 +137,7 @@ pub fn get_working_branch<'repo>(
     }
 }
 
+/// Returns a `bool` if the `git2::Commit` is a descendent of the `git2::Branch`
 pub fn is_commit_in_branch<'repo>(r: &'repo Repository, commit: &Commit, branch: &Branch) -> bool {
     let branch_head = branch.get().peel_to_commit();
 
@@ -170,6 +162,9 @@ pub fn is_commit_in_branch<'repo>(r: &'repo Repository, commit: &Commit, branch:
     check_commit_in_branch.expect("Unable to determine if commit exists within branch")
 }
 
+// TODO: Verify if commit is not in branch, that we'll end up in detached HEAD
+/// Return a `git2::Commit` that refers to the commit object requested for building
+/// If commit id is not provided, then we'll use the HEAD commit of whatever branch is active or provided
 pub fn get_target_commit<'repo>(
     r: &'repo Repository,
     branch: &Option<String>,

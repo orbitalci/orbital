@@ -4,9 +4,9 @@ use structopt::StructOpt;
 extern crate clap;
 use structopt::clap::arg_enum;
 
-// Copied definition from https://docs.rs/clap/2.33.0/clap/enum.Shell.html
-
 arg_enum! {
+  /// Represents the shells supported by [clap.rs](https://clap.rs/) for generating auto-completion scripts
+  /// Copied definition from [https://docs.rs/clap/2.33.0/clap/enum.Shell.html](https://docs.rs/clap/2.33.0/clap/enum.Shell.html)
   #[derive(Debug, StructOpt)]
   #[structopt(rename_all = "kebab-case")]
   pub enum Shell {
@@ -50,6 +50,7 @@ impl From<SubcommandOption> for clap::Shell {
     }
 }
 
+/// The shell type you want completion scripts generated
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
