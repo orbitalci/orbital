@@ -1,0 +1,31 @@
+[package]
+name = "orbital_cli_subcommand"
+version = "0.1.0-alpha.1"
+authors = ["T.J. Telan <t.telan@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+chrono = "0.4"
+clap = "2.33"
+git2 = "0.11"
+log = "0.4"
+orbital_agent_runtime = { path = "../../../../lib/agent_runtime" }
+orbital_config_parser = { path = "../../../../lib/config_parser" }
+orbital_database = { path = "../../../../models/orbital_database" }
+orbital_git_meta = { path = "../../../../lib/git_meta" }
+# Temporary. Move into agent runtime
+orbital_hashicorp_stack = { path = "../../../../lib/hashicorp_stack" }
+orbital_headers = { path = "../../../../models/orbital_headers" }
+orbital_services = { path = "../../../../services" }
+prettytable-rs = "0.8"
+structopt = "0.3"
+strum = "0.17"
+strum_macros = "0.17"
+termcolor = "1.1"
+thiserror = "1.0"
+tonic = "0.1"
+
+[lib]
+name = "subcommand"
+path = "mod.rs"

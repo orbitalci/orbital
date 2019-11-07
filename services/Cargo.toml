@@ -1,0 +1,26 @@
+[package]
+name = "orbital_services"
+version = "0.1.0-alpha.1"
+authors = ["T.J. Telan <t.telan@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+chrono = "0.4"
+futures = "0.3"
+log = "0.4"
+mktemp = "0.4"
+orbital_agent_runtime = { path = "../lib/agent_runtime" }
+orbital_config_parser = { path = "../lib/config_parser" }
+orbital_database = { path = "../models/orbital_database" }
+orbital_git_meta = { path = "../lib/git_meta" }
+orbital_hashicorp_stack = { path = "../lib/hashicorp_stack" }
+orbital_headers = { path = "../models/orbital_headers" }
+prost-types = "0.6"
+thiserror = "1.0"
+tokio = "0.2"
+tonic = "0.1"
+
+[lib]
+name = "orbital_services"
+path = "mod.rs"

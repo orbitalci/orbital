@@ -1,7 +1,0 @@
-- name: Run HTTP calls for initializing NSQ with build topic
-  uri:
-    url: "{{ item }}"
-    method: POST
-  loop:
-    - http://{{ infra_vagrant_ip }}:4151/topic/create?topic=build
-    - http://{{ infra_vagrant_ip }}:4151/channel/create?topic=build&channel=werker

@@ -1,0 +1,51 @@
+syntax = "proto3";
+package organization;
+
+import "orbital_types.proto";
+import "code.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// Defines our major organizational types: organizations (orgs), version control systems (vcs) and git repositories (repos) 
+// Repos are repositories of code representing a codebase to build
+
+message OrgEntry {
+    int32 id = 1;
+    string name = 2;
+    google.protobuf.Timestamp created = 3;
+    google.protobuf.Timestamp last_update = 4;
+    orbital_types.ActiveState active_state = 5; 
+}
+
+// Server returns OrgEntry as response
+message OrgAddRequest {
+    string name = 1;
+}
+
+message OrgGetRequest {
+    string name = 1;
+}
+
+message OrgUpdateRequest {
+    string name = 1;
+    string update_name = 2;
+    orbital_types.ActiveState active_state = 3;
+}
+
+// Server returns OrgEntry as response
+message OrgRemoveRequest {
+    string name = 1;
+    bool force = 2;
+}
+
+message OrgListResponse {
+    repeated OrgEntry orgs = 1; 
+}
+
+service OrganizationService {
+    rpc OrgAdd(OrgAddRequest) returns (OrgEntry);
+    rpc OrgGet(OrgGetRequest) returns (OrgEntry);
+    rpc OrgUpdate(OrgUpdateRequest) returns (OrgEntry);
+    rpc OrgRemove(OrgRemoveRequest) returns (OrgEntry);
+    rpc OrgList(google.protobuf.Empty) returns (OrgListResponse);
+}

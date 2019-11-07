@@ -1,0 +1,14 @@
+[package]
+name = "orbital_hashicorp_stack"
+version = "0.1.0-alpha.1"
+authors = ["T.J. Telan <t.telan@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+hashicorp_vault = "1.0.0"
+log = "0.4"
+
+[lib]
+name = "hashicorp_stack"
+path = "mod.rs"

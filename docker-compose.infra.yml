@@ -1,0 +1,57 @@
+version: "3"
+services: 
+  vault:
+    image: vault:1.3.0
+    container_name: vault
+    hostname: vault-docker
+    ports:
+      - 8200:8200
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=orbital
+      #- VAULT_DEV_ROOT_TOKEN_ID=test12345
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    command:
+      - vault
+      - server
+      - -dev-kv-v1
+  #consul:
+  #  image: consul:1.6
+  #  container_name: consul
+  #  hostname: consul-docker
+  #  network_mode: host
+  #  ports: 
+  #    - 8500:8500
+  #  environment: 
+  #    CONSUL_LOCAL_CONFIG: '{"skip_leave_on_interrupt": true}'
+  #    CONSUL_BIND_INTERFACE: "eth0"
+  #  command: ["consul", "agent", "-dev"]
+  postgres:
+    image: postgres:12-alpine
+    container_name: postgres
+    hostname: postgres-docker
+    user: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=orbital
+      - POSTGRES_PASSWORD=orbital
+      - POSTGRES_DB=orbital
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  #rabbitmq:
+  #  image: rabbitmq:3.8-management-alpine
+  #  container_name: rabbitmq
+  #  hostname: rabbitmq-docker
+  #  ports:
+  #    - 15672:15672
+  #  environment:
+  #    - RABBITMQ_DEFAULT_USER=orbital
+  #    - RABBITMQ_DEFAULT_PASS=orbital
+  #  volumes:
+  #    - ./dev-data/orbital-rabbitmq:/var/lib/rabbitmq
+
+volumes:
+  pgdata:

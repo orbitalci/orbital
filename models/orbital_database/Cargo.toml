@@ -1,0 +1,21 @@
+[package]
+name = "orbital_database"
+version = "0.1.0-alpha.1"
+authors = ["T.J. Telan <t.telan@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+chrono = "0.4"
+diesel = { version = "1.4", features = ["postgres", "chrono"] }
+log = "0.4"
+orbital_agent_runtime = { path = "../../lib/agent_runtime" }
+orbital_git_meta = { path = "../../lib/git_meta" }
+orbital_headers = { path = "../orbital_headers" }
+prost-types = "0.6"
+strum = "0.17"
+strum_macros = "0.17"
+
+[lib]
+name = "orbital_database"
+path = "mod.rs"

@@ -1,0 +1,11 @@
+[workspace]
+members = [
+    "cli/orb",
+    "cli/orb/src/subcommand",
+    "lib/config_parser",
+    "lib/agent_runtime",
+    "lib/git_meta",
+    "lib/hashicorp_stack",
+    "services",
+    "models/orbital_database",
+]
