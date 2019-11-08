@@ -1,16 +1,15 @@
 [package]
 name = "orbital_headers"
 version = "0.1.0"
-authors = ["evancramer <evancramer@level11.com>"]
+authors = ["evancramer <evancramer@level11.com>", "T.J. Telan <tjtelan@level11.com>"]
 edition = "2018"
 
 [dependencies]
-tower-hyper = "0.1"
-tower-grpc = "0.1"
+tonic = "0.1.0-alpha.5"
 prost = "0.5"
 prost-types = "0.5"
+prost-derive = "0.5"
 bytes = "0.4"
-futures = "0.1"
 
 [build-dependencies]
-tower-grpc-build = {version = "0.1", features = ["tower-hyper"]}
+tonic-build = "0.1.0-alpha.5"

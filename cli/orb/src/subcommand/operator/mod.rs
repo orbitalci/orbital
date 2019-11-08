@@ -13,11 +13,13 @@ pub enum OperatorType {
 }
 
 /// Subcommand router for `orb operator`
-pub fn subcommand_handler(
+pub async fn subcommand_handler(
     global_option: GlobalOption,
     ops_subcommand: OperatorType,
 ) -> Result<(), SubcommandError> {
     match ops_subcommand {
-        OperatorType::Start(sub_option) => start::subcommand_handler(global_option, sub_option),
+        OperatorType::Start(sub_option) => {
+            start::subcommand_handler(global_option, sub_option).await
+        }
     }
 }

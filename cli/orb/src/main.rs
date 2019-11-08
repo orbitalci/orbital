@@ -6,7 +6,8 @@ use std::io;
 use subcommand::{self, GlobalOption, Subcommand, SubcommandContext, SubcommandError};
 
 /// Parse command line input, and route into one of the subcommand handlers along with global options
-fn main() -> Result<(), SubcommandError> {
+#[tokio::main]
+async fn main() -> Result<(), SubcommandError> {
     env_logger::init();
 
     let parsed = SubcommandContext::from_args();
@@ -14,7 +15,7 @@ fn main() -> Result<(), SubcommandError> {
     // Pass to the subcommand handlers
     match parsed.subcommand {
         Subcommand::Build(sub_option) => {
-            subcommand::build_cmd::subcommand_handler(parsed.global_option, sub_option)
+            subcommand::build_cmd::subcommand_handler(parsed.global_option, sub_option).await
         }
         Subcommand::Cancel => Err(SubcommandError::new("Not yet implemented")),
         Subcommand::Logs => Err(SubcommandError::new("Not yet implemented")),
@@ -24,7 +25,7 @@ fn main() -> Result<(), SubcommandError> {
         Subcommand::Secret => Err(SubcommandError::new("Not yet implemented")),
         Subcommand::Summary => Err(SubcommandError::new("Not yet implemented")),
         Subcommand::Operator(sub_command) => {
-            subcommand::operator::subcommand_handler(parsed.global_option, sub_command)
+            subcommand::operator::subcommand_handler(parsed.global_option, sub_command).await
         }
         Subcommand::Developer(sub_command) => {
             subcommand::developer::subcommand_handler(parsed.global_option, sub_command)

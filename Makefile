@@ -3,22 +3,22 @@ SHELL = sh
 
 .PHONY: help
 
-all: init-googleapi-protos
+all: init-protobuf-types
 	cargo build
 
-release: init-googleapi-protos
+release: init-protobuf-types
 	cargo build --release
 
 # Note: VSCode may automatically recreate your cargo target dir, for `rls`.
 clean:
-	cargo clean
-	rm -rf ./models/protos/vendor
+	cargo clean;
+	rm -rf ./models/protos/vendor;
 
-init-googleapi-protos:
-	if [ ! -d "models/protos/vendor/grpc-gateway" ]; then \
+init-protobuf-types:
+	if [ ! -d "models/protos/vendor/protobuf" ]; then \
 		mkdir -p models/protos/vendor/; \
 		cd models/protos/vendor && \
-			git clone https://github.com/grpc-ecosystem/grpc-gateway.git; \
+			git clone https://github.com/protocolbuffers/protobuf.git; \
 	fi
 
 help:

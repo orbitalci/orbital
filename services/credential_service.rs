@@ -1,44 +1,39 @@
-use futures::future::FutureResult;
 use orbital_headers::credential::{
     server::CredentialService, VcsCredCreateRequest, VcsCredDeleteRequest, VcsCredEntry,
     VcsCredListRequest, VcsCredListResponse, VcsCredUpdateRequest,
 };
-use tower_grpc::Response;
+use tonic::{Request, Response, Status};
 
 use super::OrbitalApi;
 
 /// Implementation of protobuf derived `CredentialService` trait
+#[tonic::async_trait]
 impl CredentialService for OrbitalApi {
-    type CreateVcsCredFuture = FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
-    type DeleteVcsCredFuture = FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
-    type UpdateVcsCredFuture = FutureResult<Response<VcsCredEntry>, tower_grpc::Status>;
-    type ListVcsCredsFuture = FutureResult<Response<VcsCredListResponse>, tower_grpc::Status>;
-
-    fn create_vcs_cred(
-        &mut self,
-        _request: tower_grpc::Request<VcsCredCreateRequest>,
-    ) -> Self::CreateVcsCredFuture {
+    async fn create_vcs_cred(
+        &self,
+        _request: Request<VcsCredCreateRequest>,
+    ) -> Result<Response<VcsCredEntry>, Status> {
         unimplemented!()
     }
 
-    fn delete_vcs_cred(
-        &mut self,
-        _request: tower_grpc::Request<VcsCredDeleteRequest>,
-    ) -> Self::DeleteVcsCredFuture {
+    async fn delete_vcs_cred(
+        &self,
+        _request: Request<VcsCredDeleteRequest>,
+    ) -> Result<Response<VcsCredEntry>, Status> {
         unimplemented!()
     }
 
-    fn update_vcs_cred(
-        &mut self,
-        _request: tower_grpc::Request<VcsCredUpdateRequest>,
-    ) -> Self::UpdateVcsCredFuture {
+    async fn update_vcs_cred(
+        &self,
+        _request: Request<VcsCredUpdateRequest>,
+    ) -> Result<Response<VcsCredEntry>, Status> {
         unimplemented!()
     }
 
-    fn list_vcs_creds(
-        &mut self,
-        _request: tower_grpc::Request<VcsCredListRequest>,
-    ) -> Self::ListVcsCredsFuture {
+    async fn list_vcs_creds(
+        &self,
+        _request: Request<VcsCredListRequest>,
+    ) -> Result<Response<VcsCredListResponse>, Status> {
         unimplemented!()
     }
 }

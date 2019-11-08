@@ -1,4 +1,3 @@
-use futures::future::FutureResult;
 use orbital_headers::integration::{
     server::IntegrationService, NotifyIntegrationCreateRequest, NotifyIntegrationDeleteRequest,
     NotifyIntegrationEntry, NotifyIntegrationListRequest, NotifyIntegrationListResponse,
@@ -6,82 +5,66 @@ use orbital_headers::integration::{
     SecretIntegrationEntry, SecretIntegrationListRequest, SecretIntegrationListResponse,
     SecretIntegrationUpdateRequest,
 };
-use tower_grpc::Response;
+use tonic::{Request, Response, Status};
 
 use super::OrbitalApi;
 
 /// Implementation of protobuf derived `IntegrationService` trait
+#[tonic::async_trait]
 impl IntegrationService for OrbitalApi {
-    type CreateSecretIntegrationFuture =
-        FutureResult<Response<SecretIntegrationEntry>, tower_grpc::Status>;
-    type DeleteSecretIntegrationFuture =
-        FutureResult<Response<SecretIntegrationEntry>, tower_grpc::Status>;
-    type UpdateSecretIntegrationFuture =
-        FutureResult<Response<SecretIntegrationEntry>, tower_grpc::Status>;
-    type ListSecretIntegrationsFuture =
-        FutureResult<Response<SecretIntegrationListResponse>, tower_grpc::Status>;
-    type CreateNotifyIntegrationFuture =
-        FutureResult<Response<NotifyIntegrationEntry>, tower_grpc::Status>;
-    type DeleteNotifyIntegrationFuture =
-        FutureResult<Response<NotifyIntegrationEntry>, tower_grpc::Status>;
-    type UpdateNotifyIntegrationFuture =
-        FutureResult<Response<NotifyIntegrationEntry>, tower_grpc::Status>;
-    type ListNotifyIntegrationsFuture =
-        FutureResult<Response<NotifyIntegrationListResponse>, tower_grpc::Status>;
-
-    fn create_secret_integration(
-        &mut self,
-        _request: tower_grpc::Request<SecretIntegrationCreateRequest>,
-    ) -> Self::CreateSecretIntegrationFuture {
+    async fn create_secret_integration(
+        &self,
+        _request: Request<SecretIntegrationCreateRequest>,
+    ) -> Result<Response<SecretIntegrationEntry>, Status> {
         unimplemented!()
     }
 
-    fn delete_secret_integration(
-        &mut self,
-        _request: tower_grpc::Request<SecretIntegrationDeleteRequest>,
-    ) -> Self::DeleteSecretIntegrationFuture {
+    async fn delete_secret_integration(
+        &self,
+        _request: Request<SecretIntegrationDeleteRequest>,
+    ) -> Result<Response<SecretIntegrationEntry>, Status> {
         unimplemented!()
     }
 
-    fn update_secret_integration(
-        &mut self,
-        _request: tower_grpc::Request<SecretIntegrationUpdateRequest>,
-    ) -> Self::UpdateSecretIntegrationFuture {
+    async fn update_secret_integration(
+        &self,
+        _request: Request<SecretIntegrationUpdateRequest>,
+    ) -> Result<Response<SecretIntegrationEntry>, Status> {
         unimplemented!()
     }
 
-    fn list_secret_integrations(
-        &mut self,
-        _request: tower_grpc::Request<SecretIntegrationListRequest>,
-    ) -> Self::ListSecretIntegrationsFuture {
+    async fn list_secret_integrations(
+        &self,
+        _request: Request<SecretIntegrationListRequest>,
+    ) -> Result<Response<SecretIntegrationListResponse>, Status> {
         unimplemented!()
     }
 
-    fn create_notify_integration(
-        &mut self,
-        _request: tower_grpc::Request<NotifyIntegrationCreateRequest>,
-    ) -> Self::CreateNotifyIntegrationFuture {
+    async fn create_notify_integration(
+        &self,
+        _request: Request<NotifyIntegrationCreateRequest>,
+    ) -> Result<Response<NotifyIntegrationEntry>, Status> {
         unimplemented!()
     }
 
-    fn delete_notify_integration(
-        &mut self,
-        _request: tower_grpc::Request<NotifyIntegrationDeleteRequest>,
-    ) -> Self::DeleteNotifyIntegrationFuture {
+    async fn delete_notify_integration(
+        &self,
+        _request: Request<NotifyIntegrationDeleteRequest>,
+    ) -> Result<Response<NotifyIntegrationEntry>, Status> {
         unimplemented!()
     }
 
-    fn update_notify_integration(
-        &mut self,
-        _request: tower_grpc::Request<NotifyIntegrationUpdateRequest>,
-    ) -> Self::UpdateNotifyIntegrationFuture {
+    async fn update_notify_integration(
+        &self,
+        _request: Request<NotifyIntegrationUpdateRequest>,
+    ) -> Result<Response<NotifyIntegrationEntry>, Status> {
         unimplemented!()
     }
 
-    fn list_notify_integrations(
-        &mut self,
-        _request: tower_grpc::Request<NotifyIntegrationListRequest>,
-    ) -> Self::ListNotifyIntegrationsFuture {
+    async fn list_notify_integrations(
+        &self,
+        _request: Request<NotifyIntegrationListRequest>,
+    ) -> Result<Response<NotifyIntegrationListResponse>, Status> {
         unimplemented!()
     }
 }

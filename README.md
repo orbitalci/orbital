@@ -28,7 +28,7 @@ OrbitalCI's roadmap for 2019 is located [here](roadmap.md)
 To get started, just run `make`.
 
 ### Requirements on host
-* Rust 1.38+
+* Rust 1.39+
 * Docker 
 * make
 * git

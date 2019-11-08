@@ -6,10 +6,7 @@ edition = "2018"
 
 [dependencies]
 git2 = "0.10"
-itertools = "0.8"
-url = "2.1"
 log = "0.4"
-env_logger = "0.7"
 
 [lib]
 name = "git_meta"

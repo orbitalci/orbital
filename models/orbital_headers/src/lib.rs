@@ -4,21 +4,23 @@ pub mod build_metadata {
 }
 
 /// Generated Rust from protobufs for credential handling
+/// Proto compilation issue is tracked by issue https://github.com/level11consulting/orbitalci/issues/229
 pub mod credential {
-    include!(concat!(env!("OUT_DIR"), "/credential.rs"));
+    tonic::include_proto!("credential");
+    tonic::include_proto!("credential_service");
 }
 
 /// Generated Rust from protobufs for external service integration
 pub mod integration {
-    include!(concat!(env!("OUT_DIR"), "/integration.rs"));
+    tonic::include_proto!("integration");
 }
 
 /// Generated Rust from protobufs for high-level units, Organizations
 pub mod organization {
-    include!(concat!(env!("OUT_DIR"), "/organization.rs"));
+    tonic::include_proto!("organization");
 }
 
 /// Generated Rust from protobufs for possible job states
 pub mod state {
-    include!(concat!(env!("OUT_DIR"), "/state.rs"));
+    tonic::include_proto!("state");
 }

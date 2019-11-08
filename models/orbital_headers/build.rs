@@ -1,16 +1,27 @@
-fn main() {
-    tower_grpc_build::Config::new()
-        .enable_server(true)
-        .enable_client(true)
-        .build(
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tonic_build::compile_protos("../protos/build_metadata.proto")?;
+    tonic_build::compile_protos("../protos/integration.proto")?;
+    tonic_build::compile_protos("../protos/state.proto")?;
+
+    /// This is a workaround for issue https://github.com/level11consulting/orbitalci/issues/229
+    tonic_build::configure()
+        .build_server(true)
+        .build_client(true)
+        .compile(
             &[
-                "../protos/build_metadata.proto",
                 "../protos/credential.proto",
-                "../protos/integration.proto",
-                "../protos/organization.proto",
-                "../protos/state.proto",
+                "../protos/credential_service.proto",
             ],
             &["../protos"],
-        )
-        .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e))
+        )?;
+
+    tonic_build::configure()
+        .build_server(true)
+        .build_client(true)
+        .compile(
+            &["../protos/organization.proto"],
+            &["../protos", "../protos/vendor/protobuf/src/google/protobuf"],
+        )?;
+
+    Ok(())
 }

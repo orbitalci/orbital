@@ -1,11 +1,10 @@
-//#[macro_use]
 extern crate structopt;
 use structopt::StructOpt;
 
 /// Send a remote call for starting a build
 pub mod build_cmd;
-/// Send a remote call for stopping a build
-pub mod cancel;
+///// Send a remote call for stopping a build
+//pub mod cancel;
 /// Generate command line shell completions
 pub mod completion;
 /// For Orbital developers - direct access to internal libraries outside of production-workflows
@@ -62,6 +61,18 @@ impl Error for SubcommandError {
 impl From<Box<dyn Error>> for SubcommandError {
     fn from(error: Box<dyn Error>) -> Self {
         SubcommandError::new(&error.to_string())
+    }
+}
+
+impl From<tonic::Status> for SubcommandError {
+    fn from(error: tonic::Status) -> Self {
+        SubcommandError::new(&error.message().to_string())
+    }
+}
+
+impl From<tonic::transport::Error> for SubcommandError {
+    fn from(error: tonic::transport::Error) -> Self {
+        SubcommandError::new(format!("{}", error).as_ref())
     }
 }
 
