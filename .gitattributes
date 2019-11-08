@@ -1,0 +1,4 @@
+# Don't account for legacy code as part of the project stats
+legacy/* linguist-detectable=false
+
+*.md linguist-documentation
