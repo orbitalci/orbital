@@ -1,6 +1,6 @@
-// TODO: Rust's `build` module is special, and we can't override it. Need to reconcile the difference in the protos.
+/// Generated Rust from protobufs for build metadata and build services
 pub mod build_metadata {
-    include!(concat!(env!("OUT_DIR"), "/build.rs"));
+    tonic::include_proto!("build_metadata");
 }
 
 /// Generated Rust from protobufs for credential handling

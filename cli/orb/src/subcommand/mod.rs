@@ -3,8 +3,8 @@ use structopt::StructOpt;
 
 /// Send a remote call for starting a build
 pub mod build_cmd;
-///// Send a remote call for stopping a build
-//pub mod cancel;
+/// Send a remote call for stopping a build
+pub mod cancel;
 /// Generate command line shell completions
 pub mod completion;
 /// For Orbital developers - direct access to internal libraries outside of production-workflows
