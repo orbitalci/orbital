@@ -3,23 +3,19 @@ SHELL = sh
 
 .PHONY: help
 
-all: init-protobuf-types
+all:
 	cargo build
 
-release: init-protobuf-types
+release:
 	cargo build --release
+
+docs:
+	cargo doc
 
 # Note: VSCode may automatically recreate your cargo target dir, for `rls`.
 clean:
 	cargo clean;
 	rm -rf ./models/protos/vendor;
-
-init-protobuf-types:
-	if [ ! -d "models/protos/vendor/protobuf" ]; then \
-		mkdir -p models/protos/vendor/; \
-		cd models/protos/vendor && \
-			git clone https://github.com/protocolbuffers/protobuf.git; \
-	fi
 
 help:
 	echo 'Targets:'

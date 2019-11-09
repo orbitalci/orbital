@@ -3,7 +3,7 @@ package organization;
 
 import "state.proto";
 import "credential.proto";
-import "timestamp.proto";
+import "google/protobuf/timestamp.proto";
 
 // Defines our major organizational types: orgs and repos
 // Repos are repositories of code representing a codebase to build
