@@ -10,12 +10,14 @@ All Continuous Integration systems are essentially fancy script executors. Orbit
 * Other self-hosted or private infrastructure (such as artifact repositories or Slack organizations) are supported in your builds.
 
 Table of contents:
-- [OrbitalCI](#orbitalci)
-  - [Roadmap](#roadmap)
-  - [Developers](#developers)
-    - [Getting started with Vagrant](#getting-started-with-vagrant)
-    - [Getting started with Docker](#getting-started-with-docker)
-  - [Contributing](#contributing)
+- [OrbitalCI](#OrbitalCI)
+  - [Roadmap](#Roadmap)
+  - [Developers](#Developers)
+    - [Requirements on host](#Requirements-on-host)
+    - [Getting started with Vagrant](#Getting-started-with-Vagrant)
+      - [Requirements on host](#Requirements-on-host-1)
+    - [Getting started with Docker](#Getting-started-with-Docker)
+  - [Contributing](#Contributing)
 
 ## Roadmap
 
@@ -26,7 +28,7 @@ OrbitalCI's roadmap for 2019 is located [here](roadmap.md)
 To get started, just run `make`.
 
 ### Requirements on host
-* Rust 1.38+
+* Rust 1.39+
 * Docker 
 * make
 * git

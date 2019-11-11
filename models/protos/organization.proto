@@ -8,37 +8,37 @@ import "google/protobuf/timestamp.proto";
 // Defines our major organizational types: orgs and repos
 // Repos are repositories of code representing a codebase to build
 
-// Server returns org as response
-message org_register_request {
+// Server returns Org as response
+message OrgRegisterRequest {
     string name = 1;
 }
 
-message org {
+message Org {
     int32 id = 1;
     string name = 2;
-    state.ACTIVE_STATE active_state = 3; 
+    state.ActiveState active_state = 3; 
 }
 
-// Server returns org as response
-message org_enable_request {
+// Server returns Org as response
+message OrgEnableRequest {
     string name = 1;
 }
 
-// Server returns org as response
-message org_disable_request {
+// Server returns Org as response
+message OrgDisableRequest {
     string name = 1;
 }
 
-// Server returns org as response
-message org_delete_request {
+// Server returns Org as response
+message OrgDeleteRequest {
     string name = 1;
     bool force = 2;
 }
 
-// Server returns registered_repo as response
-message repo_register_request {
+// Server returns RegisteredRepo as response
+message RepoRegisterRequest {
     string org = 1;
-    credential.VCS_TYPE vcs_type = 2;
+    credential.VcsType vcs_type = 2;
     string uri = 3;
 }
 
@@ -48,42 +48,42 @@ message repo_register_request {
 // exists already in the database. One can update both at the same
 // time as well.
 // Server returns registered_repo as response
-message registered_repo_update_state_request {
+message RegisteredRepoUpdateStateRequest {
     string org = 1;
     string account = 2;
     string repo = 3;
-    state.ACTIVE_STATE build_activity_state = 4;
-    state.ACTIVE_STATE notify_activity_state = 5;
+    state.ActiveState build_activity_state = 4;
+    state.ActiveState notify_activity_state = 5;
 }
 
-// Server returns registered_repo as response
-message registered_repo_update_uri_request {
+// Server returns RegisteredRepo as response
+message RegisteredRepoUpdateUriRequest {
     string org = 1;
     string account = 2;
     string repo = 3;
     string uri = 4;
 }
 
-// Server returns registered_repo as response
-message registered_repo_delete_request {
+// Server returns RegisteredRepo as response
+message RegisteredRepoDeleteRequest {
     string org = 1;
     string account = 2;
     string repo = 3;
 }
 
 // registered repo -> a repo registered with orbitalci
-// remove active_state field from database -> redundant
-message registered_repo {
+// remove ActiveState field from database -> redundant
+message RegisteredRepo {
     int32 id = 1;
     int32 vcs_creds_id = 2;
     string uri = 3;
-    state.ACTIVE_STATE build_active_state = 4;
-    state.ACTIVE_STATE notify_active_state = 5;
+    state.ActiveState build_active_state = 4;
+    state.ActiveState notify_active_state = 5;
     int32 next_build_index = 6;
 }
 
-// Server returns polled_repo as response
-message repo_register_polling_expression_request {
+// Server returns PolledRepo as response
+message RepoRegisterPollingExpressionRequest {
     string org = 1;
     string account = 2;
     string repo = 3;
@@ -91,32 +91,32 @@ message repo_register_polling_expression_request {
     string cron_expression = 5;
 }
 
-// Server returns polled_repo as response
-message repo_update_polling_state_request {
+// Server returns PolledRepo as response
+message RepoUpdatePollingStateRequest {
     string org = 1;
     string account = 2;
     string repo = 3;
     string branch = 4;
-    state.ACTIVE_STATE active_state = 5;
+    state.ActiveState active_state = 5;
 }
 
 // polled repo -> an entry that contains a cron expression that determines when orbitalci polls the repo to build it
-message polled_repo {
+message PolledRepo {
     string uri = 1;
     string cron_expression = 2;
     string branch = 3;
     google.protobuf.Timestamp last_polled_time = 4;
-    state.ACTIVE_STATE active_state = 5;
+    state.ActiveState active_state = 5;
 }
 
-service organization_service {
-    rpc register_org(org_register_request) returns (org);
-    rpc enable_org(org_enable_request) returns (org);
-    rpc disable_org(org_disable_request) returns (org);
-    rpc delete_org(org_delete_request) returns (org);
-    rpc register_repo(repo_register_request) returns (registered_repo);
-    rpc update_repo_state(registered_repo_update_state_request) returns (registered_repo);
-    rpc update_repo_uri(registered_repo_update_uri_request) returns (registered_repo);
-    rpc poll_repo(repo_register_polling_expression_request) returns (polled_repo);
-    rpc update_repo_polling_state(repo_update_polling_state_request) returns (polled_repo);
+service OrganizationService {
+    rpc RegisterOrg(OrgRegisterRequest) returns (Org);
+    rpc EnableOrg(OrgEnableRequest) returns (Org);
+    rpc DisableOrg(OrgDisableRequest) returns (Org);
+    rpc DeleteOrg(OrgDeleteRequest) returns (Org);
+    rpc RegisterRepo(RepoRegisterRequest) returns (RegisteredRepo);
+    rpc UpdateRepoState(RegisteredRepoUpdateStateRequest) returns (RegisteredRepo);
+    rpc UpdateRepoUri(RegisteredRepoUpdateUriRequest) returns (RegisteredRepo);
+    rpc PollRepo(RepoRegisterPollingExpressionRequest) returns (PolledRepo);
+    rpc UpdateRepoPollingState(RepoUpdatePollingStateRequest) returns (PolledRepo);
 }

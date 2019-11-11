@@ -3,70 +3,72 @@ package build_metadata;
 
 import "google/protobuf/timestamp.proto";
 
-enum JOB_TRIGGER {
-    POLL = 0;
-    WEBHOOK = 1;
-    MANUAL = 2;
-    SUBSCRIBE_TRIGGER = 3;
-    COMMIT_MSG_TRIGGER = 4;
+enum JobTrigger {
+    JOB_TRIGGER_UNSPECIFIED = 0;
+    POLL = 1;
+    WEBHOOK = 2;
+    MANUAL = 3;
+    SUBSCRIBE_TRIGGER = 4;
+    COMMIT_MSG_TRIGGER = 5;
 }
 
-enum JOB_STATE {
-    UNKNOWN = 0;
-    QUEUED = 1;
-    STARTING = 2;
-    RUNNING = 3;
-    FINISHING = 4;
-    CANCELLED = 5;
-    KILLED = 6;
-    FAILED = 7;
-    DONE = 8;
+enum JobState {
+    JOB_STATE_UNSPECIFIED = 0;
+    UNKNOWN = 1;
+    QUEUED = 2;
+    STARTING = 3;
+    RUNNING = 4;
+    FINISHING = 5;
+    CANCELLED = 6;
+    KILLED = 7;
+    FAILED = 8;
+    DONE = 9;
     DELETED = 100;
 }
 
 // Server returns a build_summary as response
-message build_start_request {
+message BuildStartRequest {
     string remote_uri = 1;
     string branch = 2;
     string commit_ref = 3;
 }
 
 // Server returns a build_summary as response
-message build_stop_request {
+message BuildStopRequest {
     int32 id = 1;
 }
 
 // NOTE: we don't know how to resolve if we have identically
 // named repos in the same org, but different providers like 
 // in both github and bitbucket
-message build_summary_request {
+message BuildSummaryRequest {
     string org = 1;
     string account = 2;
     string repo = 3;
 }
 
-message build_summary_response {
-    repeated build_summary summary = 1;
+message BuildSummaryResponse {
+    repeated BuildSummary summaries = 1;
 }
 
-message build_target {
+message BuildTarget {
     int32 id = 1;
     string git_hash = 2;
     int32 registered_repo_id = 3;
     int32 build_index = 4;
 }
 
-message build_summary {
+message BuildSummary {
     int32 id = 1;
-    build_target build = 2;
-    JOB_TRIGGER job_trigger = 3;
+    BuildTarget build = 2;
+    JobTrigger job_trigger = 3;
     google.protobuf.Timestamp queue_time = 4;
     google.protobuf.Timestamp start_time = 5;
     google.protobuf.Timestamp end_time = 6;
-    JOB_STATE build_state = 7;
+    JobState build_state = 7;
 }
 
-message build_stage {
+message BuildStage {
     int32 id = 1;
     int32 build_summary_id = 2;
     string stage = 3;
@@ -77,28 +79,28 @@ message build_stage {
     int32 exit_code = 8;
 }
 
-message build_log_request {
+message BuildLogRequest {
     string org = 1;
     string account = 2;
     string repo = 3;
     int32 index = 4;
 }
 
-message build_log_response {
-    repeated build_stage stages = 1;
+message BuildLogResponse {
+    repeated BuildStage stages = 1;
 }
 
 // Server returns build_summary as response
-message build_delete_request {
+message BuildDeleteRequest {
     string org = 1;
     string account = 2;
     string repo = 3;
     int32 index = 4;
 }
 
-service build_service {
-    rpc start_build (build_start_request) returns (build_summary);
-    rpc stop_build (build_stop_request) returns (build_summary);
-    rpc get_build_logs (build_log_request) returns (build_log_response);
-    rpc delete_build (build_delete_request) returns (build_summary);
+service BuildService {
+    rpc StartBuild (BuildStartRequest) returns (BuildSummary);
+    rpc StopBuild (BuildStopRequest) returns (BuildSummary);
+    rpc GetBuildLogs (BuildLogRequest) returns (BuildLogResponse);
+    rpc DeleteBuild (BuildDeleteRequest) returns (BuildSummary);
 }

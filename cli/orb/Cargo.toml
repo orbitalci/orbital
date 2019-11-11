@@ -8,13 +8,8 @@ default-run = "orb"
 [dependencies]
 structopt = "0.3"
 clap = "2.33"
-tower-hyper = "0.1"
-tower-grpc = "0.1"
-prost = "0.5"
-prost-types = "0.5"
-bytes = "0.4"
-futures = "0.1"
-log = "0.4"
+tonic = "0.1.0-alpha.6"
+tokio = "=0.2.0-alpha.6"
 env_logger = "0.7"
 orbital_headers = { path = "../../models/orbital_headers" }
 orbital_cli_subcommand = { path = "src/subcommand" }

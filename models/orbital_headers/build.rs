@@ -1,16 +1,9 @@
-fn main() {
-    tower_grpc_build::Config::new()
-        .enable_server(true)
-        .enable_client(true)
-        .build(
-            &[
-                "../protos/build_metadata.proto",
-                "../protos/credential.proto",
-                "../protos/integration.proto",
-                "../protos/organization.proto",
-                "../protos/state.proto",
-            ],
-            &["../protos"],
-        )
-        .unwrap_or_else(|e| panic!("protobuf compilation failed: {}", e))
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tonic_build::compile_protos("../protos/build_metadata.proto")?;
+    tonic_build::compile_protos("../protos/integration.proto")?;
+    tonic_build::compile_protos("../protos/state.proto")?;
+    tonic_build::compile_protos("../protos/organization.proto")?;
+    tonic_build::compile_protos("../protos/credential.proto")?;
+    
+    Ok(())
 }

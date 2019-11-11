@@ -1,4 +1,3 @@
-//#[macro_use]
 extern crate structopt;
 use structopt::StructOpt;
 
@@ -62,6 +61,18 @@ impl Error for SubcommandError {
 impl From<Box<dyn Error>> for SubcommandError {
     fn from(error: Box<dyn Error>) -> Self {
         SubcommandError::new(&error.to_string())
+    }
+}
+
+impl From<tonic::Status> for SubcommandError {
+    fn from(error: tonic::Status) -> Self {
+        SubcommandError::new(&error.message().to_string())
+    }
+}
+
+impl From<tonic::transport::Error> for SubcommandError {
+    fn from(error: tonic::transport::Error) -> Self {
+        SubcommandError::new(format!("{}", error).as_ref())
     }
 }
 

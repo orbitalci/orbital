@@ -2,9 +2,10 @@ syntax = "proto3";
 package state;
 
 // define entity/capability states
-enum ACTIVE_STATE {
-    UNKNOWN = 0;
+enum ActiveState {
+    ACTIVE_STATE_UNSPECIFIED = 0;
     ENABLED = 1;
     DISABLED = 2;
+    UNKNOWN = 3;
     DELETED = 100;
 }

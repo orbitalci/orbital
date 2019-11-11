@@ -1,37 +1,44 @@
-use futures::{future, future::FutureResult};
 use orbital_headers::build_metadata::{
     server::BuildService, BuildDeleteRequest, BuildLogRequest, BuildLogResponse, BuildStartRequest,
     BuildStopRequest, BuildSummary,
 };
-use tower_grpc::{Request, Response};
+use tonic::{Request, Response, Status};
 
 use super::OrbitalApi;
 
 /// Implementation of protobuf derived `BuildService` trait
+#[tonic::async_trait]
 impl BuildService for OrbitalApi {
-    type StartBuildFuture = FutureResult<Response<BuildSummary>, tower_grpc::Status>;
-    type StopBuildFuture = FutureResult<Response<BuildSummary>, tower_grpc::Status>;
-    type GetBuildLogsFuture = FutureResult<Response<BuildLogResponse>, tower_grpc::Status>;
-    type DeleteBuildFuture = FutureResult<Response<BuildSummary>, tower_grpc::Status>;
-
     /// Start a build
-    fn start_build(&mut self, _request: Request<BuildStartRequest>) -> Self::StartBuildFuture {
+    async fn start_build(
+        &self,
+        _request: Request<BuildStartRequest>,
+    ) -> Result<Response<BuildSummary>, Status> {
         let response = Response::new(BuildSummary::default());
 
         println!("DEBUG: {:?}", response);
 
-        future::ok(response)
+        Ok(response)
     }
 
-    fn stop_build(&mut self, _request: Request<BuildStopRequest>) -> Self::StopBuildFuture {
+    async fn stop_build(
+        &self,
+        _request: Request<BuildStopRequest>,
+    ) -> Result<Response<BuildSummary>, Status> {
         unimplemented!();
     }
 
-    fn get_build_logs(&mut self, _request: Request<BuildLogRequest>) -> Self::GetBuildLogsFuture {
+    async fn get_build_logs(
+        &self,
+        _request: Request<BuildLogRequest>,
+    ) -> Result<Response<BuildLogResponse>, Status> {
         unimplemented!();
     }
 
-    fn delete_build(&mut self, _request: Request<BuildDeleteRequest>) -> Self::DeleteBuildFuture {
+    async fn delete_build(
+        &self,
+        _request: Request<BuildDeleteRequest>,
+    ) -> Result<Response<BuildSummary>, Status> {
         unimplemented!();
     }
 }

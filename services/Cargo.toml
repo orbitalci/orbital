@@ -4,11 +4,8 @@ version = "0.1.0"
 authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-tower-grpc = "0.1"
-futures = "0.1"
+tonic = "0.1.0-alpha.6"
 orbital_headers = { path = "../models/orbital_headers" }
 
 
