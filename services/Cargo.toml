@@ -5,7 +5,7 @@ authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-tonic = "0.1.0-alpha.5"
+tonic = "0.1.0-alpha.6"
 orbital_headers = { path = "../models/orbital_headers" }
 
 

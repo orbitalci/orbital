@@ -4,10 +4,8 @@ pub mod build_metadata {
 }
 
 /// Generated Rust from protobufs for credential handling
-/// Proto compilation issue is tracked by issue https://github.com/level11consulting/orbitalci/issues/229
 pub mod credential {
     tonic::include_proto!("credential");
-    tonic::include_proto!("credential_service");
 }
 
 /// Generated Rust from protobufs for external service integration

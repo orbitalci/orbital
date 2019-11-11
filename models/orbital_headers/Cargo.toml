@@ -5,11 +5,11 @@ authors = ["evancramer <evancramer@level11.com>", "T.J. Telan <tjtelan@level11.c
 edition = "2018"
 
 [dependencies]
-tonic = "0.1.0-alpha.5"
+tonic = "0.1.0-alpha.6"
 prost = "0.5"
 prost-types = "0.5"
 prost-derive = "0.5"
 bytes = "0.4"
 
 [build-dependencies]
-tonic-build = "0.1.0-alpha.5"
+tonic-build = "0.1.0-alpha.6"
