@@ -17,7 +17,7 @@ pub struct SubcommandOption {
 }
 
 /// Expects `--path`. Attempts to open directory and parse repo for git metadata and prints to stdout
-pub fn subcommand_handler(
+pub async fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {

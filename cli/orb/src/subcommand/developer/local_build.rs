@@ -37,7 +37,7 @@ pub struct SubcommandOption {
 /// If `--path` not given, expects current working directory, and parses for git metadata
 /// Reads `orb.yml` from path. Pulls, creates and starts a container from the specified yaml.
 /// Loops over the command list and executes commands into the container
-pub fn subcommand_handler(
+pub async fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {

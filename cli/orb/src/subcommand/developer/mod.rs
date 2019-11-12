@@ -93,18 +93,20 @@ pub fn kv_csv_parser(kv_str: &Option<String>) -> Option<Vec<&str>> {
 }
 
 /// Subcommand router for `orb developer`
-pub fn subcommand_handler(
+pub async fn subcommand_handler(
     global_option: GlobalOption,
     dev_subcommand: DeveloperType,
 ) -> Result<(), SubcommandError> {
     match dev_subcommand {
-        DeveloperType::Git(sub_option) => git::subcommand_handler(global_option, sub_option),
-        DeveloperType::Docker(sub_option) => docker::subcommand_handler(global_option, sub_option),
+        DeveloperType::Git(sub_option) => git::subcommand_handler(global_option, sub_option).await,
+        DeveloperType::Docker(sub_option) => {
+            docker::subcommand_handler(global_option, sub_option).await
+        }
         DeveloperType::Build(sub_option) => {
-            local_build::subcommand_handler(global_option, sub_option)
+            local_build::subcommand_handler(global_option, sub_option).await
         }
         DeveloperType::Validate(sub_option) => {
-            validate::subcommand_handler(global_option, sub_option)
+            validate::subcommand_handler(global_option, sub_option).await
         }
     }
 }

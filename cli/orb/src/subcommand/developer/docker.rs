@@ -95,7 +95,7 @@ impl FromStr for Action {
 /// Expects `--image` and `--command` to be provided. Splits the command on whitespace, so beware of complex one-liners.
 ///
 /// The equivalent `docker` command is `docker exec <container id> <command>`
-pub fn subcommand_handler(
+pub async fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {

@@ -13,7 +13,7 @@ git_meta = { path = "../../../../lib/git_meta" }
 orbital_headers = { path = "../../../../models/orbital_headers" }
 orbital_services = { path = "../../../../services" }
 log = "0.4"
-tonic = "0.1.0-alpha.6"
+tonic = { version = "0.1.0-alpha.6", features = [ "rustls"] }
 
 [lib]
 name = "subcommand"

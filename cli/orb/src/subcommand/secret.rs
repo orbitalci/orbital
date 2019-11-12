@@ -4,9 +4,7 @@ use structopt::StructOpt;
 use crate::{GlobalOption, SubcommandError};
 
 // Secrets maybe want to move to credentials?
-use orbital_headers::credential::{
-    client::CredentialServiceClient, SecretCreateRequest,
-};
+use orbital_headers::credential::{client::CredentialServiceClient, SecretCreateRequest};
 
 use crate::ORB_DEFAULT_URI;
 use tonic::Request;

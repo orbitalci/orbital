@@ -42,7 +42,7 @@ async fn main() -> Result<(), SubcommandError> {
             subcommand::operator::subcommand_handler(parsed.global_option, sub_command).await
         }
         Subcommand::Developer(sub_command) => {
-            subcommand::developer::subcommand_handler(parsed.global_option, sub_command)
+            subcommand::developer::subcommand_handler(parsed.global_option, sub_command).await
         }
         Subcommand::Completion(shell) => {
             GlobalOption::clap().gen_completions_to(
