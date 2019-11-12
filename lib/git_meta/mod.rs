@@ -12,7 +12,7 @@ pub struct GitCommitContext {
 }
 
 /// Parsed from a remote git uri
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct GitSshRemote {
     user: String,
     provider: String,
