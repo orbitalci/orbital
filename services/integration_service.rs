@@ -1,9 +1,6 @@
 use orbital_headers::integration::{
-    server::IntegrationService, NotifyIntegrationCreateRequest, NotifyIntegrationDeleteRequest,
-    NotifyIntegrationEntry, NotifyIntegrationListRequest, NotifyIntegrationListResponse,
-    NotifyIntegrationUpdateRequest, SecretIntegrationCreateRequest, SecretIntegrationDeleteRequest,
-    SecretIntegrationEntry, SecretIntegrationListRequest, SecretIntegrationListResponse,
-    SecretIntegrationUpdateRequest,
+    server::IntegrationService, NotifyCreateRequest, NotifyDeleteRequest, NotifyEntry,
+    NotifyListRequest, NotifyListResponse, NotifyUpdateRequest,
 };
 use tonic::{Request, Response, Status};
 
@@ -12,59 +9,31 @@ use super::OrbitalApi;
 /// Implementation of protobuf derived `IntegrationService` trait
 #[tonic::async_trait]
 impl IntegrationService for OrbitalApi {
-    async fn create_secret_integration(
+    async fn create_notify(
         &self,
-        _request: Request<SecretIntegrationCreateRequest>,
-    ) -> Result<Response<SecretIntegrationEntry>, Status> {
+        _request: Request<NotifyCreateRequest>,
+    ) -> Result<Response<NotifyEntry>, Status> {
         unimplemented!()
     }
 
-    async fn delete_secret_integration(
+    async fn delete_notify(
         &self,
-        _request: Request<SecretIntegrationDeleteRequest>,
-    ) -> Result<Response<SecretIntegrationEntry>, Status> {
+        _request: Request<NotifyDeleteRequest>,
+    ) -> Result<Response<NotifyEntry>, Status> {
         unimplemented!()
     }
 
-    async fn update_secret_integration(
+    async fn update_notify(
         &self,
-        _request: Request<SecretIntegrationUpdateRequest>,
-    ) -> Result<Response<SecretIntegrationEntry>, Status> {
+        _request: Request<NotifyUpdateRequest>,
+    ) -> Result<Response<NotifyEntry>, Status> {
         unimplemented!()
     }
 
-    async fn list_secret_integrations(
+    async fn list_notify(
         &self,
-        _request: Request<SecretIntegrationListRequest>,
-    ) -> Result<Response<SecretIntegrationListResponse>, Status> {
-        unimplemented!()
-    }
-
-    async fn create_notify_integration(
-        &self,
-        _request: Request<NotifyIntegrationCreateRequest>,
-    ) -> Result<Response<NotifyIntegrationEntry>, Status> {
-        unimplemented!()
-    }
-
-    async fn delete_notify_integration(
-        &self,
-        _request: Request<NotifyIntegrationDeleteRequest>,
-    ) -> Result<Response<NotifyIntegrationEntry>, Status> {
-        unimplemented!()
-    }
-
-    async fn update_notify_integration(
-        &self,
-        _request: Request<NotifyIntegrationUpdateRequest>,
-    ) -> Result<Response<NotifyIntegrationEntry>, Status> {
-        unimplemented!()
-    }
-
-    async fn list_notify_integrations(
-        &self,
-        _request: Request<NotifyIntegrationListRequest>,
-    ) -> Result<Response<NotifyIntegrationListResponse>, Status> {
+        _request: Request<NotifyListRequest>,
+    ) -> Result<Response<NotifyListResponse>, Status> {
         unimplemented!()
     }
 }

@@ -5,6 +5,9 @@ use crate::{GlobalOption, SubcommandError};
 
 use orbital_headers::build_metadata::{client::BuildServiceClient, BuildStartRequest};
 
+use crate::ORB_DEFAULT_URI;
+use tonic::Request;
+
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
@@ -19,9 +22,9 @@ pub async fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
-    let mut client = BuildServiceClient::connect("http://127.0.0.1:50051").await?;
+    let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let request = tonic::Request::new(BuildStartRequest {
+    let request = Request::new(BuildStartRequest {
         remote_uri: "http://1.2.3.4:5678".into(),
         branch: "master".into(),
         commit_ref: "deadbeef".into(),

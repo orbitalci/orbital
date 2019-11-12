@@ -27,6 +27,10 @@ pub mod summary;
 use std::error::Error;
 use std::fmt;
 
+// FIXME: This is called URI, but in fact is just a host:port. Need to figure out how to let server and client use this default
+/// Default URI for the Orbital service
+pub const ORB_DEFAULT_URI: &str = "127.0.0.1:50051";
+
 /// Internal error type used by all subcommand handlers. Implements `Error` trait.
 #[derive(Debug)]
 pub struct SubcommandError {
@@ -83,27 +87,25 @@ pub enum Subcommand {
     /// Send build signal
     Build(build_cmd::SubcommandOption),
     /// Send cancel signal
-    Cancel,
+    Cancel(cancel::SubcommandOption),
     /// Get logs
-    Logs,
+    Logs(logs::SubcommandOption),
     /// Actions for Organizations
-    Org,
+    Org(org::SubcommandOption),
     /// Actions for Repos
-    Repo,
+    Repo(repo::SubcommandOption),
     /// Actions for Polling
-    Poll,
+    Poll(poll::SubcommandOption),
     /// Do things with secrets for builds
-    Secret,
+    Secret(secret::SubcommandOption),
     /// Get summary of a repo
-    Summary,
+    Summary(summary::SubcommandOption),
     /// Administration and service settings
     #[structopt(alias = "ops")]
     Operator(operator::OperatorType),
     /// Developer level commands and settings
     #[structopt(alias = "dev")]
     Developer(developer::DeveloperType),
-    /// Get version string
-    Version,
     /// Generate shell completions script for orb command
     Completion(completion::SubcommandOption),
 }

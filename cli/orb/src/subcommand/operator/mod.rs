@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-/// Start a BuildService server
+/// Start an Orb server
 pub mod start;
 
 /// Subcommands for `orb operator`

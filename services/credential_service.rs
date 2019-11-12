@@ -1,6 +1,8 @@
 use orbital_headers::credential::{
-    server::CredentialService, VcsCredCreateRequest, VcsCredDeleteRequest, VcsCredEntry,
-    VcsCredListRequest, VcsCredListResponse, VcsCredUpdateRequest,
+    server::CredentialService, SecretCreateRequest, SecretDeleteRequest, SecretEntry,
+    SecretListRequest, SecretListResponse, SecretUpdateRequest, VcsCredCreateRequest,
+    VcsCredDeleteRequest, VcsCredEntry, VcsCredListRequest, VcsCredListResponse,
+    VcsCredUpdateRequest,
 };
 use tonic::{Request, Response, Status};
 
@@ -9,6 +11,34 @@ use super::OrbitalApi;
 /// Implementation of protobuf derived `CredentialService` trait
 #[tonic::async_trait]
 impl CredentialService for OrbitalApi {
+    async fn create_secret(
+        &self,
+        _request: Request<SecretCreateRequest>,
+    ) -> Result<Response<SecretEntry>, Status> {
+        unimplemented!()
+    }
+
+    async fn delete_secret(
+        &self,
+        _request: Request<SecretDeleteRequest>,
+    ) -> Result<Response<SecretEntry>, Status> {
+        unimplemented!()
+    }
+
+    async fn update_secret(
+        &self,
+        _request: Request<SecretUpdateRequest>,
+    ) -> Result<Response<SecretEntry>, Status> {
+        unimplemented!()
+    }
+
+    async fn list_secret(
+        &self,
+        _request: Request<SecretListRequest>,
+    ) -> Result<Response<SecretListResponse>, Status> {
+        unimplemented!()
+    }
+
     async fn create_vcs_cred(
         &self,
         _request: Request<VcsCredCreateRequest>,
