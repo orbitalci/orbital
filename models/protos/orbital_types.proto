@@ -1,0 +1,70 @@
+syntax = "proto3";
+package orbital_types;
+
+enum JobTrigger {
+    JOB_TRIGGER_UNSPECIFIED = 0;
+    PUSH = 1;
+    PULL_REQUEST = 2;
+    JOB_TRIGGER_WEBHOOK = 3;
+    POLL = 4;
+    MANUAL = 5;
+    SUBSCRIBE_TRIGGER = 6;
+    COMMIT_MSG_TRIGGER = 7;
+}
+
+enum JobState {
+    JOB_STATE_UNSPECIFIED = 0;
+    JOB_STATE_UNKNOWN = 1;
+    QUEUED = 2;
+    STARTING = 3;
+    RUNNING = 4;
+    FINISHING = 5;
+    CANCELLED = 6;
+    SYSTEM_ERR = 7;
+    FAILED = 8;
+    DONE = 9;
+    JOB_STATE_DELETED = 10;
+}
+
+// define entity/capability states
+enum ActiveState {
+    ACTIVE_STATE_UNSPECIFIED = 0;
+    ENABLED = 1;
+    DISABLED = 2;
+    ACTIVE_STATE_UNKNOWN = 3;
+    ACTIVE_STATE_DELETED = 4;
+}
+
+enum SecretType {
+    SECRET_TYPE_UNSPECIFIED = 0;
+    BASIC_AUTH = 1;
+    API_KEY = 2;
+    ENV_VAR = 3;
+    FILE = 4;
+    SSH_PEM = 5;
+    DOCKER_REGISTRY = 6;
+    NPM_REPO = 7;
+    PYPI_REGISTRY = 8;
+    MAVEN_REPO = 9;
+    KUBERNETES = 10;
+}
+
+// VCS Credentials allow OrbitalCI to clone and download code for test and deployment
+// Currently supported VCS types:
+//    * Bitbucket
+//    * GITHUB
+
+enum CodeHostType {
+    CODE_HOST_UNSPECIFIED = 0;
+    GENERIC = 1;
+    BITBUCKET = 2;
+    GITHUB = 3;
+    // GITLAB = 4;
+    // GITTEA = 5;
+}
+
+enum NotifyType {
+    NOTIFY_TYPE_UNSPECIFIED = 0;
+    SLACK = 1;
+    NOTIFY_TYPE_WEBHOOK = 2;
+}

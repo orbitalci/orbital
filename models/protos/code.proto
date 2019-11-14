@@ -1,0 +1,134 @@
+syntax = "proto3";
+package code;
+
+import "orbital_types.proto";
+import "secret.proto";
+
+message GitProviderEntry {
+    string org = 1;
+    string name = 2;
+    orbital_types.CodeHostType git_host = 3;
+    orbital_types.ActiveState active_state = 4;
+}
+
+// Server returns GitProviderEntry as response
+message GitProviderAddRequest {
+    string org = 1;
+    string name = 2;
+    orbital_types.CodeHostType git_host = 3;
+    string auth_data = 4;
+}
+
+message GitProviderGetRequest {
+    string org = 1;
+    string name = 2;
+    orbital_types.CodeHostType git_host = 3;
+}
+
+// Server returns GitProviderEntry as response
+message GitProviderUpdateRequest {
+    string org = 1;
+    string name = 2;
+    orbital_types.CodeHostType git_host = 3;
+    orbital_types.ActiveState active_state = 4;
+    string auth_data = 5;
+}
+
+// Server returns GitProviderEntry as response
+message GitProviderRemoveRequest {
+    string org = 1;
+    string name = 2;
+    orbital_types.CodeHostType git_host = 3;
+    bool force = 4;
+}
+
+// Server returns GitProviderListResponse as response
+message GitProviderListRequest {
+    string org = 1;
+    orbital_types.CodeHostType git_host = 2;
+}
+
+message GitProviderListResponse {
+    repeated GitProviderEntry git_providers = 1;
+}
+
+/// Code repository
+
+message GitRepoEntry {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    orbital_types.CodeHostType git_host = 4;
+    string uri = 5;
+    orbital_types.SecretType secret_type = 6;
+    string auth_data = 7;
+    orbital_types.ActiveState build = 8;
+    orbital_types.ActiveState notify = 9;
+    int32 next_build_index = 10;
+}
+
+// Server returns AddedRepo as response
+message GitRepoAddRequest {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    orbital_types.CodeHostType git_host = 4;
+    string uri = 5;
+    orbital_types.SecretType secret_type = 6;
+    string auth_data = 7;
+}
+
+message GitRepoGetRequest {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    orbital_types.CodeHostType git_host = 4;
+    string uri = 5;
+}
+
+message GitRepoUpdateRequest {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    orbital_types.CodeHostType git_host = 4;
+    string uri = 5;
+    orbital_types.SecretType secret_type = 6;
+    orbital_types.ActiveState build = 7;
+    orbital_types.ActiveState notify = 8;
+    string auth_data = 9;
+}
+
+message GitRepoRemoveRequest {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    orbital_types.CodeHostType git_host = 4;
+    string uri = 5;
+    bool force = 6;
+}
+
+message GitRepoListResponse {
+    repeated GitRepoEntry git_repos = 1;
+}
+
+service CodeService {
+    rpc GitProviderAdd(GitProviderAddRequest) returns (GitProviderEntry);
+    rpc GitProviderGet(GitProviderGetRequest) returns (GitProviderEntry);
+    rpc GitProviderUpdate(GitProviderUpdateRequest) returns (GitProviderEntry);
+    rpc GitProviderRemove(GitProviderRemoveRequest) returns (GitProviderEntry);
+    rpc GitProviderList(GitProviderListRequest) returns (GitProviderListResponse);
+
+    rpc GitRepoAdd(GitRepoAddRequest) returns (GitRepoEntry);
+    rpc GitRepoGet(GitRepoGetRequest) returns (GitRepoEntry);
+    rpc GitRepoUpdate(GitProviderUpdateRequest) returns (GitRepoEntry);
+    rpc GitRepoRemove(GitRepoRemoveRequest) returns (GitRepoEntry);
+    rpc GitRepoList(GitRepoListResponse) returns (GitRepoListResponse);
+
+    // I think I still need things for polling.
+    // They just don't need to be exposed to the user, or at least via config file
+    //rpc AddRepoPollRule() returns ();
+    //rpc GetRepoPollRule() returns ();
+    //rpc UpdateRepoPollRule() returns ();
+    //rpc DeleteRepoPollRule() returns ();
+    //rpc ListRepoPollRule() returns ();
+}

@@ -1,0 +1,60 @@
+syntax = "proto3";
+package notify;
+
+import "orbital_types.proto";
+
+// Server returns SecretEntry as response
+message NotifyEntry {
+    string org = 1;
+    string name = 3;
+    orbital_types.NotifyType notify_type = 4;
+    orbital_types.ActiveState active_state = 5;
+    bytes notify_data = 6;
+}
+
+// Server returns SecretEntry as response
+message NotifyAddRequest {
+    string org = 1;
+    string name = 2;
+    orbital_types.NotifyType notify_type = 3;
+    bytes notify_data = 4;
+}
+
+message NotifyGetRequest {
+    string org = 1;
+    string name = 2;
+    orbital_types.NotifyType notify_type = 3;
+}
+
+// Server returns SecretEntry as response
+message NotifyUpdateRequest {
+    string org = 1;
+    string name = 2;
+    orbital_types.ActiveState active_state = 3;
+    orbital_types.NotifyType notify_type = 4;
+    bytes notify_data = 5;
+}
+
+// Server returns SecretEntry as response
+message NotifyRemoveRequest {
+    string org = 1;
+    orbital_types.NotifyType notify_type = 2;
+}
+
+// Server returns NotifyListResponse
+message NotifyListRequest {
+    string org = 1;
+    orbital_types.NotifyType notify_type = 2;
+}
+
+message NotifyListResponse {
+    repeated NotifyEntry notifiers = 1;
+}
+
+service NotifyService {
+    rpc NotifyAdd(NotifyAddRequest) returns (NotifyEntry);
+    rpc NotifyGet(NotifyGetRequest) returns (NotifyEntry);
+    rpc NotifyUpdate(NotifyUpdateRequest) returns (NotifyEntry);
+    rpc NotifyRemove(NotifyRemoveRequest) returns (NotifyEntry);
+    rpc NotifyList(NotifyListRequest) returns (NotifyListResponse);
+}

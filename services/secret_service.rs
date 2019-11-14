@@ -1,5 +1,5 @@
-use orbital_headers::credential::{
-    server::CredentialService, SecretCreateRequest, SecretDeleteRequest, SecretEntry,
+use orbital_headers::secret::{
+    server::SecretService, SecretCreateRequest, SecretDeleteRequest, SecretEntry,
     SecretListRequest, SecretListResponse, SecretUpdateRequest, VcsCredCreateRequest,
     VcsCredDeleteRequest, VcsCredEntry, VcsCredListRequest, VcsCredListResponse,
     VcsCredUpdateRequest,
@@ -8,9 +8,9 @@ use tonic::{Request, Response, Status};
 
 use super::OrbitalApi;
 
-/// Implementation of protobuf derived `CredentialService` trait
+/// Implementation of protobuf derived `SecretService` trait
 #[tonic::async_trait]
-impl CredentialService for OrbitalApi {
+impl SecretService for OrbitalApi {
     async fn create_secret(
         &self,
         _request: Request<SecretCreateRequest>,

@@ -3,8 +3,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-// Secrets maybe want to move to credentials?
-use orbital_headers::credential::{client::CredentialServiceClient, SecretCreateRequest};
+use orbital_headers::secret::{client::SecretServiceClient, SecretCreateRequest};
 
 use crate::ORB_DEFAULT_URI;
 use tonic::Request;
@@ -24,8 +23,7 @@ pub async fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
-    let mut client =
-        CredentialServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
+    let mut client = SecretServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(SecretCreateRequest {
         org: "org_name_goes_here".into(),

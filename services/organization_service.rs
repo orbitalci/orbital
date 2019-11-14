@@ -1,5 +1,5 @@
 use orbital_headers::organization::{
-    server::OrganizationService, Org, OrgDeleteRequest, OrgDisableRequest, OrgEnableRequest,
+    server::OrganizationService, OrgDeleteRequest, OrgDisableRequest, OrgEnableRequest, OrgEntry,
     OrgRegisterRequest, PolledRepo, RegisteredRepo, RegisteredRepoUpdateStateRequest,
     RegisteredRepoUpdateUriRequest, RepoRegisterPollingExpressionRequest, RepoRegisterRequest,
     RepoUpdatePollingStateRequest,
@@ -14,28 +14,28 @@ impl OrganizationService for OrbitalApi {
     async fn register_org(
         &self,
         _request: Request<OrgRegisterRequest>,
-    ) -> Result<Response<Org>, Status> {
+    ) -> Result<Response<OrgEntry>, Status> {
         unimplemented!()
     }
 
     async fn enable_org(
         &self,
         _request: Request<OrgEnableRequest>,
-    ) -> Result<Response<Org>, Status> {
+    ) -> Result<Response<OrgEntry>, Status> {
         unimplemented!()
     }
 
     async fn disable_org(
         &self,
         _request: Request<OrgDisableRequest>,
-    ) -> Result<Response<Org>, Status> {
+    ) -> Result<Response<OrgEntry>, Status> {
         unimplemented!()
     }
 
     async fn delete_org(
         &self,
         _request: Request<OrgDeleteRequest>,
-    ) -> Result<Response<Org>, Status> {
+    ) -> Result<Response<OrgEntry>, Status> {
         unimplemented!()
     }
 

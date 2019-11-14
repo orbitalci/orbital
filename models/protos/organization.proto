@@ -1,122 +1,46 @@
 syntax = "proto3";
 package organization;
 
-import "state.proto";
-import "credential.proto";
-import "google/protobuf/timestamp.proto";
+import "orbital_types.proto";
+import "code.proto";
+import "google/protobuf/empty.proto";
 
-// Defines our major organizational types: orgs and repos
+// Defines our major organizational types: organizations (orgs), version control systems (vcs) and git repositories (repos) 
 // Repos are repositories of code representing a codebase to build
 
-// Server returns Org as response
-message OrgRegisterRequest {
+message OrgEntry {
+    string name = 1;
+    orbital_types.ActiveState active_state = 2; 
+}
+
+// Server returns OrgEntry as response
+message OrgAddRequest {
     string name = 1;
 }
 
-message Org {
-    int32 id = 1;
-    string name = 2;
-    state.ActiveState active_state = 3; 
-}
-
-// Server returns Org as response
-message OrgEnableRequest {
+message OrgGetRequest {
     string name = 1;
 }
 
-// Server returns Org as response
-message OrgDisableRequest {
+message OrgUpdateRequest {
     string name = 1;
+    orbital_types.ActiveState active_state = 2;
 }
 
-// Server returns Org as response
-message OrgDeleteRequest {
+// Server returns OrgEntry as response
+message OrgRemoveRequest {
     string name = 1;
     bool force = 2;
 }
 
-// Server returns RegisteredRepo as response
-message RepoRegisterRequest {
-    string org = 1;
-    credential.VcsType vcs_type = 2;
-    string uri = 3;
-}
-
-// When updating only one of choice(build, notify) state, we send
-// our desired state for the one we wish to update, and UNKNOWN for
-// the other. This tells the server to leave that state to whatever
-// exists already in the database. One can update both at the same
-// time as well.
-// Server returns registered_repo as response
-message RegisteredRepoUpdateStateRequest {
-    string org = 1;
-    string account = 2;
-    string repo = 3;
-    state.ActiveState build_activity_state = 4;
-    state.ActiveState notify_activity_state = 5;
-}
-
-// Server returns RegisteredRepo as response
-message RegisteredRepoUpdateUriRequest {
-    string org = 1;
-    string account = 2;
-    string repo = 3;
-    string uri = 4;
-}
-
-// Server returns RegisteredRepo as response
-message RegisteredRepoDeleteRequest {
-    string org = 1;
-    string account = 2;
-    string repo = 3;
-}
-
-// registered repo -> a repo registered with orbitalci
-// remove ActiveState field from database -> redundant
-message RegisteredRepo {
-    int32 id = 1;
-    int32 vcs_creds_id = 2;
-    string uri = 3;
-    state.ActiveState build_active_state = 4;
-    state.ActiveState notify_active_state = 5;
-    int32 next_build_index = 6;
-}
-
-// Server returns PolledRepo as response
-message RepoRegisterPollingExpressionRequest {
-    string org = 1;
-    string account = 2;
-    string repo = 3;
-    string branch = 4;
-    string cron_expression = 5;
-}
-
-// Server returns PolledRepo as response
-message RepoUpdatePollingStateRequest {
-    string org = 1;
-    string account = 2;
-    string repo = 3;
-    string branch = 4;
-    state.ActiveState active_state = 5;
-}
-
-// polled repo -> an entry that contains a cron expression that determines when orbitalci polls the repo to build it
-message PolledRepo {
-    string uri = 1;
-    string cron_expression = 2;
-    string branch = 3;
-    google.protobuf.Timestamp last_polled_time = 4;
-    state.ActiveState active_state = 5;
+message OrgListResponse {
+    repeated OrgEntry orgs = 1; 
 }
 
 service OrganizationService {
-    rpc RegisterOrg(OrgRegisterRequest) returns (Org);
-    rpc EnableOrg(OrgEnableRequest) returns (Org);
-    rpc DisableOrg(OrgDisableRequest) returns (Org);
-    rpc DeleteOrg(OrgDeleteRequest) returns (Org);
-    rpc RegisterRepo(RepoRegisterRequest) returns (RegisteredRepo);
-    rpc UpdateRepoState(RegisteredRepoUpdateStateRequest) returns (RegisteredRepo);
-    rpc UpdateRepoUri(RegisteredRepoUpdateUriRequest) returns (RegisteredRepo);
-    rpc PollRepo(RepoRegisterPollingExpressionRequest) returns (PolledRepo);
-    rpc UpdateRepoPollingState(RepoUpdatePollingStateRequest) returns (PolledRepo);
+    rpc OrgAdd(OrgAddRequest) returns (OrgEntry);
+    rpc OrgGet(OrgGetRequest) returns (OrgEntry);
+    rpc OrgUpdate(OrgUpdateRequest) returns (OrgEntry);
+    rpc OrgRemove(OrgRemoveRequest) returns (OrgEntry);
+    rpc OrgList(google.protobuf.Empty) returns (OrgListResponse);
 }
