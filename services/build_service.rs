@@ -1,8 +1,10 @@
-use orbital_headers::build_metadata::{
-    server::BuildService, BuildDeleteRequest, BuildLogRequest, BuildLogResponse, BuildStartRequest,
-    BuildStopRequest, BuildSummary,
+use orbital_headers::build_meta::{
+    server::BuildService, BuildLogResponse, BuildMetadata, BuildSummaryRequest,
+    BuildSummaryResponse, BuildTarget,
 };
 use tonic::{Request, Response, Status};
+
+use tokio::sync::mpsc;
 
 use super::OrbitalApi;
 
@@ -10,35 +12,43 @@ use super::OrbitalApi;
 #[tonic::async_trait]
 impl BuildService for OrbitalApi {
     /// Start a build
-    async fn start_build(
+    async fn build_start(
         &self,
-        _request: Request<BuildStartRequest>,
-    ) -> Result<Response<BuildSummary>, Status> {
-        let response = Response::new(BuildSummary::default());
+        _request: Request<BuildTarget>,
+    ) -> Result<Response<BuildMetadata>, Status> {
+        let response = Response::new(BuildMetadata::default());
 
         println!("DEBUG: {:?}", response);
 
         Ok(response)
     }
 
-    async fn stop_build(
+    async fn build_stop(
         &self,
-        _request: Request<BuildStopRequest>,
-    ) -> Result<Response<BuildSummary>, Status> {
+        _request: Request<BuildTarget>,
+    ) -> Result<Response<BuildMetadata>, Status> {
         unimplemented!();
     }
 
-    async fn get_build_logs(
+    type BuildLogsStream = mpsc::Receiver<Result<BuildLogResponse, Status>>;
+    async fn build_logs(
         &self,
-        _request: Request<BuildLogRequest>,
-    ) -> Result<Response<BuildLogResponse>, Status> {
+        _request: Request<BuildTarget>,
+    ) -> Result<Response<Self::BuildLogsStream>, Status> {
         unimplemented!();
     }
 
-    async fn delete_build(
+    async fn build_remove(
         &self,
-        _request: Request<BuildDeleteRequest>,
-    ) -> Result<Response<BuildSummary>, Status> {
+        _request: Request<BuildTarget>,
+    ) -> Result<Response<BuildMetadata>, Status> {
+        unimplemented!();
+    }
+
+    async fn build_summary(
+        &self,
+        _request: Request<BuildSummaryRequest>,
+    ) -> Result<Response<BuildSummaryResponse>, Status> {
         unimplemented!();
     }
 }

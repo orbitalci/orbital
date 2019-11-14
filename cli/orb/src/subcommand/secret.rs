@@ -28,10 +28,11 @@ pub async fn subcommand_handler(
     let request = Request::new(SecretCreateRequest {
         org: "org_name_goes_here".into(),
         secret_type: 0,
-        secret: "secret_text_goes_here".into(),
+        data: "secret_text_goes_here".into(),
+        ..Default::default()
     });
 
-    let response = client.create_secret(request).await?;
+    let response = client.secret_add(request).await?;
 
     println!("RESPONSE = {:?}", response);
 

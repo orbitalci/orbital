@@ -222,7 +222,8 @@ mod tests {
 
     #[test]
     fn parse_bitbucket_ssh_url() -> Result<(), String> {
-        let bb_url_parsed = git_remote_url_parse("git@bitbucket.com:level11consulting/orbitalci.git");
+        let bb_url_parsed =
+            git_remote_url_parse("git@bitbucket.com:level11consulting/orbitalci.git");
 
         let expected_parsed = GitSshRemote {
             user: "git".to_string(),
@@ -239,7 +240,8 @@ mod tests {
     // We need to keep track of this so we can accomodate for parser changes
     #[test]
     fn parse_azure_ssh_url() -> Result<(), String> {
-        let az_url_parsed = git_remote_url_parse("git@ssh.dev.azure.com:v3/organization/project/repo");
+        let az_url_parsed =
+            git_remote_url_parse("git@ssh.dev.azure.com:v3/organization/project/repo");
 
         let expected_parsed = GitSshRemote {
             user: "git".to_string(),

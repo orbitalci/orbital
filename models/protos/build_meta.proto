@@ -11,6 +11,7 @@ message BuildTarget {
     string remote_uri = 4;
     string branch = 5;
     string commit_hash = 6;
+    int32 id = 7;
 }
 
 message BuildStage {

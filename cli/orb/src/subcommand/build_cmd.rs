@@ -3,7 +3,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::build_metadata::{client::BuildServiceClient, BuildStartRequest};
+use orbital_headers::build_meta::{client::BuildServiceClient, BuildTarget};
 
 use crate::ORB_DEFAULT_URI;
 use tonic::Request;
@@ -24,13 +24,14 @@ pub async fn subcommand_handler(
 ) -> Result<(), SubcommandError> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let request = Request::new(BuildStartRequest {
+    let request = Request::new(BuildTarget {
         remote_uri: "http://1.2.3.4:5678".into(),
         branch: "master".into(),
-        commit_ref: "deadbeef".into(),
+        commit_hash: "deadbeef".into(),
+        ..Default::default()
     });
 
-    let response = client.start_build(request).await?;
+    let response = client.build_start(request).await?;
 
     println!("RESPONSE = {:?}", response);
 

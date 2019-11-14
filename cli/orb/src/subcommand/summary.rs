@@ -3,7 +3,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::build_metadata::{client::BuildServiceClient, BuildLogRequest};
+use orbital_headers::build_meta::{client::BuildServiceClient, BuildTarget, BuildSummaryRequest};
 
 use crate::ORB_DEFAULT_URI;
 use tonic::Request;
@@ -27,14 +27,13 @@ pub async fn subcommand_handler(
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     // Idea: Index should be Option<u32>
-    let request = Request::new(BuildLogRequest {
-        org: "org_name_goes_here".into(),
-        account: "account_name_goes_here".into(),
-        repo: "repo_name_goes_here".into(),
-        index: 0,
+    let request = Request::new(BuildSummaryRequest {
+        build: Some(BuildTarget { org : "org_name_goes_here".into(), ..Default::default() }),
+        ..Default::default()
+
     });
 
-    let response = client.get_build_logs(request).await?;
+    let response = client.build_summary(request).await?;
 
     println!("RESPONSE = {:?}", response);
 

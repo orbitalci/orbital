@@ -4,7 +4,7 @@ use structopt::StructOpt;
 use crate::{GlobalOption, SubcommandError};
 
 use orbital_headers::organization::{
-    client::OrganizationServiceClient, RepoRegisterPollingExpressionRequest,
+    client::OrganizationServiceClient,
 };
 
 use crate::ORB_DEFAULT_URI;
@@ -24,20 +24,23 @@ pub async fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
-    let mut client =
-        OrganizationServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let request = Request::new(RepoRegisterPollingExpressionRequest {
-        org: "org_name_goes_here".into(),
-        account: "account_name_goes_here".into(),
-        repo: "repo_name_goes_here".into(),
-        branch: "branch_name_goes_here".into(),
-        cron_expression: "cron_name_goes_here".into(),
-    });
+    // Haven't yet figured out the user-space relationship with polling
 
-    let response = client.poll_repo(request).await?;
+    //let mut client =
+    //    OrganizationServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    println!("RESPONSE = {:?}", response);
+    //let request = Request::new(RepoRegisterPollingExpressionRequest {
+    //    org: "org_name_goes_here".into(),
+    //    account: "account_name_goes_here".into(),
+    //    repo: "repo_name_goes_here".into(),
+    //    branch: "branch_name_goes_here".into(),
+    //    cron_expression: "cron_name_goes_here".into(),
+    //});
+
+    //let response = client.poll_repo(request).await?;
+
+    //println!("RESPONSE = {:?}", response);
 
     Ok(())
 }

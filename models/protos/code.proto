@@ -107,6 +107,12 @@ message GitRepoRemoveRequest {
     bool force = 6;
 }
 
+message GitRepoListRequest {
+    string org = 1;
+    string git_provider = 2;
+    orbital_types.CodeHostType git_host = 3;
+}
+
 message GitRepoListResponse {
     repeated GitRepoEntry git_repos = 1;
 }
@@ -122,7 +128,7 @@ service CodeService {
     rpc GitRepoGet(GitRepoGetRequest) returns (GitRepoEntry);
     rpc GitRepoUpdate(GitProviderUpdateRequest) returns (GitRepoEntry);
     rpc GitRepoRemove(GitRepoRemoveRequest) returns (GitRepoEntry);
-    rpc GitRepoList(GitRepoListResponse) returns (GitRepoListResponse);
+    rpc GitRepoList(GitRepoListRequest) returns (GitRepoListResponse);
 
     // I think I still need things for polling.
     // They just don't need to be exposed to the user, or at least via config file

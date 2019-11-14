@@ -3,10 +3,11 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::build_metadata::{client::BuildServiceClient, BuildLogRequest};
+use orbital_headers::build_meta::{client::BuildServiceClient, BuildTarget};
 
 use crate::ORB_DEFAULT_URI;
 use tonic::Request;
+//use futures::stream;
 
 /// Local options for customizing logs request
 #[derive(Debug, StructOpt)]
@@ -24,17 +25,24 @@ pub async fn subcommand_handler(
 ) -> Result<(), SubcommandError> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    // Idea: Index should be Option<u32>
-    let request = Request::new(BuildLogRequest {
-        org: "org_name_goes_here".into(),
-        account: "account_name_goes_here".into(),
-        repo: "repo_name_goes_here".into(),
-        index: 0,
-    });
 
-    let response = client.get_build_logs(request).await?;
+    // Need to figure out how to handle the streaming response
 
-    println!("RESPONSE = {:?}", response);
+    //let request = Request::new(BuildTarget {
+    //    org: "org_name_goes_here".into(),
+    //    ..Default::default()
+    //});
+
+
+    //let mut stream = client
+    //.build_logs(Request::new(request))
+    //.await?
+    //.into_inner();
+
+    //while let Some(response) = stream.message().await? {
+    //    println!("RESPONSE = {:?}", response);
+    //}
+
 
     Ok(())
 }

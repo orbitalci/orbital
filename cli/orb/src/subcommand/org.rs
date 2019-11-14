@@ -3,7 +3,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::organization::{client::OrganizationServiceClient, OrgRegisterRequest};
+use orbital_headers::organization::{client::OrganizationServiceClient, OrgAddRequest};
 
 use crate::ORB_DEFAULT_URI;
 use tonic::Request;
@@ -25,11 +25,12 @@ pub async fn subcommand_handler(
     let mut client =
         OrganizationServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let request = Request::new(OrgRegisterRequest {
+    let request = Request::new(OrgAddRequest {
         name: "org_name_goes_here".into(),
+        ..Default::default()
     });
 
-    let response = client.register_org(request).await?;
+    let response = client.org_add(request).await?;
 
     println!("RESPONSE = {:?}", response);
 

@@ -990,6 +990,7 @@ name = "orbital_services"
 version = "0.1.0"
 dependencies = [
  "orbital_headers 0.1.0",
+ "tokio 0.2.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "tonic 0.1.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

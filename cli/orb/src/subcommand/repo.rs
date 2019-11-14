@@ -3,7 +3,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::organization::{client::OrganizationServiceClient, RepoRegisterRequest};
+use orbital_headers::code::{client::CodeServiceClient, GitRepoAddRequest};
 
 use crate::ORB_DEFAULT_URI;
 use tonic::Request;
@@ -23,15 +23,15 @@ pub async fn subcommand_handler(
     _local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
     let mut client =
-        OrganizationServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
+        CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let request = Request::new(RepoRegisterRequest {
+    let request = Request::new(GitRepoAddRequest {
         org: "org_name_goes_here".into(),
-        vcs_type: 0,
         uri: "uri_goes_here".into(),
+        ..Default::default()
     });
 
-    let response = client.register_repo(request).await?;
+    let response = client.git_repo_add(request).await?;
 
     println!("RESPONSE = {:?}", response);
 

@@ -4,8 +4,8 @@ use structopt::StructOpt;
 use crate::{GlobalOption, SubcommandError};
 
 use orbital_headers::{
-    build_metadata::server::BuildServiceServer, integration::server::IntegrationServiceServer,
-    organization::server::OrganizationServiceServer, secret::server::SecretServiceServer,
+    build_meta::server::BuildServiceServer, notify::server::NotifyServiceServer,
+    organization::server::OrganizationServiceServer, secret::server::SecretServiceServer, code::server::CodeServiceServer,
 };
 use orbital_services::OrbitalApi;
 
@@ -33,9 +33,10 @@ pub async fn subcommand_handler(
     debug!("Starting single-node server");
     Server::builder()
         .add_service(BuildServiceServer::new(OrbitalApi::default()))
-        .add_service(SecretServiceServer::new(OrbitalApi::default()))
-        .add_service(IntegrationServiceServer::new(OrbitalApi::default()))
+        .add_service(CodeServiceServer::new(OrbitalApi::default()))
+        .add_service(NotifyServiceServer::new(OrbitalApi::default()))
         .add_service(OrganizationServiceServer::new(OrbitalApi::default()))
+        .add_service(SecretServiceServer::new(OrbitalApi::default()))
         .serve(addr)
         .await?;
 
