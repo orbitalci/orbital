@@ -4,8 +4,9 @@ use structopt::StructOpt;
 use crate::{GlobalOption, SubcommandError};
 
 use orbital_headers::{
-    build_meta::server::BuildServiceServer, notify::server::NotifyServiceServer,
-    organization::server::OrganizationServiceServer, secret::server::SecretServiceServer, code::server::CodeServiceServer,
+    build_meta::server::BuildServiceServer, code::server::CodeServiceServer,
+    notify::server::NotifyServiceServer, organization::server::OrganizationServiceServer,
+    secret::server::SecretServiceServer,
 };
 use orbital_services::OrbitalApi;
 

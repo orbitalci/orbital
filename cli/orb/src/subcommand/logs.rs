@@ -25,14 +25,12 @@ pub async fn subcommand_handler(
 ) -> Result<(), SubcommandError> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-
     // Need to figure out how to handle the streaming response
 
     //let request = Request::new(BuildTarget {
     //    org: "org_name_goes_here".into(),
     //    ..Default::default()
     //});
-
 
     //let mut stream = client
     //.build_logs(Request::new(request))
@@ -42,7 +40,6 @@ pub async fn subcommand_handler(
     //while let Some(response) = stream.message().await? {
     //    println!("RESPONSE = {:?}", response);
     //}
-
 
     Ok(())
 }

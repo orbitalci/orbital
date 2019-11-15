@@ -3,7 +3,7 @@ members = [
     "cli/orb",
     "cli/orb/src/subcommand",
     "lib/config_parser",
-    "lib/container_builder",
+    "lib/agent_runtime",
     "lib/git_meta",
     "services",
 ]

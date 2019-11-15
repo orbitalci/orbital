@@ -22,8 +22,7 @@ pub async fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
-    let mut client =
-        CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
+    let mut client = CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(GitRepoAddRequest {
         org: "org_name_goes_here".into(),

@@ -2,7 +2,7 @@ extern crate structopt;
 use structopt::StructOpt;
 
 use config_parser::yaml as parser;
-use container_builder::docker;
+use agent_runtime::docker;
 use git_meta::git_info;
 
 use log::debug;

@@ -5,8 +5,6 @@ use structopt::StructOpt;
 pub mod build_cmd;
 /// Send a remote call for stopping a build
 pub mod cancel;
-/// Generate command line shell completions
-pub mod completion;
 /// For Orbital developers - direct access to internal libraries outside of production-workflows
 pub mod developer;
 /// Request logs
@@ -15,8 +13,6 @@ pub mod logs;
 pub mod operator;
 /// Organization-level commands
 pub mod org;
-/// Polling support
-pub mod poll;
 /// Git repo resource support
 pub mod repo;
 /// Secrets engine support
@@ -94,8 +90,8 @@ pub enum Subcommand {
     Org(org::SubcommandOption),
     /// Actions for Repos
     Repo(repo::SubcommandOption),
-    /// Actions for Polling
-    Poll(poll::SubcommandOption),
+    ///// Actions for Polling
+    //Poll(poll::SubcommandOption),
     /// Do things with secrets for builds
     Secret(secret::SubcommandOption),
     /// Get summary of a repo
@@ -106,8 +102,6 @@ pub enum Subcommand {
     /// Developer level commands and settings
     #[structopt(alias = "dev")]
     Developer(developer::DeveloperType),
-    /// Generate shell completions script for orb command
-    Completion(completion::SubcommandOption),
 }
 
 /// Global command line flags that get passed down to the final subcommand handler
@@ -120,6 +114,9 @@ pub struct GlobalOption {
     /// Dry-run mode. No changes will be made
     #[structopt(long)]
     pub check: bool,
+    /// Path to local repo. Defaults to current working directory
+    #[structopt(long)]
+    path: Option<String>,
 }
 
 /// Represents a single-parsed command line invocation from user

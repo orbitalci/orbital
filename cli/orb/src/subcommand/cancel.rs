@@ -24,7 +24,10 @@ pub async fn subcommand_handler(
 ) -> Result<(), SubcommandError> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let request = Request::new(BuildTarget { id: 0.into(), ..Default::default()});
+    let request = Request::new(BuildTarget {
+        id: 0.into(),
+        ..Default::default()
+    });
 
     let response = client.build_stop(request).await?;
 

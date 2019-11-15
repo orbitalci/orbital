@@ -4,8 +4,11 @@ use crate::{GlobalOption, SubcommandError};
 
 use log::debug;
 use std::env;
+use std::io;
 
-use container_builder;
+use agent_runtime;
+/// Generate command line shell completions
+pub mod completion;
 /// Access into internal Docker wrapper library
 pub mod docker;
 /// Access into internal git library
@@ -27,6 +30,8 @@ pub enum DeveloperType {
     Build(local_build::SubcommandOption),
     /// Test the config file parsers
     Validate(validate::SubcommandOption),
+    /// Generate shell completions script for orb command
+    Completion(completion::SubcommandOption),
 }
 
 /// Returns a `String` of the current working directory.
@@ -48,20 +53,20 @@ pub fn parse_envs_input(user_input: &Option<String>) -> Option<Vec<&str>> {
 }
 
 /// Wrapper function for `kv_csv_parser` to specifically handle volume mounts for `shiplift`
-/// Automatically add in the docker socket as defined by `container_builder::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
+/// Automatically add in the docker socket as defined by `agent_runtime::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
 ///
 /// For now, also assume passing in the current working directory as well
 pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
     let vols = match kv_csv_parser(user_input) {
         Some(v) => {
             let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(container_builder::DOCKER_SOCKET_VOLMAP);
+            new_vec.push(agent_runtime::DOCKER_SOCKET_VOLMAP);
             new_vec.extend(v.clone());
             Some(new_vec)
         }
         None => {
             let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(container_builder::DOCKER_SOCKET_VOLMAP);
+            new_vec.push(agent_runtime::DOCKER_SOCKET_VOLMAP);
 
             // There's got to be a better way to handle this...
             // https://stackoverflow.com/a/30527289/1672638
@@ -69,7 +74,7 @@ pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
                 format!(
                     "{}:{}",
                     get_current_workdir(),
-                    container_builder::ORBITAL_CONTAINER_WORKDIR,
+                    agent_runtime::ORBITAL_CONTAINER_WORKDIR,
                 )
                 .into_boxed_str(),
             ));
@@ -107,6 +112,14 @@ pub async fn subcommand_handler(
         }
         DeveloperType::Validate(sub_option) => {
             validate::subcommand_handler(global_option, sub_option).await
+        }
+        DeveloperType::Completion(shell) => {
+            GlobalOption::clap().gen_completions_to(
+                env!("CARGO_PKG_NAME"),
+                shell.into(),
+                &mut io::stdout(),
+            );
+            Ok(())
         }
     }
 }

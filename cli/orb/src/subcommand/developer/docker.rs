@@ -2,7 +2,7 @@ extern crate structopt;
 use std::str::FromStr;
 use structopt::StructOpt;
 
-use container_builder::docker;
+use agent_runtime::docker;
 use log::debug;
 
 use crate::{GlobalOption, SubcommandError};

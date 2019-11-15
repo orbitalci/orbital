@@ -1,7 +1,6 @@
 use structopt::StructOpt;
 
 extern crate clap;
-use std::io;
 
 use subcommand::{self, GlobalOption, Subcommand, SubcommandContext, SubcommandError};
 
@@ -16,6 +15,10 @@ async fn main() -> Result<(), SubcommandError> {
     match parsed.subcommand {
         Subcommand::Build(sub_option) => {
             subcommand::build_cmd::subcommand_handler(parsed.global_option, sub_option).await
+
+            // we can default to following the logs using the metadata info that we'll need to capture
+            //
+            //subcommand::logs::subcommand_handler(parsed.global_option, sub_option).await
         }
         Subcommand::Cancel(sub_option) => {
             subcommand::cancel::subcommand_handler(parsed.global_option, sub_option).await
@@ -29,9 +32,6 @@ async fn main() -> Result<(), SubcommandError> {
         Subcommand::Repo(sub_option) => {
             subcommand::repo::subcommand_handler(parsed.global_option, sub_option).await
         }
-        Subcommand::Poll(sub_option) => {
-            subcommand::poll::subcommand_handler(parsed.global_option, sub_option).await
-        }
         Subcommand::Secret(sub_option) => {
             subcommand::secret::subcommand_handler(parsed.global_option, sub_option).await
         }
@@ -43,14 +43,6 @@ async fn main() -> Result<(), SubcommandError> {
         }
         Subcommand::Developer(sub_command) => {
             subcommand::developer::subcommand_handler(parsed.global_option, sub_command).await
-        }
-        Subcommand::Completion(shell) => {
-            GlobalOption::clap().gen_completions_to(
-                env!("CARGO_PKG_NAME"),
-                shell.into(),
-                &mut io::stdout(),
-            );
-            Ok(())
         }
     }
 }
