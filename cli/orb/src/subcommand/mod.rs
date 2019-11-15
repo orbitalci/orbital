@@ -22,6 +22,10 @@ pub mod summary;
 
 use std::error::Error;
 use std::fmt;
+use std::env;
+use log::debug;
+
+use git2;
 
 // FIXME: This is called URI, but in fact is just a host:port. Need to figure out how to let server and client use this default
 /// Default URI for the Orbital service
@@ -75,6 +79,76 @@ impl From<tonic::transport::Error> for SubcommandError {
         SubcommandError::new(format!("{}", error).as_ref())
     }
 }
+
+impl From<git2::Error> for SubcommandError {
+    fn from(error: git2::Error) -> Self {
+        SubcommandError::new(format!("{}", error.message()).as_ref())
+    }
+}
+
+/// Returns a `String` of the current working directory.
+pub fn get_current_workdir() -> String {
+    let path = match env::current_dir() {
+        Ok(d) => format!("{}", d.display()),
+        Err(_) => String::from("."),
+    };
+
+    debug!("Current workdir on host: {}", &path);
+    path
+}
+
+/// Wrapper function for `kv_csv_parser` to specifically handle env vars for `shiplift`
+pub fn parse_envs_input(user_input: &Option<String>) -> Option<Vec<&str>> {
+    let envs = kv_csv_parser(user_input);
+    debug!("Env vars to set: {:?}", envs);
+    envs
+}
+
+/// Wrapper function for `kv_csv_parser` to specifically handle volume mounts for `shiplift`
+/// Automatically add in the docker socket as defined by `agent_runtime::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
+///
+/// For now, also assume passing in the current working directory as well
+pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
+    let vols = match kv_csv_parser(user_input) {
+        Some(v) => {
+            let mut new_vec: Vec<&str> = Vec::new();
+            new_vec.push(agent_runtime::DOCKER_SOCKET_VOLMAP);
+            new_vec.extend(v.clone());
+            Some(new_vec)
+        }
+        None => {
+            let mut new_vec: Vec<&str> = Vec::new();
+            new_vec.push(agent_runtime::DOCKER_SOCKET_VOLMAP);
+
+            // There's got to be a better way to handle this...
+            // https://stackoverflow.com/a/30527289/1672638
+            new_vec.push(Box::leak(
+                format!(
+                    "{}:{}",
+                    get_current_workdir(),
+                    agent_runtime::ORBITAL_CONTAINER_WORKDIR,
+                )
+                .into_boxed_str(),
+            ));
+            Some(new_vec)
+        }
+    };
+    debug!("Volumes to mount: {:?}", &vols);
+    vols
+}
+
+/// Returns an `Option<Vec<&str>>` after parsing a comma-separated string from the cli
+pub fn kv_csv_parser(kv_str: &Option<String>) -> Option<Vec<&str>> {
+    debug!("Parsing Option<String> input: {:?}", &kv_str);
+    match kv_str {
+        Some(n) => {
+            let kv_vec: Vec<&str> = n.split(",").collect();
+            return Some(kv_vec);
+        }
+        None => return None,
+    }
+}
+
 
 /// Top-level subcommands for `orb`
 #[derive(Debug, StructOpt)]

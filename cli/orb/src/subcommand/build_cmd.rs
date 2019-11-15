@@ -7,6 +7,8 @@ use orbital_headers::build_meta::{client::BuildServiceClient, BuildTarget};
 
 use crate::ORB_DEFAULT_URI;
 use tonic::Request;
+use git_meta::git_info;
+use config_parser::yaml as parser;
 
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
@@ -15,16 +17,25 @@ pub struct SubcommandOption {
     /// Environment variables to add to build 
     #[structopt(long)]
     envs: Option<String>,
+
+    /// Branch name (Default is to choose checked out branch)
+    #[structopt(long)]
+    branch: Option<String>,
+
+    /// Git commit hash (Default is to choose the remote HEAD commit)
+    #[structopt(long)]
+    hash: Option<String>,
 }
 
 /// Generates gRPC `BuildStartRequest` object and connects to *currently hardcoded* gRPC server and sends a request to `BuildService` server.
 pub async fn subcommand_handler(
-    _global_option: GlobalOption,
-    _local_option: SubcommandOption,
+    global_option: GlobalOption,
+    local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
         // Path
+    let path = &global_option.path.unwrap_or(crate::get_current_workdir());
 
         // Read in the git repo
         // uri
@@ -32,10 +43,13 @@ pub async fn subcommand_handler(
         // Branch
         // Commit
         //  
+
+    let git_context = git_info::get_git_info_from_path(path.as_str(), &local_option.branch, &local_option.hash)?;
         // If specified, check if commit is in branch
         // If We're in detatched head (commit not in branch) say so
         //
         // Open the orb.yml
+    let config = parser::load_orb_yaml(format!("{}/{}", &path, "orb.yml"))?;
         // Assuming Docker builder... (Stay focused!)
         // Get the docker container image
 
@@ -45,9 +59,10 @@ pub async fn subcommand_handler(
 
     let request = Request::new(BuildTarget {
         remote_uri: "http://1.2.3.4:5678".into(),
-        branch: "master".into(),
-        commit_hash: "deadbeef".into(),
-        // Docker image
+        branch: git_context.branch.into(),
+        commit_hash: git_context.id.into(),
+        docker_image: config.image.into(),
+        envs: local_option.envs.unwrap_or_default().into(),
         ..Default::default()
     });
 

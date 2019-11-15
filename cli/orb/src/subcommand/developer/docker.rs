@@ -125,8 +125,8 @@ pub async fn subcommand_handler(
             // Embedded commands with quotes, $(), or backtics not expected to work with this parsing
             let command_vec_slice: Vec<&str> = unwrapped_command.split_whitespace().collect();
 
-            let envs_vec = super::parse_envs_input(&local_option.env);
-            let vols_vec = super::parse_volumes_input(&local_option.volume);
+            let envs_vec = crate::parse_envs_input(&local_option.env);
+            let vols_vec = crate::parse_volumes_input(&local_option.volume);
 
             match docker::container_create(
                 local_option

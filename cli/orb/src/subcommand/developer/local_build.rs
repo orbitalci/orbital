@@ -45,10 +45,10 @@ pub async fn subcommand_handler(
     // Read orb.yml
 
     // If a path isn't given, then use the current working directory based on env var PWD
-    let path = &local_option.path.unwrap_or(super::get_current_workdir());
+    let path = &local_option.path.unwrap_or(crate::get_current_workdir());
 
-    let envs_vec = super::parse_envs_input(&local_option.env);
-    let vols_vec = super::parse_volumes_input(&local_option.volume);
+    let envs_vec = crate::parse_envs_input(&local_option.env);
+    let vols_vec = crate::parse_volumes_input(&local_option.volume);
 
     debug!(
         "Git info at path ({:?}): {:?}",
