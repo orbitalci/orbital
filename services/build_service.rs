@@ -25,7 +25,7 @@ impl BuildService for OrbitalApi {
     ) -> Result<Response<BuildMetadata>, Status> {
         let response = Response::new(BuildMetadata::default());
 
-        println!("DEBUG: {:?}", response);
+        //println!("DEBUG: {:?}", response);
 
         // Placeholder for things we need to check for eventually when we support more things
         // Org - We want the user to select their org, and cache it locally
@@ -42,13 +42,16 @@ impl BuildService for OrbitalApi {
 
         // Git clone for provider ( uri, branch, commit )
         let unwrapped_request = request.into_inner();
+        debug!("Received request: {:?}", unwrapped_request);
 
+        debug!("Cloning code into temp directory");
         let git_repo =
             clone::clone_temp_dir(&unwrapped_request.remote_uri).expect("Unable to clone repo");
 
         debug!("Loading orb.yml from path {:?}", &git_repo.as_path());
-        let config = parser::load_orb_yaml(format!("{:?}/{}", &git_repo.as_path(), "orb.yml"))
-            .expect("Unable to load orb.yml");
+        let config =
+            parser::load_orb_yaml(format!("{}/{}", &git_repo.as_path().display(), "orb.yml"))
+                .expect("Unable to load orb.yml");
 
         debug!("Pulling container: {:?}", config.image.clone());
         match docker::container_pull(config.image.as_str()) {

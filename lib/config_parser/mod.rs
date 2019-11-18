@@ -5,9 +5,9 @@ pub mod yaml;
 
 /*
 TODO:
-* Different kind of builder: docker as default, but directly on host should be offered 
+* Different kind of builder: docker as default, but directly on host should be offered
 * commands should go inside stages
-* notify 
+* notify
 * global env vars
 * stage dependent env vars
 * secrets
@@ -31,7 +31,7 @@ build:
         branch:
         slack:
           name:
-          message: 
+          message:
     - notify:
         branch:
         webhook:
