@@ -6,15 +6,17 @@ use crate::{GlobalOption, SubcommandError};
 use orbital_headers::build_meta::{client::BuildServiceClient, BuildTarget};
 
 use crate::ORB_DEFAULT_URI;
-use tonic::Request;
-use git_meta::git_info;
 use config_parser::yaml as parser;
+use git_meta::git_info;
+use tonic::Request;
+
+use log::debug;
 
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
-    /// Environment variables to add to build 
+    /// Environment variables to add to build
     #[structopt(long)]
     envs: Option<String>,
 
@@ -34,40 +36,42 @@ pub async fn subcommand_handler(
 ) -> Result<(), SubcommandError> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-        // Path
+    // Path
     let path = &global_option.path.unwrap_or(crate::get_current_workdir());
 
-        // Read in the git repo
-        // uri
-        // Git provider
-        // Branch
-        // Commit
-        //  
+    // Read in the git repo
+    // uri
+    // Git provider
+    // Branch
+    // Commit
+    //
 
-    let git_context = git_info::get_git_info_from_path(path.as_str(), &local_option.branch, &local_option.hash)?;
-        // If specified, check if commit is in branch
-        // If We're in detatched head (commit not in branch) say so
-        //
-        // Open the orb.yml
+    let git_context =
+        git_info::get_git_info_from_path(path.as_str(), &local_option.branch, &local_option.hash)?;
+    // If specified, check if commit is in branch
+    // If We're in detatched head (commit not in branch) say so
+    //
+    // Open the orb.yml
     let config = parser::load_orb_yaml(format!("{}/{}", &path, "orb.yml"))?;
-        // Assuming Docker builder... (Stay focused!)
-        // Get the docker container image
+    // Assuming Docker builder... (Stay focused!)
+    // Get the docker container image
 
-        // Org - default (Future: How can we cache this client-side?)
-        // 
-
+    // Org - default (Future: How can we cache this client-side?)
+    //
 
     let request = Request::new(BuildTarget {
-        remote_uri: "http://1.2.3.4:5678".into(),
-        branch: git_context.branch.into(),
-        commit_hash: git_context.id.into(),
-        docker_image: config.image.into(),
-        envs: local_option.envs.unwrap_or_default().into(),
+        remote_uri: git_context.uri,
+        git_provider: git_context.provider,
+        branch: git_context.branch,
+        commit_hash: git_context.id,
+        docker_image: config.image,
+        envs: local_option.envs.unwrap_or_default(),
         ..Default::default()
     });
 
-    let response = client.build_start(request).await?;
+    debug!("Request for build: {:?}", &request);
 
+    let response = client.build_start(request).await?;
     println!("RESPONSE = {:?}", response);
 
     Ok(())

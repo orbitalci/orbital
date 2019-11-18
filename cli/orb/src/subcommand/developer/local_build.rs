@@ -1,8 +1,8 @@
 extern crate structopt;
 use structopt::StructOpt;
 
-use config_parser::yaml as parser;
 use agent_runtime::docker;
+use config_parser::yaml as parser;
 use git_meta::git_info;
 
 use log::debug;

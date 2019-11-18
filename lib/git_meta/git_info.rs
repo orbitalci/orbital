@@ -42,12 +42,14 @@ pub fn get_git_info_from_path(
     commit.account = remote_info.account;
     commit.repo = remote_info.repo;
     commit.branch = working_branch;
+    commit.uri = git_remote_from_repo(&local_repo)?;
 
     commit.id = format!("{}", working_commit?.id());
 
     Ok(commit)
 }
 
+// FIXME: Should not assume remote is origin. This will cause issue in some dev workflows
 /// Returns the remote url after opening and validating repo from the local path
 pub fn git_remote_from_path(path: &str) -> Result<String, git2::Error> {
     let r = get_local_repo_from_path(path)?;

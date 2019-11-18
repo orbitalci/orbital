@@ -1,3 +1,5 @@
+/// Helper functions for cloning repos
+pub mod clone;
 /// Helper functions for parsing local git repos and deriving Orbital accounting info
 pub mod git_info;
 
@@ -9,6 +11,7 @@ pub struct GitCommitContext {
     pub id: String,
     pub account: String,
     pub repo: String,
+    pub uri: String,
 }
 
 /// Parsed from a remote git uri

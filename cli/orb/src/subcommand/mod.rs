@@ -20,10 +20,10 @@ pub mod secret;
 /// Historical data for users
 pub mod summary;
 
+use log::debug;
+use std::env;
 use std::error::Error;
 use std::fmt;
-use std::env;
-use log::debug;
 
 use git2;
 
@@ -148,7 +148,6 @@ pub fn kv_csv_parser(kv_str: &Option<String>) -> Option<Vec<&str>> {
         None => return None,
     }
 }
-
 
 /// Top-level subcommands for `orb`
 #[derive(Debug, StructOpt)]

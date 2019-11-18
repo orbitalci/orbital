@@ -8,7 +8,10 @@ edition = "2018"
 tonic = { version = "0.1.0-alpha.6", features = [ "rustls"] }
 orbital_headers = { path = "../models/orbital_headers" }
 tokio = "=0.2.0-alpha.6"
-
+git_meta = { path = "../lib/git_meta" }
+config_parser = { path = "../lib/config_parser" }
+agent_runtime = { path = "../lib/agent_runtime" }
+log = "0.4"
 
 [lib]
 name = "orbital_services"
