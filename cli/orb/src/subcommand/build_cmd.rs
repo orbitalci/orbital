@@ -11,6 +11,7 @@ use git_meta::git_info;
 use tonic::Request;
 
 use log::debug;
+use std::path::Path;
 
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
@@ -52,7 +53,7 @@ pub async fn subcommand_handler(
     // If We're in detatched head (commit not in branch) say so
     //
     // Open the orb.yml
-    let config = parser::load_orb_yaml(format!("{}/{}", &path, "orb.yml"))?;
+    let config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path, "orb.yml")))?;
     // Assuming Docker builder... (Stay focused!)
     // Get the docker container image
 

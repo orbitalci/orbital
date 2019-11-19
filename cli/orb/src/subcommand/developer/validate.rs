@@ -2,6 +2,7 @@ extern crate structopt;
 use structopt::StructOpt;
 
 use config_parser::yaml as parser;
+use std::path::Path;
 
 use crate::{GlobalOption, SubcommandError};
 
@@ -21,7 +22,7 @@ pub async fn subcommand_handler(
     local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
     if let Some(yaml_file) = local_option.file {
-        match parser::load_orb_yaml(yaml_file) {
+        match parser::load_orb_yaml(Path::new(&yaml_file)) {
             Ok(_c) => Ok(()),
             Err(_e) => Err(SubcommandError::new("Config file failed validation")),
         }

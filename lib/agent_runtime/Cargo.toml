@@ -10,6 +10,7 @@ tokio = "0.1"
 log = "0.4"
 git_meta = { path = "../git_meta" }
 mktemp = "0.4"
+config_parser = { path = "../config_parser" }
 
 [lib]
 name = "agent_runtime"

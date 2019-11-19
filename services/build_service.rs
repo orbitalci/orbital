@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 
 use crate::OrbitalServiceError;
 use agent_runtime::{build_engine, docker};
-use config_parser::yaml as parser;
+//use config_parser::yaml as parser;
 use git_meta::{clone, GitCredentials};
 
 use super::OrbitalApi;
@@ -16,6 +16,7 @@ use super::OrbitalApi;
 use log::debug;
 
 use std::path::Path;
+use std::time::Duration;
 
 /// Implementation of protobuf derived `BuildService` trait
 #[tonic::async_trait]
@@ -25,8 +26,6 @@ impl BuildService for OrbitalApi {
         &self,
         request: Request<BuildTarget>,
     ) -> Result<Response<BuildMetadata>, Status> {
-        let response = Response::new(BuildMetadata::default());
-
         //println!("DEBUG: {:?}", response);
 
         // Placeholder for things we need to check for eventually when we support more things
@@ -58,83 +57,51 @@ impl BuildService for OrbitalApi {
             .expect("Unable to clone repo");
 
         debug!("Loading orb.yml from path {:?}", &git_repo.as_path());
-        let config =
-            parser::load_orb_yaml(format!("{}/{}", &git_repo.as_path().display(), "orb.yml"))
-                .expect("Unable to load orb.yml");
+        let config = build_engine::load_orb_config(Path::new(&format!(
+            "{}/{}",
+            &git_repo.as_path().display(),
+            "orb.yml"
+        )))
+        .expect("Unable to load orb.yml");
 
         debug!("Pulling container: {:?}", config.image.clone());
-        match docker::container_pull(config.image.as_str()) {
+        match build_engine::docker_container_pull(config.image.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
-            Err(_) => {
-                return Err(OrbitalServiceError::new(&format!(
-                    "Could not pull image {}",
-                    &config.image
-                ))
-                .into())
-            }
+            Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
         // TODO: Inject the dynamic build env vars here
-        let envs_vec = crate::parse_envs_input(&None);
-        let vols_vec = crate::parse_volumes_input(&None);
+        let envs_vec = agent_runtime::parse_envs_input(&None);
+        let vols_vec = agent_runtime::parse_volumes_input(&None);
 
         // Create a new container
         debug!("Creating container");
-        let default_command_w_timeout = vec!["sleep", "1h"];
-        let container_id = match docker::container_create(
+        let container_id = match build_engine::docker_container_create(
             config.image.as_str(),
-            default_command_w_timeout,
             envs_vec,
             vols_vec,
+            Duration::from_secs(crate::DEFAULT_BUILD_TIMEOUT),
         ) {
-            Ok(container_id) => container_id,
-            Err(_) => {
-                return Err(OrbitalServiceError::new(&format!(
-                    "Could not create image {}",
-                    &config.image
-                ))
-                .into())
-            }
+            Ok(id) => id,
+            Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
         // Start a docker container
-
-        match docker::container_start(&container_id) {
-            Ok(container_id) => container_id,
-            Err(_) => {
-                return Err(OrbitalServiceError::new(&format!(
-                    "Could not start image {}",
-                    &config.image
-                ))
-                .into())
-            }
-        }
+        debug!("Start container");
+        match build_engine::docker_container_start(config.image.as_str()) {
+            Ok(ok) => ok, // The successful result doesn't matter
+            Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
+        };
 
         // TODO: Make sure tests try to exec w/o starting the container
         // Exec into the new container
         debug!("Sending commands into container");
-        for command in config.command.iter() {
-            // Build the exec string
-            let wrapped_command = format!("{} | tee -a /proc/1/fd/1", &command);
+        match build_engine::docker_container_exec(config.image.as_str(), config.command) {
+            Ok(ok) => ok, // The successful result doesn't matter
+            Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
+        };
 
-            let container_command = vec!["/bin/sh", "-c", wrapped_command.as_ref()];
-
-            match docker::container_exec(container_id.as_ref(), container_command.clone()) {
-                Ok(output) => {
-                    debug!("Command: {:?}", &command);
-                    debug!("Output: {:?}", &output);
-                    output
-                }
-                Err(_) => {
-                    return Err(OrbitalServiceError::new(&format!(
-                        "Could not create image {}",
-                        &config.image
-                    ))
-                    .into())
-                }
-            }
-        }
-
+        let response = Response::new(BuildMetadata::default());
         Ok(response)
     }
 

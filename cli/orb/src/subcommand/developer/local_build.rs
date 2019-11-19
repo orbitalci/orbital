@@ -4,6 +4,7 @@ use structopt::StructOpt;
 use agent_runtime::docker;
 use config_parser::yaml as parser;
 use git_meta::git_info;
+use std::path::Path;
 
 use log::debug;
 
@@ -60,7 +61,7 @@ pub async fn subcommand_handler(
     // TODO: Also handle file being named orb.yaml
     // Look for a file named orb.yml
     debug!("Loading orb.yml from path {:?}", &path);
-    let config = parser::load_orb_yaml(format!("{}/{}", &path, "orb.yml"))?;
+    let config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path, "orb.yml")))?;
 
     debug!("Pulling container: {:?}", config.image.clone());
     match docker::container_pull(config.image.as_str()) {
