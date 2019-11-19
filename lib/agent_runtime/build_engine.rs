@@ -11,9 +11,10 @@ use std::time::Duration;
 /// Create a temporary directory on the host, and clone a repo
 pub fn clone_repo(
     uri: &str,
+    branch: &str,
     credentials: git_meta::GitCredentials,
 ) -> Result<mktemp::Temp, Box<dyn Error>> {
-    git_meta::clone::clone_temp_dir(uri, credentials)
+    git_meta::clone::clone_temp_dir(uri, branch, credentials)
 }
 
 /// Load orb.yml from a filepath

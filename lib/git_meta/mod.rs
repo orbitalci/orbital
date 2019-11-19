@@ -26,16 +26,20 @@ pub struct GitSshRemote {
 }
 
 /// Types of supported git authentication
+#[derive(Clone)]
 pub enum GitCredentials {
     /// Public repo
     Public,
     /// Username, PrivateKey, PublicKey, Passphrase
     SshKey {
-        username: String,
+        username: &'static str,
         public_key: Option<&'static Path>,
         private_key: &'static Path,
-        passphrase: Option<String>,
+        passphrase: Option<&'static str>,
     },
     /// Username, Password
-    UserPassPlaintext { username: String, password: String },
+    UserPassPlaintext {
+        username: &'static str,
+        password: &'static str,
+    },
 }

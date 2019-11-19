@@ -46,15 +46,19 @@ impl BuildService for OrbitalApi {
         debug!("Received request: {:?}", unwrapped_request);
 
         let git_creds = GitCredentials::SshKey {
-            username: "git".to_string(),
+            username: "git",
             public_key: Some(Path::new("/home/telant/.ssh/id_ed25519.pub")),
             private_key: &Path::new("/home/telant/.ssh/id_ed25519"),
             passphrase: None,
         };
 
         debug!("Cloning code into temp directory");
-        let git_repo = build_engine::clone_repo(&unwrapped_request.remote_uri, git_creds)
-            .expect("Unable to clone repo");
+        let git_repo = build_engine::clone_repo(
+            &unwrapped_request.remote_uri,
+            &unwrapped_request.branch,
+            git_creds,
+        )
+        .expect("Unable to clone repo");
 
         debug!("Loading orb.yml from path {:?}", &git_repo.as_path());
         let config = build_engine::load_orb_config(Path::new(&format!(

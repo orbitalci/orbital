@@ -65,6 +65,7 @@ pub async fn subcommand_handler(
         Action::Clone => {
             let temp_dir = build_engine::clone_repo(
                 "https://github.com/alexcrichton/git2-rs",
+                "master",
                 GitCredentials::Public,
             )?;
 
