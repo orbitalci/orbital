@@ -3,7 +3,9 @@ use std::fs;
 use std::str::FromStr;
 use structopt::StructOpt;
 
-use git_meta::{clone, git_info};
+use git_meta::{git_info, GitCredentials};
+
+use agent_runtime::build_engine;
 
 use crate::{GlobalOption, SubcommandError};
 
@@ -61,7 +63,10 @@ pub async fn subcommand_handler(
             );
         }
         Action::Clone => {
-            let temp_dir = clone::clone_temp_dir("https://github.com/alexcrichton/git2-rs")?;
+            let temp_dir = build_engine::clone_repo(
+                "https://github.com/alexcrichton/git2-rs",
+                GitCredentials::Public,
+            )?;
 
             let paths = fs::read_dir(&temp_dir.as_path()).unwrap();
             for path in paths {

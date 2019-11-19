@@ -9,7 +9,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "agent_runtime"
 version = "0.1.0"
 dependencies = [
+ "git_meta 0.1.0",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mktemp 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "shiplift 0.5.1 (git+https://github.com/softprops/shiplift.git)",
  "tokio 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

@@ -3,6 +3,8 @@ pub mod clone;
 /// Helper functions for parsing local git repos and deriving Orbital accounting info
 pub mod git_info;
 
+use std::path::Path;
+
 /// This is the git reference that will be used for build requests
 #[derive(Debug, Default)]
 pub struct GitCommitContext {
@@ -21,4 +23,19 @@ pub struct GitSshRemote {
     provider: String,
     account: String,
     repo: String,
+}
+
+/// Types of supported git authentication
+pub enum GitCredentials {
+    /// Public repo
+    Public,
+    /// Username, PrivateKey, PublicKey, Passphrase
+    SshKey {
+        username: String,
+        public_key: Option<&'static Path>,
+        private_key: &'static Path,
+        passphrase: Option<String>,
+    },
+    /// Username, Password
+    UserPassPlaintext { username: String, password: String },
 }

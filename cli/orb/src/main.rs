@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 extern crate clap;
 
-use subcommand::{self, GlobalOption, Subcommand, SubcommandContext, SubcommandError};
+use subcommand::{self, Subcommand, SubcommandContext, SubcommandError};
 
 /// Parse command line input, and route into one of the subcommand handlers along with global options
 #[tokio::main]

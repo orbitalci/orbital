@@ -7,13 +7,15 @@ use tonic::{Request, Response, Status};
 use tokio::sync::mpsc;
 
 use crate::OrbitalServiceError;
-use agent_runtime::docker;
+use agent_runtime::{build_engine, docker};
 use config_parser::yaml as parser;
-use git_meta::clone;
+use git_meta::{clone, GitCredentials};
 
 use super::OrbitalApi;
 
 use log::debug;
+
+use std::path::Path;
 
 /// Implementation of protobuf derived `BuildService` trait
 #[tonic::async_trait]
@@ -44,9 +46,16 @@ impl BuildService for OrbitalApi {
         let unwrapped_request = request.into_inner();
         debug!("Received request: {:?}", unwrapped_request);
 
+        let git_creds = GitCredentials::SshKey {
+            username: "git".to_string(),
+            public_key: Some(Path::new("/home/telant/.ssh/id_ed25519.pub")),
+            private_key: &Path::new("/home/telant/.ssh/id_ed25519"),
+            passphrase: None,
+        };
+
         debug!("Cloning code into temp directory");
-        let git_repo =
-            clone::clone_temp_dir(&unwrapped_request.remote_uri).expect("Unable to clone repo");
+        let git_repo = build_engine::clone_repo(&unwrapped_request.remote_uri, git_creds)
+            .expect("Unable to clone repo");
 
         debug!("Loading orb.yml from path {:?}", &git_repo.as_path());
         let config =
@@ -57,10 +66,11 @@ impl BuildService for OrbitalApi {
         match docker::container_pull(config.image.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(_) => {
-                return Err(Status::new(
-                    tonic::Code::Aborted,
-                    &format!("Could not pull image {}", &config.image),
+                return Err(OrbitalServiceError::new(&format!(
+                    "Could not pull image {}",
+                    &config.image
                 ))
+                .into())
             }
         };
 

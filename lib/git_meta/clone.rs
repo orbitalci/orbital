@@ -4,12 +4,24 @@ use mktemp::Temp;
 use std::error::Error;
 use std::path::Path;
 
+// TODO: Need a way to switch between a public and private repo
+// Idea: Create an enum:
+
 /// Create a temporary directory with mktemp, clone given uri into it.
 /// Return mktemp directory, which will delete when out of scope
-pub fn clone_temp_dir(uri: &str) -> Result<Temp, Box<dyn Error>> {
+pub fn clone_temp_dir(
+    uri: &str,
+    credentials: crate::GitCredentials,
+) -> Result<Temp, Box<dyn Error>> {
     let mut temp_dir = Temp::new_dir()?;
 
     debug!("Temp dir path: {:?}", &temp_dir.as_path());
+
+    match credentials {
+        Public => {}
+        SshKey => {}
+        UserPassPlaintext => {}
+    }
 
     let mut builder = RepoBuilder::new();
     let mut callbacks = RemoteCallbacks::new();

@@ -4,7 +4,6 @@ use crate::{GlobalOption, SubcommandError};
 
 use std::io;
 
-use agent_runtime;
 /// Generate command line shell completions
 pub mod completion;
 /// Access into internal Docker wrapper library
