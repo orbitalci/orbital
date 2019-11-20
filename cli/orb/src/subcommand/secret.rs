@@ -5,7 +5,7 @@ use crate::{GlobalOption, SubcommandError};
 
 use orbital_headers::secret::{client::SecretServiceClient, SecretCreateRequest};
 
-use crate::ORB_DEFAULT_URI;
+use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 /// Local options for customizing secrets request

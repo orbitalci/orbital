@@ -5,7 +5,7 @@ use crate::{GlobalOption, SubcommandError};
 
 use orbital_headers::code::{client::CodeServiceClient, GitRepoAddRequest};
 
-use crate::ORB_DEFAULT_URI;
+use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 /// Local options for customizing repo request

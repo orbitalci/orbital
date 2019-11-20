@@ -27,10 +27,6 @@ use std::fmt;
 
 use git2;
 
-// FIXME: This is called URI, but in fact is just a host:port. Need to figure out how to let server and client use this default
-/// Default URI for the Orbital service
-pub const ORB_DEFAULT_URI: &str = "127.0.0.1:50051";
-
 /// Internal error type used by all subcommand handlers. Implements `Error` trait.
 #[derive(Debug)]
 pub struct SubcommandError {

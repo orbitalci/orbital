@@ -15,8 +15,26 @@ pub mod organization_service;
 /// gRPC service for secrets CRUD
 pub mod secret_service;
 
+pub enum ServiceType {
+    Build,
+    Code,
+    Notify,
+    Org,
+    Secret,
+}
+// FIXME: This is called URI, but in fact is just a host:port. Need to figure out how to let server and client use this default
+/// Default URI for the Orbital service
+pub const ORB_DEFAULT_URI: &str = "127.0.0.1:50051";
+
 /// 1 hour, in seconds
 pub const DEFAULT_BUILD_TIMEOUT: u64 = 60 * 60 * 24;
+
+/// Return the uri for a given service
+pub fn get_service_uri(_svc: ServiceType) -> &'static str {
+    // TODO: Connect to consul and return a uri of the specified service
+
+    ORB_DEFAULT_URI
+}
 
 /// Bare struct for implmenting gRPC service traits
 #[derive(Clone, Debug, Default)]
@@ -67,6 +85,12 @@ impl From<agent_runtime::AgentRuntimeError> for OrbitalServiceError {
 impl From<tonic::Status> for OrbitalServiceError {
     fn from(error: tonic::Status) -> Self {
         OrbitalServiceError::new(&error.message().to_string())
+    }
+}
+
+impl From<tonic::transport::Error> for OrbitalServiceError {
+    fn from(error: tonic::transport::Error) -> Self {
+        OrbitalServiceError::new(format!("{}", error).as_ref())
     }
 }
 

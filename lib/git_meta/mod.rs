@@ -26,7 +26,7 @@ pub struct GitSshRemote {
 }
 
 /// Types of supported git authentication
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum GitCredentials {
     /// Public repo
     Public,

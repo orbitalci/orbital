@@ -2,6 +2,11 @@ use orbital_headers::build_meta::{
     server::BuildService, BuildLogResponse, BuildMetadata, BuildSummaryRequest,
     BuildSummaryResponse, BuildTarget,
 };
+
+use orbital_headers::code::{client::CodeServiceClient, GitRepoGetRequest,};
+use orbital_headers::secret::{client::SecretServiceClient, SecretGetRequest};
+use orbital_headers::orbital_types::SecretType;
+
 use tonic::{Request, Response, Status};
 
 use tokio::sync::mpsc;
@@ -11,12 +16,14 @@ use agent_runtime::{build_engine, docker};
 //use config_parser::yaml as parser;
 use git_meta::{clone, GitCredentials};
 
-use super::OrbitalApi;
+use super::{OrbitalApi, ServiceType};
 
 use log::debug;
 
 use std::path::Path;
 use std::time::Duration;
+
+use futures::executor::block_on;
 
 /// Implementation of protobuf derived `BuildService` trait
 #[tonic::async_trait]
@@ -30,7 +37,7 @@ impl BuildService for OrbitalApi {
 
         // Git clone for provider ( uri, branch, commit )
         let unwrapped_request = request.into_inner();
-        debug!("Received request: {:?}", unwrapped_request);
+        debug!("Received request: {:?}", &unwrapped_request);
 
         // Placeholder for things we need to check for eventually when we support more things
         // Org - We want the user to select their org, and cache it locally
@@ -44,6 +51,56 @@ impl BuildService for OrbitalApi {
 
         // Ocelot current takes all of the secrets from an org and throws it into the container.
         // We should probably follow suit until we know better
+
+
+        // Connect to the code service to deref the repo to the secret it uses
+
+        let mut code_client = block_on(CodeServiceClient::connect(format!(
+            "http://{}",
+            super::get_service_uri(ServiceType::Code)
+        //));
+        ))).expect("Unable to connect to Code service");
+
+        //match client.await {
+        //    Ok(m) => { m },
+        //    Err(e) => return Err(OrbitalServiceError::new("Unable to connect to Code service").into()),
+
+        //};
+
+        // Note: git_provider and git_host together are confusing
+        // The intention is to help select the method of discovering new commits
+        let request = Request::new(GitRepoGetRequest {
+            git_provider: unwrapped_request.clone().git_provider,
+            name: unwrapped_request.clone().git_repo,
+            git_host: 0, // Implement 'From' trait to handle &unwrapped_request.git_provider
+            uri: unwrapped_request.clone().remote_uri,
+            ..Default::default()
+        });
+
+        let _response = block_on(code_client.git_repo_get(request)).expect("Unable to get repo info");
+        //let response = match client.git_repo_get(request).await {
+        //    Ok(r) => r,
+        //    Err(e) => return Err(OrbitalServiceError::new("There was an error getting git repo").into()),
+        //};
+
+
+
+
+        // Get the secret
+
+        //let mut client = SecretServiceClient::connect(format!(
+        //    "http://{}",
+        //    super::get_service_uri(ServiceType::Secret)
+        //))
+        //.await?;
+
+        //let request = Request::new(SecretGetRequest {
+        //    name: format!("{}/{}", &unwrapped_request.git_provider, &unwrapped_request.git_repo),
+        //    secret_type: SecretType::,
+        //    ..Default::default()
+        //});
+
+        //let response = client.secret_get(request).await?;
 
         let git_creds = GitCredentials::SshKey {
             username: "git",

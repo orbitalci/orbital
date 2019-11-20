@@ -5,9 +5,9 @@ use crate::{GlobalOption, SubcommandError};
 
 use orbital_headers::build_meta::{client::BuildServiceClient, BuildTarget};
 
-use crate::ORB_DEFAULT_URI;
 use config_parser::yaml as parser;
 use git_meta::git_info;
+use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 use log::debug;

@@ -10,7 +10,7 @@ use orbital_headers::{
 };
 use orbital_services::OrbitalApi;
 
-use crate::ORB_DEFAULT_URI;
+use orbital_services::ORB_DEFAULT_URI;
 
 use log::debug;
 use tonic::transport::Server;
