@@ -18,6 +18,7 @@ pub fn clone_temp_dir(
     let temp_dir = Temp::new_dir()?;
 
     debug!("Temp dir path: {:?}", &temp_dir.as_path());
+    debug!("GitCredentials: {:?}", &credentials);
 
     match credentials {
         GitCredentials::Public => {

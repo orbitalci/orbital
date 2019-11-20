@@ -28,6 +28,10 @@ impl BuildService for OrbitalApi {
     ) -> Result<Response<BuildMetadata>, Status> {
         //println!("DEBUG: {:?}", response);
 
+        // Git clone for provider ( uri, branch, commit )
+        let unwrapped_request = request.into_inner();
+        debug!("Received request: {:?}", unwrapped_request);
+
         // Placeholder for things we need to check for eventually when we support more things
         // Org - We want the user to select their org, and cache it locally
         // Is Repo in the system? Halt if not
@@ -41,14 +45,10 @@ impl BuildService for OrbitalApi {
         // Ocelot current takes all of the secrets from an org and throws it into the container.
         // We should probably follow suit until we know better
 
-        // Git clone for provider ( uri, branch, commit )
-        let unwrapped_request = request.into_inner();
-        debug!("Received request: {:?}", unwrapped_request);
-
         let git_creds = GitCredentials::SshKey {
             username: "git",
-            public_key: Some(Path::new("/home/telant/.ssh/id_ed25519.pub")),
-            private_key: &Path::new("/home/telant/.ssh/id_ed25519"),
+            public_key: Some(Path::new("/home/vagrant/.ssh/id_ecdsa.pub")),
+            private_key: &Path::new("/home/vagrant/.ssh/id_ecdsa"),
             passphrase: None,
         };
 
@@ -92,7 +92,7 @@ impl BuildService for OrbitalApi {
 
         // Start a docker container
         debug!("Start container");
-        match build_engine::docker_container_start(config.image.as_str()) {
+        match build_engine::docker_container_start(container_id.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
@@ -100,7 +100,7 @@ impl BuildService for OrbitalApi {
         // TODO: Make sure tests try to exec w/o starting the container
         // Exec into the new container
         debug!("Sending commands into container");
-        match build_engine::docker_container_exec(config.image.as_str(), config.command) {
+        match build_engine::docker_container_exec(container_id.as_str(), config.command) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };

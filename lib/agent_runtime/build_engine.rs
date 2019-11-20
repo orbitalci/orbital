@@ -52,12 +52,12 @@ pub fn docker_container_create(
 }
 
 /// Start a docker container
-pub fn docker_container_start(image: &str) -> Result<(), Box<dyn Error>> {
-    match docker::container_start(image) {
+pub fn docker_container_start(container_id: &str) -> Result<(), Box<dyn Error>> {
+    match docker::container_start(container_id) {
         Ok(ok) => Ok(ok), // The successful result doesn't matter
         Err(_) => Err(Box::new(AgentRuntimeError::new(&format!(
-            "Could not pull image {}",
-            image
+            "Could not start container_id {}",
+            container_id
         )))),
     }
 }
