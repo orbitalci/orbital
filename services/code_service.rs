@@ -8,6 +8,8 @@ use tonic::{Request, Response, Status};
 
 use super::OrbitalApi;
 
+use log::debug;
+
 /// Implementation of protobuf derived `CodeService` trait
 #[tonic::async_trait]
 impl CodeService for OrbitalApi {
@@ -55,9 +57,12 @@ impl CodeService for OrbitalApi {
 
     async fn git_repo_get(
         &self,
-        _request: Request<GitRepoGetRequest>,
+        request: Request<GitRepoGetRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-        unimplemented!()
+
+        debug!("Got request: {:?}", &request);
+
+        Ok(Response::new(GitRepoEntry { ..Default::default() }))
     }
 
     async fn git_repo_update(
