@@ -3,28 +3,27 @@ use orbital_headers::build_meta::{
     BuildSummaryResponse, BuildTarget,
 };
 
-use orbital_headers::code::{client::CodeServiceClient, GitRepoGetRequest,};
+use orbital_headers::code::{client::CodeServiceClient, GitRepoGetRequest};
+use orbital_headers::orbital_types::{JobState, SecretType};
 use orbital_headers::secret::{client::SecretServiceClient, SecretGetRequest};
-use orbital_headers::orbital_types::SecretType;
 
 use tonic::{Request, Response, Status};
 
 use tokio::sync::mpsc;
 
 use crate::OrbitalServiceError;
-use agent_runtime::{build_engine, docker};
-//use config_parser::yaml as parser;
-use git_meta::{clone, GitCredentials};
+use agent_runtime::build_engine;
+use git_meta::GitCredentials;
 
 use super::{OrbitalApi, ServiceType};
 
 use log::debug;
 
+use prost_types::Timestamp;
 use std::path::Path;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
-use futures::executor::block_on;
-
+// TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
 #[tonic::async_trait]
 impl BuildService for OrbitalApi {
@@ -34,6 +33,14 @@ impl BuildService for OrbitalApi {
         request: Request<BuildTarget>,
     ) -> Result<Response<BuildMetadata>, Status> {
         //println!("DEBUG: {:?}", response);
+
+        let start_timestamp = Timestamp {
+            seconds: SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
+            nanos: 0,
+        };
 
         // Git clone for provider ( uri, branch, commit )
         let unwrapped_request = request.into_inner();
@@ -52,21 +59,19 @@ impl BuildService for OrbitalApi {
         // Ocelot current takes all of the secrets from an org and throws it into the container.
         // We should probably follow suit until we know better
 
-
         // Connect to the code service to deref the repo to the secret it uses
 
         debug!("Connecting to the Code service");
-        //let mut code_client = block_on(CodeServiceClient::connect(format!(
         let code_client_conn_req = CodeServiceClient::connect(format!(
             "http://{}",
             super::get_service_uri(ServiceType::Code)
-        //));
-        //)).expect("Unable to connect to Code service");
         ));
 
         let mut code_client = match code_client_conn_req.await {
-            Ok(connection_handler) =>  connection_handler,
-            Err(e) => return Err(OrbitalServiceError::new("Unable to connect to Code service").into()),
+            Ok(connection_handler) => connection_handler,
+            Err(e) => {
+                return Err(OrbitalServiceError::new("Unable to connect to Code service").into())
+            }
         };
 
         debug!("Building request to Code service for git repo");
@@ -86,12 +91,12 @@ impl BuildService for OrbitalApi {
 
         let response = match request.await {
             Ok(r) => r,
-            Err(e) => return Err(OrbitalServiceError::new("There was an error getting git repo").into()),
+            Err(e) => {
+                return Err(OrbitalServiceError::new("There was an error getting git repo").into())
+            }
         };
 
         println!("Git repo get response: {:?}", &response);
-
-
 
         // Get the secret
 
@@ -112,7 +117,7 @@ impl BuildService for OrbitalApi {
         let git_creds = GitCredentials::SshKey {
             username: "git",
             public_key: None,
-            private_key: &Path::new("/home/vagrant/.ssh/id_ecdsa"),
+            private_key: &Path::new("/home/telant/.ssh/id_ed25519"),
             passphrase: None,
         };
 
@@ -169,7 +174,29 @@ impl BuildService for OrbitalApi {
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
-        let response = Response::new(BuildMetadata::default());
+        debug!("Stopping the container");
+        match build_engine::docker_container_stop(container_id.as_str()) {
+            Ok(ok) => ok, // The successful result doesn't matter
+            Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
+        };
+
+        let end_timestamp = Timestamp {
+            seconds: SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
+            nanos: 0,
+        };
+
+        let build_metadata = BuildMetadata {
+            build: Some(unwrapped_request),
+            start_time: Some(start_timestamp),
+            end_time: Some(end_timestamp),
+            //build_state: JobState::Done.into(),
+            ..Default::default()
+        };
+
+        let response = Response::new(build_metadata);
         Ok(response)
     }
 

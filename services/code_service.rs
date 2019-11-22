@@ -59,10 +59,14 @@ impl CodeService for OrbitalApi {
         &self,
         request: Request<GitRepoGetRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-
         debug!("Got request: {:?}", &request);
 
-        Ok(Response::new(GitRepoEntry { ..Default::default() }))
+
+        // Connect to database. Query for the repo
+
+        Ok(Response::new(GitRepoEntry {
+            ..Default::default()
+        }))
     }
 
     async fn git_repo_update(

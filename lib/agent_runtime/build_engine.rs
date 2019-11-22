@@ -62,6 +62,17 @@ pub fn docker_container_start(container_id: &str) -> Result<(), Box<dyn Error>> 
     }
 }
 
+/// Stop a docker container
+pub fn docker_container_stop(container_id: &str) -> Result<(), Box<dyn Error>> {
+    match docker::container_stop(container_id) {
+        Ok(ok) => Ok(ok), // The successful result doesn't matter
+        Err(_) => Err(Box::new(AgentRuntimeError::new(&format!(
+            "Could not start container_id {}",
+            container_id
+        )))),
+    }
+}
+
 /// Loop over commands, exec into docker container
 pub fn docker_container_exec(
     container_id: &str,

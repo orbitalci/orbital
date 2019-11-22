@@ -1090,6 +1090,7 @@ dependencies = [
  "git_meta 0.1.0",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "orbital_headers 0.1.0",
+ "prost-types 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio 0.2.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "tonic 0.1.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
