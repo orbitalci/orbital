@@ -8,3 +8,6 @@ members = [
     "lib/hashicorp_stack",
     "services",
 ]
+
+[patch.crates-io]
+hashicorp_vault = { git = "https://github.com/tjtelan/vault-rs"}
