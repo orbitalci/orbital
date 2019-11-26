@@ -4,6 +4,9 @@ use orbital_headers::code::{
     GitProviderUpdateRequest, GitRepoAddRequest, GitRepoEntry, GitRepoGetRequest,
     GitRepoListRequest, GitRepoListResponse, GitRepoRemoveRequest,
 };
+
+use orbital_headers::orbital_types::*;
+
 use tonic::{Request, Response, Status};
 
 use super::OrbitalApi;
@@ -61,12 +64,20 @@ impl CodeService for OrbitalApi {
     ) -> Result<Response<GitRepoEntry>, Status> {
         debug!("Got request: {:?}", &request);
 
+        let unwrapped_request = request.into_inner();
 
         // Connect to database. Query for the repo
+        // let git_repo = db_get_repo(org, git_provider, git_repo_name)-> GitRepoEntry
 
-        Ok(Response::new(GitRepoEntry {
-            ..Default::default()
-        }))
+        let mut git_repo = GitRepoEntry::default();
+        git_repo.org = "default_org".into();
+        //git_repo.user = "git",
+        git_repo.secret_type = SecretType::SshKey.into(); // TODO: Need an impl From i32 to orbital_types::SecretType
+        git_repo.uri = unwrapped_request.uri;
+        git_repo.auth_data =
+            "secret/orbital/default_org/sshkey/github.com/level11consulting/orbitalci".into();
+
+        Ok(Response::new(git_repo))
     }
 
     async fn git_repo_update(

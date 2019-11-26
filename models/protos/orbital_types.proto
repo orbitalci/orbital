@@ -41,7 +41,7 @@ enum SecretType {
     API_KEY = 2;
     ENV_VAR = 3;
     FILE = 4;
-    SSH_PEM = 5;
+    SSH_KEY = 5;
     DOCKER_REGISTRY = 6;
     NPM_REPO = 7;
     PYPI_REGISTRY = 8;

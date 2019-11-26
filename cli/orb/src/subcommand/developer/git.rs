@@ -9,7 +9,7 @@ use agent_runtime::build_engine;
 
 use crate::{GlobalOption, SubcommandError};
 
-use log::debug;
+//use log::debug;
 
 /// Local options for customizing git library call
 #[derive(Debug, StructOpt)]

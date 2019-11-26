@@ -24,6 +24,5 @@ pub mod organization {
 }
 
 /// Generated Rust from protobufs for enums used over multiple packages
-pub mod orbital_types {
-    tonic::include_proto!("orbital_types");
-}
+/// Additionally, `From` traits implemented for types;
+pub mod orbital_types;

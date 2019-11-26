@@ -4,7 +4,7 @@ use orbital_headers::build_meta::{
 };
 
 use orbital_headers::code::{client::CodeServiceClient, GitRepoGetRequest};
-use orbital_headers::orbital_types::{JobState, SecretType};
+use orbital_headers::orbital_types::{CodeHostType, JobState};
 use orbital_headers::secret::{client::SecretServiceClient, SecretGetRequest};
 
 use tonic::{Request, Response, Status};
@@ -66,58 +66,79 @@ impl BuildService for OrbitalApi {
             "http://{}",
             super::get_service_uri(ServiceType::Code)
         ));
-
         let mut code_client = match code_client_conn_req.await {
             Ok(connection_handler) => connection_handler,
-            Err(e) => {
+            Err(_e) => {
                 return Err(OrbitalServiceError::new("Unable to connect to Code service").into())
             }
         };
 
-        debug!("Building request to Code service for git repo");
+        debug!("Building request to Code service for git repo info");
 
         // Note: git_provider and git_host together are confusing
         // The intention is to help select the method of discovering new commits
         let request_payload = Request::new(GitRepoGetRequest {
+            // Add org
             git_provider: unwrapped_request.clone().git_provider,
             name: unwrapped_request.clone().git_repo,
-            git_host: 0, // Implement 'From' trait to handle &unwrapped_request.git_provider
+            git_host: CodeHostType::Github.into(), // Implement 'From' trait to handle &unwrapped_request.git_provider
             uri: unwrapped_request.clone().remote_uri,
             ..Default::default()
         });
 
         debug!("Sending request to Code service for git repo");
-        let request = code_client.git_repo_get(request_payload);
-
-        let response = match request.await {
-            Ok(r) => r,
-            Err(e) => {
+        let code_service_request = code_client.git_repo_get(request_payload);
+        let code_service_response = match code_service_request.await {
+            Ok(r) => r.into_inner(),
+            Err(_e) => {
                 return Err(OrbitalServiceError::new("There was an error getting git repo").into())
             }
         };
 
-        println!("Git repo get response: {:?}", &response);
+        debug!("Git repo get response: {:?}", &code_service_response);
+
+        // TODO: The main response we want is the auth_data. This should be a vault path, or public.
+        // Only call the secret service is we get a vault path.
 
         // Get the secret
+        debug!("Git repo needs a private key");
+        debug!("Connecting to the Secret service");
 
-        //let mut client = SecretServiceClient::connect(format!(
-        //    "http://{}",
-        //    super::get_service_uri(ServiceType::Secret)
-        //))
-        //.await?;
+        let secret_client_conn_req = SecretServiceClient::connect(format!(
+            "http://{}",
+            super::get_service_uri(ServiceType::Secret)
+        ));
+        let mut secret_client = match secret_client_conn_req.await {
+            Ok(connection_handler) => connection_handler,
+            Err(_e) => {
+                return Err(OrbitalServiceError::new("Unable to connect to Code service").into())
+            }
+        };
 
-        //let request = Request::new(SecretGetRequest {
-        //    name: format!("{}/{}", &unwrapped_request.git_provider, &unwrapped_request.git_repo),
-        //    secret_type: SecretType::,
-        //    ..Default::default()
-        //});
+        debug!("Building request to Secret service for git repo ");
+        let secret_service_request = Request::new(SecretGetRequest {
+            name: format!("{}", &code_service_response.uri),
+            secret_type: code_service_response.clone().secret_type.into(),
+            ..Default::default()
+        });
 
-        //let response = client.secret_get(request).await?;
+        let secret_service_response = match secret_client.secret_get(secret_service_request).await {
+            Ok(r) => r.into_inner(),
+            Err(_e) => {
+                return Err(OrbitalServiceError::new("There was an error getting git repo").into())
+            }
+        };
 
+        debug!("Secret get response: {:?}", &secret_service_response);
+
+        // Write ssh key to temp file
+        let temp_ssh_key = "/tmp/path/to/sshkey";
+
+        // Replace username with the user from the code service
         let git_creds = GitCredentials::SshKey {
             username: "git",
             public_key: None,
-            private_key: &Path::new("/home/telant/.ssh/id_ed25519"),
+            private_key: &Path::new(temp_ssh_key),
             passphrase: None,
         };
 
@@ -192,7 +213,7 @@ impl BuildService for OrbitalApi {
             build: Some(unwrapped_request),
             start_time: Some(start_timestamp),
             end_time: Some(end_timestamp),
-            //build_state: JobState::Done.into(),
+            build_state: JobState::Done.into(),
             ..Default::default()
         };
 
