@@ -126,7 +126,7 @@ service CodeService {
 
     rpc GitRepoAdd(GitRepoAddRequest) returns (GitRepoEntry);
     rpc GitRepoGet(GitRepoGetRequest) returns (GitRepoEntry);
-    rpc GitRepoUpdate(GitProviderUpdateRequest) returns (GitRepoEntry);
+    rpc GitRepoUpdate(GitRepoUpdateRequest) returns (GitRepoEntry);
     rpc GitRepoRemove(GitRepoRemoveRequest) returns (GitRepoEntry);
     rpc GitRepoList(GitRepoListRequest) returns (GitRepoListResponse);
 

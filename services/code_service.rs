@@ -2,7 +2,7 @@ use orbital_headers::code::{
     server::CodeService, GitProviderAddRequest, GitProviderEntry, GitProviderGetRequest,
     GitProviderListRequest, GitProviderListResponse, GitProviderRemoveRequest,
     GitProviderUpdateRequest, GitRepoAddRequest, GitRepoEntry, GitRepoGetRequest,
-    GitRepoListRequest, GitRepoListResponse, GitRepoRemoveRequest,
+    GitRepoListRequest, GitRepoListResponse, GitRepoRemoveRequest, GitRepoUpdateRequest,
 };
 
 use orbital_headers::orbital_types::*;
@@ -82,7 +82,7 @@ impl CodeService for OrbitalApi {
 
     async fn git_repo_update(
         &self,
-        _request: Request<GitProviderUpdateRequest>,
+        _request: Request<GitRepoUpdateRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
         unimplemented!()
     }
