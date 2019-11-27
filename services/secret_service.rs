@@ -1,5 +1,5 @@
 use orbital_headers::secret::{
-    server::SecretService, SecretCreateRequest, SecretDeleteRequest, SecretEntry, SecretGetRequest,
+    server::SecretService, SecretAddRequest, SecretRemoveRequest, SecretEntry, SecretGetRequest,
     SecretListRequest, SecretListResponse, SecretUpdateRequest,
 };
 use tonic::{Request, Response, Status};
@@ -11,7 +11,7 @@ use super::OrbitalApi;
 impl SecretService for OrbitalApi {
     async fn secret_add(
         &self,
-        _request: Request<SecretCreateRequest>,
+        _request: Request<SecretAddRequest>,
     ) -> Result<Response<SecretEntry>, Status> {
         unimplemented!()
     }
@@ -23,9 +23,9 @@ impl SecretService for OrbitalApi {
         unimplemented!()
     }
 
-    async fn secret_delete(
+    async fn secret_remove(
         &self,
-        _request: Request<SecretDeleteRequest>,
+        _request: Request<SecretRemoveRequest>,
     ) -> Result<Response<SecretEntry>, Status> {
         unimplemented!()
     }

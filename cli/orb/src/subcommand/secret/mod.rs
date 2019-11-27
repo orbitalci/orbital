@@ -8,7 +8,7 @@ pub mod list;
 pub mod remove;
 pub mod update;
 
-/// Local options for customizing repo request
+/// Local options for customizing secrets request
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
@@ -32,7 +32,8 @@ pub enum Action {
     // Disable,
 }
 
-/// *Not yet implemented* Backend calls for managing repo resources
+// FIXME:
+/// *Not yet implemented* Backend calls for managing secrets resources
 pub async fn subcommand_handler(
     global_option: GlobalOption,
     local_option: SubcommandOption,
