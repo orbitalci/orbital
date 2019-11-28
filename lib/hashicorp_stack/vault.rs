@@ -23,8 +23,13 @@ pub fn vault_add_secret(path: &str, data: &str) -> Result<(), ()> {
     let client = vault::Client::new(host.as_str(), token).unwrap();
 
     match client.set_secret(path, data) {
-        Ok(_) => Ok(()),
-        Err(_) => Err(()),
+        Ok(_) => {
+            debug!("Secret was set");
+            Ok(())
+        }
+        Err(_) => {
+            panic!("There was an error setting the secret");
+        }
     }
 }
 
@@ -46,7 +51,15 @@ pub fn vault_get_secret(path: &str) -> Result<String, ()> {
     };
     let client = vault::Client::new(host.as_str(), token).unwrap();
 
-    let secret = client.get_secret(path).unwrap();
+    let secret = match client.get_secret(path) {
+        Ok(secret) => {
+            debug!("Found secret");
+            secret
+        }
+        Err(_e) => {
+            panic!("There was an error getting the secret");
+        }
+    };
 
     Ok(secret)
 }

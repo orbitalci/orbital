@@ -82,6 +82,12 @@ impl From<git2::Error> for SubcommandError {
     }
 }
 
+impl From<std::io::Error> for SubcommandError {
+    fn from(error: std::io::Error) -> Self {
+        SubcommandError::new(format!("{}", error.description()).as_ref())
+    }
+}
+
 /// Returns a `String` of the current working directory.
 pub fn get_current_workdir() -> String {
     let path = match env::current_dir() {

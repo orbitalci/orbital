@@ -1197,6 +1197,7 @@ dependencies = [
  "config_parser 0.1.0",
  "git2 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "git_meta 0.1.0",
+ "hashicorp_stack 0.1.0",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "orbital_headers 0.1.0",
  "orbital_services 0.1.0",
