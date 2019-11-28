@@ -71,7 +71,7 @@ impl CodeService for OrbitalApi {
 
         let mut git_repo = GitRepoEntry::default();
         git_repo.org = unwrapped_request.org;
-        git_repo.user = "git".into(); 
+        git_repo.user = "git".into();
         git_repo.git_provider = unwrapped_request.git_provider;
         git_repo.name = unwrapped_request.name;
         git_repo.secret_type = SecretType::SshKey.into();

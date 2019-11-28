@@ -133,9 +133,7 @@ impl BuildService for OrbitalApi {
                 //no username, no trailing .git
                 let vault_secret_path = format!(
                     "/secret/orbital/{}/sshkey/{}/{}",
-                    "default_org",
-                    &unwrapped_request.git_provider,
-                    &unwrapped_request.git_repo,
+                    "default_org", &unwrapped_request.git_provider, &unwrapped_request.git_repo,
                 );
 
                 let secret_service_request = Request::new(SecretGetRequest {

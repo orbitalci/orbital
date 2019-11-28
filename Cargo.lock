@@ -637,6 +637,7 @@ name = "hashicorp_stack"
 version = "0.1.0"
 dependencies = [
  "hashicorp_vault 0.7.0 (git+https://github.com/tjtelan/vault-rs)",
+ "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
