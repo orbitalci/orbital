@@ -32,14 +32,14 @@ pub enum GitCredentials {
     Public,
     /// Username, PrivateKey, PublicKey, Passphrase
     SshKey {
-        username: &'static str,
+        username: String,
         public_key: Option<&'static Path>,
         private_key: &'static Path,
         passphrase: Option<&'static str>,
     },
     /// Username, Password
     UserPassPlaintext {
-        username: &'static str,
-        password: &'static str,
+        username: String,
+        password: String,
     },
 }

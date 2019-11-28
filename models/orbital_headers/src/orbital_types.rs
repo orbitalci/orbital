@@ -67,14 +67,14 @@ impl From<i32> for SecretType {
     }
 }
 
-impl From<i32> for CodeHostType {
-    fn from(code_host_type: i32) -> Self {
-        match code_host_type {
-            0 => Self::CodeHostUnspecified,
+impl From<i32> for GitHostType {
+    fn from(git_host_type: i32) -> Self {
+        match git_host_type {
+            0 => Self::Unspecified,
             1 => Self::Generic,
             2 => Self::Bitbucket,
             3 => Self::Github,
-            _ => panic!("Unknown code host type"),
+            _ => panic!("Unknown git host type"),
         }
     }
 }

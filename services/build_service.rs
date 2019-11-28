@@ -4,7 +4,7 @@ use orbital_headers::build_meta::{
 };
 
 use orbital_headers::code::{client::CodeServiceClient, GitRepoGetRequest};
-use orbital_headers::orbital_types::{CodeHostType, JobState};
+use orbital_headers::orbital_types::{JobState, SecretType};
 use orbital_headers::secret::{client::SecretServiceClient, SecretGetRequest};
 
 use tonic::{Request, Response, Status};
@@ -75,73 +75,121 @@ impl BuildService for OrbitalApi {
 
         debug!("Building request to Code service for git repo info");
 
-        // Note: git_provider and git_host together are confusing
-        // The intention is to help select the method of discovering new commits
+        // Request: org/git_provider/name
+        // e.g.: default_org/github.com/level11consulting/orbitalci
         let request_payload = Request::new(GitRepoGetRequest {
-            // Add org
+            org: "default_org".into(),
             git_provider: unwrapped_request.clone().git_provider,
             name: unwrapped_request.clone().git_repo,
-            git_host: CodeHostType::Github.into(), // Implement 'From' trait to handle &unwrapped_request.git_provider
             uri: unwrapped_request.clone().remote_uri,
             ..Default::default()
         });
 
+        debug!("Payload: {:?}", &request_payload);
+
         debug!("Sending request to Code service for git repo");
         let code_service_request = code_client.git_repo_get(request_payload);
         let code_service_response = match code_service_request.await {
-            Ok(r) => r.into_inner(),
+            Ok(r) => {
+                debug!("Git repo get response: {:?}", &r);
+                r.into_inner()
+            }
             Err(_e) => {
                 return Err(OrbitalServiceError::new("There was an error getting git repo").into())
             }
         };
 
-        debug!("Git repo get response: {:?}", &code_service_response);
+        // Build a GitCredentials struct based on the repo auth type
+        let git_creds = match &code_service_response.secret_type.into() {
+            SecretType::Unspecified => {
+                debug!("No secret needed to clone. Public repo");
 
-        // TODO: The main response we want is the auth_data. This should be a vault path, or public.
-        // Only call the secret service is we get a vault path.
-
-        // Get the secret
-        debug!("Git repo needs a private key");
-        debug!("Connecting to the Secret service");
-
-        let secret_client_conn_req = SecretServiceClient::connect(format!(
-            "http://{}",
-            super::get_service_uri(ServiceType::Secret)
-        ));
-        let mut secret_client = match secret_client_conn_req.await {
-            Ok(connection_handler) => connection_handler,
-            Err(_e) => {
-                return Err(OrbitalServiceError::new("Unable to connect to Code service").into())
+                GitCredentials::Public
             }
-        };
+            SecretType::SshKey => {
+                debug!("SSH key needed to clone");
 
-        debug!("Building request to Secret service for git repo ");
-        let secret_service_request = Request::new(SecretGetRequest {
-            name: format!("{}", &code_service_response.uri),
-            secret_type: code_service_response.clone().secret_type.into(),
-            ..Default::default()
-        });
+                debug!("Connecting to the Secret service");
+                let secret_client_conn_req = SecretServiceClient::connect(format!(
+                    "http://{}",
+                    super::get_service_uri(ServiceType::Secret)
+                ));
+                let mut secret_client = match secret_client_conn_req.await {
+                    Ok(connection_handler) => connection_handler,
+                    Err(_e) => {
+                        return Err(
+                            OrbitalServiceError::new("Unable to connect to Secret service").into(),
+                        )
+                    }
+                };
 
-        let secret_service_response = match secret_client.secret_get(secret_service_request).await {
-            Ok(r) => r.into_inner(),
-            Err(_e) => {
-                return Err(OrbitalServiceError::new("There was an error getting git repo").into())
+                debug!("Building request to Secret service for git repo ");
+
+                // This is kind of a hack until I clean up git repo uri duplication starting from the client-side
+                // I want the vault path for git repo keys to be treated like any other secret for an org
+                // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
+                // Where the secret name is the git repo url
+                // e.g., "github.com/level11consulting/orbitalci"
+                //no username, no trailing .git
+                let vault_secret_path = format!(
+                    "/secret/orbital/{}/sshkey/{}/{}",
+                    "default_org",
+                    &unwrapped_request.git_provider,
+                    &unwrapped_request.git_repo,
+                );
+
+                let secret_service_request = Request::new(SecretGetRequest {
+                    name: vault_secret_path,
+                    secret_type: SecretType::SshKey.into(),
+                    ..Default::default()
+                });
+
+                let secret_service_response =
+                    match secret_client.secret_get(secret_service_request).await {
+                        Ok(r) => r.into_inner(),
+                        Err(_e) => {
+                            return Err(OrbitalServiceError::new(
+                                "There was an error getting git repo",
+                            )
+                            .into())
+                        }
+                    };
+
+                debug!("Secret get response: {:?}", &secret_service_response);
+
+                // Call out to Vault
+
+                //
+                // Load ssh key into mktemp file
+
+                // Write ssh key to temp file
+                let temp_ssh_key = "/tmp/path/to/sshkey";
+
+                // Replace username with the user from the code service
+                let git_creds = GitCredentials::SshKey {
+                    username: code_service_response.user,
+                    public_key: None,
+                    private_key: &Path::new(temp_ssh_key),
+                    passphrase: None,
+                };
+
+                git_creds
             }
+            SecretType::BasicAuth => {
+                debug!("Userpass needed to clone");
+                let git_creds = GitCredentials::UserPassPlaintext {
+                    username: "git".to_string(),
+                    password: "fakepassword".to_string(),
+                };
+
+                git_creds
+            }
+            _ => panic!(
+                "We only support public repos, or private repo auth with sshkeys or basic auth"
+            ),
         };
 
-        debug!("Secret get response: {:?}", &secret_service_response);
-
-        // Write ssh key to temp file
-        let temp_ssh_key = "/tmp/path/to/sshkey";
-
-        // Replace username with the user from the code service
-        let git_creds = GitCredentials::SshKey {
-            username: "git",
-            public_key: None,
-            private_key: &Path::new(temp_ssh_key),
-            passphrase: None,
-        };
-
+        //
         debug!("Cloning code into temp directory");
         let git_repo = build_engine::clone_repo(
             &unwrapped_request.remote_uri,

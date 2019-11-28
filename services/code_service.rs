@@ -70,13 +70,16 @@ impl CodeService for OrbitalApi {
         // let git_repo = db_get_repo(org, git_provider, git_repo_name)-> GitRepoEntry
 
         let mut git_repo = GitRepoEntry::default();
-        git_repo.org = "default_org".into();
-        //git_repo.user = "git",
-        git_repo.secret_type = SecretType::SshKey.into(); // TODO: Need an impl From i32 to orbital_types::SecretType
+        git_repo.org = unwrapped_request.org;
+        git_repo.user = "git".into(); 
+        git_repo.git_provider = unwrapped_request.git_provider;
+        git_repo.name = unwrapped_request.name;
+        git_repo.secret_type = SecretType::SshKey.into();
         git_repo.uri = unwrapped_request.uri;
         git_repo.auth_data =
             "secret/orbital/default_org/sshkey/github.com/level11consulting/orbitalci".into();
 
+        debug!("Response: {:?}", &git_repo);
         Ok(Response::new(git_repo))
     }
 

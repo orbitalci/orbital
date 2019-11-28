@@ -54,8 +54,8 @@ enum SecretType {
 //    * Bitbucket
 //    * GITHUB
 
-enum CodeHostType {
-    CODE_HOST_UNSPECIFIED = 0;
+enum GitHostType {
+    GIT_HOST_TYPE_UNSPECIFIED = 0;
     GENERIC = 1;
     BITBUCKET = 2;
     GITHUB = 3;

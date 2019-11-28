@@ -4,48 +4,54 @@ package code;
 import "orbital_types.proto";
 import "secret.proto";
 
+// GitProvider is an entity that GitRepo are organized under
 message GitProviderEntry {
     string org = 1;
     string name = 2;
-    orbital_types.CodeHostType git_host = 3;
-    orbital_types.ActiveState active_state = 4;
+    string hostname = 3;
+    orbital_types.GitHostType git_host_type = 4;
+    orbital_types.ActiveState active_state = 5;
 }
 
 // Server returns GitProviderEntry as response
 message GitProviderAddRequest {
     string org = 1;
     string name = 2;
-    orbital_types.CodeHostType git_host = 3;
-    string auth_data = 4;
+    string hostname = 3;
+    orbital_types.GitHostType git_host_type = 4;
+    string auth_data = 5;
 }
 
 message GitProviderGetRequest {
     string org = 1;
     string name = 2;
-    orbital_types.CodeHostType git_host = 3;
+    string hostname = 3;
+    orbital_types.GitHostType git_host_type = 4;
 }
 
 // Server returns GitProviderEntry as response
 message GitProviderUpdateRequest {
     string org = 1;
     string name = 2;
-    orbital_types.CodeHostType git_host = 3;
-    orbital_types.ActiveState active_state = 4;
-    string auth_data = 5;
+    string hostname = 3;
+    orbital_types.GitHostType git_host_type = 4;
+    orbital_types.ActiveState active_state = 5;
+    string auth_data = 6;
 }
 
 // Server returns GitProviderEntry as response
 message GitProviderRemoveRequest {
     string org = 1;
     string name = 2;
-    orbital_types.CodeHostType git_host = 3;
-    bool force = 4;
+    string hostname = 3;
+    orbital_types.GitHostType git_host_type = 4;
+    bool force = 5;
 }
 
 // Server returns GitProviderListResponse as response
 message GitProviderListRequest {
     string org = 1;
-    orbital_types.CodeHostType git_host = 2;
+    orbital_types.GitHostType git_host_type = 2;
 }
 
 message GitProviderListResponse {
@@ -58,7 +64,7 @@ message GitRepoEntry {
     string org = 1;
     string git_provider = 2;
     string name = 3;
-    orbital_types.CodeHostType git_host = 4;
+    string user = 4;
     string uri = 5;
     orbital_types.SecretType secret_type = 6;
     string auth_data = 7;
@@ -72,7 +78,7 @@ message GitRepoAddRequest {
     string org = 1;
     string git_provider = 2;
     string name = 3;
-    orbital_types.CodeHostType git_host = 4;
+    string user = 4;
     string uri = 5;
     orbital_types.SecretType secret_type = 6;
     string auth_data = 7;
@@ -82,7 +88,7 @@ message GitRepoGetRequest {
     string org = 1;
     string git_provider = 2;
     string name = 3;
-    orbital_types.CodeHostType git_host = 4;
+    string user = 4;
     string uri = 5;
 }
 
@@ -90,7 +96,7 @@ message GitRepoUpdateRequest {
     string org = 1;
     string git_provider = 2;
     string name = 3;
-    orbital_types.CodeHostType git_host = 4;
+    string user = 4;
     string uri = 5;
     orbital_types.SecretType secret_type = 6;
     orbital_types.ActiveState build = 7;
@@ -102,7 +108,7 @@ message GitRepoRemoveRequest {
     string org = 1;
     string git_provider = 2;
     string name = 3;
-    orbital_types.CodeHostType git_host = 4;
+    string user = 4;
     string uri = 5;
     bool force = 6;
 }
@@ -110,7 +116,6 @@ message GitRepoRemoveRequest {
 message GitRepoListRequest {
     string org = 1;
     string git_provider = 2;
-    orbital_types.CodeHostType git_host = 3;
 }
 
 message GitRepoListResponse {

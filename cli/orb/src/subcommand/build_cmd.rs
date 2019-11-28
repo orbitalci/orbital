@@ -53,7 +53,7 @@ pub async fn subcommand_handler(
     // If We're in detatched head (commit not in branch) say so
     //
     // Open the orb.yml
-    let config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path, "orb.yml")))?;
+    let _config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path, "orb.yml")))?;
     // Assuming Docker builder... (Stay focused!)
     // Get the docker container image
 
@@ -61,11 +61,12 @@ pub async fn subcommand_handler(
     //
 
     let request = Request::new(BuildTarget {
+        org: "default_org".into(),
+        git_repo: format!("{}/{}", git_context.account, git_context.repo),
         remote_uri: git_context.uri,
         git_provider: git_context.provider,
         branch: git_context.branch,
         commit_hash: git_context.id,
-        docker_image: config.image,
         envs: local_option.envs.unwrap_or_default(),
         ..Default::default()
     });

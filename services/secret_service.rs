@@ -1,6 +1,6 @@
 use orbital_headers::secret::{
-    server::SecretService, SecretAddRequest, SecretRemoveRequest, SecretEntry, SecretGetRequest,
-    SecretListRequest, SecretListResponse, SecretUpdateRequest,
+    server::SecretService, SecretAddRequest, SecretEntry, SecretGetRequest, SecretListRequest,
+    SecretListResponse, SecretRemoveRequest, SecretUpdateRequest,
 };
 use tonic::{Request, Response, Status};
 

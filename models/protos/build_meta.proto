@@ -11,9 +11,8 @@ message BuildTarget {
     string remote_uri = 4;
     string branch = 5;
     string commit_hash = 6;
-    string docker_image = 7;
-    string envs = 8;
-    int32 id = 9;
+    string envs = 7;
+    int32 id = 8;
 }
 
 message BuildStage {
