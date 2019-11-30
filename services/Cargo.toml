@@ -14,6 +14,7 @@ agent_runtime = { path = "../lib/agent_runtime" }
 log = "0.4"
 futures = "0.3"
 prost-types = "0.5"
+hashicorp_stack = { path = "../lib/hashicorp_stack" }
 
 [lib]
 name = "orbital_services"

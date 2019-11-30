@@ -8,6 +8,7 @@ services:
       - 8200:8200
     environment:
       - VAULT_DEV_ROOT_TOKEN_ID=orbital
+      #- VAULT_DEV_ROOT_TOKEN_ID=test12345
       - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
     cap_add:
       - IPC_LOCK

@@ -189,9 +189,6 @@ pub struct GlobalOption {
     /// Dry-run mode. No changes will be made
     #[structopt(long)]
     pub check: bool,
-    /// Path to local repo. Defaults to current working directory
-    #[structopt(long)]
-    path: Option<String>,
 }
 
 /// Represents a single-parsed command line invocation from user

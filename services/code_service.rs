@@ -62,7 +62,7 @@ impl CodeService for OrbitalApi {
         &self,
         request: Request<GitRepoGetRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-        debug!("Got request: {:?}", &request);
+        debug!("Git repo get request: {:?}", &request);
 
         let unwrapped_request = request.into_inner();
 

@@ -28,17 +28,21 @@ pub struct SubcommandOption {
     /// Git commit hash (Default is to choose the remote HEAD commit)
     #[structopt(long)]
     hash: Option<String>,
+
+    /// Path to repo. Defaults to current working directory.
+    #[structopt(long, env = "PWD")]
+    path: String,
 }
 
 /// Generates gRPC `BuildStartRequest` object and connects to *currently hardcoded* gRPC server and sends a request to `BuildService` server.
 pub async fn subcommand_handler(
-    global_option: GlobalOption,
+    _global_option: GlobalOption,
     local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     // Path
-    let path = &global_option.path.unwrap_or(crate::get_current_workdir());
+    let path = &local_option.path;
 
     // Read in the git repo
     // uri
