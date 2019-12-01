@@ -19,7 +19,7 @@ impl SecretService for OrbitalApi {
         debug!("secret add request: {:?}", &request);
 
         let unwrapped_request = request.into_inner();
-        let vault_path = &unwrapped_request.name.to_lowercase();
+        let vault_path = &unwrapped_request.name;
 
         // TODO: Handle errors
         let _ = vault::vault_add_secret(

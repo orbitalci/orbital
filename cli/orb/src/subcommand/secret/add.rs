@@ -46,7 +46,6 @@ pub async fn action_handler(
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
 ) -> Result<(), SubcommandError> {
-    
     let mut file = File::open(&action_option.secret_file.expect("No secret filepath given"))?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
@@ -59,11 +58,12 @@ pub async fn action_handler(
         "orbital/{}/{}/{}",
         org_name,
         SecretType::from(action_option.secret_type.clone()),
-        secret_name
-    );
+        secret_name,
+    )
+    .to_lowercase();
 
     let request = Request::new(SecretAddRequest {
-        org: "default_org".into(),
+        org: org_name.into(),
         name: vault_path.into(),
         secret_type: SecretType::from(action_option.secret_type.clone()).into(),
         data: contents.into(),
