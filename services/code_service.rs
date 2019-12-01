@@ -136,7 +136,10 @@ impl CodeService for OrbitalApi {
 
                 debug!("Adding private key to secret service");
                 let org_name = &unwrapped_request.org;
-                let secret_name = format!("{}", &unwrapped_request.name);
+                let secret_name = format!(
+                    "{}/{}",
+                    &unwrapped_request.git_provider, &unwrapped_request.name
+                );
                 let vault_path = format!(
                     "orbital/{}/{}/{}",
                     org_name,

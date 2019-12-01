@@ -3,6 +3,8 @@ pub mod build_engine;
 
 /// Docker engine api wrapper
 pub mod docker;
+/// Vault api wrapper
+pub mod vault;
 /// Default volume mount mapping for host Docker into container for Docker-in-Docker builds
 pub const DOCKER_SOCKET_VOLMAP: &str = "/var/run/docker.sock:/var/run/docker.sock";
 /// Default working directory for staging repo code inside container

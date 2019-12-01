@@ -23,6 +23,10 @@ use prost_types::Timestamp;
 use std::path::Path;
 use std::time::{Duration, SystemTime};
 
+use mktemp::Temp;
+use std::fs::File;
+use std::io::prelude::*;
+
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
 #[tonic::async_trait]
@@ -100,6 +104,9 @@ impl BuildService for OrbitalApi {
         };
 
         // Build a GitCredentials struct based on the repo auth type
+        // Declaring this in case we have an ssh key.
+        let temp_keypath = Temp::new_file().expect("Unable to create temp file");
+
         let git_creds = match &code_service_response.secret_type.into() {
             SecretType::Unspecified => {
                 debug!("No secret needed to clone. Public repo");
@@ -132,8 +139,11 @@ impl BuildService for OrbitalApi {
                 // e.g., "github.com/level11consulting/orbitalci"
                 //no username, no trailing .git
                 let vault_secret_path = format!(
-                    "/secret/orbital/{}/sshkey/{}/{}",
-                    "default_org", &unwrapped_request.git_provider, &unwrapped_request.git_repo,
+                    "orbital/{}/{}/{}/{}",
+                    &unwrapped_request.org,
+                    SecretType::SshKey.to_string().to_lowercase(),
+                    &unwrapped_request.git_provider,
+                    &unwrapped_request.git_repo,
                 );
 
                 let secret_service_request = Request::new(SecretGetRequest {
@@ -155,19 +165,17 @@ impl BuildService for OrbitalApi {
 
                 debug!("Secret get response: {:?}", &secret_service_response);
 
-                // Call out to Vault
-
-                //
-                // Load ssh key into mktemp file
-
                 // Write ssh key to temp file
-                let temp_ssh_key = "/tmp/path/to/sshkey";
+                debug!("Writing incoming ssh key to temp file");
+                let mut file = File::create(temp_keypath.as_path())?;
+                let mut _contents = String::new();
+                let _ = file.write_all(&secret_service_response.data);
 
                 // Replace username with the user from the code service
                 let git_creds = GitCredentials::SshKey {
                     username: code_service_response.user,
                     public_key: None,
-                    private_key: &Path::new(temp_ssh_key),
+                    private_key: temp_keypath.as_path(),
                     passphrase: None,
                 };
 
