@@ -9,14 +9,15 @@ use std::path::Path;
 use log::debug;
 
 use crate::{GlobalOption, SubcommandError};
+use std::path::PathBuf;
 
 /// Local options for customizing local docker build with orb
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
-    #[structopt(long)]
-    path: Option<String>,
+    #[structopt(long, parse(from_os_str), env = "PWD")]
+    path: PathBuf,
 
     /// Add env vars to build. Comma-separated with no spaces. ex. "key1=var1,key2=var2"
     #[structopt(long, short)]
@@ -46,7 +47,7 @@ pub async fn subcommand_handler(
     // Read orb.yml
 
     // If a path isn't given, then use the current working directory based on env var PWD
-    let path = &local_option.path.unwrap_or(crate::get_current_workdir());
+    let path = &local_option.path;
 
     let envs_vec = crate::parse_envs_input(&local_option.env);
     let vols_vec = crate::parse_volumes_input(&local_option.volume);
@@ -54,14 +55,14 @@ pub async fn subcommand_handler(
     debug!(
         "Git info at path ({:?}): {:?}",
         &path,
-        git_info::get_git_info_from_path(path.as_str(), &None, &None)
+        git_info::get_git_info_from_path(path, &None, &None)
     );
 
     // TODO: Will want ability to pass in any yaml.
     // TODO: Also handle file being named orb.yaml
     // Look for a file named orb.yml
     debug!("Loading orb.yml from path {:?}", &path);
-    let config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path, "orb.yml")))?;
+    let config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))?;
 
     debug!("Pulling container: {:?}", config.image.clone());
     match docker::container_pull(config.image.as_str()) {

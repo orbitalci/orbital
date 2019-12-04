@@ -3,21 +3,21 @@
 // Get as much info about the remote branch as well
 
 use git2::{Branch, BranchType, Commit, ObjectType, Repository};
-
 use log::debug;
+use std::path::Path;
 
 use super::{GitCommitContext, GitSshRemote};
 
 /// Returns a `git2::Repository` from a given repo directory path
-fn get_local_repo_from_path(path: &str) -> Result<Repository, git2::Error> {
-    Repository::open(path)
+fn get_local_repo_from_path(path: &Path) -> Result<Repository, git2::Error> {
+    Repository::open(path.as_os_str())
 }
 
 /// Returns a `GitCommitContext` after parsing metadata from a repo
 /// If branch is not provided, current checked out branch will be used
 /// If commit id is not provided, the HEAD of the branch will be used
 pub fn get_git_info_from_path(
-    path: &str,
+    path: &Path,
     branch: &Option<String>,
     commit_id: &Option<String>,
 ) -> Result<GitCommitContext, git2::Error> {
@@ -51,7 +51,7 @@ pub fn get_git_info_from_path(
 
 // FIXME: Should not assume remote is origin. This will cause issue in some dev workflows
 /// Returns the remote url after opening and validating repo from the local path
-pub fn git_remote_from_path(path: &str) -> Result<String, git2::Error> {
+pub fn git_remote_from_path(path: &Path) -> Result<String, git2::Error> {
     let r = get_local_repo_from_path(path)?;
     let remote_url: String = r
         .find_remote("origin")?

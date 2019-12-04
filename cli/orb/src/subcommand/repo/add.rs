@@ -46,17 +46,11 @@ pub async fn action_handler(
 
     // Read git repo info from local filesystem.
     // TODO: support adding a repo from a uri
-    let repo_info = match git_info::get_git_info_from_path(
-        action_option
-            .path
-            .to_str()
-            .expect("Error with path to git repo"),
-        &None,
-        &None,
-    ) {
-        Ok(info) => info,
-        Err(_) => panic!("Unable to parse path for git repo info"),
-    };
+    let repo_info =
+        match git_info::get_git_info_from_path(&action_option.path.as_path(), &None, &None) {
+            Ok(info) => info,
+            Err(_) => panic!("Unable to parse path for git repo info"),
+        };
 
     // TODO: Need to update the git repo parser to split out a username
     let request = match &action_option.public {

@@ -11,7 +11,7 @@ use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 use log::debug;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
@@ -30,8 +30,8 @@ pub struct SubcommandOption {
     hash: Option<String>,
 
     /// Path to repo. Defaults to current working directory.
-    #[structopt(long, env = "PWD")]
-    path: String,
+    #[structopt(long, parse(from_os_str), env = "PWD")]
+    path: PathBuf,
 }
 
 /// Generates gRPC `BuildStartRequest` object and connects to *currently hardcoded* gRPC server and sends a request to `BuildService` server.
@@ -52,12 +52,12 @@ pub async fn subcommand_handler(
     //
 
     let git_context =
-        git_info::get_git_info_from_path(path.as_str(), &local_option.branch, &local_option.hash)?;
+        git_info::get_git_info_from_path(path, &local_option.branch, &local_option.hash)?;
     // If specified, check if commit is in branch
     // If We're in detatched head (commit not in branch) say so
     //
     // Open the orb.yml
-    let _config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path, "orb.yml")))?;
+    let _config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))?;
     // Assuming Docker builder... (Stay focused!)
     // Get the docker container image
 

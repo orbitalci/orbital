@@ -12,12 +12,14 @@ pub const ORBITAL_CONTAINER_WORKDIR: &str = "/orbital-work";
 
 use log::debug;
 use std::error::Error;
+use std::path::PathBuf;
 use std::{env, fmt};
 
-enum AgentRuntimeType {
-    Host,
-    Docker,
-}
+// Leaving this here for when we can focus on non-docker workflows
+//enum AgentRuntimeType {
+//    Host,
+//    Docker,
+//}
 
 #[derive(Debug)]
 pub struct AgentRuntimeError {
@@ -64,15 +66,15 @@ pub fn parse_envs_input(user_input: &Option<String>) -> Option<Vec<&str>> {
     envs
 }
 
-/// Returns a `String` of the current working directory.
-pub fn get_current_workdir() -> String {
-    let path = match env::current_dir() {
-        Ok(d) => format!("{}", d.display()),
-        Err(_) => String::from("."),
+/// Returns a `Path` of the current working directory.
+pub fn get_current_workdir() -> PathBuf {
+    let pathbuf = match env::current_dir() {
+        Ok(p) => p,
+        Err(_) => panic!("Could not get current working directory"),
     };
 
-    debug!("Current workdir on host: {}", &path);
-    path
+    debug!("Current workdir on host: {:?}", &pathbuf);
+    pathbuf
 }
 
 /// Wrapper function for `kv_csv_parser` to specifically handle volume mounts for `shiplift`
@@ -96,7 +98,7 @@ pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
             new_vec.push(Box::leak(
                 format!(
                     "{}:{}",
-                    get_current_workdir(),
+                    &get_current_workdir().display(),
                     crate::ORBITAL_CONTAINER_WORKDIR,
                 )
                 .into_boxed_str(),

@@ -24,6 +24,7 @@ use log::debug;
 use std::env;
 use std::error::Error;
 use std::fmt;
+use std::path::PathBuf;
 
 use git2;
 
@@ -88,15 +89,15 @@ impl From<std::io::Error> for SubcommandError {
     }
 }
 
-/// Returns a `String` of the current working directory.
-pub fn get_current_workdir() -> String {
-    let path = match env::current_dir() {
-        Ok(d) => format!("{}", d.display()),
-        Err(_) => String::from("."),
+/// Returns a `Path` of the current working directory.
+pub fn get_current_workdir() -> PathBuf {
+    let pathbuf = match env::current_dir() {
+        Ok(p) => p,
+        Err(_) => panic!("Could not get current working directory"),
     };
 
-    debug!("Current workdir on host: {}", &path);
-    path
+    debug!("Current workdir on host: {:?}", &pathbuf);
+    pathbuf
 }
 
 /// Wrapper function for `kv_csv_parser` to specifically handle env vars for `shiplift`
@@ -127,7 +128,7 @@ pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
             new_vec.push(Box::leak(
                 format!(
                     "{}:{}",
-                    get_current_workdir(),
+                    get_current_workdir().display(),
                     agent_runtime::ORBITAL_CONTAINER_WORKDIR,
                 )
                 .into_boxed_str(),

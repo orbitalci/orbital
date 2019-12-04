@@ -1,9 +1,8 @@
 use crate::GitCredentials;
-use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks, Repository};
+use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks};
 use log::debug;
 use mktemp::Temp;
 use std::error::Error;
-use std::path::Path;
 
 // TODO: Need a way to switch between a public and private repo
 // Idea: Create an enum:
@@ -25,7 +24,7 @@ pub fn clone_temp_dir(
             debug!("Cloning a public repo");
 
             let mut builder = RepoBuilder::new();
-            let mut callbacks = RemoteCallbacks::new();
+            let callbacks = RemoteCallbacks::new();
             let mut fetch_options = FetchOptions::new();
 
             fetch_options.remote_callbacks(callbacks);
