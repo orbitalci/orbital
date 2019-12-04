@@ -1,17 +1,17 @@
 use structopt::StructOpt;
 
-use crate::{GlobalOption, SubcommandError};
+use crate::{GlobalOption, SubcommandContext, SubcommandError};
 
 use std::io;
 
+/// Experience the remote build workflows locally
+pub mod build;
 /// Generate command line shell completions
 pub mod completion;
 /// Access into internal Docker wrapper library
 pub mod docker;
 /// Access into internal git library
 pub mod git;
-/// Experience the remote build workflows locally
-pub mod local_build;
 /// Validate `orb.yml` config files
 pub mod validate;
 
@@ -24,7 +24,7 @@ pub enum DeveloperType {
     /// Test the docker driver
     Docker(docker::SubcommandOption),
     /// Test running builds
-    Build(local_build::SubcommandOption),
+    Build(build::SubcommandOption),
     /// Test the config file parsers
     Validate(validate::SubcommandOption),
     /// Generate shell completions script for orb command
@@ -42,17 +42,13 @@ pub async fn subcommand_handler(
             docker::subcommand_handler(global_option, sub_option).await
         }
         DeveloperType::Build(sub_option) => {
-            local_build::subcommand_handler(global_option, sub_option).await
+            build::subcommand_handler(global_option, sub_option).await
         }
         DeveloperType::Validate(sub_option) => {
             validate::subcommand_handler(global_option, sub_option).await
         }
         DeveloperType::Completion(shell) => {
-            GlobalOption::clap().gen_completions_to(
-                env!("CARGO_PKG_NAME"),
-                shell.into(),
-                &mut io::stdout(),
-            );
+            SubcommandContext::clap().gen_completions_to("orb", shell.into(), &mut io::stdout());
             Ok(())
         }
     }
