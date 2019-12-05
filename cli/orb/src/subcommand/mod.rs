@@ -79,13 +79,13 @@ impl From<tonic::transport::Error> for SubcommandError {
 
 impl From<git2::Error> for SubcommandError {
     fn from(error: git2::Error) -> Self {
-        SubcommandError::new(format!("{}", error.message()).as_ref())
+        SubcommandError::new(error.message().to_string().as_ref())
     }
 }
 
 impl From<std::io::Error> for SubcommandError {
     fn from(error: std::io::Error) -> Self {
-        SubcommandError::new(format!("{}", error.description()).as_ref())
+        SubcommandError::new(error.description().to_string().as_ref())
     }
 }
 
@@ -93,7 +93,7 @@ impl From<std::io::Error> for SubcommandError {
 pub fn get_current_workdir() -> PathBuf {
     let pathbuf = match env::current_dir() {
         Ok(p) => p,
-        Err(_) => panic!("Could not get current working directory"),
+        Err(_e) => panic!("Could not get current working directory"),
     };
 
     debug!("Current workdir on host: {:?}", &pathbuf);
@@ -145,10 +145,10 @@ pub fn kv_csv_parser(kv_str: &Option<String>) -> Option<Vec<&str>> {
     debug!("Parsing Option<String> input: {:?}", &kv_str);
     match kv_str {
         Some(n) => {
-            let kv_vec: Vec<&str> = n.split(",").collect();
-            return Some(kv_vec);
+            let kv_vec: Vec<&str> = n.split(',').collect();
+            Some(kv_vec)
         }
-        None => return None,
+        None => None,
     }
 }
 

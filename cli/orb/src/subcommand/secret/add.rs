@@ -64,7 +64,7 @@ pub async fn action_handler(
 
     let request = Request::new(SecretAddRequest {
         org: org_name.into(),
-        name: vault_path.into(),
+        name: vault_path,
         secret_type: SecretType::from(action_option.secret_type.clone()).into(),
         data: contents.into(),
     });

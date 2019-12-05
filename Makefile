@@ -12,6 +12,9 @@ release:
 docs:
 	cargo doc
 
+lint:
+	cargo clippy 
+
 # Note: VSCode may automatically recreate your cargo target dir, for `rls`.
 clean:
 	cargo clean;

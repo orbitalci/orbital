@@ -27,7 +27,6 @@ pub async fn subcommand_handler(
 
     let request = Request::new(OrgAddRequest {
         name: "org_name_goes_here".into(),
-        ..Default::default()
     });
 
     let response = client.org_add(request).await?;

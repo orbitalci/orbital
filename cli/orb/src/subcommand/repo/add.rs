@@ -49,7 +49,7 @@ pub async fn action_handler(
     let repo_info =
         match git_info::get_git_info_from_path(&action_option.path.as_path(), &None, &None) {
             Ok(info) => info,
-            Err(_) => panic!("Unable to parse path for git repo info"),
+            Err(_e) => panic!("Unable to parse path for git repo info"),
         };
 
     // TODO: Need to update the git repo parser to split out a username
@@ -82,7 +82,6 @@ pub async fn action_handler(
                 name: format!("{}/{}", repo_info.account, repo_info.repo),
                 uri: repo_info.uri,
                 user: "git".into(),
-                ..Default::default()
             })
         }
     };

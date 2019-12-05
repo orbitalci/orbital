@@ -16,12 +16,12 @@ pub async fn action_handler(
     action_option: ActionOption,
 ) -> Result<(), SubcommandError> {
     match docker::container_pull(action_option.image.clone().as_str()) {
-        Ok(_) => return Ok(()),
+        Ok(_) => Ok(()),
         Err(_) => {
-            return Err(SubcommandError::new(&format!(
+            Err(SubcommandError::new(&format!(
                 "Could not pull image {:?}",
                 &action_option.image
             )))
         }
-    };
+    }
 }
