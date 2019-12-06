@@ -1,5 +1,5 @@
-use structopt::StructOpt;
 use structopt::clap::arg_enum;
+use structopt::StructOpt;
 
 arg_enum! {
   /// Represents the shells supported by [clap.rs](https://clap.rs/) for generating auto-completion scripts
