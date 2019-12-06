@@ -1,4 +1,3 @@
-extern crate structopt;
 use structopt::StructOpt;
 
 use config_parser::yaml as parser;
@@ -21,8 +20,8 @@ pub async fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
-        match parser::load_orb_yaml(&local_option.file.as_path()) {
-            Ok(_c) => Ok(()),
-            Err(_e) => Err(SubcommandError::new("Config file failed validation")),
-        }
+    match parser::load_orb_yaml(&local_option.file.as_path()) {
+        Ok(_c) => Ok(()),
+        Err(_e) => Err(SubcommandError::new("Config file failed validation")),
+    }
 }

@@ -1,4 +1,3 @@
-extern crate structopt;
 use structopt::StructOpt;
 
 /// Send a remote call for starting a build

@@ -1,4 +1,3 @@
-extern crate structopt;
 use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
@@ -6,6 +5,7 @@ use crate::{GlobalOption, SubcommandError};
 use orbital_headers::build_meta::{client::BuildServiceClient, BuildSummaryRequest, BuildTarget};
 
 use orbital_services::ORB_DEFAULT_URI;
+use std::path::PathBuf;
 use tonic::Request;
 
 /// Local options for customizing summary request
@@ -13,8 +13,8 @@ use tonic::Request;
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
-    #[structopt(long)]
-    path: Option<String>,
+    #[structopt(long, parse(from_os_str), env = "PWD")]
+    path: PathBuf,
 }
 
 // FIXME: Request for summary is not currently served well by proto. How to differeniate from a regular log request?

@@ -50,8 +50,10 @@ pub fn clone_temp_dir(
             let mut fetch_options = FetchOptions::new();
 
             &callbacks.credentials(|_, _, _| {
-                Ok(Cred::ssh_key(&username, public_key, private_key, passphrase)
-                    .expect("Could not create credentials object for ssh key"))
+                Ok(
+                    Cred::ssh_key(&username, public_key, private_key, passphrase)
+                        .expect("Could not create credentials object for ssh key"),
+                )
             });
 
             fetch_options.remote_callbacks(callbacks);
