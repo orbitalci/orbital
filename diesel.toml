@@ -4,3 +4,7 @@
 # Assuming we are running `diesel` from the root of the repo
 [print_schema]
 file = "models/orbital_database/postgres/schema.rs"
+
+# This should arrive w/ diesel-rs/diesel#2163
+#[migrations_directory]
+#file = "models/orbital_database/postgres/migrationsq"
