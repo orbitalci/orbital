@@ -31,15 +31,16 @@ services:
     image: postgres:12-alpine
     container_name: postgres
     hostname: postgres-docker
+    user: postgres
     ports:
       - 5432:5432
     environment:
       - POSTGRES_USER=orbital
       - POSTGRES_PASSWORD=orbital
       - POSTGRES_DB=orbital
-      - PGDATA=/postgres
+      - PGDATA=/var/lib/postgresql/data
     volumes:
-      - ./dev-data/orbital-db-data:/postgres
+      - pgdata:/var/lib/postgresql/data
   #rabbitmq:
   #  image: rabbitmq:3.8-management-alpine
   #  container_name: rabbitmq
@@ -51,3 +52,6 @@ services:
   #    - RABBITMQ_DEFAULT_PASS=orbital
   #  volumes:
   #    - ./dev-data/orbital-rabbitmq:/var/lib/rabbitmq
+
+volumes:
+  pgdata:
