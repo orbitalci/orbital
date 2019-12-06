@@ -1,6 +1,7 @@
 use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
+use std::path::PathBuf;
 
 pub mod add;
 pub mod get;
@@ -13,8 +14,8 @@ pub mod update;
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
-    #[structopt(long)]
-    path: Option<String>,
+    #[structopt(long, parse(from_os_str), env = "PWD")]
+    path: PathBuf,
 
     #[structopt(subcommand)]
     pub action: Action,

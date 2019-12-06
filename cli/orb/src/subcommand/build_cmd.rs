@@ -1,4 +1,3 @@
-extern crate structopt;
 use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};

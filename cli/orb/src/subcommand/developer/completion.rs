@@ -1,7 +1,4 @@
-extern crate structopt;
 use structopt::StructOpt;
-
-extern crate clap;
 use structopt::clap::arg_enum;
 
 arg_enum! {

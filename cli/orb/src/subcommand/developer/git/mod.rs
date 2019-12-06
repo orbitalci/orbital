@@ -1,4 +1,3 @@
-extern crate structopt;
 use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
@@ -6,6 +5,7 @@ use crate::{GlobalOption, SubcommandError};
 pub mod clone;
 pub mod info;
 
+use std::path::PathBuf;
 //use log::debug;
 
 /// Local options for customizing git library call
@@ -13,8 +13,8 @@ pub mod info;
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
-    #[structopt(long)]
-    path: Option<String>,
+    #[structopt(long, parse(from_os_str), env = "PWD")]
+    path: PathBuf,
 
     /// info, clone
     #[structopt(subcommand)]

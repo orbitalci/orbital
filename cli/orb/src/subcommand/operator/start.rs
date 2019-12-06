@@ -1,4 +1,3 @@
-extern crate structopt;
 use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
@@ -13,6 +12,7 @@ use orbital_services::OrbitalApi;
 use orbital_services::ORB_DEFAULT_URI;
 
 use log::debug;
+use std::path::PathBuf;
 use tonic::transport::Server;
 
 /// Local options for starting build service
@@ -20,8 +20,8 @@ use tonic::transport::Server;
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
-    #[structopt(long)]
-    path: Option<String>,
+    #[structopt(long, parse(from_os_str), env = "PWD")]
+    path: PathBuf,
 }
 
 /// Binds a *currently hardcoded* address and starts all services on mutliplexed gRPC server

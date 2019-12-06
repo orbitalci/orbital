@@ -44,11 +44,9 @@ pub async fn action_handler(
             println!("{}", container_id);
             Ok(())
         }
-        Err(_) => {
-            Err(SubcommandError::new(&format!(
-                "Could not pull image {:?}",
-                &action_option.image
-            )))
-        }
+        Err(_) => Err(SubcommandError::new(&format!(
+            "Could not pull image {:?}",
+            &action_option.image
+        ))),
     }
 }

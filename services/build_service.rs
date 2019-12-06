@@ -1,6 +1,10 @@
 use orbital_headers::build_meta::{
-    server::BuildService, BuildLogResponse, BuildMetadata, BuildSummaryRequest,
-    BuildSummaryResponse, BuildTarget,
+    server::BuildService,
+    BuildLogResponse,
+    BuildMetadata, //BuildRecord, BuildStage,
+    BuildSummaryRequest,
+    BuildSummaryResponse,
+    BuildTarget,
 };
 
 use orbital_headers::code::{client::CodeServiceClient, GitRepoGetRequest};
@@ -287,7 +291,27 @@ impl BuildService for OrbitalApi {
         &self,
         _request: Request<BuildTarget>,
     ) -> Result<Response<Self::BuildLogsStream>, Status> {
-        unimplemented!();
+        // Get the container info so we can call the docker api
+
+        let (mut tx, rx) = mpsc::channel(4);
+
+        tokio::spawn(async move {
+            let build_log_response = BuildLogResponse {
+                id: 0,
+                records: Vec::new(),
+            };
+
+            tx.send(Ok(build_log_response)).await.unwrap()
+
+            // Determine if there are logs in the database and fetch those first
+            // Probably send those logs, unless we specifically don't want to
+
+            // If the build is still running, then we want to go to the live logs
+
+            // The agent runtime log wrapper needs to provide the build stage info
+        });
+
+        Ok(Response::new(rx))
     }
 
     async fn build_remove(

@@ -1,4 +1,3 @@
-extern crate structopt;
 use structopt::StructOpt;
 
 use agent_runtime::docker;
