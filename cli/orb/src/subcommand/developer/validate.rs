@@ -2,6 +2,7 @@ extern crate structopt;
 use structopt::StructOpt;
 
 use config_parser::yaml as parser;
+use std::path::PathBuf;
 
 use crate::{GlobalOption, SubcommandError};
 
@@ -10,22 +11,18 @@ use crate::{GlobalOption, SubcommandError};
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
     /// Path to orb config file. Defaults to current working directory
-    #[structopt(long, short)]
-    file: Option<String>,
+    #[structopt(parse(from_os_str), env = "PWD")]
+    file: PathBuf,
 }
 
 // TODO: We want to return the config
 /// Validate the config by loading it. Serde-yaml will error out if there are syntax issues.
-pub fn subcommand_handler(
+pub async fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
-    if let Some(yaml_file) = local_option.file {
-        match parser::load_orb_yaml(yaml_file) {
+        match parser::load_orb_yaml(&local_option.file.as_path()) {
             Ok(_c) => Ok(()),
             Err(_e) => Err(SubcommandError::new("Config file failed validation")),
         }
-    } else {
-        Err(SubcommandError::new("No config file specified"))
-    }
 }

@@ -41,3 +41,5 @@ scripts/backup*
 *.txt
 
 target/
+legacy/
+dev-data/

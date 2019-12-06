@@ -3,7 +3,11 @@ members = [
     "cli/orb",
     "cli/orb/src/subcommand",
     "lib/config_parser",
-    "lib/container_builder",
+    "lib/agent_runtime",
     "lib/git_meta",
+    "lib/hashicorp_stack",
     "services",
 ]
+
+[patch.crates-io]
+hashicorp_vault = { git = "https://github.com/tjtelan/vault-rs"}

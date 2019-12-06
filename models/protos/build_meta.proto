@@ -1,0 +1,64 @@
+syntax = "proto3";
+package build_meta;
+
+import "orbital_types.proto";
+import "google/protobuf/timestamp.proto";
+
+message BuildTarget {
+    string org = 1;
+    string git_provider = 2;
+    string git_repo = 3;
+    string remote_uri = 4;
+    string branch = 5;
+    string commit_hash = 6;
+    string envs = 7;
+    int32 id = 8;
+}
+
+message BuildStage {
+    int32 id = 1;
+    int32 build_id = 2;
+    string stage = 3;
+    int32 exit_code = 4;
+    orbital_types.JobState status = 5;
+    google.protobuf.Timestamp start_time = 6;
+    google.protobuf.Timestamp end_time = 7;
+    bytes output = 8;
+}
+
+message BuildMetadata {
+    int32 id = 1;
+    BuildTarget build = 2;
+    orbital_types.JobTrigger job_trigger = 3;
+    google.protobuf.Timestamp queue_time = 4;
+    google.protobuf.Timestamp start_time = 5;
+    google.protobuf.Timestamp end_time = 6;
+    orbital_types.JobState build_state = 7;
+}
+
+message BuildRecord {
+    BuildMetadata build_metadata = 1;
+    repeated BuildStage build_output = 2;
+}
+
+message BuildSummaryRequest {
+    BuildTarget build = 1;
+    int32 limit = 2;
+}
+
+message BuildSummaryResponse {
+    repeated BuildMetadata summaries = 1;
+}
+
+message BuildLogResponse {
+    int32 id = 1;
+    repeated BuildRecord records = 2;
+}
+
+service BuildService {
+    rpc BuildStart(BuildTarget) returns (BuildMetadata);
+    rpc BuildStop(BuildTarget) returns (BuildMetadata);
+    rpc BuildLogs(BuildTarget) returns (stream BuildLogResponse);
+    rpc BuildRemove(BuildTarget) returns (BuildMetadata);
+    rpc BuildSummary(BuildSummaryRequest) returns (BuildSummaryResponse);
+}

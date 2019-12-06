@@ -3,8 +3,14 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::build_metadata::server::BuildServiceServer;
+use orbital_headers::{
+    build_meta::server::BuildServiceServer, code::server::CodeServiceServer,
+    notify::server::NotifyServiceServer, organization::server::OrganizationServiceServer,
+    secret::server::SecretServiceServer,
+};
 use orbital_services::OrbitalApi;
+
+use orbital_services::ORB_DEFAULT_URI;
 
 use log::debug;
 use tonic::transport::Server;
@@ -18,17 +24,20 @@ pub struct SubcommandOption {
     path: Option<String>,
 }
 
-/// Binds a *currently hardcoded* address and starts a `BuildService` gRPC server
+/// Binds a *currently hardcoded* address and starts all services on mutliplexed gRPC server
 pub async fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,
 ) -> Result<(), SubcommandError> {
-    let addr = "127.0.0.1:50051".parse().unwrap();
-    let buildserver = OrbitalApi::default();
+    let addr = ORB_DEFAULT_URI.parse().unwrap();
 
-    debug!("Starting BuildService server");
+    debug!("Starting single-node server");
     Server::builder()
-        .add_service(BuildServiceServer::new(buildserver))
+        .add_service(BuildServiceServer::new(OrbitalApi::default()))
+        .add_service(CodeServiceServer::new(OrbitalApi::default()))
+        .add_service(NotifyServiceServer::new(OrbitalApi::default()))
+        .add_service(OrganizationServiceServer::new(OrbitalApi::default()))
+        .add_service(SecretServiceServer::new(OrbitalApi::default()))
         .serve(addr)
         .await?;
 

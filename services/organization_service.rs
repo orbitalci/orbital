@@ -1,8 +1,6 @@
 use orbital_headers::organization::{
-    server::OrganizationService, Org, OrgDeleteRequest, OrgDisableRequest, OrgEnableRequest,
-    OrgRegisterRequest, PolledRepo, RegisteredRepo, RegisteredRepoUpdateStateRequest,
-    RegisteredRepoUpdateUriRequest, RepoRegisterPollingExpressionRequest, RepoRegisterRequest,
-    RepoUpdatePollingStateRequest,
+    server::OrganizationService, OrgAddRequest, OrgEntry, OrgGetRequest, OrgListResponse,
+    OrgRemoveRequest, OrgUpdateRequest,
 };
 use tonic::{Request, Response, Status};
 
@@ -11,66 +9,35 @@ use super::OrbitalApi;
 /// Implementation of protobuf derived `OrganizationService` trait
 #[tonic::async_trait]
 impl OrganizationService for OrbitalApi {
-    async fn register_org(
+    async fn org_add(
         &self,
-        _request: Request<OrgRegisterRequest>,
-    ) -> Result<Response<Org>, Status> {
+        _request: Request<OrgAddRequest>,
+    ) -> Result<Response<OrgEntry>, Status> {
         unimplemented!()
     }
 
-    async fn enable_org(
+    async fn org_get(
         &self,
-        _request: Request<OrgEnableRequest>,
-    ) -> Result<Response<Org>, Status> {
+        _request: Request<OrgGetRequest>,
+    ) -> Result<Response<OrgEntry>, Status> {
         unimplemented!()
     }
 
-    async fn disable_org(
+    async fn org_update(
         &self,
-        _request: Request<OrgDisableRequest>,
-    ) -> Result<Response<Org>, Status> {
+        _request: Request<OrgUpdateRequest>,
+    ) -> Result<Response<OrgEntry>, Status> {
         unimplemented!()
     }
 
-    async fn delete_org(
+    async fn org_remove(
         &self,
-        _request: Request<OrgDeleteRequest>,
-    ) -> Result<Response<Org>, Status> {
+        _request: Request<OrgRemoveRequest>,
+    ) -> Result<Response<OrgEntry>, Status> {
         unimplemented!()
     }
 
-    async fn register_repo(
-        &self,
-        _request: Request<RepoRegisterRequest>,
-    ) -> Result<Response<RegisteredRepo>, Status> {
-        unimplemented!()
-    }
-
-    async fn update_repo_state(
-        &self,
-        _request: Request<RegisteredRepoUpdateStateRequest>,
-    ) -> Result<Response<RegisteredRepo>, Status> {
-        unimplemented!()
-    }
-
-    async fn update_repo_uri(
-        &self,
-        _request: Request<RegisteredRepoUpdateUriRequest>,
-    ) -> Result<Response<RegisteredRepo>, Status> {
-        unimplemented!()
-    }
-
-    async fn poll_repo(
-        &self,
-        _request: Request<RepoRegisterPollingExpressionRequest>,
-    ) -> Result<Response<PolledRepo>, Status> {
-        unimplemented!()
-    }
-
-    async fn update_repo_polling_state(
-        &self,
-        _request: Request<RepoUpdatePollingStateRequest>,
-    ) -> Result<Response<PolledRepo>, Status> {
+    async fn org_list(&self, _request: Request<()>) -> Result<Response<OrgListResponse>, Status> {
         unimplemented!()
     }
 }

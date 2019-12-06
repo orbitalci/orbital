@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 git2 = "0.10"
 log = "0.4"
+mktemp = "0.4"
 
 [lib]
 name = "git_meta"

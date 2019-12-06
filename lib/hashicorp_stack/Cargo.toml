@@ -1,0 +1,13 @@
+[package]
+name = "hashicorp_stack"
+version = "0.1.0"
+authors = ["T.J. Telan <t.telan@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+hashicorp_vault = "0.7.0"
+log = "0.4"
+
+[lib]
+name = "hashicorp_stack"
+path = "mod.rs"

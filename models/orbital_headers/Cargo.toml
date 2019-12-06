@@ -5,7 +5,7 @@ authors = ["evancramer <evancramer@level11.com>", "T.J. Telan <tjtelan@level11.c
 edition = "2018"
 
 [dependencies]
-tonic = "0.1.0-alpha.6"
+tonic = { version = "0.1.0-alpha.6", features = [ "rustls"] }
 prost = "0.5"
 prost-types = "0.5"
 prost-derive = "0.5"

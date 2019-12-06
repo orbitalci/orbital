@@ -1,5 +1,5 @@
 [package]
-name = "container_builder"
+name = "agent_runtime"
 version = "0.1.0"
 authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
@@ -8,7 +8,11 @@ edition = "2018"
 shiplift = { git = "https://github.com/softprops/shiplift.git" }
 tokio = "0.1"
 log = "0.4"
+git_meta = { path = "../git_meta" }
+mktemp = "0.4"
+config_parser = { path = "../config_parser" }
+hashicorp_stack = { path = "../hashicorp_stack" }
 
 [lib]
-name = "container_builder"
+name = "agent_runtime"
 path = "mod.rs"
