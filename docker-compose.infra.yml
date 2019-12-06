@@ -27,19 +27,19 @@ services:
   #    CONSUL_LOCAL_CONFIG: '{"skip_leave_on_interrupt": true}'
   #    CONSUL_BIND_INTERFACE: "eth0"
   #  command: ["consul", "agent", "-dev"]
-  #postgres:
-  #  image: postgres:12-alpine
-  #  container_name: postgres
-  #  hostname: postgres-docker
-  #  ports:
-  #    - 5432:5432
-  #  environment:
-  #    - POSTGRES_USER=orbital
-  #    - POSTGRES_PASSWORD=orbital
-  #    - POSTGRES_DB=orbital
-  #    - PGDATA=/postgres
-  #  volumes:
-  #    - ./dev-data/orbital-db-data:/postgres
+  postgres:
+    image: postgres:12-alpine
+    container_name: postgres
+    hostname: postgres-docker
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=orbital
+      - POSTGRES_PASSWORD=orbital
+      - POSTGRES_DB=orbital
+      - PGDATA=/postgres
+    volumes:
+      - ./dev-data/orbital-db-data:/postgres
   #rabbitmq:
   #  image: rabbitmq:3.8-management-alpine
   #  container_name: rabbitmq
