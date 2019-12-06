@@ -19,7 +19,7 @@ enum JobState {
     STARTING = 3;
     RUNNING = 4;
     FINISHING = 5;
-    CANCELLED = 6;
+    CANCELED = 6;
     SYSTEM_ERR = 7;
     FAILED = 8;
     DONE = 9;

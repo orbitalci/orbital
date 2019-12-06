@@ -11,20 +11,23 @@ CREATE TYPE job_state AS ENUM (
     'RUNNING',
     'FINISHING',
     'CANCELED',
-    'KILLED',
+    'SYSTEMERR',
     'FAILED',
     'DONE'
 );
 
 CREATE TYPE job_trigger AS ENUM (
-    'POLL',
+    'PUSH',
+    'PULLREQUEST',
     'WEBHOOK',
+    'POLL',
     'MANUAL',
-    'SUBSCRIBE',
-    'COMMIT_MSG'
+    'SUBSCRIBE_TRIGGER',
+    'COMMIT_MSG_TRIGGER'
 );
 
-CREATE TYPE code_host_type AS ENUM (
+CREATE TYPE git_host_type AS ENUM (
+    'GENERIC',
     'BITBUCKET',
     'GITHUB'
 );
