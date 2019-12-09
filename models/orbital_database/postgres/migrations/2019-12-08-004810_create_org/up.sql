@@ -1,0 +1,4 @@
+CREATE TABLE org (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR NOT NULL
+);
