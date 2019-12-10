@@ -7,7 +7,7 @@ members = [
     "lib/git_meta",
     "lib/hashicorp_stack",
     "services",
-    "models/orbital_database/postgres",
+    "models/orbital_database",
 ]
 
 [patch.crates-io]
