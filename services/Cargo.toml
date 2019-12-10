@@ -16,6 +16,8 @@ futures = "0.3"
 prost-types = "0.5"
 hashicorp_stack = { path = "../lib/hashicorp_stack" }
 mktemp = "0.4"
+orbital_database = { path = "../models/orbital_database" }
+
 
 [lib]
 name = "orbital_services"

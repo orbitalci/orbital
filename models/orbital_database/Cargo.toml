@@ -1,10 +1,11 @@
 [package]
-name = "orbital-database"
+name = "orbital_database"
 version = "0.1.0"
 authors = ["T.J. Telan <tjtelan@level11.com>"]
 edition = "2018"
 
 [dependencies]
+diesel = { version = "1.4", features = ["postgres"] }
 
 [lib]
 name = "orbital_database"
