@@ -3,6 +3,7 @@ package organization;
 
 import "orbital_types.proto";
 import "code.proto";
+import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 // Defines our major organizational types: organizations (orgs), version control systems (vcs) and git repositories (repos) 
@@ -10,7 +11,9 @@ import "google/protobuf/empty.proto";
 
 message OrgEntry {
     string name = 1;
-    orbital_types.ActiveState active_state = 2; 
+    google.protobuf.Timestamp created = 2;
+    google.protobuf.Timestamp last_update = 3;
+    orbital_types.ActiveState active_state = 4; 
 }
 
 // Server returns OrgEntry as response
@@ -24,7 +27,8 @@ message OrgGetRequest {
 
 message OrgUpdateRequest {
     string name = 1;
-    orbital_types.ActiveState active_state = 2;
+    string update_name = 2;
+    orbital_types.ActiveState active_state = 3;
 }
 
 // Server returns OrgEntry as response
