@@ -165,8 +165,6 @@ pub enum Subcommand {
     Org(org::SubcommandOption),
     /// Actions for Repos
     Repo(repo::SubcommandOption),
-    ///// Actions for Polling
-    //Poll(poll::SubcommandOption),
     /// Do things with secrets for builds
     Secret(secret::SubcommandOption),
     /// Get summary of a repo

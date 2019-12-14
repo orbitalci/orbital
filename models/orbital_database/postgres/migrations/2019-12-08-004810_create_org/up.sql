@@ -1,4 +1,7 @@
 CREATE TABLE org (
   id SERIAL PRIMARY KEY,
-  name VARCHAR NOT NULL
+  name TEXT NOT NULL,
+  created TIMESTAMP NOT NULL,
+  last_update TIMESTAMP NOT NULL,
+  active_state active_state NOT NULL DEFAULT 'enabled'::active_state
 );

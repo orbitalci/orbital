@@ -12,6 +12,7 @@ use log::debug;
 #[structopt(rename_all = "kebab_case")]
 pub struct ActionOption {
     name: String,
+    update_name: String,
     #[structopt(long, short)]
     active_state: Option<bool>,
 }
@@ -26,6 +27,7 @@ pub async fn action_handler(
 
     let request = Request::new(OrgUpdateRequest {
         name: action_option.name.into(),
+        update_name: action_option.update_name.into(),
         active_state: action_option
             .active_state
             .expect("Something went wrong with parsing active state")
