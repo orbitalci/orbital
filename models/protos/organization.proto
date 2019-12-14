@@ -10,10 +10,11 @@ import "google/protobuf/empty.proto";
 // Repos are repositories of code representing a codebase to build
 
 message OrgEntry {
-    string name = 1;
-    google.protobuf.Timestamp created = 2;
-    google.protobuf.Timestamp last_update = 3;
-    orbital_types.ActiveState active_state = 4; 
+    int32 id = 1;
+    string name = 2;
+    google.protobuf.Timestamp created = 3;
+    google.protobuf.Timestamp last_update = 4;
+    orbital_types.ActiveState active_state = 5; 
 }
 
 // Server returns OrgEntry as response

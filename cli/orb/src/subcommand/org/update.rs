@@ -6,6 +6,8 @@ use orbital_headers::organization::{client::OrganizationServiceClient, OrgUpdate
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
+use orbital_database::postgres::schema::ActiveState;
+
 use log::debug;
 
 #[derive(Debug, StructOpt, Clone)]
@@ -13,8 +15,9 @@ use log::debug;
 pub struct ActionOption {
     name: String,
     update_name: String,
-    #[structopt(long, short)]
-    active_state: Option<bool>,
+    // TODO: This needs some work
+    //#[structopt(long, short, default_value = ActiveState::Enabled)]
+    //active_state: ActiveState,
 }
 
 pub async fn action_handler(
@@ -28,10 +31,7 @@ pub async fn action_handler(
     let request = Request::new(OrgUpdateRequest {
         name: action_option.name.into(),
         update_name: action_option.update_name.into(),
-        active_state: action_option
-            .active_state
-            .expect("Something went wrong with parsing active state")
-            .into(),
+        active_state: ActiveState::Enabled.into(),
     });
     debug!("Request for org update: {:?}", &request);
 
