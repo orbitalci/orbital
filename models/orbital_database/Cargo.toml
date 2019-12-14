@@ -8,6 +8,8 @@ edition = "2018"
 diesel = { version = "1.4", features = ["postgres", "chrono"] }
 log = "0.4"
 chrono = "0.4"
+orbital_headers = { path = "../orbital_headers" }
+prost-types = "0.5"
 
 [lib]
 name = "orbital_database"

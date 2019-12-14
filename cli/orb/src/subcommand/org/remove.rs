@@ -13,7 +13,7 @@ use log::debug;
 pub struct ActionOption {
     name: String,
     #[structopt(long, short)]
-    force: Option<bool>,
+    force: bool,
 }
 
 pub async fn action_handler(
@@ -26,10 +26,7 @@ pub async fn action_handler(
 
     let request = Request::new(OrgRemoveRequest {
         name: action_option.name.into(),
-        force: action_option
-            .force
-            .expect("Something went wrong with parsing force flag")
-            .into(),
+        force: action_option.force.into(),
     });
     debug!("Request for org remove: {:?}", &request);
 

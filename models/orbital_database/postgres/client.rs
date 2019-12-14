@@ -10,7 +10,6 @@ pub fn establish_connection() -> PgConnection {
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
 
-// FIXME: This isn't checking for existence. It is just selecting all.
 pub fn new_org(conn: &PgConnection, name: &str) -> Result<Org, String> {
     // Only insert if there are no other orgs by this name
     let mut org_check: Vec<Org> = org::table
@@ -49,7 +48,7 @@ pub fn get_org(conn: &PgConnection, name: &str) -> Result<Org, String> {
 
     match &org_check.len() {
         0 => {
-            debug!("org doesn't exist");
+            debug!("org not found in db");
             Err("Org not Found".to_string())
         }
         1 => {
@@ -60,10 +59,33 @@ pub fn get_org(conn: &PgConnection, name: &str) -> Result<Org, String> {
     }
 }
 
-//pub fn update_org(conn: &PgConnection, name: &str, org: Org) -> Result<Org, String> {
-//    unimplemented!()
-//}
-//
-//pub fn remove_org(conn: &PgConnection, org: Org) -> Result<(), String> {
-//    unimplemented!()
-//}
+pub fn update_org(conn: &PgConnection, name: &str, update_org: NewOrg) -> Result<Org, String> {
+    let org_update: Org = diesel::update(org::table)
+        .filter(org::name.eq(&name))
+        .set(update_org)
+        .get_result(conn)
+        .expect("Error updating org");
+
+    debug!("Result after update: {:?}", &org_update);
+
+    Ok(org_update)
+}
+
+pub fn remove_org(conn: &PgConnection, name: &str) -> Result<Org, String> {
+    let org_delete: Org = diesel::delete(org::table)
+        .filter(org::name.eq(&name))
+        .get_result(conn)
+        .expect("Error deleting org");
+
+    Ok(org_delete)
+}
+
+pub fn list_org(conn: &PgConnection) -> Result<Vec<Org>, String> {
+    let query: Vec<Org> = org::table
+        .select(org::all_columns)
+        .order_by(org::id)
+        .load(conn)
+        .expect("Error getting all order records");
+
+    Ok(query)
+}
