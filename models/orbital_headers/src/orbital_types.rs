@@ -1,6 +1,7 @@
 tonic::include_proto!("orbital_types");
 
 use std::fmt;
+use std::str::FromStr;
 
 impl From<i32> for JobTrigger {
     fn from(job_trigger: i32) -> Self {
@@ -46,6 +47,37 @@ impl fmt::Display for JobTrigger {
             Self::SubscribeTrigger => write!(f, "{}", "SubscribeTrigger"),
             Self::CommitMsgTrigger => write!(f, "{}", "CommitMessage"),
         }
+    }
+}
+
+//impl FromStr for JobTrigger {
+//    type Err = std::string::ParseError;
+//
+//    fn from_str(s: &str) -> Result<Self, Self::Err> {
+//        Ok(match s.to_lowercase().as_ref() {
+//            "unspecified" => ActiveState::Unspecified,
+//            "unknown" => ActiveState::Unknown,
+//            "enabled" => ActiveState::Enabled,
+//            "disabled" => ActiveState::Disabled,
+//            "deleted" => ActiveState::Deleted,
+//            _ => ActiveState::Unknown,
+//        })
+//    }
+//}
+
+impl JobTrigger {
+    /// A list of possible variants in `&'static str` form
+    pub fn variants() -> [&'static str; 8] {
+        [
+            "unspecified",
+            "push",
+            "pullrequest",
+            "webhook",
+            "poll",
+            "manual",
+            "subscribetrigger",
+            "commitmsgtrigger",
+        ]
     }
 }
 
@@ -105,6 +137,25 @@ impl fmt::Display for JobState {
     }
 }
 
+impl JobState {
+    /// A list of possible variants in `&'static str` form
+    pub fn variants() -> [&'static str; 11] {
+        [
+            "unspecified",
+            "unknown",
+            "queued",
+            "starting",
+            "running",
+            "finishing",
+            "canceled",
+            "systemerr",
+            "failed",
+            "done",
+            "deleted",
+        ]
+    }
+}
+
 impl From<i32> for ActiveState {
     fn from(active_state: i32) -> Self {
         match active_state {
@@ -130,6 +181,7 @@ impl From<String> for ActiveState {
         }
     }
 }
+
 impl fmt::Display for ActiveState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -139,6 +191,13 @@ impl fmt::Display for ActiveState {
             Self::Unknown => write!(f, "{}", "Unknown"),
             Self::Deleted => write!(f, "{}", "Deleted"),
         }
+    }
+}
+
+impl ActiveState {
+    /// A list of possible variants in `&'static str` form
+    pub fn variants() -> [&'static str; 5] {
+        ["unspecified", "enabled", "disabled", "unknown", "deleted"]
     }
 }
 
@@ -198,6 +257,46 @@ impl fmt::Display for SecretType {
     }
 }
 
+impl FromStr for SecretType {
+    type Err = std::string::ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.to_lowercase().as_ref() {
+            "unspecified" => Self::Unspecified,
+            "basicauth" => Self::BasicAuth,
+            "apikey" => Self::ApiKey,
+            "envvar" => Self::EnvVar,
+            "file" => Self::File,
+            "sshkey" => Self::SshKey,
+            "dockerregistry" => Self::DockerRegistry,
+            "npmrepo" => Self::NpmRepo,
+            "pypiregistry" => Self::PypiRegistry,
+            "mavenrepo" => Self::MavenRepo,
+            "kubernetes" => Self::Kubernetes,
+            _ => panic!("Unknown secret type"),
+        })
+    }
+}
+
+impl SecretType {
+    /// A list of possible variants in `&'static str` form
+    pub fn variants() -> [&'static str; 11] {
+        [
+            "unspecified",
+            "basicauth",
+            "apikey",
+            "envvar",
+            "file",
+            "sshkey",
+            "dockerregistry",
+            "npmrepo",
+            "pypiregistry",
+            "mavenrepo",
+            "kubernetes",
+        ]
+    }
+}
+
 impl From<i32> for GitHostType {
     fn from(git_host_type: i32) -> Self {
         match git_host_type {
@@ -233,6 +332,27 @@ impl fmt::Display for GitHostType {
     }
 }
 
+impl FromStr for GitHostType {
+    type Err = std::string::ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.to_lowercase().as_ref() {
+            "unspecified" => Self::Unspecified,
+            "generic" => Self::Generic,
+            "bitbucket" => Self::Bitbucket,
+            "github" => Self::Github,
+            _ => panic!("Unknown git host type"),
+        })
+    }
+}
+
+impl GitHostType {
+    /// A list of possible variants in `&'static str` form
+    pub fn variants() -> [&'static str; 4] {
+        ["unspecified", "generic", "bitbucket", "github"]
+    }
+}
+
 impl From<i32> for NotifyType {
     fn from(notify_type: i32) -> Self {
         match notify_type {
@@ -261,5 +381,25 @@ impl fmt::Display for NotifyType {
             Self::Slack => write!(f, "{}", "Slack"),
             Self::Webhook => write!(f, "{}", "Webhook"),
         }
+    }
+}
+
+impl FromStr for NotifyType {
+    type Err = std::string::ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.to_lowercase().as_ref() {
+            "unspecified" => Self::Unspecified,
+            "slack" => Self::Slack,
+            "webhook" => Self::Webhook,
+            _ => panic!("Unknown notify type"),
+        })
+    }
+}
+
+impl NotifyType {
+    /// A list of possible variants in `&'static str` form
+    pub fn variants() -> [&'static str; 3] {
+        ["unspecified", "slack", "webhook"]
     }
 }

@@ -4,6 +4,7 @@ use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
 use diesel::serialize::{self, IsNull, Output, ToSql};
 use std::io::Write;
+use std::str::FromStr;
 
 use orbital_headers::orbital_types;
 
@@ -35,6 +36,28 @@ pub enum ActiveState {
     Enabled = 2,
     Disabled = 3,
     Deleted = 4,
+}
+
+impl ActiveState {
+    /// A list of possible variants in `&'static str` form
+    pub fn variants() -> [&'static str; 5] {
+        ["unspecified", "unknown", "enabled", "disabled", "deleted"]
+    }
+}
+
+impl FromStr for ActiveState {
+    type Err = std::string::ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.to_lowercase().as_ref() {
+            "unspecified" => ActiveState::Unspecified,
+            "unknown" => ActiveState::Unknown,
+            "enabled" => ActiveState::Enabled,
+            "disabled" => ActiveState::Disabled,
+            "deleted" => ActiveState::Deleted,
+            _ => ActiveState::Unknown,
+        })
+    }
 }
 
 impl From<i32> for ActiveState {

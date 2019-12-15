@@ -27,7 +27,9 @@ pub enum Action {
     Add(add::ActionOption),
     Get(get::ActionOption),
     Update(update::ActionOption),
+    #[structopt(alias = "rm")]
     Remove(remove::ActionOption),
+    #[structopt(alias = "ls")]
     List(list::ActionOption),
     // Enable,
     // Disable,
