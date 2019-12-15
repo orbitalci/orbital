@@ -20,18 +20,8 @@ pub struct ActionOption {
     secret_name: String,
 
     /// Secret Type
-    #[structopt(long, required = true, possible_values = &[
-        "basicauth", 
-        "apikey", 
-        "envvar", 
-        "file", 
-        "sshkey", 
-        "dockerregistry", 
-        "npmrepo", 
-        "pypiregistry", 
-        "mavenrepo", 
-        "kubernetes"])]
-    secret_type: String,
+    #[structopt(long, required = true, possible_values = &SecretType::variants())]
+    secret_type: SecretType,
 
     #[structopt(long, default_value = "default_org")]
     org_name: String,

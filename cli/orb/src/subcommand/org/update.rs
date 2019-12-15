@@ -15,9 +15,8 @@ use log::debug;
 pub struct ActionOption {
     name: String,
     update_name: String,
-    // TODO: This needs some work
-    //#[structopt(long, short, default_value = ActiveState::Enabled)]
-    //active_state: ActiveState,
+    #[structopt(long, short, default_value = "enabled", possible_values = &ActiveState::variants())]
+    active_state: ActiveState,
 }
 
 pub async fn action_handler(
@@ -31,8 +30,9 @@ pub async fn action_handler(
     let request = Request::new(OrgUpdateRequest {
         name: action_option.name.into(),
         update_name: action_option.update_name.into(),
-        active_state: ActiveState::Enabled.into(),
+        active_state: action_option.active_state.into(),
     });
+
     debug!("Request for org update: {:?}", &request);
 
     let response = client.org_update(request).await?;
