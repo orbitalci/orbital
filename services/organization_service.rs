@@ -64,20 +64,14 @@ impl OrganizationService for OrbitalApi {
 
         let pg_conn = postgres::client::establish_connection();
 
-        let remove_org = postgres::org::Org::default();
-
         let db_result = postgres::client::remove_org(&pg_conn, &unwrapped_request.name)
             .expect("There was a problem finding org in database");
 
         Ok(Response::new(db_result.into()))
     }
 
-    async fn org_list(&self, request: Request<()>) -> Result<Response<OrgListResponse>, Status> {
-        let unwrapped_request = request.into_inner();
-
+    async fn org_list(&self, _request: Request<()>) -> Result<Response<OrgListResponse>, Status> {
         let pg_conn = postgres::client::establish_connection();
-
-        let update_org = postgres::org::Org::default();
 
         // Convert the Vec<Org> response into the proto codegen version.
         let db_result: Vec<OrgEntry> = postgres::client::list_org(&pg_conn)

@@ -15,7 +15,7 @@ table! {
     use diesel::sql_types::{Integer, Text, Timestamp};
     use super::ActiveStatePGEnum;
 
-    org {
+    org (id) {
         id -> Integer,
         name -> Text,
         created -> Timestamp,
@@ -121,4 +121,42 @@ impl From<orbital_types::ActiveState> for ActiveState {
             orbital_types::ActiveState::Deleted => ActiveState::Deleted,
         }
     }
+}
+
+table! {
+    use diesel::sql_types::{Integer, Text};
+    use super::{ActiveStatePGEnum,SecretTypePGEnum};
+
+    secret (id, org_id) {
+        id -> Integer,
+        org_id -> Integer,
+        name -> Text,
+        secret_type -> SecretTypePGEnum,
+        vault_path -> Text,
+        active_state -> ActiveStatePGEnum,
+    }
+}
+
+joinable!(secret -> org (org_id));
+
+allow_tables_to_appear_in_same_query!(org, secret,);
+
+#[derive(SqlType, Debug)]
+#[postgres(type_name = "secret_type")]
+pub struct SecretTypePGEnum;
+
+#[derive(Debug, Clone, PartialEq, FromSqlRow, AsExpression)]
+#[sql_type = "SecretTypePGEnum"]
+pub enum SecretType {
+    Unspecified = 0,
+    BasicAuth = 1,
+    ApiKey = 2,
+    EnvVar = 3,
+    File = 4,
+    SshKey = 5,
+    DockerRegistry = 6,
+    NpmRepo = 7,
+    PypiRegistry = 8,
+    MavenRepo = 9,
+    Kubernetes = 10,
 }
