@@ -194,12 +194,13 @@ impl fmt::Display for ActiveState {
     }
 }
 
-impl ActiveState {
-    /// A list of possible variants in `&'static str` form
-    pub fn variants() -> [&'static str; 5] {
-        ["unspecified", "enabled", "disabled", "unknown", "deleted"]
-    }
-}
+// TODO: Get rid of lots of duplication
+//impl ActiveState {
+//    /// A list of possible variants in `&'static str` form
+//    pub fn variants() -> [&'static str; 5] {
+//        ["unspecified", "enabled", "disabled", "unknown", "deleted"]
+//    }
+//}
 
 impl From<i32> for SecretType {
     fn from(secret_type: i32) -> Self {
