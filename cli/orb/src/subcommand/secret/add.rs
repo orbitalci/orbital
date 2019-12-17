@@ -23,8 +23,9 @@ pub struct ActionOption {
     #[structopt(long, required = true, possible_values = &SecretType::variants())]
     secret_type: SecretType,
 
-    #[structopt(long, default_value = "default_org")]
-    org_name: String,
+    /// Name of Orbital org
+    #[structopt(long, env = "ORB_DEFAULT_ORG")]
+    org: Option<String>,
 
     /// Secret filepath
     #[structopt(long, short = "f")]
@@ -42,20 +43,10 @@ pub async fn action_handler(
 
     let mut client = SecretServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let org_name = &action_option.org_name;
-    let secret_name = &action_option.secret_name;
-    let vault_path = format!(
-        "orbital/{}/{}/{}",
-        org_name,
-        SecretType::from(action_option.secret_type.clone()),
-        secret_name,
-    )
-    .to_lowercase();
-
     let request = Request::new(SecretAddRequest {
-        org: org_name.into(),
-        name: vault_path,
-        secret_type: SecretType::from(action_option.secret_type.clone()).into(),
+        org: action_option.org.unwrap_or_default().into(),
+        name: action_option.secret_name.into(),
+        secret_type: action_option.secret_type.into(),
         data: contents.into(),
     });
 

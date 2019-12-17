@@ -20,8 +20,9 @@ pub struct ActionOption {
     #[structopt(long, required = true, possible_values = &SecretType::variants())]
     secret_type: SecretType,
 
-    #[structopt(long, default_value = "default_org")]
-    org_name: String,
+    /// Name of Orbital org
+    #[structopt(long, env = "ORB_DEFAULT_ORG")]
+    org: Option<String>,
 }
 
 pub async fn action_handler(
@@ -31,12 +32,13 @@ pub async fn action_handler(
 ) -> Result<(), SubcommandError> {
     let mut client = SecretServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let org_name = &action_option.org_name;
+    let org_name = action_option.org.unwrap_or_default();
     let secret_name = &action_option.secret_name;
+
     let vault_path = format!(
         "orbital/{}/{}/{}",
         org_name,
-        SecretType::from(action_option.secret_type.clone()),
+        action_option.secret_type.to_string(),
         secret_name
     )
     .to_lowercase();
@@ -44,7 +46,7 @@ pub async fn action_handler(
     let request = Request::new(SecretGetRequest {
         org: org_name.into(),
         name: vault_path,
-        secret_type: SecretType::from(action_option.secret_type.clone()).into(),
+        secret_type: action_option.secret_type.into(),
     });
 
     debug!("Request for secret get: {:?}", &request);

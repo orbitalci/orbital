@@ -15,6 +15,10 @@ pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
     #[structopt(long, parse(from_os_str), env = "PWD")]
     path: PathBuf,
+
+    /// Name of Orbital org
+    #[structopt(long, env = "ORB_DEFAULT_ORG")]
+    org: Option<String>,
 }
 
 /// Generates request for canceling a build in progress
