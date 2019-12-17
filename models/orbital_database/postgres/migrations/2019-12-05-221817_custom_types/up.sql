@@ -42,7 +42,7 @@ CREATE TYPE secret_type AS ENUM (
     'maven_repo',
     'npm_repo',
     'pypi_registry',
-    'ssh_key',
+    'ssh_key'
 );
 
 CREATE TYPE notify_type AS ENUM (

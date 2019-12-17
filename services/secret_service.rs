@@ -32,7 +32,10 @@ impl SecretService for OrbitalApi {
             &vault::orb_vault_path(
                 &unwrapped_request.org,
                 &unwrapped_request.name,
-                &unwrapped_request.secret_type.to_string(),
+                &format!(
+                    "{:?}",
+                    postgres::schema::SecretType::from(unwrapped_request.secret_type)
+                ),
             ),
             &String::from_utf8_lossy(&unwrapped_request.data),
         );
