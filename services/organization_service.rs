@@ -16,7 +16,7 @@ impl OrganizationService for OrbitalApi {
 
         let pg_conn = postgres::client::establish_connection();
 
-        let db_result = postgres::client::new_org(&pg_conn, &unwrapped_request.name)
+        let db_result = postgres::client::org_add(&pg_conn, &unwrapped_request.name)
             .expect("There was a problem adding org in database");
 
         Ok(Response::new(db_result.into()))
@@ -27,7 +27,7 @@ impl OrganizationService for OrbitalApi {
 
         let pg_conn = postgres::client::establish_connection();
 
-        let db_result = postgres::client::get_org(&pg_conn, &unwrapped_request.name)
+        let db_result = postgres::client::org_get(&pg_conn, &unwrapped_request.name)
             .expect("There was a problem finding org in database");
 
         Ok(Response::new(db_result.into()))
@@ -50,7 +50,7 @@ impl OrganizationService for OrbitalApi {
             _ => unwrapped_request.update_name.clone(),
         };
 
-        let db_result = postgres::client::update_org(&pg_conn, &unwrapped_request.name, update_org)
+        let db_result = postgres::client::org_update(&pg_conn, &unwrapped_request.name, update_org)
             .expect("There was a problem finding org in database");
 
         Ok(Response::new(db_result.into()))
@@ -64,7 +64,7 @@ impl OrganizationService for OrbitalApi {
 
         let pg_conn = postgres::client::establish_connection();
 
-        let db_result = postgres::client::remove_org(&pg_conn, &unwrapped_request.name)
+        let db_result = postgres::client::org_remove(&pg_conn, &unwrapped_request.name)
             .expect("There was a problem finding org in database");
 
         Ok(Response::new(db_result.into()))
@@ -74,7 +74,7 @@ impl OrganizationService for OrbitalApi {
         let pg_conn = postgres::client::establish_connection();
 
         // Convert the Vec<Org> response into the proto codegen version.
-        let db_result: Vec<OrgEntry> = postgres::client::list_org(&pg_conn)
+        let db_result: Vec<OrgEntry> = postgres::client::org_list(&pg_conn)
             .expect("There was a problem finding org in database")
             .into_iter()
             .map(|o| o.into())
