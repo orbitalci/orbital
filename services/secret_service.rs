@@ -8,6 +8,7 @@ use super::OrbitalApi;
 
 use agent_runtime::vault;
 use log::debug;
+use orbital_database::postgres;
 
 /// Implementation of protobuf derived `SecretService` trait
 #[tonic::async_trait]
@@ -19,17 +20,38 @@ impl SecretService for OrbitalApi {
         debug!("secret add request: {:?}", &request);
 
         let unwrapped_request = request.into_inner();
-        let vault_path = &unwrapped_request.name;
+
+        // TODO: Agent runtime needs to provide this
+        // If no org provided. Try to reference an org
+        // If there are no orgs, throw an error
+        // If there is only one org, choose it
+        // If there are more than one, we need to choose a default or to throw an error
 
         // TODO: Handle errors
         let _ = vault::vault_add_secret(
-            &vault_path,
+            &vault::orb_vault_path(
+                &unwrapped_request.org,
+                &unwrapped_request.name,
+                &unwrapped_request.secret_type.to_string(),
+            ),
             &String::from_utf8_lossy(&unwrapped_request.data),
         );
 
+        // Add Secret reference into DB
+
+        let pg_conn = postgres::client::establish_connection();
+
+        let _db_result = postgres::client::secret_add(
+            &pg_conn,
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            unwrapped_request.secret_type.into(),
+        )
+        .expect("There was a problem adding secret in database");
+
         let secret_result = SecretEntry {
-            //org: "default_org".into(),
-            name: vault_path.to_string(),
+            org: unwrapped_request.org.into(),
+            name: unwrapped_request.name.into(),
             secret_type: unwrapped_request.secret_type,
             ..Default::default()
         };
@@ -46,10 +68,14 @@ impl SecretService for OrbitalApi {
         let unwrapped_request = request.into_inner();
 
         // TODO: Handle errors
-        let secret = vault::vault_get_secret(&unwrapped_request.name);
+        let secret = vault::vault_get_secret(&vault::orb_vault_path(
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            &unwrapped_request.secret_type.to_string(),
+        ));
 
         let secret_result = SecretEntry {
-            //org: "default_org".into(),
+            org: unwrapped_request.org,
             name: unwrapped_request.name,
             secret_type: unwrapped_request.secret_type,
             data: secret.expect("Error unwrapping secret from Vault").into(),

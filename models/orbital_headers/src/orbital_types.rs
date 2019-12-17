@@ -225,16 +225,16 @@ impl From<String> for SecretType {
     fn from(secret_type: String) -> Self {
         match secret_type.to_lowercase().as_str() {
             "unspecified" => Self::Unspecified,
-            "basicauth" => Self::BasicAuth,
-            "apikey" => Self::ApiKey,
-            "envvar" => Self::EnvVar,
+            "api_key" => Self::ApiKey,
+            "basic_auth" => Self::BasicAuth,
+            "docker_registry" => Self::DockerRegistry,
+            "env_var" => Self::EnvVar,
             "file" => Self::File,
-            "sshkey" => Self::SshKey,
-            "dockerregistry" => Self::DockerRegistry,
-            "npmrepo" => Self::NpmRepo,
-            "pypiregistry" => Self::PypiRegistry,
-            "mavenrepo" => Self::MavenRepo,
             "kubernetes" => Self::Kubernetes,
+            "maven_repo" => Self::MavenRepo,
+            "npm_repo" => Self::NpmRepo,
+            "pypi_registry" => Self::PypiRegistry,
+            "ssh_key" => Self::SshKey,
             _ => panic!("Unknown secret type"),
         }
     }
@@ -264,16 +264,16 @@ impl FromStr for SecretType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s.to_lowercase().as_ref() {
             "unspecified" => Self::Unspecified,
-            "basicauth" => Self::BasicAuth,
-            "apikey" => Self::ApiKey,
-            "envvar" => Self::EnvVar,
+            "api_key" => Self::ApiKey,
+            "basic_auth" => Self::BasicAuth,
+            "docker_registry" => Self::DockerRegistry,
+            "env_var" => Self::EnvVar,
             "file" => Self::File,
-            "sshkey" => Self::SshKey,
-            "dockerregistry" => Self::DockerRegistry,
-            "npmrepo" => Self::NpmRepo,
-            "pypiregistry" => Self::PypiRegistry,
-            "mavenrepo" => Self::MavenRepo,
             "kubernetes" => Self::Kubernetes,
+            "maven_repo" => Self::MavenRepo,
+            "npm_repo" => Self::NpmRepo,
+            "pypi_registry" => Self::PypiRegistry,
+            "ssh_key" => Self::SshKey,
             _ => panic!("Unknown secret type"),
         })
     }
@@ -284,16 +284,16 @@ impl SecretType {
     pub fn variants() -> [&'static str; 11] {
         [
             "unspecified",
-            "basicauth",
-            "apikey",
-            "envvar",
+            "api_key",
+            "basic_auth",
+            "docker_registry",
+            "env_var",
             "file",
-            "sshkey",
-            "dockerregistry",
-            "npmrepo",
-            "pypiregistry",
-            "mavenrepo",
             "kubernetes",
+            "maven_repo",
+            "npm_repo",
+            "pypi_registry",
+            "ssh_key",
         ]
     }
 }
