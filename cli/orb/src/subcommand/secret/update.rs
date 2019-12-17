@@ -10,16 +10,21 @@ use log::debug;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
-pub struct ActionOption {}
+pub struct ActionOption {
+    /// Name of Orbital org
+    #[structopt(long, env = "ORB_DEFAULT_ORG")]
+    org: Option<String>,
+}
 
 pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
-    _action_option: ActionOption,
+    action_option: ActionOption,
 ) -> Result<(), SubcommandError> {
     let mut client = SecretServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(SecretUpdateRequest {
+        org: action_option.org.unwrap_or_default(),
         ..Default::default()
     });
 

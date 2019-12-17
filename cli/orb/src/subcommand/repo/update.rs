@@ -15,16 +15,21 @@ pub struct ActionOption {
     /// Repo path
     #[structopt(parse(from_os_str), env = "PWD")]
     path: PathBuf,
+
+    /// Name of Orbital org
+    #[structopt(long, env = "ORB_DEFAULT_ORG")]
+    org: Option<String>,
 }
 
 pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
-    _action_option: ActionOption,
+    action_option: ActionOption,
 ) -> Result<(), SubcommandError> {
     let mut client = CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(GitRepoUpdateRequest {
+        org: action_option.org.unwrap_or_default(),
         ..Default::default()
     });
 

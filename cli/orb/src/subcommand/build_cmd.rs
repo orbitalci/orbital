@@ -16,6 +16,10 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
+    /// Name of Orbital org
+    #[structopt(long, env = "ORB_DEFAULT_ORG")]
+    org: Option<String>,
+
     /// Environment variables to add to build
     #[structopt(long)]
     envs: Option<String>,
@@ -61,10 +65,10 @@ pub async fn subcommand_handler(
     // Get the docker container image
 
     // Org - default (Future: How can we cache this client-side?)
-    //
+    // Validate that the org exists be
 
     let request = Request::new(BuildTarget {
-        org: "default_org".into(),
+        org: local_option.org.unwrap_or_default(),
         git_repo: format!("{}/{}", git_context.account, git_context.repo),
         remote_uri: git_context.uri,
         git_provider: git_context.provider,

@@ -33,16 +33,16 @@ CREATE TYPE git_host_type AS ENUM (
 );
 
 CREATE TYPE secret_type AS ENUM (
+    'api_key',
+    'basic_auth'
     'docker_registry',
-    'npm_repo',
-    'maven_repo',
-    'ssh_key',
-    'helm_repo',
-    'kubernetes',
-    'apple_developer',
     'env_var',
     'file',
-    'basic_auth'
+    'kubernetes',
+    'maven_repo',
+    'npm_repo',
+    'pypi_registry',
+    'ssh_key',
 );
 
 CREATE TYPE notify_type AS ENUM (

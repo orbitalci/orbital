@@ -2,6 +2,10 @@ use hashicorp_stack::vault;
 use log::debug;
 use std::env;
 
+pub fn orb_vault_path(org: &str, name: &str, secret_type: &str) -> String {
+    format!("orbital/{}/{}/{}", org, secret_type, name,).to_lowercase()
+}
+
 pub fn vault_add_secret(path: &str, data: &str) -> Result<(), ()> {
     let host = match env::var("VAULT_ADDR") {
         Ok(val) => val,

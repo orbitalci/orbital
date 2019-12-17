@@ -20,8 +20,9 @@ pub struct ActionOption {
     #[structopt(parse(from_os_str), env = "PWD")]
     path: PathBuf,
 
-    #[structopt(long, default_value = "default_org")]
-    org_name: String,
+    /// Name of Orbital org
+    #[structopt(long, env = "ORB_DEFAULT_ORG")]
+    org: Option<String>,
 
     /// Use flag if repo is public
     #[structopt(long)]
@@ -55,7 +56,7 @@ pub async fn action_handler(
     // TODO: Need to update the git repo parser to split out a username
     let request = match &action_option.public {
         true => Request::new(GitRepoAddRequest {
-            org: action_option.org_name,
+            org: action_option.org.unwrap_or_default(),
             secret_type: SecretType::Unspecified.into(),
             git_provider: repo_info.provider,
             name: format!("{}/{}", repo_info.account, repo_info.repo),
@@ -75,7 +76,7 @@ pub async fn action_handler(
             file.read_to_string(&mut contents)?;
 
             Request::new(GitRepoAddRequest {
-                org: action_option.org_name,
+                org: action_option.org.unwrap_or_default(),
                 secret_type: SecretType::SshKey.into(),
                 auth_data: contents,
                 git_provider: repo_info.provider,
