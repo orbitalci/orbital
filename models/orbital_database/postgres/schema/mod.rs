@@ -146,7 +146,7 @@ allow_tables_to_appear_in_same_query!(org, secret,);
 #[postgres(type_name = "secret_type")]
 pub struct SecretTypePGEnum;
 
-#[derive(Debug, Clone, PartialEq, FromSqlRow, AsExpression)]
+#[derive(Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression)]
 #[sql_type = "SecretTypePGEnum"]
 pub enum SecretType {
     Unspecified = 0,

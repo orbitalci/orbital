@@ -1,6 +1,7 @@
 use crate::postgres::org::{NewOrg, Org};
 use crate::postgres::schema::{org, secret, ActiveState, SecretType};
 use crate::postgres::secret::{NewSecret, Secret};
+use agent_runtime::vault::orb_vault_path;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use log::debug;
@@ -104,48 +105,48 @@ pub fn secret_add(
     //    vault_path
     //    active_state
 
-    //let mut secret_check: Vec<Secret> = secret::table
-    //    .select(secret::all_columns)
-    //    .filter(secret::name.eq(&name))
-    //    .order_by(secret::id)
-    //    .load(conn)
-    //    .expect("Error querying for secret");
+    let org = org_get(conn, org).expect("Unable to find org");
 
-    //let mut secret_check: Vec<Secret> = secret::table
-    //    .select(secret::all_columns)
-    //    .load(conn)
-    //    .expect("Error querying for secret");
+    let mut secret_check: Vec<Secret> = secret::table
+        .select(secret::all_columns)
+        .order_by(secret::id)
+        .load(conn)
+        .expect("Error querying for secret");
 
-    //match &secret_check.len() {
-    //    0 => {
-    //        debug!("secret doesn't exist. Inserting into db.");
-    //        Ok(diesel::insert_into(secret::table)
-    //            .values(NewSecret {
-    //                name: name.to_string(),
-    //                ..Default::default()
-    //            })
-    //            .get_result(conn)
-    //            .expect("Error saving new secret"))
-    //    }
-    //    1 => {
-    //        debug!("secret found in db. Returning result.");
-    //        Ok(secret_check.pop().unwrap())
-    //    }
-    //    _ => panic!("Found more than one secret in the org by the same name in db"),
-    //}
+    match &secret_check.len() {
+        0 => {
+            debug!("secret doesn't exist. Inserting into db.");
+            Ok(diesel::insert_into(secret::table)
+                .values(NewSecret {
+                    name: name.to_string(),
+                    org_id: org.id,
+                    secret_type: secret_type,
+                    vault_path: orb_vault_path(&org.name, name, format!("{:?}",&secret_type).as_str()),
+                    ..Default::default()
+                })
+                .get_result(conn)
+                .expect("Error saving new secret"))
+        }
+        1 => {
+            debug!("secret found in db. Returning result.");
+            Ok(secret_check.pop().unwrap())
+        }
+        _ => panic!("Found more than one secret in the org by the same name in db"),
+    }
 
     // This works
-    diesel::insert_into(secret::table)
-        .values(vec![NewSecret {
-            name: name.to_string(),
-            org_id: 1,
-            secret_type: SecretType::SshKey.into(),
-            ..Default::default()
-        }])
-        .execute(conn)
-        .expect("Error inserting secret into db");
+    //diesel::insert_into(secret::table)
+    //    .values(vec![NewSecret {
+    //        name: name.to_string(),
+    //        org_id: 1,
+    //        secret_type: SecretType::SshKey,
+    //        vault_path: orb_vault_path(org, name, "ssh_key"),
+    //        ..Default::default()
+    //    }])
+    //    .execute(conn)
+    //    .expect("Error inserting secret into db");
 
-    Ok(Secret {
-        ..Default::default()
-    })
+    //Ok(Secret {
+    //    ..Default::default()
+    //})
 }
