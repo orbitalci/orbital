@@ -32,20 +32,9 @@ pub async fn action_handler(
 ) -> Result<(), SubcommandError> {
     let mut client = SecretServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    let org_name = action_option.org.unwrap_or_default();
-    let secret_name = &action_option.secret_name;
-
-    let vault_path = format!(
-        "orbital/{}/{}/{}",
-        org_name,
-        action_option.secret_type.to_string(),
-        secret_name
-    )
-    .to_lowercase();
-
     let request = Request::new(SecretGetRequest {
-        org: org_name.into(),
-        name: vault_path,
+        org: action_option.org.unwrap_or_default().into(),
+        name: action_option.secret_name.into(),
         secret_type: action_option.secret_type.into(),
     });
 

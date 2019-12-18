@@ -9,6 +9,7 @@ use super::OrbitalApi;
 use agent_runtime::vault;
 use log::debug;
 use orbital_database::postgres;
+use orbital_database::postgres::schema::SecretType;
 
 /// Implementation of protobuf derived `SecretService` trait
 #[tonic::async_trait]
@@ -27,16 +28,15 @@ impl SecretService for OrbitalApi {
         // If there is only one org, choose it
         // If there are more than one, we need to choose a default or to throw an error
 
+        let vault_path = vault::orb_vault_path(
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            &unwrapped_request.secret_type.to_string(),
+        );
+
         // TODO: Handle errors
         let _ = vault::vault_add_secret(
-            &vault::orb_vault_path(
-                &unwrapped_request.org,
-                &unwrapped_request.name,
-                &format!(
-                    "{:?}",
-                    postgres::schema::SecretType::from(unwrapped_request.secret_type)
-                ),
-            ),
+            &vault_path,
             &String::from_utf8_lossy(&unwrapped_request.data),
         );
 
@@ -90,22 +90,118 @@ impl SecretService for OrbitalApi {
 
     async fn secret_remove(
         &self,
-        _request: Request<SecretRemoveRequest>,
+        request: Request<SecretRemoveRequest>,
     ) -> Result<Response<SecretEntry>, Status> {
-        unimplemented!()
+        debug!("secret remove request: {:?}", &request);
+
+        let unwrapped_request = request.into_inner();
+
+        let vault_path = &vault::orb_vault_path(
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            &unwrapped_request.secret_type.to_string(),
+        );
+
+        // Remove Secret reference into DB
+
+        let pg_conn = postgres::client::establish_connection();
+
+        let db_result = postgres::client::secret_remove(
+            &pg_conn,
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            unwrapped_request.secret_type.into(),
+        )
+        .expect("There was a problem removing secret in database");
+
+        // TODO: Handle errors
+        debug!("Trying to delete secret from vault: {:?}", &db_result.vault_path);
+        let _secret = vault::vault_remove_secret(&db_result.vault_path);
+
+        let secret_result = SecretEntry {
+            org: unwrapped_request.org,
+            name: unwrapped_request.name,
+            secret_type: unwrapped_request.secret_type,
+            ..Default::default()
+        };
+
+        Ok(Response::new(secret_result))
     }
 
     async fn secret_update(
         &self,
-        _request: Request<SecretUpdateRequest>,
+        request: Request<SecretUpdateRequest>,
     ) -> Result<Response<SecretEntry>, Status> {
-        unimplemented!()
+        debug!("secret update request: {:?}", &request);
+
+        let unwrapped_request = request.into_inner();
+
+        let vault_path = vault::orb_vault_path(
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            &unwrapped_request.secret_type.to_string(),
+        );
+
+        // TODO: Handle errors
+        let _secret = vault::vault_update_secret(
+            &vault_path,
+            &String::from_utf8_lossy(&unwrapped_request.data),
+        );
+
+        // Remove Secret reference into DB
+
+        let pg_conn = postgres::client::establish_connection();
+        // FIXME: Need a cleaner way to get org id for this struct, because we're making duplicate calls to db for org.id
+        let org = postgres::client::org_get(&pg_conn, &unwrapped_request.org)
+            .expect("Unable to get org from db");
+
+        let secret_update = postgres::secret::NewSecret {
+            name: unwrapped_request.name.clone(),
+            org_id: org.id,
+            secret_type: postgres::schema::SecretType::from(unwrapped_request.secret_type.clone()),
+            vault_path: vault_path,
+            active_state: postgres::schema::ActiveState::from(
+                unwrapped_request.active_state.clone(),
+            ),
+        };
+
+        let _db_result = postgres::client::secret_update(
+            &pg_conn,
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            secret_update,
+        )
+        .expect("There was a problem updating secret in database");
+
+        let secret_result = SecretEntry {
+            org: unwrapped_request.org,
+            name: unwrapped_request.name,
+            secret_type: unwrapped_request.secret_type,
+            ..Default::default()
+        };
+
+        Ok(Response::new(secret_result))
     }
 
     async fn secret_list(
         &self,
-        _request: Request<SecretListRequest>,
+        request: Request<SecretListRequest>,
     ) -> Result<Response<SecretListResponse>, Status> {
-        unimplemented!()
+        let unwrapped_request = request.into_inner();
+        let pg_conn = postgres::client::establish_connection();
+
+        let filters: Option<SecretType> = None;
+
+        // Convert the Vec<Secret> response into the proto codegen version.
+        let db_result: Vec<SecretEntry> =
+            postgres::client::secret_list(&pg_conn, &unwrapped_request.org, filters)
+                .expect("There was a problem listing secret from database")
+                .into_iter()
+                .map(|o| o.into())
+                .collect();
+
+        Ok(Response::new(SecretListResponse {
+            secret_entries: db_result,
+        }))
     }
 }
