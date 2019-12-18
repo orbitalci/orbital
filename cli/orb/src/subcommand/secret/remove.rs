@@ -2,6 +2,7 @@ use structopt::StructOpt;
 
 use crate::{secret::SubcommandOption, GlobalOption, SubcommandError};
 
+use orbital_headers::orbital_types::SecretType;
 use orbital_headers::secret::{client::SecretServiceClient, SecretRemoveRequest};
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
@@ -14,6 +15,14 @@ pub struct ActionOption {
     /// Name of Orbital org
     #[structopt(long, env = "ORB_DEFAULT_ORG")]
     org: Option<String>,
+
+    /// Secret name
+    #[structopt(required = true)]
+    secret_name: String,
+
+    /// Secret Type
+    #[structopt(long, required = true, possible_values = &SecretType::variants())]
+    secret_type: SecretType,
 }
 
 pub async fn action_handler(
