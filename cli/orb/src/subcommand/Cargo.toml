@@ -14,7 +14,7 @@ orbital_headers = { path = "../../../../models/orbital_headers" }
 orbital_services = { path = "../../../../services" }
 orbital_database = { path = "../../../../models/orbital_database" }
 log = "0.4"
-tonic = { version = "0.1.0-alpha.6", features = [ "rustls"] }
+tonic = "0.1.0-beta.1"
 git2 = "0.10"
 # Temporary. Move into agent runtime
 hashicorp_stack = { path = "../../../../lib/hashicorp_stack" }

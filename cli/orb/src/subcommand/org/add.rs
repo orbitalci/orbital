@@ -2,7 +2,9 @@ use structopt::StructOpt;
 
 use crate::{org::SubcommandOption, GlobalOption, SubcommandError};
 
-use orbital_headers::organization::{client::OrganizationServiceClient, OrgAddRequest};
+use orbital_headers::organization::{
+    organization_service_client::OrganizationServiceClient, OrgAddRequest,
+};
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 

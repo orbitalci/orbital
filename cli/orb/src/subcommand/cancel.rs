@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::build_meta::{client::BuildServiceClient, BuildTarget};
+use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
 
 use orbital_services::ORB_DEFAULT_URI;
 use std::path::PathBuf;

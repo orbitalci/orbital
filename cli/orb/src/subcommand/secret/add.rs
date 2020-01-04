@@ -3,7 +3,7 @@ use structopt::StructOpt;
 use crate::{secret::SubcommandOption, GlobalOption, SubcommandError};
 
 use orbital_headers::orbital_types::SecretType;
-use orbital_headers::secret::{client::SecretServiceClient, SecretAddRequest};
+use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretAddRequest};
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 

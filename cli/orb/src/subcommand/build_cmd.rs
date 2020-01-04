@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 use crate::{GlobalOption, SubcommandError};
 
-use orbital_headers::build_meta::{client::BuildServiceClient, BuildTarget};
+use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
 
 use config_parser::yaml as parser;
 use git_meta::git_info;
