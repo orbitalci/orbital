@@ -1,5 +1,5 @@
 use orbital_headers::build_meta::{
-    server::BuildService,
+    build_service_server::BuildService,
     BuildLogResponse,
     BuildMetadata, //BuildRecord, BuildStage,
     BuildSummaryRequest,
@@ -7,9 +7,9 @@ use orbital_headers::build_meta::{
     BuildTarget,
 };
 
-use orbital_headers::code::{client::CodeServiceClient, GitRepoGetRequest};
+use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_headers::orbital_types::{JobState, SecretType};
-use orbital_headers::secret::{client::SecretServiceClient, SecretGetRequest};
+use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
 
 use tonic::{Request, Response, Status};
 
@@ -30,6 +30,9 @@ use std::time::{Duration, SystemTime};
 use mktemp::Temp;
 use std::fs::File;
 use std::io::prelude::*;
+
+use futures::Stream;
+use std::pin::Pin;
 
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
@@ -286,32 +289,35 @@ impl BuildService for OrbitalApi {
         unimplemented!();
     }
 
-    type BuildLogsStream = mpsc::Receiver<Result<BuildLogResponse, Status>>;
+    type BuildLogsStream =
+        Pin<Box<dyn Stream<Item = Result<BuildLogResponse, Status>> + Send + Sync + 'static>>;
+
     async fn build_logs(
         &self,
         _request: Request<BuildTarget>,
-    ) -> Result<Response<Self::BuildLogsStream>, Status> {
-        // Get the container info so we can call the docker api
+    ) -> Result<tonic::Response<Self::BuildLogsStream>, tonic::Status> {
+        unimplemented!()
+        //// Get the container info so we can call the docker api
 
-        let (mut tx, rx) = mpsc::channel(4);
+        //let (mut tx, rx) = mpsc::channel(4);
 
-        tokio::spawn(async move {
-            let build_log_response = BuildLogResponse {
-                id: 0,
-                records: Vec::new(),
-            };
+        //tokio::spawn(async move {
+        //    let build_log_response = BuildLogResponse {
+        //        id: 0,
+        //        records: Vec::new(),
+        //    };
 
-            tx.send(Ok(build_log_response)).await.unwrap()
+        //    tx.send(Ok(build_log_response)).await.unwrap()
 
-            // Determine if there are logs in the database and fetch those first
-            // Probably send those logs, unless we specifically don't want to
+        //    // Determine if there are logs in the database and fetch those first
+        //    // Probably send those logs, unless we specifically don't want to
 
-            // If the build is still running, then we want to go to the live logs
+        //    // If the build is still running, then we want to go to the live logs
 
-            // The agent runtime log wrapper needs to provide the build stage info
-        });
+        //    // The agent runtime log wrapper needs to provide the build stage info
+        //});
 
-        Ok(Response::new(rx))
+        //Ok(Response::new(rx))
     }
 
     async fn build_remove(

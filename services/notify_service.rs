@@ -1,6 +1,6 @@
 use orbital_headers::notify::{
-    server::NotifyService, NotifyAddRequest, NotifyEntry, NotifyGetRequest, NotifyListRequest,
-    NotifyListResponse, NotifyRemoveRequest, NotifyUpdateRequest,
+    notify_service_server::NotifyService, NotifyAddRequest, NotifyEntry, NotifyGetRequest,
+    NotifyListRequest, NotifyListResponse, NotifyRemoveRequest, NotifyUpdateRequest,
 };
 use tonic::{Request, Response, Status};
 

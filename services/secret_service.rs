@@ -1,6 +1,6 @@
 use orbital_headers::secret::{
-    server::SecretService, SecretAddRequest, SecretEntry, SecretGetRequest, SecretListRequest,
-    SecretListResponse, SecretRemoveRequest, SecretUpdateRequest,
+    secret_service_server::SecretService, SecretAddRequest, SecretEntry, SecretGetRequest,
+    SecretListRequest, SecretListResponse, SecretRemoveRequest, SecretUpdateRequest,
 };
 use tonic::{Request, Response, Status};
 
@@ -115,7 +115,10 @@ impl SecretService for OrbitalApi {
         .expect("There was a problem removing secret in database");
 
         // TODO: Handle errors
-        debug!("Trying to delete secret from vault: {:?}", &db_result.vault_path);
+        debug!(
+            "Trying to delete secret from vault: {:?}",
+            &db_result.vault_path
+        );
         let _secret = vault::vault_remove_secret(&db_result.vault_path);
 
         let secret_result = SecretEntry {

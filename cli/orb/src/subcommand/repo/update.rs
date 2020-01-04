@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 use crate::{repo::SubcommandOption, GlobalOption, SubcommandError};
 
-use orbital_headers::code::{client::CodeServiceClient, GitRepoUpdateRequest};
+use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoUpdateRequest};
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 

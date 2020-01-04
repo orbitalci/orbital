@@ -1,11 +1,12 @@
 use orbital_headers::code::{
-    server::CodeService, GitProviderAddRequest, GitProviderEntry, GitProviderGetRequest,
-    GitProviderListRequest, GitProviderListResponse, GitProviderRemoveRequest,
-    GitProviderUpdateRequest, GitRepoAddRequest, GitRepoEntry, GitRepoGetRequest,
-    GitRepoListRequest, GitRepoListResponse, GitRepoRemoveRequest, GitRepoUpdateRequest,
+    code_service_server::CodeService, GitProviderAddRequest, GitProviderEntry,
+    GitProviderGetRequest, GitProviderListRequest, GitProviderListResponse,
+    GitProviderRemoveRequest, GitProviderUpdateRequest, GitRepoAddRequest, GitRepoEntry,
+    GitRepoGetRequest, GitRepoListRequest, GitRepoListResponse, GitRepoRemoveRequest,
+    GitRepoUpdateRequest,
 };
 
-use orbital_headers::secret::{client::SecretServiceClient, SecretAddRequest};
+use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretAddRequest};
 
 use crate::{OrbitalServiceError, ServiceType};
 use orbital_headers::orbital_types::*;

@@ -1,6 +1,6 @@
 use orbital_headers::organization::{
-    server::OrganizationService, OrgAddRequest, OrgEntry, OrgGetRequest, OrgListResponse,
-    OrgRemoveRequest, OrgUpdateRequest,
+    organization_service_server::OrganizationService, OrgAddRequest, OrgEntry, OrgGetRequest,
+    OrgListResponse, OrgRemoveRequest, OrgUpdateRequest,
 };
 use tonic::{Request, Response, Status};
 

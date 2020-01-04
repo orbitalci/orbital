@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 use crate::{secret::SubcommandOption, GlobalOption, SubcommandError};
 
-use orbital_headers::secret::{client::SecretServiceClient, SecretListRequest};
+use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretListRequest};
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
