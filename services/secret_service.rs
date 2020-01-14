@@ -31,8 +31,11 @@ impl SecretService for OrbitalApi {
         let vault_path = vault::orb_vault_path(
             &unwrapped_request.org,
             &unwrapped_request.name,
-            &unwrapped_request.secret_type.to_string(),
+            &orbital_headers::orbital_types::SecretType::from(unwrapped_request.secret_type)
+                .to_string(),
         );
+
+        println!("Got vault path: {:?}", &vault_path);
 
         // TODO: Handle errors
         let _ = vault::vault_add_secret(
@@ -71,11 +74,13 @@ impl SecretService for OrbitalApi {
         let unwrapped_request = request.into_inner();
 
         // TODO: Handle errors
-        let secret = vault::vault_get_secret(&vault::orb_vault_path(
+        let secret_path = &vault::orb_vault_path(
             &unwrapped_request.org,
             &unwrapped_request.name,
-            &unwrapped_request.secret_type.to_string(),
-        ));
+            &orbital_headers::orbital_types::SecretType::from(unwrapped_request.secret_type).to_string(),
+        );
+        debug!("Requesting secret from path: {:?}", &secret_path);
+        let secret = vault::vault_get_secret(secret_path);
 
         let secret_result = SecretEntry {
             org: unwrapped_request.org,
@@ -95,12 +100,6 @@ impl SecretService for OrbitalApi {
         debug!("secret remove request: {:?}", &request);
 
         let unwrapped_request = request.into_inner();
-
-        let vault_path = &vault::orb_vault_path(
-            &unwrapped_request.org,
-            &unwrapped_request.name,
-            &unwrapped_request.secret_type.to_string(),
-        );
 
         // Remove Secret reference into DB
 
@@ -139,10 +138,10 @@ impl SecretService for OrbitalApi {
 
         let unwrapped_request = request.into_inner();
 
-        let vault_path = vault::orb_vault_path(
+        let vault_path = &vault::orb_vault_path(
             &unwrapped_request.org,
             &unwrapped_request.name,
-            &unwrapped_request.secret_type.to_string(),
+            &orbital_headers::orbital_types::SecretType::from(unwrapped_request.secret_type).to_string(),
         );
 
         // TODO: Handle errors
@@ -162,7 +161,7 @@ impl SecretService for OrbitalApi {
             name: unwrapped_request.name.clone(),
             org_id: org.id,
             secret_type: postgres::schema::SecretType::from(unwrapped_request.secret_type.clone()),
-            vault_path: vault_path,
+            vault_path: vault_path.to_string(),
             active_state: postgres::schema::ActiveState::from(
                 unwrapped_request.active_state.clone(),
             ),

@@ -141,17 +141,10 @@ impl CodeService for OrbitalApi {
                     "{}/{}",
                     &unwrapped_request.git_provider, &unwrapped_request.name
                 );
-                let vault_path = format!(
-                    "orbital/{}/{}/{}",
-                    org_name,
-                    SecretType::from(unwrapped_request.secret_type),
-                    secret_name,
-                )
-                .to_lowercase();
 
                 let request = Request::new(SecretAddRequest {
                     org: org_name.into(),
-                    name: vault_path.into(),
+                    name: secret_name.into(),
                     secret_type: SecretType::from(unwrapped_request.secret_type).into(),
                     data: unwrapped_request.auth_data.into(),
                 });
