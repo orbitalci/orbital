@@ -5,7 +5,7 @@ authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-tonic = "0.1.0-beta.1"
+tonic = "0.1.0"
 orbital_headers = { path = "../models/orbital_headers" }
 tokio = "0.2"
 git_meta = { path = "../lib/git_meta" }
@@ -13,7 +13,7 @@ config_parser = { path = "../lib/config_parser" }
 agent_runtime = { path = "../lib/agent_runtime" }
 log = "0.4"
 futures = "0.3"
-prost-types = "0.5"
+prost-types = "0.6"
 hashicorp_stack = { path = "../lib/hashicorp_stack" }
 mktemp = "0.4"
 orbital_database = { path = "../models/orbital_database" }
