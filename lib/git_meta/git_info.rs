@@ -78,7 +78,7 @@ fn git_remote_from_repo(local_repo: &Repository) -> Result<String, git2::Error> 
 // ssh: git@ssh.dev.azure.com:v3/organization/project/repo
 // http: https://organization@dev.azure.com/organization/project/_git/repo
 /// Return a `GitSshRemote` after parsing a remote url from a git repo
-fn git_remote_url_parse(remote_url: &str) -> GitSshRemote {
+pub fn git_remote_url_parse(remote_url: &str) -> GitSshRemote {
     // TODO: We will want to see if we can parse w/ Url, since git repos might use HTTPS
     //let http_url = Url::parse(remote_url);
     // If we get Err(RelativeUrlWithoutBase) then we should pick apart the remote url

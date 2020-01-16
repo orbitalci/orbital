@@ -155,6 +155,9 @@ impl CodeService for OrbitalApi {
                 let response = secret_client.secret_add(request).await?;
                 println!("RESPONSE = {:?}", response);
 
+                // Convert the response SecretEntry from the secret add into Secret
+                let secret : postgres::secret::Secret = response.into_inner().into();
+
                 // Write git repo to DB
 
                 let pg_conn = postgres::client::establish_connection();
@@ -164,7 +167,7 @@ impl CodeService for OrbitalApi {
                     &unwrapped_request.org,
                     &unwrapped_request.name,
                     &unwrapped_request.uri,
-                    None,
+                    Some(secret),
                 )
                 .expect("There was a problem adding repo in database");
 

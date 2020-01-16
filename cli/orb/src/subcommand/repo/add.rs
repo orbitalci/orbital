@@ -8,6 +8,7 @@ use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 use git_meta::git_info;
+use git_meta::GitSshRemote;
 use log::debug;
 use std::fs::File;
 use std::io::prelude::*;
@@ -60,8 +61,8 @@ pub async fn action_handler(
             secret_type: SecretType::Unspecified.into(),
             git_provider: repo_info.provider,
             name: format!("{}/{}", repo_info.account, repo_info.repo),
-            uri: repo_info.uri,
-            user: "git".into(),
+            uri: repo_info.uri.clone(),
+            user: git_info::git_remote_url_parse(&repo_info.uri.clone()).user,
             ..Default::default()
         }),
         false => {
@@ -81,8 +82,8 @@ pub async fn action_handler(
                 auth_data: contents,
                 git_provider: repo_info.provider,
                 name: format!("{}/{}", repo_info.account, repo_info.repo),
-                uri: repo_info.uri,
-                user: "git".into(),
+                uri: repo_info.uri.clone(),
+                user: git_info::git_remote_url_parse(&repo_info.uri.clone()).user,
             })
         }
     };

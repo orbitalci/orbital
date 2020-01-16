@@ -47,7 +47,7 @@ impl SecretService for OrbitalApi {
 
         let pg_conn = postgres::client::establish_connection();
 
-        let _db_result = postgres::client::secret_add(
+        let db_result = postgres::client::secret_add(
             &pg_conn,
             &unwrapped_request.org,
             &unwrapped_request.name,
@@ -55,10 +55,13 @@ impl SecretService for OrbitalApi {
         )
         .expect("There was a problem adding secret in database");
 
+        // TODO: We want the vault path available
         let secret_result = SecretEntry {
+            id: db_result.id,
             org: unwrapped_request.org.into(),
             name: unwrapped_request.name.into(),
             secret_type: unwrapped_request.secret_type,
+            vault_path: db_result.vault_path,
             ..Default::default()
         };
 
@@ -73,21 +76,27 @@ impl SecretService for OrbitalApi {
 
         let unwrapped_request = request.into_inner();
 
-        // TODO: Handle errors
-        let secret_path = &vault::orb_vault_path(
+        // Talk to DB to get the secret path
+        let pg_conn = postgres::client::establish_connection();
+
+        let db_result = postgres::client::secret_get(
+            &pg_conn,
             &unwrapped_request.org,
             &unwrapped_request.name,
-            &orbital_headers::orbital_types::SecretType::from(unwrapped_request.secret_type)
-                .to_string(),
-        );
-        debug!("Requesting secret from path: {:?}", &secret_path);
-        let secret = vault::vault_get_secret(secret_path);
+            unwrapped_request.secret_type.into(),
+        )
+        .expect("There was a problem getting secret in database");
+
+        debug!("Requesting secret from path: {:?}", &db_result.vault_path);
+        let secret = vault::vault_get_secret(&db_result.vault_path);
 
         let secret_result = SecretEntry {
+            id: db_result.id,
             org: unwrapped_request.org,
             name: unwrapped_request.name,
             secret_type: unwrapped_request.secret_type,
             data: secret.expect("Error unwrapping secret from Vault").into(),
+            vault_path: db_result.vault_path,
             ..Default::default()
         };
 

@@ -56,7 +56,23 @@ impl From<Secret> for SecretEntry {
             org: secret.org_id.to_string(),
             name: secret.name,
             secret_type: secret.secret_type.into(),
+            vault_path: secret.vault_path.into(),
             active_state: secret.active_state.into(),
+            ..Default::default()
+        }
+    }
+}
+
+// FIXME: This does not correctly set the org id
+impl From<SecretEntry> for Secret {
+    fn from(secret_entry: SecretEntry) -> Self {
+        Secret {
+            id: secret_entry.id,
+            org_id: 0,
+            name: secret_entry.name,
+            secret_type: secret_entry.secret_type.into(),
+            vault_path: secret_entry.vault_path.into(),
+            active_state: secret_entry.active_state.into(),
             ..Default::default()
         }
     }
