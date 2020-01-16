@@ -19,10 +19,10 @@ pub struct GitCommitContext {
 /// Parsed from a remote git uri
 #[derive(Debug, PartialEq)]
 pub struct GitSshRemote {
-    user: String,
-    provider: String,
-    account: String,
-    repo: String,
+    pub user: String,
+    pub provider: String,
+    pub account: String,
+    pub repo: String,
 }
 
 /// Types of supported git authentication
