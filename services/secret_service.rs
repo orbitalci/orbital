@@ -77,7 +77,8 @@ impl SecretService for OrbitalApi {
         let secret_path = &vault::orb_vault_path(
             &unwrapped_request.org,
             &unwrapped_request.name,
-            &orbital_headers::orbital_types::SecretType::from(unwrapped_request.secret_type).to_string(),
+            &orbital_headers::orbital_types::SecretType::from(unwrapped_request.secret_type)
+                .to_string(),
         );
         debug!("Requesting secret from path: {:?}", &secret_path);
         let secret = vault::vault_get_secret(secret_path);
@@ -141,7 +142,8 @@ impl SecretService for OrbitalApi {
         let vault_path = &vault::orb_vault_path(
             &unwrapped_request.org,
             &unwrapped_request.name,
-            &orbital_headers::orbital_types::SecretType::from(unwrapped_request.secret_type).to_string(),
+            &orbital_headers::orbital_types::SecretType::from(unwrapped_request.secret_type)
+                .to_string(),
         );
 
         // TODO: Handle errors

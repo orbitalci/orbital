@@ -22,6 +22,7 @@ use super::OrbitalApi;
 
 use agent_runtime::build_engine;
 use log::debug;
+use orbital_database::postgres;
 
 /// Implementation of protobuf derived `CodeService` trait
 #[tonic::async_trait]
@@ -153,6 +154,19 @@ impl CodeService for OrbitalApi {
 
                 let response = secret_client.secret_add(request).await?;
                 println!("RESPONSE = {:?}", response);
+
+                // Write git repo to DB
+
+                let pg_conn = postgres::client::establish_connection();
+
+                let _db_result = postgres::client::repo_add(
+                    &pg_conn,
+                    &unwrapped_request.org,
+                    &unwrapped_request.name,
+                    &unwrapped_request.uri,
+                    None,
+                )
+                .expect("There was a problem adding repo in database");
 
                 creds
             }
