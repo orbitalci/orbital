@@ -1,5 +1,6 @@
 use crate::postgres::org::{NewOrg, Org};
-use crate::postgres::schema::{org, secret, ActiveState, SecretType};
+use crate::postgres::repo::{NewRepo, Repo};
+use crate::postgres::schema::{org, repo, secret, ActiveState, SecretType};
 use crate::postgres::secret::{NewSecret, Secret};
 use agent_runtime::vault::orb_vault_path;
 use diesel::pg::PgConnection;
@@ -209,4 +210,45 @@ pub fn secret_list(
     };
 
     Ok(query)
+}
+
+pub fn repo_add(
+    conn: &PgConnection,
+    org: &str,
+    name: &str,
+    uri: &str,
+    secret: Option<Secret>,
+) -> Result<Repo, String> {
+    let org = org_get(conn, org).expect("Unable to find org");
+
+    let secret_id = match secret {
+        Some(s) => Some(s.clone().id),
+        None => None,
+    };
+
+    let repo_check: Result<Repo, _> = repo::table
+        .select(repo::all_columns)
+        .filter(repo::name.eq(&name))
+        .order_by(repo::id)
+        .get_result(conn);
+
+    match repo_check {
+        Err(_e) => {
+            debug!("repo doesn't exist. Inserting into db.");
+            Ok(diesel::insert_into(repo::table)
+                .values(NewRepo {
+                    name: name.into(),
+                    org_id: org.id,
+                    uri: uri.into(),
+                    secret_id: secret_id,
+                    ..Default::default()
+                })
+                .get_result(conn)
+                .expect("Error saving new repo"))
+        }
+        Ok(s) => {
+            debug!("repo found in db. Returning result.");
+            Ok(s)
+        }
+    }
 }

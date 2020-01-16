@@ -128,7 +128,7 @@ table! {
     use diesel::sql_types::{Integer, Text};
     use super::{ActiveStatePGEnum,SecretTypePGEnum};
 
-    secret (id, org_id) {
+    secret (id) {
         id -> Integer,
         org_id -> Integer,
         name -> Text,
@@ -292,6 +292,60 @@ impl From<orbital_types::SecretType> for SecretType {
             orbital_types::SecretType::PypiRegistry => SecretType::PypiRegistry,
             orbital_types::SecretType::MavenRepo => SecretType::MavenRepo,
             orbital_types::SecretType::Kubernetes => SecretType::Kubernetes,
+        }
+    }
+}
+
+table! {
+    use diesel::sql_types::{Integer, Text, Nullable};
+    use super::{ActiveStatePGEnum,GitHostTypePGEnum};
+
+    repo (id) {
+        id -> Integer,
+        org_id -> Integer,
+        name -> Text,
+        uri -> Text,
+        git_host_type -> GitHostTypePGEnum,
+        secret_id -> Nullable<Integer>,
+        build_active_state -> ActiveStatePGEnum,
+        notify_active_state -> ActiveStatePGEnum,
+        next_build_index -> Integer,
+    }
+}
+
+#[derive(SqlType, Debug)]
+#[postgres(type_name = "git_host_type")]
+pub struct GitHostTypePGEnum;
+
+#[derive(Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression)]
+#[sql_type = "GitHostTypePGEnum"]
+pub enum GitHostType {
+    Unspecified = 0,
+    Generic = 1,
+    Bitbucket = 2,
+    Github = 3,
+}
+
+impl ToSql<GitHostTypePGEnum, Pg> for GitHostType {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        match *self {
+            GitHostType::Unspecified => out.write_all(b"unspecified")?,
+            GitHostType::Generic => out.write_all(b"generic")?,
+            GitHostType::Bitbucket => out.write_all(b"bitbucket")?,
+            GitHostType::Github => out.write_all(b"github")?,
+        }
+        Ok(IsNull::No)
+    }
+}
+
+impl FromSql<GitHostTypePGEnum, Pg> for GitHostType {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        match not_none!(bytes) {
+            b"unspecified" => Ok(GitHostType::Unspecified),
+            b"generic" => Ok(GitHostType::Generic),
+            b"bitbucket" => Ok(GitHostType::Bitbucket),
+            b"github" => Ok(GitHostType::Github),
+            _ => Err("Unrecognized GitHostType variant".into()),
         }
     }
 }
