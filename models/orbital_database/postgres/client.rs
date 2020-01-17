@@ -13,6 +13,30 @@ pub fn establish_connection() -> PgConnection {
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
 
+pub fn org_from_id(conn: &PgConnection, id: i32) -> Result<Org, String> {
+    let org_check: Result<Org, _> = org::table
+        .select(org::all_columns)
+        .filter(org::id.eq(id))
+        .get_result(conn);
+
+    match org_check {
+        Ok(o) => Ok(o),
+        Err(e) => Err("Could not retrieve org by id from DB".to_string()),
+    }
+}
+
+pub fn secret_from_id(conn: &PgConnection, id: i32) -> Result<Secret, String> {
+    let secret_check: Result<Secret, _> = secret::table
+        .select(secret::all_columns)
+        .filter(secret::id.eq(id))
+        .get_result(conn);
+
+    match secret_check {
+        Ok(o) => Ok(o),
+        Err(e) => Err("Could not retrieve secret by id from DB".to_string()),
+    }
+}
+
 pub fn org_add(conn: &PgConnection, name: &str) -> Result<Org, String> {
     // Only insert if there are no other orgs by this name
     let org_check: Result<Org, _> = org::table
@@ -251,4 +275,20 @@ pub fn repo_add(
             Ok(s)
         }
     }
+}
+
+pub fn repo_get(conn: &PgConnection, org: &str, name: &str) -> Result<Repo, String> {
+    debug!("Repo get: Org: {}, Name: {}", org, name);
+
+    let org_db = org_get(conn, org).expect("Unable to find org");
+
+    let repo: Repo = repo::table
+        .select(repo::all_columns)
+        .filter(repo::org_id.eq(&org_db.id))
+        .filter(repo::name.eq(&name))
+        .order_by(repo::id)
+        .get_result(conn)
+        .expect("Error querying for repo");
+
+    Ok(repo)
 }

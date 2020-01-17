@@ -11,6 +11,7 @@ use orbital_headers::secret::{secret_service_client::SecretServiceClient, Secret
 use crate::{OrbitalServiceError, ServiceType};
 use orbital_headers::orbital_types::*;
 
+use git_meta::git_info;
 use git_meta::GitCredentials;
 use mktemp::Temp;
 use std::fs::File;
@@ -156,7 +157,7 @@ impl CodeService for OrbitalApi {
                 println!("RESPONSE = {:?}", response);
 
                 // Convert the response SecretEntry from the secret add into Secret
-                let secret : postgres::secret::Secret = response.into_inner().into();
+                let secret: postgres::secret::Secret = response.into_inner().into();
 
                 // Write git repo to DB
 
@@ -216,17 +217,38 @@ impl CodeService for OrbitalApi {
         let unwrapped_request = request.into_inner();
 
         // Connect to database. Query for the repo
-        // let git_repo = db_get_repo(org, git_provider, git_repo_name)-> GitRepoEntry
+        let pg_conn = postgres::client::establish_connection();
+
+        let db_result =
+            //postgres::client::repo_get(&pg_conn, &unwrapped_request.org, &unwrapped_request.name)
+            postgres::client::repo_get(&pg_conn, &unwrapped_request.org, &format!("{}/{}", &unwrapped_request.org, &unwrapped_request.name))
+                .expect("There was a problem getting repo in database");
+
+        let git_uri_parsed = git_info::git_remote_url_parse(&db_result.uri.clone());
+
+        let vault_path = match db_result.secret_id {
+            Some(id) => {
+                postgres::client::secret_from_id(&pg_conn, id)
+                    .expect("Couldn't resolve secret id to a secret")
+                    .vault_path
+            }
+            None => "".to_string(),
+        };
 
         let mut git_repo = GitRepoEntry::default();
-        git_repo.org = unwrapped_request.org;
-        git_repo.user = "git".into();
-        git_repo.git_provider = unwrapped_request.git_provider;
-        git_repo.name = unwrapped_request.name;
-        git_repo.secret_type = SecretType::SshKey.into();
-        git_repo.uri = unwrapped_request.uri;
-        git_repo.auth_data =
-            "secret/orbital/default_org/sshkey/github.com/level11consulting/orbitalci".into();
+        git_repo.org = postgres::client::org_from_id(&pg_conn, db_result.org_id)
+            .expect("Couldn't resolve org id to a name")
+            .name;
+        git_repo.user = git_uri_parsed.user;
+        git_repo.git_provider = git_uri_parsed.provider;
+        git_repo.name = git_uri_parsed.repo;
+        git_repo.secret_type =
+            postgres::client::secret_from_id(&pg_conn, db_result.secret_id.unwrap_or(0))
+                .unwrap_or(postgres::secret::Secret::default())
+                .secret_type
+                .into();
+        git_repo.uri = db_result.uri;
+        git_repo.auth_data = vault_path;
 
         debug!("Response: {:?}", &git_repo);
         Ok(Response::new(git_repo))
