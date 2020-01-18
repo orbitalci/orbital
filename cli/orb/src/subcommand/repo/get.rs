@@ -30,7 +30,6 @@ pub async fn action_handler(
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
 ) -> Result<(), SubcommandError> {
-
     // Try to parse path for some git info
 
     let mut client = CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;

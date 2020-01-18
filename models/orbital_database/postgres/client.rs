@@ -292,3 +292,47 @@ pub fn repo_get(conn: &PgConnection, org: &str, name: &str) -> Result<Repo, Stri
 
     Ok(repo)
 }
+
+// You should update your secret with secret_update()
+pub fn repo_update(
+    conn: &PgConnection,
+    org: &str,
+    name: &str,
+    update_repo: NewRepo,
+) -> Result<Repo, String> {
+    let org_db = org_get(conn, org).expect("Unable to find org");
+
+    let repo_update: Repo = diesel::update(repo::table)
+        .filter(repo::org_id.eq(&org_db.id))
+        .filter(repo::name.eq(&name))
+        .set(update_repo)
+        .get_result(conn)
+        .expect("Error updating repo");
+
+    debug!("Result after update: {:?}", &repo_update);
+
+    Ok(repo_update)
+}
+
+pub fn repo_remove(conn: &PgConnection, org: &str, name: &str) -> Result<Repo, String> {
+    let org_db = org_get(conn, org).expect("Unable to find org");
+
+    let repo_delete: Repo = diesel::delete(repo::table)
+        .filter(repo::org_id.eq(&org_db.id))
+        .filter(repo::name.eq(&name))
+        .get_result(conn)
+        .expect("Error deleting repo");
+
+    Ok(repo_delete)
+}
+
+pub fn repo_list(conn: &PgConnection, org: &str) -> Result<Vec<Repo>, String> {
+    let org_db = org_get(conn, org).expect("Unable to find org");
+
+    Ok(repo::table
+        .select(repo::all_columns)
+        .filter(repo::org_id.eq(&org_db.id))
+        .order_by(repo::id)
+        .load(conn)
+        .expect("Error getting all repo records"))
+}
