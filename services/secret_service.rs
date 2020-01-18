@@ -103,43 +103,6 @@ impl SecretService for OrbitalApi {
         Ok(Response::new(secret_result))
     }
 
-    async fn secret_remove(
-        &self,
-        request: Request<SecretRemoveRequest>,
-    ) -> Result<Response<SecretEntry>, Status> {
-        debug!("secret remove request: {:?}", &request);
-
-        let unwrapped_request = request.into_inner();
-
-        // Remove Secret reference into DB
-
-        let pg_conn = postgres::client::establish_connection();
-
-        let db_result = postgres::client::secret_remove(
-            &pg_conn,
-            &unwrapped_request.org,
-            &unwrapped_request.name,
-            unwrapped_request.secret_type.into(),
-        )
-        .expect("There was a problem removing secret in database");
-
-        // TODO: Handle errors
-        debug!(
-            "Trying to delete secret from vault: {:?}",
-            &db_result.vault_path
-        );
-        let _secret = vault::vault_remove_secret(&db_result.vault_path);
-
-        let secret_result = SecretEntry {
-            org: unwrapped_request.org,
-            name: unwrapped_request.name,
-            secret_type: unwrapped_request.secret_type,
-            ..Default::default()
-        };
-
-        Ok(Response::new(secret_result))
-    }
-
     async fn secret_update(
         &self,
         request: Request<SecretUpdateRequest>,
@@ -185,6 +148,43 @@ impl SecretService for OrbitalApi {
             secret_update,
         )
         .expect("There was a problem updating secret in database");
+
+        let secret_result = SecretEntry {
+            org: unwrapped_request.org,
+            name: unwrapped_request.name,
+            secret_type: unwrapped_request.secret_type,
+            ..Default::default()
+        };
+
+        Ok(Response::new(secret_result))
+    }
+
+    async fn secret_remove(
+        &self,
+        request: Request<SecretRemoveRequest>,
+    ) -> Result<Response<SecretEntry>, Status> {
+        debug!("secret remove request: {:?}", &request);
+
+        let unwrapped_request = request.into_inner();
+
+        // Remove Secret reference into DB
+
+        let pg_conn = postgres::client::establish_connection();
+
+        let db_result = postgres::client::secret_remove(
+            &pg_conn,
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            unwrapped_request.secret_type.into(),
+        )
+        .expect("There was a problem removing secret in database");
+
+        // TODO: Handle errors
+        debug!(
+            "Trying to delete secret from vault: {:?}",
+            &db_result.vault_path
+        );
+        let _secret = vault::vault_remove_secret(&db_result.vault_path);
 
         let secret_result = SecretEntry {
             org: unwrapped_request.org,
