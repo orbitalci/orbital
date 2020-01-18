@@ -256,22 +256,98 @@ impl CodeService for OrbitalApi {
 
     async fn git_repo_update(
         &self,
-        _request: Request<GitRepoUpdateRequest>,
+        request: Request<GitRepoUpdateRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-        unimplemented!()
+        debug!("Git repo update request: {:?}", &request);
+
+        let unwrapped_request = request.into_inner();
+
+        // Connect to database. Query for the repo
+        let pg_conn = postgres::client::establish_connection();
+
+        // Get the current repo
+        let current_repo =
+            postgres::client::repo_get(&pg_conn, &unwrapped_request.org, &unwrapped_request.name)
+                .expect("Could not find repo to update");
+
+        // FIXME: We're not really doing a whole lot to support updating secrets at the moment
+        // Build the NewRepo struct
+        let update_repo = postgres::repo::NewRepo {
+            org_id: current_repo.org_id,
+            name: current_repo.name,
+            uri: unwrapped_request.uri,
+            git_host_type: current_repo.git_host_type,
+            secret_id: current_repo.secret_id,
+            build_active_state: current_repo.build_active_state,
+            notify_active_state: current_repo.notify_active_state,
+            next_build_index: current_repo.next_build_index,
+        };
+
+        let update_request = postgres::client::repo_update(
+            &pg_conn,
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+            update_repo,
+        )
+        .expect("Could not update repo");
+
+        let git_uri_parsed = git_info::git_remote_url_parse(&update_request.uri.clone());
+
+        let vault_path = match update_request.secret_id {
+            Some(id) => {
+                postgres::client::secret_from_id(&pg_conn, id)
+                    .expect("Couldn't resolve secret id to a secret")
+                    .vault_path
+            }
+            None => "".to_string(),
+        };
+
+        let mut git_repo = GitRepoEntry::default();
+        git_repo.org = unwrapped_request.org;
+        git_repo.user = git_uri_parsed.user;
+        git_repo.git_provider = git_uri_parsed.provider;
+        git_repo.name = git_uri_parsed.repo;
+        git_repo.secret_type =
+            postgres::client::secret_from_id(&pg_conn, update_request.secret_id.unwrap_or(0))
+                .unwrap_or(postgres::secret::Secret::default())
+                .secret_type
+                .into();
+        git_repo.uri = update_request.uri;
+        git_repo.auth_data = vault_path;
+
+        debug!("Response: {:?}", &git_repo);
+        Ok(Response::new(git_repo))
     }
 
     async fn git_repo_remove(
         &self,
-        _request: Request<GitRepoRemoveRequest>,
+        request: Request<GitRepoRemoveRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-        unimplemented!()
+        debug!("Git repo remove request: {:?}", &request);
+
+        let unwrapped_request = request.into_inner();
+
+        // Connect to database. Query for the repo
+        let pg_conn = postgres::client::establish_connection();
+
+        let mut git_repo = GitRepoEntry::default();
+        debug!("Response: {:?}", &git_repo);
+        Ok(Response::new(git_repo))
     }
 
     async fn git_repo_list(
         &self,
-        _request: Request<GitRepoListRequest>,
+        request: Request<GitRepoListRequest>,
     ) -> Result<Response<GitRepoListResponse>, Status> {
-        unimplemented!()
+        debug!("Git repo list request: {:?}", &request);
+
+        let unwrapped_request = request.into_inner();
+
+        // Connect to database. Query for the repo
+        let pg_conn = postgres::client::establish_connection();
+
+        let mut git_repos = GitRepoListResponse::default();
+        debug!("Response: {:?}", &git_repos);
+        Ok(Response::new(git_repos))
     }
 }
