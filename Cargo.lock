@@ -1170,6 +1170,7 @@ dependencies = [
  "agent_runtime 0.1.0",
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "diesel 1.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "git_meta 0.1.0",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "orbital_headers 0.1.0",
  "prost-types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",

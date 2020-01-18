@@ -283,7 +283,7 @@ impl CodeService for OrbitalApi {
             next_build_index: current_repo.next_build_index,
         };
 
-        let update_request = postgres::client::repo_update(
+        let db_result = postgres::client::repo_update(
             &pg_conn,
             &unwrapped_request.org,
             &unwrapped_request.name,
@@ -291,9 +291,9 @@ impl CodeService for OrbitalApi {
         )
         .expect("Could not update repo");
 
-        let git_uri_parsed = git_info::git_remote_url_parse(&update_request.uri.clone());
+        let git_uri_parsed = git_info::git_remote_url_parse(&db_result.uri.clone());
 
-        let vault_path = match update_request.secret_id {
+        let vault_path = match db_result.secret_id {
             Some(id) => {
                 postgres::client::secret_from_id(&pg_conn, id)
                     .expect("Couldn't resolve secret id to a secret")
@@ -308,11 +308,11 @@ impl CodeService for OrbitalApi {
         git_repo.git_provider = git_uri_parsed.provider;
         git_repo.name = git_uri_parsed.repo;
         git_repo.secret_type =
-            postgres::client::secret_from_id(&pg_conn, update_request.secret_id.unwrap_or(0))
+            postgres::client::secret_from_id(&pg_conn, db_result.secret_id.unwrap_or(0))
                 .unwrap_or(postgres::secret::Secret::default())
                 .secret_type
                 .into();
-        git_repo.uri = update_request.uri;
+        git_repo.uri = db_result.uri;
         git_repo.auth_data = vault_path;
 
         debug!("Response: {:?}", &git_repo);
@@ -330,7 +330,37 @@ impl CodeService for OrbitalApi {
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
+        let db_result = postgres::client::repo_remove(
+            &pg_conn,
+            &unwrapped_request.org,
+            &unwrapped_request.name,
+        )
+        .expect("There was a problem removing repo in database");
+
+        let git_uri_parsed = git_info::git_remote_url_parse(&db_result.uri.clone());
+
+        let vault_path = match db_result.secret_id {
+            Some(id) => {
+                postgres::client::secret_from_id(&pg_conn, id)
+                    .expect("Couldn't resolve secret id to a secret")
+                    .vault_path
+            }
+            None => "".to_string(),
+        };
+
         let mut git_repo = GitRepoEntry::default();
+        git_repo.org = unwrapped_request.org;
+        git_repo.user = git_uri_parsed.user;
+        git_repo.git_provider = git_uri_parsed.provider;
+        git_repo.name = git_uri_parsed.repo;
+        git_repo.secret_type =
+            postgres::client::secret_from_id(&pg_conn, db_result.secret_id.unwrap_or(0))
+                .unwrap_or(postgres::secret::Secret::default())
+                .secret_type
+                .into();
+        git_repo.uri = db_result.uri;
+        git_repo.auth_data = vault_path;
+
         debug!("Response: {:?}", &git_repo);
         Ok(Response::new(git_repo))
     }
@@ -345,6 +375,13 @@ impl CodeService for OrbitalApi {
 
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
+
+        let db_result: Vec<GitRepoEntry> =
+            postgres::client::repo_list(&pg_conn, &unwrapped_request.org)
+                .expect("There was a problem listing repo from database")
+                .into_iter()
+                .map(|o| o.into())
+                .collect();
 
         let mut git_repos = GitRepoListResponse::default();
         debug!("Response: {:?}", &git_repos);
