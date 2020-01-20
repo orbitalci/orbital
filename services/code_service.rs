@@ -384,6 +384,7 @@ impl CodeService for OrbitalApi {
                 .collect();
 
         let mut git_repos = GitRepoListResponse::default();
+        git_repos.git_repos = db_result;
         debug!("Response: {:?}", &git_repos);
         Ok(Response::new(git_repos))
     }
