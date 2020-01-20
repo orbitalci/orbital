@@ -44,8 +44,6 @@ pub async fn action_handler(
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
 ) -> Result<(), SubcommandError> {
-    let mut client = CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
-
     // Read git repo info from local filesystem.
     // TODO: support adding a repo from a uri
     let repo_info =
@@ -90,6 +88,7 @@ pub async fn action_handler(
 
     debug!("Request for git repo add: {:?}", &request);
 
+    let mut client = CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
     let response = client.git_repo_add(request).await?;
     println!("RESPONSE = {:?}", response);
     Ok(())
