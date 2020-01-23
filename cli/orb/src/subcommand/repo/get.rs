@@ -37,7 +37,7 @@ pub async fn action_handler(
         match git_info::get_git_info_from_path(&action_option.path.as_path(), &None, &None) {
             Ok(info) => info,
             Err(_e) => panic!("Unable to parse path for git repo info"),
-        };
+        }; 
 
     let request = match action_option.name {
         Some(name) => Request::new(GitRepoGetRequest {
@@ -47,7 +47,10 @@ pub async fn action_handler(
         }),
         None => Request::new(GitRepoGetRequest {
             org: action_option.org.unwrap_or_default(),
-            ..Default::default()
+            git_provider: repo_info.git_url.host.unwrap(),
+            name: repo_info.git_url.name,
+            user: repo_info.git_url.user.unwrap(),
+            uri: repo_info.git_url.href,
         }),
     };
 

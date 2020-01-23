@@ -1,6 +1,6 @@
 use crate::postgres::org::{NewOrg, Org};
 use crate::postgres::repo::{NewRepo, Repo};
-use crate::postgres::schema::{org, repo, secret, ActiveState, SecretType};
+use crate::postgres::schema::{org, repo, secret, SecretType};
 use crate::postgres::secret::{NewSecret, Secret};
 use agent_runtime::vault::orb_vault_path;
 use diesel::pg::PgConnection;
@@ -21,7 +21,7 @@ pub fn org_from_id(conn: &PgConnection, id: i32) -> Result<Org, String> {
 
     match org_check {
         Ok(o) => Ok(o),
-        Err(e) => Err("Could not retrieve org by id from DB".to_string()),
+        Err(_e) => Err("Could not retrieve org by id from DB".to_string()),
     }
 }
 
@@ -33,7 +33,7 @@ pub fn secret_from_id(conn: &PgConnection, id: i32) -> Result<Secret, String> {
 
     match secret_check {
         Ok(o) => Ok(o),
-        Err(e) => Err("Could not retrieve secret by id from DB".to_string()),
+        Err(_e) => Err("Could not retrieve secret by id from DB".to_string()),
     }
 }
 
@@ -158,7 +158,7 @@ pub fn secret_get(
     conn: &PgConnection,
     org: &str,
     name: &str,
-    secret_type: SecretType,
+    _secret_type: SecretType,
 ) -> Result<Secret, String> {
     let org_db = org_get(conn, org).expect("Unable to find org");
 
@@ -197,7 +197,7 @@ pub fn secret_remove(
     conn: &PgConnection,
     org: &str,
     name: &str,
-    secret_type: SecretType,
+    _secret_type: SecretType,
 ) -> Result<Secret, String> {
     let org_db = org_get(conn, org).expect("Unable to find org");
 
@@ -224,7 +224,7 @@ pub fn secret_list(
             .order_by(secret::id)
             .load(conn)
             .expect("Error getting all secret records"),
-        Some(f) => secret::table
+        Some(_f) => secret::table
             .select(secret::all_columns)
             .filter(secret::org_id.eq(&org_db.id))
             //.filter(secret::secret_type.eq(SecretType::from(f))) // Not working yet.

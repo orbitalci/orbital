@@ -4,25 +4,14 @@ pub mod clone;
 pub mod git_info;
 
 use std::path::Path;
+use git_url_parse::GitUrl;
 
-/// This is the git reference that will be used for build requests
+/// This is the git commit that will be used for build requests
 #[derive(Debug, Default)]
 pub struct GitCommitContext {
-    pub provider: String,
     pub branch: String,
-    pub id: String,
-    pub account: String,
-    pub repo: String,
-    pub uri: String,
-}
-
-/// Parsed from a remote git uri
-#[derive(Debug, PartialEq)]
-pub struct GitSshRemote {
-    pub user: String,
-    pub provider: String,
-    pub account: String,
-    pub repo: String,
+    pub commit_id: String,
+    pub git_url: GitUrl,
 }
 
 /// Types of supported git authentication

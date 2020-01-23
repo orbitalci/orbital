@@ -69,11 +69,11 @@ pub async fn subcommand_handler(
 
     let request = Request::new(BuildTarget {
         org: local_option.org.unwrap_or_default(),
-        git_repo: format!("{}/{}", git_context.account, git_context.repo),
-        remote_uri: git_context.uri,
-        git_provider: git_context.provider,
+        git_repo: git_context.git_url.name,
+        remote_uri: git_context.git_url.href,
+        git_provider: git_context.git_url.host.unwrap(),
         branch: git_context.branch,
-        commit_hash: git_context.id,
+        commit_hash: git_context.commit_id,
         envs: local_option.envs.unwrap_or_default(),
         ..Default::default()
     });

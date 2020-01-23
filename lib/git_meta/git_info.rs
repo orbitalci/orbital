@@ -2,11 +2,13 @@
 
 // Get as much info about the remote branch as well
 
+use anyhow::Result;
 use git2::{Branch, BranchType, Commit, ObjectType, Repository};
+use git_url_parse::GitUrl;
 use log::debug;
 use std::path::Path;
 
-use super::{GitCommitContext, GitSshRemote};
+use super::GitCommitContext;
 
 /// Returns a `git2::Repository` from a given repo directory path
 fn get_local_repo_from_path(path: &Path) -> Result<Repository, git2::Error> {
@@ -20,13 +22,10 @@ pub fn get_git_info_from_path(
     path: &Path,
     branch: &Option<String>,
     commit_id: &Option<String>,
-) -> Result<GitCommitContext, git2::Error> {
-    // Our return struct
-    let mut commit = GitCommitContext::default();
-
+) -> Result<GitCommitContext> {
     // First we open the repository and get the remote_url and parse it into components
     let local_repo = get_local_repo_from_path(path)?;
-    let remote_info = git_remote_url_parse(&git_remote_from_repo(&local_repo)?);
+    let remote_url = git_remote_from_repo(&local_repo)?;
 
     // TODO: Do this in two stages, we could support passing a remote branch, and then fall back to a local branch
     // Assuming we are passed a local branch from remote "origin", or nothing.
@@ -36,17 +35,16 @@ pub fn get_git_info_from_path(
         .expect("Unable to extract branch name")
         .to_string();
 
-    let working_commit = get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id);
+    let working_commit = format!(
+        "{}",
+        get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id)?.id()
+    );
 
-    commit.provider = remote_info.provider;
-    commit.account = remote_info.account;
-    commit.repo = remote_info.repo;
-    commit.branch = working_branch;
-    commit.uri = git_remote_from_repo(&local_repo)?;
-
-    commit.id = format!("{}", working_commit?.id());
-
-    Ok(commit)
+    Ok(GitCommitContext {
+        commit_id: working_commit,
+        branch: working_branch,
+        git_url: GitUrl::parse(&remote_url)?,
+    })
 }
 
 // FIXME: Should not assume remote is origin. This will cause issue in some dev workflows
@@ -78,28 +76,8 @@ fn git_remote_from_repo(local_repo: &Repository) -> Result<String, git2::Error> 
 // ssh: git@ssh.dev.azure.com:v3/organization/project/repo
 // http: https://organization@dev.azure.com/organization/project/_git/repo
 /// Return a `GitSshRemote` after parsing a remote url from a git repo
-pub fn git_remote_url_parse(remote_url: &str) -> GitSshRemote {
-    // TODO: We will want to see if we can parse w/ Url, since git repos might use HTTPS
-    //let http_url = Url::parse(remote_url);
-    // If we get Err(RelativeUrlWithoutBase) then we should pick apart the remote url
-    //println!("{:?}",http_url);
-
-    // Splitting on colon first will split
-    // user@provider.tld:account/repo.git
-    let split_first_stage = remote_url.split(":").collect::<Vec<&str>>();
-
-    let user_provider = split_first_stage[0].split("@").collect::<Vec<&str>>();
-    let acct_repo = split_first_stage[1].split("/").collect::<Vec<&str>>();
-
-    let repo_parsed = acct_repo[1].to_string();
-    let repo_parsed = repo_parsed.split(".git").collect::<Vec<&str>>();
-
-    GitSshRemote {
-        user: user_provider[0].to_string(),
-        provider: user_provider[1].to_string(),
-        account: acct_repo[0].to_string(),
-        repo: repo_parsed[0].to_string(),
-    }
+pub fn git_remote_url_parse(remote_url: &str) -> Result<GitUrl> {
+    GitUrl::parse(remote_url)
 }
 
 /// Return the `git2::Branch` struct for a local repo (as opposed to a remote repo)

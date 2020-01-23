@@ -1,7 +1,7 @@
 use crate::postgres::schema::{repo, ActiveState, GitHostType};
 
 use orbital_headers::code::GitRepoEntry;
-use orbital_headers::secret::SecretEntry;
+//use orbital_headers::secret::SecretEntry;
 
 use git_meta::git_info;
 
@@ -66,14 +66,14 @@ impl Default for Repo {
 // FIXME: Org should be a string, but right now we only have the postgres org id
 impl From<Repo> for GitRepoEntry {
     fn from(repo: Repo) -> Self {
-        let git_uri_parsed = git_info::git_remote_url_parse(&repo.uri.clone());
+        let git_uri_parsed = git_info::git_remote_url_parse(&repo.uri.clone()).unwrap();
 
         //
         GitRepoEntry {
             org: repo.org_id.to_string(), // FIXME: We should have the org name
-            git_provider: git_uri_parsed.provider,
-            name: git_uri_parsed.repo,
-            user: git_uri_parsed.user,
+            git_provider: git_uri_parsed.host.unwrap(),
+            name: git_uri_parsed.name,
+            user: git_uri_parsed.user.unwrap(),
             //uri: git_uri_parsed.repo, // FIXME: THis is an inconsistency
             //secret_type:
             //auth_data:
