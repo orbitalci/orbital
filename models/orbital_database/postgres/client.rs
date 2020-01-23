@@ -259,7 +259,8 @@ pub fn repo_add(
     match repo_check {
         Err(_e) => {
             debug!("repo doesn't exist. Inserting into db.");
-            Ok(diesel::insert_into(repo::table)
+
+            let result = Ok(diesel::insert_into(repo::table)
                 .values(NewRepo {
                     name: name.into(),
                     org_id: org.id,
@@ -268,7 +269,11 @@ pub fn repo_add(
                     ..Default::default()
                 })
                 .get_result(conn)
-                .expect("Error saving new repo"))
+                .expect("Error saving new repo"));
+
+            debug!("DB insert result: {:?}", &result);
+
+            result
         }
         Ok(s) => {
             debug!("repo found in db. Returning result.");

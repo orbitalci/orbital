@@ -103,7 +103,7 @@ impl CodeService for OrbitalApi {
                 let _ = file.write_all(unwrapped_request.auth_data.as_bytes());
 
                 let creds = GitCredentials::SshKey {
-                    username: "git".into(),
+                    username: unwrapped_request.user,
                     public_key: None,
                     private_key: temp_keypath.as_path(),
                     passphrase: None,
@@ -158,6 +158,8 @@ impl CodeService for OrbitalApi {
 
                 // Convert the response SecretEntry from the secret add into Secret
                 let secret: postgres::secret::Secret = response.into_inner().into();
+
+                debug!("Secret after conversion from proto to DB type: {:?}", &secret);
 
                 // Write git repo to DB
 
@@ -220,8 +222,7 @@ impl CodeService for OrbitalApi {
         let pg_conn = postgres::client::establish_connection();
 
         let db_result =
-            //postgres::client::repo_get(&pg_conn, &unwrapped_request.org, &unwrapped_request.name)
-            postgres::client::repo_get(&pg_conn, &unwrapped_request.org, &format!("{}/{}", &unwrapped_request.org, &unwrapped_request.name))
+            postgres::client::repo_get(&pg_conn, &unwrapped_request.org, &unwrapped_request.name)
                 .expect("There was a problem getting repo in database");
 
         let git_uri_parsed = git_info::git_remote_url_parse(&db_result.uri.clone()).unwrap();
