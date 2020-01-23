@@ -8,7 +8,6 @@ use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 use git_meta::git_info;
-use git_meta::GitSshRemote;
 use log::debug;
 use std::fs::File;
 use std::io::prelude::*;
@@ -57,10 +56,10 @@ pub async fn action_handler(
         true => Request::new(GitRepoAddRequest {
             org: action_option.org.unwrap_or_default(),
             secret_type: SecretType::Unspecified.into(),
-            git_provider: repo_info.provider,
-            name: format!("{}/{}", repo_info.account, repo_info.repo),
-            uri: repo_info.uri.clone(),
-            user: git_info::git_remote_url_parse(&repo_info.uri.clone()).user,
+            git_provider: repo_info.git_url.host.unwrap(),
+            name: repo_info.git_url.name,
+            uri: repo_info.git_url.href,
+            user: repo_info.git_url.user.unwrap(),
             ..Default::default()
         }),
         false => {
@@ -78,10 +77,10 @@ pub async fn action_handler(
                 org: action_option.org.unwrap_or_default(),
                 secret_type: SecretType::SshKey.into(),
                 auth_data: contents,
-                git_provider: repo_info.provider,
-                name: format!("{}/{}", repo_info.account, repo_info.repo),
-                uri: repo_info.uri.clone(),
-                user: git_info::git_remote_url_parse(&repo_info.uri.clone()).user,
+                git_provider: repo_info.git_url.host.unwrap(),
+                name: repo_info.git_url.name,
+                uri: repo_info.git_url.href,
+                user: repo_info.git_url.user.unwrap(),
             })
         }
     };

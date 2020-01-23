@@ -64,6 +64,12 @@ impl From<Box<dyn Error>> for SubcommandError {
     }
 }
 
+impl From<anyhow::Error> for SubcommandError {
+    fn from(error: anyhow::Error) -> Self {
+        SubcommandError::new(&error.to_string())
+    }
+}
+
 impl From<tonic::Status> for SubcommandError {
     fn from(error: tonic::Status) -> Self {
         SubcommandError::new(&error.message().to_string())
