@@ -3,8 +3,8 @@ pub mod clone;
 /// Helper functions for parsing local git repos and deriving Orbital accounting info
 pub mod git_info;
 
-use std::path::Path;
 use git_url_parse::GitUrl;
+use std::path::Path;
 
 /// This is the git commit that will be used for build requests
 #[derive(Debug, Default)]

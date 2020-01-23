@@ -159,7 +159,10 @@ impl CodeService for OrbitalApi {
                 // Convert the response SecretEntry from the secret add into Secret
                 let secret: postgres::secret::Secret = response.into_inner().into();
 
-                debug!("Secret after conversion from proto to DB type: {:?}", &secret);
+                debug!(
+                    "Secret after conversion from proto to DB type: {:?}",
+                    &secret
+                );
 
                 // Write git repo to DB
 
