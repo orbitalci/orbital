@@ -89,7 +89,7 @@ impl BuildService for OrbitalApi {
         // Request: org/git_provider/name
         // e.g.: default_org/github.com/level11consulting/orbitalci
         let request_payload = Request::new(GitRepoGetRequest {
-            org: "default_org".into(),
+            org: unwrapped_request.org.clone().into(),
             git_provider: unwrapped_request.clone().git_provider,
             name: unwrapped_request.clone().git_repo,
             uri: unwrapped_request.clone().remote_uri,
@@ -144,20 +144,34 @@ impl BuildService for OrbitalApi {
                 // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
                 // Where the secret name is the git repo url
                 // e.g., "github.com/level11consulting/orbitalci"
-                //no username, no trailing .git
-                let vault_secret_path = format!(
-                    "orbital/{}/{}/{}/{}",
-                    &unwrapped_request.org,
-                    SecretType::SshKey.to_string().to_lowercase(),
-                    &unwrapped_request.git_provider,
-                    &unwrapped_request.git_repo,
+
+                let secret_name = format!(
+                    "{}/{}",
+                    &unwrapped_request.git_provider, &unwrapped_request.git_repo,
                 );
 
+                //let vault_secret_path = agent_runtime::vault::orb_vault_path(
+                //    &unwrapped_request.org.clone(),
+                //    &secret_name,
+                //    &SecretType::SshKey.to_string(),
+                //);
+
+                //let vault_secret_path = format!(
+                //    "orbital/{}/{}/{}/{}",
+                //    &unwrapped_request.org,
+                //    SecretType::SshKey.to_string().to_lowercase(),
+                //    &unwrapped_request.git_provider,
+                //    &unwrapped_request.git_repo,
+                //);
+
                 let secret_service_request = Request::new(SecretGetRequest {
-                    name: vault_secret_path,
+                    org: unwrapped_request.org.clone().into(),
+                    name: secret_name,
                     secret_type: SecretType::SshKey.into(),
                     ..Default::default()
                 });
+
+                debug!("Secret request: {:?}", &secret_service_request);
 
                 let secret_service_response =
                     match secret_client.secret_get(secret_service_request).await {
