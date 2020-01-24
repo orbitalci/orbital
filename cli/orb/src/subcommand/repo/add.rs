@@ -13,6 +13,9 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
+use orbital_database::postgres::repo::Repo;
+use prettytable::{cell, format, row, Table};
+
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
 pub struct ActionOption {
@@ -88,7 +91,48 @@ pub async fn action_handler(
     debug!("Request for git repo add: {:?}", &request);
 
     let mut client = CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
-    let response = client.git_repo_add(request).await?;
-    println!("RESPONSE = {:?}", response);
-    Ok(())
+    let response = client.git_repo_add(request).await;
+
+    match response {
+        Err(_e) => {
+            eprintln!("Error adding Repo");
+            Ok(())
+        }
+        Ok(o) => {
+            let repo_proto = o.into_inner();
+
+            debug!("RESPONSE = {:?}", &repo_proto);
+
+            // By default, format the response into a table
+            let mut table = Table::new();
+            table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+            // Print the header row
+            table.set_titles(row![
+                "Org Name",
+                "Repo Name",
+                "Uri",
+                "Secret Type",
+                "Build Enabled",
+                "Notify Enabled",
+                "Next build index"
+            ]);
+
+            let repo = Repo::from(repo_proto.clone());
+
+            table.add_row(row![
+                repo.org_id,
+                repo.name,
+                repo.uri,
+                repo.secret_id.unwrap_or_default(),
+                &format!("{:?}", repo.build_active_state),
+                &format!("{:?}", repo.notify_active_state),
+                repo.next_build_index
+            ]);
+
+            // Print the table to stdout
+            table.printstd();
+            Ok(())
+        }
+    }
 }

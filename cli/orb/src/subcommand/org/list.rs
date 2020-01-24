@@ -36,14 +36,21 @@ pub async fn action_handler(
     // Print the header row
     table.set_titles(row!["Org Name", "Active", "Created", "Last Update"]);
 
-    for org_proto in response.orgs {
-        let org = Org::from(org_proto);
-        table.add_row(row![
-            org.name,
-            &format!("{:?}", org.active_state),
-            org.created,
-            org.last_update
-        ]);
+    match response.orgs.len() {
+        0 => {
+            println!("No Orgs found");
+        }
+        _ => {
+            for org_proto in response.orgs {
+                let org = Org::from(org_proto);
+                table.add_row(row![
+                    org.name,
+                    &format!("{:?}", org.active_state),
+                    org.created,
+                    org.last_update
+                ]);
+            }
+        }
     }
 
     // Print the table to stdout
