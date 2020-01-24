@@ -54,7 +54,7 @@ pub async fn action_handler(
 
     match response {
         Err(_e) => {
-            eprintln!("Error adding Repo");
+            eprintln!("Repo not found");
             Ok(())
         }
         Ok(o) => {
