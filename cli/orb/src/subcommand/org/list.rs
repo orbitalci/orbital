@@ -8,6 +8,10 @@ use tonic::Request;
 
 use log::debug;
 
+use prettytable::{cell, format, row, Table};
+
+use orbital_database::postgres::org::Org;
+
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
 pub struct ActionOption {}
@@ -23,7 +27,28 @@ pub async fn action_handler(
     let request = Request::new(());
     debug!("Request for org remove: {:?}", &request);
 
-    let response = client.org_list(request).await?;
-    println!("RESPONSE = {:?}", response);
+    let response = client.org_list(request).await?.into_inner();
+
+    // By default, format the response into a table
+    let mut table = Table::new();
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+    // Print the header row
+    table.set_titles(row!["Org Name", "Active", "Created", "Last Update"]);
+
+    for org_proto in response.orgs {
+        let org = Org::from(org_proto);
+        table.add_row(row![
+            org.name,
+            &format!("{:?}", org.active_state),
+            org.created,
+            org.last_update
+        ]);
+    }
+
+    // Print the table to stdout
+    table.printstd();
+
+    //println!("RESPONSE = {:?}", response);
     Ok(())
 }
