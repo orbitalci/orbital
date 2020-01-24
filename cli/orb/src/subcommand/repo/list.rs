@@ -8,6 +8,9 @@ use tonic::Request;
 
 use log::debug;
 
+use orbital_database::postgres::repo::Repo;
+use prettytable::{cell, format, row, Table};
+
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
 pub struct ActionOption {
@@ -30,7 +33,48 @@ pub async fn action_handler(
 
     debug!("Request for git repo list: {:?}", &request);
 
-    let response = client.git_repo_list(request).await?;
-    println!("RESPONSE = {:?}", response);
+    let response = client.git_repo_list(request).await?.into_inner();
+
+    // By default, format the response into a table
+    let mut table = Table::new();
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+    // Print the header row
+    table.set_titles(row![
+        "Org Name",
+        "Repo Name",
+        "Uri",
+        "Secret Type",
+        "Build Enabled",
+        "Notify Enabled",
+        "Next build index"
+    ]);
+
+    match response.git_repos.len() {
+        0 => {
+            println!("No repos found");
+        }
+        _ => {
+            for repo_proto in &response.git_repos {
+                let repo = Repo::from(repo_proto.clone());
+
+                table.add_row(row![
+                    repo.org_id,
+                    repo.name,
+                    repo.uri,
+                    repo.secret_id.unwrap_or_default(),
+                    &format!("{:?}", repo.build_active_state),
+                    &format!("{:?}", repo.notify_active_state),
+                    repo.next_build_index
+                ]);
+
+                debug!("RESPONSE = {:?}", &response);
+            }
+        }
+    }
+
+    // Print the table to stdout
+    table.printstd();
+
     Ok(())
 }
