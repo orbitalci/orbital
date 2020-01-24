@@ -9,6 +9,9 @@ use tonic::Request;
 
 use log::debug;
 
+use orbital_database::postgres::secret::Secret;
+use prettytable::{cell, format, row, Table};
+
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
 pub struct ActionOption {
@@ -40,7 +43,57 @@ pub async fn action_handler(
 
     debug!("Request for secret get: {:?}", &request);
 
-    let response = client.secret_get(request).await?;
-    println!("RESPONSE = {:?}", response);
-    Ok(())
+    let response = client.secret_get(request).await;
+
+    // By default, format the response into a table
+    let mut table = Table::new();
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+    // Print the header row
+    table.set_titles(row![
+        "Org Name",
+        "Secret Name",
+        "Secret Type",
+        "Vault Path",
+        "Active State",
+    ]);
+
+    match response {
+        Err(_e) => {
+            eprintln!("Secret not found");
+            Ok(())
+        }
+        Ok(s) => {
+            let secret_proto = s.into_inner();
+
+            debug!("RESPONSE = {:?}", &secret_proto);
+
+            // By default, format the response into a table
+            let mut table = Table::new();
+            table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+            // Print the header row
+            table.set_titles(row![
+                "Org Name",
+                "Secret Name",
+                "Secret Type",
+                "Vault Path",
+                "Active State",
+            ]);
+
+            let secret = Secret::from(secret_proto.clone());
+
+            table.add_row(row![
+                secret.org_id,
+                secret.name,
+                &format!("{:?}", secret.secret_type),
+                secret.vault_path,
+                &format!("{:?}", secret.active_state),
+            ]);
+
+            // Print the table to stdout
+            table.printstd();
+            Ok(())
+        }
+    }
 }
