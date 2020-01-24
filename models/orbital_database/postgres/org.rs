@@ -45,20 +45,19 @@ impl Default for Org {
     }
 }
 
-//impl From<OrgEntry> for Org {
-//    fn from(org: OrgEntry) -> Self {
-//
-//        // TODO: Need to convert timestamps from OrgEntry
-//
-//        Org {
-//            id: org.id.into(),
-//            name: org.name.into(),
-//            created: NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0),
-//            last_update: NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0),
-//            active_state: org.active_state.into(),
-//        }
-//    }
-//}
+impl From<OrgEntry> for Org {
+    fn from(org: OrgEntry) -> Self {
+        // TODO: Need to convert timestamps from OrgEntry
+
+        Org {
+            id: org.id.into(),
+            name: org.name.into(),
+            created: NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0),
+            last_update: NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0),
+            active_state: org.active_state.into(),
+        }
+    }
+}
 
 impl From<Org> for OrgEntry {
     fn from(org: Org) -> Self {

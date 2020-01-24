@@ -17,6 +17,8 @@ log = "0.4"
 tonic = "0.1.0"
 git2 = "0.11"
 anyhow = "1.0"
+prettytable-rs = "0.8"
+chrono = "0.4"
 # Temporary. Move into agent runtime
 hashicorp_stack = { path = "../../../../lib/hashicorp_stack" }
 
