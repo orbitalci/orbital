@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{secret::SubcommandOption, GlobalOption, SubcommandError};
+use crate::{secret::SubcommandOption, GlobalOption};
 
 use orbital_database::postgres::schema::SecretType;
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
@@ -9,6 +9,7 @@ use tonic::Request;
 
 use log::debug;
 
+use anyhow::Result;
 use orbital_database::postgres::secret::Secret;
 use prettytable::{cell, format, row, Table};
 use strum::VariantNames;
@@ -33,7 +34,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     let mut client = SecretServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(SecretGetRequest {

@@ -1,6 +1,7 @@
+use anyhow::Result;
 use structopt::StructOpt;
 
-use crate::{GlobalOption, SubcommandError};
+use crate::GlobalOption;
 
 pub mod add;
 pub mod get;
@@ -34,7 +35,7 @@ pub enum Action {
 pub async fn subcommand_handler(
     global_option: GlobalOption,
     local_option: SubcommandOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     match local_option.clone().action {
         Action::Add(action_option) => {
             add::action_handler(global_option, local_option, action_option).await

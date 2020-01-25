@@ -1,5 +1,6 @@
-use crate::{developer::git::SubcommandOption, GlobalOption, SubcommandError};
+use crate::{developer::git::SubcommandOption, GlobalOption};
 //use log::debug;
+use anyhow::Result;
 use git_meta::git_info;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -16,7 +17,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     println!(
         "{:?}",
         git_info::get_git_info_from_path(&action_option.path, &None, &None)

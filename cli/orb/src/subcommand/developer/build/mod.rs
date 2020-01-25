@@ -1,3 +1,4 @@
+use anyhow::Result;
 use structopt::StructOpt;
 
 use agent_runtime::docker;
@@ -41,7 +42,7 @@ pub struct SubcommandOption {
 pub async fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     // Read options and validate against git repo
     // Read orb.yml
 
@@ -61,16 +62,17 @@ pub async fn subcommand_handler(
     // TODO: Also handle file being named orb.yaml
     // Look for a file named orb.yml
     debug!("Loading orb.yml from path {:?}", &path);
-    let config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))?;
+    //let config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))?;
+    let config =
+        parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).unwrap();
 
     debug!("Pulling container: {:?}", config.image.clone());
     match docker::container_pull(config.image.as_str()) {
         Ok(ok) => ok, // The successful result doesn't matter
         Err(_) => {
-            return Err(SubcommandError::new(&format!(
-                "Could not pull image {}",
-                &config.image
-            )))
+            return Err(
+                SubcommandError::new(&format!("Could not pull image {}", &config.image)).into(),
+            )
         }
     };
 
@@ -85,10 +87,9 @@ pub async fn subcommand_handler(
     ) {
         Ok(container_id) => container_id,
         Err(_) => {
-            return Err(SubcommandError::new(&format!(
-                "Could not create image {}",
-                &config.image
-            )))
+            return Err(
+                SubcommandError::new(&format!("Could not create image {}", &config.image)).into(),
+            )
         }
     };
 
@@ -97,10 +98,9 @@ pub async fn subcommand_handler(
     match docker::container_start(&container_id) {
         Ok(container_id) => container_id,
         Err(_) => {
-            return Err(SubcommandError::new(&format!(
-                "Could not start image {}",
-                &config.image
-            )))
+            return Err(
+                SubcommandError::new(&format!("Could not start image {}", &config.image)).into(),
+            )
         }
     }
 
@@ -123,7 +123,8 @@ pub async fn subcommand_handler(
                 return Err(SubcommandError::new(&format!(
                     "Could not create image {}",
                     &config.image
-                )))
+                ))
+                .into())
             }
         }
     }

@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{repo::SubcommandOption, GlobalOption, SubcommandError};
+use crate::{repo::SubcommandOption, GlobalOption};
 
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoListRequest};
 use orbital_services::ORB_DEFAULT_URI;
@@ -8,6 +8,7 @@ use tonic::Request;
 
 use log::debug;
 
+use anyhow::Result;
 use orbital_database::postgres::repo::Repo;
 use prettytable::{cell, format, row, Table};
 
@@ -23,7 +24,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     let mut client = CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(GitRepoListRequest {

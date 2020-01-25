@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{GlobalOption, SubcommandError};
+use crate::GlobalOption;
 
 use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
 
@@ -9,6 +9,7 @@ use git_meta::git_info;
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
+use anyhow::Result;
 use log::debug;
 use std::path::{Path, PathBuf};
 
@@ -41,7 +42,7 @@ pub struct SubcommandOption {
 pub async fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     // Path
@@ -60,7 +61,9 @@ pub async fn subcommand_handler(
     // If We're in detatched head (commit not in branch) say so
     //
     // Open the orb.yml
-    let _config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))?;
+    //let _config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))?;
+    let _config =
+        parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).unwrap();
     // Assuming Docker builder... (Stay focused!)
     // Get the docker container image
 

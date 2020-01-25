@@ -1,6 +1,7 @@
+use anyhow::Result;
 use structopt::StructOpt;
 
-use crate::{GlobalOption, SubcommandError};
+use crate::GlobalOption;
 
 /// Start an Orb server
 pub mod start;
@@ -16,7 +17,7 @@ pub enum OperatorType {
 pub async fn subcommand_handler(
     global_option: GlobalOption,
     ops_subcommand: OperatorType,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     match ops_subcommand {
         OperatorType::Start(sub_option) => {
             start::subcommand_handler(global_option, sub_option).await

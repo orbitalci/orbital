@@ -1,5 +1,6 @@
 use crate::{developer::docker::SubcommandOption, GlobalOption, SubcommandError};
 use agent_runtime::docker;
+use anyhow::Result;
 use log::debug;
 use structopt::StructOpt;
 
@@ -14,7 +15,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     debug!("Starting container");
     match docker::container_start(&action_option.container_id) {
         Ok(container_id) => container_id,
@@ -22,7 +23,8 @@ pub async fn action_handler(
             return Err(SubcommandError::new(&format!(
                 "Could not start Docker container id  {}",
                 &action_option.container_id
-            )))
+            ))
+            .into())
         }
     }
     Ok(())

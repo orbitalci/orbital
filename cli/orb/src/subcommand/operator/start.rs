@@ -1,6 +1,7 @@
+use anyhow::Result;
 use structopt::StructOpt;
 
-use crate::{GlobalOption, SubcommandError};
+use crate::GlobalOption;
 
 use orbital_headers::{
     build_meta::build_service_server::BuildServiceServer,
@@ -30,7 +31,7 @@ pub struct SubcommandOption {
 pub async fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     let addr = ORB_DEFAULT_URI.parse().unwrap();
 
     debug!("Starting single-node server");

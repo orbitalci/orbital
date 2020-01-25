@@ -17,6 +17,8 @@ prost-types = "0.6"
 hashicorp_stack = { path = "../lib/hashicorp_stack" }
 mktemp = "0.4"
 orbital_database = { path = "../models/orbital_database" }
+anyhow = "1.0"
+thiserror = "1.0"
 
 
 [lib]

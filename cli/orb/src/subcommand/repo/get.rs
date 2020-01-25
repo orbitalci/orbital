@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{repo::SubcommandOption, GlobalOption, SubcommandError};
+use crate::{repo::SubcommandOption, GlobalOption};
 
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_services::ORB_DEFAULT_URI;
@@ -10,6 +10,7 @@ use git_meta::git_info;
 use log::debug;
 use std::path::PathBuf;
 
+use anyhow::Result;
 use orbital_database::postgres::repo::Repo;
 use prettytable::{cell, format, row, Table};
 
@@ -33,7 +34,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     // Try to parse path for some git info
 
     let repo_info =
