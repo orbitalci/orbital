@@ -15,13 +15,14 @@ use log::debug;
 use prettytable::{cell, format, row, Table};
 
 use orbital_database::postgres::org::Org;
+use strum::VariantNames;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
 pub struct ActionOption {
     name: String,
     update_name: String,
-    #[structopt(long, short, default_value = "enabled", possible_values = &ActiveState::variants())]
+    #[structopt(long, short, default_value = "ActiveState::Enabled", possible_values = &ActiveState::VARIANTS)]
     active_state: ActiveState,
 }
 
