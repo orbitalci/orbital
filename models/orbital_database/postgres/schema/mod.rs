@@ -4,7 +4,7 @@ use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
 use diesel::serialize::{self, IsNull, Output, ToSql};
 use std::io::Write;
-use std::str::FromStr;
+use strum_macros::{Display, EnumString, EnumVariantNames};
 
 use orbital_headers::orbital_types;
 
@@ -28,7 +28,10 @@ table! {
 #[postgres(type_name = "active_state")]
 pub struct ActiveStatePGEnum;
 
-#[derive(Debug, Clone, PartialEq, FromSqlRow, AsExpression)]
+#[derive(
+    Debug, Clone, PartialEq, FromSqlRow, AsExpression, EnumString, EnumVariantNames, Display,
+)]
+#[strum(serialize_all = "snake_case")]
 #[sql_type = "ActiveStatePGEnum"]
 pub enum ActiveState {
     Unspecified = 0,
@@ -36,28 +39,6 @@ pub enum ActiveState {
     Enabled = 2,
     Disabled = 3,
     Deleted = 4,
-}
-
-impl ActiveState {
-    /// A list of possible variants in `&'static str` form
-    pub fn variants() -> [&'static str; 5] {
-        ["unspecified", "unknown", "enabled", "disabled", "deleted"]
-    }
-}
-
-impl FromStr for ActiveState {
-    type Err = std::string::ParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s.to_lowercase().as_ref() {
-            "unspecified" => ActiveState::Unspecified,
-            "unknown" => ActiveState::Unknown,
-            "enabled" => ActiveState::Enabled,
-            "disabled" => ActiveState::Disabled,
-            "deleted" => ActiveState::Deleted,
-            _ => ActiveState::Unknown,
-        })
-    }
 }
 
 impl From<i32> for ActiveState {
@@ -144,7 +125,10 @@ joinable!(secret -> org (org_id));
 #[postgres(type_name = "secret_type")]
 pub struct SecretTypePGEnum;
 
-#[derive(Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression, EnumString, EnumVariantNames, Display,
+)]
+#[strum(serialize_all = "snake_case")]
 #[sql_type = "SecretTypePGEnum"]
 pub enum SecretType {
     Unspecified = 0,
@@ -158,46 +142,6 @@ pub enum SecretType {
     PypiRegistry = 8,
     MavenRepo = 9,
     Kubernetes = 10,
-}
-
-impl SecretType {
-    /// A list of possible variants in `&'static str` form
-    pub fn variants() -> [&'static str; 11] {
-        [
-            "unspecified",
-            "basic_auth",
-            "api_key",
-            "env_var",
-            "file",
-            "ssh_key",
-            "docker_registry",
-            "npm_repo",
-            "pypi_registry",
-            "maven_repo",
-            "kubernetes",
-        ]
-    }
-}
-
-impl FromStr for SecretType {
-    type Err = std::string::ParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s.to_lowercase().as_ref() {
-            "unspecified" => SecretType::Unspecified,
-            "basic_auth" => SecretType::BasicAuth,
-            "api_key" => SecretType::ApiKey,
-            "env_var" => SecretType::EnvVar,
-            "file" => SecretType::File,
-            "ssh_key" => SecretType::SshKey,
-            "docker_registry" => SecretType::DockerRegistry,
-            "npm_repo" => SecretType::NpmRepo,
-            "pypi_registry" => SecretType::PypiRegistry,
-            "maven_repo" => SecretType::MavenRepo,
-            "kubernetes" => SecretType::Kubernetes,
-            _ => SecretType::Unspecified,
-        })
-    }
 }
 
 impl From<i32> for SecretType {
@@ -320,7 +264,9 @@ allow_tables_to_appear_in_same_query!(org, secret, repo);
 #[postgres(type_name = "git_host_type")]
 pub struct GitHostTypePGEnum;
 
-#[derive(Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression, EnumString, EnumVariantNames, Display,
+)]
 #[sql_type = "GitHostTypePGEnum"]
 pub enum GitHostType {
     Unspecified = 0,

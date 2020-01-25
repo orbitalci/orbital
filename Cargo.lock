@@ -1252,6 +1252,8 @@ dependencies = [
  "orbital_services 0.1.0",
  "prettytable-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "strum 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "strum_macros 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tonic 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1266,6 +1268,8 @@ dependencies = [
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "orbital_headers 0.1.0",
  "prost-types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "strum 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "strum_macros 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

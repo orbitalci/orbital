@@ -10,7 +10,6 @@ use log::debug;
 
 use orbital_database::postgres::secret::Secret;
 use prettytable::{cell, format, row, Table};
-use orbital_headers::orbital_types;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]

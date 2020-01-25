@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 use crate::{secret::SubcommandOption, GlobalOption, SubcommandError};
 
-use orbital_headers::orbital_types::SecretType;
+use orbital_database::postgres::schema::SecretType;
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
@@ -11,6 +11,7 @@ use log::debug;
 
 use orbital_database::postgres::secret::Secret;
 use prettytable::{cell, format, row, Table};
+use strum::VariantNames;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
@@ -20,7 +21,7 @@ pub struct ActionOption {
     secret_name: String,
 
     /// Secret Type
-    #[structopt(long, required = true, possible_values = &SecretType::variants())]
+    #[structopt(long, required = true, possible_values = &SecretType::VARIANTS)]
     secret_type: SecretType,
 
     /// Name of Orbital org
