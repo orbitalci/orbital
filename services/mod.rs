@@ -2,6 +2,7 @@
 //use log::debug;
 use std::error::Error;
 use std::fmt;
+use thiserror::Error;
 
 /// gRPC service for building code
 pub mod build_service;
@@ -39,7 +40,7 @@ pub fn get_service_uri(_svc: ServiceType) -> &'static str {
 #[derive(Clone, Debug, Default)]
 pub struct OrbitalApi {}
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub struct OrbitalServiceError {
     details: String,
 }
@@ -58,19 +59,14 @@ impl fmt::Display for OrbitalServiceError {
     }
 }
 
-impl Error for OrbitalServiceError {
-    fn description(&self) -> &str {
-        &self.details
-    }
-
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        // Generic error, underlying cause isn't tracked.
-        None
+impl From<Box<dyn Error>> for OrbitalServiceError {
+    fn from(error: Box<dyn Error>) -> Self {
+        OrbitalServiceError::new(&error.to_string())
     }
 }
 
-impl From<Box<dyn Error>> for OrbitalServiceError {
-    fn from(error: Box<dyn Error>) -> Self {
+impl From<anyhow::Error> for OrbitalServiceError {
+    fn from(error: anyhow::Error) -> Self {
         OrbitalServiceError::new(&error.to_string())
     }
 }

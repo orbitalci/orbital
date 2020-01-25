@@ -3,6 +3,7 @@ use shiplift::{tty::StreamType, ContainerOptions, Docker, ExecContainerOptions, 
 use tokio;
 use tokio::prelude::{Future, Stream};
 
+use anyhow::{anyhow, Result};
 use log::{debug, error};
 
 /// Returns a String to work around shiplift behavior that is different from the docker cli
@@ -15,7 +16,7 @@ use log::{debug, error};
 /// assert_eq!("alpine:3", tag_provided);
 /// ```
 #[doc(test(no_crate_inject))]
-pub fn image_tag_sanitizer(image: &str) -> Result<String, ()> {
+pub fn image_tag_sanitizer(image: &str) -> Result<String> {
     let split = &image.split(":").collect::<Vec<_>>();
 
     match split.len() {
@@ -26,13 +27,14 @@ pub fn image_tag_sanitizer(image: &str) -> Result<String, ()> {
             }
         }
         2 => return Ok(image.to_string()),
-        _ => return Err(()),
+        //_ => return Err(anyhow::Error::msg("Failed to clean docker image tag")),
+        _ => return Err(anyhow!("Failed to clean docker image tag")),
     }
 }
 
 /// Connect to the docker engine and pull the provided image
 /// if no tag is provided with the image, ":latest" tag will be assumed
-pub fn container_pull(image: &str) -> Result<(), ()> {
+pub fn container_pull(image: &str) -> Result<()> {
     let docker = Docker::new();
 
     let img = image_tag_sanitizer(image)?;
@@ -101,7 +103,7 @@ pub fn container_create(
 }
 
 /// Connect to the docker engine and start a created container with a given `container_id`
-pub fn container_start(container_id: &str) -> Result<(), ()> {
+pub fn container_start(container_id: &str) -> Result<()> {
     let docker = Docker::new();
 
     debug!("Starting the container");
@@ -121,7 +123,7 @@ pub fn container_start(container_id: &str) -> Result<(), ()> {
 }
 
 /// Connect to the docker engine and stop a running container with a given `container_id`
-pub fn container_stop(container_id: &str) -> Result<(), ()> {
+pub fn container_stop(container_id: &str) -> Result<()> {
     let docker = Docker::new();
     let stop_container = docker
         .containers()
@@ -137,7 +139,7 @@ pub fn container_stop(container_id: &str) -> Result<(), ()> {
 }
 
 /// Connect to the docker engine and execute commands in a running container with a given `container_id`
-pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<(), ()> {
+pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<()> {
     let docker = Docker::new();
 
     println!("{:?}", command);

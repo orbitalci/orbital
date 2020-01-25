@@ -9,12 +9,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "agent_runtime"
 version = "0.1.0"
 dependencies = [
+ "anyhow 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "config_parser 0.1.0",
  "git_meta 0.1.0",
  "hashicorp_stack 0.1.0",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mktemp 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "shiplift 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -235,6 +237,7 @@ dependencies = [
 name = "config_parser"
 version = "0.1.0"
 dependencies = [
+ "anyhow 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_yaml 0.8.11 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -704,6 +707,7 @@ dependencies = [
 name = "hashicorp_stack"
 version = "0.1.0"
 dependencies = [
+ "anyhow 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "hashicorp_vault 0.7.0 (git+https://github.com/tjtelan/vault-rs)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

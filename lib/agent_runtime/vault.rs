@@ -1,3 +1,4 @@
+use anyhow::Result;
 use hashicorp_stack::vault;
 use log::debug;
 use std::env;
@@ -9,7 +10,7 @@ pub fn orb_vault_path(org: &str, name: &str, secret_type: &str) -> String {
     path
 }
 
-pub fn vault_add_secret(path: &str, data: &str) -> Result<(), ()> {
+pub fn vault_add_secret(path: &str, data: &str) -> Result<()> {
     let host = match env::var("VAULT_ADDR") {
         Ok(val) => val,
         Err(_e) => {
@@ -37,7 +38,7 @@ pub fn vault_add_secret(path: &str, data: &str) -> Result<(), ()> {
     }
 }
 
-pub fn vault_get_secret(path: &str) -> Result<String, ()> {
+pub fn vault_get_secret(path: &str) -> Result<String> {
     let host = match env::var("VAULT_ADDR") {
         Ok(val) => val,
         Err(_e) => {
@@ -67,7 +68,7 @@ pub fn vault_get_secret(path: &str) -> Result<String, ()> {
     Ok(secret)
 }
 
-pub fn vault_update_secret(path: &str, data: &str) -> Result<(), ()> {
+pub fn vault_update_secret(path: &str, data: &str) -> Result<()> {
     let host = match env::var("VAULT_ADDR") {
         Ok(val) => val,
         Err(_e) => {
@@ -95,7 +96,7 @@ pub fn vault_update_secret(path: &str, data: &str) -> Result<(), ()> {
     }
 }
 
-pub fn vault_remove_secret(path: &str) -> Result<(), ()> {
+pub fn vault_remove_secret(path: &str) -> Result<()> {
     let host = match env::var("VAULT_ADDR") {
         Ok(val) => val,
         Err(_e) => {

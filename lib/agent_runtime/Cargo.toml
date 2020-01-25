@@ -12,6 +12,8 @@ git_meta = { path = "../git_meta" }
 mktemp = "0.4"
 config_parser = { path = "../config_parser" }
 hashicorp_stack = { path = "../hashicorp_stack" }
+anyhow = "1.0"
+thiserror = "1.0"
 
 [lib]
 name = "agent_runtime"
