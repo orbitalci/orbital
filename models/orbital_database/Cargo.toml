@@ -14,6 +14,7 @@ agent_runtime = { path = "../../lib/agent_runtime" }
 git_meta = { path = "../../lib/git_meta" }
 strum = "0.17"
 strum_macros = "0.17"
+anyhow = "1.0"
 
 [lib]
 name = "orbital_database"
