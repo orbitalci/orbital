@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{secret::SubcommandOption, GlobalOption, SubcommandError};
+use crate::{secret::SubcommandOption, GlobalOption};
 
 use orbital_database::postgres::schema::SecretType;
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretUpdateRequest};
@@ -12,6 +12,7 @@ use log::debug;
 use orbital_database::postgres::secret::Secret;
 use prettytable::{cell, format, row, Table};
 
+use anyhow::Result;
 use std::fs::File;
 use std::io::prelude::*;
 use strum::VariantNames;
@@ -40,7 +41,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     let mut file = File::open(&action_option.secret_file.expect("No secret filepath given"))?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
