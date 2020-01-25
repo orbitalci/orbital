@@ -1,4 +1,6 @@
+use anyhow;
 use structopt::StructOpt;
+use thiserror::Error;
 
 /// Send a remote call for starting a build
 pub mod build_cmd;
@@ -27,8 +29,38 @@ use std::path::PathBuf;
 
 use git2;
 
+//#[derive(Debug, Error)]
+//pub enum SubcommandError {
+////pub enum SubcommandErrorEnum {
+//    #[error("Error from git")]
+//    Git(#[from] git2::Error),
+//    #[error("Error from tonic status")]
+//    TonicStatus(#[from] tonic::Status),
+//    #[error("Error from tonic transport")]
+//    TonicTransport(#[from] tonic::transport::Error),
+//    #[error("Error from anyhow")]
+//    Anyhow(#[from] anyhow::Error),
+//    #[error("Error from Boxed")]
+//    Boxed(#[from] Box<dyn Error>),
+//    #[error("Error from I/O")]
+//    Io(#[from] dyn std::error::Error),
+//    #[error("Failed to parse config: {0}")]
+//    ConfigParseError(String),
+//
+//    #[error("Could not pull image: {0}")]
+//    DockerClientPull(String),
+//    #[error("Could not create container with image: {0}")]
+//    DockerClientCreate(String),
+//    #[error("Could not start Docker container id: {0}")]
+//    DockerClientStart(String),
+//    #[error("Could not exec into container id: {0}")]
+//    DockerClientExec(String),
+//    #[error("Could not stop container id: {0}")]
+//    DockerClientStop(String),
+//}
+
 /// Internal error type used by all subcommand handlers. Implements `Error` trait.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub struct SubcommandError {
     details: String,
 }
@@ -47,16 +79,16 @@ impl fmt::Display for SubcommandError {
     }
 }
 
-impl Error for SubcommandError {
-    fn description(&self) -> &str {
-        &self.details
-    }
-
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        // Generic error, underlying cause isn't tracked.
-        None
-    }
-}
+//impl Error for SubcommandError {
+//    fn description(&self) -> &str {
+//        &self.details
+//    }
+//
+//    fn source(&self) -> Option<&(dyn Error + 'static)> {
+//        // Generic error, underlying cause isn't tracked.
+//        None
+//    }
+//}
 
 impl From<Box<dyn Error>> for SubcommandError {
     fn from(error: Box<dyn Error>) -> Self {

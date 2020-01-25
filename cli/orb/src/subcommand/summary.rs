@@ -1,11 +1,12 @@
 use structopt::StructOpt;
 
-use crate::{GlobalOption, SubcommandError};
+use crate::GlobalOption;
 
 use orbital_headers::build_meta::{
     build_service_client::BuildServiceClient, BuildSummaryRequest, BuildTarget,
 };
 
+use anyhow::Result;
 use orbital_services::ORB_DEFAULT_URI;
 use std::path::PathBuf;
 use tonic::Request;
@@ -29,7 +30,7 @@ pub struct SubcommandOption {
 pub async fn subcommand_handler(
     _global_option: GlobalOption,
     _local_option: SubcommandOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     // Idea: Index should be Option<u32>

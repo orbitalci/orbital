@@ -1,12 +1,13 @@
+use anyhow::Result;
 use structopt::StructOpt;
 
 extern crate clap;
 
-use subcommand::{self, Subcommand, SubcommandContext, SubcommandError};
+use subcommand::{self, Subcommand, SubcommandContext};
 
 /// Parse command line input, and route into one of the subcommand handlers along with global options
 #[tokio::main]
-async fn main() -> Result<(), SubcommandError> {
+async fn main() -> Result<()> {
     env_logger::init();
 
     let parsed = SubcommandContext::from_args();

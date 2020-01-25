@@ -21,6 +21,7 @@ prettytable-rs = "0.8"
 chrono = "0.4"
 strum = "0.17"
 strum_macros = "0.17"
+thiserror = "1.0"
 # Temporary. Move into agent runtime
 hashicorp_stack = { path = "../../../../lib/hashicorp_stack" }
 

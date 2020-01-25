@@ -1,6 +1,7 @@
 use crate::{developer::docker::SubcommandOption, GlobalOption, SubcommandError};
 use agent_runtime::docker;
 //use log::debug;
+use anyhow::Result;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt, Clone)]
@@ -25,7 +26,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     // FIXME
     // This is going to be a stupid parsed command on whitespace only.
     // Embedded commands with quotes, $(), or backtics not expected to work with this parsing
@@ -47,6 +48,7 @@ pub async fn action_handler(
         Err(_) => Err(SubcommandError::new(&format!(
             "Could not pull image {:?}",
             &action_option.image
-        ))),
+        ))
+        .into()),
     }
 }

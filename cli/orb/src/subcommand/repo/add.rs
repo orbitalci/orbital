@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{repo::SubcommandOption, GlobalOption, SubcommandError};
+use crate::{repo::SubcommandOption, GlobalOption};
 
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoAddRequest};
 use orbital_headers::orbital_types::SecretType;
@@ -13,6 +13,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
+use anyhow::Result;
 use orbital_database::postgres::repo::Repo;
 use prettytable::{cell, format, row, Table};
 
@@ -45,7 +46,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     // Read git repo info from local filesystem.
     // TODO: support adding a repo from a uri
     let repo_info =

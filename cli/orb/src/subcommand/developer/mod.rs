@@ -1,6 +1,7 @@
+use anyhow::Result;
 use structopt::StructOpt;
 
-use crate::{GlobalOption, SubcommandContext, SubcommandError};
+use crate::{GlobalOption, SubcommandContext};
 
 use std::io;
 
@@ -35,7 +36,7 @@ pub enum DeveloperType {
 pub async fn subcommand_handler(
     global_option: GlobalOption,
     dev_subcommand: DeveloperType,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     match dev_subcommand {
         DeveloperType::Git(sub_option) => git::subcommand_handler(global_option, sub_option).await,
         DeveloperType::Docker(sub_option) => {

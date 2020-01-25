@@ -1,5 +1,6 @@
 use crate::{developer::docker::SubcommandOption, GlobalOption, SubcommandError};
 use agent_runtime::docker;
+use anyhow::Result;
 use log::debug;
 use structopt::StructOpt;
 
@@ -17,7 +18,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     debug!("Exec'ing commands into container");
     // FIXME
     // This is going to be a stupid parsed command on whitespace only.
@@ -37,7 +38,8 @@ pub async fn action_handler(
             return Err(SubcommandError::new(&format!(
                 "Could not exec into container id {}",
                 &action_option.container_id
-            )))
+            ))
+            .into())
         }
     }
     Ok(())

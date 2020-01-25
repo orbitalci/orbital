@@ -14,3 +14,5 @@ env_logger = "0.7"
 orbital_headers = { path = "../../models/orbital_headers" }
 orbital_cli_subcommand = { path = "src/subcommand" }
 orbital_services = { path = "../../services"}
+anyhow = "1.0"
+thiserror = "1.0"

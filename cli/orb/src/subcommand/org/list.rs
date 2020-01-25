@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{org::SubcommandOption, GlobalOption, SubcommandError};
+use crate::{org::SubcommandOption, GlobalOption};
 
 use orbital_headers::organization::organization_service_client::OrganizationServiceClient;
 use orbital_services::ORB_DEFAULT_URI;
@@ -10,6 +10,7 @@ use log::debug;
 
 use prettytable::{cell, format, row, Table};
 
+use anyhow::Result;
 use orbital_database::postgres::org::Org;
 
 #[derive(Debug, StructOpt, Clone)]
@@ -20,7 +21,7 @@ pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
     _action_option: ActionOption,
-) -> Result<(), SubcommandError> {
+) -> Result<()> {
     let mut client =
         OrganizationServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
