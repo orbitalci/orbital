@@ -29,9 +29,10 @@ use std::path::PathBuf;
 
 use git2;
 
+// TODO: I'd like to manage errors like this to keep error text together
+// Getting this error: `(dyn std::error::Error + 'static)` cannot be sent between threads safely
 //#[derive(Debug, Error)]
-//pub enum SubcommandError {
-////pub enum SubcommandErrorEnum {
+//pub enum SubcommandErrorEnum {
 //    #[error("Error from git")]
 //    Git(#[from] git2::Error),
 //    #[error("Error from tonic status")]
@@ -43,10 +44,10 @@ use git2;
 //    #[error("Error from Boxed")]
 //    Boxed(#[from] Box<dyn Error>),
 //    #[error("Error from I/O")]
-//    Io(#[from] dyn std::error::Error),
+//    Io(#[from] io::Error),
+//
 //    #[error("Failed to parse config: {0}")]
 //    ConfigParseError(String),
-//
 //    #[error("Could not pull image: {0}")]
 //    DockerClientPull(String),
 //    #[error("Could not create container with image: {0}")]
@@ -78,17 +79,6 @@ impl fmt::Display for SubcommandError {
         write!(f, "{}", self.details)
     }
 }
-
-//impl Error for SubcommandError {
-//    fn description(&self) -> &str {
-//        &self.details
-//    }
-//
-//    fn source(&self) -> Option<&(dyn Error + 'static)> {
-//        // Generic error, underlying cause isn't tracked.
-//        None
-//    }
-//}
 
 impl From<Box<dyn Error>> for SubcommandError {
     fn from(error: Box<dyn Error>) -> Self {
