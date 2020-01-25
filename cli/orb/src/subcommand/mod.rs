@@ -1,4 +1,3 @@
-use anyhow;
 use structopt::StructOpt;
 use thiserror::Error;
 

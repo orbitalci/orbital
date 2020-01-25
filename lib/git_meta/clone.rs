@@ -1,19 +1,15 @@
 use crate::GitCredentials;
+use anyhow::Result;
 use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks};
 use log::debug;
 use mktemp::Temp;
-use std::error::Error;
 
 // TODO: Need a way to switch between a public and private repo
 // Idea: Create an enum:
 
 /// Create a temporary directory with mktemp, clone given uri into it.
 /// Return mktemp directory, which will delete when out of scope
-pub fn clone_temp_dir(
-    uri: &str,
-    branch: &str,
-    credentials: GitCredentials,
-) -> Result<Temp, Box<dyn Error>> {
+pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> Result<Temp> {
     let temp_dir = Temp::new_dir()?;
 
     debug!("Temp dir path: {:?}", &temp_dir.as_path());

@@ -14,6 +14,7 @@ use log::debug;
 use std::error::Error;
 use std::path::PathBuf;
 use std::{env, fmt};
+use thiserror::Error;
 
 // Leaving this here for when we can focus on non-docker workflows
 //enum AgentRuntimeType {
@@ -21,7 +22,7 @@ use std::{env, fmt};
 //    Docker,
 //}
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub struct AgentRuntimeError {
     details: String,
 }
@@ -37,17 +38,6 @@ impl AgentRuntimeError {
 impl fmt::Display for AgentRuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.details)
-    }
-}
-
-impl Error for AgentRuntimeError {
-    fn description(&self) -> &str {
-        &self.details
-    }
-
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        // Generic error, underlying cause isn't tracked.
-        None
     }
 }
 

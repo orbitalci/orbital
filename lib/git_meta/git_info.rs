@@ -49,7 +49,7 @@ pub fn get_git_info_from_path(
 
 // FIXME: Should not assume remote is origin. This will cause issue in some dev workflows
 /// Returns the remote url after opening and validating repo from the local path
-pub fn git_remote_from_path(path: &Path) -> Result<String, git2::Error> {
+pub fn git_remote_from_path(path: &Path) -> Result<String> {
     let r = get_local_repo_from_path(path)?;
     let remote_url: String = r
         .find_remote("origin")?
@@ -61,7 +61,7 @@ pub fn git_remote_from_path(path: &Path) -> Result<String, git2::Error> {
 }
 
 /// Returns the remote url from the `git2::Repository` struct
-fn git_remote_from_repo(local_repo: &Repository) -> Result<String, git2::Error> {
+fn git_remote_from_repo(local_repo: &Repository) -> Result<String> {
     let remote_url: String = local_repo
         .find_remote("origin")?
         .url()
@@ -85,7 +85,7 @@ pub fn git_remote_url_parse(remote_url: &str) -> Result<GitUrl> {
 fn get_working_branch<'repo>(
     r: &'repo Repository,
     local_branch: &Option<String>,
-) -> Result<Branch<'repo>, git2::Error> {
+) -> Result<Branch<'repo>> {
     // It is likely that a user branch will not contain the remote
 
     match local_branch {
@@ -105,14 +105,17 @@ fn get_working_branch<'repo>(
             let local_branch = Branch::wrap(head?);
 
             debug!("Returning HEAD branch: {:?}", local_branch.name()?);
-            r.find_branch(
+
+            // Convert git2::Error to anyhow::Error
+            match r.find_branch(
                 local_branch
                     .name()?
                     .expect("Unable to return local branch name"),
                 BranchType::Local,
-            )
-
-            //r.find_branch(&"master", BranchType::Local)
+            ) {
+                Ok(b) => Ok(b),
+                Err(e) => Err(e.into()),
+            }
         }
     }
 }
@@ -149,7 +152,7 @@ fn get_target_commit<'repo>(
     r: &'repo Repository,
     branch: &Option<String>,
     commit_id: &Option<String>,
-) -> Result<Commit<'repo>, git2::Error> {
+) -> Result<Commit<'repo>> {
     let working_branch = get_working_branch(r, branch)?;
     let working_ref = working_branch.into_reference();
 
