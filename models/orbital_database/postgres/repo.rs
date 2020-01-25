@@ -94,14 +94,14 @@ impl From<Repo> for GitRepoEntry {
 // FIXME: This does not correctly set the org id
 impl From<GitRepoEntry> for Repo {
     fn from(git_repo_entry: GitRepoEntry) -> Self {
+        let git_uri_parsed = git_info::git_remote_url_parse(&git_repo_entry.uri.clone()).unwrap();
+
         Repo {
             id: 0,
             //org_id: git_repo_entry.org,
+            org_id: 0,
             name: git_repo_entry.name.clone(),
-            uri: format!(
-                "{}@{}/{}",
-                &git_repo_entry.user, &git_repo_entry.git_provider, &git_repo_entry.name
-            ),
+            uri: git_uri_parsed.href,
             //git_host_type: git_repo_entry.,
             //secret_id: Option<i32>,
             build_active_state: git_repo_entry.build.into(),

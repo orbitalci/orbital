@@ -74,7 +74,9 @@ impl CodeService for OrbitalApi {
         let temp_keypath = Temp::new_file().expect("Unable to create temp file");
 
         // check if repo is public or private. Do a test checkout
-        let _credentials = match unwrapped_request.secret_type.into() {
+
+        // TODO: Return GitCredentials and Repo
+        let (repo, credentials) = match unwrapped_request.secret_type.into() {
             SecretType::Unspecified => {
                 debug!("No secret type specified. Public repo");
                 let creds = GitCredentials::Public;
@@ -91,7 +93,23 @@ impl CodeService for OrbitalApi {
                         }
                     };
 
-                creds
+                // TODO: Test cloning repo
+                //let repo = postgres::repo::Repo::default();
+
+                // Write git repo to DB
+
+                let pg_conn = postgres::client::establish_connection();
+
+                let repo_db = postgres::client::repo_add(
+                    &pg_conn,
+                    &unwrapped_request.org,
+                    &unwrapped_request.name,
+                    &unwrapped_request.uri,
+                    None,
+                )
+                .expect("There was a problem adding repo in database");
+
+                (repo_db, None)
             }
             SecretType::SshKey => {
                 debug!("Private repo with ssh key");
@@ -168,16 +186,16 @@ impl CodeService for OrbitalApi {
 
                 let pg_conn = postgres::client::establish_connection();
 
-                let _db_result = postgres::client::repo_add(
+                let repo_db = postgres::client::repo_add(
                     &pg_conn,
                     &unwrapped_request.org,
                     &unwrapped_request.name,
                     &unwrapped_request.uri,
-                    Some(secret),
+                    Some(secret.clone()),
                 )
                 .expect("There was a problem adding repo in database");
 
-                creds
+                (repo_db, Some(secret))
             }
             SecretType::BasicAuth => {
                 debug!("Private repo with basic auth");
@@ -199,14 +217,105 @@ impl CodeService for OrbitalApi {
                         }
                     };
 
-                creds
+                // Commit secret into secret service
+                debug!("Connecting to the Secret service");
+                let secret_client_conn_req = SecretServiceClient::connect(format!(
+                    "http://{}",
+                    super::get_service_uri(ServiceType::Secret)
+                ));
+                let mut secret_client = match secret_client_conn_req.await {
+                    Ok(connection_handler) => connection_handler,
+                    Err(_e) => {
+                        return Err(
+                            OrbitalServiceError::new("Unable to connect to Secret service").into(),
+                        )
+                    }
+                };
+
+                debug!("Adding userpass to secret service");
+                let org_name = &unwrapped_request.org;
+                let secret_name = format!(
+                    "{}/{}",
+                    &unwrapped_request.git_provider, &unwrapped_request.name
+                );
+
+                // TODO: auth_data does not have a representation for userpass
+                let request = Request::new(SecretAddRequest {
+                    org: org_name.into(),
+                    name: secret_name.into(),
+                    secret_type: SecretType::from(unwrapped_request.secret_type).into(),
+                    data: unwrapped_request.auth_data.into(),
+                });
+
+                debug!("Request for secret add: {:?}", &request);
+
+                let response = secret_client.secret_add(request).await?;
+                println!("RESPONSE = {:?}", response);
+
+                // Convert the response SecretEntry from the secret add into Secret
+                let secret: postgres::secret::Secret = response.into_inner().into();
+
+                debug!(
+                    "Secret after conversion from proto to DB type: {:?}",
+                    &secret
+                );
+
+
+                // Write git repo to DB
+
+                let pg_conn = postgres::client::establish_connection();
+
+                let repo_db = postgres::client::repo_add(
+                    &pg_conn,
+                    &unwrapped_request.org,
+                    &unwrapped_request.name,
+                    &unwrapped_request.uri,
+                    None,
+                )
+                .expect("There was a problem adding repo in database");
+
+                (repo_db, Some(secret))
             }
             _ => panic!("Only public repo or private repo w/ sshkey/basic auth supported"),
         };
 
         // Test checking code out before committing repo into database and vault
+//pub struct GitRepoEntry {
+//    #[prost(string, tag = "1")]
+//    pub org: std::string::String,
+//    #[prost(string, tag = "2")]
+//    pub git_provider: std::string::String,
+//    #[prost(string, tag = "3")]
+//    pub name: std::string::String,
+//    #[prost(string, tag = "4")]
+//    pub user: std::string::String,
+//    #[prost(string, tag = "5")]
+//    pub uri: std::string::String,
+//    #[prost(enumeration = "super::orbital_types::SecretType", tag = "6")]
+//    pub secret_type: i32,
+//    #[prost(string, tag = "7")]
+//    pub auth_data: std::string::String,
+//    #[prost(enumeration = "super::orbital_types::ActiveState", tag = "8")]
+//    pub build: i32,
+//    #[prost(enumeration = "super::orbital_types::ActiveState", tag = "9")]
+//    pub notify: i32,
+//    #[prost(int32, tag = "10")]
+//    pub next_build_index: i32,
+//}
+
+        let git_uri_parsed = git_info::git_remote_url_parse(&repo.uri.clone()).unwrap();
+        //let repo_info = GitUrl::parse(&repo.uri);
 
         let response = Response::new(GitRepoEntry {
+            org: unwrapped_request.org,
+            git_provider: git_uri_parsed.host.unwrap(),
+            name: repo.name,
+            user: git_uri_parsed.user.unwrap(),
+            uri: git_uri_parsed.href,
+            secret_type: credentials.unwrap_or(postgres::secret::Secret::default()).secret_type.into(),
+            build: repo.build_active_state.into(),
+            notify: repo.notify_active_state.into(),
+            next_build_index: repo.next_build_index.into(),
             ..Default::default()
         });
 
