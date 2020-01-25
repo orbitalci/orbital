@@ -10,6 +10,7 @@ use log::debug;
 
 use orbital_database::postgres::secret::Secret;
 use prettytable::{cell, format, row, Table};
+use orbital_headers::orbital_types;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
@@ -57,7 +58,7 @@ pub async fn action_handler(
                 let secret = Secret::from(secret_proto.clone());
 
                 table.add_row(row![
-                    secret.org_id,
+                    secret_proto.org,
                     secret.name,
                     &format!("{:?}", secret.secret_type),
                     secret.vault_path,

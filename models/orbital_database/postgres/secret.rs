@@ -1,8 +1,10 @@
+use crate::postgres::org::Org;
 use crate::postgres::schema::{secret, ActiveState, SecretType};
 
 use orbital_headers::secret::SecretEntry;
 
-#[derive(Insertable, Debug, PartialEq, AsChangeset)]
+#[derive(Insertable, Debug, PartialEq, Associations, AsChangeset)]
+#[belongs_to(Org)]
 #[table_name = "secret"]
 pub struct NewSecret {
     pub name: String,
@@ -24,7 +26,8 @@ impl Default for NewSecret {
     }
 }
 
-#[derive(Clone, Debug, Identifiable, Queryable, QueryableByName)]
+#[derive(Clone, Debug, Identifiable, Queryable, Associations, QueryableByName)]
+#[belongs_to(Org)]
 #[table_name = "secret"]
 pub struct Secret {
     pub id: i32,

@@ -140,9 +140,7 @@ table! {
 
 joinable!(secret -> org (org_id));
 
-allow_tables_to_appear_in_same_query!(org, secret,);
-
-#[derive(SqlType, Debug)]
+#[derive(SqlType, Debug, Queryable)]
 #[postgres(type_name = "secret_type")]
 pub struct SecretTypePGEnum;
 
@@ -312,6 +310,11 @@ table! {
         next_build_index -> Integer,
     }
 }
+
+joinable!(repo -> org(org_id));
+joinable!(repo -> secret(secret_id));
+
+allow_tables_to_appear_in_same_query!(org, secret, repo);
 
 #[derive(SqlType, Debug)]
 #[postgres(type_name = "git_host_type")]

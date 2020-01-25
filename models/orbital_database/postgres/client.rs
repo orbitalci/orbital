@@ -7,6 +7,7 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use log::debug;
 use std::env;
+//use orbital_headers::orbital_types;
 
 pub fn establish_connection() -> PgConnection {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -120,36 +121,40 @@ pub fn secret_add(
     org: &str,
     name: &str,
     secret_type: SecretType,
-) -> Result<Secret, String> {
-    let org = org_get(conn, org).expect("Unable to find org");
-
-    let secret_check: Result<Secret, _> = secret::table
-        .select(secret::all_columns)
+) -> Result<(Secret, Org), String> {
+    let query_result: Result<(Secret, Org), _> = secret::table
+        .inner_join(org::table)
+        .select((secret::all_columns, org::all_columns))
         .filter(secret::name.eq(&name))
-        .order_by(secret::id)
+        .filter(org::name.eq(&org))
         .get_result(conn);
 
-    match secret_check {
+    match query_result {
         Err(_e) => {
             debug!("secret doesn't exist. Inserting into db.");
-            Ok(diesel::insert_into(secret::table)
+
+            let org_db = org_get(conn, org).expect("Unable to find org");
+
+            let secret_db = diesel::insert_into(secret::table)
                 .values(NewSecret {
                     name: name.to_string(),
-                    org_id: org.id,
+                    org_id: org_db.id,
                     secret_type: secret_type,
                     vault_path: orb_vault_path(
-                        &org.name,
+                        &org_db.name,
                         name,
                         format!("{:?}", &secret_type).as_str(),
                     ),
                     ..Default::default()
                 })
                 .get_result(conn)
-                .expect("Error saving new secret"))
+                .expect("Error saving new secret");
+
+            Ok((secret_db, org_db))
         }
-        Ok(s) => {
+        Ok((secret_db, org_db)) => {
             debug!("secret found in db. Returning result.");
-            Ok(s)
+            Ok((secret_db, org_db))
         }
     }
 }
@@ -159,18 +164,18 @@ pub fn secret_get(
     org: &str,
     name: &str,
     _secret_type: SecretType,
-) -> Result<Secret, String> {
-    let org_db = org_get(conn, org).expect("Unable to find org");
-
-    let secret: Secret = secret::table
-        .select(secret::all_columns)
-        .filter(secret::org_id.eq(&org_db.id))
+) -> Result<(Secret, Org), String> {
+    let query_result: (Secret, Org) = secret::table
+        .inner_join(org::table)
+        .select((secret::all_columns, org::all_columns))
         .filter(secret::name.eq(&name))
-        .order_by(secret::id)
-        .get_result(conn)
+        .filter(org::name.eq(&org))
+        .first(conn)
         .expect("Error querying for secret");
 
-    Ok(secret)
+    debug!("Secret get result: \n {:?}", &query_result);
+
+    Ok(query_result)
 }
 
 pub fn secret_update(
@@ -214,26 +219,26 @@ pub fn secret_list(
     conn: &PgConnection,
     org: &str,
     filter: Option<SecretType>,
-) -> Result<Vec<Secret>, String> {
-    let org_db = org_get(conn, org).expect("Unable to find org");
-
-    let query: Vec<Secret> = match filter {
+) -> Result<Vec<(Secret, Org)>, String> {
+    let query_result: Vec<(Secret, Org)> = match filter {
         None => secret::table
-            .select(secret::all_columns)
-            .filter(secret::org_id.eq(&org_db.id))
-            .order_by(secret::id)
+            .inner_join(org::table)
+            .select((secret::all_columns, org::all_columns))
+            .filter(org::name.eq(&org))
             .load(conn)
             .expect("Error getting all secret records"),
         Some(_f) => secret::table
-            .select(secret::all_columns)
-            .filter(secret::org_id.eq(&org_db.id))
+            .inner_join(org::table)
+            .select((secret::all_columns, org::all_columns))
+            .filter(org::name.eq(&org))
             //.filter(secret::secret_type.eq(SecretType::from(f))) // Not working yet.
-            .order_by(secret::id)
             .load(conn)
-            .expect("Error getting secret records by filter"),
+            .expect("Error getting all secret records"),
     };
 
-    Ok(query)
+    debug!("Secret list result: \n {:?}", &query_result);
+
+    Ok(query_result)
 }
 
 pub fn repo_add(
