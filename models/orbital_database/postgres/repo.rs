@@ -1,11 +1,15 @@
+use crate::postgres::org::Org;
 use crate::postgres::schema::{repo, ActiveState, GitHostType};
+use crate::postgres::secret::Secret;
 
 use orbital_headers::code::GitRepoEntry;
 //use orbital_headers::secret::SecretEntry;
 
 use git_meta::git_info;
 
-#[derive(Insertable, Debug, PartialEq, AsChangeset)]
+#[derive(Insertable, Debug, PartialEq, Associations, AsChangeset)]
+#[belongs_to(Org)]
+#[belongs_to(Secret)]
 #[table_name = "repo"]
 pub struct NewRepo {
     pub org_id: i32,
@@ -33,7 +37,9 @@ impl Default for NewRepo {
     }
 }
 
-#[derive(Clone, Debug, Identifiable, Queryable, QueryableByName)]
+#[derive(Clone, Debug, Identifiable, Queryable, Associations, QueryableByName)]
+#[belongs_to(Org)]
+#[belongs_to(Secret)]
 #[table_name = "repo"]
 pub struct Repo {
     pub id: i32,

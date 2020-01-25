@@ -55,13 +55,17 @@ impl SecretService for OrbitalApi {
         )
         .expect("There was a problem adding secret in database");
 
+        let secret_db = db_result.0;
+        let org_db = db_result.1;
+
         // TODO: We want the vault path available
         let secret_result = SecretEntry {
-            id: db_result.id,
-            org: unwrapped_request.org.into(),
-            name: unwrapped_request.name.into(),
-            secret_type: unwrapped_request.secret_type,
-            vault_path: db_result.vault_path,
+            id: secret_db.id,
+            org: org_db.name.into(),
+            name: secret_db.name.into(),
+            secret_type: secret_db.secret_type.into(),
+            vault_path: secret_db.vault_path,
+            active_state: secret_db.active_state.into(),
             ..Default::default()
         };
 
@@ -87,16 +91,20 @@ impl SecretService for OrbitalApi {
         )
         .expect("There was a problem getting secret in database");
 
-        debug!("Requesting secret from path: {:?}", &db_result.vault_path);
-        let secret = vault::vault_get_secret(&db_result.vault_path);
+        let secret_db = db_result.0;
+        let org_db = db_result.1;
+
+        debug!("Requesting secret from path: {:?}", &secret_db.vault_path);
+        let secret = vault::vault_get_secret(&secret_db.vault_path);
 
         let secret_result = SecretEntry {
-            id: db_result.id,
-            org: unwrapped_request.org,
-            name: unwrapped_request.name,
+            id: secret_db.id,
+            org: org_db.name,
+            name: secret_db.name,
             secret_type: unwrapped_request.secret_type,
             data: secret.expect("Error unwrapping secret from Vault").into(),
-            vault_path: db_result.vault_path,
+            vault_path: secret_db.vault_path,
+            active_state: secret_db.active_state.into(),
             ..Default::default()
         };
 
@@ -210,7 +218,11 @@ impl SecretService for OrbitalApi {
             postgres::client::secret_list(&pg_conn, &unwrapped_request.org, filters)
                 .expect("There was a problem listing secret from database")
                 .into_iter()
-                .map(|o| o.into())
+                .map(|(s, o)| {
+                    let mut secret = SecretEntry::from(s);
+                    secret.org = o.name;
+                    secret
+                })
                 .collect();
 
         Ok(Response::new(SecretListResponse {
