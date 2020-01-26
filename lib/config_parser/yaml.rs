@@ -1,7 +1,7 @@
 use super::OrbitalConfig;
+use anyhow::Result;
 use log::debug;
 use std::path::Path;
-use anyhow::Result;
 
 /// Load Orbital config file from path, parse with `serde_yaml`, return `Result<OrbitalConfig>`
 pub fn load_orb_yaml(path: &Path) -> Result<OrbitalConfig> {
