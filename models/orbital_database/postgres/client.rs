@@ -347,7 +347,6 @@ pub fn repo_remove(
 }
 
 pub fn repo_list(conn: &PgConnection, org: &str) -> Result<Vec<(Org, Repo, Option<Secret>)>> {
-
     let query: Vec<(Org, Repo)> = repo::table
         .inner_join(org::table)
         .select((org::all_columns, repo::all_columns))
@@ -364,5 +363,4 @@ pub fn repo_list(conn: &PgConnection, org: &str) -> Result<Vec<(Org, Repo, Optio
         .collect();
 
     Ok(map_result)
-
 }

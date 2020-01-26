@@ -32,7 +32,7 @@ impl Default for NewRepo {
             secret_id: None,
             build_active_state: ActiveState::Enabled,
             notify_active_state: ActiveState::Enabled,
-            next_build_index: 0,
+            next_build_index: 1,
         }
     }
 }
@@ -64,7 +64,7 @@ impl Default for Repo {
             secret_id: None,
             build_active_state: ActiveState::Enabled,
             notify_active_state: ActiveState::Enabled,
-            next_build_index: 0,
+            next_build_index: 1,
         }
     }
 }
@@ -80,8 +80,8 @@ impl From<Repo> for GitRepoEntry {
             git_provider: git_uri_parsed.host.unwrap(),
             name: git_uri_parsed.name,
             user: git_uri_parsed.user.unwrap(),
-            //uri: git_uri_parsed.repo, // FIXME: THis is an inconsistency
-            //secret_type:
+            uri: repo.uri,
+            //secret_type
             //auth_data:
             build: repo.build_active_state.into(),
             notify: repo.notify_active_state.into(),
