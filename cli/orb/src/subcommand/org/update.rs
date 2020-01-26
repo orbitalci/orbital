@@ -59,15 +59,12 @@ pub async fn action_handler(
             table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
 
             // Print the header row
-            table.set_titles(row!["Org Name", "Active", "Created", "Last Update"]);
+            table.set_titles(row![bc=> "Org Name", "Active", "Created", "Last Update"]);
 
             let org = Org::from(org_proto.clone());
             table.add_row(row![
                 org.name,
-                &format!(
-                    "{:?}",
-                    orbital_database::postgres::schema::ActiveState::Deleted
-                ),
+                &format!("{:?}", org.active_state,),
                 org.created,
                 org.last_update
             ]);

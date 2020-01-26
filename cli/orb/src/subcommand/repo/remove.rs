@@ -69,6 +69,7 @@ pub async fn action_handler(
 
             // Print the header row
             table.set_titles(row![
+                bc =>
                 "Org Name",
                 "Repo Name",
                 "Uri",

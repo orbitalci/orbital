@@ -47,19 +47,6 @@ pub async fn action_handler(
 
     let response = client.secret_get(request).await;
 
-    // By default, format the response into a table
-    let mut table = Table::new();
-    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
-
-    // Print the header row
-    table.set_titles(row![
-        "Org Name",
-        "Secret Name",
-        "Secret Type",
-        "Vault Path",
-        "Active State",
-    ]);
-
     match response {
         Err(_e) => {
             eprintln!("Secret not found");
@@ -76,6 +63,7 @@ pub async fn action_handler(
 
             // Print the header row
             table.set_titles(row![
+                bc =>
                 "Org Name",
                 "Secret Name",
                 "Secret Type",
