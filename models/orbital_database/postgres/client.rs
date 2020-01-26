@@ -27,15 +27,15 @@ pub fn org_from_id(conn: &PgConnection, id: i32) -> Result<Org> {
     }
 }
 
-pub fn secret_from_id(conn: &PgConnection, id: i32) -> Result<Secret> {
+pub fn secret_from_id(conn: &PgConnection, id: i32) -> Option<Secret> {
     let secret_check: Result<Secret, _> = secret::table
         .select(secret::all_columns)
         .filter(secret::id.eq(id))
         .get_result(conn);
 
     match secret_check {
-        Ok(o) => Ok(o),
-        Err(_e) => Err(anyhow!("Could not retrieve secret by id from DB")),
+        Ok(o) => Some(o),
+        Err(_e) => None,
     }
 }
 
@@ -248,60 +248,65 @@ pub fn repo_add(
     name: &str,
     uri: &str,
     secret: Option<Secret>,
-) -> Result<Repo> {
-    let org = org_get(conn, org).expect("Unable to find org");
-
-    let secret_id = match secret {
-        Some(s) => Some(s.clone().id),
-        None => None,
-    };
-
-    let repo_check: Result<Repo, _> = repo::table
-        .select(repo::all_columns)
-        .filter(repo::name.eq(&name))
-        .order_by(repo::id)
-        .get_result(conn);
+) -> Result<(Org, Repo, Option<Secret>)> {
+    let repo_check = repo_get(conn, org, name);
 
     match repo_check {
         Err(_e) => {
             debug!("repo doesn't exist. Inserting into db.");
 
-            let result = Ok(diesel::insert_into(repo::table)
+            let secret_id = match secret {
+                Some(s) => Some(s.clone().id),
+                None => None,
+            };
+
+            let org_db = org_get(conn, org)?;
+
+            let result: Repo = diesel::insert_into(repo::table)
                 .values(NewRepo {
                     name: name.into(),
-                    org_id: org.id,
+                    org_id: org_db.id,
                     uri: uri.into(),
                     secret_id: secret_id,
                     ..Default::default()
                 })
                 .get_result(conn)
-                .expect("Error saving new repo"));
+                .expect("Error saving new repo");
 
             debug!("DB insert result: {:?}", &result);
 
-            result
+            // Run query again. This time it should pass
+            repo_get(conn, org, name)
         }
-        Ok(s) => {
+        Ok((o, r, s)) => {
             debug!("repo found in db. Returning result.");
-            Ok(s)
+            Ok((o, r, s))
         }
     }
 }
 
-pub fn repo_get(conn: &PgConnection, org: &str, name: &str) -> Result<Repo> {
+pub fn repo_get(conn: &PgConnection, org: &str, name: &str) -> Result<(Org, Repo, Option<Secret>)> {
     debug!("Repo get: Org: {}, Name: {}", org, name);
 
-    let org_db = org_get(conn, org).expect("Unable to find org");
-
-    let repo: Repo = repo::table
-        .select(repo::all_columns)
-        .filter(repo::org_id.eq(&org_db.id))
+    let query: Result<(Org, Repo), _> = repo::table
+        .inner_join(org::table)
+        .select((org::all_columns, repo::all_columns))
         .filter(repo::name.eq(&name))
-        .order_by(repo::id)
-        .get_result(conn)
-        .expect("Error querying for repo");
+        //.filter(secret::id.eq(&secret_id))
+        .get_result(conn);
 
-    Ok(repo)
+    match query {
+        Ok((o, r)) => {
+            // If we're using a secret, we should also return it to the requester
+            let secret = match &r.secret_id {
+                None => None,
+                Some(id) => secret_from_id(conn, *id),
+            };
+
+            Ok((o, r, secret))
+        }
+        Err(_e) => Err(anyhow!("{} not found in {} org", name, org)),
+    }
 }
 
 // You should update your secret with secret_update()
@@ -310,8 +315,8 @@ pub fn repo_update(
     org: &str,
     name: &str,
     update_repo: NewRepo,
-) -> Result<Repo> {
-    let org_db = org_get(conn, org).expect("Unable to find org");
+) -> Result<(Org, Repo, Option<Secret>)> {
+    let (org_db, _repo_db, secret_db) = repo_get(conn, org, name)?;
 
     let repo_update: Repo = diesel::update(repo::table)
         .filter(repo::org_id.eq(&org_db.id))
@@ -322,28 +327,42 @@ pub fn repo_update(
 
     debug!("Result after update: {:?}", &repo_update);
 
-    Ok(repo_update)
+    Ok((org_db, repo_update, secret_db))
 }
 
-pub fn repo_remove(conn: &PgConnection, org: &str, name: &str) -> Result<Repo> {
-    let org_db = org_get(conn, org).expect("Unable to find org");
+pub fn repo_remove(
+    conn: &PgConnection,
+    org: &str,
+    name: &str,
+) -> Result<(Org, Repo, Option<Secret>)> {
+    let (org_db, repo_db, secret_db) = repo_get(conn, org, name)?;
 
-    let repo_delete: Repo = diesel::delete(repo::table)
+    let _repo_delete: Repo = diesel::delete(repo::table)
         .filter(repo::org_id.eq(&org_db.id))
         .filter(repo::name.eq(&name))
         .get_result(conn)
         .expect("Error deleting repo");
 
-    Ok(repo_delete)
+    Ok((org_db, repo_db, secret_db))
 }
 
-pub fn repo_list(conn: &PgConnection, org: &str) -> Result<Vec<Repo>> {
-    let org_db = org_get(conn, org).expect("Unable to find org");
+pub fn repo_list(conn: &PgConnection, org: &str) -> Result<Vec<(Org, Repo, Option<Secret>)>> {
 
-    Ok(repo::table
-        .select(repo::all_columns)
-        .filter(repo::org_id.eq(&org_db.id))
-        .order_by(repo::id)
+    let query: Vec<(Org, Repo)> = repo::table
+        .inner_join(org::table)
+        .select((org::all_columns, repo::all_columns))
+        .filter(org::name.eq(org))
         .load(conn)
-        .expect("Error getting all repo records"))
+        .expect("Error selecting all repo");
+
+    let map_result: Vec<(Org, Repo, Option<Secret>)> = query
+        .into_iter()
+        .map(|(o, r)| match r.clone().secret_id {
+            None => (o, r, None),
+            Some(id) => (o, r, secret_from_id(conn, id)),
+        })
+        .collect();
+
+    Ok(map_result)
+
 }

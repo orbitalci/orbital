@@ -38,7 +38,7 @@ pub async fn action_handler(
         };
 
     let request = Request::new(GitRepoRemoveRequest {
-        org: action_option.org.unwrap_or_default(),
+        org: action_option.org.clone().unwrap_or_default(),
         git_provider: repo_info.git_url.host.unwrap(),
         name: repo_info.git_url.name,
         //user: ,
@@ -72,7 +72,7 @@ pub async fn action_handler(
                 "Org Name",
                 "Repo Name",
                 "Uri",
-                "Secret Type",
+                "Secret Name",
                 "Build Enabled",
                 "Notify Enabled",
                 "Next build index"
@@ -81,10 +81,10 @@ pub async fn action_handler(
             let repo = Repo::from(repo_proto.clone());
 
             table.add_row(row![
-                repo.org_id,
+                action_option.org.unwrap(),
                 repo.name,
                 repo.uri,
-                repo.secret_id.unwrap_or_default(),
+                repo_proto.auth_data,
                 &format!("{:?}", repo.build_active_state),
                 &format!("{:?}", repo.notify_active_state),
                 repo.next_build_index

@@ -45,12 +45,18 @@ pub async fn action_handler(
 
     let request = match action_option.name {
         Some(name) => Request::new(GitRepoGetRequest {
-            org: action_option.org.unwrap_or_default(),
+            org: action_option
+                .org
+                .clone()
+                .expect("Please provide an org with request"),
             name: name,
             ..Default::default()
         }),
         None => Request::new(GitRepoGetRequest {
-            org: action_option.org.unwrap_or_default(),
+            org: action_option
+                .org
+                .clone()
+                .expect("Please provide an org with request"),
             git_provider: repo_info.git_url.host.unwrap(),
             name: repo_info.git_url.name,
             user: repo_info.git_url.user.unwrap(),
@@ -83,7 +89,7 @@ pub async fn action_handler(
                 "Org Name",
                 "Repo Name",
                 "Uri",
-                "Secret Type",
+                "Secret Name",
                 "Build Enabled",
                 "Notify Enabled",
                 "Next build index"
@@ -92,10 +98,10 @@ pub async fn action_handler(
             let repo = Repo::from(repo_proto.clone());
 
             table.add_row(row![
-                repo.org_id,
+                action_option.org.unwrap(),
                 repo.name,
                 repo.uri,
-                repo.secret_id.unwrap_or_default(),
+                repo_proto.auth_data,
                 &format!("{:?}", repo.build_active_state),
                 &format!("{:?}", repo.notify_active_state),
                 repo.next_build_index

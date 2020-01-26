@@ -58,7 +58,10 @@ pub async fn action_handler(
     // TODO: Need to update the git repo parser to split out a username
     let request = match &action_option.public {
         true => Request::new(GitRepoAddRequest {
-            org: action_option.org.unwrap_or_default(),
+            org: action_option
+                .org
+                .clone()
+                .expect("Please provide an org with request"),
             secret_type: SecretType::Unspecified.into(),
             git_provider: repo_info.git_url.host.unwrap(),
             name: repo_info.git_url.name,
@@ -78,7 +81,10 @@ pub async fn action_handler(
             file.read_to_string(&mut contents)?;
 
             Request::new(GitRepoAddRequest {
-                org: action_option.org.unwrap_or_default(),
+                org: action_option
+                    .org
+                    .clone()
+                    .expect("Please provide an org with request"),
                 secret_type: SecretType::SshKey.into(),
                 auth_data: contents,
                 git_provider: repo_info.git_url.host.unwrap(),
@@ -113,7 +119,7 @@ pub async fn action_handler(
                 "Org Name",
                 "Repo Name",
                 "Uri",
-                "Secret Type",
+                "Secret Name",
                 "Build Enabled",
                 "Notify Enabled",
                 "Next build index"
@@ -122,10 +128,10 @@ pub async fn action_handler(
             let repo = Repo::from(repo_proto.clone());
 
             table.add_row(row![
-                repo.org_id,
+                action_option.org.unwrap(),
                 repo.name,
                 repo.uri,
-                repo.secret_id.unwrap_or_default(),
+                repo_proto.auth_data,
                 &format!("{:?}", repo.build_active_state),
                 &format!("{:?}", repo.notify_active_state),
                 repo.next_build_index
