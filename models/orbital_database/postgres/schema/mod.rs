@@ -69,7 +69,7 @@ impl From<ActiveState> for i32 {
 impl ToSql<ActiveStatePGEnum, Pg> for ActiveState {
     fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         match *self {
-            ActiveState::Unspecified => out.write_all(b"unspecified")?,
+            ActiveState::Unspecified => out.write_all(b"")?,
             ActiveState::Unknown => out.write_all(b"unknown")?,
             ActiveState::Enabled => out.write_all(b"enabled")?,
             ActiveState::Disabled => out.write_all(b"disabled")?,
@@ -82,7 +82,7 @@ impl ToSql<ActiveStatePGEnum, Pg> for ActiveState {
 impl FromSql<ActiveStatePGEnum, Pg> for ActiveState {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match not_none!(bytes) {
-            b"unspecified" => Ok(ActiveState::Unspecified),
+            b"" => Ok(ActiveState::Unspecified),
             b"unknown" => Ok(ActiveState::Unknown),
             b"enabled" => Ok(ActiveState::Enabled),
             b"disabled" => Ok(ActiveState::Disabled),
@@ -184,7 +184,7 @@ impl From<SecretType> for i32 {
 impl ToSql<SecretTypePGEnum, Pg> for SecretType {
     fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         match *self {
-            SecretType::Unspecified => out.write_all(b"unspecified")?,
+            SecretType::Unspecified => out.write_all(b"")?,
             SecretType::BasicAuth => out.write_all(b"basic_auth")?,
             SecretType::ApiKey => out.write_all(b"api_key")?,
             SecretType::EnvVar => out.write_all(b"env_var")?,
@@ -203,7 +203,7 @@ impl ToSql<SecretTypePGEnum, Pg> for SecretType {
 impl FromSql<SecretTypePGEnum, Pg> for SecretType {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match not_none!(bytes) {
-            b"unspecified" => Ok(SecretType::Unspecified),
+            b"" => Ok(SecretType::Unspecified),
             b"basic_auth" => Ok(SecretType::BasicAuth),
             b"api_key" => Ok(SecretType::ApiKey),
             b"env_var" => Ok(SecretType::EnvVar),
@@ -238,6 +238,8 @@ impl From<orbital_types::SecretType> for SecretType {
     }
 }
 
+
+// FIXME: This is missing a column for storing ad-hoc env vars
 table! {
     use diesel::sql_types::{Integer, Text, Nullable};
     use super::{ActiveStatePGEnum,GitHostTypePGEnum};
@@ -278,7 +280,7 @@ pub enum GitHostType {
 impl ToSql<GitHostTypePGEnum, Pg> for GitHostType {
     fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         match *self {
-            GitHostType::Unspecified => out.write_all(b"unspecified")?,
+            GitHostType::Unspecified => out.write_all(b"")?,
             GitHostType::Generic => out.write_all(b"generic")?,
             GitHostType::Bitbucket => out.write_all(b"bitbucket")?,
             GitHostType::Github => out.write_all(b"github")?,
@@ -290,10 +292,80 @@ impl ToSql<GitHostTypePGEnum, Pg> for GitHostType {
 impl FromSql<GitHostTypePGEnum, Pg> for GitHostType {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match not_none!(bytes) {
-            b"unspecified" => Ok(GitHostType::Unspecified),
+            b"" => Ok(GitHostType::Unspecified),
             b"generic" => Ok(GitHostType::Generic),
             b"bitbucket" => Ok(GitHostType::Bitbucket),
             b"github" => Ok(GitHostType::Github),
+            _ => Err("Unrecognized GitHostType variant".into()),
+        }
+    }
+}
+
+table! {
+    use diesel::sql_types::{Integer, Text, Timestamp};
+    use super::JobTriggerPGEnum;
+
+    build_target (id) {
+        id -> Integer,
+        repo_id -> Integer,
+        name -> Text,
+        git_hash -> Text,
+        branch -> Text,
+        queue_time -> Timestamp,
+        build_index -> Integer,
+        job_trigger -> JobTriggerPGEnum,
+    }
+}
+
+joinable!(build_target -> repo(repo_id));
+allow_tables_to_appear_in_same_query!(build_target, repo);
+
+#[derive(SqlType, Debug)]
+#[postgres(type_name = "job_trigger")]
+pub struct JobTriggerPGEnum;
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression, EnumString, EnumVariantNames, Display,
+)]
+#[sql_type = "JobTriggerPGEnum"]
+pub enum JobTrigger {
+    Unspecified = 0,
+    Push = 1,
+    PullRequest = 2,
+    Webhook = 3,
+    Poll = 4,
+    Manual = 5,
+    SubscribeTrigger = 6,
+    CommitMsgTrigger = 7,
+}
+
+impl ToSql<JobTriggerPGEnum, Pg> for JobTrigger {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        match *self {
+            JobTrigger::Unspecified => out.write_all(b"")?,
+            JobTrigger::Push => out.write_all(b"push")?,
+            JobTrigger::PullRequest => out.write_all(b"pull_request")?,
+            JobTrigger::Webhook => out.write_all(b"webhook")?,
+            JobTrigger::Poll => out.write_all(b"poll")?,
+            JobTrigger::Manual => out.write_all(b"manual")?,
+            JobTrigger::SubscribeTrigger => out.write_all(b"subscribe_trigger")?,
+            JobTrigger::CommitMsgTrigger => out.write_all(b"commit_msg_trigger")?,
+        }
+        Ok(IsNull::No)
+    }
+}
+
+impl FromSql<JobTriggerPGEnum, Pg> for JobTrigger {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        match not_none!(bytes) {
+            b"" => Ok(JobTrigger::Unspecified),
+            b"push" => Ok(JobTrigger::Push),
+            b"pull_request" => Ok(JobTrigger::PullRequest),
+            b"webhook" => Ok(JobTrigger::Webhook),
+            b"poll" => Ok(JobTrigger::Poll),
+            b"manual" => Ok(JobTrigger::Manual),
+            b"subscribe_trigger" => Ok(JobTrigger::SubscribeTrigger),
+            b"commit_msg_trigger" => Ok(JobTrigger::CommitMsgTrigger),
             _ => Err("Unrecognized GitHostType variant".into()),
         }
     }
