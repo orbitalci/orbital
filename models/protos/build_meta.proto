@@ -6,13 +6,14 @@ import "google/protobuf/timestamp.proto";
 
 message BuildTarget {
     string org = 1;
-    string git_provider = 2;
+    //string git_provider = 2;
     string git_repo = 3;
     string remote_uri = 4;
     string branch = 5;
     string commit_hash = 6;
-    string envs = 7;
+    string user_envs = 7;
     int32 id = 8;
+    orbital_types.JobTrigger trigger = 9;
 }
 
 message BuildStage {

@@ -3,6 +3,7 @@ use structopt::StructOpt;
 use crate::GlobalOption;
 
 use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
+use orbital_headers::orbital_types::JobTrigger;
 
 use config_parser::yaml as parser;
 use git_meta::git_info;
@@ -71,13 +72,14 @@ pub async fn subcommand_handler(
     // Validate that the org exists be
 
     let request = Request::new(BuildTarget {
-        org: local_option.org.unwrap_or_default(),
+        org: local_option.org.expect("Please provide an org name"),
         git_repo: git_context.git_url.name,
         remote_uri: git_context.git_url.href,
-        git_provider: git_context.git_url.host.unwrap(),
+        //git_provider: git_context.git_url.host.unwrap(),
         branch: git_context.branch,
         commit_hash: git_context.commit_id,
-        envs: local_option.envs.unwrap_or_default(),
+        user_envs: local_option.envs.unwrap_or_default(),
+        trigger: JobTrigger::Manual.into(),
         ..Default::default()
     });
 

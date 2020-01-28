@@ -7,6 +7,8 @@ use orbital_headers::build_meta::{
     BuildTarget,
 };
 
+use orbital_database::postgres;
+use orbital_database::postgres::build_target::{BuildTarget as PGBuildTarget, NewBuildTarget};
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_headers::orbital_types::{JobState, SecretType};
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
@@ -30,6 +32,8 @@ use std::time::{Duration, SystemTime};
 use mktemp::Temp;
 use std::fs::File;
 use std::io::prelude::*;
+
+use git_meta::git_info;
 
 use futures::Stream;
 use std::pin::Pin;
@@ -56,6 +60,10 @@ impl BuildService for OrbitalApi {
         // Git clone for provider ( uri, branch, commit )
         let unwrapped_request = request.into_inner();
         debug!("Received request: {:?}", &unwrapped_request);
+
+        let git_parsed_uri =
+            git_info::git_remote_url_parse(unwrapped_request.clone().remote_uri.as_ref())
+                .expect("Could not parse repo uri");
 
         // Placeholder for things we need to check for eventually when we support more things
         // Org - We want the user to select their org, and cache it locally
@@ -90,7 +98,7 @@ impl BuildService for OrbitalApi {
         // e.g.: default_org/github.com/level11consulting/orbitalci
         let request_payload = Request::new(GitRepoGetRequest {
             org: unwrapped_request.org.clone().into(),
-            git_provider: unwrapped_request.clone().git_provider,
+            //git_provider: unwrapped_request.clone().git_provider,
             name: unwrapped_request.clone().git_repo,
             uri: unwrapped_request.clone().remote_uri,
             ..Default::default()
@@ -139,30 +147,15 @@ impl BuildService for OrbitalApi {
 
                 debug!("Building request to Secret service for git repo ");
 
-                // This is kind of a hack until I clean up git repo uri duplication starting from the client-side
-                // I want the vault path for git repo keys to be treated like any other secret for an org
                 // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
                 // Where the secret name is the git repo url
                 // e.g., "github.com/level11consulting/orbitalci"
 
                 let secret_name = format!(
                     "{}/{}",
-                    &unwrapped_request.git_provider, &unwrapped_request.git_repo,
+                    &git_parsed_uri.host.expect("No host defined"),
+                    &git_parsed_uri.name,
                 );
-
-                //let vault_secret_path = agent_runtime::vault::orb_vault_path(
-                //    &unwrapped_request.org.clone(),
-                //    &secret_name,
-                //    &SecretType::SshKey.to_string(),
-                //);
-
-                //let vault_secret_path = format!(
-                //    "orbital/{}/{}/{}/{}",
-                //    &unwrapped_request.org,
-                //    SecretType::SshKey.to_string().to_lowercase(),
-                //    &unwrapped_request.git_provider,
-                //    &unwrapped_request.git_repo,
-                //);
 
                 let secret_service_request = Request::new(SecretGetRequest {
                     org: unwrapped_request.org.clone().into(),
@@ -215,6 +208,29 @@ impl BuildService for OrbitalApi {
                 "We only support public repos, or private repo auth with sshkeys or basic auth"
             ),
         };
+
+        // Mark the start of build in the database right here
+        let build_target_record = NewBuildTarget {
+            //name: git_parsed_uri.name.to_string(),
+            git_hash: unwrapped_request.commit_hash.to_string(),
+            branch: unwrapped_request.branch.to_string(),
+            user_envs: match &unwrapped_request.user_envs.len() {
+                0 => None,
+                _ => Some(unwrapped_request.user_envs.clone()),
+            },
+            trigger: unwrapped_request.trigger.clone().into(),
+            ..Default::default()
+        };
+
+        // Connect to database. Query for the repo
+        let pg_conn = postgres::client::establish_connection();
+
+        let build_target_db = postgres::client::build_target_add(
+            &pg_conn,
+            &unwrapped_request.org,
+            &git_parsed_uri.name,
+            build_target_record,
+        );
 
         //
         debug!("Cloning code into temp directory");

@@ -238,7 +238,6 @@ impl From<orbital_types::SecretType> for SecretType {
     }
 }
 
-
 // FIXME: This is missing a column for storing ad-hoc env vars
 table! {
     use diesel::sql_types::{Integer, Text, Nullable};
@@ -302,18 +301,18 @@ impl FromSql<GitHostTypePGEnum, Pg> for GitHostType {
 }
 
 table! {
-    use diesel::sql_types::{Integer, Text, Timestamp};
+    use diesel::sql_types::{Integer, Text, Nullable, Timestamp};
     use super::JobTriggerPGEnum;
 
     build_target (id) {
         id -> Integer,
         repo_id -> Integer,
-        name -> Text,
         git_hash -> Text,
         branch -> Text,
+        user_envs -> Nullable<Text>,
         queue_time -> Timestamp,
         build_index -> Integer,
-        job_trigger -> JobTriggerPGEnum,
+        trigger -> JobTriggerPGEnum,
     }
 }
 
@@ -337,6 +336,37 @@ pub enum JobTrigger {
     Manual = 5,
     SubscribeTrigger = 6,
     CommitMsgTrigger = 7,
+}
+
+impl From<i32> for JobTrigger {
+    fn from(job_trigger: i32) -> Self {
+        match job_trigger {
+            0 => JobTrigger::Unspecified,
+            1 => JobTrigger::Push,
+            2 => JobTrigger::PullRequest,
+            3 => JobTrigger::Webhook,
+            4 => JobTrigger::Poll,
+            5 => JobTrigger::Manual,
+            6 => JobTrigger::SubscribeTrigger,
+            7 => JobTrigger::CommitMsgTrigger,
+            _ => panic!("Unrecognized JobTrigger variant"),
+        }
+    }
+}
+
+impl From<JobTrigger> for i32 {
+    fn from(job_trigger: JobTrigger) -> Self {
+        match job_trigger {
+            JobTrigger::Unspecified => 0,
+            JobTrigger::Push => 1,
+            JobTrigger::PullRequest => 2,
+            JobTrigger::Webhook => 3,
+            JobTrigger::Poll => 4,
+            JobTrigger::Manual => 5,
+            JobTrigger::SubscribeTrigger => 6,
+            JobTrigger::CommitMsgTrigger => 7,
+        }
+    }
 }
 
 impl ToSql<JobTriggerPGEnum, Pg> for JobTrigger {

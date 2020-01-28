@@ -1,6 +1,7 @@
+use crate::postgres::build_target::{BuildTarget, NewBuildTarget};
 use crate::postgres::org::{NewOrg, Org};
 use crate::postgres::repo::{NewRepo, Repo};
-use crate::postgres::schema::{org, repo, secret, SecretType};
+use crate::postgres::schema::{build_target, org, repo, secret, SecretType};
 use crate::postgres::secret::{NewSecret, Secret};
 use agent_runtime::vault::orb_vault_path;
 use anyhow::{anyhow, Result};
@@ -363,4 +364,28 @@ pub fn repo_list(conn: &PgConnection, org: &str) -> Result<Vec<(Org, Repo, Optio
         .collect();
 
     Ok(map_result)
+}
+
+pub fn build_target_add(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    build_target_part: NewBuildTarget,
+) -> Result<(Repo, BuildTarget)> {
+    let (org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
+
+    debug!("Incoming build spec: {:?}", &build_target_part);
+
+    let mut build_target = build_target_part.clone();
+    build_target.repo_id = repo_db.id.clone();
+    build_target.build_index = repo_db.next_build_index;
+
+    debug!("Build spec to insert: {:?}", &build_target);
+
+    let result: BuildTarget = diesel::insert_into(build_target::table)
+        .values(build_target)
+        .get_result(conn)
+        .expect("Error saving new build_target");
+
+    Ok((repo_db, result))
 }
