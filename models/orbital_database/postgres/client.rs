@@ -372,7 +372,7 @@ pub fn build_target_add(
     repo: &str,
     build_target_part: NewBuildTarget,
 ) -> Result<(Repo, BuildTarget)> {
-    let (org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
+    let (_org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
 
     debug!("Incoming build spec: {:?}", &build_target_part);
 
@@ -387,5 +387,36 @@ pub fn build_target_add(
         .get_result(conn)
         .expect("Error saving new build_target");
 
+    // TODO: Increment repo next_build_target by 1
+
     Ok((repo_db, result))
+}
+
+pub fn build_summary(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    limit: i32,
+) -> Result<Vec<(Org, Repo, BuildTarget)>> {
+    debug!(
+        "Build summary db request: org {:?} repo: {:?} limit: {:?}",
+        &org, &repo, &limit
+    );
+
+    let (org_db, _repo_db, _secret_db) = repo_get(conn, org, repo)?;
+
+    let result: Vec<(Repo, BuildTarget)> = build_target::table
+        .inner_join(repo::table)
+        .select((repo::all_columns, build_target::all_columns))
+        //.filter()
+        .limit(limit.into())
+        .load(conn)
+        .expect("Error saving new build_target");
+
+    let map_result: Vec<(Org, Repo, BuildTarget)> = result
+        .into_iter()
+        .map(|(r, b)| (org_db.clone(), r, b))
+        .collect();
+
+    Ok(map_result)
 }

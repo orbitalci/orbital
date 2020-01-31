@@ -1298,6 +1298,7 @@ version = "0.1.0"
 dependencies = [
  "agent_runtime 0.1.0",
  "anyhow 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "config_parser 0.1.0",
  "futures 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "git_meta 0.1.0",
