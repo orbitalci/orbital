@@ -1,0 +1,69 @@
+top-level:
+    exec-mode:
+        required: false
+        possible_values: [docker, exec, ssh]
+        default_value: docker
+        description: Style of command execution
+        notes:
+            - Need to think this through a little bit more w/ regards to options we'd want to pass to the shells
+    image:
+        required: true
+        description: The name of the docker image to start for the build context
+        value_type: string
+    buildTool:
+        required: false
+        description:
+    branches:
+        required: false
+        description: Name of branch that we want to support for builds
+        notes:
+            - Values may be in regex expressions to support naming conventions
+        value_type: list of strings
+    notify:
+        required: false
+        value_type: hashmap for a notifier. Only notifier is called slack.
+    env:
+        required: false
+        description: Shell-style key-value definition
+        value_type: list of strings
+    stages:
+        required: true
+        description:
+        value_type: list of stage_list_item
+
+
+nested:
+    stage_list_item:
+        required: false
+        description:
+        value_type: hashmap
+        hashmap_values:
+            name:
+                required: true
+            trigger:
+                required: false 
+                value_type: hashmap
+                hashmap_values:
+                    branches:
+                        required: false 
+            script:
+                required: false
+                description: Shell command that is appended to a one-liner `/bin/sh/ -c `
+                value_type: list of strings
+
+    slack:
+        required: false
+        value_type: hashmap
+        hashmap_values:
+            channel:
+                required: false
+                description: "Explicit channel or user to address. Fallback to webhook configured default"
+                value_type: string
+            identifier:
+                required: true
+                description: "Explicit name of the secret name for Slack auth"
+                value_type: string
+            on:
+                required: true
+                description: Configuration for sending a notification whenever build state changes to one of the listed
+                value_type: list of strings of build states
