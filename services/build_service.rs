@@ -233,7 +233,15 @@ impl BuildService for OrbitalApi {
             build_target_record,
         );
 
-        //
+        // TODO: Mark build_summary.build_state as queued
+        // In the future, this is where the service should return
+
+
+        // This is when another thread should start when picking work off queue
+        // TODO: Mark build_summary.build_state as starting
+        // TODO: Mark build_summary start time
+
+        // TODO: Replace expect with match, so we can update db in case of failures
         debug!("Cloning code into temp directory");
         let git_repo = build_engine::clone_repo(
             &unwrapped_request.remote_uri,
@@ -279,6 +287,9 @@ impl BuildService for OrbitalApi {
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
+        // FIXME: Loop over config.command and run the docker_container_exec, for timestamping build_stage
+        // TODO: Mark build summary.build_state as running
+        // TODO: Mark build stage start time
         // TODO: Make sure tests try to exec w/o starting the container
         // Exec into the new container
         debug!("Sending commands into container");
@@ -286,13 +297,18 @@ impl BuildService for OrbitalApi {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
+        // TODO: Mark build stage end time
 
+        // TOO: Mark build_summary.build_state as finishing
         debug!("Stopping the container");
         match build_engine::docker_container_stop(container_id.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
+        //TODO: Mark build_summary end time
+        //TODO: Mark build_summary.build_statue as done
+        // Timestamp 
         let end_timestamp = Timestamp {
             seconds: SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)

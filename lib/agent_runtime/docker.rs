@@ -138,6 +138,7 @@ pub fn container_stop(container_id: &str) -> Result<()> {
     Ok(())
 }
 
+// TODO: This will need a mechanism to stream logs out to a client
 /// Connect to the docker engine and execute commands in a running container with a given `container_id`
 pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<()> {
     let docker = Docker::new();

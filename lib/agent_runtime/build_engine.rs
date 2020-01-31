@@ -69,6 +69,8 @@ pub fn docker_container_stop(container_id: &str) -> Result<()> {
     }
 }
 
+// FIXME: Possibly change this to only run single commands. So timestamping can be handled outside
+// TODO: This will also need to accept some channel to pass to docker::container_exec
 /// Loop over commands, exec into docker container
 pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Result<()> {
     for command in commands.iter() {
