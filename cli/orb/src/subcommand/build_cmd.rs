@@ -42,7 +42,6 @@ pub struct SubcommandOption {
     /// Print full commit hash
     #[structopt(long, short)]
     wide: bool,
-
 }
 
 /// Generates gRPC `BuildStartRequest` object and connects to *currently hardcoded* gRPC server and sends a request to `BuildService` server.

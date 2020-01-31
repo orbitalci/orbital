@@ -73,7 +73,6 @@ impl From<BuildTarget> for build_meta::BuildTarget {
             nanos: 0,
         };
 
-
         build_meta::BuildTarget {
             git_repo: format!("{:?}", build_target.repo_id),
             branch: build_target.branch,
