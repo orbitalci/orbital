@@ -400,3 +400,42 @@ impl FromSql<JobTriggerPGEnum, Pg> for JobTrigger {
         }
     }
 }
+
+
+table! {
+    use diesel::sql_types::{Integer, Text, Nullable, Timestamp};
+    use super::JobStatePGEnum;
+
+    build_summary (id) {
+        id -> Integer,
+        build_target_id -> Integer,
+        start_time -> Nullable<Timestamp>,
+        end_time -> Nullable<Timestamp>,
+        build_state -> JobStatePGEnum,
+    }
+}
+
+joinable!(build_summary -> build_target(build_target_id));
+allow_tables_to_appear_in_same_query!(build_summary, build_target);
+
+#[derive(SqlType, Debug)]
+#[postgres(type_name = "job_state")]
+pub struct JobStatePGEnum;
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, FromSqlRow, AsExpression, EnumString, EnumVariantNames, Display,
+)]
+#[sql_type = "JobStatePGEnum"]
+pub enum JobState {
+    Unspecified = 0,
+    Unknown = 1,
+    Queued = 2,
+    Starting = 3,
+    Running = 4,
+    Finishing = 5,
+    Canceled = 6,
+    SystemErr = 7,
+    Failed = 8,
+    Done = 9,
+    Deleted = 10,
+}
