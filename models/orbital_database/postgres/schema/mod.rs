@@ -401,9 +401,8 @@ impl FromSql<JobTriggerPGEnum, Pg> for JobTrigger {
     }
 }
 
-
 table! {
-    use diesel::sql_types::{Integer, Text, Nullable, Timestamp};
+    use diesel::sql_types::{Integer, Nullable, Timestamp};
     use super::JobStatePGEnum;
 
     build_summary (id) {
@@ -439,3 +438,21 @@ pub enum JobState {
     Done = 9,
     Deleted = 10,
 }
+
+table! {
+    use diesel::sql_types::{Integer, Text, Nullable, Timestamp};
+
+    build_stage (id) {
+        id -> Integer,
+        build_summary_id -> Integer,
+        build_host -> Nullable<Text>,
+        stage_name -> Nullable<Text>,
+        output -> Nullable<Text>,
+        start_time -> Timestamp,
+        end_time -> Nullable<Timestamp>,
+        exit_code -> Nullable<Integer>,
+    }
+}
+
+joinable!(build_stage -> build_summary(build_summary_id));
+allow_tables_to_appear_in_same_query!(build_stage, build_summary);
