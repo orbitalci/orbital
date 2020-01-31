@@ -7,8 +7,9 @@ use orbital_headers::build_meta::{
     BuildTarget,
 };
 
+use chrono::{NaiveDateTime, Utc};
 use orbital_database::postgres;
-use orbital_database::postgres::build_target::{BuildTarget as PGBuildTarget, NewBuildTarget};
+use orbital_database::postgres::build_target::{BuildTarget as _PGBuildTarget, NewBuildTarget};
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_headers::orbital_types::{JobState, SecretType};
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
@@ -359,8 +360,61 @@ impl BuildService for OrbitalApi {
 
     async fn build_summary(
         &self,
-        _request: Request<BuildSummaryRequest>,
+        request: Request<BuildSummaryRequest>,
     ) -> Result<Response<BuildSummaryResponse>, Status> {
-        unimplemented!();
+        let unwrapped_request = request.into_inner();
+        let build_info = &unwrapped_request
+            .build
+            .clone()
+            .expect("No build info provided");
+
+        debug!("Received request: {:?}", &unwrapped_request);
+
+        // Connect to database. Query for the repo
+        let pg_conn = postgres::client::establish_connection();
+
+        let build_target_db = postgres::client::build_summary(
+            &pg_conn,
+            &build_info.org,
+            &build_info.git_repo,
+            unwrapped_request.limit,
+        )
+        .expect("No summary returned");
+
+        debug!("Summary: {:?}", &build_target_db);
+
+        //let mut metadata_proto : Vec<BuildMetadata> = Vec::new();
+        let metadata_proto: Vec<BuildMetadata> = build_target_db
+            .into_iter()
+            .map(|(o, r, b)| BuildMetadata {
+                id: b.id,
+                build: Some(BuildTarget {
+                    org: o.name,
+                    git_repo: r.name,
+                    remote_uri: r.uri,
+                    branch: b.branch,
+                    commit_hash: b.git_hash,
+                    user_envs: match b.user_envs {
+                        Some(e) => e,
+                        None => "".to_string(),
+                    },
+                    id: b.id,
+                    trigger: b.trigger.into(),
+                }),
+                //job_trigger:
+                //queue_time: Some(b.queue_time.into()),
+                //    Some(t) => t.into(),
+                //    _ => NaiveDateTime::from_timestamp(0, 0),
+                //},
+                //start_time
+                //end_time:
+                //build_state:
+                ..Default::default()
+            })
+            .collect();
+
+        Ok(Response::new(BuildSummaryResponse {
+            summaries: metadata_proto,
+        }))
     }
 }

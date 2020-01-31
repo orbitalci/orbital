@@ -8,6 +8,7 @@ use orbital_headers::orbital_types::JobTrigger;
 use config_parser::yaml as parser;
 use git_meta::git_info;
 use orbital_services::ORB_DEFAULT_URI;
+use prettytable::{cell, format, row, Table};
 use tonic::Request;
 
 use anyhow::Result;
@@ -37,6 +38,11 @@ pub struct SubcommandOption {
     /// Path to repo. Defaults to current working directory.
     #[structopt(long, parse(from_os_str), env = "PWD")]
     path: PathBuf,
+
+    /// Print full commit hash
+    #[structopt(long, short)]
+    wide: bool,
+
 }
 
 /// Generates gRPC `BuildStartRequest` object and connects to *currently hardcoded* gRPC server and sends a request to `BuildService` server.
@@ -85,8 +91,49 @@ pub async fn subcommand_handler(
 
     debug!("Request for build: {:?}", &request);
 
-    let response = client.build_start(request).await?;
+    let response = client.build_start(request).await?.into_inner();
     println!("RESPONSE = {:?}", response);
+
+    // By default, format the response into a table
+    let mut table = Table::new();
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+    // Print the header row
+    table.set_titles(row![
+        bc =>
+        "Build #",
+        "Org",
+        "Repo",
+        "Branch",
+        "Commit",
+        "User Envs",
+        "Queue time",
+        "Start time",
+        "End time",
+        "Build state",
+    ]);
+
+    let build_target = response.build.clone().expect("No build target in summary");
+
+    let commit = match local_option.wide {
+        true => build_target.commit_hash,
+        false => build_target.commit_hash[..7].to_string(),
+    };
+
+    table.add_row(row![
+        build_target.id,
+        build_target.org,
+        build_target.git_repo,
+        commit,
+        build_target.user_envs,
+        format!("{:?}", response.queue_time),
+        format!("{:?}", response.start_time),
+        format!("{:?}", response.end_time),
+        format!("{:?}", response.build_state),
+    ]);
+
+    // Print the table to stdout
+    table.printstd();
 
     Ok(())
 }
