@@ -456,3 +456,42 @@ table! {
 
 joinable!(build_stage -> build_summary(build_summary_id));
 allow_tables_to_appear_in_same_query!(build_stage, build_summary);
+
+impl ToSql<JobStatePGEnum, Pg> for JobState {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        match *self {
+            JobState::Unspecified => out.write_all(b"")?,
+            JobState::Unknown => out.write_all(b"unknown")?,
+            JobState::Queued => out.write_all(b"queued")?,
+            JobState::Starting => out.write_all(b"starting")?,
+            JobState::Running => out.write_all(b"running")?,
+            JobState::Finishing => out.write_all(b"finishing")?,
+            JobState::Canceled => out.write_all(b"canceled")?,
+            JobState::SystemErr => out.write_all(b"systemerr")?,
+            JobState::Failed => out.write_all(b"failed")?,
+            JobState::Done => out.write_all(b"done")?,
+            JobState::Deleted => out.write_all(b"deleted")?,
+        }
+        Ok(IsNull::No)
+    }
+}
+
+impl FromSql<JobStatePGEnum, Pg> for JobState {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        match not_none!(bytes) {
+            b"" => Ok(JobState::Unspecified),
+            b"unknown" => Ok(JobState::Unknown),
+            b"queued" => Ok(JobState::Queued),
+            b"starting" => Ok(JobState::Starting),
+            b"running" => Ok(JobState::Running),
+            b"finishing" => Ok(JobState::Finishing),
+            b"cancele" => Ok(JobState::Canceled),
+            b"systemerr" => Ok(JobState::SystemErr),
+            b"failed" => Ok(JobState::Failed),
+            b"done" => Ok(JobState::Done),
+            b"deleted" => Ok(JobState::Deleted),
+
+            _ => Err("Unrecognized JobState variant".into()),
+        }
+    }
+}

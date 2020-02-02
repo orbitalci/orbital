@@ -7,6 +7,7 @@ use orbital_headers::build_meta::{
     BuildTarget,
 };
 
+use postgres::schema::JobTrigger;
 use chrono::{NaiveDateTime, Utc};
 use orbital_database::postgres;
 use orbital_database::postgres::build_target::{BuildTarget as _PGBuildTarget, NewBuildTarget};
@@ -220,22 +221,35 @@ impl BuildService for OrbitalApi {
                 _ => Some(unwrapped_request.user_envs.clone()),
             },
             trigger: unwrapped_request.trigger.clone().into(),
+
             ..Default::default()
         };
 
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
+//    conn: &PgConnection,
+//    org: &str,
+//    repo: &str,
+//    hash : &str,
+//    branch: &str,
+//    build_index: i32,
+//    user_envs: Option<String>,
+//    job_trigger: JobTrigger,
         let build_target_db = postgres::client::build_target_add(
             &pg_conn,
             &unwrapped_request.org,
             &git_parsed_uri.name,
-            build_target_record,
+            &build_target_record.git_hash.clone(),
+            &build_target_record.branch.clone(),
+            build_target_record.build_index.clone(),
+            build_target_record.user_envs.clone(),
+            JobTrigger::Manual.into(),
         );
 
         // TODO: Mark build_summary.build_state as queued
+        // Create a new build summary record
         // In the future, this is where the service should return
-
 
         // This is when another thread should start when picking work off queue
         // TODO: Mark build_summary.build_state as starting
@@ -308,7 +322,7 @@ impl BuildService for OrbitalApi {
 
         //TODO: Mark build_summary end time
         //TODO: Mark build_summary.build_statue as done
-        // Timestamp 
+        // Timestamp
         let end_timestamp = Timestamp {
             seconds: SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
@@ -389,7 +403,7 @@ impl BuildService for OrbitalApi {
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
-        let build_target_db = postgres::client::build_summary(
+        let build_target_db = postgres::client::build_target_list(
             &pg_conn,
             &build_info.org,
             &build_info.git_repo,
