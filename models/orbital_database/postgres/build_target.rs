@@ -7,7 +7,6 @@ use std::time::SystemTime;
 use orbital_headers::build_meta;
 
 #[derive(Insertable, Debug, PartialEq, AsChangeset, Clone)]
-//#[belongs_to(Repo)]
 #[table_name = "build_target"]
 pub struct NewBuildTarget {
     pub repo_id: i32,
