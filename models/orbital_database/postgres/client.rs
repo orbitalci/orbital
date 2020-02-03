@@ -2,7 +2,9 @@ use crate::postgres::build_summary::{BuildSummary, NewBuildSummary};
 use crate::postgres::build_target::{BuildTarget, NewBuildTarget};
 use crate::postgres::org::{NewOrg, Org};
 use crate::postgres::repo::{NewRepo, Repo};
-use crate::postgres::schema::{build_summary, build_target, org, repo, secret, SecretType, JobTrigger};
+use crate::postgres::schema::{
+    build_summary, build_target, org, repo, secret, JobTrigger, SecretType,
+};
 use crate::postgres::secret::{NewSecret, Secret};
 use agent_runtime::vault::orb_vault_path;
 use anyhow::{anyhow, Result};
@@ -39,6 +41,25 @@ pub fn secret_from_id(conn: &PgConnection, id: i32) -> Option<Secret> {
         Ok(o) => Some(o),
         Err(_e) => None,
     }
+}
+
+pub fn repo_increment_build_index(conn: &PgConnection, repo: Repo) -> Result<Repo> {
+    let org_name = org_from_id(&conn, repo.org_id.clone())?.name;
+
+    let update_repo = NewRepo {
+        org_id: repo.org_id,
+        name: repo.name.clone(),
+        uri: repo.uri,
+        git_host_type: repo.git_host_type,
+        secret_id: repo.secret_id,
+        build_active_state: repo.build_active_state,
+        notify_active_state: repo.notify_active_state,
+        next_build_index: repo.next_build_index + 1,
+    };
+
+    let update_result = repo_update(conn, &org_name, &repo.name.clone(), update_repo)?;
+
+    Ok(update_result.1)
 }
 
 pub fn org_add(conn: &PgConnection, name: &str) -> Result<Org> {
@@ -371,16 +392,15 @@ pub fn build_target_add(
     conn: &PgConnection,
     org: &str,
     repo: &str,
-    hash : &str,
+    hash: &str,
     branch: &str,
-    build_index: i32,
     user_envs: Option<String>,
     job_trigger: JobTrigger,
 ) -> Result<(Org, Repo, BuildTarget)> {
-    let (org_db, repo_db, build_target_db) = build_target_get(conn, org, repo, hash, branch, build_index)?;
+    let (org_db, repo_db, _) = repo_get(conn, org, repo)?;
 
     let build_target = NewBuildTarget {
-        repo_id: repo_db.id,
+        repo_id: repo_db.id.clone(),
         git_hash: hash.to_string(),
         branch: branch.to_string(),
         user_envs: user_envs,
@@ -396,9 +416,10 @@ pub fn build_target_add(
         .get_result(conn)
         .expect("Error saving new build_target");
 
-    // TODO: Increment repo next_build_target by 1
+    // Increment repo next_build_target by 1
+    let updated_repo = repo_increment_build_index(conn, repo_db)?;
 
-    Ok((org_db, repo_db, result))
+    Ok((org_db, updated_repo, result))
 }
 
 // This should probably return a Vec
@@ -407,10 +428,10 @@ pub fn build_target_get(
     conn: &PgConnection,
     org: &str,
     repo: &str,
-    hash : &str,
+    hash: &str,
     branch: &str,
     build_index: i32,
-) -> Result<(Org, Repo, BuildTarget)> {
+) -> Result<(Org, Repo, Option<BuildTarget>)> {
     debug!(
         "Build target get request: org {:?} repo: {:?} hash: {:?} branch: {:?} build_index: {:?}",
         &org, &repo, &hash, &branch, &build_index,
@@ -418,35 +439,41 @@ pub fn build_target_get(
 
     let (org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
 
-    let result: (Repo, BuildTarget) = build_target::table
+    let result: Result<(Repo, BuildTarget), _> = build_target::table
         .inner_join(repo::table)
         .select((repo::all_columns, build_target::all_columns))
         .filter(build_target::repo_id.eq(repo_db.id))
         .filter(build_target::branch.eq(branch))
         .filter(build_target::build_index.eq(build_index))
-        .get_result(conn)
-        .expect("Error saving new build_target");
+        .get_result(conn);
 
-    Ok((org_db, result.0, result.1))
+    match result {
+        Ok((repo, build_target)) => Ok((org_db, repo, Some(build_target))),
+        Err(_e) => Ok((org_db, repo_db, None)),
+    }
 }
 
 pub fn build_target_update(
     conn: &PgConnection,
     org: &str,
     repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: i32,
     update_build_target: NewBuildTarget,
 ) -> Result<(Org, Repo, BuildTarget)> {
-    unimplemented!()
-    //let (org_db, repo_db, build_target_db) = build_target_get(conn, org, repo, update_build_target.id)?;
+    let (org_db, repo_db, build_target_db_opt) =
+        build_target_get(conn, org, repo, hash, branch, build_index)?;
 
-    //let result: BuildTarget = diesel::update(build_target::table)
-    //    .filter(repo::id.eq(repo_db.id))
-    //    .filter(build_target::id.eq(build_target_db.id))
-    //    .set(update_build_target)
-    //    .get_result(conn)
-    //    .expect("Error updating build target");
+    let build_target_db = build_target_db_opt.expect("No build target found");
 
-    //Ok((org_db, repo_db, result))
+    let result: BuildTarget = diesel::update(build_target::table)
+        .filter(build_target::id.eq(build_target_db.id))
+        .set(update_build_target)
+        .get_result(conn)
+        .expect("Error updating build target");
+
+    Ok((org_db, repo_db, result))
 }
 
 // TODO build_target_delete
@@ -467,7 +494,6 @@ pub fn build_target_list(
     let result: Vec<(Repo, BuildTarget)> = build_target::table
         .inner_join(repo::table)
         .select((repo::all_columns, build_target::all_columns))
-        //.filter()
         .limit(limit.into())
         .load(conn)
         .expect("Error saving new build_target");
@@ -480,18 +506,19 @@ pub fn build_target_list(
     Ok(map_result)
 }
 
-
 pub fn build_summary_add(
     conn: &PgConnection,
     org: &str,
     repo: &str,
-    hash : &str,
+    hash: &str,
     branch: &str,
     build_index: i32,
     build_summary: NewBuildSummary,
 ) -> Result<(Repo, BuildTarget, BuildSummary)> {
-    let (_org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
-    let (_org_db, repo_db, build_target_db) = build_target_get(conn, org, repo, hash, branch, build_index)?;
+    let (_org_db, repo_db, build_target_db_opt) =
+        build_target_get(conn, org, repo, hash, branch, build_index)?;
+
+    let build_target_db = build_target_db_opt.expect("Build target not found");
 
     debug!("Build summary to insert: {:?}", &build_summary);
 
@@ -507,23 +534,79 @@ pub fn build_summary_get(
     conn: &PgConnection,
     org: &str,
     repo: &str,
-    hash : &str,
+    hash: &str,
     branch: &str,
-    build_index: i32
-) -> Result<(Repo, BuildTarget, BuildSummary)> {
+    build_index: i32,
+) -> Result<(Repo, BuildTarget, Option<BuildSummary>)> {
     debug!(
         "Build summary get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
         &org, &repo, &hash, &branch, &build_index,
     );
 
-    let (_org_db, repo_db, _build_target_db) = build_target_get(conn, org, repo, hash, branch, build_index)?;
+    let (_org_db, repo_db, build_target_db_opt) =
+        build_target_get(conn, org, repo, hash, branch, build_index)?;
 
-    let result: (BuildTarget, BuildSummary) = build_summary::table
+    let build_target_db = build_target_db_opt.expect("No build target found");
+
+    let result: Result<(BuildTarget, BuildSummary), _> = build_summary::table
         .inner_join(build_target::table)
         .select((build_target::all_columns, build_summary::all_columns))
         .filter(build_target::id.eq(build_index))
-        .get_result(conn)
-        .expect("Error getting build_summary");
+        .get_result(conn);
 
-    Ok((repo_db, result.0, result.1))
+    match result {
+        Ok((build_target, build_summary)) => Ok((repo_db, build_target, Some(build_summary))),
+        Err(_e) => Ok((repo_db, build_target_db, None)),
+    }
+}
+
+pub fn build_summary_update(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: i32,
+    update_summary: NewBuildSummary,
+) -> Result<(Repo, BuildTarget, BuildSummary)> {
+    let (org_db, build_target_db, build_summary_db_opt) =
+        build_summary_get(conn, org, repo, hash, branch, build_index)?;
+
+    let build_summary_db = build_summary_db_opt.expect("No build summary found");
+
+    let result: BuildSummary = diesel::update(build_summary::table)
+        .filter(build_summary::id.eq(build_summary_db.id))
+        .set(update_summary)
+        .get_result(conn)
+        .expect("Error updating build summary");
+
+    Ok((org_db, build_target_db, result))
+}
+
+pub fn build_summary_list(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    limit: i32,
+) -> Result<Vec<(Repo, BuildTarget, BuildSummary)>> {
+    debug!(
+        "Build summary list request: org {:?} repo: {:?} limit: {:?}",
+        &org, &repo, &limit
+    );
+
+    let (_org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
+
+    let result: Vec<(BuildTarget, BuildSummary)> = build_summary::table
+        .inner_join(build_target::table)
+        .select((build_target::all_columns, build_summary::all_columns))
+        .limit(limit.into())
+        .load(conn)
+        .expect("Error listing build summaries");
+
+    let map_result: Vec<(Repo, BuildTarget, BuildSummary)> = result
+        .into_iter()
+        .map(|(build_target, build_summary)| (repo_db.clone(), build_target, build_summary))
+        .collect();
+
+    Ok(map_result)
 }
