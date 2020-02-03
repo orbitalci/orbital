@@ -7,13 +7,13 @@ use orbital_headers::build_meta::{
     BuildTarget,
 };
 
-use postgres::schema::JobTrigger;
 use chrono::{NaiveDateTime, Utc};
 use orbital_database::postgres;
 use orbital_database::postgres::build_target::{BuildTarget as _PGBuildTarget, NewBuildTarget};
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_headers::orbital_types::{JobState, SecretType};
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
+use postgres::schema::JobTrigger;
 
 use tonic::{Request, Response, Status};
 
@@ -228,21 +228,12 @@ impl BuildService for OrbitalApi {
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
-//    conn: &PgConnection,
-//    org: &str,
-//    repo: &str,
-//    hash : &str,
-//    branch: &str,
-//    build_index: i32,
-//    user_envs: Option<String>,
-//    job_trigger: JobTrigger,
         let build_target_db = postgres::client::build_target_add(
             &pg_conn,
             &unwrapped_request.org,
             &git_parsed_uri.name,
             &build_target_record.git_hash.clone(),
             &build_target_record.branch.clone(),
-            build_target_record.build_index.clone(),
             build_target_record.user_envs.clone(),
             JobTrigger::Manual.into(),
         );
