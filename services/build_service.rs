@@ -9,6 +9,7 @@ use orbital_headers::build_meta::{
 
 use chrono::{NaiveDateTime, Utc};
 use orbital_database::postgres;
+use orbital_database::postgres::build_summary::{BuildSummary, NewBuildSummary};
 use orbital_database::postgres::build_target::{BuildTarget as _PGBuildTarget, NewBuildTarget};
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_headers::orbital_types::{JobState, SecretType};
@@ -228,7 +229,8 @@ impl BuildService for OrbitalApi {
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
-        let build_target_db = postgres::client::build_target_add(
+        // Add build target record in db
+        let build_target_result = postgres::client::build_target_add(
             &pg_conn,
             &unwrapped_request.org,
             &git_parsed_uri.name,
@@ -236,15 +238,74 @@ impl BuildService for OrbitalApi {
             &build_target_record.branch.clone(),
             build_target_record.user_envs.clone(),
             JobTrigger::Manual.into(),
+        )
+        .expect("Build target add failed");
+
+        let (org_db, repo_db, build_target_db) = (
+            build_target_result.0,
+            build_target_result.1,
+            build_target_result.2,
         );
 
-        // TODO: Mark build_summary.build_state as queued
+        // TODO: Clean this up by implementing From<BuildTarget> trait
+        let build_target_current_state = NewBuildTarget {
+            repo_id: build_target_db.repo_id,
+            git_hash: build_target_db.git_hash,
+            branch: build_target_db.branch,
+            user_envs: build_target_db.user_envs,
+            queue_time: build_target_db.queue_time,
+            build_index: build_target_db.build_index,
+            trigger: build_target_db.trigger,
+        };
+
+        // Add build summary record in db
+        // Mark build_summary.build_state as queued
+        let build_summary_current_state = NewBuildSummary {
+            build_target_id: build_target_db.id,
+            build_state: postgres::schema::JobState::Queued,
+            start_time: None,
+            ..Default::default()
+        };
+
         // Create a new build summary record
+        let _build_summary_result_add = postgres::client::build_summary_add(
+            &pg_conn,
+            &org_db.name,
+            &repo_db.name,
+            &build_target_current_state.git_hash,
+            &build_target_current_state.branch,
+            build_target_current_state.build_index,
+            build_summary_current_state.clone(),
+        )
+        .expect("Unable to create new build summary");
+
         // In the future, this is where the service should return
 
         // This is when another thread should start when picking work off queue
-        // TODO: Mark build_summary.build_state as starting
-        // TODO: Mark build_summary start time
+        // Mark build_summary start time
+        // Mark build_summary.build_state as starting
+        let build_summary_current_state = NewBuildSummary {
+            build_target_id: build_target_db.id,
+            build_state: postgres::schema::JobState::Starting,
+            ..Default::default()
+        };
+
+        let build_summary_result_start = postgres::client::build_summary_update(
+            &pg_conn,
+            &org_db.name,
+            &repo_db.name,
+            &build_target_current_state.git_hash,
+            &build_target_current_state.branch,
+            build_target_current_state.build_index,
+            build_summary_current_state.clone(),
+        )
+        .expect("Unable to update build summary job state to starting");
+
+        let (_repo_db, _build_target_db, build_summary_current_state_db) = (
+            build_summary_result_start.0,
+            build_summary_result_start.1,
+            build_summary_result_start.2,
+        );
 
         // TODO: Replace expect with match, so we can update db in case of failures
         debug!("Cloning code into temp directory");
@@ -294,6 +355,30 @@ impl BuildService for OrbitalApi {
 
         // FIXME: Loop over config.command and run the docker_container_exec, for timestamping build_stage
         // TODO: Mark build summary.build_state as running
+        let build_summary_current_state = NewBuildSummary {
+            build_target_id: build_summary_current_state_db.build_target_id,
+            start_time: build_summary_current_state_db.start_time,
+            build_state: postgres::schema::JobState::Running,
+            ..Default::default()
+        };
+
+        let build_summary_result_running = postgres::client::build_summary_update(
+            &pg_conn,
+            &org_db.name,
+            &repo_db.name,
+            &build_target_current_state.git_hash,
+            &build_target_current_state.branch,
+            build_target_current_state.build_index,
+            build_summary_current_state.clone(),
+        )
+        .expect("Unable to update build summary job state to running");
+
+        let (_repo_db, _build_target_db, build_summary_current_state_db) = (
+            build_summary_result_running.0,
+            build_summary_result_running.1,
+            build_summary_result_running.2,
+        );
+
         // TODO: Mark build stage start time
         // TODO: Make sure tests try to exec w/o starting the container
         // Exec into the new container
@@ -305,6 +390,30 @@ impl BuildService for OrbitalApi {
         // TODO: Mark build stage end time
 
         // TOO: Mark build_summary.build_state as finishing
+        let build_summary_current_state = NewBuildSummary {
+            build_target_id: build_summary_current_state_db.build_target_id,
+            start_time: build_summary_current_state_db.start_time,
+            build_state: postgres::schema::JobState::Finishing,
+            ..Default::default()
+        };
+
+        let build_summary_result_finishing = postgres::client::build_summary_update(
+            &pg_conn,
+            &org_db.name,
+            &repo_db.name,
+            &build_target_current_state.git_hash,
+            &build_target_current_state.branch,
+            build_target_current_state.build_index,
+            build_summary_current_state.clone(),
+        )
+        .expect("Unable to update build summary job state to running");
+
+        let (_repo_db, _build_target_db, build_summary_current_state_db) = (
+            build_summary_result_finishing.0,
+            build_summary_result_finishing.1,
+            build_summary_result_finishing.2,
+        );
+
         debug!("Stopping the container");
         match build_engine::docker_container_stop(container_id.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
@@ -313,6 +422,31 @@ impl BuildService for OrbitalApi {
 
         //TODO: Mark build_summary end time
         //TODO: Mark build_summary.build_statue as done
+        let build_summary_current_state = NewBuildSummary {
+            build_target_id: build_summary_current_state_db.build_target_id,
+            start_time: build_summary_current_state_db.start_time,
+            end_time: Some(NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0)),
+            build_state: postgres::schema::JobState::Done,
+            ..Default::default()
+        };
+
+        let build_summary_result_done = postgres::client::build_summary_update(
+            &pg_conn,
+            &org_db.name,
+            &repo_db.name,
+            &build_target_current_state.git_hash,
+            &build_target_current_state.branch,
+            build_target_current_state.build_index,
+            build_summary_current_state.clone(),
+        )
+        .expect("Unable to update build summary job state to running");
+
+        let (_repo_db, _build_target_db, build_summary_current_state_db) = (
+            build_summary_result_done.0,
+            build_summary_result_done.1,
+            build_summary_result_done.2,
+        );
+
         // Timestamp
         let end_timestamp = Timestamp {
             seconds: SystemTime::now()
