@@ -515,6 +515,11 @@ pub fn build_summary_add(
     build_index: i32,
     build_summary: NewBuildSummary,
 ) -> Result<(Repo, BuildTarget, BuildSummary)> {
+    debug!(
+        "Build summary add request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
+        &org, &repo, &hash, &branch, &build_index,
+    );
+
     let (_org_db, repo_db, build_target_db_opt) =
         build_target_get(conn, org, repo, hash, branch, build_index)?;
 
@@ -551,12 +556,18 @@ pub fn build_summary_get(
     let result: Result<(BuildTarget, BuildSummary), _> = build_summary::table
         .inner_join(build_target::table)
         .select((build_target::all_columns, build_summary::all_columns))
-        .filter(build_target::id.eq(build_index))
+        //.filter(build_target::id.eq(build_index))
         .get_result(conn);
 
     match result {
-        Ok((build_target, build_summary)) => Ok((repo_db, build_target, Some(build_summary))),
-        Err(_e) => Ok((repo_db, build_target_db, None)),
+        Ok((build_target, build_summary)) => {
+            debug!("Build summary was found");
+            Ok((repo_db, build_target, Some(build_summary)))
+        }
+        Err(_e) => {
+            debug!("Build summary NOT found");
+            Ok((repo_db, build_target_db, None))
+        }
     }
 }
 
@@ -569,6 +580,11 @@ pub fn build_summary_update(
     build_index: i32,
     update_summary: NewBuildSummary,
 ) -> Result<(Repo, BuildTarget, BuildSummary)> {
+    debug!(
+        "Build summary update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
+        &org, &repo, &hash, &branch, &build_index,
+    );
+
     let (org_db, build_target_db, build_summary_db_opt) =
         build_summary_get(conn, org, repo, hash, branch, build_index)?;
 
