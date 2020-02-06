@@ -6,7 +6,10 @@ use orbital_headers::build_meta::{
     build_service_client::BuildServiceClient, BuildSummaryRequest, BuildTarget,
 };
 
+use orbital_database::postgres::schema::JobState;
+
 use anyhow::Result;
+use chrono::NaiveDateTime;
 use git_meta::git_info;
 use log::debug;
 use orbital_services::ORB_DEFAULT_URI;
@@ -106,6 +109,32 @@ pub async fn subcommand_handler(
                     false => build_target.commit_hash[..7].to_string(),
                 };
 
+                //queue_time: NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0),
+
+                let queue_time = match &summary.queue_time {
+                    Some(t) => format!(
+                        "{:?}",
+                        NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
+                    ),
+                    None => format!("---"),
+                };
+
+                let start_time = match &summary.start_time {
+                    Some(t) => format!(
+                        "{:?}",
+                        NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
+                    ),
+                    None => format!("---"),
+                };
+
+                let end_time = match &summary.end_time {
+                    Some(t) => format!(
+                        "{:?}",
+                        NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
+                    ),
+                    None => format!("---"),
+                };
+
                 table.add_row(row![
                     build_target.id,
                     build_target.org,
@@ -113,10 +142,10 @@ pub async fn subcommand_handler(
                     build_target.branch,
                     commit,
                     build_target.user_envs,
-                    format!("{:?}", summary.queue_time),
-                    format!("{:?}", summary.start_time),
-                    format!("{:?}", summary.end_time),
-                    format!("{:?}", summary.build_state),
+                    queue_time,
+                    start_time,
+                    end_time,
+                    JobState::from(summary.build_state),
                 ]);
             }
 
