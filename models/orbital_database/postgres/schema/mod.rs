@@ -439,6 +439,43 @@ pub enum JobState {
     Deleted = 10,
 }
 
+impl From<i32> for JobState {
+    fn from(job_state: i32) -> Self {
+        match job_state {
+            0 => JobState::Unspecified,
+            1 => JobState::Unknown,
+            2 => JobState::Queued,
+            3 => JobState::Starting,
+            4 => JobState::Running,
+            5 => JobState::Finishing,
+            6 => JobState::Canceled,
+            7 => JobState::SystemErr,
+            8 => JobState::Failed,
+            9 => JobState::Done,
+            10 => JobState::Deleted,
+            _ => panic!("Unrecognized JobState variant"),
+        }
+    }
+}
+
+impl From<JobState> for i32 {
+    fn from(job_state: JobState) -> Self {
+        match job_state {
+            JobState::Unspecified => 0,
+            JobState::Unknown => 1,
+            JobState::Queued => 2,
+            JobState::Starting => 3,
+            JobState::Running => 4,
+            JobState::Finishing => 5,
+            JobState::Canceled => 6,
+            JobState::SystemErr => 7,
+            JobState::Failed => 8,
+            JobState::Done => 9,
+            JobState::Deleted => 10,
+        }
+    }
+}
+
 table! {
     use diesel::sql_types::{Integer, Text, Nullable, Timestamp};
 

@@ -14,7 +14,7 @@ orbital_headers = { path = "../../../../models/orbital_headers" }
 orbital_services = { path = "../../../../services" }
 orbital_database = { path = "../../../../models/orbital_database" }
 log = "0.4"
-tonic = "0.1.0"
+tonic = "0.1"
 git2 = "0.11"
 anyhow = "1.0"
 prettytable-rs = "0.8"
