@@ -632,7 +632,7 @@ dependencies = [
 
 [[package]]
 name = "git-url-parse"
-version = "0.0.1"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "anyhow 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -662,7 +662,7 @@ name = "git_meta"
 version = "0.1.0"
 dependencies = [
  "anyhow 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
- "git-url-parse 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "git-url-parse 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "git2 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mktemp 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2867,7 +2867,7 @@ dependencies = [
 "checksum futures-task 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0bae52d6b29cf440e298856fec3965ee6fa71b06aa7495178615953fd669e5f9"
 "checksum futures-util 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c0d66274fb76985d3c62c886d1da7ac4c0903a8c9f754e8fe0f35a6a6cc39e76"
 "checksum getrandom 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "e7db7ca94ed4cd01190ceee0d8a8052f08a247aa1b469a7f68c6a3b71afcf407"
-"checksum git-url-parse 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "189596f0cf85c63b145198fa88ef7a68454373c31538de75393f671aa06c45c9"
+"checksum git-url-parse 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a1ad5895dff2d15253a915134cca5a4a061b9c251db45d6ee4d385903d2f66be"
 "checksum git2 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "77519ef7c5beee314d0804d4534f01e0f9e8d9acdee2b7a48627e590b27e0ec4"
 "checksum h2 0.1.26 (registry+https://github.com/rust-lang/crates.io-index)" = "a5b34c246847f938a410a03c5458c7fee2274436675e76d8b903c08efc29c462"
 "checksum h2 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b9433d71e471c1736fd5a61b671fc0b148d7a2992f666c958d03cd8feb3b88d1"

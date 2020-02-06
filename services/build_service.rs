@@ -528,7 +528,7 @@ impl BuildService for OrbitalApi {
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
-        let build_target_db = postgres::client::build_target_list(
+        let build_summary_db = postgres::client::build_summary_list(
             &pg_conn,
             &build_info.org,
             &build_info.git_repo,
@@ -536,35 +536,45 @@ impl BuildService for OrbitalApi {
         )
         .expect("No summary returned");
 
-        debug!("Summary: {:?}", &build_target_db);
+        debug!("Summary: {:?}", &build_summary_db);
 
-        //let mut metadata_proto : Vec<BuildMetadata> = Vec::new();
-        let metadata_proto: Vec<BuildMetadata> = build_target_db
+        let metadata_proto: Vec<BuildMetadata> = build_summary_db
             .into_iter()
-            .map(|(o, r, b)| BuildMetadata {
-                id: b.id,
+            .map(|(repo, target, summary)| BuildMetadata {
+                id: summary.id,
                 build: Some(BuildTarget {
-                    org: o.name,
-                    git_repo: r.name,
-                    remote_uri: r.uri,
-                    branch: b.branch,
-                    commit_hash: b.git_hash,
-                    user_envs: match b.user_envs {
+                    org: build_info.org.clone(),
+                    git_repo: repo.name,
+                    remote_uri: repo.uri,
+                    branch: target.branch,
+                    commit_hash: target.git_hash,
+                    user_envs: match target.user_envs {
                         Some(e) => e,
                         None => "".to_string(),
                     },
-                    id: b.id,
-                    trigger: b.trigger.into(),
+                    id: target.id,
+                    trigger: target.trigger.into(),
                 }),
-                //job_trigger:
-                //queue_time: Some(b.queue_time.into()),
-                //    Some(t) => t.into(),
-                //    _ => NaiveDateTime::from_timestamp(0, 0),
-                //},
-                //start_time
-                //end_time:
-                //build_state:
-                ..Default::default()
+                job_trigger: target.trigger.into(),
+                queue_time: Some(prost_types::Timestamp {
+                    seconds: target.queue_time.timestamp(),
+                    nanos: target.queue_time.timestamp_subsec_nanos() as i32,
+                }),
+                start_time: match summary.start_time {
+                    Some(start_time) => Some(prost_types::Timestamp {
+                        seconds: start_time.timestamp(),
+                        nanos: start_time.timestamp_subsec_nanos() as i32,
+                    }),
+                    None => None,
+                },
+                end_time: match summary.end_time {
+                    Some(end_time) => Some(prost_types::Timestamp {
+                        seconds: end_time.timestamp(),
+                        nanos: end_time.timestamp_subsec_nanos() as i32,
+                    }),
+                    None => None,
+                },
+                build_state: summary.build_state.into(),
             })
             .collect();
 
