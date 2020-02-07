@@ -9,8 +9,8 @@ use orbital_headers::build_meta::{
 
 use chrono::{NaiveDateTime, Utc};
 use orbital_database::postgres;
-use orbital_database::postgres::build_summary::{BuildSummary, NewBuildSummary};
-use orbital_database::postgres::build_target::{BuildTarget as _PGBuildTarget, NewBuildTarget};
+use orbital_database::postgres::build_summary::NewBuildSummary;
+use orbital_database::postgres::build_target::NewBuildTarget;
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_headers::orbital_types::{JobState, SecretType};
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
@@ -28,9 +28,8 @@ use super::{OrbitalApi, ServiceType};
 
 use log::debug;
 
-use prost_types::Timestamp;
 use std::path::Path;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 use mktemp::Temp;
 use std::fs::File;
@@ -51,14 +50,6 @@ impl BuildService for OrbitalApi {
         request: Request<BuildTarget>,
     ) -> Result<Response<BuildMetadata>, Status> {
         //println!("DEBUG: {:?}", response);
-
-        let start_timestamp = Timestamp {
-            seconds: SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs() as i64,
-            nanos: 0,
-        };
 
         // Git clone for provider ( uri, branch, commit )
         let unwrapped_request = request.into_inner();
@@ -287,6 +278,7 @@ impl BuildService for OrbitalApi {
         let build_summary_current_state = NewBuildSummary {
             build_target_id: build_target_db.id,
             build_state: postgres::schema::JobState::Starting,
+            start_time: Some(NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0)),
             ..Default::default()
         };
 
@@ -441,25 +433,33 @@ impl BuildService for OrbitalApi {
         )
         .expect("Unable to update build summary job state to running");
 
-        let (_repo_db, _build_target_db, build_summary_current_state_db) = (
+        let (_repo_db, build_target_db, build_summary_current_state_db) = (
             build_summary_result_done.0,
             build_summary_result_done.1,
             build_summary_result_done.2,
         );
 
-        // Timestamp
-        let end_timestamp = Timestamp {
-            seconds: SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs() as i64,
-            nanos: 0,
-        };
-
         let build_metadata = BuildMetadata {
+            id: build_summary_current_state_db.build_target_id,
             build: Some(unwrapped_request),
-            start_time: Some(start_timestamp),
-            end_time: Some(end_timestamp),
+            queue_time: Some(prost_types::Timestamp {
+                seconds: build_target_db.queue_time.timestamp(),
+                nanos: build_target_db.queue_time.timestamp_subsec_nanos() as i32,
+            }),
+            start_time: match build_summary_current_state_db.start_time {
+                Some(t) => Some(prost_types::Timestamp {
+                    seconds: t.timestamp(),
+                    nanos: t.timestamp_subsec_nanos() as i32,
+                }),
+                None => None,
+            },
+            end_time: match build_summary_current_state_db.end_time {
+                Some(t) => Some(prost_types::Timestamp {
+                    seconds: t.timestamp(),
+                    nanos: t.timestamp_subsec_nanos() as i32,
+                }),
+                None => None,
+            },
             build_state: JobState::Done.into(),
             ..Default::default()
         };
@@ -552,7 +552,7 @@ impl BuildService for OrbitalApi {
                         Some(e) => e,
                         None => "".to_string(),
                     },
-                    id: target.id,
+                    id: target.build_index,
                     trigger: target.trigger.into(),
                 }),
                 job_trigger: target.trigger.into(),

@@ -5,8 +5,10 @@ use crate::GlobalOption;
 use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
 use orbital_headers::orbital_types::JobTrigger;
 
+use chrono::NaiveDateTime;
 use config_parser::yaml as parser;
 use git_meta::git_info;
+use orbital_database::postgres::schema::JobState;
 use orbital_services::ORB_DEFAULT_URI;
 use prettytable::{cell, format, row, Table};
 use tonic::Request;
@@ -119,16 +121,41 @@ pub async fn subcommand_handler(
         false => build_target.commit_hash[..7].to_string(),
     };
 
+    let queue_time = match &response.queue_time {
+        Some(t) => format!(
+            "{:?}",
+            NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
+        ),
+        None => format!("---"),
+    };
+
+    let start_time = match &response.start_time {
+        Some(t) => format!(
+            "{:?}",
+            NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
+        ),
+        None => format!("---"),
+    };
+
+    let end_time = match &response.end_time {
+        Some(t) => format!(
+            "{:?}",
+            NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
+        ),
+        None => format!("---"),
+    };
+
     table.add_row(row![
-        build_target.id,
+        response.id,
         build_target.org,
         build_target.git_repo,
+        build_target.branch,
         commit,
         build_target.user_envs,
-        format!("{:?}", response.queue_time),
-        format!("{:?}", response.start_time),
-        format!("{:?}", response.end_time),
-        format!("{:?}", response.build_state),
+        queue_time,
+        start_time,
+        end_time,
+        JobState::from(response.build_state),
     ]);
 
     // Print the table to stdout

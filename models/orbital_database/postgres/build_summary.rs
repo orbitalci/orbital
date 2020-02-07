@@ -1,4 +1,3 @@
-use crate::postgres::build_target::BuildTarget;
 use crate::postgres::schema::{build_summary, JobState};
 use chrono::{NaiveDateTime, Utc};
 

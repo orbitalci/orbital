@@ -448,7 +448,10 @@ pub fn build_target_get(
         .get_result(conn);
 
     match result {
-        Ok((repo, build_target)) => Ok((org_db, repo, Some(build_target))),
+        Ok((repo, build_target)) => {
+            debug!("BuildTarget found: {:?}", &build_target);
+            Ok((org_db, repo, Some(build_target)))
+        }
         Err(_e) => Ok((org_db, repo_db, None)),
     }
 }
@@ -556,12 +559,12 @@ pub fn build_summary_get(
     let result: Result<(BuildTarget, BuildSummary), _> = build_summary::table
         .inner_join(build_target::table)
         .select((build_target::all_columns, build_summary::all_columns))
-        //.filter(build_target::id.eq(build_index))
+        .filter(build_summary::build_target_id.eq(build_index))
         .get_result(conn);
 
     match result {
         Ok((build_target, build_summary)) => {
-            debug!("Build summary was found");
+            debug!("Build summary was found: {:?}", &build_summary);
             Ok((repo_db, build_target, Some(build_summary)))
         }
         Err(_e) => {
@@ -581,8 +584,8 @@ pub fn build_summary_update(
     update_summary: NewBuildSummary,
 ) -> Result<(Repo, BuildTarget, BuildSummary)> {
     debug!(
-        "Build summary update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
-        &org, &repo, &hash, &branch, &build_index,
+        "Build summary update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} update_summary: {:?}",
+        &org, &repo, &hash, &branch, &build_index, &update_summary,
     );
 
     let (org_db, build_target_db, build_summary_db_opt) =
@@ -615,6 +618,7 @@ pub fn build_summary_list(
     let result: Vec<(BuildTarget, BuildSummary)> = build_summary::table
         .inner_join(build_target::table)
         .select((build_target::all_columns, build_summary::all_columns))
+        .order(build_summary::id.desc())
         .limit(limit.into())
         .load(conn)
         .expect("Error listing build summaries");
