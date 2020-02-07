@@ -1,8 +1,6 @@
 use crate::postgres::repo::Repo;
 use crate::postgres::schema::{build_target, JobTrigger};
 use chrono::{NaiveDateTime, Utc};
-use prost_types::Timestamp;
-use std::time::SystemTime;
 
 use orbital_headers::build_meta;
 
@@ -67,11 +65,6 @@ impl Default for BuildTarget {
 // Loses queue time information
 impl From<BuildTarget> for build_meta::BuildTarget {
     fn from(build_target: BuildTarget) -> Self {
-        let queue_time_proto = Timestamp {
-            seconds: build_target.queue_time.timestamp(),
-            nanos: 0,
-        };
-
         build_meta::BuildTarget {
             git_repo: format!("{:?}", build_target.repo_id),
             branch: build_target.branch,
@@ -81,7 +74,6 @@ impl From<BuildTarget> for build_meta::BuildTarget {
             },
             commit_hash: build_target.git_hash,
             id: build_target.id,
-            //queue_time: queue_time_proto,
             ..Default::default()
         }
     }
