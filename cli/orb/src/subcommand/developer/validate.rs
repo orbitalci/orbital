@@ -22,7 +22,10 @@ pub async fn subcommand_handler(
     local_option: SubcommandOption,
 ) -> Result<()> {
     match parser::load_orb_yaml(&local_option.file.as_path()) {
-        Ok(_c) => Ok(()),
+        Ok(c) => {
+            println!("{:?}", c);
+            Ok(())
+        },
         Err(_e) => Err(SubcommandError::new("Config file failed validation").into()),
     }
 }
