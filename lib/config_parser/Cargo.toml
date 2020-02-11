@@ -9,6 +9,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
 log = "0.4"
 anyhow = "1.0"
+strum = "0.17"
+strum_macros = "0.17"
 
 [lib]
 name = "config_parser"
