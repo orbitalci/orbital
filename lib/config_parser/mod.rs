@@ -52,31 +52,31 @@ command:
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OrbitalBuildMode {
-  Docker,
-  Host,
+    Docker,
+    Host,
 }
 
 impl Default for OrbitalBuildMode {
-  fn default() -> Self {
-    OrbitalBuildMode::Docker
-  }
+    fn default() -> Self {
+        OrbitalBuildMode::Docker
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct OrbitalBranches {
-  pub include: Option<Vec<String>>,
-  pub exclude: Option<Vec<String>>,
+    pub include: Option<Vec<String>>,
+    pub exclude: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct OrbitalStage {
-  pub name: Option<String>,
-  pub command: Vec<String>,
-  pub branches: Option<OrbitalBranches>,
-  pub env: Option<Vec<String>>,
-  // FIXME: Stage timeout. This should get parsed into a duration
-  pub timeout: Option<u32>,
-  pub secrets: Option<String>,
+    pub name: Option<String>,
+    pub command: Vec<String>,
+    pub branches: Option<OrbitalBranches>,
+    pub env: Option<Vec<String>>,
+    // FIXME: Stage timeout. This should get parsed into a duration
+    pub timeout: Option<u32>,
+    pub secrets: Option<String>,
 }
 
 /// Orbital config struct for `orb.yml`
