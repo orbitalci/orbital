@@ -25,7 +25,7 @@ pub async fn subcommand_handler(
         Ok(c) => {
             println!("{:?}", c);
             Ok(())
-        },
+        }
         Err(_e) => Err(SubcommandError::new("Config file failed validation").into()),
     }
 }

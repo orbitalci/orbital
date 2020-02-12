@@ -345,66 +345,78 @@ impl BuildService for OrbitalApi {
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
-        // FIXME: Loop over config.command and run the docker_container_exec, for timestamping build_stage
-        // TODO: Mark build summary.build_state as running
-        let build_summary_current_state = NewBuildSummary {
-            build_target_id: build_summary_current_state_db.build_target_id,
-            start_time: build_summary_current_state_db.start_time,
-            build_state: postgres::schema::JobState::Running,
-            ..Default::default()
-        };
+        for (i, config_stage) in config.stages.iter().enumerate() {
+            debug!(
+                "Starting stage: {:?}",
+                &config_stage.name.clone().unwrap_or(format!("Stage#{}", i))
+            );
 
-        let build_summary_result_running = postgres::client::build_summary_update(
-            &pg_conn,
-            &org_db.name,
-            &repo_db.name,
-            &build_target_current_state.git_hash,
-            &build_target_current_state.branch,
-            build_target_current_state.build_index,
-            build_summary_current_state.clone(),
-        )
-        .expect("Unable to update build summary job state to running");
+            // FIXME: Loop over config.command and run the docker_container_exec, for timestamping build_stage
+            // TODO: Mark build summary.build_state as running
+            let build_summary_current_state = NewBuildSummary {
+                build_target_id: build_summary_current_state_db.build_target_id,
+                start_time: build_summary_current_state_db.start_time,
+                build_state: postgres::schema::JobState::Running,
+                ..Default::default()
+            };
 
-        let (_repo_db, _build_target_db, build_summary_current_state_db) = (
-            build_summary_result_running.0,
-            build_summary_result_running.1,
-            build_summary_result_running.2,
-        );
+            let build_summary_result_running = postgres::client::build_summary_update(
+                &pg_conn,
+                &org_db.name,
+                &repo_db.name,
+                &build_target_current_state.git_hash,
+                &build_target_current_state.branch,
+                build_target_current_state.build_index,
+                build_summary_current_state.clone(),
+            )
+            .expect("Unable to update build summary job state to running");
 
-        // TODO: Mark build stage start time
-        // TODO: Make sure tests try to exec w/o starting the container
-        // Exec into the new container
-        debug!("Sending commands into container");
-        match build_engine::docker_container_exec(container_id.as_str(), config.stages[0].command.clone()) {
-            Ok(ok) => ok, // The successful result doesn't matter
-            Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
-        };
-        // TODO: Mark build stage end time
+            let (_repo_db, _build_target_db, build_summary_current_state_db) = (
+                build_summary_result_running.0,
+                build_summary_result_running.1,
+                build_summary_result_running.2,
+            );
 
-        // TOO: Mark build_summary.build_state as finishing
-        let build_summary_current_state = NewBuildSummary {
-            build_target_id: build_summary_current_state_db.build_target_id,
-            start_time: build_summary_current_state_db.start_time,
-            build_state: postgres::schema::JobState::Finishing,
-            ..Default::default()
-        };
+            // TODO: Mark build stage start time
+            // TODO: Make sure tests try to exec w/o starting the container
+            // Exec into the new container
+            debug!("Sending commands into container");
+            match build_engine::docker_container_exec(
+                container_id.as_str(),
+                config_stage.command.clone(),
+            ) {
+                Ok(ok) => ok, // The successful result doesn't matter
+                Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
+            };
 
-        let build_summary_result_finishing = postgres::client::build_summary_update(
-            &pg_conn,
-            &org_db.name,
-            &repo_db.name,
-            &build_target_current_state.git_hash,
-            &build_target_current_state.branch,
-            build_target_current_state.build_index,
-            build_summary_current_state.clone(),
-        )
-        .expect("Unable to update build summary job state to running");
+            // Mark build_summary.build_state as finishing
+            let build_summary_current_state = NewBuildSummary {
+                build_target_id: build_summary_current_state_db.build_target_id,
+                start_time: build_summary_current_state_db.start_time,
+                build_state: postgres::schema::JobState::Finishing,
+                ..Default::default()
+            };
 
-        let (_repo_db, _build_target_db, build_summary_current_state_db) = (
-            build_summary_result_finishing.0,
-            build_summary_result_finishing.1,
-            build_summary_result_finishing.2,
-        );
+            let build_summary_result_finishing = postgres::client::build_summary_update(
+                &pg_conn,
+                &org_db.name,
+                &repo_db.name,
+                &build_target_current_state.git_hash,
+                &build_target_current_state.branch,
+                build_target_current_state.build_index,
+                build_summary_current_state.clone(),
+            )
+            .expect("Unable to update build summary job state to running");
+
+            let (_repo_db, _build_target_db, _build_summary_current_state_db) = (
+                build_summary_result_finishing.0,
+                build_summary_result_finishing.1,
+                build_summary_result_finishing.2,
+            );
+
+            // TODO: Mark build stage end time
+            // END Looping over stages
+        }
 
         debug!("Stopping the container");
         match build_engine::docker_container_stop(container_id.as_str()) {
@@ -412,8 +424,8 @@ impl BuildService for OrbitalApi {
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
-        //TODO: Mark build_summary end time
-        //TODO: Mark build_summary.build_statue as done
+        // Mark build_summary end time
+        // Mark build_summary.build_statue as done
         let build_summary_current_state = NewBuildSummary {
             build_target_id: build_summary_current_state_db.build_target_id,
             start_time: build_summary_current_state_db.start_time,

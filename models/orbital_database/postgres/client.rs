@@ -479,7 +479,9 @@ pub fn build_target_update(
     Ok((org_db, repo_db, result))
 }
 
-// TODO build_target_delete
+pub fn build_target_remove() {
+    unimplemented!();
+}
 
 pub fn build_target_list(
     conn: &PgConnection,
@@ -602,6 +604,10 @@ pub fn build_summary_update(
     Ok((org_db, build_target_db, result))
 }
 
+pub fn build_summary_remove() {
+    unimplemented!();
+}
+
 pub fn build_summary_list(
     conn: &PgConnection,
     org: &str,
@@ -629,4 +635,24 @@ pub fn build_summary_list(
         .collect();
 
     Ok(map_result)
+}
+
+pub build_stage_add() {
+    unimplemented!();
+}
+
+pub build_stage_get() {
+    unimplemented!();
+}
+
+pub build_stage_update() {
+    unimplemented!();
+}
+
+pub build_stage_remove() {
+    unimplemented!();
+}
+
+pub build_stage_list() {
+    unimplemented!();
 }
