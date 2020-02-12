@@ -1,7 +1,9 @@
 image: docker
-command:
-  - echo Hello world!
-  - pwd
-  - ls
-  - env
-  - docker build -t orb .
+stages:
+  - name: Stage name
+    command:
+    - echo Hello world!
+    - pwd
+    - ls
+    - env
+    - docker build -t orb .

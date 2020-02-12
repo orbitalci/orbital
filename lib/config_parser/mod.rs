@@ -62,16 +62,37 @@ impl Default for OrbitalBuildMode {
   }
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct OrbitalBranches {
+  pub include: Option<Vec<String>>,
+  pub exclude: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct OrbitalStage {
+  pub name: Option<String>,
+  pub command: Vec<String>,
+  pub branches: Option<OrbitalBranches>,
+  pub env: Option<Vec<String>>,
+  // FIXME: Stage timeout. This should get parsed into a duration
+  pub timeout: Option<u32>,
+  pub secrets: Option<String>,
+}
+
 /// Orbital config struct for `orb.yml`
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 //#[serde(rename_all = "kebabcase")]
 pub struct OrbitalConfig {
     #[serde(default)]
-    pub exec_mode: OrbitalBuildMode,
+    pub runtime_mode: OrbitalBuildMode,
     /// Docker image string
     pub image: String,
-    /// List of commands to be executed
-    pub command: Vec<String>,
+    /// List of stages to be executed
+    pub stages: Vec<OrbitalStage>,
     #[serde(default)]
-    pub branches: Option<Vec<String>>,
+    pub branches: Option<OrbitalBranches>,
+    pub env: Option<Vec<String>>,
+    // FIXME: Global timeout. This should get parsed into a duration
+    pub timeout: Option<u32>,
+    pub secrets: Option<String>,
 }
