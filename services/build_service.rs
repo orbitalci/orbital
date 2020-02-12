@@ -375,7 +375,7 @@ impl BuildService for OrbitalApi {
         // TODO: Make sure tests try to exec w/o starting the container
         // Exec into the new container
         debug!("Sending commands into container");
-        match build_engine::docker_container_exec(container_id.as_str(), config.command) {
+        match build_engine::docker_container_exec(container_id.as_str(), config.stages[0].command.clone()) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };

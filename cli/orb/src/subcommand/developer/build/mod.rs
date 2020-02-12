@@ -104,10 +104,11 @@ pub async fn subcommand_handler(
         }
     }
 
+    // TODO: Loop on stages
     // TODO: Make sure tests try to exec w/o starting the container
     // Exec into the new container
     debug!("Sending commands into container");
-    for command in config.command.iter() {
+    for command in config.stages[0].command.clone().iter() {
         // Build the exec string
         let wrapped_command = format!("{} | tee -a /proc/1/fd/1", &command);
 
