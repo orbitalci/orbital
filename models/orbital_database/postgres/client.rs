@@ -653,10 +653,10 @@ pub fn build_stage_add(
         &org, &repo, &hash, &branch, &build_index, &build_summary_id,
     );
 
-    let (build_target_db, build_summary_db, build_stage_db_opt) =
-        build_stage_get(conn, org, repo, hash, branch, build_index, build_summary_id)?;
+    let (_org_db, build_target_db, build_summary_db_opt) =
+        build_summary_get(conn, org, repo, hash, branch, build_index)?;
 
-    let build_stage_db_opt = build_stage_db_opt.expect("No build stage found");
+    let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
     debug!("Build stage to insert: {:?}", &build_stage);
 

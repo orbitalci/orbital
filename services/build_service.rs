@@ -9,6 +9,7 @@ use orbital_headers::build_meta::{
 
 use chrono::{NaiveDateTime, Utc};
 use orbital_database::postgres;
+use orbital_database::postgres::build_stage::NewBuildStage;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::build_target::NewBuildTarget;
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
@@ -378,6 +379,35 @@ impl BuildService for OrbitalApi {
             );
 
             // TODO: Mark build stage start time
+            //let build_stage_current = NewBuildStage {
+            //    build_summary_id: build_summary_current_state_db.id,
+            //    stage_name: Some(config_stage.name.clone().unwrap_or(format!("Stage#{}", i))),
+            //    ..Default::default()
+            //};
+
+            let build_stage_start = postgres::client::build_stage_add(
+                &pg_conn,
+                &org_db.name,
+                &repo_db.name,
+                &build_target_current_state.git_hash,
+                &build_target_current_state.branch,
+                build_target_current_state.build_index,
+                build_summary_current_state_db.id,
+                NewBuildStage {
+                    build_summary_id: build_summary_current_state_db.id,
+                    stage_name: Some(config_stage.name.clone().unwrap_or(format!("Stage#{}", i))),
+                    build_host: Some("Hardcoded hostname Fixme".to_string()),
+                    ..Default::default()
+                },
+            ).expect("Unable to add new build stage in db");
+
+            let (_build_target_db, _build_summary_db, build_stage_db) = (
+                build_stage_start.0,
+                build_stage_start.1,
+                build_stage_start.2,
+            );
+
+
             // TODO: Make sure tests try to exec w/o starting the container
             // Exec into the new container
             debug!("Sending commands into container");
@@ -415,6 +445,23 @@ impl BuildService for OrbitalApi {
             );
 
             // TODO: Mark build stage end time
+            let build_stage_end = postgres::client::build_stage_update(
+                &pg_conn,
+                &org_db.name,
+                &repo_db.name,
+                &build_target_current_state.git_hash,
+                &build_target_current_state.branch,
+                build_target_current_state.build_index,
+                build_summary_current_state_db.id,
+                NewBuildStage {
+                    build_summary_id: build_summary_current_state_db.id,
+                    stage_name: Some(config_stage.name.clone().unwrap_or(format!("Stage#{}", i))),
+                    start_time: build_stage_db.start_time,
+                    end_time: Some(NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0)),
+                    build_host: build_stage_db.build_host,
+                    ..Default::default()
+                },
+            );
             // END Looping over stages
         }
 
