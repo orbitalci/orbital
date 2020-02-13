@@ -1,4 +1,4 @@
-use crate::postgres::schema::{build_stage};
+use crate::postgres::schema::build_stage;
 use chrono::{NaiveDateTime, Utc};
 
 // TODO: Stage name required? Build service can generate an index
@@ -38,7 +38,7 @@ pub struct BuildStage {
     pub output: Option<String>,
     pub start_time: NaiveDateTime,
     pub end_time: Option<NaiveDateTime>,
-    pub exit_code: Option<i32>
+    pub exit_code: Option<i32>,
 }
 
 impl Default for BuildStage {

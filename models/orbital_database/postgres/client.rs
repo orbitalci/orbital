@@ -1,9 +1,10 @@
+use crate::postgres::build_stage::{BuildStage, NewBuildStage};
 use crate::postgres::build_summary::{BuildSummary, NewBuildSummary};
 use crate::postgres::build_target::{BuildTarget, NewBuildTarget};
 use crate::postgres::org::{NewOrg, Org};
 use crate::postgres::repo::{NewRepo, Repo};
 use crate::postgres::schema::{
-    build_summary, build_target, org, repo, secret, JobTrigger, SecretType,
+    build_stage, build_summary, build_target, org, repo, secret, JobTrigger, SecretType,
 };
 use crate::postgres::secret::{NewSecret, Secret};
 use agent_runtime::vault::orb_vault_path;
@@ -637,22 +638,137 @@ pub fn build_summary_list(
     Ok(map_result)
 }
 
-pub build_stage_add() {
+pub fn build_stage_add(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: i32,
+    build_summary_id: i32,
+    build_stage: NewBuildStage,
+) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
+    debug!(
+        "Build stage add request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
+        &org, &repo, &hash, &branch, &build_index, &build_summary_id,
+    );
+
+    let (build_target_db, build_summary_db, build_stage_db_opt) =
+        build_stage_get(conn, org, repo, hash, branch, build_index, build_summary_id)?;
+
+    let build_stage_db_opt = build_stage_db_opt.expect("No build stage found");
+
+    debug!("Build stage to insert: {:?}", &build_stage);
+
+    let result: BuildStage = diesel::insert_into(build_stage::table)
+        .values(build_stage)
+        .get_result(conn)
+        .expect("Error saving new build_stage");
+
+    Ok((build_target_db, build_summary_db, result))
+}
+
+pub fn build_stage_get(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: i32,
+    build_summary_id: i32,
+) -> Result<(BuildTarget, BuildSummary, Option<BuildStage>)> {
+    debug!(
+        "Build stage get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
+        &org, &repo, &hash, &branch, &build_index, &build_summary_id,
+    );
+
+    let (_repo_db, build_target_db, build_summary_db_opt) =
+        build_summary_get(conn, org, repo, hash, branch, build_index)?;
+
+    let build_summary_db = build_summary_db_opt.expect("No build target found");
+
+    let result: Result<(BuildSummary, BuildStage), _> = build_stage::table
+        .inner_join(build_summary::table)
+        .select((build_summary::all_columns, build_stage::all_columns))
+        .filter(build_summary::build_target_id.eq(build_index))
+        .get_result(conn);
+
+    match result {
+        Ok((build_summary, build_stage)) => {
+            debug!("Build stage was found: {:?}", &build_summary);
+            Ok((build_target_db, build_summary, Some(build_stage)))
+        }
+        Err(_e) => {
+            debug!("Build stage NOT found");
+            Ok((build_target_db, build_summary_db, None))
+        }
+    }
+}
+
+pub fn build_stage_update(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: i32,
+    build_summary_id: i32,
+    update_stage: NewBuildStage,
+) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
+    debug!(
+        "Build stage update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?} update_stage {:?}",
+        &org, &repo, &hash, &branch, &build_index, &build_summary_id, &update_stage,
+    );
+
+    let (build_target_db, build_summary_db, build_stage_db_opt) =
+        build_stage_get(conn, org, repo, hash, branch, build_index, build_summary_id)?;
+
+    let build_stage_db = build_stage_db_opt.expect("No build stage found");
+
+    let result: BuildStage = diesel::update(build_stage::table)
+        .filter(build_stage::id.eq(build_stage_db.id))
+        .set(update_stage)
+        .get_result(conn)
+        .expect("Error updating build stage");
+
+    Ok((build_target_db, build_summary_db, result))
+}
+
+pub fn build_stage_remove() {
     unimplemented!();
 }
 
-pub build_stage_get() {
-    unimplemented!();
-}
+pub fn build_stage_list(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: i32,
+    limit: i32,
+) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
+    debug!(
+        "Build stage list request: org {:?} repo: {:?} hash {:?} branch {:?} build_index {:?} limit: {:?}",
+        &org, &repo, &hash, &branch, &build_index, &limit
+    );
 
-pub build_stage_update() {
-    unimplemented!();
-}
+    let (_repo_db, build_target_db, build_summary_db_opt) =
+        build_summary_get(conn, org, repo, hash, branch, build_index)?;
 
-pub build_stage_remove() {
-    unimplemented!();
-}
+    let _build_summary_db = build_summary_db_opt.expect("No build summary found");
 
-pub build_stage_list() {
-    unimplemented!();
+    let result: Vec<(BuildSummary, BuildStage)> = build_stage::table
+        .inner_join(build_summary::table)
+        .select((build_summary::all_columns, build_stage::all_columns))
+        .order(build_stage::id.desc())
+        .limit(limit.into())
+        .load(conn)
+        .expect("Error listing build stages");
+
+    let map_result: Vec<(BuildTarget, BuildSummary, BuildStage)> = result
+        .into_iter()
+        .map(|(build_summary, build_stage)| (build_target_db.clone(), build_summary, build_stage))
+        .collect();
+
+    Ok(map_result)
 }
