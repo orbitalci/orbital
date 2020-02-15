@@ -453,6 +453,7 @@ impl BuildService for OrbitalApi {
                 &build_target_current_state.branch,
                 build_target_current_state.build_index,
                 build_summary_current_state_db.id,
+                build_stage_db.id,
                 NewBuildStage {
                     build_summary_id: build_summary_current_state_db.id,
                     stage_name: Some(config_stage.name.clone().unwrap_or(format!("Stage#{}", i))),

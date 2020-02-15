@@ -676,6 +676,7 @@ pub fn build_stage_get(
     branch: &str,
     build_index: i32,
     build_summary_id: i32,
+    build_stage_id: i32,
 ) -> Result<(BuildTarget, BuildSummary, Option<BuildStage>)> {
     debug!(
         "Build stage get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
@@ -691,6 +692,7 @@ pub fn build_stage_get(
         .inner_join(build_summary::table)
         .select((build_summary::all_columns, build_stage::all_columns))
         .filter(build_summary::build_target_id.eq(build_index))
+        .filter(build_stage::id.eq(build_stage_id))
         .get_result(conn);
 
     match result {
@@ -713,20 +715,21 @@ pub fn build_stage_update(
     branch: &str,
     build_index: i32,
     build_summary_id: i32,
+    build_stage_id: i32,
     update_stage: NewBuildStage,
 ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
     debug!(
-        "Build stage update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?} update_stage {:?}",
-        &org, &repo, &hash, &branch, &build_index, &build_summary_id, &update_stage,
+        "Build stage update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?} build_stage_id {:?} update_stage {:?}",
+        &org, &repo, &hash, &branch, &build_index, &build_summary_id, &build_stage_id, &update_stage,
     );
 
     let (build_target_db, build_summary_db, build_stage_db_opt) =
-        build_stage_get(conn, org, repo, hash, branch, build_index, build_summary_id)?;
+        build_stage_get(conn, org, repo, hash, branch, build_index, build_summary_id, build_stage_id)?;
 
     let build_stage_db = build_stage_db_opt.expect("No build stage found");
 
     let result: BuildStage = diesel::update(build_stage::table)
-        .filter(build_stage::id.eq(build_stage_db.id))
+        .filter(build_stage::id.eq(build_stage_id))
         .set(update_stage)
         .get_result(conn)
         .expect("Error updating build stage");
