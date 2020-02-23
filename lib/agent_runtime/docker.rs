@@ -141,7 +141,7 @@ pub fn container_stop(container_id: &str) -> Result<()> {
 
 // TODO: This will need a mechanism to stream logs out to a client
 /// Connect to the docker engine and execute commands in a running container with a given `container_id`
-pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<()> {
+pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<String>> {
     let docker = Docker::new();
 
     println!("{:?}", command);
@@ -181,10 +181,7 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<()> {
     tokio::run(exec_container);
 
 
-    // receive from channel
-    for stuff in rx {
-        println!("Received: {:?}", stuff)
-    };
+    let exec_output : Vec<String> = rx.into_iter().collect();
 
-    Ok(())
+    Ok(exec_output)
 }

@@ -25,6 +25,8 @@ pub async fn action_handler(
     // Embedded commands with quotes, $(), or backtics not expected to work with this parsing
     let command_vec_slice: Vec<&str> = action_option.command.split_whitespace().collect();
 
+    let mut exec_output : Vec<String> = Vec::new();
+
     match docker::container_exec(
         action_option.container_id.as_ref(),
         command_vec_slice.clone(),
@@ -32,7 +34,8 @@ pub async fn action_handler(
         Ok(output) => {
             debug!("Command: {:?}", &command_vec_slice);
             debug!("Output: {:?}", &output);
-            output
+            &mut exec_output.extend(output);
+            ()
         }
         Err(_) => {
             return Err(SubcommandError::new(&format!(

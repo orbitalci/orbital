@@ -108,6 +108,7 @@ pub async fn subcommand_handler(
     // TODO: Make sure tests try to exec w/o starting the container
     // Exec into the new container
     debug!("Sending commands into container");
+    let mut exec_output : Vec<String> = Vec::new();
     for command in config.stages[0].command.clone().iter() {
         // Build the exec string
         let wrapped_command = format!("{} | tee -a /proc/1/fd/1", &command);
@@ -118,7 +119,8 @@ pub async fn subcommand_handler(
             Ok(output) => {
                 debug!("Command: {:?}", &command);
                 debug!("Output: {:?}", &output);
-                output
+                &mut exec_output.extend(output);
+                ()
             }
             Err(_) => {
                 return Err(SubcommandError::new(&format!(
