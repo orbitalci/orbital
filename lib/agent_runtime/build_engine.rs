@@ -72,7 +72,9 @@ pub fn docker_container_stop(container_id: &str) -> Result<()> {
 // FIXME: Possibly change this to only run single commands. So timestamping can be handled outside
 // TODO: This will also need to accept some channel to pass to docker::container_exec
 /// Loop over commands, exec into docker container
-pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Result<()> {
+pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Result<String> {
+
+    let mut exec_output : Vec<String> = Vec::new();
 
     for command in commands.iter() {
         // Build the exec string
@@ -84,6 +86,7 @@ pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Resul
             Ok(output) => {
                 debug!("Command: {:?}", &command);
                 debug!("Output: {:?}", &output);
+                &mut exec_output.extend(output.clone());
                 output
             }
             Err(_) => {
@@ -96,5 +99,5 @@ pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Resul
         };
     }
 
-    Ok(())
+    Ok(exec_output.join(""))
 }

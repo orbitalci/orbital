@@ -411,7 +411,7 @@ impl BuildService for OrbitalApi {
             // TODO: Make sure tests try to exec w/o starting the container
             // Exec into the new container
             debug!("Sending commands into container");
-            match build_engine::docker_container_exec(
+            let build_stage_logs = match build_engine::docker_container_exec(
                 container_id.as_str(),
                 config_stage.command.clone(),
             ) {
@@ -444,8 +444,8 @@ impl BuildService for OrbitalApi {
                 build_summary_result_finishing.2,
             );
 
-            // TODO: Mark build stage end time
-            let build_stage_end = postgres::client::build_stage_update(
+            // Mark build stage end time and save stage output
+            let _build_stage_end = postgres::client::build_stage_update(
                 &pg_conn,
                 &org_db.name,
                 &repo_db.name,
@@ -460,6 +460,7 @@ impl BuildService for OrbitalApi {
                     start_time: build_stage_db.start_time,
                     end_time: Some(NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0)),
                     build_host: build_stage_db.build_host,
+                    output: Some(build_stage_logs),
                     ..Default::default()
                 },
             );

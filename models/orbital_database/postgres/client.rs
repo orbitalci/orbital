@@ -726,7 +726,7 @@ pub fn build_stage_update(
     let (build_target_db, build_summary_db, build_stage_db_opt) =
         build_stage_get(conn, org, repo, hash, branch, build_index, build_summary_id, build_stage_id)?;
 
-    let build_stage_db = build_stage_db_opt.expect("No build stage found");
+    let _build_stage_db = build_stage_db_opt.expect("No build stage found");
 
     let result: BuildStage = diesel::update(build_stage::table)
         .filter(build_stage::id.eq(build_stage_id))
