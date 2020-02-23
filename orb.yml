@@ -8,4 +8,4 @@ stages:
   - name: The second stage
     command:
     - echo Hello world!
-    #- docker build -t orb .
+    - docker build -t orb .
