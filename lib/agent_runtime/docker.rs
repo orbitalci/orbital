@@ -5,6 +5,7 @@ use tokio::prelude::{Future, Stream};
 
 use anyhow::{anyhow, Result};
 use log::{debug, error};
+use std::sync::mpsc::channel;
 
 /// Returns a String to work around shiplift behavior that is different from the docker cli
 /// If we give shiplift an image w/o a tag, it'll download all the tags. Usually the intended behavior is to only pull latest
@@ -152,14 +153,25 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<()> {
         .attach_stderr(true)
         .build();
 
+
+    // open a channel
+    let (tx, rx) = channel();
+
+    // send output to channel
     let exec_container = docker
         .containers()
         .get(&container_id)
         .exec(&options)
-        .for_each(|chunk| {
+        .for_each(move |chunk| {
             match chunk.stream_type {
-                StreamType::StdOut => print!("{}", chunk.as_string_lossy()),
-                StreamType::StdErr => eprintln!("{}", chunk.as_string_lossy()),
+                StreamType::StdOut => {
+                    tx.send(chunk.as_string_lossy()).unwrap();
+                    print!("{}", chunk.as_string_lossy())
+                },
+                StreamType::StdErr => {
+                    tx.send(chunk.as_string_lossy()).unwrap();
+                    eprintln!("{}", chunk.as_string_lossy());
+                },
                 StreamType::StdIn => unreachable!(),
             }
             Ok(())
@@ -167,6 +179,12 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<()> {
         .map_err(|e| eprintln!("Error: {}", e));
 
     tokio::run(exec_container);
+
+
+    // receive from channel
+    for stuff in rx {
+        println!("Received: {:?}", stuff)
+    };
 
     Ok(())
 }
