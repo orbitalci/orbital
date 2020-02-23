@@ -73,6 +73,7 @@ pub fn docker_container_stop(container_id: &str) -> Result<()> {
 // TODO: This will also need to accept some channel to pass to docker::container_exec
 /// Loop over commands, exec into docker container
 pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Result<()> {
+
     for command in commands.iter() {
         // Build the exec string
         let wrapped_command = format!("{} | tee -a /proc/1/fd/1", &command);
