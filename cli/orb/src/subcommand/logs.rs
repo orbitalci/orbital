@@ -54,7 +54,6 @@ pub async fn subcommand_handler(
         git_repo: git_context.git_url.name,
         remote_uri: git_context.git_url.href,
         //git_provider: "default_git_provider".into(),
-        //git_repo: "default_git_repo".into(),
         branch: git_context.branch,
         commit_hash: git_context.commit_id,
         user_envs: local_option.envs.unwrap_or_default(),

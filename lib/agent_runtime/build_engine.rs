@@ -73,8 +73,7 @@ pub fn docker_container_stop(container_id: &str) -> Result<()> {
 // TODO: This will also need to accept some channel to pass to docker::container_exec
 /// Loop over commands, exec into docker container
 pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Result<String> {
-
-    let mut exec_output : Vec<String> = Vec::new();
+    let mut exec_output: Vec<String> = Vec::new();
 
     for command in commands.iter() {
         // Build the exec string
@@ -82,6 +81,8 @@ pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Resul
 
         let container_command = vec!["/bin/sh", "-c", wrapped_command.as_ref()];
 
+        // Print the command in the output we want to store in database
+        &mut exec_output.push(format!("Command: {:?}\n", &command.clone()));
         match docker::container_exec(container_id, container_command.clone()) {
             Ok(output) => {
                 debug!("Command: {:?}", &command);

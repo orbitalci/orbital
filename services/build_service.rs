@@ -1,7 +1,8 @@
 use orbital_headers::build_meta::{
     build_service_server::BuildService,
     BuildLogResponse,
-    BuildMetadata, //BuildRecord, BuildStage,
+    BuildMetadata,
+    BuildRecord, //BuildStage,
     BuildSummaryRequest,
     BuildSummaryResponse,
     BuildTarget,
@@ -19,7 +20,7 @@ use postgres::schema::JobTrigger;
 
 use tonic::{Request, Response, Status};
 
-//use tokio::sync::mpsc;
+use tokio::sync::mpsc;
 
 use crate::OrbitalServiceError;
 use agent_runtime::build_engine;
@@ -37,9 +38,6 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use git_meta::git_info;
-
-use futures::Stream;
-use std::pin::Pin;
 
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
@@ -399,14 +397,14 @@ impl BuildService for OrbitalApi {
                     build_host: Some("Hardcoded hostname Fixme".to_string()),
                     ..Default::default()
                 },
-            ).expect("Unable to add new build stage in db");
+            )
+            .expect("Unable to add new build stage in db");
 
             let (_build_target_db, _build_summary_db, build_stage_db) = (
                 build_stage_start.0,
                 build_stage_start.1,
                 build_stage_start.2,
             );
-
 
             // TODO: Make sure tests try to exec w/o starting the container
             // Exec into the new container
@@ -536,35 +534,71 @@ impl BuildService for OrbitalApi {
         unimplemented!();
     }
 
-    type BuildLogsStream =
-        Pin<Box<dyn Stream<Item = Result<BuildLogResponse, Status>> + Send + Sync + 'static>>;
+    //type BuildLogsStream =
+    //    Pin<Box<dyn Stream<Item = Result<BuildLogResponse, Status>> + Send + Sync + 'static>>;
+
+    type BuildLogsStream = mpsc::Receiver<Result<BuildLogResponse, Status>>;
 
     async fn build_logs(
         &self,
-        _request: Request<BuildTarget>,
+        request: Request<BuildTarget>,
     ) -> Result<tonic::Response<Self::BuildLogsStream>, tonic::Status> {
-        unimplemented!()
-        //// Get the container info so we can call the docker api
+        let unwrapped_request = request.into_inner();
 
-        //let (mut tx, rx) = mpsc::channel(4);
+        // Get repo id from BuildTarget
+        // Connect to database. Query for the repo
+        let pg_conn = postgres::client::establish_connection();
 
+        let build_stage_query = postgres::client::build_logs_get(
+            &pg_conn,
+            &unwrapped_request.org,
+            &unwrapped_request.git_repo,
+            &unwrapped_request.commit_hash,
+            &unwrapped_request.branch,
+            {
+                match &unwrapped_request.id {
+                    0 => None,
+                    _ => Some(unwrapped_request.id.clone()),
+                }
+            },
+        )
+        .expect("No build stages found");
+
+        let (mut tx, rx) = mpsc::channel(4);
+
+        let mut build_stage_list: Vec<orbital_headers::build_meta::BuildStage> = Vec::new();
+        for (_target, _summary, stage) in build_stage_query {
+            build_stage_list.push(stage.into());
+        }
+
+        let build_record = BuildRecord {
+            build_metadata: None,
+            build_output: build_stage_list,
+        };
+
+        //
+        let build_log_response = BuildLogResponse {
+            id: build_record.build_output[0].build_id,
+            records: vec![build_record],
+        };
+
+        tx.send(Ok(build_log_response)).await.unwrap();
+
+        // FIXME - the protobuf struct is too complicated
+        //BuildLogResponse
+        // Vec<BuildRecord>
+
+        // Check on whether the BuildTarget represents a build in progress or one that is done
+        // Get the output from the database
+
+        // TODO: This is for handling builds that are in progress
         //tokio::spawn(async move {
-        //    let build_log_response = BuildLogResponse {
-        //        id: 0,
-        //        records: Vec::new(),
-        //    };
+        //    tx.send(Ok(BuildLogResponse { ..Default::default() })).await.unwrap();
 
-        //    tx.send(Ok(build_log_response)).await.unwrap()
-
-        //    // Determine if there are logs in the database and fetch those first
-        //    // Probably send those logs, unless we specifically don't want to
-
-        //    // If the build is still running, then we want to go to the live logs
-
-        //    // The agent runtime log wrapper needs to provide the build stage info
+        //    println!(" /// done sending");
         //});
 
-        //Ok(Response::new(rx))
+        Ok(Response::new(rx))
     }
 
     async fn build_remove(
