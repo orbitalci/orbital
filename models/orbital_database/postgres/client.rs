@@ -723,8 +723,16 @@ pub fn build_stage_update(
         &org, &repo, &hash, &branch, &build_index, &build_summary_id, &build_stage_id, &update_stage,
     );
 
-    let (build_target_db, build_summary_db, build_stage_db_opt) =
-        build_stage_get(conn, org, repo, hash, branch, build_index, build_summary_id, build_stage_id)?;
+    let (build_target_db, build_summary_db, build_stage_db_opt) = build_stage_get(
+        conn,
+        org,
+        repo,
+        hash,
+        branch,
+        build_index,
+        build_summary_id,
+        build_stage_id,
+    )?;
 
     let _build_stage_db = build_stage_db_opt.expect("No build stage found");
 
@@ -763,6 +771,7 @@ pub fn build_stage_list(
     let result: Vec<(BuildSummary, BuildStage)> = build_stage::table
         .inner_join(build_summary::table)
         .select((build_summary::all_columns, build_stage::all_columns))
+        .filter(build_stage::build_summary_id.eq(build_index))
         .order(build_stage::id.desc())
         .limit(limit.into())
         .load(conn)
@@ -774,4 +783,28 @@ pub fn build_stage_list(
         .collect();
 
     Ok(map_result)
+}
+
+pub fn build_logs_get(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: Option<i32>,
+) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
+    let (_org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
+
+    match build_index {
+        Some(n) => build_stage_list(conn, org, repo, hash, branch, n, 255),
+        None => build_stage_list(
+            conn,
+            org,
+            repo,
+            hash,
+            branch,
+            repo_db.next_build_index - 1,
+            255,
+        ),
+    }
 }

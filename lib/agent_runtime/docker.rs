@@ -153,7 +153,6 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<Stri
         .attach_stderr(true)
         .build();
 
-
     // open a channel
     let (tx, rx) = channel();
 
@@ -167,11 +166,11 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<Stri
                 StreamType::StdOut => {
                     tx.send(chunk.as_string_lossy()).unwrap();
                     print!("{}", chunk.as_string_lossy())
-                },
+                }
                 StreamType::StdErr => {
                     tx.send(chunk.as_string_lossy()).unwrap();
                     eprintln!("{}", chunk.as_string_lossy());
-                },
+                }
                 StreamType::StdIn => unreachable!(),
             }
             Ok(())
@@ -180,8 +179,7 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<Stri
 
     tokio::run(exec_container);
 
-
-    let exec_output : Vec<String> = rx.into_iter().collect();
+    let exec_output: Vec<String> = rx.into_iter().collect();
 
     Ok(exec_output)
 }
