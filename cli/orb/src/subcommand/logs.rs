@@ -7,7 +7,9 @@ use orbital_headers::build_meta::{build_service_client::BuildServiceClient, Buil
 use anyhow::Result;
 use git_meta::git_info;
 use orbital_services::ORB_DEFAULT_URI;
+use std::io::Write;
 use std::path::PathBuf;
+use termcolor::{BufferWriter, ColorChoice};
 use tonic::Request;
 
 /// Local options for customizing logs request
@@ -63,7 +65,14 @@ pub async fn subcommand_handler(
     let mut stream = client.build_logs(request).await?.into_inner();
 
     while let Some(response) = stream.message().await? {
-        println!("RESPONSE = {:?}", response);
+        let bufwtr = BufferWriter::stdout(ColorChoice::Always);
+        let mut buffer = bufwtr.buffer();
+        writeln!(
+            &mut buffer,
+            "{}",
+            &String::from_utf8(response.records[0].build_output[0].output.clone()).unwrap()
+        )?;
+        bufwtr.print(&buffer)?;
     }
 
     Ok(())
