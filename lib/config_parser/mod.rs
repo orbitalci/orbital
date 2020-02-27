@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 //use strum_macros::{Display, EnumIter};
+use std::fmt;
 
 /// Yaml config parser for Orbital
 pub mod yaml;
@@ -95,4 +96,10 @@ pub struct OrbitalConfig {
     // FIXME: Global timeout. This should get parsed into a duration
     pub timeout: Option<u32>,
     pub secrets: Option<String>,
+}
+
+impl fmt::Display for OrbitalConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", serde_yaml::to_string(self).expect("OrbitalConfig serde_yaml::to_string() failed"))
+    }
 }
