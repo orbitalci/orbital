@@ -1,7 +1,0 @@
-/var/spool/mail/root {
-  rotate 4
-  weekly
-  compress
-  missingok
-  notifempty
-}
