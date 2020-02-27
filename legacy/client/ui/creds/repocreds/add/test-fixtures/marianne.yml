@@ -1,7 +1,0 @@
-repo:
-- username: admin
-  password: admin123
-  identifier: snapshot
-  repoUrl: http://localhost:8081/nexus/content/repositories/snapshots/
-  acctName: mellowfogs
-  subType: nexus

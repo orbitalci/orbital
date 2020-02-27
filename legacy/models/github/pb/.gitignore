@@ -1,5 +1,0 @@
-# We want this empty directory to exist at clone
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore

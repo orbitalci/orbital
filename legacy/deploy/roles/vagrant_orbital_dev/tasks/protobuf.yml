@@ -1,6 +1,0 @@
-# FIXME: In Ansible 2.8, there will be a module for snap packages
-- name: Install Protobuf 
-  become: yes
-  command: snap install protobuf --classic
-  args:
-    creates: /snap/bin/protoc

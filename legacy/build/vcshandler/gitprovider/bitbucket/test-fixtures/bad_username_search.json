@@ -1,8 +1,0 @@
-{
-  "type": "error",
-  "error": {
-    "message": "User not found: jessi_is_the_best"
-  }
-}
-/// https://api.bitbucket.org/2.0/repositories/jessi_is_the_best
-/// searching on user that doesn't exist
