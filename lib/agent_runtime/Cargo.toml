@@ -1,6 +1,6 @@
 [package]
-name = "agent_runtime"
-version = "0.1.0"
+name = "orbital_agent_runtime"
+version = "0.1.0-alpha.1"
 authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
@@ -8,10 +8,10 @@ edition = "2018"
 shiplift = "0.6"
 tokio = "0.1"
 log = "0.4"
-git_meta = { path = "../git_meta" }
+orbital_git_meta = { path = "../git_meta" }
 mktemp = "0.4"
-config_parser = { path = "../config_parser" }
-hashicorp_stack = { path = "../hashicorp_stack" }
+orbital_config_parser = { path = "../config_parser" }
+orbital_hashicorp_stack = { path = "../hashicorp_stack" }
 anyhow = "1.0"
 thiserror = "1.0"
 
