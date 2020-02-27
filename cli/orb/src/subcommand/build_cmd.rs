@@ -44,6 +44,10 @@ pub struct SubcommandOption {
     /// Print full commit hash
     #[structopt(long, short)]
     wide: bool,
+
+    /// Path to local build config file to use instead of the checked in orb.yml
+    #[structopt(long, parse(from_os_str))]
+    config: Option<PathBuf>,
 }
 
 /// Generates gRPC `BuildStartRequest` object and connects to *currently hardcoded* gRPC server and sends a request to `BuildService` server.
@@ -70,8 +74,15 @@ pub async fn subcommand_handler(
     //
     // Open the orb.yml
     //let _config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))?;
-    let _config =
-        parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).unwrap();
+
+    let config = match &local_option.config {
+        Some(path) => parser::load_orb_yaml(path).expect("Provided config failed validation"),
+        None => parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).expect("orb.yml failed validation"),
+    };
+
+    //let _config =
+    //    parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).unwrap();
+
     // Assuming Docker builder... (Stay focused!)
     // Get the docker container image
 
@@ -82,11 +93,20 @@ pub async fn subcommand_handler(
         org: local_option.org.expect("Please provide an org name"),
         git_repo: git_context.git_url.name,
         remote_uri: git_context.git_url.href,
-        //git_provider: git_context.git_url.host.unwrap(),
         branch: git_context.branch,
         commit_hash: git_context.commit_id,
         user_envs: local_option.envs.unwrap_or_default(),
         trigger: JobTrigger::Manual.into(),
+        config: {
+            match local_option.config {
+                Some(_path) => {
+                    config.to_string()
+                },
+                None => {
+                    "".to_string()
+                },
+            }
+        },
         ..Default::default()
     });
 

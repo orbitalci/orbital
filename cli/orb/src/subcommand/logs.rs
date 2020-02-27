@@ -35,6 +35,10 @@ pub struct SubcommandOption {
     /// Environment variables to add to build
     #[structopt(long)]
     envs: Option<String>,
+
+    /// Build ID
+    #[structopt(long)]
+    id: Option<i32>,
 }
 
 /// Generates request for logs
@@ -55,18 +59,24 @@ pub async fn subcommand_handler(
         org: local_option.org.expect("Please provide an org name"),
         git_repo: git_context.git_url.name,
         remote_uri: git_context.git_url.href,
-        //git_provider: "default_git_provider".into(),
         branch: git_context.branch,
         commit_hash: git_context.commit_id,
         user_envs: local_option.envs.unwrap_or_default(),
+        id: {
+            match local_option.id {
+                Some(id) => id,
+                None => 0,
+            }
+        },
         ..Default::default()
     });
 
     let mut stream = client.build_logs(request).await?.into_inner();
 
     while let Some(response) = stream.message().await? {
-        let bufwtr = BufferWriter::stdout(ColorChoice::Always);
+        let bufwtr = BufferWriter::stdout(ColorChoice::Auto);
         let mut buffer = bufwtr.buffer();
+        
         writeln!(
             &mut buffer,
             "{}",

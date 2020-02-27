@@ -88,10 +88,9 @@ impl BuildService for OrbitalApi {
         debug!("Building request to Code service for git repo info");
 
         // Request: org/git_provider/name
-        // e.g.: default_org/github.com/level11consulting/orbitalci
+        // e.g.: org_name/github.com/orbitalci/orbital
         let request_payload = Request::new(GitRepoGetRequest {
             org: unwrapped_request.org.clone().into(),
-            //git_provider: unwrapped_request.clone().git_provider,
             name: unwrapped_request.clone().git_repo,
             uri: unwrapped_request.clone().remote_uri,
             ..Default::default()
@@ -307,13 +306,24 @@ impl BuildService for OrbitalApi {
         )
         .expect("Unable to clone repo");
 
-        debug!("Loading orb.yml from path {:?}", &git_repo.as_path());
-        let config = build_engine::load_orb_config(Path::new(&format!(
-            "{}/{}",
-            &git_repo.as_path().display(),
-            "orb.yml"
-        )))
-        .expect("Unable to load orb.yml");
+        let config = match &unwrapped_request.config.len() {
+            0 => {
+                debug!("Loading orb.yml from path {:?}", &git_repo.as_path());
+                build_engine::load_orb_config(Path::new(&format!(
+                    "{}/{}",
+                    &git_repo.as_path().display(),
+                    "orb.yml"
+                )))
+                .expect("Unable to load orb.yml")
+            }
+            _ => {
+                debug!("Loading orb.yml from str:\n{:?}", &unwrapped_request.config);
+                build_engine::load_orb_config_from_str(
+                    &unwrapped_request.config
+                )
+                .expect("Unable to load config from str")
+            }
+        };
 
         debug!("Pulling container: {:?}", config.image.clone());
         match build_engine::docker_container_pull(config.image.as_str()) {
@@ -649,6 +659,7 @@ impl BuildService for OrbitalApi {
                     },
                     id: target.build_index,
                     trigger: target.trigger.into(),
+                    config: "".to_string(),
                 }),
                 job_trigger: target.trigger.into(),
                 queue_time: Some(prost_types::Timestamp {
