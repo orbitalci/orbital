@@ -1,14 +1,14 @@
 [package]
-name = "config_parser"
-version = "0.1.0"
+name = "orbital_config_parser"
+version = "0.1.0-alpha.1"
 authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+anyhow = "1.0"
+log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
-log = "0.4"
-anyhow = "1.0"
 strum = "0.17"
 strum_macros = "0.17"
 

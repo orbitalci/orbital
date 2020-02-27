@@ -1,18 +1,18 @@
 [package]
 name = "orb"
-version = "0.1.0"
-authors = ["T.J. Telan <tjtelan@level11.com>"]
+version = "0.1.0-alpha.1"
+authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 default-run = "orb"
 
 [dependencies]
-structopt = "0.3"
-clap = "2.33"
-tonic = "0.1"
-tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
-env_logger = "0.7"
-orbital_headers = { path = "../../models/orbital_headers" }
-orbital_cli_subcommand = { path = "src/subcommand" }
-orbital_services = { path = "../../services"}
 anyhow = "1.0"
+clap = "2.33"
+env_logger = "0.7"
+orbital_cli_subcommand = { path = "src/subcommand" }
+orbital_headers = { path = "../../models/orbital_headers" }
+orbital_services = { path = "../../services"}
+structopt = "0.3"
 thiserror = "1.0"
+tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
+tonic = "0.1"

@@ -1,15 +1,15 @@
 [package]
 name = "orbital_headers"
-version = "0.1.0"
-authors = ["evancramer <evancramer@level11.com>", "T.J. Telan <tjtelan@level11.com>"]
+version = "0.1.0-alpha.1"
+authors = ["evancramer <evancramer@level11.com>", "T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-tonic = "0.1"
-prost = "0.6"
-prost-types = "0.6"
-prost-derive = "0.6"
 bytes = "0.5"
+prost = "0.6"
+prost-derive = "0.6"
+prost-types = "0.6"
+tonic = "0.1"
 
 [build-dependencies]
 tonic-build = "0.1"

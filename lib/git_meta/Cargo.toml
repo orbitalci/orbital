@@ -1,15 +1,15 @@
 [package]
-name = "git_meta"
-version = "0.1.0"
-authors = ["T.J. Telan <tjtelan@level11.com>"]
+name = "orbital_git_meta"
+version = "0.1.0-alpha.1"
+authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+anyhow = "1.0"
 git-url-parse = "0.1"
 git2 = "0.11"
 log = "0.4"
 mktemp = "0.4"
-anyhow = "1.0"
 
 [lib]
 name = "git_meta"
