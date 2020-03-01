@@ -1,30 +1,22 @@
-# 2019 Roadmap
+# 2020 Roadmap
 
-The Level11 internal installation has crossed into 1 year of continous operation! In 2019, we're switching into a heavy maintanence mode to better prepare for features.
+## Stable release target for 2020
+The main goal for this year is to get to a stable release published to both Github and Crates.io. We'll break the path to this target down into domains.
 
-## Project related
-### Renaming the repo to OrbitalCI
-Renaming the project from Ocelot to OrbitalCI is important for growing the project's discoverability. This was a problem that had continued to compound as the repo changed owners.
+The project has no sponsors at the moment, so progress will be slowing down until further notice. The focus will be closing/fixing issues filed from the Go codebase. An alpha release should be expected to publish early 2020.
 
-### Major refactoring to codebase
-Ocelot has proven itself to be successful after a year in production. However the codebase has some architectural shortcomings attributed to having stronger values for quick and experimental feedback. Now that we have a better idea of what out users want, we are going to attempt to correct leaky abstractions. Particularly where they involve database and grpc interaction.
+### Backend
+* Complete the rest of the service endpoints, including changes for what it will take to stream live logs to the client in chunked form
+* Polling repos to support auto-start builds on new commits
+* MacOS Docker support
+* Non-containerized builds
+* Slack notifications
+* Repo subscription build triggers
 
-Since these changes have potential to change expected behavior, we will be using the rename and the `orb` single-binary (more on that later) as testing grounds for beginning these corrections.
+### CLI
+* Streaming live logs
+* CLI client file-based configs
+* Server data import-export
 
-### Single binary deployments
-Based on internal operation, we've concluded that building multiple binaries has made it really easy to make mistakes deploying updates.
-
-Also, it creates unnecessary distance from potential operators by separating the client cli from the server modes. 
-
-The new binary will be named `orb`.
-
-The `ocelot` client and the server components `admin`, `werker`, `hookhandler`, `poller` and `changecheck` will be maintained until their functionality is offered within `orb`. Though, there is potential that some newer functionality will not land in those components.
-
-### RFC process for large changes
-As an effort to be more transparent, we're trying to adopt some processes that create documentation to be created for features prior to their code landing in master. This will let stakeholders provide feedback early. This process is inspired by the Rust-lang governance model and we'll probably cherry-pick solutions that are appropriate for our current scale.
-
-## Feature related
-### Subscribe builds
-Biggest new feature is the ability to configure build dependencies. Internally this has been called "subscribe builds".
-
-The idea is that we want a build timeline when a common repo's successful build  (such as a library) may trigger a downstream repo build to start based on the downstream repo's explicit subscription to the library.
+## Suspending contribution structure for adoption
+The project hasn't attracted any developers. In order to not discourage anyone who potentially wants to contribute, plain PRs will suffice. I'll continue to try my best to keep communication of design and project direction open.

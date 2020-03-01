@@ -21,7 +21,7 @@ Table of contents:
 
 ## Roadmap
 
-OrbitalCI's roadmap for 2019 is located [here](roadmap.md)
+OrbitalCI's roadmap for the year is located [here](roadmap.md)
 
 ## Developers
 
@@ -59,13 +59,3 @@ To manually build the container from root of the repo:
 ## Contributing 
 
 Fork the repo and issue a pull request.
-
-Inspired by the [Rust governance process](https://www.rust-lang.org/governance), large or potentially backwards incompatible changes should be socialized by opening an issue with the `RFC` label.
-
-Conversation aims to mainly occur in the Github issues. This process is being developed to provide transparency of intent when decisions are made. The desire is to allow stakeholders time to engage with objections, but have process to continue moving forward if there is a lack of response within a reasonable time period.
-
-When an RFC's details are worked out and ready for final comment, similar but less formal to Rust's governance, `RFC` issues, the issue opener, or the maintainers should call out in the comments stating final changes are in.
-
-At this point, more changes may be required due to new comments. But after 10 calendar days (at least 5 business days), code or additional design based on this RFC is acceptable.
-
-Updates to this process are welcome and should also be introduced via Github issue using `RFC` label. 
