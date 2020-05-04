@@ -4,13 +4,13 @@ use crate::postgres::build_target::{BuildTarget, NewBuildTarget};
 use crate::postgres::org::{NewOrg, Org};
 use crate::postgres::repo::{NewRepo, Repo};
 use crate::postgres::schema::{
-    build_stage, build_summary, build_target, org, repo, secret, JobTrigger, SecretType,
+    build_stage, build_summary, build_target, org, repo, secret, JobState, JobTrigger, SecretType,
 };
 use crate::postgres::secret::{NewSecret, Secret};
-use agent_runtime::vault::orb_vault_path;
 use anyhow::{anyhow, Result};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use hashicorp_stack::orb_vault_path;
 use log::debug;
 use std::env;
 //use orbital_headers::orbital_types;
@@ -562,7 +562,7 @@ pub fn build_summary_get(
     let result: Result<(BuildTarget, BuildSummary), _> = build_summary::table
         .inner_join(build_target::table)
         .select((build_target::all_columns, build_summary::all_columns))
-        .filter(build_summary::build_target_id.eq(build_index))
+        .filter(build_summary::build_target_id.eq(build_target_db.id))
         .get_result(conn);
 
     match result {
@@ -609,6 +609,7 @@ pub fn build_summary_remove() {
     unimplemented!();
 }
 
+// TODO: `repo` should be changed to Option<&str> for granularity between all or one repo
 pub fn build_summary_list(
     conn: &PgConnection,
     org: &str,
@@ -625,6 +626,7 @@ pub fn build_summary_list(
     let result: Vec<(BuildTarget, BuildSummary)> = build_summary::table
         .inner_join(build_target::table)
         .select((build_target::all_columns, build_summary::all_columns))
+        .filter(build_target::repo_id.eq(repo_db.id))
         .order(build_summary::id.desc())
         .limit(limit.into())
         .load(conn)
@@ -691,7 +693,7 @@ pub fn build_stage_get(
     let result: Result<(BuildSummary, BuildStage), _> = build_stage::table
         .inner_join(build_summary::table)
         .select((build_summary::all_columns, build_stage::all_columns))
-        .filter(build_summary::build_target_id.eq(build_index))
+        .filter(build_summary::build_target_id.eq(build_target_db.id))
         .filter(build_stage::id.eq(build_stage_id))
         .get_result(conn);
 
@@ -766,12 +768,13 @@ pub fn build_stage_list(
     let (_repo_db, build_target_db, build_summary_db_opt) =
         build_summary_get(conn, org, repo, hash, branch, build_index)?;
 
-    let _build_summary_db = build_summary_db_opt.expect("No build summary found");
+    let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
     let result: Vec<(BuildSummary, BuildStage)> = build_stage::table
         .inner_join(build_summary::table)
         .select((build_summary::all_columns, build_stage::all_columns))
-        .filter(build_stage::build_summary_id.eq(build_index))
+        .filter(build_summary::build_target_id.eq(build_target_db.id))
+        .filter(build_stage::build_summary_id.eq(build_summary_db.id))
         .order(build_stage::id.desc())
         .limit(limit.into())
         .load(conn)
@@ -806,5 +809,26 @@ pub fn build_logs_get(
             repo_db.next_build_index - 1,
             255,
         ),
+    }
+}
+
+pub fn is_build_canceled(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: i32,
+) -> Result<bool> {
+    match build_summary_get(conn, org, repo, hash, branch, build_index) {
+        Ok((_, _, Some(summary))) => match summary.build_state {
+            JobState::Canceled => Ok(true),
+            _ => Ok(false),
+        },
+        Ok((_, _, None)) => {
+            // Build hasn't been queued yet
+            Ok(false)
+        }
+        Err(_) => Err(anyhow!("Could not retrieve build summary from DB")),
     }
 }

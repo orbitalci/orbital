@@ -39,10 +39,10 @@ pub async fn action_handler(
 
     let request = Request::new(GitRepoUpdateRequest {
         org: action_option.org.unwrap_or_default(),
-        git_provider: repo_info.git_url.host.unwrap(),
-        name: repo_info.git_url.name,
+        git_provider: repo_info.git_url.host.clone().unwrap(),
+        name: repo_info.git_url.name.clone(),
         //user: repo_info,
-        uri: repo_info.git_url.href,
+        uri: repo_info.git_url.trim_auth().to_string(),
         //secret_type: ,
         //build: ,
         //notify: ,

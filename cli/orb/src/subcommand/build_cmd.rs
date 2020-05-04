@@ -2,7 +2,9 @@ use structopt::StructOpt;
 
 use crate::GlobalOption;
 
-use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
+use orbital_headers::build_meta::{
+    build_service_client::BuildServiceClient, BuildMetadata, BuildTarget,
+};
 use orbital_headers::orbital_types::JobTrigger;
 
 use chrono::NaiveDateTime;
@@ -13,9 +15,13 @@ use orbital_services::ORB_DEFAULT_URI;
 use prettytable::{cell, format, row, Table};
 use tonic::Request;
 
+use std::io::Write;
+use termcolor::{BufferWriter, ColorChoice};
+
 use anyhow::Result;
 use log::debug;
 use std::path::{Path, PathBuf};
+use std::str;
 
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
@@ -44,6 +50,10 @@ pub struct SubcommandOption {
     /// Print full commit hash
     #[structopt(long, short)]
     wide: bool,
+
+    /// Don't follow the build output
+    #[structopt(long)]
+    no_follow: bool,
 
     /// Path to local build config file to use instead of the checked in orb.yml
     #[structopt(long, parse(from_os_str))]
@@ -77,7 +87,8 @@ pub async fn subcommand_handler(
 
     let config = match &local_option.config {
         Some(path) => parser::load_orb_yaml(path).expect("Provided config failed validation"),
-        None => parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).expect("orb.yml failed validation"),
+        None => parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))
+            .expect("orb.yml failed validation"),
     };
 
     //let _config =
@@ -91,20 +102,16 @@ pub async fn subcommand_handler(
 
     let request = Request::new(BuildTarget {
         org: local_option.org.expect("Please provide an org name"),
-        git_repo: git_context.git_url.name,
-        remote_uri: git_context.git_url.href,
+        git_repo: git_context.git_url.name.clone(),
+        remote_uri: git_context.git_url.trim_auth().to_string(),
         branch: git_context.branch,
         commit_hash: git_context.commit_id,
         user_envs: local_option.envs.unwrap_or_default(),
         trigger: JobTrigger::Manual.into(),
         config: {
             match local_option.config {
-                Some(_path) => {
-                    config.to_string()
-                },
-                None => {
-                    "".to_string()
-                },
+                Some(_path) => config.to_string(),
+                None => "".to_string(),
             }
         },
         ..Default::default()
@@ -112,8 +119,41 @@ pub async fn subcommand_handler(
 
     debug!("Request for build: {:?}", &request);
 
-    let response = client.build_start(request).await?.into_inner();
-    println!("RESPONSE = {:?}", response);
+    //let response = client.build_start(request).await?.into_inner();
+    //println!("RESPONSE = {:?}", response);
+
+    let mut stream = client.build_start(request).await?.into_inner();
+
+    let mut build_metadata = BuildMetadata {
+        ..Default::default()
+    };
+
+    // TODO: Convert the proto types to the Diesel types
+    //while let Some(response) = stream.next().await {
+    while let Some(response) = stream.message().await? {
+        let bufwtr = BufferWriter::stdout(ColorChoice::Auto);
+        let mut buffer = bufwtr.buffer();
+
+        build_metadata = response.build_metadata.clone().unwrap_or_default();
+
+        if !local_option.no_follow {
+            match response.build_output.clone().pop() {
+                Some(build_output) => {
+                    //writeln!(&mut buffer, "{:?}", response.clone())?;
+                    write!(
+                        &mut buffer,
+                        "[{}] {}",
+                        build_output.stage.to_string(),
+                        str::from_utf8(&build_output.output)?
+                    )?;
+                    bufwtr.print(&buffer)?;
+                }
+                None => (),
+            };
+        } else {
+            break;
+        }
+    }
 
     // By default, format the response into a table
     let mut table = Table::new();
@@ -134,14 +174,17 @@ pub async fn subcommand_handler(
         "Build state",
     ]);
 
-    let build_target = response.build.clone().expect("No build target in summary");
+    let build_target = build_metadata
+        .build
+        .clone()
+        .expect("No build target in summary");
 
     let commit = match local_option.wide {
         true => build_target.commit_hash,
         false => build_target.commit_hash[..7].to_string(),
     };
 
-    let queue_time = match &response.queue_time {
+    let queue_time = match &build_metadata.queue_time {
         Some(t) => format!(
             "{:?}",
             NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
@@ -149,7 +192,7 @@ pub async fn subcommand_handler(
         None => format!("---"),
     };
 
-    let start_time = match &response.start_time {
+    let start_time = match &build_metadata.start_time {
         Some(t) => format!(
             "{:?}",
             NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
@@ -157,7 +200,7 @@ pub async fn subcommand_handler(
         None => format!("---"),
     };
 
-    let end_time = match &response.end_time {
+    let end_time = match &build_metadata.end_time {
         Some(t) => format!(
             "{:?}",
             NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
@@ -166,7 +209,7 @@ pub async fn subcommand_handler(
     };
 
     table.add_row(row![
-        response.id,
+        build_metadata.id,
         build_target.org,
         build_target.git_repo,
         build_target.branch,
@@ -175,7 +218,7 @@ pub async fn subcommand_handler(
         queue_time,
         start_time,
         end_time,
-        JobState::from(response.build_state),
+        JobState::from(build_metadata.build_state),
     ]);
 
     // Print the table to stdout

@@ -7,10 +7,11 @@ use git_url_parse::GitUrl;
 use std::path::Path;
 
 /// This is the git commit that will be used for build requests
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct GitCommitContext {
     pub branch: String,
     pub commit_id: String,
+    pub message: String,
     pub git_url: GitUrl,
 }
 
@@ -27,5 +28,5 @@ pub enum GitCredentials<'a> {
         passphrase: Option<&'a str>,
     },
     /// Username, Password
-    UserPassPlaintext { username: String, password: String },
+    BasicAuth { username: String, password: String },
 }

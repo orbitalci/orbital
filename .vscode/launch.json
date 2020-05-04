@@ -5,24 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
-            "type": "go",
+            "name": "Launch Orbital server",
+            "type": "lldb",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/cmd/werker/main.go",
+            "program": "${workspaceFolder}/target/debug/orb",
             "env": {
-                "ADMIN_HOST" : "192.168.12.34",
-                "ADMIN_PORT" : "10000",
-                "CONSUL_HTTP_ADDR" : "http://192.168.56.78:8500",
-                "CONSUL_HOST" : "192.168.56.78",
-                "VAULT_ADDR" : "http://192.168.56.78:8200",
-                "VAULT_TOKEN" : "orbital",
-                "NSQLOOKUPD_IP" : "192.168.56.78",
-                "NSQLOOKUPD_PORT" : "4161",
-                "NSQD_IP" : "192.168.56.78",
-                "NSQD_PORT" : "4150",
+                "ORB_DEFAULT_ORG" : "tjtelan",
+                "DATABASE_URL": "postgres://orbital:orbital@localhost:5432/orbital",
+                "RUST_LOG": "info,orbital_services,orbital_database::postgres::client"
             },
-            "args": []
+            "args": ["server", "start"],
+            "cwd": "${workspaceRoot}",
         }
     ]
 }

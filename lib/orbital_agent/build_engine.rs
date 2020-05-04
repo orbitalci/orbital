@@ -1,12 +1,18 @@
-use crate::docker;
 use crate::AgentRuntimeError;
 use anyhow::Result;
 use config_parser;
 use git_meta;
-use log::debug;
+use log::{debug, info};
 use mktemp;
+use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
+use state_machine;
 use std::path::Path;
-use std::time::Duration;
+
+use serde_json::value::Value;
+use tokio::sync::mpsc;
+
+/// TODO: Hang all of the bare functions off of Agent
+pub struct Agent;
 
 /// Create a temporary directory on the host, and clone a repo
 pub fn clone_repo(
@@ -22,31 +28,47 @@ pub fn load_orb_config(path: &Path) -> Result<config_parser::OrbitalConfig> {
     config_parser::yaml::load_orb_yaml(path)
 }
 
-/// Load config from str 
+/// Load config from str
 pub fn load_orb_config_from_str(config: &str) -> Result<config_parser::OrbitalConfig> {
     config_parser::yaml::load_orb_yaml_from_str(config)
 }
 
 /// Pull a docker image using the host docker engine
-pub fn docker_container_pull(image: &str) -> Result<()> {
-    match docker::container_pull(image) {
+pub fn docker_container_pull(orb_build_spec: &OrbitalContainerSpec) -> Result<()> {
+    match docker::container_pull(&orb_build_spec.image) {
         Ok(ok) => Ok(ok), // The successful result doesn't matter
-        Err(_) => Err(AgentRuntimeError::new(&format!("Could not pull image {}", image)).into()),
+        Err(_) => Err(AgentRuntimeError::new(&format!(
+            "Could not pull image {}",
+            &orb_build_spec.image
+        ))
+        .into()),
     }
 }
 
+pub async fn docker_container_pull_async(
+    orb_build_spec: OrbitalContainerSpec<'_>,
+) -> Result<mpsc::UnboundedReceiver<Value>> {
+    docker::container_pull_async(orb_build_spec.image.to_string()).await
+}
+
 /// Create a docker container
-pub fn docker_container_create(
-    image: &str,
-    envs: Option<Vec<&str>>,
-    volumes: Option<Vec<&str>>,
-    timeout: Duration,
-) -> Result<String> {
-    let timeout_as_seconds = format!("{}s", timeout.as_secs());
+pub fn docker_container_create(orb_build_spec: &OrbitalContainerSpec) -> Result<String> {
+    let timeout_as_seconds = format!("{}s", orb_build_spec.timeout.unwrap().as_secs());
     let default_command_w_timeout = vec!["sleep", &timeout_as_seconds];
-    match docker::container_create(image, default_command_w_timeout, envs, volumes) {
-        Ok(container_id) => Ok(container_id),
-        Err(_) => Err(AgentRuntimeError::new(&format!("Could not create image {}", &image)).into()),
+
+    let mut orb_build_spec_w_timeout = orb_build_spec.clone();
+    orb_build_spec_w_timeout.command = default_command_w_timeout;
+
+    match docker::container_create(orb_build_spec_w_timeout) {
+        Ok(container_id) => {
+            info!("Created container id: {:?}", container_id);
+            Ok(container_id)
+        }
+        Err(_) => Err(AgentRuntimeError::new(&format!(
+            "Could not create image {}",
+            &orb_build_spec.image
+        ))
+        .into()),
     }
 }
 
@@ -67,7 +89,7 @@ pub fn docker_container_stop(container_id: &str) -> Result<()> {
     match docker::container_stop(container_id) {
         Ok(ok) => Ok(ok), // The successful result doesn't matter
         Err(_) => Err(AgentRuntimeError::new(&format!(
-            "Could not start container_id {}",
+            "Could not stop container_id {}",
             container_id
         ))
         .into()),
@@ -106,4 +128,39 @@ pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Resul
     }
 
     Ok(exec_output.join(""))
+}
+
+pub async fn docker_container_exec_async(
+    container_id: String,
+    commands: Vec<String>,
+) -> Result<mpsc::UnboundedReceiver<String>> {
+    let (tx, rx) = mpsc::unbounded_channel();
+
+    tokio::spawn(async move {
+        for command in commands.iter() {
+            // Build the exec string
+            let wrapped_command = format!("{} | tee -a /proc/1/fd/1", command);
+
+            let container_command = vec!["/bin/sh".to_string(), "-c".to_string(), wrapped_command];
+
+            let mut exec_rx =
+                docker::container_exec_async(container_id.clone(), container_command.clone())
+                    .await
+                    .unwrap();
+
+            tx.send(format!("Command: {:?}\n", &command)).unwrap();
+
+            while let Some(command_output) = exec_rx.recv().await {
+                tx.send(command_output).unwrap();
+            }
+        }
+    });
+
+    Ok(rx)
+}
+
+pub async fn docker_container_logs(
+    container_id: String,
+) -> Result<mpsc::UnboundedReceiver<String>> {
+    docker::container_logs(container_id).await
 }

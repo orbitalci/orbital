@@ -1,3 +1,4 @@
+use structopt::clap::AppSettings;
 use structopt::StructOpt;
 use thiserror::Error;
 
@@ -9,18 +10,19 @@ pub mod cancel;
 pub mod developer;
 /// Request logs
 pub mod logs;
-/// Operator-specific commands
-pub mod operator;
 /// Organization-level commands
 pub mod org;
 /// Git repo resource support
 pub mod repo;
 /// Secrets engine support
 pub mod secret;
+/// Server-specific commands
+pub mod server;
 /// Historical data for users
 pub mod summary;
 
 use log::debug;
+use orbital_exec_runtime::{DOCKER_SOCKET_VOLMAP, ORBITAL_CONTAINER_WORKDIR};
 use std::env;
 use std::error::Error;
 use std::fmt;
@@ -111,7 +113,7 @@ impl From<git2::Error> for SubcommandError {
 
 impl From<std::io::Error> for SubcommandError {
     fn from(error: std::io::Error) -> Self {
-        SubcommandError::new(error.description().to_string().as_ref())
+        SubcommandError::new(error.to_string().as_ref())
     }
 }
 
@@ -134,20 +136,20 @@ pub fn parse_envs_input(user_input: &Option<String>) -> Option<Vec<&str>> {
 }
 
 /// Wrapper function for `kv_csv_parser` to specifically handle volume mounts for `shiplift`
-/// Automatically add in the docker socket as defined by `agent_runtime::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
+/// Automatically add in the docker socket as defined by `orbital_agent::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
 ///
 /// For now, also assume passing in the current working directory as well
 pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
     let vols = match kv_csv_parser(user_input) {
         Some(v) => {
             let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(agent_runtime::DOCKER_SOCKET_VOLMAP);
+            new_vec.push(DOCKER_SOCKET_VOLMAP);
             new_vec.extend(v.clone());
             Some(new_vec)
         }
         None => {
             let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(agent_runtime::DOCKER_SOCKET_VOLMAP);
+            new_vec.push(DOCKER_SOCKET_VOLMAP);
 
             // There's got to be a better way to handle this...
             // https://stackoverflow.com/a/30527289/1672638
@@ -155,7 +157,7 @@ pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
                 format!(
                     "{}:{}",
                     get_current_workdir().display(),
-                    agent_runtime::ORBITAL_CONTAINER_WORKDIR,
+                    ORBITAL_CONTAINER_WORKDIR,
                 )
                 .into_boxed_str(),
             ));
@@ -196,9 +198,8 @@ pub enum Subcommand {
     Secret(secret::SubcommandOption),
     /// Get summary of a repo
     Summary(summary::SubcommandOption),
-    /// Administration and service settings
-    #[structopt(alias = "ops")]
-    Operator(operator::OperatorType),
+    /// Server admin and service settings
+    Server(server::ServerType),
     /// Developer level commands and settings
     #[structopt(alias = "dev")]
     Developer(developer::DeveloperType),
@@ -216,9 +217,14 @@ pub struct GlobalOption {
     pub check: bool,
 }
 
+//lazy_static::lazy_static! {
+//    static ref BUILD_VERSION: String = env!("BUILD_VERSION").to_string();
+//}
+const BUILD_VERSION: &'static str = env!("BUILD_VERSION");
+
 /// Represents a single-parsed command line invocation from user
 #[derive(Debug, StructOpt)]
-#[structopt(name = "orb")]
+#[structopt(name = "orb", version = BUILD_VERSION, settings = &[AppSettings::GlobalVersion] )]
 pub struct SubcommandContext {
     #[structopt(subcommand)]
     pub subcommand: Subcommand,

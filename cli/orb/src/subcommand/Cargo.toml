@@ -8,9 +8,11 @@ edition = "2018"
 anyhow = "1.0"
 chrono = "0.4"
 clap = "2.33"
-git2 = "0.11"
+git2 = "0.13"
+git-url-parse = "0.2"
 log = "0.4"
-orbital_agent_runtime = { path = "../../../../lib/agent_runtime" }
+orbital_agent = { path = "../../../../lib/orbital_agent" }
+orbital_exec_runtime = { path = "../../../../lib/exec_runtime" }
 orbital_config_parser = { path = "../../../../lib/config_parser" }
 orbital_database = { path = "../../../../models/orbital_database" }
 orbital_git_meta = { path = "../../../../lib/git_meta" }
@@ -20,11 +22,16 @@ orbital_headers = { path = "../../../../models/orbital_headers" }
 orbital_services = { path = "../../../../services" }
 prettytable-rs = "0.8"
 structopt = "0.3"
-strum = "0.17"
-strum_macros = "0.17"
+strum = "0.18"
+strum_macros = "0.18"
 termcolor = "1.1"
 thiserror = "1.0"
-tonic = "0.1"
+tonic = "0.2"
+rand = "0.7"
+
+[build-dependencies]
+orbital_git_meta = { path = "../../../../lib/git_meta" }
+chrono = "0.4"
 
 [lib]
 name = "subcommand"

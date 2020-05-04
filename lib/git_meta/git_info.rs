@@ -35,14 +35,16 @@ pub fn get_git_info_from_path(
         .expect("Unable to extract branch name")
         .to_string();
 
-    let working_commit = format!(
-        "{}",
-        get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id)?.id()
-    );
+    let commit = get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id)?;
+
+    let commit_id = format!("{}", &commit.id());
+
+    let commit_msg = commit.clone().message().unwrap_or_default().to_string();
 
     Ok(GitCommitContext {
-        commit_id: working_commit,
+        commit_id: commit_id,
         branch: working_branch,
+        message: commit_msg.to_string(),
         git_url: GitUrl::parse(&remote_url)?,
     })
 }
@@ -50,6 +52,8 @@ pub fn get_git_info_from_path(
 // FIXME: Should not assume remote is origin. This will cause issue in some dev workflows
 /// Returns the remote url after opening and validating repo from the local path
 pub fn git_remote_from_path(path: &Path) -> Result<String> {
+    // Theory: After we get the repo, we can derive the remote name from the branch
+
     let r = get_local_repo_from_path(path)?;
     let remote_url: String = r
         .find_remote("origin")?

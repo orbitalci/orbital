@@ -1,13 +1,18 @@
 use anyhow::Result;
-use hashicorp_stack::vault;
+use hashicorp_stack::{self, vault};
 use log::debug;
 use std::env;
 
-pub fn orb_vault_path(org: &str, name: &str, secret_type: &str) -> String {
-    let path = format!("orbital/{}/{}/{}", org, secret_type, name,).to_lowercase();
+// While we're stuffing json data into Vault, we have to b64 encode/decode or the library calls fail.
+use base64;
+use std::str;
 
-    debug!("Vault Path: {:?}", &path);
-    path
+pub fn orb_vault_path(org: &str, name: &str, secret_type: &str) -> String {
+    hashicorp_stack::orb_vault_path(org, name, secret_type)
+    //let path = format!("orbital/{}/{}/{}", org, secret_type, name,).to_lowercase();
+
+    //debug!("Vault Path: {:?}", &path);
+    //path
 }
 
 pub fn vault_add_secret(path: &str, data: &str) -> Result<()> {
@@ -27,7 +32,7 @@ pub fn vault_add_secret(path: &str, data: &str) -> Result<()> {
         }
     };
 
-    match vault::add_secret(host.as_str(), token.as_str(), path, data) {
+    match vault::add_secret(host.as_str(), token.as_str(), path, &base64::encode(data)) {
         Ok(_) => {
             debug!("Secret was set");
             Ok(())
@@ -58,7 +63,7 @@ pub fn vault_get_secret(path: &str) -> Result<String> {
     let secret = match vault::get_secret(host.as_str(), token.as_str(), path) {
         Ok(secret) => {
             debug!("Found secret");
-            secret
+            str::from_utf8(&base64::decode(secret).unwrap())?.to_string()
         }
         Err(_e) => {
             panic!("There was an error getting the secret");

@@ -9,12 +9,12 @@ anyhow = "1.0"
 chrono = "0.4"
 diesel = { version = "1.4", features = ["postgres", "chrono"] }
 log = "0.4"
-orbital_agent_runtime = { path = "../../lib/agent_runtime" }
+orbital_hashicorp_stack = { path = "../../lib/hashicorp_stack" }
 orbital_git_meta = { path = "../../lib/git_meta" }
 orbital_headers = { path = "../orbital_headers" }
 prost-types = "0.6"
-strum = "0.17"
-strum_macros = "0.17"
+strum = "0.18"
+strum_macros = "0.18"
 
 [lib]
 name = "orbital_database"

@@ -1,51 +1,13 @@
-/// Agent api for building
-pub mod build_engine;
-
-/// Docker engine api wrapper
 pub mod docker;
-/// Vault api wrapper
-pub mod vault;
+
+use log::debug;
+use std::path::PathBuf;
+use std::{env, fmt};
+
 /// Default volume mount mapping for host Docker into container for Docker-in-Docker builds
 pub const DOCKER_SOCKET_VOLMAP: &str = "/var/run/docker.sock:/var/run/docker.sock";
 /// Default working directory for staging repo code inside container
 pub const ORBITAL_CONTAINER_WORKDIR: &str = "/orbital-work";
-
-use log::debug;
-use std::error::Error;
-use std::path::PathBuf;
-use std::{env, fmt};
-use thiserror::Error;
-
-// Leaving this here for when we can focus on non-docker workflows
-//enum AgentRuntimeType {
-//    Host,
-//    Docker,
-//}
-
-#[derive(Debug, Error)]
-pub struct AgentRuntimeError {
-    details: String,
-}
-
-impl AgentRuntimeError {
-    pub fn new(msg: &str) -> AgentRuntimeError {
-        AgentRuntimeError {
-            details: msg.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for AgentRuntimeError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.details)
-    }
-}
-
-impl From<Box<dyn Error>> for AgentRuntimeError {
-    fn from(error: Box<dyn Error>) -> Self {
-        AgentRuntimeError::new(&error.to_string())
-    }
-}
 
 // Below is copied from orbital_cli_subcommand crate
 
@@ -68,7 +30,7 @@ pub fn get_current_workdir() -> PathBuf {
 }
 
 /// Wrapper function for `kv_csv_parser` to specifically handle volume mounts for `shiplift`
-/// Automatically add in the docker socket as defined by `agent_runtime::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
+/// Automatically add in the docker socket as defined by `orbital_agent::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
 ///
 /// For now, also assume passing in the current working directory as well
 pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {

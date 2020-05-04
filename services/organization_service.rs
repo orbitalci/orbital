@@ -1,3 +1,4 @@
+use log::info;
 use orbital_headers::organization::{
     organization_service_server::OrganizationService, OrgAddRequest, OrgEntry, OrgGetRequest,
     OrgListResponse, OrgRemoveRequest, OrgUpdateRequest,
@@ -13,6 +14,7 @@ use orbital_database::postgres;
 impl OrganizationService for OrbitalApi {
     async fn org_add(&self, request: Request<OrgAddRequest>) -> Result<Response<OrgEntry>, Status> {
         let unwrapped_request = request.into_inner();
+        info!("org add request: {:?}", &unwrapped_request.name);
 
         let pg_conn = postgres::client::establish_connection();
 
@@ -24,6 +26,7 @@ impl OrganizationService for OrbitalApi {
 
     async fn org_get(&self, request: Request<OrgGetRequest>) -> Result<Response<OrgEntry>, Status> {
         let unwrapped_request = request.into_inner();
+        info!("org get request: {:?}", &unwrapped_request.name);
 
         let pg_conn = postgres::client::establish_connection();
 
@@ -38,6 +41,7 @@ impl OrganizationService for OrbitalApi {
         request: Request<OrgUpdateRequest>,
     ) -> Result<Response<OrgEntry>, Status> {
         let unwrapped_request = request.into_inner();
+        info!("org update request: {:?}", &unwrapped_request.name);
 
         let pg_conn = postgres::client::establish_connection();
 
@@ -61,6 +65,7 @@ impl OrganizationService for OrbitalApi {
         request: Request<OrgRemoveRequest>,
     ) -> Result<Response<OrgEntry>, Status> {
         let unwrapped_request = request.into_inner();
+        info!("org remove request: {:?}", &unwrapped_request.name);
 
         let pg_conn = postgres::client::establish_connection();
 
@@ -71,6 +76,8 @@ impl OrganizationService for OrbitalApi {
     }
 
     async fn org_list(&self, _request: Request<()>) -> Result<Response<OrgListResponse>, Status> {
+        info!("org list request");
+
         let pg_conn = postgres::client::establish_connection();
 
         // Convert the Vec<Org> response into the proto codegen version.

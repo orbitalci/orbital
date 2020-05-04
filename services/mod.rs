@@ -1,4 +1,4 @@
-//use agent_runtime::AgentRuntimeError;
+//use orbital_agent::AgentRuntimeError;
 //use log::debug;
 use std::error::Error;
 use std::fmt;
@@ -26,8 +26,8 @@ pub enum ServiceType {
 /// Default URI for the Orbital service
 pub const ORB_DEFAULT_URI: &str = "127.0.0.1:50051";
 
-/// 1 hour, in seconds
-pub const DEFAULT_BUILD_TIMEOUT: u64 = 60 * 60 * 24;
+/// Number of seconds in an hour
+pub const DEFAULT_BUILD_TIMEOUT: u64 = 60 * 60;
 
 /// Return the uri for a given service
 pub fn get_service_uri(_svc: ServiceType) -> &'static str {
@@ -71,8 +71,8 @@ impl From<anyhow::Error> for OrbitalServiceError {
     }
 }
 
-impl From<agent_runtime::AgentRuntimeError> for OrbitalServiceError {
-    fn from(error: agent_runtime::AgentRuntimeError) -> Self {
+impl From<orbital_agent::AgentRuntimeError> for OrbitalServiceError {
+    fn from(error: orbital_agent::AgentRuntimeError) -> Self {
         OrbitalServiceError::new(&error.to_string())
     }
 }

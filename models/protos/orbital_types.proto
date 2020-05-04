@@ -37,16 +37,16 @@ enum ActiveState {
 
 enum SecretType {
     SECRET_TYPE_UNSPECIFIED = 0;
-    BASIC_AUTH = 1;
-    API_KEY = 2;
-    ENV_VAR = 3;
-    FILE = 4;
-    SSH_KEY = 5;
-    DOCKER_REGISTRY = 6;
-    NPM_REPO = 7;
-    PYPI_REGISTRY = 8;
-    MAVEN_REPO = 9;
-    KUBERNETES = 10;
+    API_KEY = 1;
+    BASIC_AUTH = 2;
+    DOCKER_REGISTRY = 3;
+    ENV_VAR = 4;
+    FILE = 5;
+    KUBERNETES = 6;
+    MAVEN_REPO = 7;
+    NPM_REPO = 8;
+    PYPI_REGISTRY = 9;
+    SSH_KEY = 10;
 }
 
 // VCS Credentials allow OrbitalCI to clone and download code for test and deployment

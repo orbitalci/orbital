@@ -57,7 +57,7 @@ message BuildLogResponse {
 }
 
 service BuildService {
-    rpc BuildStart(BuildTarget) returns (BuildMetadata);
+    rpc BuildStart(BuildTarget) returns (stream BuildRecord);
     rpc BuildStop(BuildTarget) returns (BuildMetadata);
     rpc BuildLogs(BuildTarget) returns (stream BuildLogResponse);
     rpc BuildRemove(BuildTarget) returns (BuildMetadata);
