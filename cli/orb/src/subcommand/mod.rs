@@ -111,7 +111,7 @@ impl From<git2::Error> for SubcommandError {
 
 impl From<std::io::Error> for SubcommandError {
     fn from(error: std::io::Error) -> Self {
-        SubcommandError::new(error.description().to_string().as_ref())
+        SubcommandError::new(error.to_string().as_ref())
     }
 }
 
