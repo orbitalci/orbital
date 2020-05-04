@@ -9,6 +9,3 @@ members = [
     "services",
     "models/orbital_database",
 ]
-
-[patch.crates-io]
-hashicorp_vault = { git = "https://github.com/tjtelan/vault-rs"}

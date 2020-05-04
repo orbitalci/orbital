@@ -4,7 +4,7 @@ use hashicorp_vault as vault;
 use log::debug;
 
 pub fn add_secret(vault_host: &str, vault_token: &str, path: &str, data: &str) -> Result<()> {
-    let client = vault::Client::new(vault_host, vault_token)?;
+    let client = vault::Client::new(vault_host, vault_token).unwrap();
 
     match client.set_secret(path, data) {
         Ok(_) => {
@@ -16,7 +16,7 @@ pub fn add_secret(vault_host: &str, vault_token: &str, path: &str, data: &str) -
 }
 
 pub fn get_secret(vault_host: &str, vault_token: &str, path: &str) -> Result<String> {
-    let client = vault::Client::new(vault_host, vault_token)?;
+    let client = vault::Client::new(vault_host, vault_token).unwrap();
 
     match client.get_secret(path) {
         Ok(secret) => {
@@ -29,7 +29,7 @@ pub fn get_secret(vault_host: &str, vault_token: &str, path: &str) -> Result<Str
 
 // This is a copy of add_secret for now
 pub fn update_secret(vault_host: &str, vault_token: &str, path: &str, data: &str) -> Result<()> {
-    let client = vault::Client::new(vault_host, vault_token)?;
+    let client = vault::Client::new(vault_host, vault_token).unwrap();
 
     match client.set_secret(path, data) {
         Ok(_) => {
@@ -41,7 +41,7 @@ pub fn update_secret(vault_host: &str, vault_token: &str, path: &str, data: &str
 }
 
 pub fn remove_secret(vault_host: &str, vault_token: &str, path: &str) -> Result<()> {
-    let client = vault::Client::new(vault_host, vault_token)?;
+    let client = vault::Client::new(vault_host, vault_token).unwrap();
 
     match client.delete_secret(path) {
         Ok(_secret) => {
