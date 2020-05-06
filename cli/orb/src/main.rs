@@ -16,10 +16,6 @@ async fn main() -> Result<()> {
     match parsed.subcommand {
         Subcommand::Build(sub_option) => {
             subcommand::build_cmd::subcommand_handler(parsed.global_option, sub_option).await
-
-            // we can default to following the logs using the metadata info that we'll need to capture
-            //
-            //subcommand::logs::subcommand_handler(parsed.global_option, sub_option).await
         }
         Subcommand::Cancel(sub_option) => {
             subcommand::cancel::subcommand_handler(parsed.global_option, sub_option).await
@@ -39,8 +35,8 @@ async fn main() -> Result<()> {
         Subcommand::Summary(sub_option) => {
             subcommand::summary::subcommand_handler(parsed.global_option, sub_option).await
         }
-        Subcommand::Operator(sub_command) => {
-            subcommand::operator::subcommand_handler(parsed.global_option, sub_command).await
+        Subcommand::Server(sub_command) => {
+            subcommand::server::subcommand_handler(parsed.global_option, sub_command).await
         }
         Subcommand::Developer(sub_command) => {
             subcommand::developer::subcommand_handler(parsed.global_option, sub_command).await

@@ -19,7 +19,7 @@ orbital_headers = { path = "../models/orbital_headers" }
 prost-types = "0.6"
 thiserror = "1.0"
 tokio = "0.2"
-tonic = "0.1"
+tonic = "0.2"
 
 [lib]
 name = "orbital_services"
