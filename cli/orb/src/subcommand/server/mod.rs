@@ -6,20 +6,20 @@ use crate::GlobalOption;
 /// Start an Orb server
 pub mod start;
 
-/// Subcommands for `orb operator`
+/// Subcommands for `orb server`
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
-pub enum OperatorType {
+pub enum ServerType {
     Start(start::SubcommandOption),
 }
 
-/// Subcommand router for `orb operator`
+/// Subcommand router for `orb server`
 pub async fn subcommand_handler(
     global_option: GlobalOption,
-    ops_subcommand: OperatorType,
+    server_subcommand: ServerType,
 ) -> Result<()> {
-    match ops_subcommand {
-        OperatorType::Start(sub_option) => {
+    match server_subcommand {
+        ServerType::Start(sub_option) => {
             start::subcommand_handler(global_option, sub_option).await
         }
     }

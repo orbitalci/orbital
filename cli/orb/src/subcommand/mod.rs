@@ -9,8 +9,8 @@ pub mod cancel;
 pub mod developer;
 /// Request logs
 pub mod logs;
-/// Operator-specific commands
-pub mod operator;
+/// Server-specific commands
+pub mod server;
 /// Organization-level commands
 pub mod org;
 /// Git repo resource support
@@ -196,9 +196,8 @@ pub enum Subcommand {
     Secret(secret::SubcommandOption),
     /// Get summary of a repo
     Summary(summary::SubcommandOption),
-    /// Administration and service settings
-    #[structopt(alias = "ops")]
-    Operator(operator::OperatorType),
+    /// Server admin and service settings
+    Server(server::ServerType),
     /// Developer level commands and settings
     #[structopt(alias = "dev")]
     Developer(developer::DeveloperType),
