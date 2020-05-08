@@ -34,8 +34,8 @@ pub struct ActionOption {
 
     // TODO: We're only supporting ssh key auth from the client at the moment.
     /// Path to private key
-    #[structopt(long, parse(from_os_str), required_if("public", "false"))]
-    private_key: PathBuf,
+    #[structopt(long, parse(from_os_str), required_unless("public"))]
+    private_key: Option<PathBuf>,
 
     /// Username for private repo
     #[structopt(long, short = "u")]
@@ -63,27 +63,36 @@ pub async fn action_handler(
             Err(_e) => panic!("Unable to parse path for git repo info"),
         };
 
+    info!("Adding repo: {:?}", &repo_info);
+
     // TODO: Need to update the git repo parser to split out a username
     let request = match &action_option.public {
-        true => Request::new(GitRepoAddRequest {
-            org: action_option
-                .org
-                .clone()
-                .expect("Please provide an org with request"),
-            secret_type: SecretType::Unspecified.into(),
-            git_provider: repo_info.git_url.host.unwrap(),
-            name: repo_info.git_url.name,
-            uri: repo_info.git_url.href,
-            user: repo_info.git_url.user.unwrap(),
-            alt_check_branch: action_option.alt_branch.unwrap_or_default(),
-            skip_check: action_option.skip_check,
-            ..Default::default()
-        }),
+        true => {
+            // TODO
+            // If the repo proto is ssh and we're specifying that this is public
+            // just error out now instead of making remote call.
+
+            Request::new(GitRepoAddRequest {
+                org: action_option
+                    .org
+                    .clone()
+                    .expect("Please provide an org with request"),
+                secret_type: SecretType::Unspecified.into(),
+                git_provider: repo_info.git_url.host.unwrap(),
+                name: repo_info.git_url.name,
+                uri: repo_info.git_url.href,
+                user: repo_info.git_url.user.unwrap_or_default(),
+                alt_check_branch: action_option.alt_branch.unwrap_or_default(),
+                skip_check: action_option.skip_check,
+                ..Default::default()
+            })
+        },
         false => {
             // Read in private key into memory
             let mut file = File::open(
                 &action_option
                     .private_key
+                    .unwrap()
                     .to_str()
                     .expect("No secret filepath given"),
             )?;

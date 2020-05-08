@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::info;
 use orbital_headers::organization::{
     organization_service_server::OrganizationService, OrgAddRequest, OrgEntry, OrgGetRequest,
     OrgListResponse, OrgRemoveRequest, OrgUpdateRequest,

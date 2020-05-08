@@ -79,7 +79,7 @@ impl CodeService for OrbitalApi {
                 .expect("There was a problem adding repo in database")
             }
             SecretType::SshKey => {
-                debug!("Private repo with ssh key");
+                info!("Private repo with ssh key");
 
                 // Write private key into a temp file
                 debug!("Writing incoming ssh key to temp file");
@@ -259,7 +259,7 @@ impl CodeService for OrbitalApi {
             org: org_db.name,
             git_provider: git_uri_parsed.host.unwrap(),
             name: repo_db.name,
-            user: git_uri_parsed.user.unwrap(),
+            user: git_uri_parsed.user.unwrap_or_default(),
             uri: git_uri_parsed.href,
             secret_type: secret_db
                 .clone()
@@ -287,7 +287,6 @@ impl CodeService for OrbitalApi {
         let unwrapped_request = request.into_inner();
         info!("Git repo get: {:?}", &unwrapped_request.name);
         debug!("Git repo get details: {:?}", &unwrapped_request);
-
 
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
@@ -486,7 +485,7 @@ impl CodeService for OrbitalApi {
                         org: org_db.name,
                         git_provider: git_uri_parsed.host.unwrap(),
                         name: repo_db.name,
-                        user: git_uri_parsed.user.unwrap(),
+                        user: git_uri_parsed.user.unwrap_or_default(),
                         uri: git_uri_parsed.href,
                         secret_type: secret_db
                             .clone()
