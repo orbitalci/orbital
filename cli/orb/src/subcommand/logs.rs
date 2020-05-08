@@ -76,7 +76,7 @@ pub async fn subcommand_handler(
     while let Some(response) = stream.message().await? {
         let bufwtr = BufferWriter::stdout(ColorChoice::Auto);
         let mut buffer = bufwtr.buffer();
-        
+
         writeln!(
             &mut buffer,
             "{}",

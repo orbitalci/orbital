@@ -8,7 +8,7 @@ use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 use git_meta::git_info;
-use log::debug;
+use log::{debug, info};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
@@ -40,6 +40,14 @@ pub struct ActionOption {
     /// Username for private repo
     #[structopt(long, short = "u")]
     username: Option<String>,
+
+    /// Skip checking branch clone before adding
+    #[structopt(long)]
+    skip_check: bool,
+
+    /// Check clone with provided branch instead of master
+    #[structopt(long)]
+    alt_branch: Option<String>,
 }
 
 pub async fn action_handler(
@@ -67,6 +75,8 @@ pub async fn action_handler(
             name: repo_info.git_url.name,
             uri: repo_info.git_url.href,
             user: repo_info.git_url.user.unwrap(),
+            alt_check_branch: action_option.alt_branch.unwrap_or_default(),
+            skip_check: action_option.skip_check,
             ..Default::default()
         }),
         false => {
@@ -91,6 +101,8 @@ pub async fn action_handler(
                 name: repo_info.git_url.name,
                 uri: repo_info.git_url.href,
                 user: repo_info.git_url.user.unwrap(),
+                alt_check_branch: action_option.alt_branch.unwrap_or_default(),
+                skip_check: action_option.skip_check,
             })
         }
     };

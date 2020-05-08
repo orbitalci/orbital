@@ -19,8 +19,6 @@ pub async fn subcommand_handler(
     server_subcommand: ServerType,
 ) -> Result<()> {
     match server_subcommand {
-        ServerType::Start(sub_option) => {
-            start::subcommand_handler(global_option, sub_option).await
-        }
+        ServerType::Start(sub_option) => start::subcommand_handler(global_option, sub_option).await,
     }
 }

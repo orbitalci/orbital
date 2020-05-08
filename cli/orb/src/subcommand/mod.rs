@@ -9,14 +9,14 @@ pub mod cancel;
 pub mod developer;
 /// Request logs
 pub mod logs;
-/// Server-specific commands
-pub mod server;
 /// Organization-level commands
 pub mod org;
 /// Git repo resource support
 pub mod repo;
 /// Secrets engine support
 pub mod secret;
+/// Server-specific commands
+pub mod server;
 /// Historical data for users
 pub mod summary;
 

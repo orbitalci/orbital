@@ -77,7 +77,8 @@ pub async fn subcommand_handler(
 
     let config = match &local_option.config {
         Some(path) => parser::load_orb_yaml(path).expect("Provided config failed validation"),
-        None => parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).expect("orb.yml failed validation"),
+        None => parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))
+            .expect("orb.yml failed validation"),
     };
 
     //let _config =
@@ -99,12 +100,8 @@ pub async fn subcommand_handler(
         trigger: JobTrigger::Manual.into(),
         config: {
             match local_option.config {
-                Some(_path) => {
-                    config.to_string()
-                },
-                None => {
-                    "".to_string()
-                },
+                Some(_path) => config.to_string(),
+                None => "".to_string(),
             }
         },
         ..Default::default()
