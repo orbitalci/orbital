@@ -100,6 +100,10 @@ pub struct OrbitalConfig {
 
 impl fmt::Display for OrbitalConfig {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", serde_yaml::to_string(self).expect("OrbitalConfig serde_yaml::to_string() failed"))
+        write!(
+            f,
+            "{}",
+            serde_yaml::to_string(self).expect("OrbitalConfig serde_yaml::to_string() failed")
+        )
     }
 }

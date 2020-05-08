@@ -28,7 +28,7 @@ use git_meta::GitCredentials;
 
 use super::{OrbitalApi, ServiceType};
 
-use log::debug;
+use log::{debug, info};
 
 use std::path::Path;
 use std::time::Duration;
@@ -52,7 +52,8 @@ impl BuildService for OrbitalApi {
 
         // Git clone for provider ( uri, branch, commit )
         let unwrapped_request = request.into_inner();
-        debug!("Received request: {:?}", &unwrapped_request);
+        info!("build request: {:?}", &unwrapped_request.git_repo);
+        debug!("build request details: {:?}", &unwrapped_request);
 
         let git_parsed_uri =
             git_info::git_remote_url_parse(unwrapped_request.clone().remote_uri.as_ref())
@@ -318,10 +319,8 @@ impl BuildService for OrbitalApi {
             }
             _ => {
                 debug!("Loading orb.yml from str:\n{:?}", &unwrapped_request.config);
-                build_engine::load_orb_config_from_str(
-                    &unwrapped_request.config
-                )
-                .expect("Unable to load config from str")
+                build_engine::load_orb_config_from_str(&unwrapped_request.config)
+                    .expect("Unable to load config from str")
             }
         };
 

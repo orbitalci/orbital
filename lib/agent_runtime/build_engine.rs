@@ -22,7 +22,7 @@ pub fn load_orb_config(path: &Path) -> Result<config_parser::OrbitalConfig> {
     config_parser::yaml::load_orb_yaml(path)
 }
 
-/// Load config from str 
+/// Load config from str
 pub fn load_orb_config_from_str(config: &str) -> Result<config_parser::OrbitalConfig> {
     config_parser::yaml::load_orb_yaml_from_str(config)
 }

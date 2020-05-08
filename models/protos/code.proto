@@ -4,60 +4,6 @@ package code;
 import "orbital_types.proto";
 import "secret.proto";
 
-// GitProvider is an entity that GitRepo are organized under
-message GitProviderEntry {
-    string org = 1;
-    string name = 2;
-    string hostname = 3;
-    orbital_types.GitHostType git_host_type = 4;
-    orbital_types.ActiveState active_state = 5;
-}
-
-// Server returns GitProviderEntry as response
-message GitProviderAddRequest {
-    string org = 1;
-    string name = 2;
-    string hostname = 3;
-    orbital_types.GitHostType git_host_type = 4;
-    string auth_data = 5;
-}
-
-message GitProviderGetRequest {
-    string org = 1;
-    string name = 2;
-    string hostname = 3;
-    orbital_types.GitHostType git_host_type = 4;
-}
-
-// Server returns GitProviderEntry as response
-message GitProviderUpdateRequest {
-    string org = 1;
-    string name = 2;
-    string hostname = 3;
-    orbital_types.GitHostType git_host_type = 4;
-    orbital_types.ActiveState active_state = 5;
-    string auth_data = 6;
-}
-
-// Server returns GitProviderEntry as response
-message GitProviderRemoveRequest {
-    string org = 1;
-    string name = 2;
-    string hostname = 3;
-    orbital_types.GitHostType git_host_type = 4;
-    bool force = 5;
-}
-
-// Server returns GitProviderListResponse as response
-message GitProviderListRequest {
-    string org = 1;
-    orbital_types.GitHostType git_host_type = 2;
-}
-
-message GitProviderListResponse {
-    repeated GitProviderEntry git_providers = 1;
-}
-
 /// Code repository
 
 message GitRepoEntry {
@@ -73,7 +19,6 @@ message GitRepoEntry {
     int32 next_build_index = 10;
 }
 
-// Server returns AddedRepo as response
 message GitRepoAddRequest {
     string org = 1;
     string git_provider = 2;
@@ -82,6 +27,8 @@ message GitRepoAddRequest {
     string uri = 5;
     orbital_types.SecretType secret_type = 6;
     string auth_data = 7;
+    bool skip_check = 8;
+    string alt_check_branch = 9;
 }
 
 message GitRepoGetRequest {
@@ -123,11 +70,11 @@ message GitRepoListResponse {
 }
 
 service CodeService {
-    rpc GitProviderAdd(GitProviderAddRequest) returns (GitProviderEntry);
-    rpc GitProviderGet(GitProviderGetRequest) returns (GitProviderEntry);
-    rpc GitProviderUpdate(GitProviderUpdateRequest) returns (GitProviderEntry);
-    rpc GitProviderRemove(GitProviderRemoveRequest) returns (GitProviderEntry);
-    rpc GitProviderList(GitProviderListRequest) returns (GitProviderListResponse);
+    //rpc GitProviderAdd(GitProviderAddRequest) returns (GitProviderEntry);
+    //rpc GitProviderGet(GitProviderGetRequest) returns (GitProviderEntry);
+    //rpc GitProviderUpdate(GitProviderUpdateRequest) returns (GitProviderEntry);
+    //rpc GitProviderRemove(GitProviderRemoveRequest) returns (GitProviderEntry);
+    //rpc GitProviderList(GitProviderListRequest) returns (GitProviderListResponse);
 
     rpc GitRepoAdd(GitRepoAddRequest) returns (GitRepoEntry);
     rpc GitRepoGet(GitRepoGetRequest) returns (GitRepoEntry);

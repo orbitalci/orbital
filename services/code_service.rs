@@ -1,9 +1,6 @@
 use orbital_headers::code::{
-    code_service_server::CodeService, GitProviderAddRequest, GitProviderEntry,
-    GitProviderGetRequest, GitProviderListRequest, GitProviderListResponse,
-    GitProviderRemoveRequest, GitProviderUpdateRequest, GitRepoAddRequest, GitRepoEntry,
-    GitRepoGetRequest, GitRepoListRequest, GitRepoListResponse, GitRepoRemoveRequest,
-    GitRepoUpdateRequest,
+    code_service_server::CodeService, GitRepoAddRequest, GitRepoEntry, GitRepoGetRequest,
+    GitRepoListRequest, GitRepoListResponse, GitRepoRemoveRequest, GitRepoUpdateRequest,
 };
 
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretAddRequest};
@@ -22,75 +19,52 @@ use tonic::{Request, Response, Status};
 use super::OrbitalApi;
 
 use agent_runtime::build_engine;
-use log::debug;
+use log::{debug, info};
 use orbital_database::postgres;
 
 /// Implementation of protobuf derived `CodeService` trait
 #[tonic::async_trait]
 impl CodeService for OrbitalApi {
-    async fn git_provider_add(
-        &self,
-        _request: Request<GitProviderAddRequest>,
-    ) -> Result<Response<GitProviderEntry>, Status> {
-        unimplemented!()
-    }
-
-    async fn git_provider_get(
-        &self,
-        _request: Request<GitProviderGetRequest>,
-    ) -> Result<Response<GitProviderEntry>, Status> {
-        unimplemented!()
-    }
-
-    async fn git_provider_update(
-        &self,
-        _request: Request<GitProviderUpdateRequest>,
-    ) -> Result<Response<GitProviderEntry>, Status> {
-        unimplemented!()
-    }
-
-    async fn git_provider_remove(
-        &self,
-        _request: Request<GitProviderRemoveRequest>,
-    ) -> Result<Response<GitProviderEntry>, Status> {
-        unimplemented!()
-    }
-
-    async fn git_provider_list(
-        &self,
-        _request: Request<GitProviderListRequest>,
-    ) -> Result<Response<GitProviderListResponse>, Status> {
-        unimplemented!()
-    }
-
     async fn git_repo_add(
         &self,
         request: Request<GitRepoAddRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-        debug!("Git repo add request: {:?}", &request);
         let unwrapped_request = request.into_inner();
+        info!("Git repo add: {:?}", &unwrapped_request.name);
+        debug!("Git repo add details: {:?}", &unwrapped_request);
 
         // Declaring this in case we have an ssh key. For test cloning
         let temp_keypath = Temp::new_file().expect("Unable to create temp file");
 
         // check if repo is public or private. Do a test checkout
+        let test_branch = match &unwrapped_request.alt_check_branch.clone().len() {
+            0 => "master".to_string(),
+            _ => unwrapped_request.alt_check_branch.clone(),
+        };
 
         let (org_db, repo_db, secret_db) = match unwrapped_request.secret_type.into() {
             SecretType::Unspecified => {
-                debug!("No secret type specified. Public repo");
+                info!("Adding public repo");
                 let creds = GitCredentials::Public;
 
                 // Temp dir checkout repo
-                let _ =
-                    match build_engine::clone_repo(&unwrapped_request.uri, "master", creds.clone())
-                    {
-                        Ok(_) => {
-                            debug!("Test git clone successful");
-                        }
-                        Err(_) => {
-                            panic!("Test git clone unsuccessful");
-                        }
-                    };
+                match unwrapped_request.skip_check {
+                    true => info!("Test git clone check skipped by request"),
+                    false => {
+                        let _ = match build_engine::clone_repo(
+                            &unwrapped_request.uri,
+                            &test_branch,
+                            creds.clone(),
+                        ) {
+                            Ok(_) => {
+                                info!("Test git clone successful");
+                            }
+                            Err(_) => {
+                                panic!("Test git clone unsuccessful");
+                            }
+                        };
+                    }
+                };
 
                 // Write git repo to DB
                 let pg_conn = postgres::client::establish_connection();
@@ -121,17 +95,23 @@ impl CodeService for OrbitalApi {
                 };
 
                 // Temp dir checkout repo
-                debug!("Test cloning the repo");
-                let _ =
-                    match build_engine::clone_repo(&unwrapped_request.uri, "master", creds.clone())
-                    {
-                        Ok(_) => {
-                            debug!("Test git clone successful");
-                        }
-                        Err(_) => {
-                            panic!("Test git clone unsuccessful");
-                        }
-                    };
+                match unwrapped_request.skip_check {
+                    true => info!("Test git clone check skipped by request"),
+                    false => {
+                        let _ = match build_engine::clone_repo(
+                            &unwrapped_request.uri,
+                            &test_branch,
+                            creds.clone(),
+                        ) {
+                            Ok(_) => {
+                                info!("Test git clone successful");
+                            }
+                            Err(_) => {
+                                panic!("Test git clone unsuccessful");
+                            }
+                        };
+                    }
+                };
 
                 // Commit secret into secret service
                 debug!("Connecting to the Secret service");
@@ -196,17 +176,23 @@ impl CodeService for OrbitalApi {
                 };
 
                 // Temp dir checkout repo
-                debug!("Test cloning the repo");
-                let _ =
-                    match build_engine::clone_repo(&unwrapped_request.uri, "master", creds.clone())
-                    {
-                        Ok(_) => {
-                            debug!("Test git clone successful");
-                        }
-                        Err(_) => {
-                            panic!("Test git clone unsuccessful");
-                        }
-                    };
+                match unwrapped_request.skip_check {
+                    true => info!("Test git clone check skipped by request"),
+                    false => {
+                        let _ = match build_engine::clone_repo(
+                            &unwrapped_request.uri,
+                            &test_branch,
+                            creds.clone(),
+                        ) {
+                            Ok(_) => {
+                                info!("Test git clone successful");
+                            }
+                            Err(_) => {
+                                panic!("Test git clone unsuccessful");
+                            }
+                        };
+                    }
+                };
 
                 // Commit secret into secret service
                 debug!("Connecting to the Secret service");
@@ -298,9 +284,10 @@ impl CodeService for OrbitalApi {
         &self,
         request: Request<GitRepoGetRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-        debug!("Git repo get request: {:?}", &request);
-
         let unwrapped_request = request.into_inner();
+        info!("Git repo get: {:?}", &unwrapped_request.name);
+        debug!("Git repo get details: {:?}", &unwrapped_request);
+
 
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
@@ -348,9 +335,9 @@ impl CodeService for OrbitalApi {
         &self,
         request: Request<GitRepoUpdateRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-        debug!("Git repo update request: {:?}", &request);
-
         let unwrapped_request = request.into_inner();
+        info!("Git repo update: {:?}", &unwrapped_request.name);
+        debug!("Git repo update details: {:?}", &unwrapped_request);
 
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
@@ -429,9 +416,9 @@ impl CodeService for OrbitalApi {
         &self,
         request: Request<GitRepoRemoveRequest>,
     ) -> Result<Response<GitRepoEntry>, Status> {
-        debug!("Git repo remove request: {:?}", &request);
-
         let unwrapped_request = request.into_inner();
+        info!("Git repo remove: {:?}", &unwrapped_request.name);
+        debug!("Git repo remove details: {:?}", &unwrapped_request);
 
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
@@ -482,9 +469,8 @@ impl CodeService for OrbitalApi {
         &self,
         request: Request<GitRepoListRequest>,
     ) -> Result<Response<GitRepoListResponse>, Status> {
-        debug!("Git repo list request: {:?}", &request);
-
         let unwrapped_request = request.into_inner();
+        info!("Git repo list request: {:?}", &unwrapped_request);
 
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();

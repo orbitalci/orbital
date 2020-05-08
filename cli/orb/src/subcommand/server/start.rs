@@ -14,7 +14,7 @@ use orbital_services::OrbitalApi;
 
 use orbital_services::ORB_DEFAULT_URI;
 
-use log::debug;
+use log::info;
 use std::path::PathBuf;
 use tonic::transport::Server;
 
@@ -34,7 +34,7 @@ pub async fn subcommand_handler(
 ) -> Result<()> {
     let addr = ORB_DEFAULT_URI.parse().unwrap();
 
-    debug!("Starting single-node server");
+    info!("Starting single-node server");
     Server::builder()
         .add_service(BuildServiceServer::new(OrbitalApi::default()))
         .add_service(CodeServiceServer::new(OrbitalApi::default()))
