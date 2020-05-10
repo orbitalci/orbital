@@ -132,12 +132,12 @@ pub struct SecretTypePGEnum;
 #[sql_type = "SecretTypePGEnum"]
 pub enum SecretType {
     Unspecified = 0,
-    BasicAuth = 1,
-    ApiKey = 2,
-    EnvVar = 3,
-    File = 4,
-    SshKey = 5,
-    DockerRegistry = 6,
+    ApiKey = 1,
+    BasicAuth = 2,
+    DockerRegistry = 3,
+    EnvVar = 4,
+    File = 5,
+    SshKey = 6,
     NpmRepo = 7,
     PypiRegistry = 8,
     MavenRepo = 9,
@@ -148,16 +148,16 @@ impl From<i32> for SecretType {
     fn from(secret_type: i32) -> Self {
         match secret_type {
             0 => SecretType::Unspecified,
-            1 => SecretType::BasicAuth,
-            2 => SecretType::ApiKey,
-            3 => SecretType::EnvVar,
-            4 => SecretType::File,
-            5 => SecretType::SshKey,
-            6 => SecretType::DockerRegistry,
-            7 => SecretType::NpmRepo,
-            8 => SecretType::PypiRegistry,
-            9 => SecretType::MavenRepo,
-            10 => SecretType::Kubernetes,
+            1 => SecretType::ApiKey,
+            2 => SecretType::BasicAuth,
+            3 => SecretType::DockerRegistry,
+            4 => SecretType::EnvVar,
+            5 => SecretType::File,
+            6 => SecretType::Kubernetes,
+            7 => SecretType::MavenRepo,
+            8 => SecretType::NpmRepo,
+            9 => SecretType::PypiRegistry,
+            10 => SecretType::SshKey,
             _ => panic!("Unrecognized SecretType variant"),
         }
     }
@@ -167,16 +167,16 @@ impl From<SecretType> for i32 {
     fn from(secret_type: SecretType) -> Self {
         match secret_type {
             SecretType::Unspecified => 0,
-            SecretType::BasicAuth => 1,
-            SecretType::ApiKey => 2,
-            SecretType::EnvVar => 3,
-            SecretType::File => 4,
-            SecretType::SshKey => 5,
-            SecretType::DockerRegistry => 6,
-            SecretType::NpmRepo => 7,
-            SecretType::PypiRegistry => 8,
-            SecretType::MavenRepo => 9,
-            SecretType::Kubernetes => 10,
+            SecretType::ApiKey => 1,
+            SecretType::BasicAuth => 2,
+            SecretType::DockerRegistry => 3,
+            SecretType::EnvVar => 4,
+            SecretType::File => 5,
+            SecretType::Kubernetes => 6,
+            SecretType::MavenRepo => 7,
+            SecretType::NpmRepo => 8,
+            SecretType::PypiRegistry => 9,
+            SecretType::SshKey => 10,
         }
     }
 }
@@ -185,16 +185,16 @@ impl ToSql<SecretTypePGEnum, Pg> for SecretType {
     fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         match *self {
             SecretType::Unspecified => out.write_all(b"")?,
-            SecretType::BasicAuth => out.write_all(b"basic_auth")?,
             SecretType::ApiKey => out.write_all(b"api_key")?,
+            SecretType::BasicAuth => out.write_all(b"basic_auth")?,
+            SecretType::DockerRegistry => out.write_all(b"docker_registry")?,
             SecretType::EnvVar => out.write_all(b"env_var")?,
             SecretType::File => out.write_all(b"file")?,
-            SecretType::SshKey => out.write_all(b"ssh_key")?,
-            SecretType::DockerRegistry => out.write_all(b"docker_registry")?,
+            SecretType::Kubernetes => out.write_all(b"kubernetes")?,
+            SecretType::MavenRepo => out.write_all(b"maven_repo")?,
             SecretType::NpmRepo => out.write_all(b"npm_repo")?,
             SecretType::PypiRegistry => out.write_all(b"pypi_registry")?,
-            SecretType::MavenRepo => out.write_all(b"maven_repo")?,
-            SecretType::Kubernetes => out.write_all(b"kubernetes")?,
+            SecretType::SshKey => out.write_all(b"ssh_key")?,
         }
         Ok(IsNull::No)
     }
@@ -204,16 +204,16 @@ impl FromSql<SecretTypePGEnum, Pg> for SecretType {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match not_none!(bytes) {
             b"" => Ok(SecretType::Unspecified),
-            b"basic_auth" => Ok(SecretType::BasicAuth),
             b"api_key" => Ok(SecretType::ApiKey),
+            b"basic_auth" => Ok(SecretType::BasicAuth),
+            b"docker_registry" => Ok(SecretType::DockerRegistry),
             b"env_var" => Ok(SecretType::EnvVar),
             b"file" => Ok(SecretType::File),
-            b"ssh_key" => Ok(SecretType::SshKey),
-            b"docker_registry" => Ok(SecretType::DockerRegistry),
-            b"npm_repo" => Ok(SecretType::NpmRepo),
-            b"pypi_registry" => Ok(SecretType::PypiRegistry),
-            b"maven_repo" => Ok(SecretType::MavenRepo),
             b"kubernetes" => Ok(SecretType::Kubernetes),
+            b"npm_repo" => Ok(SecretType::NpmRepo),
+            b"maven_repo" => Ok(SecretType::MavenRepo),
+            b"pypi_registry" => Ok(SecretType::PypiRegistry),
+            b"ssh_key" => Ok(SecretType::SshKey),
             _ => Err("Unrecognized SecretType variant".into()),
         }
     }
@@ -224,16 +224,16 @@ impl From<orbital_types::SecretType> for SecretType {
     fn from(secret_type: orbital_types::SecretType) -> Self {
         match secret_type {
             orbital_types::SecretType::Unspecified => SecretType::Unspecified,
-            orbital_types::SecretType::BasicAuth => SecretType::BasicAuth,
             orbital_types::SecretType::ApiKey => SecretType::ApiKey,
+            orbital_types::SecretType::BasicAuth => SecretType::BasicAuth,
+            orbital_types::SecretType::DockerRegistry => SecretType::DockerRegistry,
             orbital_types::SecretType::EnvVar => SecretType::EnvVar,
             orbital_types::SecretType::File => SecretType::File,
-            orbital_types::SecretType::SshKey => SecretType::SshKey,
-            orbital_types::SecretType::DockerRegistry => SecretType::DockerRegistry,
+            orbital_types::SecretType::Kubernetes => SecretType::Kubernetes,
+            orbital_types::SecretType::MavenRepo => SecretType::MavenRepo,
             orbital_types::SecretType::NpmRepo => SecretType::NpmRepo,
             orbital_types::SecretType::PypiRegistry => SecretType::PypiRegistry,
-            orbital_types::SecretType::MavenRepo => SecretType::MavenRepo,
-            orbital_types::SecretType::Kubernetes => SecretType::Kubernetes,
+            orbital_types::SecretType::SshKey => SecretType::SshKey,
         }
     }
 }
