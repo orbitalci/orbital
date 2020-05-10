@@ -42,7 +42,7 @@ impl CodeService for OrbitalApi {
             _ => unwrapped_request.alt_check_branch.clone(),
         };
 
-        let (org_db, repo_db, secret_db) = match unwrapped_request.secret_type.into() {
+        let (org_db, repo_db, secret_db) = match unwrapped_request.secret_type.clone().into() {
             SecretType::Unspecified => {
                 info!("Adding public repo");
                 let creds = GitCredentials::Public;
@@ -145,7 +145,7 @@ impl CodeService for OrbitalApi {
                 debug!("Request for secret add: {:?}", &request);
 
                 let response = secret_client.secret_add(request).await?;
-                println!("RESPONSE = {:?}", response);
+                debug!("RESPONSE = {:?}", response);
 
                 // Convert the response SecretEntry from the secret add into Secret
                 let secret: postgres::secret::Secret = response.into_inner().into();
@@ -169,10 +169,10 @@ impl CodeService for OrbitalApi {
                 .expect("There was a problem adding repo in database")
             }
             SecretType::BasicAuth => {
-                debug!("Private repo with basic auth");
+                info!("Private repo with basic auth");
                 let creds = GitCredentials::UserPassPlaintext {
-                    username: "git".to_string(),
-                    password: "fakepassword".to_string(),
+                    username: unwrapped_request.clone().user.into(),
+                    password: unwrapped_request.clone().auth_data.into(),
                 };
 
                 // Temp dir checkout repo
@@ -250,7 +250,10 @@ impl CodeService for OrbitalApi {
                 )
                 .expect("There was a problem adding repo in database")
             }
-            _ => panic!("Only public repo or private repo w/ sshkey/basic auth supported"),
+            _ => {
+                debug!("Raw secret type: {:?}", unwrapped_request.secret_type.clone());
+                panic!("Only public repo or private repo w/ sshkey/basic auth supported")
+            },
         };
 
         let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
@@ -442,7 +445,7 @@ impl CodeService for OrbitalApi {
             org: org_db.name,
             git_provider: git_uri_parsed.host.unwrap(),
             name: repo_db.name,
-            user: git_uri_parsed.user.unwrap(),
+            user: git_uri_parsed.user.unwrap_or_default(),
             uri: git_uri_parsed.href,
             secret_type: secret_db
                 .clone()

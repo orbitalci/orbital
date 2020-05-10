@@ -206,16 +206,16 @@ impl From<i32> for SecretType {
     fn from(secret_type: i32) -> Self {
         match secret_type {
             0 => Self::Unspecified,
-            1 => Self::BasicAuth,
-            2 => Self::ApiKey,
-            3 => Self::EnvVar,
-            4 => Self::File,
-            5 => Self::SshKey,
-            6 => Self::DockerRegistry,
-            7 => Self::NpmRepo,
-            8 => Self::PypiRegistry,
-            9 => Self::MavenRepo,
-            10 => Self::Kubernetes,
+            1 => Self::ApiKey,
+            2 => Self::BasicAuth,
+            3 => Self::DockerRegistry,
+            4 => Self::EnvVar,
+            5 => Self::File,
+            6 => Self::Kubernetes,
+            7 => Self::MavenRepo,
+            8 => Self::NpmRepo,
+            9 => Self::PypiRegistry,
+            10 => Self::SshKey,
             _ => panic!("Unknown secret type"),
         }
     }

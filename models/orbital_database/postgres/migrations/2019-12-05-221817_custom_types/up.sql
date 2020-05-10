@@ -34,7 +34,7 @@ CREATE TYPE git_host_type AS ENUM (
 
 CREATE TYPE secret_type AS ENUM (
     'api_key',
-    'basic_auth'
+    'basic_auth',
     'docker_registry',
     'env_var',
     'file',
