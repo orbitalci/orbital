@@ -1,6 +1,6 @@
 CREATE TABLE secret (
   id SERIAL PRIMARY KEY,
-  org_id INTEGER REFERENCES org(id),
+  org_id INTEGER REFERENCES org(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   secret_type secret_type NOT NULL,
   vault_path TEXT NOT NULL,

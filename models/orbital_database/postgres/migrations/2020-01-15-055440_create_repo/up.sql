@@ -1,6 +1,6 @@
 CREATE TABLE repo (
   id SERIAL PRIMARY KEY,
-  org_id INTEGER REFERENCES org(id),
+  org_id INTEGER REFERENCES org(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   uri TEXT NOT NULL,
   git_host_type git_host_type NOT NULL,
