@@ -14,6 +14,7 @@ orbital_config_parser = { path = "../config_parser" }
 orbital_hashicorp_stack = { path = "../hashicorp_stack" }
 anyhow = "1.0"
 thiserror = "1.0"
+base64 = "0.12"
 
 [lib]
 name = "agent_runtime"
