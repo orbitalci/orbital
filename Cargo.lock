@@ -1382,6 +1382,7 @@ name = "orbital_agent_runtime"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "base64 0.12.1",
  "log 0.4.8",
  "mktemp",
  "orbital_config_parser",
@@ -1494,6 +1495,7 @@ dependencies = [
  "orbital_hashicorp_stack",
  "orbital_headers",
  "prost-types",
+ "serde_json",
  "thiserror",
  "tokio 0.2.20",
  "tonic",

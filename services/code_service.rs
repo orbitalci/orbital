@@ -22,6 +22,9 @@ use agent_runtime::build_engine;
 use log::{debug, info};
 use orbital_database::postgres;
 
+use std::collections::HashMap;
+use serde_json::json;
+
 /// Implementation of protobuf derived `CodeService` trait
 #[tonic::async_trait]
 impl CodeService for OrbitalApi {
@@ -69,6 +72,8 @@ impl CodeService for OrbitalApi {
                 // Write git repo to DB
                 let pg_conn = postgres::client::establish_connection();
 
+                // TODO: We should remove usernames from the uri when we add to the database
+                // This means we're going to need to add usernames to secret service
                 postgres::client::repo_add(
                     &pg_conn,
                     &unwrapped_request.org,
@@ -85,10 +90,10 @@ impl CodeService for OrbitalApi {
                 debug!("Writing incoming ssh key to temp file");
                 let mut file = File::create(temp_keypath.as_path())?;
                 let mut _contents = String::new();
-                let _ = file.write_all(unwrapped_request.auth_data.as_bytes());
+                let _ = file.write_all(unwrapped_request.clone().auth_data.as_bytes());
 
                 let creds = GitCredentials::SshKey {
-                    username: unwrapped_request.user,
+                    username: unwrapped_request.clone().user,
                     public_key: None,
                     private_key: temp_keypath.as_path(),
                     passphrase: None,
@@ -112,6 +117,13 @@ impl CodeService for OrbitalApi {
                         };
                     }
                 };
+
+
+                // TODO: We should create a struct for this
+                let auth_info = json!({
+                    "username": unwrapped_request.clone().user,
+                    "private_key": unwrapped_request.clone().auth_data,
+                });
 
                 // Commit secret into secret service
                 debug!("Connecting to the Secret service");
@@ -139,7 +151,7 @@ impl CodeService for OrbitalApi {
                     org: org_name.into(),
                     name: secret_name.into(),
                     secret_type: SecretType::from(unwrapped_request.secret_type).into(),
-                    data: unwrapped_request.auth_data.into(),
+                    data: auth_info.to_string().into_bytes(),
                 });
 
                 debug!("Request for secret add: {:?}", &request);
@@ -159,6 +171,7 @@ impl CodeService for OrbitalApi {
 
                 let pg_conn = postgres::client::establish_connection();
 
+                // TODO: Remove username from uri
                 postgres::client::repo_add(
                     &pg_conn,
                     &unwrapped_request.org,
@@ -194,6 +207,13 @@ impl CodeService for OrbitalApi {
                     }
                 };
 
+
+                // TODO: Create hashmap. Username + password
+                let auth_info = json!({
+                    "username": unwrapped_request.clone().user,
+                    "password": unwrapped_request.clone().auth_data,
+                });
+
                 // Commit secret into secret service
                 debug!("Connecting to the Secret service");
                 let secret_client_conn_req = SecretServiceClient::connect(format!(
@@ -221,7 +241,7 @@ impl CodeService for OrbitalApi {
                     org: org_name.into(),
                     name: secret_name.into(),
                     secret_type: SecretType::from(unwrapped_request.secret_type).into(),
-                    data: unwrapped_request.auth_data.into(),
+                    data: auth_info.to_string().into_bytes(),
                 });
 
                 debug!("Request for secret add: {:?}", &request);
@@ -241,6 +261,7 @@ impl CodeService for OrbitalApi {
 
                 let pg_conn = postgres::client::establish_connection();
 
+                // TODO: Remove username from uri
                 postgres::client::repo_add(
                     &pg_conn,
                     &unwrapped_request.org,
@@ -306,12 +327,14 @@ impl CodeService for OrbitalApi {
 
         let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
 
+        // Maybe TODO? Call into Secret service to get a username?
+
         // We use auth_data to hold the name of the secret used by repo
         let response = Response::new(GitRepoEntry {
             org: org_db.name,
             git_provider: git_uri_parsed.host.unwrap(),
             name: repo_db.name,
-            user: git_uri_parsed.user.unwrap(),
+            //user: git_uri_parsed.user.unwrap(), // I think we're going to let the build service handle this
             uri: git_uri_parsed.href,
             secret_type: secret_db
                 .clone()
