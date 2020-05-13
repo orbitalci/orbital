@@ -8,7 +8,7 @@ use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 use git_meta::git_info;
-use git_url_parse::Protocol;
+use git_url_parse::Scheme;
 use log::{debug, info};
 use std::fs::File;
 use std::io::prelude::*;
@@ -29,22 +29,13 @@ pub struct ActionOption {
     #[structopt(long, env = "ORB_DEFAULT_ORG")]
     org: Option<String>,
 
-    /// Use flag if repo is public
-    #[structopt(long)]
-    public: bool,
-
     // TODO: We're only supporting ssh key auth from the client at the moment.
     /// Path to private key
-    #[structopt(
-        long,
-        parse(from_os_str),
-        required_unless("public"),
-        required_unless("password")
-    )]
+    #[structopt(long, parse(from_os_str), required_unless("password"))]
     private_key: Option<PathBuf>,
 
     /// Password for private repo. Mutually exclusive w/ private key
-    #[structopt(long, required_unless("public"), required_unless("private-key"))]
+    #[structopt(long, required_unless("private-key"))]
     password: Option<String>,
 
     /// Username for private repo
@@ -75,82 +66,64 @@ pub async fn action_handler(
 
     info!("Adding repo: {:?}", &repo_info);
 
-    // TODO: Need to update the git repo parser to split out a username
-    let request = match &action_option.public {
-        true => {
-
-            if repo_info.clone().git_url.protocol == Protocol::Ssh {
-                panic!("Repo auth is not public")
-            };
-
-            info!("Repo is public");
-            // TODO
-            // If the repo proto is ssh and we're specifying that this is public
-            // just error out now instead of making remote call.
-
-            Request::new(GitRepoAddRequest {
-                org: action_option
-                    .org
-                    .clone()
-                    .expect("Please provide an org with request"),
-                secret_type: SecretType::Unspecified.into(),
-                git_provider: repo_info.git_url.host.unwrap(),
-                name: repo_info.git_url.name,
-                uri: repo_info.git_url.href,
-                user: repo_info.git_url.user.unwrap_or_default(),
-                alt_check_branch: action_option.alt_branch.unwrap_or_default(),
-                skip_check: action_option.skip_check,
-                ..Default::default()
-            })
-        }
-        false => {
-            info!("Repo is private");
-
-            match action_option.private_key {
-                Some(p) => {
-                    info!("Repo auth with private key");
-
-                    // Read in private key into memory
-                    let mut file = File::open(p.to_str().expect("No secret filepath given"))?;
-                    let mut contents = String::new();
-                    file.read_to_string(&mut contents)?;
-
-                    Request::new(GitRepoAddRequest {
-                        org: action_option
-                            .org
-                            .clone()
-                            .expect("Please provide an org with request"),
-                        secret_type: SecretType::SshKey.into(),
-                        auth_data: contents,
-                        git_provider: repo_info.git_url.host.unwrap(),
-                        name: repo_info.git_url.name,
-                        uri: repo_info.git_url.href,
-                        user: repo_info.git_url.user.unwrap(),
-                        alt_check_branch: action_option.alt_branch.unwrap_or_default(),
-                        skip_check: action_option.skip_check,
-                    })
-                }
-                None => {
-                    info!("Repo auth with basic auth");
-
-                    Request::new(GitRepoAddRequest {
-                        org: action_option
-                            .org
-                            .clone()
-                            .expect("Please provide an org with request"),
-                        secret_type: SecretType::BasicAuth.into(),
-                        auth_data: action_option.password.expect("No password provided"),
-                        git_provider: repo_info.git_url.host.unwrap(),
-                        name: repo_info.git_url.name,
-                        uri: repo_info.git_url.href,
-                        user: action_option.username.expect("No username provided"),
-                        alt_check_branch: action_option.alt_branch.unwrap_or_default(),
-                        skip_check: action_option.skip_check,
-                    })
-                }
-            }
-        }
+    let (repo_secret_type, repo_user) = match repo_info.git_url.scheme {
+        Scheme::Ssh => (SecretType::SshKey, repo_info.git_url.user.clone().unwrap()),
+        Scheme::Https => match &repo_info.git_url.token {
+            Some(_) => (
+                SecretType::BasicAuth,
+                repo_info.git_url.user.clone().unwrap(),
+            ),
+            None => (
+                SecretType::Unspecified,
+                action_option.username.unwrap_or_default(),
+            ),
+        },
+        _ => (
+            SecretType::Unspecified,
+            action_option.username.unwrap_or_default(),
+        ),
     };
+
+    let mut contents = String::new();
+
+    // If private key, load up contents with key
+    match action_option.private_key {
+        Some(p) => {
+            info!("Repo auth with private key");
+
+            // Read in private key into memory
+            let mut file = File::open(p.to_str().expect("No secret filepath given"))?;
+            let mut contents = String::new();
+            file.read_to_string(&mut contents)?;
+        }
+        None => info!("Not using private key auth"),
+    };
+
+    // If password, load up contents with password
+    match action_option.password {
+        Some(p) => {
+            info!("Repo auth with basic auth");
+
+            contents = p;
+        }
+        None => info!("Not using basic auth"),
+    };
+
+    let request = Request::new(GitRepoAddRequest {
+        org: action_option
+            .org
+            .clone()
+            .expect("Please provide an org with request"),
+        secret_type: repo_secret_type.into(),
+        auth_data: contents,
+        git_provider: repo_info.git_url.host.clone().unwrap(),
+        name: repo_info.git_url.name.clone(),
+        uri: repo_info.git_url.trim_auth().to_string(),
+        user: repo_user,
+        alt_check_branch: action_option.alt_branch.unwrap_or_default(),
+        skip_check: action_option.skip_check,
+        ..Default::default()
+    });
 
     debug!("Request for git repo add: {:?}", &request);
 

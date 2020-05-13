@@ -57,8 +57,8 @@ pub async fn subcommand_handler(
 
     let request = Request::new(BuildTarget {
         org: local_option.org.expect("Please provide an org name"),
-        git_repo: git_context.git_url.name,
-        remote_uri: git_context.git_url.href,
+        git_repo: git_context.git_url.name.clone(),
+        remote_uri: git_context.git_url.trim_auth().to_string(),
         branch: git_context.branch,
         commit_hash: git_context.commit_id,
         user_envs: local_option.envs.unwrap_or_default(),

@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0"
-git-url-parse = "0.1"
+git-url-parse = "0.2"
 git2 = "0.13"
 log = "0.4"
 mktemp = "0.4"
