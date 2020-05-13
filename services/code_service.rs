@@ -104,7 +104,12 @@ impl CodeService for OrbitalApi {
                     true => info!("Test git clone check skipped by request"),
                     false => {
                         let _ = match build_engine::clone_repo(
-                            &unwrapped_request.uri,
+                            format!(
+                                "{}@{}",
+                                unwrapped_request.clone().user,
+                                &unwrapped_request.uri
+                            )
+                            .as_str(),
                             &test_branch,
                             creds.clone(),
                         ) {
@@ -182,7 +187,7 @@ impl CodeService for OrbitalApi {
             }
             SecretType::BasicAuth => {
                 info!("Private repo with basic auth");
-                let creds = GitCredentials::UserPassPlaintext {
+                let creds = GitCredentials::BasicAuth {
                     username: unwrapped_request.clone().user.into(),
                     password: unwrapped_request.clone().auth_data.into(),
                 };
@@ -227,7 +232,7 @@ impl CodeService for OrbitalApi {
                     }
                 };
 
-                debug!("Adding userpass to secret service");
+                debug!("Adding basic auth to secret service");
                 let org_name = &unwrapped_request.org;
                 let secret_name = format!(
                     "{}/{}",
