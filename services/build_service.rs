@@ -266,7 +266,7 @@ impl BuildService for OrbitalApi {
                         .expect("Unable to read json data from Vault");
 
                 // Replace username with the user from the code service
-                let git_creds = GitCredentials::UserPassPlaintext {
+                let git_creds = GitCredentials::BasicAuth {
                     username: vault_response["username"].as_str().unwrap().to_string(),
                     password: vault_response["password"].as_str().unwrap().to_string(),
                 };

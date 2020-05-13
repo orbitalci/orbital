@@ -27,7 +27,6 @@ pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> R
             builder.fetch_options(fetch_options);
             builder.branch(branch);
 
-            //let _repo = match Repository::clone(uri, &temp_dir.as_path()) {
             let _repo = match builder.clone(uri, &temp_dir.as_path()) {
                 Ok(repo) => repo,
                 Err(e) => panic!("failed to clone: {}", e),
@@ -62,8 +61,8 @@ pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> R
             };
         }
 
-        GitCredentials::UserPassPlaintext { username, password } => {
-            debug!("Cloning a private repo with userpass");
+        GitCredentials::BasicAuth { username, password } => {
+            debug!("Cloning a private repo with basic auth");
 
             let mut builder = RepoBuilder::new();
             let mut callbacks = RemoteCallbacks::new();
@@ -79,7 +78,6 @@ pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> R
             builder.fetch_options(fetch_options);
             builder.branch(branch);
 
-            //let _repo = match Repository::clone(uri, &temp_dir.as_path()) {
             let _repo = match builder.clone(uri, &temp_dir.as_path()) {
                 Ok(repo) => repo,
                 Err(e) => panic!("failed to clone: {}", e),

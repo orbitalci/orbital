@@ -29,13 +29,12 @@ pub struct ActionOption {
     #[structopt(long, env = "ORB_DEFAULT_ORG")]
     org: Option<String>,
 
-    // TODO: We're only supporting ssh key auth from the client at the moment.
     /// Path to private key
-    #[structopt(long, parse(from_os_str), required_unless("password"))]
+    #[structopt(long, parse(from_os_str), conflicts_with("password"))]
     private_key: Option<PathBuf>,
 
     /// Password for private repo. Mutually exclusive w/ private key
-    #[structopt(long, required_unless("private-key"))]
+    #[structopt(long, conflicts_with("private-key"))]
     password: Option<String>,
 
     /// Username for private repo
@@ -71,7 +70,11 @@ pub async fn action_handler(
         Scheme::Https => match &repo_info.git_url.token {
             Some(_) => (
                 SecretType::BasicAuth,
-                repo_info.git_url.user.clone().unwrap(),
+                if let Some(user) = action_option.username {
+                    user
+                } else {
+                    repo_info.git_url.user.clone().unwrap()
+                },
             ),
             None => (
                 SecretType::Unspecified,
@@ -84,30 +87,31 @@ pub async fn action_handler(
         ),
     };
 
-    let mut contents = String::new();
+    let mut auth_content = String::new();
 
-    // If private key, load up contents with key
-    match action_option.private_key {
-        Some(p) => {
-            info!("Repo auth with private key");
+    if repo_secret_type != SecretType::Unspecified {
+        // If private key, load up contents with key
+        match action_option.private_key {
+            Some(p) => {
+                info!("Repo auth with private key");
 
-            // Read in private key into memory
-            let mut file = File::open(p.to_str().expect("No secret filepath given"))?;
-            let mut contents = String::new();
-            file.read_to_string(&mut contents)?;
-        }
-        None => info!("Not using private key auth"),
-    };
+                // Read in private key into memory
+                let mut file = File::open(p.to_str().expect("No secret filepath given"))?;
+                file.read_to_string(&mut auth_content)?;
+            }
+            None => info!("Not using private key auth"),
+        };
 
-    // If password, load up contents with password
-    match action_option.password {
-        Some(p) => {
-            info!("Repo auth with basic auth");
+        // If password, load up contents with password
+        match action_option.password {
+            Some(p) => {
+                info!("Repo auth with basic auth");
 
-            contents = p;
-        }
-        None => info!("Not using basic auth"),
-    };
+                auth_content = p;
+            }
+            None => info!("Not using basic auth"),
+        };
+    }
 
     let request = Request::new(GitRepoAddRequest {
         org: action_option
@@ -115,7 +119,7 @@ pub async fn action_handler(
             .clone()
             .expect("Please provide an org with request"),
         secret_type: repo_secret_type.into(),
-        auth_data: contents,
+        auth_data: auth_content,
         git_provider: repo_info.git_url.host.clone().unwrap(),
         name: repo_info.git_url.name.clone(),
         uri: repo_info.git_url.trim_auth().to_string(),
