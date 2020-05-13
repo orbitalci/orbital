@@ -22,8 +22,8 @@ use agent_runtime::build_engine;
 use log::{debug, info};
 use orbital_database::postgres;
 
-use std::collections::HashMap;
 use serde_json::json;
+use std::collections::HashMap;
 
 /// Implementation of protobuf derived `CodeService` trait
 #[tonic::async_trait]
@@ -118,7 +118,6 @@ impl CodeService for OrbitalApi {
                     }
                 };
 
-
                 // TODO: We should create a struct for this
                 let auth_info = json!({
                     "username": unwrapped_request.clone().user,
@@ -207,7 +206,6 @@ impl CodeService for OrbitalApi {
                     }
                 };
 
-
                 // TODO: Create hashmap. Username + password
                 let auth_info = json!({
                     "username": unwrapped_request.clone().user,
@@ -272,19 +270,22 @@ impl CodeService for OrbitalApi {
                 .expect("There was a problem adding repo in database")
             }
             _ => {
-                debug!("Raw secret type: {:?}", unwrapped_request.secret_type.clone());
+                debug!(
+                    "Raw secret type: {:?}",
+                    unwrapped_request.secret_type.clone()
+                );
                 panic!("Only public repo or private repo w/ sshkey/basic auth supported")
-            },
+            }
         };
 
         let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
 
         let response = Response::new(GitRepoEntry {
             org: org_db.name,
-            git_provider: git_uri_parsed.host.unwrap(),
+            git_provider: git_uri_parsed.clone().host.unwrap(),
             name: repo_db.name,
-            user: git_uri_parsed.user.unwrap_or_default(),
-            uri: git_uri_parsed.href,
+            user: git_uri_parsed.user.clone().unwrap_or_default(),
+            uri: format!("{}", git_uri_parsed.trim_auth()),
             secret_type: secret_db
                 .clone()
                 .unwrap_or(postgres::secret::Secret::default())
@@ -332,10 +333,10 @@ impl CodeService for OrbitalApi {
         // We use auth_data to hold the name of the secret used by repo
         let response = Response::new(GitRepoEntry {
             org: org_db.name,
-            git_provider: git_uri_parsed.host.unwrap(),
+            git_provider: git_uri_parsed.clone().host.unwrap(),
             name: repo_db.name,
             //user: git_uri_parsed.user.unwrap(), // I think we're going to let the build service handle this
-            uri: git_uri_parsed.href,
+            uri: format!("{}", git_uri_parsed.trim_auth()),
             secret_type: secret_db
                 .clone()
                 .unwrap_or(postgres::secret::Secret::default())
@@ -388,7 +389,7 @@ impl CodeService for OrbitalApi {
         let update_repo = postgres::repo::NewRepo {
             org_id: org_db.id,
             name: repo_db.name,
-            uri: git_uri_parsed.href,
+            uri: format!("{}", git_uri_parsed),
             git_host_type: repo_db.git_host_type,
             secret_id: secret_id,
             build_active_state: repo_db.build_active_state,
@@ -413,10 +414,10 @@ impl CodeService for OrbitalApi {
 
         let response = Response::new(GitRepoEntry {
             org: org_db.name,
-            git_provider: git_uri_parsed.host.unwrap(),
+            git_provider: git_uri_parsed.clone().host.unwrap(),
             name: repo_db.name,
-            user: git_uri_parsed.user.unwrap(),
-            uri: git_uri_parsed.href,
+            user: git_uri_parsed.clone().user.unwrap(),
+            uri: format!("{}", git_uri_parsed.trim_auth()),
             secret_type: secret_db
                 .clone()
                 .unwrap_or(postgres::secret::Secret::default())
@@ -466,10 +467,10 @@ impl CodeService for OrbitalApi {
         // We use auth_data to hold the name of the secret used by repo
         let response = Response::new(GitRepoEntry {
             org: org_db.name,
-            git_provider: git_uri_parsed.host.unwrap(),
+            git_provider: git_uri_parsed.clone().host.unwrap(),
             name: repo_db.name,
-            user: git_uri_parsed.user.unwrap_or_default(),
-            uri: git_uri_parsed.href,
+            user: git_uri_parsed.clone().user.unwrap_or_default(),
+            uri: format!("{}", git_uri_parsed.trim_auth()),
             secret_type: secret_db
                 .clone()
                 .unwrap_or(postgres::secret::Secret::default())
@@ -507,12 +508,13 @@ impl CodeService for OrbitalApi {
                 .map(|(org_db, repo_db, secret_db)| {
                     let git_uri_parsed =
                         git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
+
                     GitRepoEntry {
                         org: org_db.name,
-                        git_provider: git_uri_parsed.host.unwrap(),
+                        git_provider: git_uri_parsed.clone().host.unwrap(),
                         name: repo_db.name,
-                        user: git_uri_parsed.user.unwrap_or_default(),
-                        uri: git_uri_parsed.href,
+                        user: git_uri_parsed.clone().user.unwrap_or_default().to_string(),
+                        uri: format!("{}", &git_uri_parsed.trim_auth()),
                         secret_type: secret_db
                             .clone()
                             .unwrap_or(postgres::secret::Secret::default())

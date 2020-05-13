@@ -39,8 +39,8 @@ use std::io::prelude::*;
 
 use git_meta::git_info;
 
+use serde_json::Value;
 use std::str;
-use serde_json::{Value};
 
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
@@ -118,12 +118,10 @@ impl BuildService for OrbitalApi {
         // Declaring this in case we have an ssh key.
         let temp_keypath = Temp::new_file().expect("Unable to create temp file");
 
-
         // TODO: This is where we're going to get usernames too
         // let username, git_creds = ...
         let git_creds = match &code_service_response.secret_type.into() {
             SecretType::Unspecified => {
-
                 // TODO: Call secret service and get a username
                 debug!("No secret needed to clone. Public repo");
 
@@ -181,15 +179,21 @@ impl BuildService for OrbitalApi {
                 debug!("Secret get response: {:?}", &secret_service_response);
 
                 // TODO: Deserialize vault data into hashmap.
-                let vault_response : Value = serde_json::from_str(str::from_utf8(&secret_service_response.data).unwrap()).expect("Unable to read json data from Vault");
-
+                let vault_response: Value =
+                    serde_json::from_str(str::from_utf8(&secret_service_response.data).unwrap())
+                        .expect("Unable to read json data from Vault");
 
                 // Write ssh key to temp file
                 debug!("Writing incoming ssh key to temp file");
                 let mut file = File::create(temp_keypath.as_path())?;
                 let mut _contents = String::new();
-                let _ = file.write_all(vault_response["private_key"].as_str().unwrap().to_string().as_bytes());
-
+                let _ = file.write_all(
+                    vault_response["private_key"]
+                        .as_str()
+                        .unwrap()
+                        .to_string()
+                        .as_bytes(),
+                );
 
                 // TODO: Stop using username from Code service output
 
@@ -257,7 +261,9 @@ impl BuildService for OrbitalApi {
                 debug!("Secret get response: {:?}", &secret_service_response);
 
                 // TODO: Deserialize vault data into hashmap.
-                let vault_response : Value = serde_json::from_str(str::from_utf8(&secret_service_response.data).unwrap()).expect("Unable to read json data from Vault");
+                let vault_response: Value =
+                    serde_json::from_str(str::from_utf8(&secret_service_response.data).unwrap())
+                        .expect("Unable to read json data from Vault");
 
                 // Replace username with the user from the code service
                 let git_creds = GitCredentials::UserPassPlaintext {
@@ -267,7 +273,6 @@ impl BuildService for OrbitalApi {
 
                 debug!("Git Creds: {:?}", &git_creds);
                 git_creds
-
             }
             _ => panic!(
                 "We only support public repos, or private repo auth with sshkeys or basic auth"

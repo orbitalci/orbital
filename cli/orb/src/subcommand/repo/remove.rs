@@ -39,10 +39,10 @@ pub async fn action_handler(
 
     let request = Request::new(GitRepoRemoveRequest {
         org: action_option.org.clone().unwrap_or_default(),
-        git_provider: repo_info.git_url.host.unwrap(),
-        name: repo_info.git_url.name,
+        git_provider: repo_info.git_url.host.clone().unwrap(),
+        name: repo_info.git_url.clone().name,
         //user: ,
-        uri: repo_info.git_url.href,
+        uri: repo_info.git_url.trim_auth().to_string(),
         //force: ,
         ..Default::default()
     });

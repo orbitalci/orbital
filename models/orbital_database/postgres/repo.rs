@@ -101,7 +101,7 @@ impl From<GitRepoEntry> for Repo {
             //org_id: git_repo_entry.org,
             org_id: 0,
             name: git_repo_entry.name.clone(),
-            uri: git_uri_parsed.href,
+            uri: format!("{}", git_uri_parsed),
             //git_host_type: git_repo_entry.,
             //secret_id: Option<i32>,
             build_active_state: git_repo_entry.build.into(),
