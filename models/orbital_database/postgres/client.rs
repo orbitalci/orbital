@@ -609,6 +609,7 @@ pub fn build_summary_remove() {
     unimplemented!();
 }
 
+// TODO: `repo` should be changed to Option<&str> for granularity between all or one repo
 pub fn build_summary_list(
     conn: &PgConnection,
     org: &str,
@@ -625,6 +626,7 @@ pub fn build_summary_list(
     let result: Vec<(BuildTarget, BuildSummary)> = build_summary::table
         .inner_join(build_target::table)
         .select((build_target::all_columns, build_summary::all_columns))
+        .filter(build_target::repo_id.eq(repo_db.id))
         .order(build_summary::id.desc())
         .limit(limit.into())
         .load(conn)
