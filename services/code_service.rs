@@ -23,7 +23,6 @@ use log::{debug, info};
 use orbital_database::postgres;
 
 use serde_json::json;
-use std::collections::HashMap;
 
 /// Implementation of protobuf derived `CodeService` trait
 #[tonic::async_trait]

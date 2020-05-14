@@ -58,7 +58,7 @@ impl BuildService for OrbitalApi {
         info!("build request: {:?}", &unwrapped_request.git_repo);
         debug!("build request details: {:?}", &unwrapped_request);
 
-        let git_parsed_uri =
+        let mut git_parsed_uri =
             git_info::git_remote_url_parse(unwrapped_request.clone().remote_uri.as_ref())
                 .expect("Could not parse repo uri");
 
@@ -123,12 +123,12 @@ impl BuildService for OrbitalApi {
         let git_creds = match &code_service_response.secret_type.into() {
             SecretType::Unspecified => {
                 // TODO: Call secret service and get a username
-                debug!("No secret needed to clone. Public repo");
+                info!("No secret needed to clone. Public repo");
 
                 GitCredentials::Public
             }
             SecretType::SshKey => {
-                debug!("SSH key needed to clone");
+                info!("SSH key needed to clone");
 
                 debug!("Connecting to the Secret service");
                 let secret_client_conn_req = SecretServiceClient::connect(format!(
@@ -152,7 +152,7 @@ impl BuildService for OrbitalApi {
 
                 let secret_name = format!(
                     "{}/{}",
-                    &git_parsed_uri.host.expect("No host defined"),
+                    &git_parsed_uri.host.clone().expect("No host defined"),
                     &git_parsed_uri.name,
                 );
 
@@ -184,7 +184,7 @@ impl BuildService for OrbitalApi {
                         .expect("Unable to read json data from Vault");
 
                 // Write ssh key to temp file
-                debug!("Writing incoming ssh key to temp file");
+                info!("Writing incoming ssh key to temp file");
                 let mut file = File::create(temp_keypath.as_path())?;
                 let mut _contents = String::new();
                 let _ = file.write_all(
@@ -199,18 +199,21 @@ impl BuildService for OrbitalApi {
 
                 // Replace username with the user from the code service
                 let git_creds = GitCredentials::SshKey {
-                    username: vault_response["username"].as_str().unwrap().to_string(),
+                    username: vault_response["username"].clone().as_str().unwrap().to_string(),
                     public_key: None,
                     private_key: temp_keypath.as_path(),
                     passphrase: None,
                 };
 
+                // Add username to git_parsed_uri for cloning
+                git_parsed_uri.user = Some(vault_response["username"].clone().as_str().unwrap().to_string());
+                
                 debug!("Git Creds: {:?}", &git_creds);
 
                 git_creds
             }
             SecretType::BasicAuth => {
-                debug!("Userpass needed to clone");
+                info!("Basic Auth creds needed to clone");
 
                 debug!("Connecting to the Secret service");
                 let secret_client_conn_req = SecretServiceClient::connect(format!(
@@ -234,7 +237,7 @@ impl BuildService for OrbitalApi {
 
                 let secret_name = format!(
                     "{}/{}",
-                    &git_parsed_uri.host.expect("No host defined"),
+                    &git_parsed_uri.host.clone().expect("No host defined"),
                     &git_parsed_uri.name,
                 );
 
@@ -297,6 +300,7 @@ impl BuildService for OrbitalApi {
         let pg_conn = postgres::client::establish_connection();
 
         // Add build target record in db
+        debug!("Adding new build target to DB");
         let build_target_result = postgres::client::build_target_add(
             &pg_conn,
             &unwrapped_request.org,
@@ -335,6 +339,7 @@ impl BuildService for OrbitalApi {
         };
 
         // Create a new build summary record
+        debug!("Adding new build summary to DB");
         let _build_summary_result_add = postgres::client::build_summary_add(
             &pg_conn,
             &org_db.name,
@@ -358,6 +363,7 @@ impl BuildService for OrbitalApi {
             ..Default::default()
         };
 
+        info!("Updating build state to starting");
         let build_summary_result_start = postgres::client::build_summary_update(
             &pg_conn,
             &org_db.name,
@@ -376,9 +382,9 @@ impl BuildService for OrbitalApi {
         );
 
         // TODO: Replace expect with match, so we can update db in case of failures
-        debug!("Cloning code into temp directory");
+        info!("Cloning code into temp directory");
         let git_repo = build_engine::clone_repo(
-            &unwrapped_request.remote_uri,
+            format!("{}", &git_parsed_uri).as_str(),
             &unwrapped_request.branch,
             git_creds,
         )
@@ -401,7 +407,7 @@ impl BuildService for OrbitalApi {
             }
         };
 
-        debug!("Pulling container: {:?}", config.image.clone());
+        info!("Pulling container: {:?}", config.image.clone());
         match build_engine::docker_container_pull(config.image.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
@@ -412,7 +418,7 @@ impl BuildService for OrbitalApi {
         let vols_vec = agent_runtime::parse_volumes_input(&None);
 
         // Create a new container
-        debug!("Creating container");
+        info!("Creating container");
         let container_id = match build_engine::docker_container_create(
             config.image.as_str(),
             envs_vec,
@@ -424,7 +430,7 @@ impl BuildService for OrbitalApi {
         };
 
         // Start a docker container
-        debug!("Start container");
+        info!("Start container");
         match build_engine::docker_container_start(container_id.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
@@ -445,6 +451,7 @@ impl BuildService for OrbitalApi {
                 ..Default::default()
             };
 
+            info!("Updating build state to running");
             let build_summary_result_running = postgres::client::build_summary_update(
                 &pg_conn,
                 &org_db.name,
@@ -469,6 +476,7 @@ impl BuildService for OrbitalApi {
             //    ..Default::default()
             //};
 
+            info!("Adding build stage");
             let build_stage_start = postgres::client::build_stage_add(
                 &pg_conn,
                 &org_db.name,
@@ -511,6 +519,7 @@ impl BuildService for OrbitalApi {
                 ..Default::default()
             };
 
+            info!("Updating build state to finishing");
             let build_summary_result_finishing = postgres::client::build_summary_update(
                 &pg_conn,
                 &org_db.name,
@@ -529,6 +538,7 @@ impl BuildService for OrbitalApi {
             );
 
             // Mark build stage end time and save stage output
+            info!("Marking end of build stage");
             let _build_stage_end = postgres::client::build_stage_update(
                 &pg_conn,
                 &org_db.name,
@@ -551,7 +561,7 @@ impl BuildService for OrbitalApi {
             // END Looping over stages
         }
 
-        debug!("Stopping the container");
+        info!("Stopping the container");
         match build_engine::docker_container_stop(container_id.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
@@ -567,6 +577,7 @@ impl BuildService for OrbitalApi {
             ..Default::default()
         };
 
+        info!("Updating build state to done");
         let build_summary_result_done = postgres::client::build_summary_update(
             &pg_conn,
             &org_db.name,
