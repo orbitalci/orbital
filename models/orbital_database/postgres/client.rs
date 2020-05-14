@@ -562,7 +562,7 @@ pub fn build_summary_get(
     let result: Result<(BuildTarget, BuildSummary), _> = build_summary::table
         .inner_join(build_target::table)
         .select((build_target::all_columns, build_summary::all_columns))
-        .filter(build_summary::build_target_id.eq(build_index))
+        .filter(build_summary::build_target_id.eq(build_target_db.id))
         .get_result(conn);
 
     match result {
@@ -691,7 +691,7 @@ pub fn build_stage_get(
     let result: Result<(BuildSummary, BuildStage), _> = build_stage::table
         .inner_join(build_summary::table)
         .select((build_summary::all_columns, build_stage::all_columns))
-        .filter(build_summary::build_target_id.eq(build_index))
+        .filter(build_summary::build_target_id.eq(build_target_db.id))
         .filter(build_stage::id.eq(build_stage_id))
         .get_result(conn);
 
