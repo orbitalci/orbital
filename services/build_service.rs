@@ -596,7 +596,7 @@ impl BuildService for OrbitalApi {
         );
 
         let build_metadata = BuildMetadata {
-            id: build_summary_current_state_db.build_target_id,
+            id: repo_db.next_build_index - 1,
             build: Some(unwrapped_request),
             queue_time: Some(prost_types::Timestamp {
                 seconds: build_target_db.queue_time.timestamp(),
