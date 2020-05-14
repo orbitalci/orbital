@@ -768,12 +768,13 @@ pub fn build_stage_list(
     let (_repo_db, build_target_db, build_summary_db_opt) =
         build_summary_get(conn, org, repo, hash, branch, build_index)?;
 
-    let _build_summary_db = build_summary_db_opt.expect("No build summary found");
+    let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
     let result: Vec<(BuildSummary, BuildStage)> = build_stage::table
         .inner_join(build_summary::table)
         .select((build_summary::all_columns, build_stage::all_columns))
-        .filter(build_stage::build_summary_id.eq(build_index))
+        .filter(build_summary::build_target_id.eq(build_target_db.id))
+        .filter(build_stage::build_summary_id.eq(build_summary_db.id))
         .order(build_stage::id.desc())
         .limit(limit.into())
         .load(conn)
