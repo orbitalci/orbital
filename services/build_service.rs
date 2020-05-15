@@ -199,15 +199,25 @@ impl BuildService for OrbitalApi {
 
                 // Replace username with the user from the code service
                 let git_creds = GitCredentials::SshKey {
-                    username: vault_response["username"].clone().as_str().unwrap().to_string(),
+                    username: vault_response["username"]
+                        .clone()
+                        .as_str()
+                        .unwrap()
+                        .to_string(),
                     public_key: None,
                     private_key: temp_keypath.as_path(),
                     passphrase: None,
                 };
 
                 // Add username to git_parsed_uri for cloning
-                git_parsed_uri.user = Some(vault_response["username"].clone().as_str().unwrap().to_string());
-                
+                git_parsed_uri.user = Some(
+                    vault_response["username"]
+                        .clone()
+                        .as_str()
+                        .unwrap()
+                        .to_string(),
+                );
+
                 debug!("Git Creds: {:?}", &git_creds);
 
                 git_creds
