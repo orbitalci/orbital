@@ -26,8 +26,8 @@ pub enum ServiceType {
 /// Default URI for the Orbital service
 pub const ORB_DEFAULT_URI: &str = "127.0.0.1:50051";
 
-/// 1 hour, in seconds
-pub const DEFAULT_BUILD_TIMEOUT: u64 = 60 * 60 * 24;
+/// Number of seconds in an hour
+pub const DEFAULT_BUILD_TIMEOUT: u64 = 60 * 60;
 
 /// Return the uri for a given service
 pub fn get_service_uri(_svc: ServiceType) -> &'static str {

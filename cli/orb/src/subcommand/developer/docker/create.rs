@@ -1,8 +1,12 @@
 use crate::{developer::docker::SubcommandOption, GlobalOption, SubcommandError};
-use agent_runtime::docker;
+use agent_runtime::{self, docker, docker::OrbitalContainerSpec};
 //use log::debug;
 use anyhow::Result;
 use structopt::StructOpt;
+
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
+use std::time::Duration;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
@@ -30,17 +34,33 @@ pub async fn action_handler(
     // FIXME
     // This is going to be a stupid parsed command on whitespace only.
     // Embedded commands with quotes, $(), or backtics not expected to work with this parsing
-    let command_vec_slice: Vec<&str> = action_option.command.split_whitespace().collect();
+    //let command_vec_slice: Vec<&str> = action_option.command.split_whitespace().collect();
 
-    let envs_vec = crate::parse_envs_input(&action_option.env);
-    let vols_vec = crate::parse_volumes_input(&action_option.volume);
+    //let envs_vec = crate::parse_envs_input(&action_option.env);
+    //let vols_vec = crate::parse_volumes_input(&action_option.volume);
 
-    match docker::container_create(
-        action_option.image.clone().as_str(),
-        command_vec_slice,
-        envs_vec,
-        vols_vec,
-    ) {
+    let rand_string: String = thread_rng().sample_iter(&Alphanumeric).take(7).collect();
+
+    let container_name = format!(
+        "{}",
+        agent_runtime::generate_unique_build_id(
+            "test-org",
+            "test-repo",
+            "test-hash",
+            &format!("{}", rand_string),
+        )
+    );
+
+    let build_container_spec = OrbitalContainerSpec {
+        name: Some(container_name),
+        image: action_option.image.clone(),
+        command: action_option.command.split_whitespace().collect(),
+        env_vars: crate::parse_envs_input(&action_option.env),
+        volumes: crate::parse_volumes_input(&action_option.volume),
+        timeout: Some(Duration::from_secs(60 * 30)), // 30 min
+    };
+
+    match docker::container_create(build_container_spec) {
         Ok(container_id) => {
             println!("{}", container_id);
             Ok(())

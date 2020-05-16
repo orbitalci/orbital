@@ -26,6 +26,7 @@ strum_macros = "0.18"
 termcolor = "1.1"
 thiserror = "1.0"
 tonic = "0.2"
+rand = "0.7"
 
 [lib]
 name = "subcommand"

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use structopt::StructOpt;
 
-use agent_runtime::docker;
+use agent_runtime::{self, docker, docker::OrbitalContainerSpec};
 use config_parser::yaml as parser;
 use git_meta::git_info;
 use std::path::Path;
@@ -10,6 +10,10 @@ use log::debug;
 
 use crate::{GlobalOption, SubcommandError};
 use std::path::PathBuf;
+
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
+use std::time::Duration;
 
 /// Local options for customizing local docker build with orb
 #[derive(Debug, StructOpt)]
@@ -48,15 +52,10 @@ pub async fn subcommand_handler(
 
     // If a path isn't given, then use the current working directory based on env var PWD
     let path = &local_option.path;
+    let git_info =
+        git_info::get_git_info_from_path(path, &None, &None).expect("Could not parse repo");
 
-    let envs_vec = crate::parse_envs_input(&local_option.env);
-    let vols_vec = crate::parse_volumes_input(&local_option.volume);
-
-    debug!(
-        "Git info at path ({:?}): {:?}",
-        &path,
-        git_info::get_git_info_from_path(path, &None, &None)
-    );
+    debug!("Git info at path ({:?}): {:?}", &path, &git_info);
 
     // TODO: Will want ability to pass in any yaml.
     // TODO: Also handle file being named orb.yaml
@@ -66,30 +65,49 @@ pub async fn subcommand_handler(
     let config =
         parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).unwrap();
 
-    debug!("Pulling container: {:?}", config.image.clone());
-    match docker::container_pull(config.image.as_str()) {
+    let rand_string: String = thread_rng().sample_iter(&Alphanumeric).take(7).collect();
+    let default_command_w_timeout = vec!["sleep", "2h"];
+    let build_container_spec = OrbitalContainerSpec {
+        name: Some(agent_runtime::generate_unique_build_id(
+            "dev-org",
+            &git_info.git_url.name,
+            &git_info.commit_id,
+            &format!("{}", rand_string),
+        )),
+        image: config.image,
+        command: default_command_w_timeout,
+
+        // TODO: Inject the dynamic build env vars here
+        env_vars: agent_runtime::parse_envs_input(&None),
+        volumes: agent_runtime::parse_volumes_input(&None),
+        timeout: Some(Duration::from_secs(60 * 30)),
+    };
+
+    debug!(
+        "Pulling container: {:?}",
+        build_container_spec.image.clone()
+    );
+    match docker::container_pull(&build_container_spec.image.clone()) {
         Ok(ok) => ok, // The successful result doesn't matter
         Err(_) => {
-            return Err(
-                SubcommandError::new(&format!("Could not pull image {}", &config.image)).into(),
-            )
+            return Err(SubcommandError::new(&format!(
+                "Could not pull image {}",
+                &build_container_spec.image
+            ))
+            .into())
         }
     };
 
     // Create a new container
     debug!("Creating container");
-    let default_command_w_timeout = vec!["sleep", "2h"];
-    let container_id = match docker::container_create(
-        config.image.as_str(),
-        default_command_w_timeout,
-        envs_vec,
-        vols_vec,
-    ) {
+    let container_id = match docker::container_create(build_container_spec.clone()) {
         Ok(container_id) => container_id,
         Err(_) => {
-            return Err(
-                SubcommandError::new(&format!("Could not create image {}", &config.image)).into(),
-            )
+            return Err(SubcommandError::new(&format!(
+                "Could not create image {}",
+                &build_container_spec.image
+            ))
+            .into())
         }
     };
 
@@ -98,9 +116,11 @@ pub async fn subcommand_handler(
     match docker::container_start(&container_id) {
         Ok(container_id) => container_id,
         Err(_) => {
-            return Err(
-                SubcommandError::new(&format!("Could not start image {}", &config.image)).into(),
-            )
+            return Err(SubcommandError::new(&format!(
+                "Could not start image {}",
+                &build_container_spec.image
+            ))
+            .into())
         }
     }
 
@@ -125,7 +145,7 @@ pub async fn subcommand_handler(
             Err(_) => {
                 return Err(SubcommandError::new(&format!(
                     "Could not create image {}",
-                    &config.image
+                    &build_container_spec.image
                 ))
                 .into())
             }

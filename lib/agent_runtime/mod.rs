@@ -47,6 +47,22 @@ impl From<Box<dyn Error>> for AgentRuntimeError {
     }
 }
 
+/// Generate a tracable string for Docker containers
+pub fn generate_unique_build_id(org: &str, repo: &str, commit: &str, id: &str) -> String {
+    // Arbitrary max lengths
+    let org_print = if org.len() > 20 { &org[0..19] } else { org };
+    let repo_print = if repo.len() > 20 { &repo[0..19] } else { repo };
+    let commit_print = &commit[0..6];
+
+    format!(
+        "{org}_{repo}_{commit}_{id}",
+        org = org_print,
+        repo = repo_print,
+        commit = commit_print,
+        id = id
+    )
+}
+
 // Below is copied from orbital_cli_subcommand crate
 
 /// Wrapper function for `kv_csv_parser` to specifically handle env vars for `shiplift`
