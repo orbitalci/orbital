@@ -1,12 +1,11 @@
-use crate::docker;
+use crate::docker::{self, OrbitalContainerSpec};
 use crate::AgentRuntimeError;
 use anyhow::Result;
 use config_parser;
 use git_meta;
-use log::debug;
+use log::{info, debug};
 use mktemp;
 use std::path::Path;
-use std::time::Duration;
 
 /// Create a temporary directory on the host, and clone a repo
 pub fn clone_repo(
@@ -28,25 +27,33 @@ pub fn load_orb_config_from_str(config: &str) -> Result<config_parser::OrbitalCo
 }
 
 /// Pull a docker image using the host docker engine
-pub fn docker_container_pull(image: &str) -> Result<()> {
-    match docker::container_pull(image) {
+pub fn docker_container_pull(orb_build_spec: &OrbitalContainerSpec) -> Result<()> {
+    match docker::container_pull(&orb_build_spec.image) {
         Ok(ok) => Ok(ok), // The successful result doesn't matter
-        Err(_) => Err(AgentRuntimeError::new(&format!("Could not pull image {}", image)).into()),
+        Err(_) => Err(AgentRuntimeError::new(&format!("Could not pull image {}", &orb_build_spec.image)).into()),
     }
 }
 
 /// Create a docker container
-pub fn docker_container_create(
-    image: &str,
-    envs: Option<Vec<&str>>,
-    volumes: Option<Vec<&str>>,
-    timeout: Duration,
-) -> Result<String> {
-    let timeout_as_seconds = format!("{}s", timeout.as_secs());
+pub fn docker_container_create(orb_build_spec: &OrbitalContainerSpec) -> Result<String> {
+    let timeout_as_seconds = format!("{}s", orb_build_spec.timeout.unwrap().as_secs());
     let default_command_w_timeout = vec!["sleep", &timeout_as_seconds];
-    match docker::container_create(image, default_command_w_timeout, envs, volumes) {
-        Ok(container_id) => Ok(container_id),
-        Err(_) => Err(AgentRuntimeError::new(&format!("Could not create image {}", &image)).into()),
+
+    let mut orb_build_spec_w_timeout = orb_build_spec.clone();
+    orb_build_spec_w_timeout.command = default_command_w_timeout;
+
+    match docker::container_create(
+        orb_build_spec_w_timeout
+    ) {
+        Ok(container_id) => {
+            info!("Created container id: {:?}", container_id);
+            Ok(container_id)
+        },
+        Err(_) => Err(AgentRuntimeError::new(&format!(
+            "Could not create image {}",
+            &orb_build_spec.image
+        ))
+        .into()),
     }
 }
 

@@ -6,6 +6,19 @@ use tokio::prelude::{Future, Stream};
 use anyhow::{anyhow, Result};
 use log::{debug, error};
 use std::sync::mpsc::channel;
+use std::time::Duration;
+
+#[derive(Debug, Default, Clone)]
+pub struct OrbitalContainerSpec<'a> {
+    pub name: Option<String>,
+    pub image: String,
+    pub command: Vec<&'a str>,
+    //pub env_vars: Option<HashMap<String, String>>,
+    //pub volumes: Option<HashMap<String, String>>,
+    pub env_vars: Option<Vec<&'a str>>,
+    pub volumes: Option<Vec<&'a str>>,
+    pub timeout: Option<Duration>,
+}
 
 /// Returns a String to work around shiplift behavior that is different from the docker cli
 /// If we give shiplift an image w/o a tag, it'll download all the tags. Usually the intended behavior is to only pull latest
@@ -53,31 +66,27 @@ pub fn container_pull(image: &str) -> Result<()> {
     Ok(tokio::run(img_pull))
 }
 
+// TODO: Build a struct so I don't have to mess with so many function calls.
 /// Connect to the docker engine and create a container
 /// Currently assumes that source code gets mounted in container's /orbital-work directory
 /// Returns the id of the container that is created
-pub fn container_create(
-    image: &str,
-    command: Vec<&str>,
-    envs: Option<Vec<&str>>,
-    vols: Option<Vec<&str>>,
-) -> Result<String, ()> {
+pub fn container_create(container_spec: OrbitalContainerSpec) -> Result<String, ()> {
     let docker = Docker::new();
 
-    let env_vec: Vec<&str> = envs.unwrap_or_default();
+    let env_vec: Vec<&str> = container_spec.env_vars.unwrap_or_default();
     debug!("Adding env vars: {:?}", env_vec);
-    let volume_vec: Vec<&str> = vols.unwrap_or_default();
+    let volume_vec: Vec<&str> = container_spec.volumes.unwrap_or_default();
     debug!("Adding volume mounts: {:?}", volume_vec);
 
     // TODO: Need a naming convention
-    let container_spec = ContainerOptions::builder(image)
+    let container_spec = ContainerOptions::builder(&container_spec.image)
         //.name("test-container-name")
         .attach_stdout(true)
         .attach_stderr(true)
         .working_dir(super::ORBITAL_CONTAINER_WORKDIR)
         .env(env_vec)
         .volumes(volume_vec)
-        .cmd(command)
+        .cmd(container_spec.command)
         .build();
 
     let new_container = docker

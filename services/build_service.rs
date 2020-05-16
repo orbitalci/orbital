@@ -24,6 +24,7 @@ use tokio::sync::mpsc;
 
 use crate::OrbitalServiceError;
 use agent_runtime::build_engine;
+use agent_runtime::docker::OrbitalContainerSpec;
 use git_meta::GitCredentials;
 
 use super::{OrbitalApi, ServiceType};
@@ -417,30 +418,41 @@ impl BuildService for OrbitalApi {
             }
         };
 
-        info!("Pulling container: {:?}", config.image.clone());
-        match build_engine::docker_container_pull(config.image.as_str()) {
+        // TODO: Use this spec when we can pre-populate the entire build info from config
+        let build_container_spec = OrbitalContainerSpec {
+            name: Some(agent_runtime::generate_unique_build_id(
+                &org_db.name,
+                &repo_db.name,
+                &build_target_current_state.git_hash,
+                &format!("{}", build_target_current_state.build_index),
+            )),
+            image: config.image.clone(),
+            command: Vec::new(), // TODO: Populate this field
+
+            // TODO: Inject the dynamic build env vars here
+            env_vars: agent_runtime::parse_envs_input(&None),
+            volumes: agent_runtime::parse_volumes_input(&None),
+            timeout: Some(Duration::from_secs(crate::DEFAULT_BUILD_TIMEOUT)),
+        };
+
+        info!(
+            "Pulling container: {:?}",
+            build_container_spec.image.clone()
+        );
+        match build_engine::docker_container_pull(&build_container_spec) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
-        // TODO: Inject the dynamic build env vars here
-        let envs_vec = agent_runtime::parse_envs_input(&None);
-        let vols_vec = agent_runtime::parse_volumes_input(&None);
-
         // Create a new container
         info!("Creating container");
-        let container_id = match build_engine::docker_container_create(
-            config.image.as_str(),
-            envs_vec,
-            vols_vec,
-            Duration::from_secs(crate::DEFAULT_BUILD_TIMEOUT),
-        ) {
+        let container_id = match build_engine::docker_container_create(&build_container_spec) {
             Ok(id) => id,
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
         };
 
         // Start a docker container
-        info!("Start container");
+        info!("Start container {:?}", &container_id.as_str());
         match build_engine::docker_container_start(container_id.as_str()) {
             Ok(ok) => ok, // The successful result doesn't matter
             Err(e) => return Err(OrbitalServiceError::new(&e.to_string()).into()),
@@ -606,7 +618,7 @@ impl BuildService for OrbitalApi {
         );
 
         let build_metadata = BuildMetadata {
-            id: repo_db.next_build_index - 1,
+            id: build_target_current_state.build_index,
             build: Some(unwrapped_request),
             queue_time: Some(prost_types::Timestamp {
                 seconds: build_target_db.queue_time.timestamp(),
