@@ -79,15 +79,26 @@ pub fn container_create(container_spec: OrbitalContainerSpec) -> Result<String, 
     debug!("Adding volume mounts: {:?}", volume_vec);
 
     // TODO: Need a naming convention
-    let container_spec = ContainerOptions::builder(&container_spec.image)
-        //.name("test-container-name")
-        .attach_stdout(true)
-        .attach_stderr(true)
-        .working_dir(super::ORBITAL_CONTAINER_WORKDIR)
-        .env(env_vec)
-        .volumes(volume_vec)
-        .cmd(container_spec.command)
-        .build();
+
+    let container_spec = match &container_spec.name {
+        Some(container_name) => ContainerOptions::builder(&container_spec.image)
+            .name(container_name)
+            .attach_stdout(true)
+            .attach_stderr(true)
+            .working_dir(super::ORBITAL_CONTAINER_WORKDIR)
+            .env(env_vec)
+            .volumes(volume_vec)
+            .cmd(container_spec.command)
+            .build(),
+        None => ContainerOptions::builder(&container_spec.image)
+            .attach_stdout(true)
+            .attach_stderr(true)
+            .working_dir(super::ORBITAL_CONTAINER_WORKDIR)
+            .env(env_vec)
+            .volumes(volume_vec)
+            .cmd(container_spec.command)
+            .build(),
+    };
 
     let new_container = docker
         .containers()
