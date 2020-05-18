@@ -3,7 +3,7 @@ use crate::AgentRuntimeError;
 use anyhow::Result;
 use config_parser;
 use git_meta;
-use log::{info, debug};
+use log::{debug, info};
 use mktemp;
 use std::path::Path;
 
@@ -30,7 +30,11 @@ pub fn load_orb_config_from_str(config: &str) -> Result<config_parser::OrbitalCo
 pub fn docker_container_pull(orb_build_spec: &OrbitalContainerSpec) -> Result<()> {
     match docker::container_pull(&orb_build_spec.image) {
         Ok(ok) => Ok(ok), // The successful result doesn't matter
-        Err(_) => Err(AgentRuntimeError::new(&format!("Could not pull image {}", &orb_build_spec.image)).into()),
+        Err(_) => Err(AgentRuntimeError::new(&format!(
+            "Could not pull image {}",
+            &orb_build_spec.image
+        ))
+        .into()),
     }
 }
 
@@ -42,13 +46,11 @@ pub fn docker_container_create(orb_build_spec: &OrbitalContainerSpec) -> Result<
     let mut orb_build_spec_w_timeout = orb_build_spec.clone();
     orb_build_spec_w_timeout.command = default_command_w_timeout;
 
-    match docker::container_create(
-        orb_build_spec_w_timeout
-    ) {
+    match docker::container_create(orb_build_spec_w_timeout) {
         Ok(container_id) => {
             info!("Created container id: {:?}", container_id);
             Ok(container_id)
-        },
+        }
         Err(_) => Err(AgentRuntimeError::new(&format!(
             "Could not create image {}",
             &orb_build_spec.image
