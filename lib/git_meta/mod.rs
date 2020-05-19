@@ -11,6 +11,7 @@ use std::path::Path;
 pub struct GitCommitContext {
     pub branch: String,
     pub commit_id: String,
+    pub message: String,
     pub git_url: GitUrl,
 }
 

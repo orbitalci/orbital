@@ -35,14 +35,19 @@ pub fn get_git_info_from_path(
         .expect("Unable to extract branch name")
         .to_string();
 
-    let working_commit = format!(
+    let commit = get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id)?;
+
+    let commit_id = format!(
         "{}",
-        get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id)?.id()
+        &commit.id()
     );
 
+    let commit_msg = commit.clone().message().unwrap_or_default().to_string();
+
     Ok(GitCommitContext {
-        commit_id: working_commit,
+        commit_id: commit_id,
         branch: working_branch,
+        message: commit_msg.to_string(), 
         git_url: GitUrl::parse(&remote_url)?,
     })
 }
