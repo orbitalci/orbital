@@ -37,17 +37,14 @@ pub fn get_git_info_from_path(
 
     let commit = get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id)?;
 
-    let commit_id = format!(
-        "{}",
-        &commit.id()
-    );
+    let commit_id = format!("{}", &commit.id());
 
     let commit_msg = commit.clone().message().unwrap_or_default().to_string();
 
     Ok(GitCommitContext {
         commit_id: commit_id,
         branch: working_branch,
-        message: commit_msg.to_string(), 
+        message: commit_msg.to_string(),
         git_url: GitUrl::parse(&remote_url)?,
     })
 }

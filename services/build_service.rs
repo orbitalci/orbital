@@ -401,6 +401,14 @@ impl BuildService for OrbitalApi {
         )
         .expect("Unable to clone repo");
 
+        // Here we parse the newly cloned repo so we can get the commit message
+        let git_repo_info = git_info::get_git_info_from_path(
+            git_repo.as_path(),
+            &Some(unwrapped_request.clone().branch),
+            &Some(build_target_current_state.clone().git_hash),
+        )
+        .unwrap();
+
         let config = match &unwrapped_request.config.len() {
             0 => {
                 debug!("Loading orb.yml from path {:?}", &git_repo.as_path());
@@ -418,6 +426,31 @@ impl BuildService for OrbitalApi {
             }
         };
 
+        // Defining internal env vars here
+        let orb_org_env = format!("ORBITAL_ORG={}", &org_db.name);
+        let orb_repo_env = format!("ORBITAL_REPOSITORY={}", &repo_db.name);
+        let orb_build_number_env = format!(
+            "ORBITAL_BUILD_NUMBER={}",
+            &build_target_current_state.build_index
+        );
+        let orb_commit_env = format!("ORBITAL_COMMIT={}", &build_target_current_state.git_hash);
+
+        let orb_commit_short_env = format!(
+            "ORBITAL_COMMIT_SHORT={}",
+            &build_target_current_state.git_hash[0..6]
+        );
+        let orb_commit_message = format!("ORBITAL_COMMIT_MSG={}", git_repo_info.message);
+
+        // TODO: Need to merge global env vars from config
+        let orbital_env_vars_vec = vec!(
+            orb_org_env.as_str(),
+            orb_repo_env.as_str(),
+            orb_build_number_env.as_str(),
+            orb_commit_env.as_str(),
+            orb_commit_short_env.as_str(),
+            orb_commit_message.as_str(),
+        );
+
         // TODO: Use this spec when we can pre-populate the entire build info from config
         let build_container_spec = OrbitalContainerSpec {
             name: Some(agent_runtime::generate_unique_build_id(
@@ -430,7 +463,8 @@ impl BuildService for OrbitalApi {
             command: Vec::new(), // TODO: Populate this field
 
             // TODO: Inject the dynamic build env vars here
-            env_vars: agent_runtime::parse_envs_input(&None),
+            //env_vars: agent_runtime::parse_envs_input(&None),
+            env_vars: Some(orbital_env_vars_vec),
             volumes: agent_runtime::parse_volumes_input(&None),
             timeout: Some(Duration::from_secs(crate::DEFAULT_BUILD_TIMEOUT)),
         };
