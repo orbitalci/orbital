@@ -8,12 +8,12 @@ stages:
       - echo Commit is ${ORBITAL_COMMIT}
       - echo Commit short is ${ORBITAL_COMMIT_SHORT}
       - echo Commit message is ${ORBITAL_COMMIT_MSG}
-  - name: The second stage
-    command:
-    - pwd
-    - ls
-    - env
-  - name: The long docker build stage
-    command:
-    - echo Hello world!
-    - docker build -t orb .
+  #- name: The first stage
+  #  command:
+  #  - pwd
+  #  - ls
+  #  - env
+  #- name: The second stage
+  #  command:
+  #  - echo Hello world!
+  #  - docker build -t orb .
