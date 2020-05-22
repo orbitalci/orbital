@@ -18,7 +18,7 @@ orbital_hashicorp_stack = { path = "../lib/hashicorp_stack" }
 orbital_headers = { path = "../models/orbital_headers" }
 prost-types = "0.6"
 thiserror = "1.0"
-tokio = "0.2"
+tokio = { version = "0.2", features = ["full"] }
 tonic = "0.2"
 serde_json = "1.0"
 

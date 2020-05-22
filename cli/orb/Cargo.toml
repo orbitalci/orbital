@@ -14,5 +14,5 @@ orbital_headers = { path = "../../models/orbital_headers" }
 orbital_services = { path = "../../services"}
 structopt = "0.3"
 thiserror = "1.0"
-tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
+tokio = { version = "0.2", features = ["full"] }
 tonic = "0.2"
