@@ -7,6 +7,9 @@ use log::{debug, info};
 use mktemp;
 use std::path::Path;
 
+use serde_json::value::Value;
+use tokio::sync::mpsc;
+
 /// Create a temporary directory on the host, and clone a repo
 pub fn clone_repo(
     uri: &str,
@@ -36,6 +39,12 @@ pub fn docker_container_pull(orb_build_spec: &OrbitalContainerSpec) -> Result<()
         ))
         .into()),
     }
+}
+
+pub async fn docker_container_pull_async(
+    orb_build_spec: OrbitalContainerSpec<'_>,
+) -> Result<mpsc::UnboundedReceiver<Value>> {
+    docker::container_pull_async(orb_build_spec.image.to_string()).await
 }
 
 /// Create a docker container

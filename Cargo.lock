@@ -1428,9 +1428,11 @@ dependencies = [
  "orbital_config_parser",
  "orbital_git_meta",
  "orbital_hashicorp_stack",
+ "serde_json",
  "shiplift",
  "thiserror",
  "tokio 0.1.22",
+ "tokio 0.2.20",
 ]
 
 [[package]]
