@@ -21,6 +21,7 @@ use termcolor::{BufferWriter, ColorChoice};
 use anyhow::Result;
 use log::debug;
 use std::path::{Path, PathBuf};
+use std::str;
 
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
@@ -127,6 +128,7 @@ pub async fn subcommand_handler(
         ..Default::default()
     };
 
+    // TODO: Convert the proto types to the Diesel types
     //while let Some(response) = stream.next().await {
     while let Some(response) = stream.message().await? {
         let bufwtr = BufferWriter::stdout(ColorChoice::Auto);
@@ -134,8 +136,19 @@ pub async fn subcommand_handler(
 
         build_metadata = response.build_metadata.clone().unwrap_or_default();
 
-        writeln!(&mut buffer, "{:?}", response.clone())?;
-        bufwtr.print(&buffer)?;
+        match response.build_output.clone().pop() {
+            Some(build_output) => {
+                //writeln!(&mut buffer, "{:?}", response.clone())?;
+                writeln!(
+                    &mut buffer,
+                    "[{}] {}",
+                    build_output.stage.to_string(),
+                    str::from_utf8(&build_output.output)?
+                )?;
+                bufwtr.print(&buffer)?;
+            }
+            None => (),
+        };
     }
 
     // By default, format the response into a table

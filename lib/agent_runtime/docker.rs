@@ -1,12 +1,15 @@
 use shiplift::{tty::StreamType, ContainerOptions, Docker, ExecContainerOptions, PullOptions};
 
-use tokio;
-use tokio::prelude::{Future, Stream};
+use tokio_01;
+use tokio_01::prelude::{Future, Stream};
 
 use anyhow::{anyhow, Result};
 use log::{debug, error};
 use std::sync::mpsc::channel;
 use std::time::Duration;
+
+use serde_json::value::Value;
+use tokio::sync::mpsc;
 
 #[derive(Debug, Default, Clone)]
 pub struct OrbitalContainerSpec<'a> {
@@ -63,7 +66,32 @@ pub fn container_pull(image: &str) -> Result<()> {
             Ok(())
         })
         .map_err(|e| eprintln!("Error: {}", e));
-    Ok(tokio::run(img_pull))
+    Ok(tokio_01::run(img_pull))
+}
+
+pub async fn container_pull_async(image: String) -> Result<mpsc::UnboundedReceiver<Value>> {
+    let (tx, rx) = mpsc::unbounded_channel();
+
+    tokio::spawn(async move {
+        let docker = Docker::new();
+
+        let img: String = image_tag_sanitizer(&image).expect("Could not sanitize image name");
+
+        debug!("Pulling image: {}", img);
+
+        let img_pull = docker
+            .images()
+            .pull(&PullOptions::builder().image(img.clone()).build())
+            .for_each(move |output| {
+                debug!("{:?}", output);
+                tx.send(output).unwrap();
+                Ok(())
+            })
+            .map_err(|e| eprintln!("Error: {}", e));
+        tokio_01::run(img_pull)
+    });
+
+    Ok(rx)
 }
 
 // TODO: Build a struct so I don't have to mess with so many function calls.
@@ -112,7 +140,8 @@ pub fn container_create(container_spec: OrbitalContainerSpec) -> Result<String, 
             e
         });
 
-    let mut container_runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
+    let mut container_runtime =
+        tokio_01::runtime::Runtime::new().expect("Unable to create a runtime");
 
     // Wait for the container to be created so we can get its container id
     let container = match container_runtime.block_on(new_container) {
@@ -138,7 +167,7 @@ pub fn container_start(container_id: &str) -> Result<()> {
             info
         })
         .map_err(|e| eprintln!("Error: {}", e));
-    tokio::run(start_container);
+    tokio_01::run(start_container);
 
     Ok(())
 }
@@ -155,7 +184,7 @@ pub fn container_stop(container_id: &str) -> Result<()> {
             info
         })
         .map_err(|e| eprintln!("Error: {}", e));
-    tokio::run(stop_container);
+    tokio_01::run(stop_container);
     Ok(())
 }
 
@@ -164,9 +193,9 @@ pub fn container_stop(container_id: &str) -> Result<()> {
 pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<String>> {
     let docker = Docker::new();
 
-    println!("{:?}", command);
+    // println!("{:?}", command);
     // FYI: This might not work on MacOS hosts until https://github.com/softprops/shiplift/issues/155 is fixed
-    println!("Executing commands in the container");
+    //println!("Executing commands in the container");
     let options = ExecContainerOptions::builder()
         .cmd(command)
         .attach_stdout(true)
@@ -197,7 +226,7 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<Stri
         })
         .map_err(|e| eprintln!("Error: {}", e));
 
-    tokio::run(exec_container);
+    tokio_01::run(exec_container);
 
     let exec_output: Vec<String> = rx.into_iter().collect();
 

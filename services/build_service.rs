@@ -1,11 +1,6 @@
 use orbital_headers::build_meta::{
-    build_service_server::BuildService,
-    BuildLogResponse,
-    BuildMetadata,
-    BuildRecord, //BuildStage,
-    BuildSummaryRequest,
-    BuildSummaryResponse,
-    BuildTarget,
+    build_service_server::BuildService, BuildLogResponse, BuildMetadata, BuildRecord, BuildStage,
+    BuildSummaryRequest, BuildSummaryResponse, BuildTarget,
 };
 
 use chrono::{NaiveDateTime, Utc};
@@ -475,7 +470,27 @@ impl BuildService for OrbitalApi {
                 build_container_spec.image.clone()
             );
 
-            let _ = build_engine::docker_container_pull(&build_container_spec).unwrap();
+            //let _ = build_engine::docker_container_pull(&build_container_spec).unwrap();
+
+            // I guess here's where I read from the channel?
+            let mut stream =
+                build_engine::docker_container_pull_async(build_container_spec.clone())
+                    .await
+                    .unwrap();
+            while let Some(response) = stream.recv().await {
+                let mut container_pull_output = BuildStage {
+                    ..Default::default()
+                };
+                
+                println!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
+                let output = response["status"].clone().as_str().unwrap().as_bytes().to_owned();
+
+                container_pull_output.output = output;
+
+                build_record.build_output.push(container_pull_output);
+                tx.send(Ok(build_record.clone())).await.unwrap();
+                build_record.build_output.pop(); // Empty out the output buffer
+            }
 
             // Build Stage end Pulling container
 
