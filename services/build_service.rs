@@ -481,9 +481,14 @@ impl BuildService for OrbitalApi {
                 let mut container_pull_output = BuildStage {
                     ..Default::default()
                 };
-                
+
                 println!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
-                let output = response["status"].clone().as_str().unwrap().as_bytes().to_owned();
+                let output = response["status"]
+                    .clone()
+                    .as_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_owned();
 
                 container_pull_output.output = output;
 
