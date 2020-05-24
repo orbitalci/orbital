@@ -232,3 +232,49 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<Stri
 
     Ok(exec_output)
 }
+
+pub async fn container_exec_async(
+    container_id: String,
+    command: Vec<String>,
+) -> Result<mpsc::UnboundedReceiver<String>> {
+    let (tx, rx) = mpsc::unbounded_channel();
+
+    tokio::spawn(async move {
+        let docker = Docker::new();
+
+        // println!("{:?}", command);
+        // FYI: This might not work on MacOS hosts until https://github.com/softprops/shiplift/issues/155 is fixed
+        //println!("Executing commands in the container");
+
+        let options = ExecContainerOptions::builder()
+            .cmd(command.iter().map(AsRef::as_ref).collect())
+            .attach_stdout(true)
+            .attach_stderr(true)
+            .build();
+
+        // send output to channel
+        let exec_container = docker
+            .containers()
+            .get(&container_id)
+            .exec(&options)
+            .for_each(move |chunk| {
+                match chunk.stream_type {
+                    StreamType::StdOut => {
+                        tx.send(chunk.as_string_lossy()).unwrap();
+                        print!("{}", chunk.as_string_lossy())
+                    }
+                    StreamType::StdErr => {
+                        tx.send(chunk.as_string_lossy()).unwrap();
+                        eprintln!("{}", chunk.as_string_lossy());
+                    }
+                    StreamType::StdIn => unreachable!(),
+                }
+                Ok(())
+            })
+            .map_err(|e| eprintln!("Error: {}", e));
+
+        tokio_01::run(exec_container);
+    });
+
+    Ok(rx)
+}
