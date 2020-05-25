@@ -136,19 +136,23 @@ pub async fn subcommand_handler(
 
         build_metadata = response.build_metadata.clone().unwrap_or_default();
 
-        match response.build_output.clone().pop() {
-            Some(build_output) => {
-                //writeln!(&mut buffer, "{:?}", response.clone())?;
-                writeln!(
-                    &mut buffer,
-                    "[{}] {}",
-                    build_output.stage.to_string(),
-                    str::from_utf8(&build_output.output)?
-                )?;
-                bufwtr.print(&buffer)?;
-            }
-            None => (),
-        };
+        if !local_option.no_follow {
+            match response.build_output.clone().pop() {
+                Some(build_output) => {
+                    //writeln!(&mut buffer, "{:?}", response.clone())?;
+                    write!(
+                        &mut buffer,
+                        "[{}] {}",
+                        build_output.stage.to_string(),
+                        str::from_utf8(&build_output.output)?
+                    )?;
+                    bufwtr.print(&buffer)?;
+                }
+                None => (),
+            };
+        } else {
+            break;
+        }
     }
 
     // By default, format the response into a table
