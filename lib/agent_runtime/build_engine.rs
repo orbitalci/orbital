@@ -125,3 +125,32 @@ pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Resul
 
     Ok(exec_output.join(""))
 }
+
+pub async fn docker_container_exec_async(
+    container_id: String,
+    commands: Vec<String>,
+) -> Result<mpsc::UnboundedReceiver<String>> {
+    let (tx, rx) = mpsc::unbounded_channel();
+
+    tokio::spawn(async move {
+        for command in commands.iter() {
+            // Build the exec string
+            let wrapped_command = format!("{} | tee -a /proc/1/fd/1", command);
+
+            let container_command = vec!["/bin/sh".to_string(), "-c".to_string(), wrapped_command];
+
+            let mut exec_rx =
+                docker::container_exec_async(container_id.clone(), container_command.clone())
+                    .await
+                    .unwrap();
+
+            tx.send(format!("Command: {:?}\n", &command)).unwrap();
+
+            while let Some(command_output) = exec_rx.recv().await {
+                tx.send(command_output).unwrap();
+            }
+        }
+    });
+
+    Ok(rx)
+}

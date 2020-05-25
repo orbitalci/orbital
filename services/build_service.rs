@@ -477,6 +477,7 @@ impl BuildService for OrbitalApi {
                 build_engine::docker_container_pull_async(build_container_spec.clone())
                     .await
                     .unwrap();
+
             while let Some(response) = stream.recv().await {
                 let mut container_pull_output = BuildStage {
                     ..Default::default()
@@ -605,11 +606,38 @@ impl BuildService for OrbitalApi {
                 // TODO: Make sure tests try to exec w/o starting the container
                 // Exec into the new container
                 debug!("Sending commands into container");
-                let build_stage_logs = build_engine::docker_container_exec(
-                    container_id.as_str(),
+
+                //let build_stage_logs = build_engine::docker_container_exec(
+                //    container_id.as_str(),
+                //    config_stage.command.clone(),
+                //)
+                //.unwrap();
+
+                let mut build_stage_logs = String::new();
+
+                let mut stream = build_engine::docker_container_exec_async(
+                    container_id.clone(),
                     config_stage.command.clone(),
                 )
+                .await
                 .unwrap();
+
+                while let Some(response) = stream.recv().await {
+                    let mut container_pull_output = BuildStage {
+                        ..Default::default()
+                    };
+
+                    println!("EXEC OUTPUT: {:?}", response.clone().as_str());
+                    let output = response.clone().as_bytes().to_owned();
+
+                    container_pull_output.output = output;
+
+                    build_stage_logs.push_str(response.clone().as_str());
+
+                    build_record.build_output.push(container_pull_output);
+                    tx.send(Ok(build_record.clone())).await.unwrap();
+                    build_record.build_output.pop(); // Empty out the output buffer
+                }
 
                 // Build Stage finishing config_stage.name
 
