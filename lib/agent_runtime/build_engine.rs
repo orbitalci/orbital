@@ -154,3 +154,9 @@ pub async fn docker_container_exec_async(
 
     Ok(rx)
 }
+
+pub async fn docker_container_logs(
+    container_id: String,
+) -> Result<mpsc::UnboundedReceiver<String>> {
+    docker::container_logs(container_id).await
+}

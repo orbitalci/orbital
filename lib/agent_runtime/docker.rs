@@ -1,4 +1,6 @@
-use shiplift::{tty::StreamType, ContainerOptions, Docker, ExecContainerOptions, PullOptions};
+use shiplift::{
+    tty::StreamType, ContainerOptions, Docker, ExecContainerOptions, LogsOptions, PullOptions,
+};
 
 use tokio_01;
 use tokio_01::prelude::{Future, Stream};
@@ -274,6 +276,39 @@ pub async fn container_exec_async(
             .map_err(|e| eprintln!("Error: {}", e));
 
         tokio_01::run(exec_container);
+    });
+
+    Ok(rx)
+}
+
+pub async fn container_logs(container_id: String) -> Result<mpsc::UnboundedReceiver<String>> {
+    let (tx, rx) = mpsc::unbounded_channel();
+
+    tokio::spawn(async move {
+        let docker = Docker::new();
+
+        // send output to channel
+        let log_container = docker
+            .containers()
+            .get(&container_id)
+            .logs(&LogsOptions::builder().stdout(true).stderr(true).build())
+            .for_each(move |chunk| {
+                match chunk.stream_type {
+                    StreamType::StdOut => {
+                        tx.send(chunk.as_string_lossy()).unwrap();
+                        print!("{}", chunk.as_string_lossy())
+                    }
+                    StreamType::StdErr => {
+                        tx.send(chunk.as_string_lossy()).unwrap();
+                        eprintln!("{}", chunk.as_string_lossy());
+                    }
+                    StreamType::StdIn => unreachable!(),
+                }
+                Ok(())
+            })
+            .map_err(|e| eprintln!("Error: {}", e));
+
+        tokio_01::run(log_container);
     });
 
     Ok(rx)
