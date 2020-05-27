@@ -52,7 +52,7 @@ pub fn generate_unique_build_id(org: &str, repo: &str, commit: &str, id: &str) -
     // Arbitrary max lengths
     let org_print = if org.len() > 20 { &org[0..19] } else { org };
     let repo_print = if repo.len() > 20 { &repo[0..19] } else { repo };
-    let commit_print = &commit[0..6];
+    let commit_print = &commit[0..7];
 
     format!(
         "{org}_{repo}_{commit}_{id}",

@@ -4,7 +4,7 @@ use crate::postgres::build_target::{BuildTarget, NewBuildTarget};
 use crate::postgres::org::{NewOrg, Org};
 use crate::postgres::repo::{NewRepo, Repo};
 use crate::postgres::schema::{
-    build_stage, build_summary, build_target, org, repo, secret, JobTrigger, SecretType,
+    build_stage, build_summary, build_target, org, repo, secret, JobState, JobTrigger, SecretType,
 };
 use crate::postgres::secret::{NewSecret, Secret};
 use agent_runtime::vault::orb_vault_path;
@@ -809,5 +809,26 @@ pub fn build_logs_get(
             repo_db.next_build_index - 1,
             255,
         ),
+    }
+}
+
+pub fn is_build_canceled(
+    conn: &PgConnection,
+    org: &str,
+    repo: &str,
+    hash: &str,
+    branch: &str,
+    build_index: i32,
+) -> Result<bool> {
+    match build_summary_get(conn, org, repo, hash, branch, build_index) {
+        Ok((_, _, Some(summary))) => match summary.build_state {
+            JobState::Canceled => Ok(true),
+            _ => Ok(false),
+        },
+        Ok((_, _, None)) => {
+            // Build hasn't been queued yet
+            Ok(false)
+        }
+        Err(_) => Err(anyhow!("Could not retrieve build summary from DB")),
     }
 }
