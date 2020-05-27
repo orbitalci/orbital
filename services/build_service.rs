@@ -1059,54 +1059,132 @@ impl BuildService for OrbitalApi {
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
-        let build_stage_query = postgres::client::build_logs_get(
+        //let build_stage_query = postgres::client::build_logs_get(
+        //    &pg_conn,
+        //    &unwrapped_request.org,
+        //    &unwrapped_request.git_repo,
+        //    &unwrapped_request.commit_hash,
+        //    &unwrapped_request.branch,
+        //    {
+        //        match &unwrapped_request.id {
+        //            0 => None,
+        //            _ => Some(unwrapped_request.id.clone()),
+        //        }
+        //    },
+        //)
+        //.expect("No build stages found");
+
+        // Resolve the build number to latest if build number is 0
+        let build_id = match unwrapped_request.id {
+            0 => {
+                if let Ok((_, repo, _)) = postgres::client::repo_get(
+                    &pg_conn,
+                    &unwrapped_request.org,
+                    &unwrapped_request.git_repo,
+                ) {
+                    repo.next_build_index - 1
+                } else {
+                    panic!("No build id provided. Failed to query DB for latest build id")
+                }
+            }
+            _ => unwrapped_request.id,
+        };
+
+        let (_repo, _build_target, build_summary_opt) = postgres::client::build_summary_get(
             &pg_conn,
             &unwrapped_request.org,
             &unwrapped_request.git_repo,
             &unwrapped_request.commit_hash,
             &unwrapped_request.branch,
-            {
-                match &unwrapped_request.id {
-                    0 => None,
-                    _ => Some(unwrapped_request.id.clone()),
-                }
-            },
+            build_id,
         )
-        .expect("No build stages found");
+        .unwrap();
+
+        drop(pg_conn);
 
         let (mut tx, rx) = mpsc::channel(4);
 
-        let mut build_stage_list: Vec<orbital_headers::build_meta::BuildStage> = Vec::new();
-        for (_target, _summary, stage) in build_stage_query {
-            build_stage_list.push(stage.into());
-        }
+        tokio::spawn(async move {
+            match build_summary_opt {
+                Some(summary) => {
+                    match summary.build_state {
+                        JobState::Queued | JobState::Running => {
 
-        let build_record = BuildRecord {
-            build_metadata: None,
-            build_output: build_stage_list,
-        };
+                            let container_name = agent_runtime::generate_unique_build_id(
+                                &unwrapped_request.org,
+                                &unwrapped_request.git_repo,
+                                &unwrapped_request.commit_hash,
+                                &format!("{}", build_id),
+                            );
 
-        //
-        let build_log_response = BuildLogResponse {
-            id: build_record.build_output[0].build_id,
-            records: vec![build_record],
-        };
+                            let mut stream =
+                                build_engine::docker_container_logs(container_name.clone())
+                                    .await
+                                    .unwrap();
 
-        tx.send(Ok(build_log_response)).await.unwrap();
+                            while let Some(response) = stream.recv().await {
+                                let mut container_logs = BuildStage {
+                                    ..Default::default()
+                                };
 
-        // FIXME - the protobuf struct is too complicated
-        //BuildLogResponse
-        // Vec<BuildRecord>
+                                println!("LOGS OUTPUT: {:?}", response.clone().as_str());
 
-        // Check on whether the BuildTarget represents a build in progress or one that is done
-        // Get the output from the database
+                                // Adding newlines
 
-        // TODO: This is for handling builds that are in progress
-        //tokio::spawn(async move {
-        //    tx.send(Ok(BuildLogResponse { ..Default::default() })).await.unwrap();
+                                let output = response.clone().as_bytes().to_owned();
+                                container_logs.output = output;
 
-        //    println!(" /// done sending");
-        //});
+                                let build_record = BuildRecord {
+                                    build_metadata: None,
+                                    build_output: vec![container_logs],
+                                };
+
+                                //
+                                let build_log_response = BuildLogResponse {
+                                    id: build_id,
+                                    records: vec![build_record],
+                                };
+
+                                tx.send(Ok(build_log_response)).await.unwrap();
+                            }
+                        }
+
+                        _ => {
+                            let pg_conn = postgres::client::establish_connection();
+                            let build_stage_query = postgres::client::build_logs_get(
+                                &pg_conn,
+                                &unwrapped_request.org,
+                                &unwrapped_request.git_repo,
+                                &unwrapped_request.commit_hash,
+                                &unwrapped_request.branch,
+                                Some(build_id),
+                            )
+                            .expect("No build stages found");
+
+                            let mut build_stage_list: Vec<orbital_headers::build_meta::BuildStage> =
+                                Vec::new();
+                            for (_target, _summary, stage) in build_stage_query {
+                                build_stage_list.push(stage.into());
+                            }
+
+                            let build_record = BuildRecord {
+                                build_metadata: None,
+                                build_output: build_stage_list,
+                            };
+
+                            //
+                            let build_log_response = BuildLogResponse {
+                                id: build_record.build_output[0].build_id,
+                                records: vec![build_record],
+                            };
+
+                            tx.send(Ok(build_log_response)).await.unwrap();
+                        }
+                    }
+                }
+                None => (),
+            }
+        });
 
         Ok(Response::new(rx))
     }
