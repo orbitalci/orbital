@@ -522,7 +522,7 @@ impl FromSql<JobStatePGEnum, Pg> for JobState {
             b"starting" => Ok(JobState::Starting),
             b"running" => Ok(JobState::Running),
             b"finishing" => Ok(JobState::Finishing),
-            b"cancele" => Ok(JobState::Canceled),
+            b"canceled" => Ok(JobState::Canceled),
             b"systemerr" => Ok(JobState::SystemErr),
             b"failed" => Ok(JobState::Failed),
             b"done" => Ok(JobState::Done),

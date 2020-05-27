@@ -85,7 +85,7 @@ pub fn docker_container_stop(container_id: &str) -> Result<()> {
     match docker::container_stop(container_id) {
         Ok(ok) => Ok(ok), // The successful result doesn't matter
         Err(_) => Err(AgentRuntimeError::new(&format!(
-            "Could not start container_id {}",
+            "Could not stop container_id {}",
             container_id
         ))
         .into()),
