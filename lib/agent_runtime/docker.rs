@@ -86,7 +86,12 @@ pub async fn container_pull_async(image: String) -> Result<mpsc::UnboundedReceiv
             .pull(&PullOptions::builder().image(img.clone()).build())
             .for_each(move |output| {
                 debug!("{:?}", output);
-                tx.send(output).unwrap();
+
+                let _ = match tx.send(output) {
+                    Ok(_) => Ok(()),
+                    Err(_) => Err(()),
+                };
+
                 Ok(())
             })
             .map_err(|e| eprintln!("Error: {}", e));
@@ -262,11 +267,19 @@ pub async fn container_exec_async(
             .for_each(move |chunk| {
                 match chunk.stream_type {
                     StreamType::StdOut => {
-                        tx.send(chunk.as_string_lossy()).unwrap();
+                        let _ = match tx.send(chunk.as_string_lossy()) {
+                            Ok(_) => Ok(()),
+                            Err(_) => Err(()),
+                        };
+
                         print!("{}", chunk.as_string_lossy())
                     }
                     StreamType::StdErr => {
-                        tx.send(chunk.as_string_lossy()).unwrap();
+                        let _ = match tx.send(chunk.as_string_lossy()) {
+                            Ok(_) => Ok(()),
+                            Err(_) => Err(()),
+                        };
+
                         eprintln!("{}", chunk.as_string_lossy());
                     }
                     StreamType::StdIn => unreachable!(),

@@ -164,7 +164,6 @@ impl BuildService for OrbitalApi {
                 });
 
                 build_record.build_metadata = Some(build_metadata.clone());
-                tx.send(Ok(build_record.clone())).await.unwrap();
 
                 // Hack. Reoccurring check Check if build has been canceled
                 _job_was_canceled = match postgres::client::is_build_canceled(
@@ -229,7 +228,10 @@ impl BuildService for OrbitalApi {
                 build_metadata.build_state = PGJobState::Starting.into();
                 build_record.build_metadata = Some(build_metadata.clone());
 
-                tx.send(Ok(build_record.clone())).await.unwrap();
+                let _ = match tx.send(Ok(build_record.clone())).await {
+                    Ok(_) => Ok(()),
+                    Err(mpsc::error::SendError(_)) => Err(()),
+                };
 
                 // Hack. Reoccurring check Check if build has been canceled
                 _job_was_canceled = match postgres::client::is_build_canceled(
@@ -590,7 +592,12 @@ impl BuildService for OrbitalApi {
                     container_pull_output.output = output;
 
                     build_record.build_output.push(container_pull_output);
-                    tx.send(Ok(build_record.clone())).await.unwrap();
+
+                    let _ = match tx.send(Ok(build_record.clone())).await {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(()),
+                    };
+
                     build_record.build_output.pop(); // Empty out the output buffer
                 }
 
@@ -711,7 +718,10 @@ impl BuildService for OrbitalApi {
                     build_metadata.build_state = PGJobState::Running.into();
                     build_record.build_metadata = Some(build_metadata.clone());
 
-                    tx.send(Ok(build_record.clone())).await.unwrap();
+                    let _ = match tx.send(Ok(build_record.clone())).await {
+                        Ok(_) => Ok(()),
+                        Err(mpsc::error::SendError(_)) => Err(()),
+                    };
 
                     // TODO: Mark build stage start time
                     //let build_stage_current = NewBuildStage {
@@ -783,7 +793,12 @@ impl BuildService for OrbitalApi {
                         build_stage_logs.push_str(response.clone().as_str());
 
                         build_record.build_output.push(container_exec_output);
-                        tx.send(Ok(build_record.clone())).await.unwrap();
+
+                        let _ = match tx.send(Ok(build_record.clone())).await {
+                            Ok(_) => Ok(()),
+                            Err(mpsc::error::SendError(_)) => Err(()),
+                        };
+
                         build_record.build_output.pop(); // Empty out the output buffer
                     }
 
@@ -906,7 +921,10 @@ impl BuildService for OrbitalApi {
                 build_metadata.build_state = PGJobState::Done.into();
                 build_record.build_metadata = Some(build_metadata.clone());
 
-                tx.send(Ok(build_record.clone())).await.unwrap();
+                let _ = match tx.send(Ok(build_record.clone())).await {
+                    Ok(_) => Ok(()),
+                    Err(mpsc::error::SendError(_)) => Err(()),
+                };
                 break 'build_loop;
             }
         });
@@ -1109,7 +1127,6 @@ impl BuildService for OrbitalApi {
                 Some(summary) => {
                     match summary.build_state {
                         JobState::Queued | JobState::Running => {
-
                             let container_name = agent_runtime::generate_unique_build_id(
                                 &unwrapped_request.org,
                                 &unwrapped_request.git_repo,
@@ -1145,7 +1162,10 @@ impl BuildService for OrbitalApi {
                                     records: vec![build_record],
                                 };
 
-                                tx.send(Ok(build_log_response)).await.unwrap();
+                                let _ = match tx.send(Ok(build_log_response)).await {
+                                    Ok(_) => Ok(()),
+                                    Err(mpsc::error::SendError(_)) => Err(()),
+                                };
                             }
                         }
 
@@ -1178,7 +1198,10 @@ impl BuildService for OrbitalApi {
                                 records: vec![build_record],
                             };
 
-                            tx.send(Ok(build_log_response)).await.unwrap();
+                            let _ = match tx.send(Ok(build_log_response)).await {
+                                Ok(_) => Ok(()),
+                                Err(mpsc::error::SendError(_)) => Err(()),
+                            };
                         }
                     }
                 }
