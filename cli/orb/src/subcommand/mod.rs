@@ -1,3 +1,4 @@
+use structopt::clap::AppSettings;
 use structopt::StructOpt;
 use thiserror::Error;
 
@@ -215,9 +216,14 @@ pub struct GlobalOption {
     pub check: bool,
 }
 
+//lazy_static::lazy_static! {
+//    static ref BUILD_VERSION: String = env!("BUILD_VERSION").to_string();
+//}
+const BUILD_VERSION: &'static str = env!("BUILD_VERSION");
+
 /// Represents a single-parsed command line invocation from user
 #[derive(Debug, StructOpt)]
-#[structopt(name = "orb")]
+#[structopt(name = "orb", version = BUILD_VERSION, settings = &[AppSettings::GlobalVersion] )]
 pub struct SubcommandContext {
     #[structopt(subcommand)]
     pub subcommand: Subcommand,
