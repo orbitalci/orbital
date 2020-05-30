@@ -28,6 +28,10 @@ thiserror = "1.0"
 tonic = "0.2"
 rand = "0.7"
 
+[build-dependencies]
+orbital_git_meta = { path = "../../../../lib/git_meta" }
+chrono = "0.4"
+
 [lib]
 name = "subcommand"
 path = "mod.rs"
