@@ -7,7 +7,7 @@ use crate::postgres::schema::{
     build_stage, build_summary, build_target, org, repo, secret, JobState, JobTrigger, SecretType,
 };
 use crate::postgres::secret::{NewSecret, Secret};
-use agent_runtime::vault::orb_vault_path;
+use hashicorp_stack::orb_vault_path;
 use anyhow::{anyhow, Result};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;

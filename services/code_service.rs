@@ -18,7 +18,7 @@ use tonic::{Request, Response, Status};
 
 use super::OrbitalApi;
 
-use agent_runtime::build_engine;
+use orbital_agent::build_engine;
 use log::{debug, info};
 use orbital_database::postgres;
 

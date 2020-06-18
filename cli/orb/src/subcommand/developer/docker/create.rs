@@ -1,5 +1,5 @@
 use crate::{developer::docker::SubcommandOption, GlobalOption, SubcommandError};
-use agent_runtime::{self, docker, docker::OrbitalContainerSpec};
+use orbital_agent::{self, docker, docker::OrbitalContainerSpec};
 //use log::debug;
 use anyhow::Result;
 use structopt::StructOpt;
@@ -43,7 +43,7 @@ pub async fn action_handler(
 
     let container_name = format!(
         "{}",
-        agent_runtime::generate_unique_build_id(
+        orbital_agent::generate_unique_build_id(
             "test-org",
             "test-repo",
             "test-hash",

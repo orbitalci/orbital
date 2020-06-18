@@ -5,6 +5,7 @@ pub mod build_engine;
 pub mod docker;
 /// Vault api wrapper
 pub mod vault;
+
 /// Default volume mount mapping for host Docker into container for Docker-in-Docker builds
 pub const DOCKER_SOCKET_VOLMAP: &str = "/var/run/docker.sock:/var/run/docker.sock";
 /// Default working directory for staging repo code inside container
@@ -84,7 +85,7 @@ pub fn get_current_workdir() -> PathBuf {
 }
 
 /// Wrapper function for `kv_csv_parser` to specifically handle volume mounts for `shiplift`
-/// Automatically add in the docker socket as defined by `agent_runtime::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
+/// Automatically add in the docker socket as defined by `orbital_agent::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
 ///
 /// For now, also assume passing in the current working directory as well
 pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
