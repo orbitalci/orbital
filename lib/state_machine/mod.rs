@@ -16,7 +16,6 @@ struct BuildStateFailed;
 #[derive(Debug)]
 struct BuildStateDone;
 
-
 #[derive(Debug)]
 struct BuildContext<S> {
     id: Option<u32>,
