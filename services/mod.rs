@@ -1,4 +1,4 @@
-//use agent_runtime::AgentRuntimeError;
+//use orbital_agent::AgentRuntimeError;
 //use log::debug;
 use std::error::Error;
 use std::fmt;
@@ -71,8 +71,8 @@ impl From<anyhow::Error> for OrbitalServiceError {
     }
 }
 
-impl From<agent_runtime::AgentRuntimeError> for OrbitalServiceError {
-    fn from(error: agent_runtime::AgentRuntimeError) -> Self {
+impl From<orbital_agent::AgentRuntimeError> for OrbitalServiceError {
+    fn from(error: orbital_agent::AgentRuntimeError) -> Self {
         OrbitalServiceError::new(&error.to_string())
     }
 }

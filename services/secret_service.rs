@@ -6,7 +6,7 @@ use tonic::{Request, Response, Status};
 
 use super::OrbitalApi;
 
-use agent_runtime::vault;
+use orbital_agent::vault;
 use log::debug;
 use orbital_database::postgres;
 use orbital_database::postgres::schema::SecretType;

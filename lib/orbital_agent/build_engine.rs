@@ -6,9 +6,13 @@ use git_meta;
 use log::{debug, info};
 use mktemp;
 use std::path::Path;
+use state_machine;
 
 use serde_json::value::Value;
 use tokio::sync::mpsc;
+
+/// TODO: Hang all of the bare functions off of Agent
+pub struct Agent;
 
 /// Create a temporary directory on the host, and clone a repo
 pub fn clone_repo(

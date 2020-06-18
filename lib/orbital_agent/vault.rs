@@ -1,5 +1,5 @@
 use anyhow::Result;
-use hashicorp_stack::vault;
+use hashicorp_stack::{self, vault};
 use log::debug;
 use std::env;
 
@@ -8,10 +8,11 @@ use base64;
 use std::str;
 
 pub fn orb_vault_path(org: &str, name: &str, secret_type: &str) -> String {
-    let path = format!("orbital/{}/{}/{}", org, secret_type, name,).to_lowercase();
+    hashicorp_stack::orb_vault_path(org, name, secret_type)
+    //let path = format!("orbital/{}/{}/{}", org, secret_type, name,).to_lowercase();
 
-    debug!("Vault Path: {:?}", &path);
-    path
+    //debug!("Vault Path: {:?}", &path);
+    //path
 }
 
 pub fn vault_add_secret(path: &str, data: &str) -> Result<()> {

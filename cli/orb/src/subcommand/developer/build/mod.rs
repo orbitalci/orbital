@@ -1,7 +1,7 @@
 use anyhow::Result;
 use structopt::StructOpt;
 
-use agent_runtime::{self, docker, docker::OrbitalContainerSpec};
+use orbital_agent::{self, docker, docker::OrbitalContainerSpec};
 use config_parser::yaml as parser;
 use git_meta::git_info;
 use std::path::Path;
@@ -68,7 +68,7 @@ pub async fn subcommand_handler(
     let rand_string: String = thread_rng().sample_iter(&Alphanumeric).take(7).collect();
     let default_command_w_timeout = vec!["sleep", "2h"];
     let build_container_spec = OrbitalContainerSpec {
-        name: Some(agent_runtime::generate_unique_build_id(
+        name: Some(orbital_agent::generate_unique_build_id(
             "dev-org",
             &git_info.git_url.name,
             &git_info.commit_id,
@@ -78,8 +78,8 @@ pub async fn subcommand_handler(
         command: default_command_w_timeout,
 
         // TODO: Inject the dynamic build env vars here
-        env_vars: agent_runtime::parse_envs_input(&None),
-        volumes: agent_runtime::parse_volumes_input(&None),
+        env_vars: orbital_agent::parse_envs_input(&None),
+        volumes: orbital_agent::parse_volumes_input(&None),
         timeout: Some(Duration::from_secs(60 * 30)),
     };
 

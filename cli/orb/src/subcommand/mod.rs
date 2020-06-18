@@ -135,20 +135,20 @@ pub fn parse_envs_input(user_input: &Option<String>) -> Option<Vec<&str>> {
 }
 
 /// Wrapper function for `kv_csv_parser` to specifically handle volume mounts for `shiplift`
-/// Automatically add in the docker socket as defined by `agent_runtime::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
+/// Automatically add in the docker socket as defined by `orbital_agent::DOCKER_SOCKET_VOLMAP`. If we don't pass in any other volumes
 ///
 /// For now, also assume passing in the current working directory as well
 pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
     let vols = match kv_csv_parser(user_input) {
         Some(v) => {
             let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(agent_runtime::DOCKER_SOCKET_VOLMAP);
+            new_vec.push(orbital_agent::DOCKER_SOCKET_VOLMAP);
             new_vec.extend(v.clone());
             Some(new_vec)
         }
         None => {
             let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(agent_runtime::DOCKER_SOCKET_VOLMAP);
+            new_vec.push(orbital_agent::DOCKER_SOCKET_VOLMAP);
 
             // There's got to be a better way to handle this...
             // https://stackoverflow.com/a/30527289/1672638
@@ -156,7 +156,7 @@ pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
                 format!(
                     "{}:{}",
                     get_current_workdir().display(),
-                    agent_runtime::ORBITAL_CONTAINER_WORKDIR,
+                    orbital_agent::ORBITAL_CONTAINER_WORKDIR,
                 )
                 .into_boxed_str(),
             ));
