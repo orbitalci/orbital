@@ -22,6 +22,7 @@ pub mod server;
 pub mod summary;
 
 use log::debug;
+use orbital_exec_runtime::{DOCKER_SOCKET_VOLMAP, ORBITAL_CONTAINER_WORKDIR};
 use std::env;
 use std::error::Error;
 use std::fmt;
@@ -142,13 +143,13 @@ pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
     let vols = match kv_csv_parser(user_input) {
         Some(v) => {
             let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(orbital_agent::DOCKER_SOCKET_VOLMAP);
+            new_vec.push(DOCKER_SOCKET_VOLMAP);
             new_vec.extend(v.clone());
             Some(new_vec)
         }
         None => {
             let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(orbital_agent::DOCKER_SOCKET_VOLMAP);
+            new_vec.push(DOCKER_SOCKET_VOLMAP);
 
             // There's got to be a better way to handle this...
             // https://stackoverflow.com/a/30527289/1672638
@@ -156,7 +157,7 @@ pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
                 format!(
                     "{}:{}",
                     get_current_workdir().display(),
-                    orbital_agent::ORBITAL_CONTAINER_WORKDIR,
+                    ORBITAL_CONTAINER_WORKDIR,
                 )
                 .into_boxed_str(),
             ));

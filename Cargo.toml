@@ -3,6 +3,7 @@ members = [
     "cli/orb",
     "cli/orb/src/subcommand",
     "lib/config_parser",
+    "lib/exec_runtime",
     "lib/orbital_agent",
     "lib/git_meta",
     "lib/hashicorp_stack",

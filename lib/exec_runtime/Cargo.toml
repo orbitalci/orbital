@@ -1,5 +1,5 @@
 [package]
-name = "orbital_agent"
+name = "orbital_exec_runtime"
 version = "0.1.0-alpha.1"
 authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
@@ -12,9 +12,8 @@ log = "0.4"
 orbital_git_meta = { path = "../git_meta" }
 mktemp = "0.4"
 orbital_config_parser = { path = "../config_parser" }
-orbital_hashicorp_stack = { path = "../hashicorp_stack" }
-orbital_state_machine = { path = "../state_machine" }
-orbital_exec_runtime = { path = "../exec_runtime" }
+#orbital_hashicorp_stack = { path = "../hashicorp_stack" }
+#orbital_state_machine = { path = "../state_machine" }
 orbital_headers = { path = "../../models/orbital_headers" }
 anyhow = "1.0"
 thiserror = "1.0"
@@ -22,5 +21,5 @@ base64 = "0.12"
 serde_json = "1.0"
 
 [lib]
-name = "orbital_agent"
+name = "orbital_exec_runtime"
 path = "mod.rs"

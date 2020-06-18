@@ -54,7 +54,6 @@ pub fn get_git_info_from_path(
 pub fn git_remote_from_path(path: &Path) -> Result<String> {
     // Theory: After we get the repo, we can derive the remote name from the branch
 
-
     let r = get_local_repo_from_path(path)?;
     let remote_url: String = r
         .find_remote("origin")?

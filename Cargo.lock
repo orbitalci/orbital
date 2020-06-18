@@ -1455,6 +1455,7 @@ dependencies = [
  "log 0.4.8",
  "mktemp",
  "orbital_config_parser",
+ "orbital_exec_runtime",
  "orbital_git_meta",
  "orbital_hashicorp_stack",
  "orbital_headers",
@@ -1479,6 +1480,7 @@ dependencies = [
  "orbital_agent",
  "orbital_config_parser",
  "orbital_database",
+ "orbital_exec_runtime",
  "orbital_git_meta",
  "orbital_hashicorp_stack",
  "orbital_headers",
@@ -1519,6 +1521,24 @@ dependencies = [
  "prost-types",
  "strum",
  "strum_macros",
+]
+
+[[package]]
+name = "orbital_exec_runtime"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "base64 0.12.2",
+ "log 0.4.8",
+ "mktemp",
+ "orbital_config_parser",
+ "orbital_git_meta",
+ "orbital_headers",
+ "serde_json",
+ "shiplift",
+ "thiserror",
+ "tokio 0.1.22",
+ "tokio 0.2.21",
 ]
 
 [[package]]
@@ -1565,6 +1585,7 @@ dependencies = [
  "orbital_agent",
  "orbital_config_parser",
  "orbital_database",
+ "orbital_exec_runtime",
  "orbital_git_meta",
  "orbital_hashicorp_stack",
  "orbital_headers",
