@@ -5,7 +5,12 @@ authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-orbital_headers = { path = "../../models/orbital_headers" }
+#orbital_headers = { path = "../../models/orbital_headers" }
+orbital_database = { path = "../../models/orbital_database" }
+anyhow = "1.0"
+log = "0.4"
+chrono = "0.4"
+machine = "0.3"
 
 [lib]
 name = "state_machine"
