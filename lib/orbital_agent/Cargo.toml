@@ -13,7 +13,6 @@ orbital_git_meta = { path = "../git_meta" }
 mktemp = "0.4"
 orbital_config_parser = { path = "../config_parser" }
 orbital_hashicorp_stack = { path = "../hashicorp_stack" }
-orbital_state_machine = { path = "../state_machine" }
 orbital_exec_runtime = { path = "../exec_runtime" }
 orbital_headers = { path = "../../models/orbital_headers" }
 anyhow = "1.0"

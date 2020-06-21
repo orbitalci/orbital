@@ -77,12 +77,16 @@ pub async fn subcommand_handler(
         let bufwtr = BufferWriter::stdout(ColorChoice::Auto);
         let mut buffer = bufwtr.buffer();
 
-        writeln!(
-            &mut buffer,
-            "{}",
-            &String::from_utf8(response.records[0].build_output[0].output.clone()).unwrap()
-        )?;
-        bufwtr.print(&buffer)?;
+        for records in response.records {
+            for logs in records.build_output {
+                writeln!(
+                    &mut buffer,
+                    "{}",
+                    &String::from_utf8(logs.output.clone()).unwrap()
+                )?;
+                bufwtr.print(&buffer)?;
+            }
+        }
     }
 
     Ok(())

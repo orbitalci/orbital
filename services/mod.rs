@@ -15,6 +15,8 @@ pub mod organization_service;
 /// gRPC service for secrets CRUD
 pub mod secret_service;
 
+pub mod state_machine;
+
 pub enum ServiceType {
     Build,
     Code,
