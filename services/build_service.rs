@@ -67,7 +67,7 @@ impl BuildService for OrbitalApi {
                 git_info::git_remote_url_parse(unwrapped_request.clone().remote_uri.as_ref())
                     .expect("Could not parse repo uri");
 
-            let build = state_machine::BuildContext::new()
+            let mut cur_build = state_machine::BuildContext::new()
                 .org(unwrapped_request.org.to_string())
                 .repo(git_parsed_uri.name.to_string())
                 .branch(unwrapped_request.branch.to_string())
@@ -76,7 +76,13 @@ impl BuildService for OrbitalApi {
                 .queue()
                 .expect("There was a problem queuing the build");
 
-            'build_loop: loop {
+            //'build_loop: loop {
+            while (cur_build.clone().state() != state_machine::BuildState::done())
+                | (cur_build.clone().state() != state_machine::BuildState::cancelled())
+                | (cur_build.clone().state() != state_machine::BuildState::failed())
+                | (cur_build.clone().state() != state_machine::BuildState::system_err())
+            {
+                cur_build = cur_build.clone().step().unwrap();
                 //    // TODO: Wrap this entire workflow in a check for cancelation
                 //    let mut _job_was_canceled = false;
 
@@ -940,7 +946,7 @@ impl BuildService for OrbitalApi {
                 //        Ok(_) => Ok(()),
                 //        Err(mpsc::error::SendError(_)) => Err(()),
                 //    };
-                break 'build_loop;
+                //    break 'build_loop;
             }
         });
 

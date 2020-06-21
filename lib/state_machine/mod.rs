@@ -35,44 +35,37 @@ transitions!(BuildState,
 
 impl Queued {
     pub fn on_step(self, input: Step) -> BuildState {
+        // Check if cancelled
+
+        println!("Move to starting");
+
         BuildState::starting()
     }
 }
 
 impl Starting {
     pub fn on_step(self, input: Step) -> BuildState {
+        println!("Move to running");
+
         BuildState::running()
     }
 }
 
 impl Running {
     pub fn on_step(self, input: Step) -> BuildState {
+        println!("Move to finishing");
         BuildState::finishing()
     }
 }
 
 impl Finishing {
     pub fn on_step(self, input: Step) -> BuildState {
+        println!("Move to done");
         BuildState::done()
     }
 }
 
-//#[derive(Debug)]
-//pub struct BuildStateQueued;
-//#[derive(Debug)]
-//pub struct BuildStateStarting;
-//#[derive(Debug)]
-//pub struct BuildStateRunning;
-//#[derive(Debug)]
-//pub struct BuildStateCanceled;
-//#[derive(Debug)]
-//pub struct BuildStateSystemErr;
-//#[derive(Debug)]
-//pub struct BuildStateFailed;
-//#[derive(Debug)]
-//pub struct BuildStateDone;
-
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BuildContext {
     pub org: String,
     pub repo: String,
@@ -178,4 +171,13 @@ impl BuildContext {
         Ok(self)
     }
 
+    pub fn state(self) -> BuildState {
+        self._state
+    }
+
+    pub fn step(mut self) -> Result<BuildContext> {
+        self._state = self._state.on_step(Step);
+
+        Ok(self)
+    }
 }
