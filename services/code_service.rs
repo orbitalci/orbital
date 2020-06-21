@@ -11,8 +11,6 @@ use orbital_headers::orbital_types::*;
 use git_meta::git_info;
 use git_meta::GitCredentials;
 use mktemp::Temp;
-use std::fs::File;
-use std::io::prelude::*;
 
 use tonic::{Request, Response, Status};
 
@@ -35,9 +33,6 @@ impl CodeService for OrbitalApi {
         info!("Git repo add: {:?}", &unwrapped_request.name);
         debug!("Git repo add details: {:?}", &unwrapped_request);
 
-        // Declaring this in case we have an ssh key. For test cloning
-        let temp_keypath = Temp::new_file().expect("Unable to create temp file");
-
         // check if repo is public or private. Do a test checkout
         let test_branch = match &unwrapped_request.alt_check_branch.clone().len() {
             0 => "master".to_string(),
@@ -53,10 +48,13 @@ impl CodeService for OrbitalApi {
                 match unwrapped_request.skip_check {
                     true => info!("Test git clone check skipped by request"),
                     false => {
+                        let temp_dir = Temp::new_dir().expect("Creating test clone dir failed");
+
                         let _ = match build_engine::clone_repo(
                             &unwrapped_request.uri,
                             &test_branch,
                             creds.clone(),
+                            temp_dir.as_path(),
                         ) {
                             Ok(_) => {
                                 info!("Test git clone successful");
@@ -85,16 +83,10 @@ impl CodeService for OrbitalApi {
             SecretType::SshKey => {
                 info!("Private repo with ssh key");
 
-                // Write private key into a temp file
-                debug!("Writing incoming ssh key to temp file");
-                let mut file = File::create(temp_keypath.as_path())?;
-                let mut _contents = String::new();
-                let _ = file.write_all(unwrapped_request.clone().auth_data.as_bytes());
-
                 let creds = GitCredentials::SshKey {
                     username: unwrapped_request.clone().user,
                     public_key: None,
-                    private_key: temp_keypath.as_path(),
+                    private_key: unwrapped_request.clone().auth_data,
                     passphrase: None,
                 };
 
@@ -102,6 +94,8 @@ impl CodeService for OrbitalApi {
                 match unwrapped_request.skip_check {
                     true => info!("Test git clone check skipped by request"),
                     false => {
+                        let temp_dir = Temp::new_dir().expect("Creating test clone dir failed");
+
                         let _ = match build_engine::clone_repo(
                             format!(
                                 "{}@{}",
@@ -111,6 +105,7 @@ impl CodeService for OrbitalApi {
                             .as_str(),
                             &test_branch,
                             creds.clone(),
+                            temp_dir.as_path(),
                         ) {
                             Ok(_) => {
                                 info!("Test git clone successful");
@@ -195,10 +190,13 @@ impl CodeService for OrbitalApi {
                 match unwrapped_request.skip_check {
                     true => info!("Test git clone check skipped by request"),
                     false => {
+                        let temp_dir = Temp::new_dir()?;
+
                         let _ = match build_engine::clone_repo(
                             &unwrapped_request.uri,
                             &test_branch,
                             creds.clone(),
+                            temp_dir.as_ref(),
                         ) {
                             Ok(_) => {
                                 info!("Test git clone successful");

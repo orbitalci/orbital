@@ -4,7 +4,6 @@ pub mod build_engine;
 /// Vault api wrapper
 pub mod vault;
 
-use log::debug;
 use std::error::Error;
 use std::fmt;
 use thiserror::Error;

@@ -3,9 +3,7 @@ use anyhow::Result;
 use config_parser;
 use git_meta;
 use log::{debug, info};
-use mktemp;
 use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
-use state_machine;
 use std::path::Path;
 
 use serde_json::value::Value;
@@ -19,8 +17,9 @@ pub fn clone_repo(
     uri: &str,
     branch: &str,
     credentials: git_meta::GitCredentials,
-) -> Result<mktemp::Temp> {
-    git_meta::clone::clone_temp_dir(uri, branch, credentials)
+    target_dir: &Path,
+) -> Result<()> {
+    git_meta::clone::clone_temp_dir(uri, branch, credentials, target_dir)
 }
 
 /// Load orb.yml from a filepath

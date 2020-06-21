@@ -28,6 +28,7 @@ termcolor = "1.1"
 thiserror = "1.0"
 tonic = "0.2"
 rand = "0.7"
+mktemp = "0.4"
 
 [build-dependencies]
 orbital_git_meta = { path = "../../../../lib/git_meta" }
