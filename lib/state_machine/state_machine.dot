@@ -1,26 +1,27 @@
 digraph G {
-    /* Entities */
-    queued [shape="square"]
-    starting [shape="square"]
-    running [shape="square"]
-    finishing [shape="square"]
-    canceled [shape="square"]
-    system_err [shape="square"]
-    failed [shape="square"]
-    done [shape="square"]
+    /* Nodes */
+    start [label="", style=filled, fillcolor="black", shape="circle"]
+    queued [shape="circle"]
+    starting [shape="circle"]
+    running [shape="circle"]
+    finishing [shape="circle"]
+    cancelled [shape="circle", peripheries=2]
+    system_err [shape="circle", peripheries=2]
+    failed [shape="circle", peripheries=2]
+    done [shape="circle", peripheries=2]
  
-    
     /* Relationships */
-    queued -> canceled
+    start -> queued
+    queued -> cancelled
     queued -> system_err
     queued -> starting
-    starting -> canceled
+    starting -> cancelled
     starting -> system_err
     starting -> running
-    running -> canceled 
+    running -> running
+    running -> cancelled 
     running -> system_err 
-    running -> failed
     running -> finishing
+    finishing -> failed 
     finishing -> done
-
 }

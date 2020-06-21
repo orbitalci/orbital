@@ -4,6 +4,9 @@ use std::error::Error;
 use std::fmt;
 use thiserror::Error;
 
+// TODO: Create some From<S> traits for protobuf types
+use state_machine;
+
 /// gRPC service for building code
 pub mod build_service;
 /// gRPC service for source code integration

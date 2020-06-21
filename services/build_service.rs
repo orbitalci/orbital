@@ -38,6 +38,8 @@ use git_meta::git_info;
 use serde_json::Value;
 use std::str;
 
+use state_machine;
+
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
 #[tonic::async_trait]
@@ -61,6 +63,19 @@ impl BuildService for OrbitalApi {
         let (mut tx, rx) = mpsc::channel(1);
 
         tokio::spawn(async move {
+            let mut git_parsed_uri =
+                git_info::git_remote_url_parse(unwrapped_request.clone().remote_uri.as_ref())
+                    .expect("Could not parse repo uri");
+
+            let build = state_machine::BuildContext::new()
+                .org(unwrapped_request.org.to_string())
+                .repo(git_parsed_uri.name.to_string())
+                .branch(unwrapped_request.branch.to_string())
+                .hash(unwrapped_request.commit_hash.to_string())
+                .triggered_by(JobTrigger::Manual)
+                .queue()
+                .expect("There was a problem queuing the build");
+
             'build_loop: loop {
                 //    // TODO: Wrap this entire workflow in a check for cancelation
                 //    let mut _job_was_canceled = false;
