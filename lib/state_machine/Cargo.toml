@@ -7,6 +7,9 @@ edition = "2018"
 [dependencies]
 #orbital_headers = { path = "../../models/orbital_headers" }
 orbital_database = { path = "../../models/orbital_database" }
+orbital_git_meta = { path = "../../lib/git_meta" }
+orbital_config_parser = { path = "../../lib/config_parser" }
+git-url-parse = "0.2"
 anyhow = "1.0"
 log = "0.4"
 chrono = "0.4"

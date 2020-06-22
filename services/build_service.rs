@@ -63,26 +63,32 @@ impl BuildService for OrbitalApi {
         let (mut tx, rx) = mpsc::channel(1);
 
         tokio::spawn(async move {
-            let mut git_parsed_uri =
-                git_info::git_remote_url_parse(unwrapped_request.clone().remote_uri.as_ref())
-                    .expect("Could not parse repo uri");
+            //let git_parsed_uri =
+            //    git_info::git_remote_url_parse(unwrapped_request.clone().remote_uri.as_ref())
+            //        .expect("Could not parse repo uri");
 
             let mut cur_build = state_machine::BuildContext::new()
-                .org(unwrapped_request.org.to_string())
-                .repo(git_parsed_uri.name.to_string())
-                .branch(unwrapped_request.branch.to_string())
-                .hash(unwrapped_request.commit_hash.to_string())
-                .triggered_by(JobTrigger::Manual)
+                .add_org(unwrapped_request.org.to_string())
+                .add_repo_uri(unwrapped_request.clone().remote_uri.to_string())
+                .expect("Could not parse repo uri")
+                .add_branch(unwrapped_request.branch.to_string())
+                .add_hash(unwrapped_request.commit_hash.to_string())
+                .add_triggered_by(JobTrigger::Manual)
                 .queue()
                 .expect("There was a problem queuing the build");
 
             //'build_loop: loop {
             while (cur_build.clone().state() != state_machine::BuildState::done())
                 | (cur_build.clone().state() != state_machine::BuildState::cancelled())
-                | (cur_build.clone().state() != state_machine::BuildState::failed())
+                | (cur_build.clone().state() != state_machine::BuildState::fail())
                 | (cur_build.clone().state() != state_machine::BuildState::system_err())
             {
                 cur_build = cur_build.clone().step().unwrap();
+
+                if cur_build.clone().state() == state_machine::BuildState::error() {
+                    panic!("State machine error")
+                };
+
                 //    // TODO: Wrap this entire workflow in a check for cancelation
                 //    let mut _job_was_canceled = false;
 
