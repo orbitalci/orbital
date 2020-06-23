@@ -94,7 +94,7 @@ impl CodeService for OrbitalApi {
                 let creds = GitCredentials::SshKey {
                     username: unwrapped_request.clone().user,
                     public_key: None,
-                    private_key: temp_keypath.as_path(),
+                    private_key: temp_keypath.to_path_buf(),
                     passphrase: None,
                 };
 

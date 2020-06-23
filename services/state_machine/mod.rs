@@ -1,4 +1,5 @@
 //use orbital_headers::orbital_types::JobTrigger;
+use anyhow::anyhow;
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use config_parser::OrbitalConfig;
@@ -8,6 +9,7 @@ use git_url_parse::GitUrl;
 use log::{debug, error, info};
 use machine::{machine, transitions};
 use mktemp::Temp;
+use orbital_agent::build_engine;
 use orbital_database::postgres;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
@@ -56,7 +58,7 @@ transitions!(BuildState,
 );
 
 impl Queued {
-    pub fn on_step(self, input: Step) -> Starting {
+    pub fn on_step(self, _: Step) -> Starting {
         println!("Queued -> Starting");
         Starting {}
     }
@@ -124,7 +126,7 @@ impl Finishing {
 }
 
 #[derive(Clone)]
-pub struct BuildContext<'a> {
+pub struct BuildContext {
     pub org: String,
     pub repo_name: String,
     pub branch: String,
@@ -136,14 +138,14 @@ pub struct BuildContext<'a> {
     pub start_time: Option<NaiveDateTime>,
     pub _ssh_key: Option<Temp>,
     pub _git_clone_dir: Option<Temp>,
-    pub _git_creds: Option<GitCredentials<'a>>,
+    pub _git_creds: Option<GitCredentials>,
     pub _git_commit_info: Option<GitCommitContext>,
     pub _build_config: Option<OrbitalConfig>,
     pub _repo_uri: Option<GitUrl>,
     _state: BuildState,
 }
 
-impl<'a> BuildContext<'a> {
+impl BuildContext {
     pub fn new() -> Self {
         BuildContext {
             org: "".to_string(),
@@ -165,12 +167,12 @@ impl<'a> BuildContext<'a> {
         }
     }
 
-    pub fn add_org(mut self, org: String) -> BuildContext<'a> {
+    pub fn add_org(mut self, org: String) -> BuildContext {
         self.org = org;
         self
     }
 
-    pub fn add_repo_uri(mut self, repo_uri: String) -> Result<BuildContext<'a>> {
+    pub fn add_repo_uri(mut self, repo_uri: String) -> Result<BuildContext> {
         let repo_uri_parsed =
             git_info::git_remote_url_parse(repo_uri.as_ref()).expect("Could not parse repo uri");
 
@@ -181,32 +183,32 @@ impl<'a> BuildContext<'a> {
         Ok(self)
     }
 
-    pub fn add_repo_name(mut self, repo_name: String) -> BuildContext<'a> {
+    pub fn add_repo_name(mut self, repo_name: String) -> BuildContext {
         self.repo_name = repo_name;
         self
     }
 
-    pub fn add_branch(mut self, branch: String) -> BuildContext<'a> {
+    pub fn add_branch(mut self, branch: String) -> BuildContext {
         self.branch = branch;
         self
     }
 
-    pub fn add_id(mut self, id: i32) -> BuildContext<'a> {
+    pub fn add_id(mut self, id: i32) -> BuildContext {
         self.id = Some(id);
         self
     }
 
-    pub fn add_hash(mut self, hash: String) -> BuildContext<'a> {
+    pub fn add_hash(mut self, hash: String) -> BuildContext {
         self.hash = Some(hash);
         self
     }
 
-    pub fn add_triggered_by(mut self, trigger: JobTrigger) -> BuildContext<'a> {
+    pub fn add_triggered_by(mut self, trigger: JobTrigger) -> BuildContext {
         self.job_trigger = trigger;
         self
     }
 
-    pub fn queue(mut self) -> Result<BuildContext<'a>> {
+    pub fn queue(mut self) -> Result<BuildContext> {
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
@@ -260,7 +262,7 @@ impl<'a> BuildContext<'a> {
 
     // Change state only once then return
     // TODO: This needs to be changed to accept a channel to stream to
-    pub fn step(self) -> Result<BuildContext<'a>> {
+    pub async fn step(self) -> Result<BuildContext> {
         let mut current_step = self.clone();
 
         // Check for termination conditions
@@ -313,7 +315,9 @@ impl<'a> BuildContext<'a> {
         let next_step = match current_step.clone().state() {
             BuildState::Queued(_) => {
                 // Get secrets for cloning
-                let mut next_step = current_step.clone();
+
+                let mut next_step = current_step.clone().secrets().await.expect("Getting repo secrets failed");
+
                 next_step._state = next_step._state.clone().on_step(Step {});
                 next_step
             }
@@ -358,7 +362,7 @@ impl<'a> BuildContext<'a> {
         Ok(next_step)
     }
 
-    pub async fn secrets(mut self) {
+    pub async fn secrets(mut self) -> Result<BuildContext> {
         //use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
         use crate::ServiceType;
 
@@ -393,7 +397,7 @@ impl<'a> BuildContext<'a> {
         // Build a GitCredentials struct based on the repo auth type
         // Declaring this in case we have an ssh key.
         self._ssh_key = Some(Temp::new_file().expect("Unable to create temp file"));
-        let temp_keypath = self._ssh_key.clone().unwrap().to_path_buf();
+        let mut temp_keypath = self._ssh_key.clone().unwrap();
 
         // TODO: This is where we're going to get usernames too
         // let username, git_creds = ...
@@ -457,7 +461,7 @@ impl<'a> BuildContext<'a> {
 
                 // Write ssh key to temp file
                 info!("Writing incoming ssh key to temp file");
-                let mut file = File::create(Path::new(&temp_keypath)).unwrap();
+                let mut file = File::create(&temp_keypath).unwrap();
                 let mut _contents = String::new();
                 let _ = file.write_all(
                     vault_response["private_key"]
@@ -470,6 +474,8 @@ impl<'a> BuildContext<'a> {
                 // TODO: Stop using username from Code service output
 
                 // Replace username with the user from the code service
+
+
                 let git_creds = GitCredentials::SshKey {
                     username: vault_response["username"]
                         .clone()
@@ -477,7 +483,7 @@ impl<'a> BuildContext<'a> {
                         .unwrap()
                         .to_string(),
                     public_key: None,
-                    private_key: &Path::new(&temp_keypath),
+                    private_key: temp_keypath.to_path_buf(),
                     passphrase: None,
                 };
 
@@ -562,11 +568,11 @@ impl<'a> BuildContext<'a> {
 
         // Don't forget to save the cloning creds
         self._git_creds = Some(git_creds);
+
+        Ok(self)
     }
 
-    pub fn code_clone(mut self) {
-        use orbital_agent::build_engine;
-
+    pub fn clone_code(mut self) -> Result<BuildContext> {
         info!("Cloning code into temp directory");
 
         let git_repo = build_engine::clone_repo(
@@ -581,13 +587,60 @@ impl<'a> BuildContext<'a> {
         // build stage end cloning repo.
 
         // Here we parse the newly cloned repo so we can get the commit message
-        let git_repo_info = git_info::get_git_info_from_path(
+        match git_info::get_git_info_from_path(
             git_repo.as_path(),
             &Some(self.branch.clone()),
             &Some(self.hash.clone().unwrap()),
-        )
-        .unwrap();
+        ) {
+            Ok(git_repo_info) => {
+                self._git_commit_info = Some(git_repo_info);
+                Ok(self)
+            }
+            Err(e) => Err(e),
+        }
+    }
 
-        self._git_commit_info = Some(git_repo_info);
+    pub fn add_build_config_from_path(mut self) -> Result<BuildContext> {
+        match (self._git_clone_dir.clone(), self._build_config.clone()) {
+            (Some(code), Some(_config)) => {
+                // Re-parse and re-set the config
+                info!("Re-loading build config from cloned code");
+                let c = build_engine::load_orb_config(Path::new(&format!(
+                    "{}/{}",
+                    &code.as_path().display(),
+                    "orb.yml",
+                )))
+                .expect("Unable to load orb.yml");
+
+                self._build_config = Some(c);
+
+                Ok(self)
+            }
+            (Some(code), None) => {
+                // Parse and re-set the config
+                info!("Build config not yet set. Loading build config from cloned code");
+                let c = build_engine::load_orb_config(Path::new(&format!(
+                    "{}/{}",
+                    &code.as_path().display(),
+                    "orb.yml",
+                )))
+                .expect("Unable to load orb.yml");
+
+                self._build_config = Some(c);
+
+                Ok(self)
+            }
+            (None, _) => Err(anyhow!("Code is not cloned")),
+        }
+    }
+
+    pub fn add_build_config_from_string(mut self, config: String) -> Result<BuildContext> {
+        match build_engine::load_orb_config_from_str(&config) {
+            Ok(c) => {
+                self._build_config = Some(c);
+                Ok(self)
+            }
+            Err(e) => Err(e),
+        }
     }
 }
