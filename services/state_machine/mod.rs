@@ -9,6 +9,17 @@ use machine::{machine, transitions};
 use orbital_database::postgres;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
+use std::str;
+use tonic::{Code, Request, Response, Status};
+use serde_json::Value;
+use git_meta::GitCredentials;
+use mktemp::Temp;
+use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
+use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
+use orbital_headers::orbital_types::{JobState as PGJobState, SecretType};
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
 
 machine! {
     #[derive(Clone, Debug, PartialEq)]
@@ -112,8 +123,8 @@ impl Finishing {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct BuildContext {
+#[derive(Clone)]
+pub struct BuildContext<'a> {
     pub org: String,
     pub repo_name: String,
     pub branch: String,
@@ -123,12 +134,14 @@ pub struct BuildContext {
     pub job_trigger: JobTrigger,
     pub queue_time: Option<NaiveDateTime>,
     pub start_time: Option<NaiveDateTime>,
+    pub _ssh_key: Option<Temp>,
+    pub _git_creds: Option<GitCredentials<'a>>,
     pub _build_config: Option<OrbitalConfig>,
     pub _repo_uri: Option<GitUrl>,
     _state: BuildState,
 }
 
-impl BuildContext {
+impl<'a> BuildContext<'a> {
     pub fn new() -> Self {
         BuildContext {
             org: "".to_string(),
@@ -140,18 +153,20 @@ impl BuildContext {
             job_trigger: JobTrigger::Manual,
             queue_time: None,
             start_time: None,
+            _ssh_key: None,
+            _git_creds: None,
             _build_config: None,
             _repo_uri: None,
             _state: BuildState::queued(),
         }
     }
 
-    pub fn add_org(mut self, org: String) -> BuildContext {
+    pub fn add_org(mut self, org: String) -> BuildContext<'a> {
         self.org = org;
         self
     }
 
-    pub fn add_repo_uri(mut self, repo_uri: String) -> Result<BuildContext> {
+    pub fn add_repo_uri(mut self, repo_uri: String) -> Result<BuildContext<'a>> {
         let repo_uri_parsed =
             git_info::git_remote_url_parse(repo_uri.as_ref()).expect("Could not parse repo uri");
 
@@ -162,32 +177,32 @@ impl BuildContext {
         Ok(self)
     }
 
-    pub fn add_repo_name(mut self, repo_name: String) -> BuildContext {
+    pub fn add_repo_name(mut self, repo_name: String) -> BuildContext<'a> {
         self.repo_name = repo_name;
         self
     }
 
-    pub fn add_branch(mut self, branch: String) -> BuildContext {
+    pub fn add_branch(mut self, branch: String) -> BuildContext<'a> {
         self.branch = branch;
         self
     }
 
-    pub fn add_id(mut self, id: i32) -> BuildContext {
+    pub fn add_id(mut self, id: i32) -> BuildContext<'a> {
         self.id = Some(id);
         self
     }
 
-    pub fn add_hash(mut self, hash: String) -> BuildContext {
+    pub fn add_hash(mut self, hash: String) -> BuildContext<'a> {
         self.hash = Some(hash);
         self
     }
 
-    pub fn add_triggered_by(mut self, trigger: JobTrigger) -> BuildContext {
+    pub fn add_triggered_by(mut self, trigger: JobTrigger) -> BuildContext<'a> {
         self.job_trigger = trigger;
         self
     }
 
-    pub fn queue(mut self) -> Result<BuildContext> {
+    pub fn queue(mut self) -> Result<BuildContext<'a>> {
         // Connect to database. Query for the repo
         let pg_conn = postgres::client::establish_connection();
 
@@ -241,7 +256,7 @@ impl BuildContext {
 
     // Change state only once then return
     // TODO: This needs to be changed to accept a channel to stream to
-    pub fn step(self) -> Result<BuildContext> {
+    pub fn step(self) -> Result<BuildContext<'a>> {
         let mut current_step = self.clone();
 
         // Check for termination conditions
@@ -339,195 +354,202 @@ impl BuildContext {
         Ok(next_step)
     }
 
-    pub fn secrets() {
+    pub async fn secrets(mut self) {
 
-        use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
+        //use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
         use crate::ServiceType;
 
 
-                //    // Retrieve any secrets needed to clone code
+        // Retrieve any secrets needed to clone code
 
-                //    debug!("Connecting to the Code service");
-                //    let code_client_conn_req = CodeServiceClient::connect(format!(
-                //        "http://{}",
-                //        super::get_service_uri(ServiceType::Code)
-                //    ));
+        debug!("Connecting to the Code service");
+        let code_client_conn_req = CodeServiceClient::connect(format!(
+            "http://{}",
+            super::get_service_uri(ServiceType::Code)
+        ));
 
-                //    let mut code_client = code_client_conn_req.await.unwrap();
+        let mut code_client = code_client_conn_req.await.unwrap();
 
-                //    debug!("Building request to Code service for git repo info");
+        debug!("Building request to Code service for git repo info");
 
-                //    // Request: org/git_provider/name
-                //    // e.g.: org_name/github.com/orbitalci/orbital
-                //    let request_payload = Request::new(GitRepoGetRequest {
-                //        org: unwrapped_request.org.clone().into(),
-                //        name: unwrapped_request.clone().git_repo,
-                //        uri: unwrapped_request.clone().remote_uri,
-                //        ..Default::default()
-                //    });
+        // Request: org/git_provider/name
+        // e.g.: org_name/github.com/orbitalci/orbital
+        let request_payload = Request::new(GitRepoGetRequest {
+            org: self.org.clone(),
+            name: self.repo_name.clone(),
+            uri: format!("{}",self._repo_uri.clone().unwrap()),
+            ..Default::default()
+        });
 
-                //    debug!("Payload: {:?}", &request_payload);
+        debug!("Payload: {:?}", &request_payload);
 
-                //    debug!("Sending request to Code service for git repo");
+        debug!("Sending request to Code service for git repo");
 
-                //    let code_service_request = code_client.git_repo_get(request_payload);
-                //    let code_service_response = code_service_request.await.unwrap().into_inner();
+        let code_service_request = code_client.git_repo_get(request_payload);
+        let code_service_response = code_service_request.await.unwrap().into_inner();
 
-                //    // Build a GitCredentials struct based on the repo auth type
-                //    // Declaring this in case we have an ssh key.
-                //    let temp_keypath = Temp::new_file().expect("Unable to create temp file");
+        // Build a GitCredentials struct based on the repo auth type
+        // Declaring this in case we have an ssh key.
+        self._ssh_key = Some(Temp::new_file().expect("Unable to create temp file"));
+        let temp_keypath = self._ssh_key.clone().unwrap().to_path_buf();
 
-                //    // TODO: This is where we're going to get usernames too
-                //    // let username, git_creds = ...
-                //    let git_creds = match &code_service_response.secret_type.into() {
-                //        SecretType::Unspecified => {
-                //            // TODO: Call secret service and get a username
-                //            info!("No secret needed to clone. Public repo");
+        // TODO: This is where we're going to get usernames too
+        // let username, git_creds = ...
+        let git_creds = match &code_service_response.secret_type.into() {
+            SecretType::Unspecified => {
+                // TODO: Call secret service and get a username
+                info!("No secret needed to clone. Public repo");
 
-                //            GitCredentials::Public
-                //        }
-                //        SecretType::SshKey => {
-                //            info!("SSH key needed to clone");
+                GitCredentials::Public
+            }
+            SecretType::SshKey => {
+                info!("SSH key needed to clone");
 
-                //            debug!("Connecting to the Secret service");
-                //            let secret_client_conn_req = SecretServiceClient::connect(format!(
-                //                "http://{}",
-                //                super::get_service_uri(ServiceType::Secret)
-                //            ));
+                debug!("Connecting to the Secret service");
+                let secret_client_conn_req = SecretServiceClient::connect(format!(
+                    "http://{}",
+                    super::get_service_uri(ServiceType::Secret)
+                ));
 
-                //            let mut secret_client = secret_client_conn_req.await.unwrap();
+                let mut secret_client = secret_client_conn_req.await.unwrap();
 
-                //            debug!("Building request to Secret service for git repo ");
+                debug!("Building request to Secret service for git repo ");
 
-                //            // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
-                //            // Where the secret name is the git repo url
-                //            // e.g., "github.com/level11consulting/orbitalci"
+                // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
+                // Where the secret name is the git repo url
+                // e.g., "github.com/level11consulting/orbitalci"
 
-                //            let secret_name = format!(
-                //                "{}/{}",
-                //                &git_parsed_uri.host.clone().expect("No host defined"),
-                //                &git_parsed_uri.name,
-                //            );
+                let secret_name = format!(
+                    "{}/{}",
+                    &self._repo_uri.clone().unwrap().host.clone().expect("No host defined"),
+                    &self._repo_uri.clone().unwrap().name,
+                );
 
-                //            let secret_service_request = Request::new(SecretGetRequest {
-                //                org: unwrapped_request.org.clone().into(),
-                //                name: secret_name,
-                //                secret_type: SecretType::SshKey.into(),
-                //                ..Default::default()
-                //            });
+                let secret_service_request = Request::new(SecretGetRequest {
+                    org: self.org.clone().into(),
+                    name: secret_name,
+                    secret_type: SecretType::SshKey.into(),
+                    ..Default::default()
+                });
 
-                //            debug!("Secret request: {:?}", &secret_service_request);
+                debug!("Secret request: {:?}", &secret_service_request);
 
-                //            let secret_service_response = secret_client
-                //                .secret_get(secret_service_request)
-                //                .await
-                //                .unwrap()
-                //                .into_inner();
+                let secret_service_response = secret_client
+                    .secret_get(secret_service_request)
+                    .await
+                    .unwrap()
+                    .into_inner();
 
-                //            debug!("Secret get response: {:?}", &secret_service_response);
+                debug!("Secret get response: {:?}", &secret_service_response);
 
-                //            // TODO: Deserialize vault data into hashmap.
-                //            let vault_response: Value = serde_json::from_str(
-                //                str::from_utf8(&secret_service_response.data).unwrap(),
-                //            )
-                //            .expect("Unable to read json data from Vault");
+                // TODO: Deserialize vault data into hashmap.
+                let vault_response: Value = serde_json::from_str(
+                    str::from_utf8(&secret_service_response.data).unwrap(),
+                )
+                .expect("Unable to read json data from Vault");
 
-                //            // Write ssh key to temp file
-                //            info!("Writing incoming ssh key to temp file");
-                //            let mut file = File::create(temp_keypath.as_path()).unwrap();
-                //            let mut _contents = String::new();
-                //            let _ = file.write_all(
-                //                vault_response["private_key"]
-                //                    .as_str()
-                //                    .unwrap()
-                //                    .to_string()
-                //                    .as_bytes(),
-                //            );
+                // Write ssh key to temp file
+                info!("Writing incoming ssh key to temp file");
+                let mut file = File::create(Path::new(&temp_keypath)).unwrap();
+                let mut _contents = String::new();
+                let _ = file.write_all(
+                    vault_response["private_key"]
+                        .as_str()
+                        .unwrap()
+                        .to_string()
+                        .as_bytes(),
+                );
 
-                //            // TODO: Stop using username from Code service output
+                // TODO: Stop using username from Code service output
 
-                //            // Replace username with the user from the code service
-                //            let git_creds = GitCredentials::SshKey {
-                //                username: vault_response["username"]
-                //                    .clone()
-                //                    .as_str()
-                //                    .unwrap()
-                //                    .to_string(),
-                //                public_key: None,
-                //                private_key: temp_keypath.as_path(),
-                //                passphrase: None,
-                //            };
+                // Replace username with the user from the code service
+                let git_creds = GitCredentials::SshKey {
+                    username: vault_response["username"]
+                        .clone()
+                        .as_str()
+                        .unwrap()
+                        .to_string(),
+                    public_key: None,
+                    private_key: &Path::new(&temp_keypath),
+                    passphrase: None,
+                };
 
-                //            // Add username to git_parsed_uri for cloning
-                //            git_parsed_uri.user = Some(
-                //                vault_response["username"]
-                //                    .clone()
-                //                    .as_str()
-                //                    .unwrap()
-                //                    .to_string(),
-                //            );
+                // Add username to git_parsed_uri for cloning
+                let mut updated_git_url = self._repo_uri.unwrap();
+                updated_git_url.user = Some(
+                    vault_response["username"]
+                        .clone()
+                        .as_str()
+                        .unwrap()
+                        .to_string(),
+                );
+                self._repo_uri = Some(updated_git_url);
 
-                //            debug!("Git Creds: {:?}", &git_creds);
+                debug!("Git Creds: {:?}", &git_creds);
 
-                //            git_creds
-                //        }
-                //        SecretType::BasicAuth => {
-                //            info!("Basic Auth creds needed to clone");
 
-                //            debug!("Connecting to the Secret service");
-                //            let secret_client_conn_req = SecretServiceClient::connect(format!(
-                //                "http://{}",
-                //                super::get_service_uri(ServiceType::Secret)
-                //            ));
-                //            let mut secret_client = secret_client_conn_req.await.unwrap();
 
-                //            debug!("Building request to Secret service for git repo ");
+                git_creds
+            }
+            SecretType::BasicAuth => {
+                info!("Basic Auth creds needed to clone");
 
-                //            // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
-                //            // Where the secret name is the git repo url
-                //            // e.g., "github.com/level11consulting/orbitalci"
+                debug!("Connecting to the Secret service");
+                let secret_client_conn_req = SecretServiceClient::connect(format!(
+                    "http://{}",
+                    super::get_service_uri(ServiceType::Secret)
+                ));
+                let mut secret_client = secret_client_conn_req.await.unwrap();
 
-                //            let secret_name = format!(
-                //                "{}/{}",
-                //                &git_parsed_uri.host.clone().expect("No host defined"),
-                //                &git_parsed_uri.name,
-                //            );
+                debug!("Building request to Secret service for git repo ");
 
-                //            let secret_service_request = Request::new(SecretGetRequest {
-                //                org: unwrapped_request.org.clone().into(),
-                //                name: secret_name,
-                //                secret_type: SecretType::BasicAuth.into(),
-                //                ..Default::default()
-                //            });
+                // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
+                // Where the secret name is the git repo url
+                // e.g., "github.com/level11consulting/orbitalci"
 
-                //            debug!("Secret request: {:?}", &secret_service_request);
+                let secret_name = format!(
+                    "{}/{}",
+                    &self._repo_uri.clone().unwrap().host.clone().expect("No host defined"),
+                    &self._repo_uri.clone().unwrap().name,
+                );
 
-                //            let secret_service_response = secret_client
-                //                .secret_get(secret_service_request)
-                //                .await
-                //                .unwrap()
-                //                .into_inner();
+                let secret_service_request = Request::new(SecretGetRequest {
+                    org: self.org.clone().into(),
+                    name: secret_name,
+                    secret_type: SecretType::BasicAuth.into(),
+                    ..Default::default()
+                });
 
-                //            debug!("Secret get response: {:?}", &secret_service_response);
+                debug!("Secret request: {:?}", &secret_service_request);
 
-                //            // TODO: Deserialize vault data into hashmap.
-                //            let vault_response: Value = serde_json::from_str(
-                //                str::from_utf8(&secret_service_response.data).unwrap(),
-                //            )
-                //            .expect("Unable to read json data from Vault");
+                let secret_service_response = secret_client
+                    .secret_get(secret_service_request)
+                    .await
+                    .unwrap()
+                    .into_inner();
 
-                //            // Replace username with the user from the code service
-                //            let git_creds = GitCredentials::BasicAuth {
-                //                username: vault_response["username"].as_str().unwrap().to_string(),
-                //                password: vault_response["password"].as_str().unwrap().to_string(),
-                //            };
+                debug!("Secret get response: {:?}", &secret_service_response);
 
-                //            debug!("Git Creds: {:?}", &git_creds);
-                //            git_creds
-                //        }
-                //        _ => panic!(
-                //        "We only support public repos, or private repo auth with sshkeys or basic auth"
-                //    ),
-                //    };
+                // TODO: Deserialize vault data into hashmap.
+                let vault_response: Value = serde_json::from_str(
+                    str::from_utf8(&secret_service_response.data).unwrap(),
+                )
+                .expect("Unable to read json data from Vault");
+
+                // Replace username with the user from the code service
+                let git_creds = GitCredentials::BasicAuth {
+                    username: vault_response["username"].as_str().unwrap().to_string(),
+                    password: vault_response["password"].as_str().unwrap().to_string(),
+                };
+
+                debug!("Git Creds: {:?}", &git_creds);
+                git_creds
+            }
+            _ => panic!(
+            "We only support public repos, or private repo auth with sshkeys or basic auth"
+        ),
+        };
+
+        self._git_creds = Some(git_creds);
     }
 }
