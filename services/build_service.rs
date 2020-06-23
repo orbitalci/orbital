@@ -23,6 +23,7 @@ use orbital_agent::build_engine;
 use orbital_exec_runtime::docker::OrbitalContainerSpec;
 
 use super::{OrbitalApi, ServiceType};
+use super::state_machine;
 
 use log::{debug, error, info};
 
@@ -37,8 +38,6 @@ use git_meta::git_info;
 
 use serde_json::Value;
 use std::str;
-
-use state_machine;
 
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
