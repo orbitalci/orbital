@@ -1477,7 +1477,6 @@ dependencies = [
  "orbital_git_meta",
  "orbital_hashicorp_stack",
  "orbital_headers",
- "orbital_state_machine",
  "serde_json",
  "shiplift",
  "thiserror",
@@ -1598,7 +1597,9 @@ dependencies = [
  "anyhow",
  "chrono",
  "futures 0.3.5",
+ "git-url-parse",
  "log 0.4.8",
+ "machine",
  "mktemp",
  "orbital_agent",
  "orbital_config_parser",
@@ -1607,23 +1608,11 @@ dependencies = [
  "orbital_git_meta",
  "orbital_hashicorp_stack",
  "orbital_headers",
- "orbital_state_machine",
  "prost-types",
  "serde_json",
  "thiserror",
  "tokio 0.2.21",
  "tonic",
-]
-
-[[package]]
-name = "orbital_state_machine"
-version = "0.1.0-alpha.1"
-dependencies = [
- "anyhow",
- "chrono",
- "log 0.4.8",
- "machine",
- "orbital_database",
 ]
 
 [[package]]

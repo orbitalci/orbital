@@ -5,7 +5,6 @@ use git_meta;
 use log::{debug, info};
 use mktemp;
 use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
-use state_machine;
 use std::path::Path;
 
 use serde_json::value::Value;

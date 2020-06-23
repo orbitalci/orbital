@@ -11,8 +11,6 @@ futures = "0.3"
 log = "0.4"
 mktemp = "0.4"
 orbital_agent = { path = "../lib/orbital_agent" }
-# TODO: Roll the state machine back into agent's api
-orbital_state_machine = { path = "../lib/state_machine" }
 orbital_exec_runtime = { path = "../lib/exec_runtime" }
 orbital_config_parser = { path = "../lib/config_parser" }
 orbital_database = { path = "../models/orbital_database" }
@@ -24,6 +22,10 @@ thiserror = "1.0"
 tokio = { version = "0.2", features = ["full"] }
 tonic = "0.2"
 serde_json = "1.0"
+
+# For state machine
+git-url-parse = "0.2"
+machine = "0.3"
 
 [lib]
 name = "orbital_services"
