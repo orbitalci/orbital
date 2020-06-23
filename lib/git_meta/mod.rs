@@ -4,7 +4,7 @@ pub mod clone;
 pub mod git_info;
 
 use git_url_parse::GitUrl;
-use std::path::Path;
+use std::path::PathBuf;
 
 /// This is the git commit that will be used for build requests
 #[derive(Debug, Default, Clone)]
@@ -17,15 +17,15 @@ pub struct GitCommitContext {
 
 /// Types of supported git authentication
 #[derive(Clone, Debug)]
-pub enum GitCredentials<'a> {
+pub enum GitCredentials {
     /// Public repo
     Public,
     /// Username, PrivateKey, PublicKey, Passphrase
     SshKey {
         username: String,
-        public_key: Option<&'a Path>,
-        private_key: &'a Path,
-        passphrase: Option<&'a str>,
+        public_key: Option<PathBuf>,
+        private_key: PathBuf,
+        passphrase: Option<String>,
     },
     /// Username, Password
     BasicAuth { username: String, password: String },

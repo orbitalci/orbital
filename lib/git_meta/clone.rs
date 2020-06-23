@@ -45,10 +45,31 @@ pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> R
             let mut fetch_options = FetchOptions::new();
 
             &callbacks.credentials(|_, _, _| {
-                Ok(
-                    Cred::ssh_key(&username, public_key, private_key, passphrase)
-                        .expect("Could not create credentials object for ssh key"),
-                )
+                // Do some Option re-wrapping stuff bc lifetimes
+                match (public_key.clone(), passphrase.clone()) {
+                    (None, None) => Ok(Cred::ssh_key(&username, None, private_key.as_ref(), None)
+                        .expect("Could not create credentials object for ssh key")),
+                    (None, Some(pp)) => {
+                        Ok(
+                            Cred::ssh_key(&username, None, private_key.as_ref(), Some(pp.as_ref()))
+                                .expect("Could not create credentials object for ssh key"),
+                        )
+                    }
+                    (Some(pk), None) => Ok(Cred::ssh_key(
+                        &username,
+                        Some(pk.as_path()),
+                        private_key.as_ref(),
+                        None,
+                    )
+                    .expect("Could not create credentials object for ssh key")),
+                    (Some(pk), Some(pp)) => Ok(Cred::ssh_key(
+                        &username,
+                        Some(pk.as_path()),
+                        private_key.as_ref(),
+                        Some(pp.as_ref()),
+                    )
+                    .expect("Could not create credentials object for ssh key")),
+                }
             });
 
             fetch_options.remote_callbacks(callbacks);
