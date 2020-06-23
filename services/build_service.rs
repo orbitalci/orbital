@@ -62,9 +62,6 @@ impl BuildService for OrbitalApi {
         let (mut tx, rx) = mpsc::channel(1);
 
         tokio::spawn(async move {
-            //let git_parsed_uri =
-            //    git_info::git_remote_url_parse(unwrapped_request.clone().remote_uri.as_ref())
-            //        .expect("Could not parse repo uri");
 
             let mut cur_build = state_machine::BuildContext::new()
                 .add_org(unwrapped_request.org.to_string())
@@ -76,13 +73,20 @@ impl BuildService for OrbitalApi {
                 .queue()
                 .expect("There was a problem queuing the build");
 
+            if unwrapped_request.config.clone().len() > 0 {
+                cur_build = cur_build
+                    .clone()
+                    .add_build_config_from_string(unwrapped_request.config.clone())
+                    .expect("Build config failed to parse");
+            }
+
             //'build_loop: loop {
             while (cur_build.clone().state() != state_machine::BuildState::done())
                 | (cur_build.clone().state() != state_machine::BuildState::cancelled())
                 | (cur_build.clone().state() != state_machine::BuildState::fail())
                 | (cur_build.clone().state() != state_machine::BuildState::system_err())
             {
-                cur_build = cur_build.clone().step().unwrap();
+                cur_build = cur_build.clone().step().await.unwrap();
 
                 if cur_build.clone().state() == state_machine::BuildState::error() {
                     panic!("State machine error")
