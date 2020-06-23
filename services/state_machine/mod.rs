@@ -3,23 +3,23 @@ use anyhow::Result;
 use chrono::NaiveDateTime;
 use config_parser::OrbitalConfig;
 use git_meta::git_info;
+use git_meta::{GitCommitContext, GitCredentials};
 use git_url_parse::GitUrl;
 use log::{debug, error, info};
 use machine::{machine, transitions};
+use mktemp::Temp;
 use orbital_database::postgres;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
-use std::str;
-use tonic::{Code, Request, Response, Status};
-use serde_json::Value;
-use git_meta::GitCredentials;
-use mktemp::Temp;
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
-use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
 use orbital_headers::orbital_types::{JobState as PGJobState, SecretType};
+use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
+use serde_json::Value;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::str;
+use tonic::{Code, Request, Response, Status};
 
 machine! {
     #[derive(Clone, Debug, PartialEq)]
@@ -135,7 +135,9 @@ pub struct BuildContext<'a> {
     pub queue_time: Option<NaiveDateTime>,
     pub start_time: Option<NaiveDateTime>,
     pub _ssh_key: Option<Temp>,
+    pub _git_clone_dir: Option<Temp>,
     pub _git_creds: Option<GitCredentials<'a>>,
+    pub _git_commit_info: Option<GitCommitContext>,
     pub _build_config: Option<OrbitalConfig>,
     pub _repo_uri: Option<GitUrl>,
     _state: BuildState,
@@ -154,7 +156,9 @@ impl<'a> BuildContext<'a> {
             queue_time: None,
             start_time: None,
             _ssh_key: None,
+            _git_clone_dir: None,
             _git_creds: None,
+            _git_commit_info: None,
             _build_config: None,
             _repo_uri: None,
             _state: BuildState::queued(),
@@ -355,10 +359,8 @@ impl<'a> BuildContext<'a> {
     }
 
     pub async fn secrets(mut self) {
-
         //use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
         use crate::ServiceType;
-
 
         // Retrieve any secrets needed to clone code
 
@@ -377,7 +379,7 @@ impl<'a> BuildContext<'a> {
         let request_payload = Request::new(GitRepoGetRequest {
             org: self.org.clone(),
             name: self.repo_name.clone(),
-            uri: format!("{}",self._repo_uri.clone().unwrap()),
+            uri: format!("{}", self._repo_uri.clone().unwrap()),
             ..Default::default()
         });
 
@@ -421,7 +423,13 @@ impl<'a> BuildContext<'a> {
 
                 let secret_name = format!(
                     "{}/{}",
-                    &self._repo_uri.clone().unwrap().host.clone().expect("No host defined"),
+                    &self
+                        ._repo_uri
+                        .clone()
+                        .unwrap()
+                        .host
+                        .clone()
+                        .expect("No host defined"),
                     &self._repo_uri.clone().unwrap().name,
                 );
 
@@ -443,10 +451,9 @@ impl<'a> BuildContext<'a> {
                 debug!("Secret get response: {:?}", &secret_service_response);
 
                 // TODO: Deserialize vault data into hashmap.
-                let vault_response: Value = serde_json::from_str(
-                    str::from_utf8(&secret_service_response.data).unwrap(),
-                )
-                .expect("Unable to read json data from Vault");
+                let vault_response: Value =
+                    serde_json::from_str(str::from_utf8(&secret_service_response.data).unwrap())
+                        .expect("Unable to read json data from Vault");
 
                 // Write ssh key to temp file
                 info!("Writing incoming ssh key to temp file");
@@ -487,8 +494,6 @@ impl<'a> BuildContext<'a> {
 
                 debug!("Git Creds: {:?}", &git_creds);
 
-
-
                 git_creds
             }
             SecretType::BasicAuth => {
@@ -509,7 +514,13 @@ impl<'a> BuildContext<'a> {
 
                 let secret_name = format!(
                     "{}/{}",
-                    &self._repo_uri.clone().unwrap().host.clone().expect("No host defined"),
+                    &self
+                        ._repo_uri
+                        .clone()
+                        .unwrap()
+                        .host
+                        .clone()
+                        .expect("No host defined"),
                     &self._repo_uri.clone().unwrap().name,
                 );
 
@@ -531,10 +542,9 @@ impl<'a> BuildContext<'a> {
                 debug!("Secret get response: {:?}", &secret_service_response);
 
                 // TODO: Deserialize vault data into hashmap.
-                let vault_response: Value = serde_json::from_str(
-                    str::from_utf8(&secret_service_response.data).unwrap(),
-                )
-                .expect("Unable to read json data from Vault");
+                let vault_response: Value =
+                    serde_json::from_str(str::from_utf8(&secret_service_response.data).unwrap())
+                        .expect("Unable to read json data from Vault");
 
                 // Replace username with the user from the code service
                 let git_creds = GitCredentials::BasicAuth {
@@ -546,10 +556,38 @@ impl<'a> BuildContext<'a> {
                 git_creds
             }
             _ => panic!(
-            "We only support public repos, or private repo auth with sshkeys or basic auth"
-        ),
+                "We only support public repos, or private repo auth with sshkeys or basic auth"
+            ),
         };
 
+        // Don't forget to save the cloning creds
         self._git_creds = Some(git_creds);
+    }
+
+    pub fn code_clone(mut self) {
+        use orbital_agent::build_engine;
+
+        info!("Cloning code into temp directory");
+
+        let git_repo = build_engine::clone_repo(
+            format!("{}", &self._repo_uri.clone().unwrap()).as_str(),
+            &self.branch,
+            self._git_creds.clone().unwrap(),
+        )
+        .expect("Unable to clone repo");
+
+        self._git_clone_dir = Some(git_repo.clone());
+
+        // build stage end cloning repo.
+
+        // Here we parse the newly cloned repo so we can get the commit message
+        let git_repo_info = git_info::get_git_info_from_path(
+            git_repo.as_path(),
+            &Some(self.branch.clone()),
+            &Some(self.hash.clone().unwrap()),
+        )
+        .unwrap();
+
+        self._git_commit_info = Some(git_repo_info);
     }
 }
