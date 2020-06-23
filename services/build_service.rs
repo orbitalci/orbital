@@ -22,8 +22,8 @@ use git_meta::GitCredentials;
 use orbital_agent::build_engine;
 use orbital_exec_runtime::docker::OrbitalContainerSpec;
 
-use super::{OrbitalApi, ServiceType};
 use super::state_machine;
+use super::{OrbitalApi, ServiceType};
 
 use log::{debug, error, info};
 
