@@ -62,6 +62,8 @@ impl BuildService for OrbitalApi {
         let (mut tx, rx) = mpsc::channel(1);
 
         tokio::spawn(async move {
+            let git_clone_dir = Temp::new_dir().expect("Unable to create dir for git clone");
+
             let mut cur_build = state_machine::BuildContext::new()
                 .add_org(unwrapped_request.org.to_string())
                 .add_repo_uri(unwrapped_request.clone().remote_uri.to_string())
@@ -69,6 +71,7 @@ impl BuildService for OrbitalApi {
                 .add_branch(unwrapped_request.branch.to_string())
                 .add_hash(unwrapped_request.commit_hash.to_string())
                 .add_triggered_by(JobTrigger::Manual)
+                .add_working_dir(git_clone_dir.to_path_buf())
                 .queue()
                 .expect("There was a problem queuing the build");
 

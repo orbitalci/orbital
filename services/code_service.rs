@@ -53,10 +53,13 @@ impl CodeService for OrbitalApi {
                 match unwrapped_request.skip_check {
                     true => info!("Test git clone check skipped by request"),
                     false => {
+                        let temp_dir = Temp::new_dir().expect("Creating test clone dir failed");
+
                         let _ = match build_engine::clone_repo(
                             &unwrapped_request.uri,
                             &test_branch,
                             creds.clone(),
+                            temp_dir.as_path(),
                         ) {
                             Ok(_) => {
                                 info!("Test git clone successful");
@@ -96,6 +99,8 @@ impl CodeService for OrbitalApi {
                 match unwrapped_request.skip_check {
                     true => info!("Test git clone check skipped by request"),
                     false => {
+                        let temp_dir = Temp::new_dir().expect("Creating test clone dir failed");
+
                         let _ = match build_engine::clone_repo(
                             format!(
                                 "{}@{}",
@@ -105,6 +110,7 @@ impl CodeService for OrbitalApi {
                             .as_str(),
                             &test_branch,
                             creds.clone(),
+                            temp_dir.as_path(),
                         ) {
                             Ok(_) => {
                                 info!("Test git clone successful");
@@ -189,10 +195,13 @@ impl CodeService for OrbitalApi {
                 match unwrapped_request.skip_check {
                     true => info!("Test git clone check skipped by request"),
                     false => {
+                        let temp_dir = Temp::new_dir()?;
+
                         let _ = match build_engine::clone_repo(
                             &unwrapped_request.uri,
                             &test_branch,
                             creds.clone(),
+                            temp_dir.as_ref(),
                         ) {
                             Ok(_) => {
                                 info!("Test git clone successful");
