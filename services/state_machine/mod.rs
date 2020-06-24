@@ -136,7 +136,6 @@ pub struct BuildContext {
     pub job_trigger: JobTrigger,
     pub queue_time: Option<NaiveDateTime>,
     pub start_time: Option<NaiveDateTime>,
-    pub _ssh_key: Option<Temp>,
     pub _git_clone_dir: Option<Temp>,
     pub _git_creds: Option<GitCredentials>,
     pub _git_commit_info: Option<GitCommitContext>,
@@ -157,7 +156,6 @@ impl BuildContext {
             job_trigger: JobTrigger::Manual,
             queue_time: None,
             start_time: None,
-            _ssh_key: None,
             _git_clone_dir: None,
             _git_creds: None,
             _git_commit_info: None,
@@ -288,7 +286,7 @@ impl BuildContext {
                 return Ok(current_step);
             }
             Ok(false) => {
-                info!("Build was not cancelled");
+                info!("Build was not cancelled - {:?}", &self._state);
             }
             _ => {
                 error!("Error checking for build cancellation");
@@ -315,10 +313,14 @@ impl BuildContext {
         let next_step = match current_step.clone().state() {
             BuildState::Queued(_) => {
                 // Get secrets for cloning
+                let mut next_step = current_step
+                    .clone()
+                    .secrets()
+                    .await
+                    .expect("Getting repo secrets failed");
 
-                let mut next_step = current_step.clone().secrets().await.expect("Getting repo secrets failed");
-
-                next_step._state = next_step._state.clone().on_step(Step {});
+                next_step._state.clone().on_step(Step {});
+                next_step._state = BuildState::starting();
                 next_step
             }
             BuildState::Starting(_) => {
@@ -328,6 +330,7 @@ impl BuildContext {
                 // Initialize stage name and step index
                 let mut next_step = current_step.clone();
                 next_step._state = next_step._state.clone().on_step(Step {});
+                //next_step._state = BuildState::running();
                 next_step
             }
             BuildState::Running(_) => {
@@ -344,6 +347,7 @@ impl BuildContext {
                 let mut next_step = current_step.clone();
                 // Run this step once to prove loopback works
                 next_step._state = next_step._state.clone().on_step(Step {});
+                //next_step._state = BuildState::running();
 
                 // DEBUG! Stepping this to Finish state immediately
                 next_step._state = next_step._state.clone().on_finishing(Finishing {});
@@ -396,8 +400,8 @@ impl BuildContext {
 
         // Build a GitCredentials struct based on the repo auth type
         // Declaring this in case we have an ssh key.
-        self._ssh_key = Some(Temp::new_file().expect("Unable to create temp file"));
-        let mut temp_keypath = self._ssh_key.clone().unwrap();
+        //let mut temp_keypath = Temp::new_file().expect("Unable to create temp file");
+        //let mut temp_keypath = self._ssh_key.clone().unwrap();
 
         // TODO: This is where we're going to get usernames too
         // let username, git_creds = ...
@@ -460,21 +464,11 @@ impl BuildContext {
                         .expect("Unable to read json data from Vault");
 
                 // Write ssh key to temp file
-                info!("Writing incoming ssh key to temp file");
-                let mut file = File::create(&temp_keypath).unwrap();
-                let mut _contents = String::new();
-                let _ = file.write_all(
-                    vault_response["private_key"]
-                        .as_str()
-                        .unwrap()
-                        .to_string()
-                        .as_bytes(),
-                );
+                info!("Writing incoming ssh key to GitCredentials::SshKey");
 
                 // TODO: Stop using username from Code service output
 
                 // Replace username with the user from the code service
-
 
                 let git_creds = GitCredentials::SshKey {
                     username: vault_response["username"]
@@ -483,7 +477,7 @@ impl BuildContext {
                         .unwrap()
                         .to_string(),
                     public_key: None,
-                    private_key: temp_keypath.to_path_buf(),
+                    private_key: vault_response["private_key"].as_str().unwrap().to_string(),
                     passphrase: None,
                 };
 

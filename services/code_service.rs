@@ -85,16 +85,10 @@ impl CodeService for OrbitalApi {
             SecretType::SshKey => {
                 info!("Private repo with ssh key");
 
-                // Write private key into a temp file
-                debug!("Writing incoming ssh key to temp file");
-                let mut file = File::create(temp_keypath.as_path())?;
-                let mut _contents = String::new();
-                let _ = file.write_all(unwrapped_request.clone().auth_data.as_bytes());
-
                 let creds = GitCredentials::SshKey {
                     username: unwrapped_request.clone().user,
                     public_key: None,
-                    private_key: temp_keypath.to_path_buf(),
+                    private_key: unwrapped_request.clone().auth_data,
                     passphrase: None,
                 };
 
