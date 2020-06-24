@@ -2,6 +2,7 @@ use crate::{developer::git::SubcommandOption, GlobalOption};
 //use log::debug;
 use anyhow::Result;
 use git_meta::GitCredentials;
+use mktemp::Temp;
 use orbital_agent::build_engine;
 use std::fs;
 use structopt::StructOpt;
@@ -15,10 +16,13 @@ pub async fn action_handler(
     _subcommand_option: SubcommandOption,
     _action_option: ActionOption,
 ) -> Result<()> {
-    let temp_dir = build_engine::clone_repo(
+    let temp_dir = Temp::new_dir().expect("Unable to create test clone dir");
+
+    let res = build_engine::clone_repo(
         "https://github.com/alexcrichton/git2-rs",
         "master",
         GitCredentials::Public,
+        &temp_dir.as_path(),
         //)?;
     )
     .unwrap();

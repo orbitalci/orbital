@@ -5,16 +5,20 @@ use log::debug;
 use mktemp::Temp;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::Path;
 
 // TODO: Need a way to switch between a public and private repo
 // Idea: Create an enum:
 
 /// Create a temporary directory with mktemp, clone given uri into it.
 /// Return mktemp directory, which will delete when out of scope
-pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> Result<Temp> {
-    let temp_dir = Temp::new_dir()?;
-
-    debug!("Temp dir path: {:?}", &temp_dir.as_path());
+pub fn clone_temp_dir(
+    uri: &str,
+    branch: &str,
+    credentials: GitCredentials,
+    target_dir: &Path,
+) -> Result<()> {
+    debug!("Temp dir path: {:?}", &target_dir);
     debug!("GitCredentials: {:?}", &credentials);
 
     match credentials {
@@ -29,7 +33,7 @@ pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> R
             builder.fetch_options(fetch_options);
             builder.branch(branch);
 
-            let _repo = match builder.clone(uri, &temp_dir.as_path()) {
+            let _repo = match builder.clone(uri, &target_dir) {
                 Ok(repo) => repo,
                 Err(e) => panic!("failed to clone: {}", e),
             };
@@ -105,7 +109,7 @@ pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> R
             builder.fetch_options(fetch_options);
             builder.branch(branch);
 
-            let _repo = match builder.clone(uri, &temp_dir.as_path()) {
+            let _repo = match builder.clone(uri, &target_dir) {
                 Ok(repo) => repo,
                 Err(e) => panic!("failed to clone: {}", e),
             };
@@ -128,12 +132,12 @@ pub fn clone_temp_dir(uri: &str, branch: &str, credentials: GitCredentials) -> R
             builder.fetch_options(fetch_options);
             builder.branch(branch);
 
-            let _repo = match builder.clone(uri, &temp_dir.as_path()) {
+            let _repo = match builder.clone(uri, &target_dir) {
                 Ok(repo) => repo,
                 Err(e) => panic!("failed to clone: {}", e),
             };
         }
     }
 
-    Ok(temp_dir)
+    Ok(())
 }

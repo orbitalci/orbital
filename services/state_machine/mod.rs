@@ -19,7 +19,7 @@ use orbital_headers::secret::{secret_service_client::SecretServiceClient, Secret
 use serde_json::Value;
 use std::fs::File;
 use std::io::prelude::*;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str;
 use tonic::{Code, Request, Response, Status};
 
@@ -130,13 +130,13 @@ pub struct BuildContext {
     pub org: String,
     pub repo_name: String,
     pub branch: String,
+    pub working_dir: PathBuf,
     pub id: Option<i32>,
     pub hash: Option<String>,
     pub user_envs: Option<Vec<String>>,
     pub job_trigger: JobTrigger,
     pub queue_time: Option<NaiveDateTime>,
     pub start_time: Option<NaiveDateTime>,
-    pub _git_clone_dir: Option<Temp>,
     pub _git_creds: Option<GitCredentials>,
     pub _git_commit_info: Option<GitCommitContext>,
     pub _build_config: Option<OrbitalConfig>,
@@ -150,13 +150,13 @@ impl BuildContext {
             org: "".to_string(),
             repo_name: "".to_string(),
             branch: "".to_string(),
+            working_dir: PathBuf::new(),
             id: None,
             hash: None,
             user_envs: None,
             job_trigger: JobTrigger::Manual,
             queue_time: None,
             start_time: None,
-            _git_clone_dir: None,
             _git_creds: None,
             _git_commit_info: None,
             _build_config: None,
@@ -203,6 +203,11 @@ impl BuildContext {
 
     pub fn add_triggered_by(mut self, trigger: JobTrigger) -> BuildContext {
         self.job_trigger = trigger;
+        self
+    }
+
+    pub fn add_working_dir(mut self, working_dir: PathBuf) -> BuildContext {
+        self.working_dir = working_dir;
         self
     }
 
@@ -328,7 +333,19 @@ impl BuildContext {
                 // Validate orb.yml
                 // Set a start time
                 // Initialize stage name and step index
-                let mut next_step = current_step.clone();
+                let mut next_step = current_step
+                    .clone()
+                    .clone_code()
+                    .expect("Cloning code failed");
+
+                if let Some(_config) = self._build_config {
+                    info!("Config file was passed in. Not reloading");
+                } else {
+                    next_step = next_step
+                        .add_build_config_from_path()
+                        .expect("Loading config from cloned code failed");
+                }
+
                 next_step._state = next_step._state.clone().on_step(Step {});
                 //next_step._state = BuildState::running();
                 next_step
@@ -567,41 +584,47 @@ impl BuildContext {
     }
 
     pub fn clone_code(mut self) -> Result<BuildContext> {
-        info!("Cloning code into temp directory");
+        info!(
+            "Cloning code into temp directory - {}",
+            format!("{}", &self._repo_uri.clone().unwrap()).as_str()
+        );
 
-        let git_repo = build_engine::clone_repo(
+        let _clone_res = build_engine::clone_repo(
             format!("{}", &self._repo_uri.clone().unwrap()).as_str(),
             &self.branch,
             self._git_creds.clone().unwrap(),
+            self.working_dir.as_ref(),
         )
         .expect("Unable to clone repo");
 
-        self._git_clone_dir = Some(git_repo.clone());
-
-        // build stage end cloning repo.
+        //TODO: Add debug here to list files from self.working_dir
 
         // Here we parse the newly cloned repo so we can get the commit message
         match git_info::get_git_info_from_path(
-            git_repo.as_path(),
+            self.working_dir.clone().as_path(),
             &Some(self.branch.clone()),
             &Some(self.hash.clone().unwrap()),
         ) {
             Ok(git_repo_info) => {
                 self._git_commit_info = Some(git_repo_info);
-                Ok(self)
             }
-            Err(e) => Err(e),
-        }
+            Err(e) => {
+                error!("Failed to parse metadata from repo");
+                return Err(e);
+            }
+        };
+
+        Ok(self)
     }
 
     pub fn add_build_config_from_path(mut self) -> Result<BuildContext> {
-        match (self._git_clone_dir.clone(), self._build_config.clone()) {
-            (Some(code), Some(_config)) => {
+        match self._build_config.clone() {
+            Some(_config) => {
                 // Re-parse and re-set the config
                 info!("Re-loading build config from cloned code");
                 let c = build_engine::load_orb_config(Path::new(&format!(
                     "{}/{}",
-                    &code.as_path().display(),
+                    self.working_dir.as_path().display(),
                     "orb.yml",
                 )))
                 .expect("Unable to load orb.yml");
@@ -610,12 +633,21 @@ impl BuildContext {
 
                 Ok(self)
             }
-            (Some(code), None) => {
+            None => {
+                //debug!("Trying to list out files");
+                //use std::fs;
+
+                //let paths = fs::read_dir(self.working_dir.as_path()).unwrap();
+
+                //for path in paths {
+                //    println!("Name: {}", path.unwrap().path().display())
+                //}
+
                 // Parse and re-set the config
                 info!("Build config not yet set. Loading build config from cloned code");
                 let c = build_engine::load_orb_config(Path::new(&format!(
                     "{}/{}",
-                    &code.as_path().display(),
+                    self.working_dir.as_path().display(),
                     "orb.yml",
                 )))
                 .expect("Unable to load orb.yml");
@@ -624,7 +656,6 @@ impl BuildContext {
 
                 Ok(self)
             }
-            (None, _) => Err(anyhow!("Code is not cloned")),
         }
     }
 

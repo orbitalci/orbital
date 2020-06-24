@@ -1494,6 +1494,7 @@ dependencies = [
  "git-url-parse",
  "git2",
  "log 0.4.8",
+ "mktemp",
  "orbital_agent",
  "orbital_config_parser",
  "orbital_database",

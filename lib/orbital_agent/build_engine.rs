@@ -14,8 +14,13 @@ use tokio::sync::mpsc;
 pub struct Agent;
 
 /// Create a temporary directory on the host, and clone a repo
-pub fn clone_repo(uri: &str, branch: &str, credentials: git_meta::GitCredentials) -> Result<Temp> {
-    git_meta::clone::clone_temp_dir(uri, branch, credentials)
+pub fn clone_repo(
+    uri: &str,
+    branch: &str,
+    credentials: git_meta::GitCredentials,
+    target_dir: &Path,
+) -> Result<()> {
+    git_meta::clone::clone_temp_dir(uri, branch, credentials, target_dir)
 }
 
 /// Load orb.yml from a filepath
