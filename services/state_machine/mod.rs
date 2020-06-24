@@ -303,18 +303,6 @@ impl BuildContext {
             }
         };
 
-        //next._state = match next.clone().state() == BuildState::finishing() {
-        //    true => {
-        //        // If there were failures during the run, then move to failed, otherwise move to done
-
-        //        next.clone().state().on_done(Done {})
-        //    } // TODO: Manage the cleanup. Diff between pass/fail.
-        //    false => {
-        //        // If there are more commands to run, then step, otherwise move to finishing
-        //        next.clone().state().on_step(Step)
-        //    }
-        //};
-
         let next_step = match current_step.clone().state() {
             BuildState::Queued(_) => {
                 // Get secrets for cloning
@@ -324,8 +312,7 @@ impl BuildContext {
                     .await
                     .expect("Getting repo secrets failed");
 
-                next_step._state.clone().on_step(Step {});
-                next_step._state = BuildState::starting();
+                next_step._state = next_step._state.clone().on_step(Step {});
                 next_step
             }
             BuildState::Starting(_) => {
@@ -359,9 +346,10 @@ impl BuildContext {
                 // Mark next command to run
                 // If this was the last command in a stage, mark the end time
 
-                // If the
-
                 let mut next_step = current_step.clone();
+
+                println!("{}", &next_step._build_config.clone().unwrap());
+
                 // Run this step once to prove loopback works
                 next_step._state = next_step._state.clone().on_step(Step {});
                 //next_step._state = BuildState::running();
