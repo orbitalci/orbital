@@ -4,7 +4,6 @@ pub mod clone;
 pub mod git_info;
 
 use git_url_parse::GitUrl;
-use std::path::PathBuf;
 
 /// This is the git commit that will be used for build requests
 #[derive(Debug, Default, Clone)]
@@ -23,8 +22,8 @@ pub enum GitCredentials {
     /// Username, PrivateKey, PublicKey, Passphrase
     SshKey {
         username: String,
-        public_key: Option<PathBuf>,
-        private_key: PathBuf,
+        public_key: Option<String>,
+        private_key: String,
         passphrase: Option<String>,
     },
     /// Username, Password

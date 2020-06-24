@@ -62,7 +62,6 @@ impl BuildService for OrbitalApi {
         let (mut tx, rx) = mpsc::channel(1);
 
         tokio::spawn(async move {
-
             let mut cur_build = state_machine::BuildContext::new()
                 .add_org(unwrapped_request.org.to_string())
                 .add_repo_uri(unwrapped_request.clone().remote_uri.to_string())
@@ -80,12 +79,16 @@ impl BuildService for OrbitalApi {
                     .expect("Build config failed to parse");
             }
 
-            //'build_loop: loop {
-            while (cur_build.clone().state() != state_machine::BuildState::done())
-                | (cur_build.clone().state() != state_machine::BuildState::cancelled())
-                | (cur_build.clone().state() != state_machine::BuildState::fail())
-                | (cur_build.clone().state() != state_machine::BuildState::system_err())
-            {
+            'build_loop: loop {
+                if (cur_build.clone().state() == state_machine::BuildState::done())
+                    | (cur_build.clone().state() == state_machine::BuildState::cancelled())
+                    | (cur_build.clone().state() == state_machine::BuildState::fail())
+                    | (cur_build.clone().state() == state_machine::BuildState::system_err())
+                {
+                    debug!("Exiting build loop - {:?}", cur_build.clone().state());
+                    break 'build_loop;
+                }
+
                 cur_build = cur_build.clone().step().await.unwrap();
 
                 if cur_build.clone().state() == state_machine::BuildState::error() {
