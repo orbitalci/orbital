@@ -23,7 +23,36 @@ pub async fn subcommand_handler(
 ) -> Result<()> {
     match parser::load_orb_yaml(&local_option.file.as_path()) {
         Ok(c) => {
-            println!("{:?}", c);
+            //println!("Full config:\n{:?}", c);
+
+            //let mut marker = (0, 0);
+
+            //loop {
+            //    let stage_index = marker.0;
+            //    let command_index = marker.1;
+
+            //    println!(
+            //        "Stage index:{} Command index:{}",
+            //        stage_index, command_index
+            //    );
+
+            //    println!("{:?}", c.stages[stage_index].command[command_index]);
+
+            //    if c.stages
+            //        .get(stage_index)
+            //        .unwrap()
+            //        .command
+            //        .get(command_index + 1)
+            //        .is_some()
+            //    {
+            //        marker = (stage_index, command_index + 1);
+            //    } else if c.stages.get(stage_index + 1).is_some() {
+            //        marker = (stage_index + 1, 0);
+            //    } else {
+            //        break;
+            //    }
+            //}
+
             Ok(())
         }
         Err(_e) => Err(SubcommandError::new("Config file failed validation").into()),
