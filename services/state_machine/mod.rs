@@ -136,11 +136,13 @@ pub struct BuildContext {
     pub user_envs: Option<Vec<String>>,
     pub job_trigger: JobTrigger,
     pub queue_time: Option<NaiveDateTime>,
-    pub start_time: Option<NaiveDateTime>,
+    pub build_start_time: Option<NaiveDateTime>,
+    pub build_end_time: Option<NaiveDateTime>,
     pub _git_creds: Option<GitCredentials>,
     pub _git_commit_info: Option<GitCommitContext>,
     pub _build_config: Option<OrbitalConfig>,
     pub _repo_uri: Option<GitUrl>,
+    _build_progress_marker: (usize, usize),
     _state: BuildState,
 }
 
@@ -156,11 +158,14 @@ impl BuildContext {
             user_envs: None,
             job_trigger: JobTrigger::Manual,
             queue_time: None,
-            start_time: None,
+            build_start_time: None,
+            build_end_time: None,
             _git_creds: None,
             _git_commit_info: None,
             _build_config: None,
+            _build_progress_marker: (0, 0),
             _repo_uri: None,
+
             _state: BuildState::queued(),
         }
     }
@@ -338,24 +343,44 @@ impl BuildContext {
                 next_step
             }
             BuildState::Running(_) => {
-                // Run command per step index
-                // If it is a new stage, create the metadata
-
                 // Note exit code?
-
-                // Mark next command to run
-                // If this was the last command in a stage, mark the end time
 
                 let mut next_step = current_step.clone();
 
-                println!("{}", &next_step._build_config.clone().unwrap());
+                let c = next_step._build_config.clone().unwrap();
 
-                // Run this step once to prove loopback works
-                next_step._state = next_step._state.clone().on_step(Step {});
-                //next_step._state = BuildState::running();
+                let stage_index = next_step._build_progress_marker.0;
+                let command_index = next_step._build_progress_marker.1;
 
-                // DEBUG! Stepping this to Finish state immediately
-                next_step._state = next_step._state.clone().on_finishing(Finishing {});
+                println!(
+                    "Stage index:{} Command index:{}",
+                    stage_index, command_index
+                );
+
+                // Placeholder: Run the command here
+                // TODO: Collect all the env vars, global and per stage
+                println!("{:?}", c.stages[stage_index].command[command_index]);
+
+                // Update build progress marker
+                if c.stages
+                    .get(stage_index)
+                    .unwrap()
+                    .command
+                    .get(command_index + 1)
+                    .is_some()
+                {
+                    // Next command in the stage
+                    next_step._build_progress_marker = (stage_index, command_index + 1);
+                    next_step._state = next_step._state.clone().on_step(Step {});
+                } else if c.stages.get(stage_index + 1).is_some() {
+                    // First command of the next stage
+                    next_step._build_progress_marker = (stage_index + 1, 0);
+                    next_step._state = next_step._state.clone().on_step(Step {});
+                } else {
+                    // This was the last command
+                    next_step._state = next_step._state.clone().on_finishing(Finishing {});
+                }
+
                 next_step
             }
             BuildState::Finishing(_) => {
