@@ -143,6 +143,7 @@ pub struct BuildContext {
     pub _git_creds: Option<GitCredentials>,
     pub _git_commit_info: Option<GitCommitContext>,
     pub _build_config: Option<OrbitalConfig>,
+    pub _container_id: Option<String>,
     pub _repo_uri: Option<GitUrl>,
     _build_progress_marker: (usize, usize),
     _state: BuildState,
@@ -165,6 +166,7 @@ impl BuildContext {
             _git_creds: None,
             _git_commit_info: None,
             _build_config: None,
+            _container_id: None,
             _build_progress_marker: (0, 0),
             _repo_uri: None,
 
@@ -398,6 +400,20 @@ impl BuildContext {
 
                 // Start the container
 
+                // Create a new container
+                info!("Creating container");
+                next_step._container_id =
+                    build_engine::docker_container_create(&build_container_spec).ok();
+
+                // Start a docker container
+                info!(
+                    "Start container {:?}",
+                    &next_step._container_id.clone().unwrap()
+                );
+                let _ =
+                    build_engine::docker_container_start(&next_step._container_id.clone().unwrap())
+                        .unwrap();
+
                 next_step._state = next_step._state.clone().on_step(Step {});
                 //next_step._state = BuildState::running();
                 next_step
@@ -420,6 +436,38 @@ impl BuildContext {
                 // Placeholder: Run the command here
                 // TODO: Collect all the env vars, global and per stage
                 println!("{:?}", c.stages[stage_index].command[command_index]);
+
+                let mut stream = build_engine::docker_container_exec_async(
+                    next_step._container_id.clone().unwrap(),
+                    vec![c.stages[stage_index].command[command_index].clone()],
+                )
+                .await
+                .unwrap();
+
+                while let Some(response) = stream.recv().await {
+                    //let mut container_exec_output = BuildStage {
+                    //    ..Default::default()
+                    //};
+
+                    println!("EXEC OUTPUT: {:?}", response.clone().as_str());
+
+                    // Adding newlines
+
+                    //let output = response.clone().as_bytes().to_owned();
+
+                    //container_exec_output.output = output;
+
+                    //build_stage_logs.push_str(response.clone().as_str());
+
+                    //build_record.build_output.push(container_exec_output);
+
+                    //let _ = match tx.send(Ok(build_record.clone())).await {
+                    //    Ok(_) => Ok(()),
+                    //    Err(mpsc::error::SendError(_)) => Err(()),
+                    //};
+
+                    //build_record.build_output.pop(); // Empty out the output buffer
+                }
 
                 // Update build progress marker
                 if c.stages
@@ -447,6 +495,13 @@ impl BuildContext {
                 // Set the end time for the build
 
                 let mut next_step = current_step.clone();
+
+                info!("Stopping the container");
+                let _ = build_engine::docker_container_stop(
+                    next_step._container_id.clone().unwrap().as_str(),
+                )
+                .unwrap();
+
                 next_step._state = next_step._state.clone().on_done(Done {});
                 next_step
             }
