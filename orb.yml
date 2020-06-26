@@ -1,6 +1,10 @@
 image: docker
+env:
+  - GLOBAL=yes
 stages:
   - name: Testing env vars
+    env:
+      - LOCAL=first
     command:
       - echo Org is ${ORBITAL_ORG}
       - echo Repo is ${ORBITAL_REPOSITORY}
@@ -8,12 +12,14 @@ stages:
       - echo Commit is ${ORBITAL_COMMIT}
       - echo Commit short is ${ORBITAL_COMMIT_SHORT}
       - echo Commit message is ${ORBITAL_COMMIT_MSG}
-  - name: The first stage
+  - name: The second stage
+    env: 
+      - LOCAL=second
     command:
     - pwd
     - ls
     - env
-  #- name: The second stage
+  #- name: The third stage
   #  command:
   #  - echo Hello world!
   #  - docker build -t orb .

@@ -9,10 +9,11 @@ use git_url_parse::GitUrl;
 use log::{debug, error, info};
 use machine::{machine, transitions};
 use mktemp::Temp;
-use orbital_agent::build_engine;
+use orbital_agent::{self, build_engine};
 use orbital_database::postgres;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
+use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_headers::orbital_types::{JobState as PGJobState, SecretType};
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
@@ -21,6 +22,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::str;
+use std::time::Duration;
 use tonic::{Code, Request, Response, Status};
 
 machine! {
@@ -330,13 +332,71 @@ impl BuildContext {
                     .clone_code()
                     .expect("Cloning code failed");
 
-                if let Some(_config) = self._build_config {
+                if let Some(_config) = next_step._build_config.clone() {
                     info!("Config file was passed in. Not reloading");
                 } else {
                     next_step = next_step
                         .add_build_config_from_path()
                         .expect("Loading config from cloned code failed");
                 }
+
+                let mut global_env_vars = next_step.clone()._internal_env_vars();
+
+                if let Some(config_env_globals) = next_step._build_config.clone().unwrap().env {
+                    global_env_vars.extend(config_env_globals);
+                }
+
+                // TODO: Use this spec when we can pre-populate the entire build info from config
+                let build_container_spec = OrbitalContainerSpec {
+                    name: Some(orbital_agent::generate_unique_build_id(
+                        &next_step.org,
+                        &next_step.repo_name,
+                        &next_step.hash.clone().unwrap(),
+                        &format!("{}", next_step.id.clone().unwrap()),
+                    )),
+                    image: next_step._build_config.clone().unwrap().image,
+                    command: Vec::new(), // TODO: Populate this field
+
+                    env_vars: Some(global_env_vars.iter().map(|s| s.as_ref()).collect()),
+                    volumes: orbital_exec_runtime::parse_volumes_input(&None),
+                    timeout: Some(Duration::from_secs(crate::DEFAULT_BUILD_TIMEOUT)),
+                };
+
+                // Pull container
+                info!(
+                    "Pulling container: {:?}",
+                    build_container_spec.image.clone()
+                );
+
+                // I guess here's where I read from the channel?
+                let mut stream =
+                    build_engine::docker_container_pull_async(build_container_spec.clone())
+                        .await
+                        .unwrap();
+
+                while let Some(response) = stream.recv().await {
+                    //let mut container_pull_output = BuildStage {
+                    //    ..Default::default()
+                    //};
+
+                    println!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
+                    let output = format!("{}\n", response["status"].clone().as_str().unwrap())
+                        .as_bytes()
+                        .to_owned();
+
+                    //container_pull_output.output = output;
+
+                    //build_record.build_output.push(container_pull_output);
+
+                    //let _ = match tx.send(Ok(build_record.clone())).await {
+                    //    Ok(_) => Ok(()),
+                    //    Err(_) => Err(()),
+                    //};
+
+                    //build_record.build_output.pop(); // Empty out the output buffer
+                }
+
+                // Start the container
 
                 next_step._state = next_step._state.clone().on_step(Step {});
                 //next_step._state = BuildState::running();
@@ -680,5 +740,45 @@ impl BuildContext {
             }
             Err(e) => Err(e),
         }
+    }
+
+    fn _internal_env_vars(self) -> Vec<String> {
+        // Defining internal env vars here
+        let orb_org_env = format!("ORBITAL_ORG={}", self.org);
+
+        let orb_repo_env = format!("ORBITAL_REPOSITORY={}", self.repo_name);
+
+        let orb_build_number_env = format!(
+            "ORBITAL_BUILD_NUMBER={}",
+            self.id.expect("Build number not yet set")
+        );
+
+        let orb_commit_env = format!(
+            "ORBITAL_COMMIT={}",
+            self.hash.clone().expect("Git hash info unavailable")
+        );
+
+        let orb_commit_short_env = format!(
+            "ORBITAL_COMMIT_SHORT={}",
+            self.hash.clone().expect("Git hash info unavailable")[0..6].to_string()
+        );
+
+        let orb_commit_message = format!(
+            "ORBITAL_COMMIT_MSG={}",
+            self._git_commit_info
+                .expect("Git commit info unavailable")
+                .message
+        );
+
+        let orbital_env_vars_vec = vec![
+            orb_org_env,
+            orb_repo_env,
+            orb_build_number_env,
+            orb_commit_env,
+            orb_commit_short_env,
+            orb_commit_message,
+        ];
+
+        orbital_env_vars_vec
     }
 }
