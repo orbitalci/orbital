@@ -4,40 +4,21 @@ use orbital_headers::build_meta::{
 };
 
 use chrono::{NaiveDateTime, Utc};
+use mktemp::Temp;
 use orbital_database::postgres;
-use orbital_database::postgres::build_stage::NewBuildStage;
 use orbital_database::postgres::build_summary::NewBuildSummary;
-use orbital_database::postgres::build_target::NewBuildTarget;
-use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
-use orbital_headers::orbital_types::{JobState as ProtoJobState, SecretType};
-use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
+use orbital_headers::orbital_types::JobState as ProtoJobState;
 use postgres::schema::{JobState, JobTrigger};
-
 use tonic::{Code, Request, Response, Status};
 
 use tokio::sync::mpsc;
 
-//use crate::OrbitalServiceError;
-use git_meta::GitCredentials;
 use orbital_agent::build_engine;
-use orbital_exec_runtime::docker::OrbitalContainerSpec;
 
 use super::state_machine;
-use super::{OrbitalApi, ServiceType};
+use super::OrbitalApi;
 
 use log::{debug, error, info};
-
-use std::path::Path;
-use std::time::Duration;
-
-use mktemp::Temp;
-use std::fs::File;
-use std::io::prelude::*;
-
-use git_meta::git_info;
-
-use serde_json::Value;
-use std::str;
 
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
@@ -61,7 +42,7 @@ impl BuildService for OrbitalApi {
         // TODO: Can we use unbounded_channel() ?
         let (mut client_tx, client_rx) = mpsc::channel(1);
 
-        let (mut build_tx, mut build_rx): (
+        let (build_tx, mut build_rx): (
             mpsc::UnboundedSender<String>,
             mpsc::UnboundedReceiver<String>,
         ) = mpsc::unbounded_channel();
@@ -105,10 +86,9 @@ impl BuildService for OrbitalApi {
 
                 debug!("Trying to listen for output. Not don't block if nothing");
                 while let Ok(response) = &build_rx.try_recv() {
-                    let mut build_metadata = BuildMetadata {
+                    let build_metadata = BuildMetadata {
                         build: Some(unwrapped_request.clone()),
                         job_trigger: cur_build.job_trigger.into(),
-                        //job_trigger: JobTrigger::Manual.into(),
                         build_state: ProtoJobState::from(cur_build.clone().state()).into(),
                         ..Default::default()
                     };
@@ -118,15 +98,12 @@ impl BuildService for OrbitalApi {
                         build_output: Vec::new(),
                     };
 
-                    println!("Stream OUTPUT: {:?}", response.clone().as_str());
+                    //debug!("Stream OUTPUT: {:?}", response.clone().as_str());
                     let mut build_stage_output = BuildStage {
+                        build_id: cur_build.id.unwrap(),
+                        status: ProtoJobState::from(cur_build.clone().state()).into(),
                         ..Default::default()
                     };
-
-                    //println!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
-                    //let output = format!("{}\n", response["status"].clone().as_str().unwrap())
-                    //    .as_bytes()
-                    //    .to_owned();
 
                     build_stage_output.output = response.as_bytes().to_owned();
                     build_record.build_output.push(build_stage_output);
@@ -135,8 +112,6 @@ impl BuildService for OrbitalApi {
                         Ok(_) => Ok(()),
                         Err(_) => Err(()),
                     };
-
-                    //build_record.build_output.pop(); // Empty out the output buffer
                 }
 
                 //    // TODO: Wrap this entire workflow in a check for cancelation

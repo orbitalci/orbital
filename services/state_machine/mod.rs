@@ -1,5 +1,3 @@
-//use orbital_headers::orbital_types::JobTrigger;
-use anyhow::anyhow;
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use config_parser::OrbitalConfig;
@@ -8,27 +6,20 @@ use git_meta::{GitCommitContext, GitCredentials};
 use git_url_parse::GitUrl;
 use log::{debug, error, info};
 use machine::{machine, transitions};
-use mktemp::Temp;
 use orbital_agent::{self, build_engine};
 use orbital_database::postgres;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
-use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
-use orbital_headers::build_meta::{
-    build_service_server::BuildService, BuildLogResponse, BuildMetadata, BuildRecord, BuildStage,
-    BuildSummaryRequest, BuildSummaryResponse, BuildTarget,
-};
+use orbital_exec_runtime::docker::OrbitalContainerSpec;
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
 use orbital_headers::orbital_types::{JobState as ProtoJobState, SecretType};
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
 use serde_json::Value;
-use std::fs::File;
-use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::str;
 use std::time::Duration;
 use tokio::sync::mpsc;
-use tonic::{Code, Request, Response, Status};
+use tonic::Request;
 
 machine! {
     #[derive(Clone, Debug, PartialEq)]
@@ -43,23 +34,6 @@ machine! {
         SystemErr
     }
 }
-
-//FIXME: This is aliased wrong. ProtoJobState should be the postgres type
-//impl From<ProtoJobState> for BuildState {
-//    fn from(pg_state: ProtoJobState) -> Self {
-//        match pg_state {
-//            ProtoJobState::Queued => BuildState::Queued(Queued {}),
-//            ProtoJobState::Starting => BuildState::Starting(Starting {}),
-//            ProtoJobState::Running => BuildState::Running(Running {}),
-//            ProtoJobState::Finishing => BuildState::Finishing(Finishing {}),
-//            ProtoJobState::Done => BuildState::Done(Done {}),
-//            ProtoJobState::Canceled => BuildState::Cancelled(Cancelled {}),
-//            ProtoJobState::Failed => BuildState::Fail(Fail {}),
-//            ProtoJobState::SystemErr => BuildState::SystemErr(SystemErr {}),
-//            _ => BuildState::Error,
-//        }
-//    }
-//}
 
 impl From<BuildState> for ProtoJobState {
     fn from(build_state: BuildState) -> Self {
@@ -180,6 +154,7 @@ pub struct BuildContext {
     pub build_end_time: Option<NaiveDateTime>,
     pub stage_start_time: Option<NaiveDateTime>,
     pub stage_end_time: Option<NaiveDateTime>,
+    pub build_stage_name: String,
     pub build_stage_logs: String,
     pub _git_creds: Option<GitCredentials>,
     pub _git_commit_info: Option<GitCommitContext>,
@@ -206,6 +181,7 @@ impl BuildContext {
             build_end_time: None,
             stage_start_time: None,
             stage_end_time: None,
+            build_stage_name: String::from("Queued"),
             build_stage_logs: String::new(),
             _git_creds: None,
             _git_commit_info: None,
@@ -320,43 +296,43 @@ impl BuildContext {
         self
     }
 
-    // Change state only once then return
-    // TODO: This needs to be changed to accept a channel to stream to
     pub async fn step(self, caller_tx: &mpsc::UnboundedSender<String>) -> Result<BuildContext> {
         // Check for termination conditions
 
         // Connect to database. Query for the repo
-        //let pg_conn = postgres::client::establish_connection();
+        let pg_conn = postgres::client::establish_connection();
 
-        //// Check if cancelled
-        //match postgres::client::is_build_canceled(
-        //    &pg_conn,
-        //    &self.org,
-        //    &self.repo_name,
-        //    &self.hash.clone().unwrap_or_default(),
-        //    &self.branch,
-        //    self.id.clone().unwrap(),
-        //) {
-        //    Ok(true) => {
-        //        info!("Build was cancelled");
-        //        self._state = self.clone().state().on_cancelled(Cancelled {});
+        // Check if cancelled
+        let _cancel_check = match postgres::client::is_build_canceled(
+            &pg_conn,
+            &self.org,
+            &self.repo_name,
+            &self.hash.clone().unwrap_or_default(),
+            &self.branch,
+            self.id.clone().unwrap(),
+        ) {
+            Ok(true) => {
+                info!("Build was cancelled");
+                let mut next_step = self.clone();
+                next_step._state = self.clone().state().on_cancelled(Cancelled {});
 
-        //        // TODO: Update database
+                // TODO: Update database
 
-        //        //return Ok(current_step);
-        //    }
-        //    Ok(false) => {
-        //        info!("Build was not cancelled - {:?}", &self._state);
-        //    }
-        //    _ => {
-        //        error!("Error checking for build cancellation");
-        //        self._state = self.clone().state().on_system_err(SystemErr {});
+                return Ok(next_step);
+            }
+            Ok(false) => {
+                info!("Build was not cancelled - {:?}", &self._state);
+            }
+            _ => {
+                error!("Error checking for build cancellation");
+                let mut next_step = self.clone();
+                next_step._state = self.clone().state().on_system_err(SystemErr {});
 
-        //        // TODO: Update database
+                // TODO: Update database
 
-        //        //return Ok(current_step);
-        //    }
-        //};
+                return Ok(next_step);
+            }
+        };
 
         let next_step = match self.clone().state() {
             BuildState::Queued(_) => {
@@ -370,6 +346,7 @@ impl BuildContext {
                 let _ = caller_tx.send("Stream: Queued -> Starting".to_string());
 
                 next_step._state = next_step._state.clone().on_step(Step {});
+                next_step.build_stage_name = "Starting".to_string();
                 next_step
             }
             BuildState::Starting(_) => {
@@ -422,25 +399,10 @@ impl BuildContext {
                         .unwrap();
 
                 while let Some(response) = stream.recv().await {
-                    //let mut container_pull_output = BuildStage {
-                    //    ..Default::default()
-                    //};
-
                     println!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
-                    let output = format!("{}\n", response["status"].clone().as_str().unwrap())
-                        .as_bytes()
-                        .to_owned();
+                    let output = format!("{}\n", response["status"].clone().as_str().unwrap());
 
-                    //container_pull_output.output = output;
-
-                    //build_record.build_output.push(container_pull_output);
-
-                    //let _ = match tx.send(Ok(build_record.clone())).await {
-                    //    Ok(_) => Ok(()),
-                    //    Err(_) => Err(()),
-                    //};
-
-                    //build_record.build_output.pop(); // Empty out the output buffer
+                    let _ = caller_tx.send(output.clone());
                 }
 
                 // Start the container
@@ -462,7 +424,7 @@ impl BuildContext {
                 let _ = caller_tx.send("Stream: Starting -> Running".to_string());
 
                 next_step._state = next_step._state.clone().on_step(Step {});
-                //next_step._state = BuildState::running();
+                next_step.build_stage_name = "Running".to_string();
                 next_step
             }
             BuildState::Running(_) => {
@@ -480,9 +442,11 @@ impl BuildContext {
                     stage_index, command_index
                 );
 
-                // Placeholder: Run the command here
-                // TODO: Collect all the env vars, global and per stage
                 println!("{:?}", c.stages[stage_index].command[command_index]);
+                next_step.build_stage_name = c.stages[stage_index]
+                    .name
+                    .clone()
+                    .unwrap_or(format!("Stage {}", stage_index.to_string()));
 
                 let mut stream = build_engine::docker_container_exec_async(
                     next_step._container_id.clone().unwrap(),
@@ -492,29 +456,7 @@ impl BuildContext {
                 .unwrap();
 
                 while let Some(response) = stream.recv().await {
-                    //let mut container_exec_output = BuildStage {
-                    //    ..Default::default()
-                    //};
-
-                    //println!("EXEC OUTPUT: {:?}", response.clone().as_str());
                     let _ = caller_tx.send(response.clone());
-
-                    // Adding newlines
-
-                    //let output = response.clone().as_bytes().to_owned();
-
-                    //container_exec_output.output = output;
-
-                    //build_stage_logs.push_str(response.clone().as_str());
-
-                    //build_record.build_output.push(container_exec_output);
-
-                    //let _ = match tx.send(Ok(build_record.clone())).await {
-                    //    Ok(_) => Ok(()),
-                    //    Err(mpsc::error::SendError(_)) => Err(()),
-                    //};
-
-                    //build_record.build_output.pop(); // Empty out the output buffer
                 }
 
                 // Update build progress marker
@@ -540,6 +482,7 @@ impl BuildContext {
                     // This was the last command
 
                     let _ = caller_tx.send("Stream: Running -> Finishing".to_string());
+                    next_step.build_stage_name = "Finishing".to_string();
                     next_step._state = next_step._state.clone().on_finishing(Finishing {});
                 }
 
@@ -558,6 +501,7 @@ impl BuildContext {
 
                 let _ = caller_tx.send("Stream: Finishing -> Done".to_string());
                 next_step._state = next_step._state.clone().on_done(Done {});
+                next_step.build_stage_name = "Done".to_string();
                 next_step
             }
             _ => self.clone(),
@@ -567,7 +511,6 @@ impl BuildContext {
     }
 
     pub async fn secrets(mut self) -> Result<BuildContext> {
-        //use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
         use crate::ServiceType;
 
         // Retrieve any secrets needed to clone code
@@ -598,13 +541,6 @@ impl BuildContext {
         let code_service_request = code_client.git_repo_get(request_payload);
         let code_service_response = code_service_request.await.unwrap().into_inner();
 
-        // Build a GitCredentials struct based on the repo auth type
-        // Declaring this in case we have an ssh key.
-        //let mut temp_keypath = Temp::new_file().expect("Unable to create temp file");
-        //let mut temp_keypath = self._ssh_key.clone().unwrap();
-
-        // TODO: This is where we're going to get usernames too
-        // let username, git_creds = ...
         let git_creds = match &code_service_response.secret_type.into() {
             SecretType::Unspecified => {
                 // TODO: Call secret service and get a username
@@ -666,10 +602,6 @@ impl BuildContext {
                 // Write ssh key to temp file
                 info!("Writing incoming ssh key to GitCredentials::SshKey");
 
-                // TODO: Stop using username from Code service output
-
-                // Replace username with the user from the code service
-
                 let git_creds = GitCredentials::SshKey {
                     username: vault_response["username"]
                         .clone()
@@ -710,7 +642,7 @@ impl BuildContext {
 
                 // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
                 // Where the secret name is the git repo url
-                // e.g., "github.com/level11consulting/orbitalci"
+                // e.g., "github.com/orbitalci/orbital"
 
                 let secret_name = format!(
                     "{}/{}",
@@ -817,15 +749,6 @@ impl BuildContext {
                 Ok(self)
             }
             None => {
-                //debug!("Trying to list out files");
-                //use std::fs;
-
-                //let paths = fs::read_dir(self.working_dir.as_path()).unwrap();
-
-                //for path in paths {
-                //    println!("Name: {}", path.unwrap().path().display())
-                //}
-
                 // Parse and re-set the config
                 info!("Build config not yet set. Loading build config from cloned code");
                 let c = build_engine::load_orb_config(Path::new(&format!(

@@ -3,7 +3,6 @@ use anyhow::Result;
 use config_parser;
 use git_meta;
 use log::{debug, info};
-use mktemp::Temp;
 use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
 use std::path::Path;
 
