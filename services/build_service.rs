@@ -107,35 +107,34 @@ impl BuildService for OrbitalApi {
                 while let Ok(response) = &build_rx.try_recv() {
                     let mut build_metadata = BuildMetadata {
                         build: Some(unwrapped_request.clone()),
-                        //job_trigger: cur_build.job_trigger,
-                        job_trigger: JobTrigger::Manual.into(),
+                        job_trigger: cur_build.job_trigger.into(),
+                        //job_trigger: JobTrigger::Manual.into(),
                         build_state: ProtoJobState::from(cur_build.clone().state()).into(),
                         ..Default::default()
                     };
 
-                    //    let mut build_record = BuildRecord {
-                    //        build_metadata: Some(build_metadata.clone()),
-                    //        build_output: Vec::new(),
-                    //    };
+                    let mut build_record = BuildRecord {
+                        build_metadata: Some(build_metadata.clone()),
+                        build_output: Vec::new(),
+                    };
 
                     println!("Stream OUTPUT: {:?}", response.clone().as_str());
-                    //let mut container_pull_output = BuildStage {
-                    //    ..Default::default()
-                    //};
+                    let mut build_stage_output = BuildStage {
+                        ..Default::default()
+                    };
 
                     //println!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
                     //let output = format!("{}\n", response["status"].clone().as_str().unwrap())
                     //    .as_bytes()
                     //    .to_owned();
 
-                    //container_pull_output.output = output;
+                    build_stage_output.output = response.as_bytes().to_owned();
+                    build_record.build_output.push(build_stage_output);
 
-                    //build_record.build_output.push(container_pull_output);
-
-                    //let _ = match tx.send(Ok(build_record.clone())).await {
-                    //    Ok(_) => Ok(()),
-                    //    Err(_) => Err(()),
-                    //};
+                    let _ = match client_tx.send(Ok(build_record.clone())).await {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(()),
+                    };
 
                     //build_record.build_output.pop(); // Empty out the output buffer
                 }
