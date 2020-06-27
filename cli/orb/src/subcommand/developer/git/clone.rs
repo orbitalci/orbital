@@ -18,7 +18,7 @@ pub async fn action_handler(
 ) -> Result<()> {
     let temp_dir = Temp::new_dir().expect("Unable to create test clone dir");
 
-    let res = build_engine::clone_repo(
+    let _res = build_engine::clone_repo(
         "https://github.com/alexcrichton/git2-rs",
         "master",
         GitCredentials::Public,

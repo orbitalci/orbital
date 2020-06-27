@@ -11,8 +11,6 @@ use orbital_headers::orbital_types::*;
 use git_meta::git_info;
 use git_meta::GitCredentials;
 use mktemp::Temp;
-use std::fs::File;
-use std::io::prelude::*;
 
 use tonic::{Request, Response, Status};
 
@@ -34,9 +32,6 @@ impl CodeService for OrbitalApi {
         let unwrapped_request = request.into_inner();
         info!("Git repo add: {:?}", &unwrapped_request.name);
         debug!("Git repo add details: {:?}", &unwrapped_request);
-
-        // Declaring this in case we have an ssh key. For test cloning
-        let temp_keypath = Temp::new_file().expect("Unable to create temp file");
 
         // check if repo is public or private. Do a test checkout
         let test_branch = match &unwrapped_request.alt_check_branch.clone().len() {
