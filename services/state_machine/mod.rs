@@ -14,8 +14,12 @@ use orbital_database::postgres;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
 use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
+use orbital_headers::build_meta::{
+    build_service_server::BuildService, BuildLogResponse, BuildMetadata, BuildRecord, BuildStage,
+    BuildSummaryRequest, BuildSummaryResponse, BuildTarget,
+};
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
-use orbital_headers::orbital_types::{JobState as PGJobState, SecretType};
+use orbital_headers::orbital_types::{JobState as ProtoJobState, SecretType};
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
 use serde_json::Value;
 use std::fs::File;
@@ -23,6 +27,7 @@ use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::str;
 use std::time::Duration;
+use tokio::sync::mpsc;
 use tonic::{Code, Request, Response, Status};
 
 machine! {
@@ -36,6 +41,39 @@ machine! {
         Cancelled,
         Fail,
         SystemErr
+    }
+}
+
+//FIXME: This is aliased wrong. ProtoJobState should be the postgres type
+//impl From<ProtoJobState> for BuildState {
+//    fn from(pg_state: ProtoJobState) -> Self {
+//        match pg_state {
+//            ProtoJobState::Queued => BuildState::Queued(Queued {}),
+//            ProtoJobState::Starting => BuildState::Starting(Starting {}),
+//            ProtoJobState::Running => BuildState::Running(Running {}),
+//            ProtoJobState::Finishing => BuildState::Finishing(Finishing {}),
+//            ProtoJobState::Done => BuildState::Done(Done {}),
+//            ProtoJobState::Canceled => BuildState::Cancelled(Cancelled {}),
+//            ProtoJobState::Failed => BuildState::Fail(Fail {}),
+//            ProtoJobState::SystemErr => BuildState::SystemErr(SystemErr {}),
+//            _ => BuildState::Error,
+//        }
+//    }
+//}
+
+impl From<BuildState> for ProtoJobState {
+    fn from(build_state: BuildState) -> Self {
+        match build_state {
+            BuildState::Queued(Queued {}) => ProtoJobState::Queued,
+            BuildState::Starting(Starting {}) => ProtoJobState::Starting,
+            BuildState::Running(Running {}) => ProtoJobState::Running,
+            BuildState::Finishing(Finishing {}) => ProtoJobState::Finishing,
+            BuildState::Done(Done {}) => ProtoJobState::Done,
+            BuildState::Cancelled(Cancelled {}) => ProtoJobState::Canceled,
+            BuildState::Fail(Fail {}) => ProtoJobState::Failed,
+            BuildState::SystemErr(SystemErr {}) => ProtoJobState::SystemErr,
+            BuildState::Error => ProtoJobState::Unknown,
+        }
     }
 }
 
@@ -140,6 +178,9 @@ pub struct BuildContext {
     pub queue_time: Option<NaiveDateTime>,
     pub build_start_time: Option<NaiveDateTime>,
     pub build_end_time: Option<NaiveDateTime>,
+    pub stage_start_time: Option<NaiveDateTime>,
+    pub stage_end_time: Option<NaiveDateTime>,
+    pub build_stage_logs: String,
     pub _git_creds: Option<GitCredentials>,
     pub _git_commit_info: Option<GitCommitContext>,
     pub _build_config: Option<OrbitalConfig>,
@@ -152,9 +193,9 @@ pub struct BuildContext {
 impl BuildContext {
     pub fn new() -> Self {
         BuildContext {
-            org: "".to_string(),
-            repo_name: "".to_string(),
-            branch: "".to_string(),
+            org: String::new(),
+            repo_name: String::new(),
+            branch: String::new(),
             working_dir: PathBuf::new(),
             id: None,
             hash: None,
@@ -163,6 +204,9 @@ impl BuildContext {
             queue_time: None,
             build_start_time: None,
             build_end_time: None,
+            stage_start_time: None,
+            stage_end_time: None,
+            build_stage_logs: String::new(),
             _git_creds: None,
             _git_commit_info: None,
             _build_config: None,
@@ -272,54 +316,58 @@ impl BuildContext {
         self._state
     }
 
+    pub fn get_context(self) -> BuildContext {
+        self
+    }
+
     // Change state only once then return
     // TODO: This needs to be changed to accept a channel to stream to
-    pub async fn step(self) -> Result<BuildContext> {
-        let mut current_step = self.clone();
-
+    pub async fn step(self, caller_tx: &mpsc::UnboundedSender<String>) -> Result<BuildContext> {
         // Check for termination conditions
 
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        //let pg_conn = postgres::client::establish_connection();
 
-        // Check if cancelled
-        match postgres::client::is_build_canceled(
-            &pg_conn,
-            &current_step.org,
-            &current_step.repo_name,
-            &current_step.hash.clone().unwrap_or_default(),
-            &current_step.branch,
-            current_step.id.clone().unwrap(),
-        ) {
-            Ok(true) => {
-                info!("Build was cancelled");
-                current_step._state = current_step.clone().state().on_cancelled(Cancelled {});
+        //// Check if cancelled
+        //match postgres::client::is_build_canceled(
+        //    &pg_conn,
+        //    &self.org,
+        //    &self.repo_name,
+        //    &self.hash.clone().unwrap_or_default(),
+        //    &self.branch,
+        //    self.id.clone().unwrap(),
+        //) {
+        //    Ok(true) => {
+        //        info!("Build was cancelled");
+        //        self._state = self.clone().state().on_cancelled(Cancelled {});
 
-                // TODO: Update database
+        //        // TODO: Update database
 
-                return Ok(current_step);
-            }
-            Ok(false) => {
-                info!("Build was not cancelled - {:?}", &self._state);
-            }
-            _ => {
-                error!("Error checking for build cancellation");
-                current_step._state = current_step.clone().state().on_system_err(SystemErr {});
+        //        //return Ok(current_step);
+        //    }
+        //    Ok(false) => {
+        //        info!("Build was not cancelled - {:?}", &self._state);
+        //    }
+        //    _ => {
+        //        error!("Error checking for build cancellation");
+        //        self._state = self.clone().state().on_system_err(SystemErr {});
 
-                // TODO: Update database
+        //        // TODO: Update database
 
-                return Ok(current_step);
-            }
-        };
+        //        //return Ok(current_step);
+        //    }
+        //};
 
-        let next_step = match current_step.clone().state() {
+        let next_step = match self.clone().state() {
             BuildState::Queued(_) => {
                 // Get secrets for cloning
-                let mut next_step = current_step
+                let mut next_step = self
                     .clone()
                     .secrets()
                     .await
                     .expect("Getting repo secrets failed");
+
+                let _ = caller_tx.send("Stream: Queued -> Starting".to_string());
 
                 next_step._state = next_step._state.clone().on_step(Step {});
                 next_step
@@ -329,10 +377,7 @@ impl BuildContext {
                 // Validate orb.yml
                 // Set a start time
                 // Initialize stage name and step index
-                let mut next_step = current_step
-                    .clone()
-                    .clone_code()
-                    .expect("Cloning code failed");
+                let mut next_step = self.clone().clone_code().expect("Cloning code failed");
 
                 if let Some(_config) = next_step._build_config.clone() {
                     info!("Config file was passed in. Not reloading");
@@ -414,6 +459,8 @@ impl BuildContext {
                     build_engine::docker_container_start(&next_step._container_id.clone().unwrap())
                         .unwrap();
 
+                let _ = caller_tx.send("Stream: Starting -> Running".to_string());
+
                 next_step._state = next_step._state.clone().on_step(Step {});
                 //next_step._state = BuildState::running();
                 next_step
@@ -421,7 +468,7 @@ impl BuildContext {
             BuildState::Running(_) => {
                 // Note exit code?
 
-                let mut next_step = current_step.clone();
+                let mut next_step = self.clone();
 
                 let c = next_step._build_config.clone().unwrap();
 
@@ -449,7 +496,8 @@ impl BuildContext {
                     //    ..Default::default()
                     //};
 
-                    println!("EXEC OUTPUT: {:?}", response.clone().as_str());
+                    //println!("EXEC OUTPUT: {:?}", response.clone().as_str());
+                    let _ = caller_tx.send(response.clone());
 
                     // Adding newlines
 
@@ -479,13 +527,19 @@ impl BuildContext {
                 {
                     // Next command in the stage
                     next_step._build_progress_marker = (stage_index, command_index + 1);
+
+                    let _ = caller_tx.send("Stream: Running -> Running (Next command)".to_string());
                     next_step._state = next_step._state.clone().on_step(Step {});
                 } else if c.stages.get(stage_index + 1).is_some() {
                     // First command of the next stage
                     next_step._build_progress_marker = (stage_index + 1, 0);
+
+                    let _ = caller_tx.send("Stream: Running -> Running (Next stage)".to_string());
                     next_step._state = next_step._state.clone().on_step(Step {});
                 } else {
                     // This was the last command
+
+                    let _ = caller_tx.send("Stream: Running -> Finishing".to_string());
                     next_step._state = next_step._state.clone().on_finishing(Finishing {});
                 }
 
@@ -494,7 +548,7 @@ impl BuildContext {
             BuildState::Finishing(_) => {
                 // Set the end time for the build
 
-                let mut next_step = current_step.clone();
+                let mut next_step = self.clone();
 
                 info!("Stopping the container");
                 let _ = build_engine::docker_container_stop(
@@ -502,10 +556,11 @@ impl BuildContext {
                 )
                 .unwrap();
 
+                let _ = caller_tx.send("Stream: Finishing -> Done".to_string());
                 next_step._state = next_step._state.clone().on_done(Done {});
                 next_step
             }
-            _ => current_step.clone(),
+            _ => self.clone(),
         };
 
         Ok(next_step)

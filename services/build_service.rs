@@ -9,7 +9,7 @@ use orbital_database::postgres::build_stage::NewBuildStage;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::build_target::NewBuildTarget;
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRequest};
-use orbital_headers::orbital_types::{JobState as PGJobState, SecretType};
+use orbital_headers::orbital_types::{JobState as ProtoJobState, SecretType};
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretGetRequest};
 use postgres::schema::{JobState, JobTrigger};
 
@@ -59,7 +59,12 @@ impl BuildService for OrbitalApi {
         debug!("build request details: {:?}", &unwrapped_request);
 
         // TODO: Can we use unbounded_channel() ?
-        let (mut tx, rx) = mpsc::channel(1);
+        let (mut client_tx, client_rx) = mpsc::channel(1);
+
+        let (mut build_tx, mut build_rx): (
+            mpsc::UnboundedSender<String>,
+            mpsc::UnboundedReceiver<String>,
+        ) = mpsc::unbounded_channel();
 
         tokio::spawn(async move {
             let git_clone_dir = Temp::new_dir().expect("Unable to create dir for git clone");
@@ -92,11 +97,48 @@ impl BuildService for OrbitalApi {
                     break 'build_loop;
                 }
 
-                cur_build = cur_build.clone().step().await.unwrap();
+                cur_build = cur_build.clone().step(&build_tx).await.unwrap();
 
                 if cur_build.clone().state() == state_machine::BuildState::error() {
                     panic!("State machine error")
                 };
+
+                debug!("Trying to listen for output. Not don't block if nothing");
+                while let Ok(response) = &build_rx.try_recv() {
+                    let mut build_metadata = BuildMetadata {
+                        build: Some(unwrapped_request.clone()),
+                        //job_trigger: cur_build.job_trigger,
+                        job_trigger: JobTrigger::Manual.into(),
+                        build_state: ProtoJobState::from(cur_build.clone().state()).into(),
+                        ..Default::default()
+                    };
+
+                    //    let mut build_record = BuildRecord {
+                    //        build_metadata: Some(build_metadata.clone()),
+                    //        build_output: Vec::new(),
+                    //    };
+
+                    println!("Stream OUTPUT: {:?}", response.clone().as_str());
+                    //let mut container_pull_output = BuildStage {
+                    //    ..Default::default()
+                    //};
+
+                    //println!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
+                    //let output = format!("{}\n", response["status"].clone().as_str().unwrap())
+                    //    .as_bytes()
+                    //    .to_owned();
+
+                    //container_pull_output.output = output;
+
+                    //build_record.build_output.push(container_pull_output);
+
+                    //let _ = match tx.send(Ok(build_record.clone())).await {
+                    //    Ok(_) => Ok(()),
+                    //    Err(_) => Err(()),
+                    //};
+
+                    //build_record.build_output.pop(); // Empty out the output buffer
+                }
 
                 //    // TODO: Wrap this entire workflow in a check for cancelation
                 //    let mut _job_was_canceled = false;
@@ -112,7 +154,7 @@ impl BuildService for OrbitalApi {
                 //    let mut build_metadata = BuildMetadata {
                 //        build: Some(unwrapped_request.clone()),
                 //        job_trigger: JobTrigger::Manual.into(),
-                //        build_state: PGJobState::Queued.into(),
+                //        build_state: ProtoJobState::Queued.into(),
                 //        ..Default::default()
                 //    };
 
@@ -221,7 +263,7 @@ impl BuildService for OrbitalApi {
                 //        }
                 //    };
 
-                //    build_metadata.build_state = PGJobState::Starting.into();
+                //    build_metadata.build_state = ProtoJobState::Starting.into();
 
                 //    // This is when another thread should start when picking work off queue
                 //    // Mark build_summary start time
@@ -261,7 +303,7 @@ impl BuildService for OrbitalApi {
                 //        None => None,
                 //    };
 
-                //    build_metadata.build_state = PGJobState::Starting.into();
+                //    build_metadata.build_state = ProtoJobState::Starting.into();
                 //    build_record.build_metadata = Some(build_metadata.clone());
 
                 //    let _ = match tx.send(Ok(build_record.clone())).await {
@@ -751,7 +793,7 @@ impl BuildService for OrbitalApi {
                 //            build_summary_result_running.2,
                 //        );
 
-                //        build_metadata.build_state = PGJobState::Running.into();
+                //        build_metadata.build_state = ProtoJobState::Running.into();
                 //        build_record.build_metadata = Some(build_metadata.clone());
 
                 //        let _ = match tx.send(Ok(build_record.clone())).await {
@@ -954,7 +996,7 @@ impl BuildService for OrbitalApi {
                 //        None => None,
                 //    };
 
-                //    build_metadata.build_state = PGJobState::Done.into();
+                //    build_metadata.build_state = ProtoJobState::Done.into();
                 //    build_record.build_metadata = Some(build_metadata.clone());
 
                 //    let _ = match tx.send(Ok(build_record.clone())).await {
@@ -965,7 +1007,7 @@ impl BuildService for OrbitalApi {
             }
         });
 
-        Ok(Response::new(rx))
+        Ok(Response::new(client_rx))
     }
 
     async fn build_stop(
