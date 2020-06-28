@@ -546,7 +546,7 @@ impl BuildContext {
                 .await
                 .unwrap();
 
-                // Do I need to be saving the output in BuildContext for the DB?
+                // Stream build output to client, and save to BuildContext
                 while let Some(response) = stream.recv().await {
                     let _ = caller_tx.send(response.clone());
                     next_step
@@ -611,7 +611,6 @@ impl BuildContext {
                     // This was the last command
 
                     let _ = caller_tx.send("Stream: Running -> Finishing".to_string());
-                    next_step.build_stage_name = "Finishing".to_string();
                     next_step._state = next_step._state.clone().on_finishing(Finishing {});
                     next_step.stage_end_time = Some(step_end_timestamp);
 
@@ -659,6 +658,7 @@ impl BuildContext {
 
                 // End build
 
+                next_step.build_stage_name = "Finishing".to_string();
                 next_step
             }
             BuildState::Finishing(_) => {
