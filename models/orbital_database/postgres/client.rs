@@ -775,10 +775,16 @@ pub fn build_stage_list(
         .select((build_summary::all_columns, build_stage::all_columns))
         .filter(build_summary::build_target_id.eq(build_target_db.id))
         .filter(build_stage::build_summary_id.eq(build_summary_db.id))
-        .order(build_stage::id.desc())
+        .order(build_stage::id.asc())
         .limit(limit.into())
         .load(conn)
         .expect("Error listing build stages");
+
+    debug!(
+        "Found {} stages for build id {}",
+        &result.len(),
+        build_index
+    );
 
     let map_result: Vec<(BuildTarget, BuildSummary, BuildStage)> = result
         .into_iter()
