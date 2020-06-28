@@ -10,6 +10,7 @@ chrono = "0.4"
 futures = "0.3"
 log = "0.4"
 mktemp = "0.4"
+hostname = "^0.3"
 orbital_agent = { path = "../lib/orbital_agent" }
 orbital_exec_runtime = { path = "../lib/exec_runtime" }
 orbital_config_parser = { path = "../lib/config_parser" }

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 use config_parser::OrbitalConfig;
 use git_meta::git_info;
 use git_meta::{GitCommitContext, GitCredentials};
@@ -8,6 +8,7 @@ use log::{debug, error, info};
 use machine::{machine, transitions};
 use orbital_agent::{self, build_engine};
 use orbital_database::postgres;
+use orbital_database::postgres::build_stage::NewBuildStage;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
 use orbital_exec_runtime::docker::OrbitalContainerSpec;
@@ -155,12 +156,16 @@ pub struct BuildContext {
     pub stage_start_time: Option<NaiveDateTime>,
     pub stage_end_time: Option<NaiveDateTime>,
     pub build_stage_name: String,
-    pub build_stage_logs: String,
+    pub build_cur_stage_logs: String,
     pub _git_creds: Option<GitCredentials>,
     pub _git_commit_info: Option<GitCommitContext>,
     pub _build_config: Option<OrbitalConfig>,
     pub _container_id: Option<String>,
     pub _repo_uri: Option<GitUrl>,
+    _build_hostname: String,
+    _db_build_target_id: i32,
+    _db_build_summary_id: i32,
+    _db_build_cur_stage_id: i32,
     _build_progress_marker: (usize, usize),
     _state: BuildState,
 }
@@ -182,13 +187,17 @@ impl BuildContext {
             stage_start_time: None,
             stage_end_time: None,
             build_stage_name: String::from("Queued"),
-            build_stage_logs: String::new(),
+            build_cur_stage_logs: String::new(),
             _git_creds: None,
             _git_commit_info: None,
             _build_config: None,
             _container_id: None,
+            _db_build_target_id: 0,
+            _db_build_summary_id: 0,
+            _db_build_cur_stage_id: 0,
             _build_progress_marker: (0, 0),
             _repo_uri: None,
+            _build_hostname: hostname::get().unwrap().into_string().unwrap(),
 
             _state: BuildState::queued(),
         }
@@ -265,11 +274,12 @@ impl BuildContext {
 
         // Add the build id and queue timestamp BuildContext
         self.id = Some(build_target_db.build_index);
+        self._db_build_target_id = build_target_db.id;
         self.queue_time = Some(build_target_db.queue_time);
 
         // Create a new build summary record
         debug!("Adding new build summary to DB");
-        let _build_summary_result_add = postgres::client::build_summary_add(
+        let build_summary_result_add = postgres::client::build_summary_add(
             &pg_conn,
             &self.org,
             &self.repo_name,
@@ -284,6 +294,15 @@ impl BuildContext {
             },
         )
         .expect("Unable to create new build summary");
+
+        // Save build summary id
+        let (_repo_db, _build_target_db, build_summary_db) = (
+            build_summary_result_add.0,
+            build_summary_result_add.1,
+            build_summary_result_add.2,
+        );
+
+        self._db_build_summary_id = build_summary_db.id;
 
         Ok(self)
     }
@@ -350,12 +369,36 @@ impl BuildContext {
                 next_step
             }
             BuildState::Starting(_) => {
-                // Clone code
-                // Validate orb.yml
-                // Set a start time
-                // Initialize stage name and step index
-                let mut next_step = self.clone().clone_code().expect("Cloning code failed");
+                let mut next_step = self.clone();
 
+                // Set build start time
+                next_step.build_start_time =
+                    Some(NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0));
+
+                // Update DB
+                let build_summary_current_state = NewBuildSummary {
+                    build_target_id: next_step._db_build_target_id,
+                    build_state: postgres::schema::JobState::Starting,
+                    start_time: next_step.build_start_time,
+                    ..Default::default()
+                };
+
+                info!("Updating build state to starting in DB");
+                let _build_summary_result_start = postgres::client::build_summary_update(
+                    &pg_conn,
+                    &next_step.org,
+                    &next_step.repo_name,
+                    &next_step.hash.clone().unwrap(),
+                    &next_step.branch,
+                    next_step.id.clone().unwrap(),
+                    build_summary_current_state,
+                )
+                .expect("Unable to update build summary job state to starting");
+
+                // Clone code
+                next_step = next_step.clone_code().expect("Cloning code failed");
+
+                // Validate orb.yml if not yet done
                 if let Some(_config) = next_step._build_config.clone() {
                     info!("Config file was passed in. Not reloading");
                 } else {
@@ -428,9 +471,57 @@ impl BuildContext {
                 next_step
             }
             BuildState::Running(_) => {
+                // Mark timestamp
+                let step_start_timestamp = NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0);
+
                 // Note exit code?
 
                 let mut next_step = self.clone();
+
+                // Mark the start of the build stage if it hasn't been set yet
+                if next_step.stage_start_time.is_none() {
+                    next_step.stage_start_time = Some(step_start_timestamp);
+
+                    let build_stage_start = postgres::client::build_stage_add(
+                        &pg_conn,
+                        &next_step.org,
+                        &next_step.repo_name,
+                        &next_step.hash.clone().unwrap(),
+                        &next_step.branch,
+                        next_step.id.clone().unwrap(),
+                        next_step._db_build_summary_id,
+                        NewBuildStage {
+                            build_summary_id: next_step._db_build_summary_id,
+                            stage_name: Some(next_step.build_stage_name),
+                            build_host: Some(next_step._build_hostname.clone()),
+                            ..Default::default()
+                        },
+                    )
+                    .expect("Unable to add new build stage in db");
+
+                    let (_build_target_db, _build_summary_db, build_stage_db) = (
+                        build_stage_start.0,
+                        build_stage_start.1,
+                        build_stage_start.2,
+                    );
+
+                    next_step._db_build_cur_stage_id = build_stage_db.id;
+
+                    let _build_summary_result_running = postgres::client::build_summary_update(
+                        &pg_conn,
+                        &next_step.org,
+                        &next_step.repo_name,
+                        &next_step.hash.clone().unwrap(),
+                        &next_step.branch,
+                        next_step.id.clone().unwrap(),
+                        NewBuildSummary {
+                            build_target_id: next_step._db_build_target_id,
+                            build_state: postgres::schema::JobState::Running,
+                            ..Default::default()
+                        },
+                    )
+                    .expect("Unable to update build summary job state to running");
+                }
 
                 let c = next_step._build_config.clone().unwrap();
 
@@ -455,9 +546,15 @@ impl BuildContext {
                 .await
                 .unwrap();
 
+                // Do I need to be saving the output in BuildContext for the DB?
                 while let Some(response) = stream.recv().await {
                     let _ = caller_tx.send(response.clone());
+                    next_step
+                        .build_cur_stage_logs
+                        .push_str(response.clone().as_str());
                 }
+
+                let step_end_timestamp = NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0);
 
                 // Update build progress marker
                 if c.stages
@@ -472,26 +569,104 @@ impl BuildContext {
 
                     let _ = caller_tx.send("Stream: Running -> Running (Next command)".to_string());
                     next_step._state = next_step._state.clone().on_step(Step {});
+
+                // Note to future self: We don't want to add stage logs until we're done with the stage
                 } else if c.stages.get(stage_index + 1).is_some() {
                     // First command of the next stage
                     next_step._build_progress_marker = (stage_index + 1, 0);
 
                     let _ = caller_tx.send("Stream: Running -> Running (Next stage)".to_string());
                     next_step._state = next_step._state.clone().on_step(Step {});
+                    next_step.stage_end_time = Some(step_end_timestamp);
+
+                    // End stage
+                    info!("Marking end of build stage");
+                    let _build_stage_end = postgres::client::build_stage_update(
+                        &pg_conn,
+                        &next_step.org,
+                        &next_step.repo_name,
+                        &next_step.hash.clone().unwrap(),
+                        &next_step.branch,
+                        next_step.id.clone().unwrap(),
+                        next_step._db_build_summary_id,
+                        next_step._db_build_cur_stage_id,
+                        NewBuildStage {
+                            build_summary_id: next_step._db_build_summary_id,
+                            stage_name: Some(next_step.build_stage_name.clone()),
+                            start_time: next_step.stage_start_time.unwrap(),
+                            end_time: next_step.stage_end_time,
+                            build_host: Some(next_step._build_hostname.clone()),
+                            output: Some(next_step.build_cur_stage_logs.clone()),
+                            ..Default::default()
+                        },
+                    );
+
+                    // Reset stage timestamps
+                    next_step.stage_start_time = None;
+                    next_step.stage_end_time = None;
+
+                    // Reset stage logs
+                    next_step.build_cur_stage_logs = String::new();
                 } else {
                     // This was the last command
 
                     let _ = caller_tx.send("Stream: Running -> Finishing".to_string());
                     next_step.build_stage_name = "Finishing".to_string();
                     next_step._state = next_step._state.clone().on_finishing(Finishing {});
+                    next_step.stage_end_time = Some(step_end_timestamp);
+
+                    // Update DB to Finishing
+
+                    // End stage
+                    info!("Marking end of build stage");
+                    let _build_stage_end = postgres::client::build_stage_update(
+                        &pg_conn,
+                        &next_step.org,
+                        &next_step.repo_name,
+                        &next_step.hash.clone().unwrap(),
+                        &next_step.branch,
+                        next_step.id.clone().unwrap(),
+                        next_step._db_build_summary_id,
+                        next_step._db_build_cur_stage_id,
+                        NewBuildStage {
+                            build_summary_id: next_step._db_build_summary_id,
+                            stage_name: Some(next_step.build_stage_name.clone()),
+                            start_time: next_step.stage_start_time.unwrap(),
+                            end_time: next_step.stage_end_time,
+                            build_host: Some(next_step._build_hostname.clone()),
+                            output: Some(next_step.build_cur_stage_logs.clone()),
+                            ..Default::default()
+                        },
+                    );
+
+                    let _build_summary_result_running = postgres::client::build_summary_update(
+                        &pg_conn,
+                        &next_step.org,
+                        &next_step.repo_name,
+                        &next_step.hash.clone().unwrap(),
+                        &next_step.branch,
+                        next_step.id.clone().unwrap(),
+                        NewBuildSummary {
+                            build_target_id: next_step._db_build_target_id,
+                            start_time: next_step.build_start_time,
+                            end_time: next_step.build_end_time,
+                            build_state: postgres::schema::JobState::Done,
+                            ..Default::default()
+                        },
+                    )
+                    .expect("Unable to update build summary job state to done");
                 }
+
+                // End build
 
                 next_step
             }
             BuildState::Finishing(_) => {
-                // Set the end time for the build
-
                 let mut next_step = self.clone();
+
+                // Set build end time
+                next_step.build_end_time =
+                    Some(NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0));
 
                 info!("Stopping the container");
                 let _ = build_engine::docker_container_stop(
