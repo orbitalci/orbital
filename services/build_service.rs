@@ -86,11 +86,38 @@ impl BuildService for OrbitalApi {
 
                 debug!("Trying to listen for output. Not don't block if nothing");
                 while let Ok(response) = &build_rx.try_recv() {
-                    let build_metadata = BuildMetadata {
+                    // TODO: Move this to be set outside the loop so we're not re-assigning so often
+                    let mut build_metadata = BuildMetadata {
                         build: Some(unwrapped_request.clone()),
                         job_trigger: cur_build.job_trigger.into(),
                         build_state: ProtoJobState::from(cur_build.clone().state()).into(),
                         ..Default::default()
+                    };
+
+                    // TODO: Be more mindful about re-assigning timestamps
+                    // Set timestamps
+                    build_metadata.queue_time = match cur_build.queue_time {
+                        Some(t) => Some(prost_types::Timestamp {
+                            seconds: t.timestamp(),
+                            nanos: t.timestamp_subsec_nanos() as i32,
+                        }),
+                        None => None,
+                    };
+
+                    build_metadata.start_time = match cur_build.build_start_time {
+                        Some(t) => Some(prost_types::Timestamp {
+                            seconds: t.timestamp(),
+                            nanos: t.timestamp_subsec_nanos() as i32,
+                        }),
+                        None => None,
+                    };
+
+                    build_metadata.end_time = match cur_build.build_end_time {
+                        Some(t) => Some(prost_types::Timestamp {
+                            seconds: t.timestamp(),
+                            nanos: t.timestamp_subsec_nanos() as i32,
+                        }),
+                        None => None,
                     };
 
                     let mut build_record = BuildRecord {
