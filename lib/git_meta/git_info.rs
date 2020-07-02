@@ -75,11 +75,7 @@ fn git_remote_from_repo(local_repo: &Repository) -> Result<String> {
     Ok(remote_url)
 }
 
-// FIXME: This parser fails to select the correct account and repo names on azure ssh repo uris. Off by one
-// Example
-// ssh: git@ssh.dev.azure.com:v3/organization/project/repo
-// http: https://organization@dev.azure.com/organization/project/_git/repo
-/// Return a `GitSshRemote` after parsing a remote url from a git repo
+/// Returns `GitUrl` after parsing input git url
 pub fn git_remote_url_parse(remote_url: &str) -> Result<GitUrl> {
     GitUrl::parse(remote_url)
 }
@@ -191,16 +187,25 @@ fn get_target_commit<'repo>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use git_url_parse::Scheme;
 
     #[test]
-    fn parse_github_ssh_url() -> Result<(), String> {
-        let gh_url_parsed = git_remote_url_parse("git@github.com:level11consulting/orbitalci.git");
+    fn parse_github_ssh_url() -> Result<()> {
+        let gh_url_parsed = git_remote_url_parse("git@github.com:orbitalci/orbital.git")?;
 
-        let expected_parsed = GitSshRemote {
-            user: "git".to_string(),
-            provider: "github.com".to_string(),
-            account: "level11consulting".to_string(),
-            repo: "orbitalci".to_string(),
+        let expected_parsed = GitUrl {
+            host: Some("github.com".to_string()),
+            name: "orbital".to_string(),
+            owner: Some("orbitalci".to_string()),
+            organization: None,
+            fullname: "orbitalci/orbital".to_string(),
+            scheme: Scheme::Ssh,
+            user: Some("git".to_string()),
+            token: None,
+            port: None,
+            path: "orbitalci/orbital.git".to_string(),
+            git_suffix: true,
+            scheme_prefix: false,
         };
 
         assert_eq!(gh_url_parsed, expected_parsed);
@@ -208,33 +213,46 @@ mod tests {
     }
 
     #[test]
-    fn parse_bitbucket_ssh_url() -> Result<(), String> {
-        let bb_url_parsed =
-            git_remote_url_parse("git@bitbucket.com:level11consulting/orbitalci.git");
+    fn parse_bitbucket_ssh_url() -> Result<()> {
+        let bb_url_parsed = git_remote_url_parse("git@bitbucket.com:orbitalci/orbital.git")?;
 
-        let expected_parsed = GitSshRemote {
-            user: "git".to_string(),
-            provider: "bitbucket.com".to_string(),
-            account: "level11consulting".to_string(),
-            repo: "orbitalci".to_string(),
+        let expected_parsed = GitUrl {
+            host: Some("bitbucket.com".to_string()),
+            name: "orbital".to_string(),
+            owner: Some("orbitalci".to_string()),
+            organization: None,
+            fullname: "orbitalci/orbital".to_string(),
+            scheme: Scheme::Ssh,
+            user: Some("git".to_string()),
+            token: None,
+            port: None,
+            path: "orbitalci/orbital.git".to_string(),
+            git_suffix: true,
+            scheme_prefix: false,
         };
 
         assert_eq!(bb_url_parsed, expected_parsed);
         Ok(())
     }
 
-    // This is a negative test. https://github.com/level11consulting/orbitalci/issues/228
-    // We need to keep track of this so we can accomodate for parser changes
     #[test]
-    fn parse_azure_ssh_url() -> Result<(), String> {
+    fn parse_azure_ssh_url() -> Result<()> {
         let az_url_parsed =
-            git_remote_url_parse("git@ssh.dev.azure.com:v3/organization/project/repo");
+            git_remote_url_parse("git@ssh.dev.azure.com:v3/organization/project/repo")?;
 
-        let expected_parsed = GitSshRemote {
-            user: "git".to_string(),
-            provider: "ssh.dev.azure.com".to_string(),
-            account: "organization".to_string(),
-            repo: "repo".to_string(),
+        let expected_parsed = GitUrl {
+            host: Some("ssh.dev.azure.com".to_string()),
+            name: "repo".to_string(),
+            owner: Some("organization".to_string()),
+            organization: Some("organization".to_string()),
+            fullname: "v3/organization/project/repo".to_string(),
+            scheme: Scheme::Ssh,
+            user: Some("git".to_string()),
+            token: None,
+            port: None,
+            path: "v3/organization/project/repo".to_string(),
+            git_suffix: false,
+            scheme_prefix: false,
         };
 
         assert_ne!(az_url_parsed, expected_parsed);
