@@ -560,7 +560,7 @@ impl BuildContext {
 
                 // vault path pattern: /secret/orbital/<org name>/<secret type>/<secret name>
                 // Where the secret name is the git repo url
-                // e.g., "github.com/level11consulting/orbitalci"
+                // e.g., "github.com/orbitalci/orbital"
 
                 let secret_name = format!(
                     "{}/{}",
