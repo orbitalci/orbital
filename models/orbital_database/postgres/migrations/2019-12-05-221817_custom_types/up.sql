@@ -10,7 +10,7 @@ CREATE TYPE job_state AS ENUM (
     'starting',
     'running',
     'finishing',
-    'canceled',
+    'cancelled',
     'systemerr',
     'failed',
     'done'

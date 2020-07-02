@@ -23,7 +23,7 @@ impl From<BuildState> for ProtoJobState {
             BuildState::Running(Running {}) => ProtoJobState::Running,
             BuildState::Finishing(Finishing {}) => ProtoJobState::Finishing,
             BuildState::Done(Done {}) => ProtoJobState::Done,
-            BuildState::Cancelled(Cancelled {}) => ProtoJobState::Canceled,
+            BuildState::Cancelled(Cancelled {}) => ProtoJobState::Cancelled,
             BuildState::Fail(Fail {}) => ProtoJobState::Failed,
             BuildState::SystemErr(SystemErr {}) => ProtoJobState::SystemErr,
             BuildState::Error => ProtoJobState::Unknown,

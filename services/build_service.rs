@@ -183,12 +183,11 @@ impl BuildService for OrbitalApi {
                 JobState::Queued => {
                     info!("Stop build before it even gets started");
 
-                    // Probably change the build job state to canceled
-                    let mut new_canceled_summary = summary.clone();
-                    new_canceled_summary.build_state = JobState::Canceled;
+                    let mut new_cancelled_summary = summary.clone();
+                    new_cancelled_summary.build_state = JobState::Cancelled;
 
-                    info!("Updating build state to canceled");
-                    let _build_summary_result_canceled = postgres::client::build_summary_update(
+                    info!("Updating build state to cancelled");
+                    let _build_summary_result_cancelled = postgres::client::build_summary_update(
                         &pg_conn,
                         &unwrapped_request.org,
                         &repo.name,
@@ -202,11 +201,11 @@ impl BuildService for OrbitalApi {
                                 Utc::now().timestamp(),
                                 0,
                             )),
-                            build_state: postgres::schema::JobState::Canceled,
+                            build_state: postgres::schema::JobState::Cancelled,
                             ..Default::default()
                         },
                     )
-                    .expect("Unable to update build summary job state to canceled");
+                    .expect("Unable to update build summary job state to cancelled");
 
                     Ok(Response::new(BuildMetadata {
                         ..Default::default()
@@ -223,16 +222,15 @@ impl BuildService for OrbitalApi {
 
                     info!("Send a cancel signal for container: {}", &container_name);
 
-                    // Probably change the build job state to canceled
                     let _ = build_engine::docker_container_stop(&container_name)
                         .expect("Sending Docker container stop failed");
 
-                    // Update summary.build_state to JobState::Canceled
-                    let mut new_canceled_summary = summary.clone();
-                    new_canceled_summary.build_state = JobState::Canceled;
+                    // Update summary.build_state to JobState::Cancelled
+                    let mut new_cancelled_summary = summary.clone();
+                    new_cancelled_summary.build_state = JobState::Cancelled;
 
-                    info!("Updating build state to canceled");
-                    let _build_summary_result_canceled = postgres::client::build_summary_update(
+                    info!("Updating build state to cancelled");
+                    let _build_summary_result_cancelled = postgres::client::build_summary_update(
                         &pg_conn,
                         &unwrapped_request.org,
                         &repo.name,
@@ -246,11 +244,11 @@ impl BuildService for OrbitalApi {
                                 Utc::now().timestamp(),
                                 0,
                             )),
-                            build_state: postgres::schema::JobState::Canceled,
+                            build_state: postgres::schema::JobState::Cancelled,
                             ..Default::default()
                         },
                     )
-                    .expect("Unable to update build summary job state to canceled");
+                    .expect("Unable to update build summary job state to cancelled");
 
                     Ok(Response::new(BuildMetadata {
                         ..Default::default()
@@ -263,7 +261,7 @@ impl BuildService for OrbitalApi {
             },
             Ok((_, _, None)) => {
                 // Build hasn't been queued yet
-                error!("Build is not yet queued, and couldn't be canceled. This is a bug.");
+                error!("Build is not yet queued, and couldn't be cancelled. This is a bug.");
                 Err(Status::new(
                     Code::FailedPrecondition,
                     "FIXME: Build has not been queued yet but we can't signal a cancel",

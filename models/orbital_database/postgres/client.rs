@@ -818,7 +818,7 @@ pub fn build_logs_get(
     }
 }
 
-pub fn is_build_canceled(
+pub fn is_build_cancelled(
     conn: &PgConnection,
     org: &str,
     repo: &str,
@@ -828,7 +828,7 @@ pub fn is_build_canceled(
 ) -> Result<bool> {
     match build_summary_get(conn, org, repo, hash, branch, build_index) {
         Ok((_, _, Some(summary))) => match summary.build_state {
-            JobState::Canceled => Ok(true),
+            JobState::Cancelled => Ok(true),
             _ => Ok(false),
         },
         Ok((_, _, None)) => {

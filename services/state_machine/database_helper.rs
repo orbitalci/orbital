@@ -14,7 +14,7 @@ impl DbHelper {
         let pg_conn = postgres::client::establish_connection();
 
         // TODO: Need to make "cancelled" the consistent spelling...
-        postgres::client::is_build_canceled(
+        postgres::client::is_build_cancelled(
             &pg_conn,
             &build_context.org,
             &build_context.repo_name,
