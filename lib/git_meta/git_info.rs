@@ -25,17 +25,15 @@ pub fn get_git_info_from_path(
 ) -> Result<GitCommitContext> {
     // First we open the repository and get the remote_url and parse it into components
     let local_repo = get_local_repo_from_path(path)?;
-    let remote_url = git_remote_from_repo(&local_repo)?;
 
-    // TODO: Do this in two stages, we could support passing a remote branch, and then fall back to a local branch
-    // Assuming we are passed a local branch from remote "origin", or nothing.
-    // Let's make sure it resolves to a remote branch
-    let working_branch = get_working_branch(&local_repo, branch)?
+    let working_branch_name = get_working_branch(&local_repo, branch)?
         .name()?
         .expect("Unable to extract branch name")
         .to_string();
 
-    let commit = get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id)?;
+    let remote_url = git_remote_from_repo(&local_repo)?;
+
+    let commit = get_target_commit(&local_repo, &Some(working_branch_name.clone()), commit_id)?;
 
     let commit_id = format!("{}", &commit.id());
 
@@ -43,7 +41,7 @@ pub fn get_git_info_from_path(
 
     Ok(GitCommitContext {
         commit_id: commit_id,
-        branch: working_branch,
+        branch: working_branch_name,
         message: commit_msg.to_string(),
         git_url: GitUrl::parse(&remote_url)?,
     })
@@ -51,12 +49,12 @@ pub fn get_git_info_from_path(
 
 // FIXME: Should not assume remote is origin. This will cause issue in some dev workflows
 /// Returns the remote url after opening and validating repo from the local path
-pub fn git_remote_from_path(path: &Path) -> Result<String> {
+pub fn git_remote_from_path(path: &Path, remote: &str) -> Result<String> {
     // Theory: After we get the repo, we can derive the remote name from the branch
 
     let r = get_local_repo_from_path(path)?;
     let remote_url: String = r
-        .find_remote("origin")?
+        .find_remote(remote)?
         .url()
         .expect("Unable to extract repo url from remote")
         .chars()
@@ -66,8 +64,22 @@ pub fn git_remote_from_path(path: &Path) -> Result<String> {
 
 /// Returns the remote url from the `git2::Repository` struct
 fn git_remote_from_repo(local_repo: &Repository) -> Result<String> {
+    // Get the name of the remote from the Repository
+    let remote_name = local_repo
+        .branch_upstream_remote(
+            local_repo
+                .head()
+                .and_then(|h| h.resolve())?
+                .name()
+                .expect("branch name is valid utf8"),
+        )
+        .map(|b| b.as_str().expect("valid utf8").to_string())
+        .unwrap_or_else(|_| "origin".into());
+
+    debug!("Remote name: {:?}", &remote_name);
+
     let remote_url: String = local_repo
-        .find_remote("origin")?
+        .find_remote(&remote_name)?
         .url()
         .expect("Unable to extract repo url from remote")
         .chars()
@@ -154,10 +166,11 @@ fn get_target_commit<'repo>(
     commit_id: &Option<String>,
 ) -> Result<Commit<'repo>> {
     let working_branch = get_working_branch(r, branch)?;
-    let working_ref = working_branch.into_reference();
 
     match commit_id {
         Some(id) => {
+            let working_ref = working_branch.into_reference();
+
             debug!("Commit provided. Using {}", id);
             let oid = git2::Oid::from_str(id)?;
 
@@ -170,12 +183,17 @@ fn get_target_commit<'repo>(
 
             Ok(commit)
         }
-        // We want the HEAD of the working branch
+
+        // We want the HEAD of the remote branch (as opposed to the working branch)
         None => {
-            debug!("No commit provided. Using HEAD commit");
+            debug!("No commit provided. Using HEAD commit from remote branch");
+
+            let upstream_branch = working_branch.upstream()?;
+            let working_ref = upstream_branch.into_reference();
+
             let commit = working_ref
                 .peel_to_commit()
-                .expect("Unable to retrieve HEAD commit object from working branch");
+                .expect("Unable to retrieve HEAD commit object from remote branch");
 
             let _ = is_commit_in_branch(r, &commit, &Branch::wrap(working_ref));
 
