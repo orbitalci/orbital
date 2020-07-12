@@ -69,7 +69,6 @@ fn get_working_branch<'repo>(
     r: &'repo Repository,
     local_branch: &Option<String>,
 ) -> Result<Branch<'repo>> {
-
     match local_branch {
         Some(branch) => {
             //println!("User passed branch: {:?}", branch);
@@ -200,7 +199,7 @@ fn _get_remote_url<'repo>(r: &'repo Repository) -> Result<String> {
         .expect("Unable to extract repo url from remote")
         .chars()
         .collect();
-        
+
     Ok(remote_url)
 }
 

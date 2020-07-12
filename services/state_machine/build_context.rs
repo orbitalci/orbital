@@ -1,5 +1,5 @@
 use anyhow::Result;
-use chrono::{NaiveDateTime, Utc};
+use chrono::{Duration as ChronoDuration, NaiveDateTime, Utc};
 use config_parser::OrbitalConfig;
 use git_meta::git_info;
 use git_meta::{GitCommitContext, GitCredentials};
@@ -19,6 +19,7 @@ use std::path::{Path, PathBuf};
 use std::str;
 use std::time::Duration;
 use tokio::sync::mpsc;
+use tokio::time::{self, Duration as tDuration};
 use tonic::Request;
 
 use crate::state_machine::build_state::BuildState;
@@ -53,6 +54,10 @@ pub struct BuildContext {
     pub _db_build_cur_stage_id: i32,
     _build_progress_marker: (usize, usize),
     _state: BuildState,
+    /// Units from config in minutes
+    pub global_timeout: Duration,
+    /// Units from config in minutes
+    pub stage_timeout: Option<Duration>,
 }
 
 impl BuildContext {
@@ -83,8 +88,9 @@ impl BuildContext {
             _build_progress_marker: (0, 0),
             _repo_uri: None,
             _build_hostname: hostname::get().unwrap().into_string().unwrap(),
-
             _state: BuildState::queued(),
+            global_timeout: Duration::from_secs(60 * 60), // Global timeout default. One hour from build start
+            stage_timeout: None,
         }
     }
 
@@ -194,7 +200,26 @@ impl BuildContext {
                 let mut next_step = self.clone();
                 next_step._state = self.clone().state().on_cancelled(Cancelled {});
 
-                // TODO: Update database
+                let _ =
+                    build_engine::docker_container_stop(&next_step._container_id.clone().unwrap())
+                        .unwrap();
+
+                // Update database timestamps
+                let end_timestamp = NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0);
+
+                next_step.stage_end_time = Some(end_timestamp.clone());
+                next_step.build_end_time = Some(end_timestamp);
+
+                let _build_timeout = DbHelper::build_summary_update(
+                    &self,
+                    NewBuildSummary {
+                        build_target_id: next_step._db_build_target_id,
+                        build_state: postgres::schema::JobState::Cancelled,
+                        end_time: next_step.build_end_time.clone(),
+                        ..Default::default()
+                    },
+                )
+                .expect("Unable to update build summary end time stamp");
 
                 return Ok(next_step);
             }
@@ -206,11 +231,36 @@ impl BuildContext {
                 let mut next_step = self.clone();
                 next_step._state = self.clone().state().on_system_err(SystemErr {});
 
-                // TODO: Update database
+                // Update database timestamps
+                let end_timestamp = NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0);
+
+                next_step.stage_end_time = Some(end_timestamp.clone());
+                next_step.build_end_time = Some(end_timestamp);
+
+                let _build_timeout = DbHelper::build_summary_update(
+                    &self,
+                    NewBuildSummary {
+                        build_target_id: next_step._db_build_target_id,
+                        build_state: postgres::schema::JobState::Cancelled,
+                        end_time: next_step.build_end_time.clone(),
+                        ..Default::default()
+                    },
+                )
+                .expect("Unable to update build summary end time stamp");
 
                 return Ok(next_step);
             }
         };
+
+        // Check if stage timeout has passed
+
+        // Check if global timeout has passed
+        if self.is_timeout() {
+            debug!("Timeout conditions met");
+
+            let _ = caller_tx.send("Build timed out".to_string());
+            return self.cancel_build();
+        }
 
         let next_step = match self.clone().state() {
             BuildState::Queued(_) => {
@@ -251,8 +301,16 @@ impl BuildContext {
                 next_step = next_step.clone_code().expect("Cloning code failed");
 
                 // Validate orb.yml if not yet done
-                if let Some(_config) = next_step._build_config.clone() {
+                if let Some(config) = next_step._build_config.clone() {
                     info!("Config file was passed in. Not reloading");
+
+                    // Check for Global build timeout
+                    // Set the Global timeout if defined
+                    // Stage-level timeouts will get set during stage entry
+                    if let Some(global_timeout) = config.timeout.clone() {
+                        next_step.global_timeout =
+                            Duration::from_secs((60 * global_timeout).into());
+                    }
                 } else {
                     next_step = next_step
                         .add_build_config_from_path()
@@ -387,12 +445,41 @@ impl BuildContext {
                 .await
                 .unwrap();
 
-                // Stream build output to client, and save to BuildContext
-                while let Some(response) = stream.recv().await {
-                    let _ = caller_tx.send(response.clone());
-                    next_step
-                        .build_cur_stage_logs
-                        .push_str(response.clone().as_str());
+                // TODO: Don't block. If command is sleeping, it prevents timeout checks
+
+                // Loop while command is still running
+                'timeout_check: loop {
+                    // Stream build output to client, and save to BuildContext
+                    //while let Some(response) = stream.recv().await {
+                    //    let _ = caller_tx.send(response.clone());
+                    //    next_step
+                    //        .build_cur_stage_logs
+                    //        .push_str(response.clone().as_str());
+                    //}
+                    //break 'timeout_check;
+
+                    match stream.try_recv() {
+                        Ok(response) => {
+                            let _ = caller_tx.send(response.clone());
+                            next_step
+                                .build_cur_stage_logs
+                                .push_str(response.clone().as_str());
+                        }
+                        Err(recv_err) => match recv_err {
+                            mpsc::error::TryRecvError::Empty => {
+                                debug!("No output from command. Check for timeout");
+                                time::delay_for(tDuration::from_secs(1)).await;
+
+                                if self.is_timeout() {
+                                    debug!("Timeout conditions met");
+                                    return self.cancel_build();
+                                }
+                            }
+                            mpsc::error::TryRecvError::Closed => {
+                                break 'timeout_check;
+                            }
+                        },
+                    }
                 }
 
                 let step_end_timestamp = NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0);
@@ -741,6 +828,12 @@ impl BuildContext {
                 )))
                 .expect("Unable to load orb.yml");
 
+                // Set the Global timeout if defined
+                // Stage-level timeouts will get set during stage entry
+                if let Some(global_timeout) = c.timeout.clone() {
+                    self.global_timeout = Duration::from_secs((60 * global_timeout).into());
+                }
+
                 self._build_config = Some(c);
 
                 Ok(self)
@@ -754,6 +847,12 @@ impl BuildContext {
                     "orb.yml",
                 )))
                 .expect("Unable to load orb.yml");
+
+                // Set the Global timeout if defined
+                // Stage-level timeouts will get set during stage entry
+                if let Some(global_timeout) = c.timeout.clone() {
+                    self.global_timeout = Duration::from_secs((60 * global_timeout).into());
+                }
 
                 self._build_config = Some(c);
 
@@ -810,5 +909,49 @@ impl BuildContext {
         ];
 
         orbital_env_vars_vec
+    }
+
+    fn cancel_build(self) -> Result<BuildContext> {
+        let _build_timeout = DbHelper::build_summary_update(
+            &self,
+            NewBuildSummary {
+                build_target_id: self._db_build_target_id,
+                build_state: postgres::schema::JobState::Cancelled,
+                ..Default::default()
+            },
+        )
+        .expect("Unable to update build summary job state to cancelled");
+
+        Ok(self)
+    }
+
+    fn is_timeout(&self) -> bool {
+        // Global timeout
+        if let Some(build_start_time) = self.build_start_time.clone() {
+            let now = NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0);
+            let timeout =
+                build_start_time + ChronoDuration::from_std(self.global_timeout.clone()).unwrap();
+
+            if timeout - now <= ChronoDuration::zero() {
+                debug!("Global timeout. Error out!");
+                debug!("Now: {:?}", now);
+                debug!("Timeout: {:?}", timeout);
+                debug!("Duration: {:?}", timeout - now);
+                debug!("Zero: {:?}", ChronoDuration::zero());
+
+                true
+            }
+            // debug purposes
+            else {
+                debug!("Global timeout conditions not yet met");
+                debug!("Now: {:?}", now);
+                debug!("Timeout: {:?}", timeout);
+                debug!("Duration: {:?}", timeout - now);
+                debug!("Zero: {:?}", ChronoDuration::zero());
+                false
+            }
+        } else {
+            false
+        }
     }
 }
