@@ -210,12 +210,17 @@ impl BuildContext {
                 next_step.stage_end_time = Some(end_timestamp.clone());
                 next_step.build_end_time = Some(end_timestamp);
 
+                // Timeout is considered to be a failure
                 let _build_timeout = DbHelper::build_summary_update(
                     &self,
                     NewBuildSummary {
                         build_target_id: next_step._db_build_target_id,
-                        build_state: postgres::schema::JobState::Cancelled,
-                        end_time: next_step.build_end_time.clone(),
+                        build_state: match self.is_timeout() {
+                            true => postgres::schema::JobState::Failed,
+                            false => postgres::schema::JobState::Cancelled,
+                        },
+                        start_time: next_step.build_start_time,
+                        end_time: next_step.build_end_time,
                         ..Default::default()
                     },
                 )
@@ -242,6 +247,7 @@ impl BuildContext {
                     NewBuildSummary {
                         build_target_id: next_step._db_build_target_id,
                         build_state: postgres::schema::JobState::Cancelled,
+                        start_time: next_step.build_start_time,
                         end_time: next_step.build_end_time.clone(),
                         ..Default::default()
                     },
