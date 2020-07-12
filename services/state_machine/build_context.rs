@@ -433,16 +433,25 @@ impl BuildContext {
                 let stage_index = next_step._build_progress_marker.0;
                 let command_index = next_step._build_progress_marker.1;
 
-                println!(
+                debug!(
                     "Stage index:{} Command index:{}",
                     stage_index, command_index
                 );
 
-                println!("{:?}", c.stages[stage_index].command[command_index]);
+                debug!("{:?}", c.stages[stage_index].command[command_index]);
                 next_step.build_stage_name = c.stages[stage_index]
                     .name
                     .clone()
                     .unwrap_or(format!("Stage {}", stage_index.to_string()));
+
+                // Set any stage-level timeout
+                match c.stages[stage_index].timeout {
+                    Some(stage_timeout_duration) => {
+                        next_step.stage_timeout =
+                            Some(Duration::from_secs((60 * stage_timeout_duration).into()));
+                    }
+                    None => (),
+                }
 
                 let mut stream = build_engine::docker_container_exec_async(
                     next_step._container_id.clone().unwrap(),
@@ -451,19 +460,8 @@ impl BuildContext {
                 .await
                 .unwrap();
 
-                // TODO: Don't block. If command is sleeping, it prevents timeout checks
-
                 // Loop while command is still running
                 'timeout_check: loop {
-                    // Stream build output to client, and save to BuildContext
-                    //while let Some(response) = stream.recv().await {
-                    //    let _ = caller_tx.send(response.clone());
-                    //    next_step
-                    //        .build_cur_stage_logs
-                    //        .push_str(response.clone().as_str());
-                    //}
-                    //break 'timeout_check;
-
                     match stream.try_recv() {
                         Ok(response) => {
                             let _ = caller_tx.send(response.clone());
@@ -476,9 +474,9 @@ impl BuildContext {
                                 debug!("No output from command. Check for timeout");
                                 time::delay_for(tDuration::from_secs(1)).await;
 
-                                if self.is_timeout() {
+                                if next_step.is_timeout() {
                                     debug!("Timeout conditions met");
-                                    return self.cancel_build();
+                                    return next_step.cancel_build();
                                 }
                             }
                             mpsc::error::TryRecvError::Closed => {
@@ -534,6 +532,9 @@ impl BuildContext {
 
                     // Reset stage logs
                     next_step.build_cur_stage_logs = String::new();
+
+                    // Reset stage timeout
+                    next_step.stage_timeout = None;
                 } else {
                     // This was the last command
 
@@ -932,32 +933,46 @@ impl BuildContext {
     }
 
     fn is_timeout(&self) -> bool {
-        // Global timeout
-        if let Some(build_start_time) = self.build_start_time.clone() {
-            let now = NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0);
-            let timeout =
-                build_start_time + ChronoDuration::from_std(self.global_timeout.clone()).unwrap();
+        let now = NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0);
 
-            if timeout - now <= ChronoDuration::zero() {
-                debug!("Global timeout. Error out!");
-                debug!("Now: {:?}", now);
-                debug!("Timeout: {:?}", timeout);
-                debug!("Duration: {:?}", timeout - now);
-                debug!("Zero: {:?}", ChronoDuration::zero());
+        // If the build hasn't even started, we don't want to bother with timeout checks
+        match self.build_start_time {
+            Some(build_start_time) => {
+                // Check for global timeout
+                //debug!("Now: {:?}", now);
+                let global_timeout = build_start_time
+                    + ChronoDuration::from_std(self.global_timeout.clone()).unwrap();
+                //debug!("Global Timeout timestamp: {:?}", global_timeout);
 
-                true
+                let global_timeout_countdown = global_timeout - now;
+                debug!("Global Timeout countdown: {:?}", global_timeout_countdown);
+
+                if global_timeout_countdown <= ChronoDuration::zero() {
+                    debug!("Global time out");
+                    return true;
+                };
+
+                // Check for stage timeout
+                match self.stage_timeout {
+                    Some(stage_timeout_duration) => {
+                        let stage_start_time = self.stage_start_time.unwrap();
+                        let stage_timeout_time = stage_start_time
+                            + ChronoDuration::from_std(stage_timeout_duration).unwrap();
+
+                        let stage_timeout_countdown = stage_timeout_time - now;
+                        debug!("Stage Timeout countdown: {:?}", stage_timeout_countdown);
+
+                        let timeout_check = stage_timeout_countdown <= ChronoDuration::zero();
+                        if timeout_check {
+                            debug!("Stage timed out");
+                        };
+
+                        timeout_check
+                    }
+                    None => false,
+                }
             }
-            // debug purposes
-            else {
-                debug!("Global timeout conditions not yet met");
-                debug!("Now: {:?}", now);
-                debug!("Timeout: {:?}", timeout);
-                debug!("Duration: {:?}", timeout - now);
-                debug!("Zero: {:?}", ChronoDuration::zero());
-                false
-            }
-        } else {
-            false
+            None => false,
         }
     }
 }
