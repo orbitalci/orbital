@@ -21,7 +21,7 @@ orbital_headers = { path = "../models/orbital_headers" }
 prost-types = "0.6"
 thiserror = "1.0"
 tokio = { version = "0.2", features = ["full"] }
-tonic = "0.2"
+tonic = "0.3"
 serde_json = "1.0"
 
 # For state machine

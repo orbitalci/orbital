@@ -10,3 +10,7 @@ members = [
     "services",
     "models/orbital_database",
 ]
+
+[patch.crates-io]
+tonic = { git = 'https://github.com/tjtelan/tonic.git', branch = "router-service" }
+tonic-build = { git = 'https://github.com/tjtelan/tonic.git', branch = "router-service" }
