@@ -3,7 +3,7 @@
 // Get as much info about the remote branch as well
 
 use anyhow::Result;
-use git2::{Branch, BranchType, Commit, ObjectType, Repository};
+use git2::{Branch, BranchType, Commit, ObjectType, References, Repository};
 use git_url_parse::GitUrl;
 use log::debug;
 use std::path::Path;
@@ -13,6 +13,21 @@ use super::GitCommitContext;
 /// Returns a `git2::Repository` from a given repo directory path
 fn get_local_repo_from_path(path: &Path) -> Result<Repository, git2::Error> {
     Repository::open(path.as_os_str())
+}
+
+// TODO Change to return the latest commit from the Remote
+pub fn get_git_latest_commit<'a>(
+    path: &'a Path,
+    branch: &'a Option<String>,
+    commit_id: &'a Option<String>,
+) -> Result<GitCommitContext> {
+    //) -> Result<References<'a>, git2::Error> {
+
+    let latest_commit = get_git_info_from_path(path, branch, commit_id)?;
+
+    // TODO: Pass in the current commit from the DB and return a bool
+
+    Ok(latest_commit)
 }
 
 /// Returns a `GitCommitContext` after parsing metadata from a repo
