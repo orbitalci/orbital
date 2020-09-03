@@ -26,13 +26,13 @@ strum = "0.18"
 strum_macros = "0.18"
 termcolor = "1.1"
 thiserror = "1.0"
-tonic = "0.3"
+tonic = "^0.3"
 rand = "0.7"
 mktemp = "0.4"
 
 # Web server
 hyper = "0.13"
-warp = { version = "0.2", default-features = false }
+warp = { version = "0.2" }
 http = "0.2"
 http-body = "0.3"
 pin-project = "0.4"

@@ -9,7 +9,7 @@ bytes = "0.5"
 prost = "0.6"
 prost-derive = "0.6"
 prost-types = "0.6"
-tonic = "0.3"
+tonic = "^0.3"
 
 [build-dependencies]
 tonic-build = "0.3"
