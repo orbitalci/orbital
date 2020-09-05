@@ -15,6 +15,7 @@ use orbital_services::OrbitalApi;
 use orbital_services::ORB_DEFAULT_URI;
 
 use log::info;
+use std::env;
 use std::path::PathBuf;
 
 // For the service router
@@ -38,14 +39,35 @@ pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
     #[structopt(long, parse(from_os_str), env = "PWD")]
     path: PathBuf,
+
+    #[structopt(long)]
+    debug: bool,
 }
 
 /// Binds a *currently hardcoded* address and starts all services on mutliplexed gRPC server
 pub async fn subcommand_handler(
     _global_option: GlobalOption,
-    _local_option: SubcommandOption,
+    local_option: SubcommandOption,
 ) -> Result<()> {
     let addr = ORB_DEFAULT_URI.parse().unwrap();
+
+    if local_option.debug {
+        if env::var_os("RUST_LOG").is_none() {
+            let debug_modules = vec![
+                "subcommand::server",
+                "orbital_services",
+                "orbital_agent",
+                "orbital_database",
+                "git_meta",
+                "hashicorp_stack",
+                "git_url_parse",
+            ];
+
+            env::set_var("RUST_LOG", debug_modules.join(","))
+        }
+    }
+
+    let _ = env_logger::try_init();
 
     info!("Starting single-node server");
 

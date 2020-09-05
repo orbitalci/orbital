@@ -28,7 +28,10 @@ pub async fn action_handler(
     let mut client = CodeServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(GitRepoListRequest {
-        org: action_option.org.unwrap_or_default(),
+        org: action_option
+            .org
+            .clone()
+            .expect("Please provide an org with request"),
         ..Default::default()
     });
 
