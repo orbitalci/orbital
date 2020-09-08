@@ -78,6 +78,7 @@ impl BuildService for OrbitalApi {
                     break 'build_loop;
                 }
 
+                // Run the next step in the state machine
                 cur_build = cur_build.clone().step(&build_tx).await.unwrap();
 
                 if cur_build.clone().state() == BuildState::error() {

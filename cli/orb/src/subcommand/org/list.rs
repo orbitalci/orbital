@@ -26,7 +26,7 @@ pub async fn action_handler(
         OrganizationServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(());
-    debug!("Request for org remove: {:?}", &request);
+    debug!("Request for org list: {:?}", &request);
 
     let response = client.org_list(request).await?.into_inner();
 

@@ -1615,6 +1615,7 @@ dependencies = [
  "strum_macros",
  "termcolor",
  "thiserror",
+ "tokio 0.2.22",
  "tonic",
  "tower",
  "warp",

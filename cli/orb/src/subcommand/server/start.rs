@@ -69,8 +69,13 @@ pub async fn subcommand_handler(
 
     let _ = env_logger::try_init();
 
-    info!("Starting single-node server");
+    // Kick off thread for checking for new commits
+    {
+        info!("Starting new commit polling");
+        crate::server::poll::poll_for_new_commits().await;
+    }
 
+    info!("Starting single-node server");
     let warp = warp::service(warp::path("hello").map(|| "hello, world!"));
 
     HyperServer::bind(&addr)

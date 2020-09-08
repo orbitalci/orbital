@@ -30,6 +30,7 @@ thiserror = "1.0"
 tonic = "^0.3"
 rand = "0.7"
 mktemp = "0.4"
+tokio = { version = "0.2", features = ["full"] }
 
 # Web server
 hyper = "0.13"
