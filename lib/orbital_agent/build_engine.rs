@@ -19,7 +19,7 @@ pub fn clone_repo(
     credentials: git_meta::GitCredentials,
     target_dir: &Path,
 ) -> Result<()> {
-    git_meta::clone::clone_temp_dir(uri, branch, credentials, target_dir)
+    git_meta::clone::clone_temp_dir(uri, Some(branch), credentials, target_dir)
 }
 
 /// Load orb.yml from a filepath

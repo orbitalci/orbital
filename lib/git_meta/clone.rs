@@ -14,7 +14,7 @@ use std::path::Path;
 /// Return mktemp directory, which will delete when out of scope
 pub fn clone_temp_dir(
     uri: &str,
-    branch: &str,
+    branch: Option<&str>,
     credentials: GitCredentials,
     target_dir: &Path,
 ) -> Result<()> {
@@ -31,7 +31,10 @@ pub fn clone_temp_dir(
 
             fetch_options.remote_callbacks(callbacks);
             builder.fetch_options(fetch_options);
-            builder.branch(branch);
+
+            if let Some(b) = branch { 
+                builder.branch(b);
+            }
 
             let _repo = match builder.clone(uri, &target_dir) {
                 Ok(repo) => repo,
@@ -107,7 +110,10 @@ pub fn clone_temp_dir(
 
             fetch_options.remote_callbacks(callbacks);
             builder.fetch_options(fetch_options);
-            builder.branch(branch);
+
+            if let Some(b) = branch { 
+                builder.branch(b);
+            }
 
             let _repo = match builder.clone(uri, &target_dir) {
                 Ok(repo) => repo,
@@ -130,7 +136,10 @@ pub fn clone_temp_dir(
 
             fetch_options.remote_callbacks(callbacks);
             builder.fetch_options(fetch_options);
-            builder.branch(branch);
+            
+            if let Some(b) = branch { 
+                builder.branch(b);
+            }
 
             let _repo = match builder.clone(uri, &target_dir) {
                 Ok(repo) => repo,
