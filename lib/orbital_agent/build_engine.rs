@@ -15,11 +15,11 @@ pub struct Agent;
 /// Create a temporary directory on the host, and clone a repo
 pub fn clone_repo(
     uri: &str,
-    branch: &str,
+    branch: Option<&str>,
     credentials: git_meta::GitCredentials,
     target_dir: &Path,
 ) -> Result<()> {
-    git_meta::clone::clone_temp_dir(uri, Some(branch), credentials, target_dir)
+    git_meta::clone::clone_temp_dir(uri, branch, credentials, target_dir)
 }
 
 /// Load orb.yml from a filepath

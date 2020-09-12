@@ -3,7 +3,7 @@
 // Get as much info about the remote branch as well
 
 use anyhow::Result;
-use git2::{Branch, BranchType, Commit, ObjectType, References, Repository};
+use git2::{Branch, BranchType, Commit, Direction, ObjectType, Repository};
 use git_url_parse::GitUrl;
 use log::debug;
 use std::path::Path;
@@ -217,6 +217,56 @@ fn _get_remote_url<'repo>(r: &'repo Repository) -> Result<String> {
 
     Ok(remote_url)
 }
+
+// ls-remote
+// Result<Vec<(Reference name, Reference oid/hash)>>
+// rename to list_remote_heads, and change the output to filter for only the head refs
+pub fn list_remote_refs(path: &Path) -> Result<Vec<(String, String)>> {
+    // Right now, this will only be used after shallow clone, so we're always going to assume the "origin" remote
+
+    // First we open the repository and get the remote_url and parse it into components
+    let local_repo = get_local_repo_from_path(path)?;
+
+    let remote = "origin";
+
+    let mut remote = local_repo
+        .find_remote(remote)
+        .or_else(|_| local_repo.remote_anonymous(remote))?;
+
+    // Connect to the remote and call the printing function for each of the
+    // remote references.
+    let connection = remote.connect_auth(Direction::Fetch, None, None)?;
+
+    Ok(connection
+        .list()?
+        .iter()
+        .filter(|head| head.name().starts_with("refs/heads"))
+        .map(|head| (head.name().to_string(), head.oid().to_string()))
+        .collect())
+    // Get the list of references on the remote and print out their name next to
+    // what they point to.
+    //    for head in connection.list()?.iter() {
+    //        println!("{}\t{}", head.oid(), head.name());
+    //    }
+}
+//fn run(args: &Args) -> Result<(), git2::Error> {
+//    let repo = Repository::open(".")?;
+//    let remote = &args.arg_remote;
+//    let mut remote = repo
+//        .find_remote(remote)
+//        .or_else(|_| repo.remote_anonymous(remote))?;
+//
+//    // Connect to the remote and call the printing function for each of the
+//    // remote references.
+//    let connection = remote.connect_auth(Direction::Fetch, None, None)?;
+//
+//    // Get the list of references on the remote and print out their name next to
+//    // what they point to.
+//    for head in connection.list()?.iter() {
+//        println!("{}\t{}", head.oid(), head.name());
+//    }
+//    Ok(())
+//}
 
 #[cfg(test)]
 mod tests {

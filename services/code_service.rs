@@ -52,7 +52,7 @@ impl CodeService for OrbitalApi {
 
                         let _ = match build_engine::clone_repo(
                             &unwrapped_request.uri,
-                            &test_branch,
+                            Some(&test_branch),
                             creds.clone(),
                             temp_dir.as_path(),
                         ) {
@@ -63,6 +63,11 @@ impl CodeService for OrbitalApi {
                                 panic!("Test git clone unsuccessful");
                             }
                         };
+
+                        // Check orb.yml for any branch restrictions, otherwise check all remote branches
+
+                        // Get all branches
+                        // per branch, collect the name and the HEAD commit
                     }
                 };
 
@@ -103,7 +108,7 @@ impl CodeService for OrbitalApi {
                                 &unwrapped_request.uri
                             )
                             .as_str(),
-                            &test_branch,
+                            Some(&test_branch),
                             creds.clone(),
                             temp_dir.as_path(),
                         ) {
@@ -194,7 +199,7 @@ impl CodeService for OrbitalApi {
 
                         let _ = match build_engine::clone_repo(
                             &unwrapped_request.uri,
-                            &test_branch,
+                            Some(&test_branch),
                             creds.clone(),
                             temp_dir.as_ref(),
                         ) {

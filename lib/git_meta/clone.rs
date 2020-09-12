@@ -5,7 +5,8 @@ use log::debug;
 use mktemp::Temp;
 use std::fs::File;
 use std::io::prelude::*;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 
 // TODO: Need a way to switch between a public and private repo
 // Idea: Create an enum:
@@ -32,7 +33,7 @@ pub fn clone_temp_dir(
             fetch_options.remote_callbacks(callbacks);
             builder.fetch_options(fetch_options);
 
-            if let Some(b) = branch { 
+            if let Some(b) = branch {
                 builder.branch(b);
             }
 
@@ -111,7 +112,7 @@ pub fn clone_temp_dir(
             fetch_options.remote_callbacks(callbacks);
             builder.fetch_options(fetch_options);
 
-            if let Some(b) = branch { 
+            if let Some(b) = branch {
                 builder.branch(b);
             }
 
@@ -136,8 +137,8 @@ pub fn clone_temp_dir(
 
             fetch_options.remote_callbacks(callbacks);
             builder.fetch_options(fetch_options);
-            
-            if let Some(b) = branch { 
+
+            if let Some(b) = branch {
                 builder.branch(b);
             }
 
@@ -147,6 +148,101 @@ pub fn clone_temp_dir(
             };
         }
     }
+
+    Ok(())
+}
+
+// Shallow clone
+/// This requires `git` and `ssh` to be installed
+pub fn shell_shallow_clone(
+    uri: &str,
+    branch: Option<&str>,
+    credentials: GitCredentials,
+    target_dir: &Path,
+) -> Result<()> {
+    // Let's not assume that the URI has been parsed, ok?
+    let parsed_uri = git_url_parse::GitUrl::parse(uri)?.trim_auth();
+
+    match credentials {
+        GitCredentials::BasicAuth { username, password } => {
+            let mut cli_remote_url = parsed_uri.clone();
+            cli_remote_url.user = Some(username);
+            cli_remote_url.token = Some(password);
+
+            let shell_clone_command = Command::new("git")
+                .arg("clone")
+                .arg(format!("{}", cli_remote_url))
+                .arg(format!("{}", target_dir.to_str().unwrap()))
+                .arg("--depth=1")
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .spawn()
+                .expect("Failed to run git clone");
+
+            let clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+            //println!("{:?}", clone_out)
+        }
+        GitCredentials::Public => {
+            let shell_clone_command = Command::new("git")
+                .arg("clone")
+                .arg(format!("{}", parsed_uri))
+                .arg(format!("{}", target_dir.to_str().unwrap()))
+                .arg("--depth=1")
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .spawn()
+                .expect("Failed to run git clone");
+
+            let clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+            //println!("{:?}", clone_out)
+        }
+        GitCredentials::SshKey {
+            username,
+            public_key,
+            private_key,
+            passphrase,
+        } => {
+            // write private key to a temp file
+            let privkey_file =
+                Temp::new_file().expect("Unable to create temp file for private key");
+
+            let mut privkey_fd = File::create(privkey_file.as_path()).unwrap();
+            let _ = privkey_fd.write_all(private_key.as_bytes());
+
+            //let shell_clone_command = format!(
+            //    "git clone {url} {dir} --depth=1 --config core.sshCommand=\"ssh -i {privkey_path}\"",
+            //    url=cli_remote_url,
+            //    dir=target_dir.to_str().unwrap(),
+            //    privkey_path=privkey_file.as_path().display(),
+            //);
+
+            let shell_clone_command = Command::new("git")
+                .arg("clone")
+                .arg(format!("{}", parsed_uri))
+                .arg(format!("{}", target_dir.to_str().unwrap()))
+                .arg("--depth=1")
+                .arg("--config")
+                .arg(format!(
+                    "core.sshCommand=\"ssh -i {privkey_path}\"",
+                    privkey_path = privkey_file.as_path().display()
+                ))
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .spawn()
+                .expect("Failed to run git clone");
+
+            let clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+            //println!("{:?}", clone_out)
+        }
+    }
+    // git clone git@github.com:tjtelan/orbitalci.git --depth 1 --config core.sshCommand="ssh -i ~/.ssh/id_ed25519"
+
+    //let mut git_config = PathBuf::new();
+    //git_config.push(target_dir);
+    //git_config.push(".git");
+    //git_config.push("config");
+
+    //let _file = File::create(git_config)?;
 
     Ok(())
 }

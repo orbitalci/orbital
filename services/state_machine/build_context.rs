@@ -797,7 +797,7 @@ impl BuildContext {
 
         let _clone_res = build_engine::clone_repo(
             format!("{}", &self._repo_uri.clone().unwrap()).as_str(),
-            &self.branch,
+            Some(&self.branch),
             self._git_creds.clone().unwrap(),
             self.working_dir.as_ref(),
         )
