@@ -221,7 +221,7 @@ fn _get_remote_url<'repo>(r: &'repo Repository) -> Result<String> {
 // ls-remote
 // Result<Vec<(Reference name, Reference oid/hash)>>
 // rename to list_remote_heads, and change the output to filter for only the head refs
-pub fn list_remote_refs(path: &Path) -> Result<Vec<(String, String)>> {
+pub fn list_remote_branch_heads(path: &Path) -> Result<Vec<(String, String)>> {
     // Right now, this will only be used after shallow clone, so we're always going to assume the "origin" remote
 
     // First we open the repository and get the remote_url and parse it into components
@@ -237,11 +237,22 @@ pub fn list_remote_refs(path: &Path) -> Result<Vec<(String, String)>> {
     // remote references.
     let connection = remote.connect_auth(Direction::Fetch, None, None)?;
 
+    let git_branch_ref_prefix = "refs/heads/";
+
     Ok(connection
         .list()?
         .iter()
-        .filter(|head| head.name().starts_with("refs/heads"))
-        .map(|head| (head.name().to_string(), head.oid().to_string()))
+        .filter(|head| head.name().starts_with(git_branch_ref_prefix))
+        .map(|head| {
+            (
+                head.name()
+                    .to_string()
+                    .rsplit(git_branch_ref_prefix)
+                    .collect::<Vec<&str>>()[0]
+                    .to_string(),
+                head.oid().to_string(),
+            )
+        })
         .collect())
     // Get the list of references on the remote and print out their name next to
     // what they point to.

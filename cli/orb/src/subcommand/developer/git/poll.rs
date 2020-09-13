@@ -35,7 +35,7 @@ pub async fn action_handler(
     // do ls-remote to temp_dir
     println!(
         "{:?}",
-        git_meta::git_info::list_remote_refs(&temp_dir.as_path())
+        git_meta::git_info::list_remote_branch_heads(&temp_dir.as_path())
     );
 
     Ok(())

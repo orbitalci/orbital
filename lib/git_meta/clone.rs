@@ -179,8 +179,8 @@ pub fn shell_shallow_clone(
                 .spawn()
                 .expect("Failed to run git clone");
 
-            let clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
-            //println!("{:?}", clone_out)
+            let _clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+
         }
         GitCredentials::Public => {
             let shell_clone_command = Command::new("git")
@@ -193,8 +193,8 @@ pub fn shell_shallow_clone(
                 .spawn()
                 .expect("Failed to run git clone");
 
-            let clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
-            //println!("{:?}", clone_out)
+            let _clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+
         }
         GitCredentials::SshKey {
             username,
@@ -208,13 +208,6 @@ pub fn shell_shallow_clone(
 
             let mut privkey_fd = File::create(privkey_file.as_path()).unwrap();
             let _ = privkey_fd.write_all(private_key.as_bytes());
-
-            //let shell_clone_command = format!(
-            //    "git clone {url} {dir} --depth=1 --config core.sshCommand=\"ssh -i {privkey_path}\"",
-            //    url=cli_remote_url,
-            //    dir=target_dir.to_str().unwrap(),
-            //    privkey_path=privkey_file.as_path().display(),
-            //);
 
             let shell_clone_command = Command::new("git")
                 .arg("clone")
@@ -231,18 +224,10 @@ pub fn shell_shallow_clone(
                 .spawn()
                 .expect("Failed to run git clone");
 
-            let clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
-            //println!("{:?}", clone_out)
+            let _clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+            
         }
     }
-    // git clone git@github.com:tjtelan/orbitalci.git --depth 1 --config core.sshCommand="ssh -i ~/.ssh/id_ed25519"
-
-    //let mut git_config = PathBuf::new();
-    //git_config.push(target_dir);
-    //git_config.push(".git");
-    //git_config.push("config");
-
-    //let _file = File::create(git_config)?;
 
     Ok(())
 }
