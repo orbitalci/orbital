@@ -1,8 +1,9 @@
 use crate::postgres::org::Org;
 use crate::postgres::schema::{repo, ActiveState, GitHostType};
 use crate::postgres::secret::Secret;
+use serde_json::{json, Value};
 
-use orbital_headers::code::GitRepoEntry;
+use orbital_headers::code::{GitRepoEntry, GitRepoRemoteBranchHead, GitRepoRemoteBranchHeadList};
 //use orbital_headers::secret::SecretEntry;
 
 use git_meta::git_info;
@@ -20,6 +21,7 @@ pub struct NewRepo {
     pub build_active_state: ActiveState,
     pub notify_active_state: ActiveState,
     pub next_build_index: i32,
+    pub remote_branch_head_refs: serde_json::Value,
 }
 
 impl Default for NewRepo {
@@ -33,6 +35,7 @@ impl Default for NewRepo {
             build_active_state: ActiveState::Enabled,
             notify_active_state: ActiveState::Enabled,
             next_build_index: 1,
+            remote_branch_head_refs: json!([]),
         }
     }
 }
@@ -51,6 +54,7 @@ pub struct Repo {
     pub build_active_state: ActiveState,
     pub notify_active_state: ActiveState,
     pub next_build_index: i32,
+    pub remote_branch_head_refs: serde_json::Value,
 }
 
 impl Default for Repo {
@@ -65,6 +69,7 @@ impl Default for Repo {
             build_active_state: ActiveState::Enabled,
             notify_active_state: ActiveState::Enabled,
             next_build_index: 1,
+            remote_branch_head_refs: json!([]),
         }
     }
 }
@@ -86,6 +91,9 @@ impl From<Repo> for GitRepoEntry {
             build: repo.build_active_state.into(),
             notify: repo.notify_active_state.into(),
             next_build_index: repo.next_build_index,
+            // TODO: FIX THIS SHIT
+            remote_branch_head_refs: None,
+            //remote_branch_head_refs: repo.remote_branch_head_refs,
             ..Default::default()
         }
     }
@@ -107,6 +115,13 @@ impl From<GitRepoEntry> for Repo {
             build_active_state: git_repo_entry.build.into(),
             notify_active_state: git_repo_entry.notify.into(),
             next_build_index: git_repo_entry.next_build_index,
+            remote_branch_head_refs: {
+                match git_repo_entry.remote_branch_head_refs {
+                    // TODO: Unpack this shit
+                    Some(branches) => json!([]),
+                    None => json!([]),
+                }
+            },
             ..Default::default()
         }
     }

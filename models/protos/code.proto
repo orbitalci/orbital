@@ -17,6 +17,8 @@ message GitRepoEntry {
     orbital_types.ActiveState build = 8;
     orbital_types.ActiveState notify = 9;
     int32 next_build_index = 10;
+    GitRepoRemoteBranchHeadList remote_branch_head_refs = 11;
+
 }
 
 message GitRepoAddRequest {
@@ -29,6 +31,7 @@ message GitRepoAddRequest {
     string auth_data = 7;
     bool skip_check = 8;
     string alt_check_branch = 9;
+    GitRepoRemoteBranchHeadList remote_branch_head_refs = 10;
 }
 
 message GitRepoGetRequest {
@@ -49,6 +52,7 @@ message GitRepoUpdateRequest {
     orbital_types.ActiveState build = 7;
     orbital_types.ActiveState notify = 8;
     string auth_data = 9;
+    GitRepoRemoteBranchHeadList remote_branch_head_refs = 10;
 }
 
 message GitRepoRemoveRequest {
@@ -67,6 +71,15 @@ message GitRepoListRequest {
 
 message GitRepoListResponse {
     repeated GitRepoEntry git_repos = 1;
+}
+
+message GitRepoRemoteBranchHead {
+   string branch = 1;
+   string commit = 2; 
+}
+
+message GitRepoRemoteBranchHeadList {
+    repeated GitRepoRemoteBranchHead remote_branch_head_refs = 1;
 }
 
 service CodeService {

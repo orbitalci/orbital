@@ -439,6 +439,7 @@ dependencies = [
  "chrono",
  "diesel_derives",
  "pq-sys",
+ "serde_json",
 ]
 
 [[package]]
@@ -1645,6 +1646,8 @@ dependencies = [
  "orbital_hashicorp_stack",
  "orbital_headers",
  "prost-types",
+ "serde",
+ "serde_json",
  "strum",
  "strum_macros",
 ]

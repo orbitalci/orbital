@@ -2,7 +2,10 @@ use structopt::StructOpt;
 
 use crate::{repo::SubcommandOption, GlobalOption};
 
-use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoAddRequest};
+use orbital_headers::code::{
+    code_service_client::CodeServiceClient, GitRepoAddRequest, GitRepoRemoteBranchHead,
+    GitRepoRemoteBranchHeadList,
+};
 use orbital_headers::orbital_types::SecretType;
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
@@ -128,11 +131,20 @@ pub async fn action_handler(
         };
     }
 
-    // Retrieve the latest remote branch refs
-    let remote_branch_refs =
-        git_info::list_remote_branch_head_refs(&action_option.path.as_path(), git_creds)?;
+    let mut remote_branch_refs = GitRepoRemoteBranchHeadList {
+        remote_branch_head_refs: Vec::new(),
+    };
 
-    println!("{:?}", remote_branch_refs);
+    for (branch_name, commit) in
+        git_info::list_remote_branch_head_refs(&action_option.path.as_path(), git_creds)?
+    {
+        let remote_ref = GitRepoRemoteBranchHead {
+            branch: branch_name,
+            commit: commit,
+        };
+
+        remote_branch_refs.remote_branch_head_refs.push(remote_ref);
+    }
 
     let request = Request::new(GitRepoAddRequest {
         org: action_option
@@ -147,6 +159,13 @@ pub async fn action_handler(
         user: repo_user,
         alt_check_branch: action_option.alt_branch.unwrap_or_default(),
         skip_check: action_option.skip_check,
+        remote_branch_head_refs: {
+            if remote_branch_refs.remote_branch_head_refs.len() > 0 {
+                Some(remote_branch_refs)
+            } else {
+                None
+            }
+        },
         ..Default::default()
     });
 

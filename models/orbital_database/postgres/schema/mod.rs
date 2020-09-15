@@ -238,9 +238,8 @@ impl From<orbital_types::SecretType> for SecretType {
     }
 }
 
-// FIXME: This is missing a column for storing ad-hoc env vars
 table! {
-    use diesel::sql_types::{Integer, Text, Nullable};
+    use diesel::sql_types::{Integer, Text, Nullable, Jsonb};
     use super::{ActiveStatePGEnum,GitHostTypePGEnum};
 
     repo (id) {
@@ -253,6 +252,7 @@ table! {
         build_active_state -> ActiveStatePGEnum,
         notify_active_state -> ActiveStatePGEnum,
         next_build_index -> Integer,
+        remote_branch_head_refs -> Jsonb,
     }
 }
 
