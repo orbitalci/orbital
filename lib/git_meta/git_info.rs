@@ -6,9 +6,10 @@ use anyhow::Result;
 use git2::{Branch, BranchType, Commit, Direction, ObjectType, Repository};
 use git_url_parse::GitUrl;
 use log::debug;
+use std::collections::HashMap;
 use std::path::Path;
 
-use super::GitCommitContext;
+use super::{GitCommitContext, GitCredentials};
 
 /// Returns a `git2::Repository` from a given repo directory path
 fn get_local_repo_from_path(path: &Path) -> Result<Repository, git2::Error> {
@@ -218,66 +219,50 @@ fn _get_remote_url<'repo>(r: &'repo Repository) -> Result<String> {
     Ok(remote_url)
 }
 
-// ls-remote
-// Result<Vec<(Reference name, Reference oid/hash)>>
-// rename to list_remote_heads, and change the output to filter for only the head refs
-pub fn list_remote_branch_heads(path: &Path) -> Result<Vec<(String, String)>> {
-    // Right now, this will only be used after shallow clone, so we're always going to assume the "origin" remote
-
+/// Returns a HashMap with branch names as keys and current branch HEAD commit as the value
+pub fn list_remote_branch_head_refs(
+    path: &Path,
+    creds: GitCredentials,
+) -> Result<HashMap<String, String>> {
     // First we open the repository and get the remote_url and parse it into components
     let local_repo = get_local_repo_from_path(path)?;
 
-    let remote = "origin";
+    let remote = _get_remote_name(&local_repo)?;
 
     let mut remote = local_repo
-        .find_remote(remote)
-        .or_else(|_| local_repo.remote_anonymous(remote))?;
+        .find_remote(&remote)
+        .or_else(|_| local_repo.remote_anonymous(&remote))?;
+
+    let callbacks = match creds {
+        GitCredentials::Public => None,
+        _ => Some(super::build_remote_callback(creds)),
+    };
 
     // Connect to the remote and call the printing function for each of the
     // remote references.
-    let connection = remote.connect_auth(Direction::Fetch, None, None)?;
+    let connection = remote.connect_auth(Direction::Fetch, callbacks, None)?;
 
     let git_branch_ref_prefix = "refs/heads/";
+    let mut ref_map: HashMap<String, String> = HashMap::new();
 
-    Ok(connection
+    for git_ref in connection
         .list()?
         .iter()
         .filter(|head| head.name().starts_with(git_branch_ref_prefix))
-        .map(|head| {
-            (
-                head.name()
-                    .to_string()
-                    .rsplit(git_branch_ref_prefix)
-                    .collect::<Vec<&str>>()[0]
-                    .to_string(),
-                head.oid().to_string(),
-            )
-        })
-        .collect())
-    // Get the list of references on the remote and print out their name next to
-    // what they point to.
-    //    for head in connection.list()?.iter() {
-    //        println!("{}\t{}", head.oid(), head.name());
-    //    }
+    {
+        let branch_name = git_ref
+            .name()
+            .to_string()
+            .rsplit(git_branch_ref_prefix)
+            .collect::<Vec<&str>>()[0]
+            .to_string();
+        let head_commit = git_ref.oid().to_string();
+
+        ref_map.insert(branch_name, head_commit);
+    }
+
+    Ok(ref_map)
 }
-//fn run(args: &Args) -> Result<(), git2::Error> {
-//    let repo = Repository::open(".")?;
-//    let remote = &args.arg_remote;
-//    let mut remote = repo
-//        .find_remote(remote)
-//        .or_else(|_| repo.remote_anonymous(remote))?;
-//
-//    // Connect to the remote and call the printing function for each of the
-//    // remote references.
-//    let connection = remote.connect_auth(Direction::Fetch, None, None)?;
-//
-//    // Get the list of references on the remote and print out their name next to
-//    // what they point to.
-//    for head in connection.list()?.iter() {
-//        println!("{}\t{}", head.oid(), head.name());
-//    }
-//    Ok(())
-//}
 
 #[cfg(test)]
 mod tests {

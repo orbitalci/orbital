@@ -7,7 +7,7 @@ use orbital_headers::orbital_types::SecretType;
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use git_meta::git_info;
+use git_meta::{git_info, GitCredentials};
 use git_url_parse::Scheme;
 use log::{debug, info};
 use std::fs::File;
@@ -89,6 +89,9 @@ pub async fn action_handler(
 
     let mut auth_content = String::new();
 
+    // This is only for getting remote branch info before sending the add repo request
+    let mut git_creds = GitCredentials::Public;
+
     if repo_secret_type != SecretType::Unspecified {
         // If private key, load up contents with key
         match action_option.private_key {
@@ -98,6 +101,13 @@ pub async fn action_handler(
                 // Read in private key into memory
                 let mut file = File::open(p.to_str().expect("No secret filepath given"))?;
                 file.read_to_string(&mut auth_content)?;
+
+                git_creds = GitCredentials::SshKey {
+                    username: repo_user.clone(),
+                    public_key: None,
+                    private_key: auth_content.clone(),
+                    passphrase: None,
+                };
             }
             None => info!("Not using private key auth"),
         };
@@ -108,10 +118,21 @@ pub async fn action_handler(
                 info!("Repo auth with basic auth");
 
                 auth_content = p;
+
+                git_creds = GitCredentials::BasicAuth {
+                    username: repo_user.clone(),
+                    password: auth_content.clone(),
+                }
             }
             None => info!("Not using basic auth"),
         };
     }
+
+    // Retrieve the latest remote branch refs
+    let remote_branch_refs =
+        git_info::list_remote_branch_head_refs(&action_option.path.as_path(), git_creds)?;
+
+    println!("{:?}", remote_branch_refs);
 
     let request = Request::new(GitRepoAddRequest {
         org: action_option
