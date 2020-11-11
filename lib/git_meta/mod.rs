@@ -104,6 +104,16 @@ fn build_remote_callback<'a>(credentials: GitCredentials) -> RemoteCallbacks<'a>
             callbacks
         }
 
-        GitCredentials::BasicAuth { username, password } => RemoteCallbacks::new(),
+        GitCredentials::BasicAuth { username, password } => {
+            let mut callbacks = RemoteCallbacks::new();
+
+            &callbacks.credentials(move |_, _, _| {
+                let userpass = Cred::userpass_plaintext(username.as_str(), password.as_str())
+                    .expect("Could not create credentials object for userpass_plaintext");
+                Ok(userpass)
+            });
+
+            callbacks
+        }
     }
 }

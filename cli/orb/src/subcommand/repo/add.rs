@@ -135,6 +135,7 @@ pub async fn action_handler(
         remote_branch_head_refs: Vec::new(),
     };
 
+    info!("Collecting HEAD refs for remote branches");
     for (branch_name, commit) in
         git_info::list_remote_branch_head_refs(&action_option.path.as_path(), git_creds)?
     {

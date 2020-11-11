@@ -120,7 +120,9 @@ pub fn shell_shallow_clone(
                 .spawn()
                 .expect("Failed to run git clone");
 
-            let _clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+            let _clone_out = shell_clone_command
+                .wait_with_output()
+                .expect("Failed to open stdout");
         }
         GitCredentials::Public => {
             let shell_clone_command = Command::new("git")
@@ -133,7 +135,9 @@ pub fn shell_shallow_clone(
                 .spawn()
                 .expect("Failed to run git clone");
 
-            let _clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+            let _clone_out = shell_clone_command
+                .wait_with_output()
+                .expect("Failed to open stdout");
         }
         GitCredentials::SshKey {
             username,
@@ -143,7 +147,7 @@ pub fn shell_shallow_clone(
         } => {
             // write private key to a temp file
             let privkey_file =
-                Temp::new_file().expect("Unable to create temp file for private key");
+                Temp::new_file().expect("unable to create temp file for private key");
 
             let mut privkey_fd = File::create(privkey_file.as_path()).unwrap();
             let _ = privkey_fd.write_all(private_key.as_bytes());
@@ -155,15 +159,17 @@ pub fn shell_shallow_clone(
                 .arg("--depth=1")
                 .arg("--config")
                 .arg(format!(
-                    "core.sshCommand=\"ssh -i {privkey_path}\"",
+                    "core.sshcommand=\"ssh -i {privkey_path}\"",
                     privkey_path = privkey_file.as_path().display()
                 ))
                 .stdout(Stdio::piped())
                 .stderr(Stdio::null())
                 .spawn()
-                .expect("Failed to run git clone");
+                .expect("failed to run git clone");
 
-            let _clone_out = shell_clone_command.stdout.expect("Failed to open stdout");
+            let _clone_out = shell_clone_command
+                .wait_with_output()
+                .expect("Failed to open stdout");
         }
     }
 
