@@ -565,11 +565,11 @@ impl BuildContext {
                             build_target_id: next_step._db_build_target_id,
                             start_time: next_step.build_start_time,
                             end_time: next_step.build_end_time,
-                            build_state: postgres::schema::JobState::Done,
+                            build_state: postgres::schema::JobState::Finishing,
                             ..Default::default()
                         },
                     )
-                    .expect("Unable to update build summary job state to done");
+                    .expect("Unable to update build summary job state to finishing");
                 }
 
                 // End build
@@ -593,6 +593,19 @@ impl BuildContext {
                 let _ = caller_tx.send("Stream: Finishing -> Done".to_string());
                 next_step._state = next_step._state.clone().on_done(Done {});
                 next_step.build_stage_name = "Done".to_string();
+
+                let _build_summary_result_running = DbHelper::build_summary_update(
+                    &self,
+                    NewBuildSummary {
+                        build_target_id: next_step._db_build_target_id,
+                        start_time: next_step.build_start_time,
+                        end_time: next_step.build_end_time,
+                        build_state: postgres::schema::JobState::Done,
+                        ..Default::default()
+                    },
+                )
+                .expect("Unable to update build summary job state to done");
+
                 next_step
             }
             _ => self.clone(),
