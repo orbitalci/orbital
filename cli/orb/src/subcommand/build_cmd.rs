@@ -134,7 +134,14 @@ pub async fn subcommand_handler(
         let bufwtr = BufferWriter::stdout(ColorChoice::Auto);
         let mut buffer = bufwtr.buffer();
 
+        // FIXME: I need to know when I have build_metadata.id
         build_metadata = response.build_metadata.clone().unwrap_or_default();
+
+        // Set the build ID for our output
+        if build_metadata.id == 0 {
+            build_metadata.id = response.build_metadata.clone().unwrap_or_default().id;
+            debug!("The build ID is: {}", &build_metadata.id);
+        }
 
         if !local_option.no_follow {
             match response.build_output.clone().pop() {

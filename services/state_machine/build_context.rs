@@ -8,6 +8,7 @@ use log::{debug, error, info};
 use orbital_agent::{self, build_engine};
 use orbital_database::postgres;
 use orbital_database::postgres::build_stage::NewBuildStage;
+
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
 use orbital_exec_runtime::docker::OrbitalContainerSpec;
@@ -358,7 +359,7 @@ impl BuildContext {
                         .unwrap();
 
                 while let Some(response) = stream.recv().await {
-                    println!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
+                    info!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
                     let output = format!("{}\n", response["status"].clone().as_str().unwrap());
 
                     let _ = caller_tx.send(output.clone());
@@ -496,6 +497,15 @@ impl BuildContext {
                     .get(command_index + 1)
                     .is_some()
                 {
+                    // Set the next stage name
+                    next_step.build_stage_name = c
+                        .stages
+                        .get(stage_index)
+                        .unwrap()
+                        .name
+                        .clone()
+                        .unwrap_or(format!("stage #{}", stage_index));
+
                     // Next command in the stage
                     next_step._build_progress_marker = (stage_index, command_index + 1);
 
@@ -570,11 +580,10 @@ impl BuildContext {
                         },
                     )
                     .expect("Unable to update build summary job state to finishing");
-                }
+                } // End of build
 
-                // End build
+                // End of build handling
 
-                next_step.build_stage_name = "Finishing".to_string();
                 next_step
             }
             BuildState::Finishing(_) => {
@@ -590,7 +599,9 @@ impl BuildContext {
                 )
                 .unwrap();
 
+                next_step.build_stage_name = "Finishing".to_string();
                 let _ = caller_tx.send("Stream: Finishing -> Done".to_string());
+
                 next_step._state = next_step._state.clone().on_done(Done {});
                 next_step.build_stage_name = "Done".to_string();
 
