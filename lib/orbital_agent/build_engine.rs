@@ -15,7 +15,7 @@ pub struct Agent;
 /// Create a temporary directory on the host, and clone a repo
 pub fn clone_repo(
     uri: &str,
-    branch: &str,
+    branch: Option<&str>,
     credentials: git_meta::GitCredentials,
     target_dir: &Path,
 ) -> Result<()> {

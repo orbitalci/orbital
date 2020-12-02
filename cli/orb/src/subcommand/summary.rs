@@ -9,7 +9,8 @@ use orbital_headers::build_meta::{
 use orbital_database::postgres::schema::JobState;
 
 use anyhow::Result;
-use chrono::NaiveDateTime;
+use chrono::{Duration, NaiveDateTime, Utc};
+use chrono_humanize::HumanTime;
 use git_meta::git_info;
 use log::debug;
 use orbital_services::ORB_DEFAULT_URI;
@@ -44,6 +45,10 @@ pub struct SubcommandOption {
     /// Print full commit hash
     #[structopt(long, short)]
     wide: bool,
+
+    /// Print exact timestamps
+    #[structopt(long)]
+    exact_time: bool,
 }
 
 // FIXME: Request for summary is not currently served well by proto. How to differeniate from a regular log request?
@@ -112,26 +117,53 @@ pub async fn subcommand_handler(
                 //queue_time: NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0),
 
                 let queue_time = match &summary.queue_time {
-                    Some(t) => format!(
-                        "{:?}",
-                        NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
-                    ),
+                    Some(t) => match &local_option.exact_time {
+                        true => format!(
+                            "{:?}",
+                            NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
+                        ),
+                        false => format!(
+                            "{}",
+                            HumanTime::from(
+                                Duration::seconds(t.seconds)
+                                    - Duration::seconds(Utc::now().timestamp())
+                            )
+                        ),
+                    },
                     None => format!("---"),
                 };
 
                 let start_time = match &summary.start_time {
-                    Some(t) => format!(
-                        "{:?}",
-                        NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
-                    ),
+                    Some(t) => match &local_option.exact_time {
+                        true => format!(
+                            "{:?}",
+                            NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32),
+                        ),
+                        false => format!(
+                            "{}",
+                            HumanTime::from(
+                                Duration::seconds(t.seconds)
+                                    - Duration::seconds(Utc::now().timestamp())
+                            )
+                        ),
+                    },
                     None => format!("---"),
                 };
 
                 let end_time = match &summary.end_time {
-                    Some(t) => format!(
-                        "{:?}",
-                        NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
-                    ),
+                    Some(t) => match &local_option.exact_time {
+                        true => format!(
+                            "{:?}",
+                            NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32),
+                        ),
+                        false => format!(
+                            "{}",
+                            HumanTime::from(
+                                Duration::seconds(t.seconds)
+                                    - Duration::seconds(Utc::now().timestamp())
+                            )
+                        ),
+                    },
                     None => format!("---"),
                 };
 

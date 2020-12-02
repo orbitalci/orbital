@@ -13,7 +13,7 @@
             "env": {
                 "ORB_DEFAULT_ORG" : "tjtelan",
                 "DATABASE_URL": "postgres://orbital:orbital@localhost:5432/orbital",
-                "RUST_LOG": "info,orbital_services,orbital_database::postgres::client"
+                "RUST_LOG": "info,subcommand::server,orbital_services,orbital_database::postgres::client"
             },
             "args": ["server", "start"],
             "cwd": "${workspaceRoot}",

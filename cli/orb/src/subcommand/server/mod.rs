@@ -6,6 +6,9 @@ use crate::GlobalOption;
 /// Start an Orb server
 pub mod start;
 
+/// Polling functionality
+pub mod poll;
+
 /// Subcommands for `orb server`
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
