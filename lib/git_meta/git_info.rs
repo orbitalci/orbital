@@ -3,16 +3,32 @@
 // Get as much info about the remote branch as well
 
 use anyhow::Result;
-use git2::{Branch, BranchType, Commit, ObjectType, Repository};
+use git2::{Branch, BranchType, Commit, Direction, ObjectType, Repository};
 use git_url_parse::GitUrl;
 use log::debug;
+use std::collections::HashMap;
 use std::path::Path;
 
-use super::GitCommitContext;
+use super::{GitCommitContext, GitCredentials};
 
 /// Returns a `git2::Repository` from a given repo directory path
 fn get_local_repo_from_path(path: &Path) -> Result<Repository, git2::Error> {
     Repository::open(path.as_os_str())
+}
+
+// TODO Change to return the latest commit from the Remote
+pub fn get_git_latest_commit<'a>(
+    path: &'a Path,
+    branch: &'a Option<String>,
+    commit_id: &'a Option<String>,
+) -> Result<GitCommitContext> {
+    //) -> Result<References<'a>, git2::Error> {
+
+    let latest_commit = get_git_info_from_path(path, branch, commit_id)?;
+
+    // TODO: Pass in the current commit from the DB and return a bool
+
+    Ok(latest_commit)
 }
 
 /// Returns a `GitCommitContext` after parsing metadata from a repo
@@ -25,17 +41,15 @@ pub fn get_git_info_from_path(
 ) -> Result<GitCommitContext> {
     // First we open the repository and get the remote_url and parse it into components
     let local_repo = get_local_repo_from_path(path)?;
-    let remote_url = git_remote_from_repo(&local_repo)?;
 
-    // TODO: Do this in two stages, we could support passing a remote branch, and then fall back to a local branch
-    // Assuming we are passed a local branch from remote "origin", or nothing.
-    // Let's make sure it resolves to a remote branch
-    let working_branch = get_working_branch(&local_repo, branch)?
+    let working_branch_name = get_working_branch(&local_repo, branch)?
         .name()?
         .expect("Unable to extract branch name")
         .to_string();
 
-    let commit = get_target_commit(&local_repo, &Some(working_branch.clone()), commit_id)?;
+    let remote_url = git_remote_from_repo(&local_repo)?;
+
+    let commit = get_target_commit(&local_repo, &Some(working_branch_name.clone()), commit_id)?;
 
     let commit_id = format!("{}", &commit.id());
 
@@ -43,43 +57,24 @@ pub fn get_git_info_from_path(
 
     Ok(GitCommitContext {
         commit_id: commit_id,
-        branch: working_branch,
+        branch: working_branch_name,
         message: commit_msg.to_string(),
         git_url: GitUrl::parse(&remote_url)?,
     })
 }
 
-// FIXME: Should not assume remote is origin. This will cause issue in some dev workflows
 /// Returns the remote url after opening and validating repo from the local path
 pub fn git_remote_from_path(path: &Path) -> Result<String> {
-    // Theory: After we get the repo, we can derive the remote name from the branch
-
     let r = get_local_repo_from_path(path)?;
-    let remote_url: String = r
-        .find_remote("origin")?
-        .url()
-        .expect("Unable to extract repo url from remote")
-        .chars()
-        .collect();
-    Ok(remote_url)
+    _get_remote_url(&r)
 }
 
 /// Returns the remote url from the `git2::Repository` struct
 fn git_remote_from_repo(local_repo: &Repository) -> Result<String> {
-    let remote_url: String = local_repo
-        .find_remote("origin")?
-        .url()
-        .expect("Unable to extract repo url from remote")
-        .chars()
-        .collect();
-    Ok(remote_url)
+    _get_remote_url(&local_repo)
 }
 
-// FIXME: This parser fails to select the correct account and repo names on azure ssh repo uris. Off by one
-// Example
-// ssh: git@ssh.dev.azure.com:v3/organization/project/repo
-// http: https://organization@dev.azure.com/organization/project/_git/repo
-/// Return a `GitSshRemote` after parsing a remote url from a git repo
+/// Returns `GitUrl` after parsing input git url
 pub fn git_remote_url_parse(remote_url: &str) -> Result<GitUrl> {
     GitUrl::parse(remote_url)
 }
@@ -90,8 +85,6 @@ fn get_working_branch<'repo>(
     r: &'repo Repository,
     local_branch: &Option<String>,
 ) -> Result<Branch<'repo>> {
-    // It is likely that a user branch will not contain the remote
-
     match local_branch {
         Some(branch) => {
             //println!("User passed branch: {:?}", branch);
@@ -158,10 +151,11 @@ fn get_target_commit<'repo>(
     commit_id: &Option<String>,
 ) -> Result<Commit<'repo>> {
     let working_branch = get_working_branch(r, branch)?;
-    let working_ref = working_branch.into_reference();
 
     match commit_id {
         Some(id) => {
+            let working_ref = working_branch.into_reference();
+
             debug!("Commit provided. Using {}", id);
             let oid = git2::Oid::from_str(id)?;
 
@@ -174,12 +168,17 @@ fn get_target_commit<'repo>(
 
             Ok(commit)
         }
-        // We want the HEAD of the working branch
+
+        // We want the HEAD of the remote branch (as opposed to the working branch)
         None => {
-            debug!("No commit provided. Using HEAD commit");
+            debug!("No commit provided. Using HEAD commit from remote branch");
+
+            let upstream_branch = working_branch.upstream()?;
+            let working_ref = upstream_branch.into_reference();
+
             let commit = working_ref
                 .peel_to_commit()
-                .expect("Unable to retrieve HEAD commit object from working branch");
+                .expect("Unable to retrieve HEAD commit object from remote branch");
 
             let _ = is_commit_in_branch(r, &commit, &Branch::wrap(working_ref));
 
@@ -188,19 +187,105 @@ fn get_target_commit<'repo>(
     }
 }
 
+/// Return the remote name from the given Repository
+fn _get_remote_name<'repo>(r: &'repo Repository) -> Result<String> {
+    let remote_name = r
+        .branch_upstream_remote(
+            r.head()
+                .and_then(|h| h.resolve())?
+                .name()
+                .expect("branch name is valid utf8"),
+        )
+        .map(|b| b.as_str().expect("valid utf8").to_string())
+        .unwrap_or_else(|_| "origin".into());
+
+    debug!("Remote name: {:?}", &remote_name);
+
+    Ok(remote_name)
+}
+
+/// Return the remote url from the given Repository
+fn _get_remote_url<'repo>(r: &'repo Repository) -> Result<String> {
+    // Get the name of the remote from the Repository
+    let remote_name = _get_remote_name(&r)?;
+
+    let remote_url: String = r
+        .find_remote(&remote_name)?
+        .url()
+        .expect("Unable to extract repo url from remote")
+        .chars()
+        .collect();
+
+    Ok(remote_url)
+}
+
+/// Returns a HashMap with branch names as keys and current branch HEAD commit as the value
+pub fn list_remote_branch_head_refs(
+    path: &Path,
+    creds: GitCredentials,
+) -> Result<HashMap<String, String>> {
+    // First we open the repository and get the remote_url and parse it into components
+    let local_repo = get_local_repo_from_path(path)?;
+
+    let remote = _get_remote_name(&local_repo)?;
+
+    let mut remote = local_repo
+        .find_remote(&remote)
+        .or_else(|_| local_repo.remote_anonymous(&remote))?;
+
+    let callbacks = match creds {
+        GitCredentials::Public => None,
+        _ => Some(super::build_remote_callback(creds)),
+    };
+
+    // Connect to the remote and call the printing function for each of the
+    // remote references.
+    let connection = remote.connect_auth(Direction::Fetch, callbacks, None)?;
+
+    let git_branch_ref_prefix = "refs/heads/";
+    let mut ref_map: HashMap<String, String> = HashMap::new();
+
+    for git_ref in connection
+        .list()?
+        .iter()
+        .filter(|head| head.name().starts_with(git_branch_ref_prefix))
+    {
+        let branch_name = git_ref
+            .name()
+            .to_string()
+            .rsplit(git_branch_ref_prefix)
+            .collect::<Vec<&str>>()[0]
+            .to_string();
+        let head_commit = git_ref.oid().to_string();
+
+        ref_map.insert(branch_name, head_commit);
+    }
+
+    Ok(ref_map)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use git_url_parse::Scheme;
 
     #[test]
-    fn parse_github_ssh_url() -> Result<(), String> {
-        let gh_url_parsed = git_remote_url_parse("git@github.com:level11consulting/orbitalci.git");
+    fn parse_github_ssh_url() -> Result<()> {
+        let gh_url_parsed = git_remote_url_parse("git@github.com:orbitalci/orbital.git")?;
 
-        let expected_parsed = GitSshRemote {
-            user: "git".to_string(),
-            provider: "github.com".to_string(),
-            account: "level11consulting".to_string(),
-            repo: "orbitalci".to_string(),
+        let expected_parsed = GitUrl {
+            host: Some("github.com".to_string()),
+            name: "orbital".to_string(),
+            owner: Some("orbitalci".to_string()),
+            organization: None,
+            fullname: "orbitalci/orbital".to_string(),
+            scheme: Scheme::Ssh,
+            user: Some("git".to_string()),
+            token: None,
+            port: None,
+            path: "orbitalci/orbital.git".to_string(),
+            git_suffix: true,
+            scheme_prefix: false,
         };
 
         assert_eq!(gh_url_parsed, expected_parsed);
@@ -208,33 +293,46 @@ mod tests {
     }
 
     #[test]
-    fn parse_bitbucket_ssh_url() -> Result<(), String> {
-        let bb_url_parsed =
-            git_remote_url_parse("git@bitbucket.com:level11consulting/orbitalci.git");
+    fn parse_bitbucket_ssh_url() -> Result<()> {
+        let bb_url_parsed = git_remote_url_parse("git@bitbucket.com:orbitalci/orbital.git")?;
 
-        let expected_parsed = GitSshRemote {
-            user: "git".to_string(),
-            provider: "bitbucket.com".to_string(),
-            account: "level11consulting".to_string(),
-            repo: "orbitalci".to_string(),
+        let expected_parsed = GitUrl {
+            host: Some("bitbucket.com".to_string()),
+            name: "orbital".to_string(),
+            owner: Some("orbitalci".to_string()),
+            organization: None,
+            fullname: "orbitalci/orbital".to_string(),
+            scheme: Scheme::Ssh,
+            user: Some("git".to_string()),
+            token: None,
+            port: None,
+            path: "orbitalci/orbital.git".to_string(),
+            git_suffix: true,
+            scheme_prefix: false,
         };
 
         assert_eq!(bb_url_parsed, expected_parsed);
         Ok(())
     }
 
-    // This is a negative test. https://github.com/level11consulting/orbitalci/issues/228
-    // We need to keep track of this so we can accomodate for parser changes
     #[test]
-    fn parse_azure_ssh_url() -> Result<(), String> {
+    fn parse_azure_ssh_url() -> Result<()> {
         let az_url_parsed =
-            git_remote_url_parse("git@ssh.dev.azure.com:v3/organization/project/repo");
+            git_remote_url_parse("git@ssh.dev.azure.com:v3/organization/project/repo")?;
 
-        let expected_parsed = GitSshRemote {
-            user: "git".to_string(),
-            provider: "ssh.dev.azure.com".to_string(),
-            account: "organization".to_string(),
-            repo: "repo".to_string(),
+        let expected_parsed = GitUrl {
+            host: Some("ssh.dev.azure.com".to_string()),
+            name: "repo".to_string(),
+            owner: Some("organization".to_string()),
+            organization: Some("organization".to_string()),
+            fullname: "v3/organization/project/repo".to_string(),
+            scheme: Scheme::Ssh,
+            user: Some("git".to_string()),
+            token: None,
+            port: None,
+            path: "v3/organization/project/repo".to_string(),
+            git_suffix: false,
+            scheme_prefix: false,
         };
 
         assert_ne!(az_url_parsed, expected_parsed);

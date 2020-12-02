@@ -56,7 +56,7 @@ impl BuildService for OrbitalApi {
                 .expect("Could not parse repo uri")
                 .add_branch(unwrapped_request.branch.to_string())
                 .add_hash(unwrapped_request.commit_hash.to_string())
-                .add_triggered_by(JobTrigger::Manual)
+                .add_triggered_by(unwrapped_request.trigger.into())
                 .add_working_dir(git_clone_dir.to_path_buf())
                 .queue()
                 .expect("There was a problem queuing the build");
@@ -78,6 +78,7 @@ impl BuildService for OrbitalApi {
                     break 'build_loop;
                 }
 
+                // Run the next step in the state machine
                 cur_build = cur_build.clone().step(&build_tx).await.unwrap();
 
                 if cur_build.clone().state() == BuildState::error() {
@@ -88,10 +89,16 @@ impl BuildService for OrbitalApi {
                 while let Ok(response) = &build_rx.try_recv() {
                     // TODO: Move this to be set outside the loop so we're not re-assigning so often
                     let mut build_metadata = BuildMetadata {
-                        build: Some(unwrapped_request.clone()),
+                        build: Some(unwrapped_request.clone()), // FIXME: We don't re-assign for the stage name
                         job_trigger: cur_build.job_trigger.into(),
                         build_state: ProtoJobState::from(cur_build.clone().state()).into(),
                         ..Default::default()
+                    };
+
+                    // Set our build ID for the client to correctly print out
+                    build_metadata.id = match cur_build.id {
+                        Some(id) => id,
+                        None => 0,
                     };
 
                     // TODO: Be more mindful about re-assigning timestamps
@@ -128,6 +135,7 @@ impl BuildService for OrbitalApi {
                     //debug!("Stream OUTPUT: {:?}", response.clone().as_str());
                     let mut build_stage_output = BuildStage {
                         build_id: cur_build.id.unwrap(),
+                        stage: cur_build.build_stage_name.clone(),
                         status: ProtoJobState::from(cur_build.clone().state()).into(),
                         ..Default::default()
                     };

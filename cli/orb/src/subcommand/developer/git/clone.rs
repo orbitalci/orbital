@@ -9,18 +9,21 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
-pub struct ActionOption {}
+pub struct ActionOption {
+    #[structopt(short, long)]
+    branch: Option<String>,
+}
 
 pub async fn action_handler(
     _global_option: GlobalOption,
     _subcommand_option: SubcommandOption,
-    _action_option: ActionOption,
+    action_option: ActionOption,
 ) -> Result<()> {
     let temp_dir = Temp::new_dir().expect("Unable to create test clone dir");
 
     let _res = build_engine::clone_repo(
         "https://github.com/alexcrichton/git2-rs",
-        "master",
+        action_option.branch.as_deref(),
         GitCredentials::Public,
         &temp_dir.as_path(),
         //)?;

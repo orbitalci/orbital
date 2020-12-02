@@ -5,6 +5,7 @@ use crate::GlobalOption;
 
 pub mod clone;
 pub mod info;
+pub mod poll;
 
 use std::path::PathBuf;
 //use log::debug;
@@ -30,6 +31,8 @@ pub enum Action {
     Info(info::ActionOption),
     /// Clone a git repo
     Clone(clone::ActionOption),
+    /// Simulate a repo poll - Shallow clone a git repo, then list remote references.
+    Poll(poll::ActionOption),
 }
 
 /// Expects `--path`. Attempts to open directory and parse repo for git metadata and prints to stdout
@@ -43,6 +46,9 @@ pub async fn subcommand_handler(
         }
         Action::Clone(action_option) => {
             clone::action_handler(global_option, local_option, action_option).await
+        }
+        Action::Poll(action_option) => {
+            poll::action_handler(global_option, local_option, action_option).await
         }
     }
 }

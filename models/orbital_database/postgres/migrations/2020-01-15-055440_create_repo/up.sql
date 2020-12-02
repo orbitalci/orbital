@@ -7,5 +7,6 @@ CREATE TABLE repo (
   secret_id INTEGER REFERENCES secret(id),
   build_active_state active_state NOT NULL DEFAULT 'enabled'::active_state,
   notify_active_state active_state NOT NULL DEFAULT 'enabled'::active_state,
-  next_build_index INTEGER NOT NULL DEFAULT 1
+  next_build_index INTEGER NOT NULL DEFAULT 1,
+  remote_branch_head_refs JSONB NOT NULL
 );

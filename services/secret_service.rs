@@ -35,7 +35,7 @@ impl SecretService for OrbitalApi {
                 .to_string(),
         );
 
-        println!("Got vault path: {:?}", &vault_path);
+        debug!("Got vault path: {:?}", &vault_path);
 
         // TODO: Handle errors
         let _ = vault::vault_add_secret(

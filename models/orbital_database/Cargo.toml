@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0"
 chrono = "0.4"
-diesel = { version = "1.4", features = ["postgres", "chrono"] }
+diesel = { version = "1.4", features = ["postgres", "chrono", "serde_json"] }
 log = "0.4"
 orbital_hashicorp_stack = { path = "../../lib/hashicorp_stack" }
 orbital_git_meta = { path = "../../lib/git_meta" }
@@ -15,6 +15,8 @@ orbital_headers = { path = "../orbital_headers" }
 prost-types = "0.6"
 strum = "0.18"
 strum_macros = "0.18"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 [lib]
 name = "orbital_database"

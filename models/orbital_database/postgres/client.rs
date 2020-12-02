@@ -14,6 +14,8 @@ use hashicorp_stack::orb_vault_path;
 use log::debug;
 use std::env;
 //use orbital_headers::orbital_types;
+use serde_json::json;
+use std::collections::HashMap;
 
 pub fn establish_connection() -> PgConnection {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -56,6 +58,8 @@ pub fn repo_increment_build_index(conn: &PgConnection, repo: Repo) -> Result<Rep
         build_active_state: repo.build_active_state,
         notify_active_state: repo.notify_active_state,
         next_build_index: repo.next_build_index + 1,
+        //remote_branch_head_refs: repo.remote_branch_head_refs,
+        remote_branch_head_refs: json!({}),
     };
 
     let update_result = repo_update(conn, &org_name, &repo.name.clone(), update_repo)?;
@@ -272,6 +276,7 @@ pub fn repo_add(
     name: &str,
     uri: &str,
     secret: Option<Secret>,
+    branch_refs: serde_json::Value,
 ) -> Result<(Org, Repo, Option<Secret>)> {
     let repo_check = repo_get(conn, org, name);
 
@@ -292,6 +297,7 @@ pub fn repo_add(
                     org_id: org_db.id,
                     uri: uri.into(),
                     secret_id: secret_id,
+                    remote_branch_head_refs: branch_refs,
                     ..Default::default()
                 })
                 .get_result(conn)
