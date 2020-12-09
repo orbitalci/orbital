@@ -58,8 +58,7 @@ pub fn repo_increment_build_index(conn: &PgConnection, repo: Repo) -> Result<Rep
         build_active_state: repo.build_active_state,
         notify_active_state: repo.notify_active_state,
         next_build_index: repo.next_build_index + 1,
-        //remote_branch_head_refs: repo.remote_branch_head_refs,
-        remote_branch_head_refs: json!({}),
+        remote_branch_head_refs: repo.remote_branch_head_refs,
     };
 
     let update_result = repo_update(conn, &org_name, &repo.name.clone(), update_repo)?;
@@ -347,6 +346,8 @@ pub fn repo_update(
     update_repo: NewRepo,
 ) -> Result<(Org, Repo, Option<Secret>)> {
     let (org_db, _repo_db, secret_db) = repo_get(conn, org, name)?;
+
+    debug!("Right before updating DB row: {:?}", &update_repo);
 
     let repo_update: Repo = diesel::update(repo::table)
         .filter(repo::org_id.eq(&org_db.id))
