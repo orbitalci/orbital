@@ -311,7 +311,9 @@ impl BuildContext {
                 // Start a docker container
                 info!(
                     "Start container {:?}",
-                    &next_step._container_id.clone().unwrap()
+                    &next_step._container_id.clone().expect(
+                        "Could not create container - Does the container name already exist?"
+                    )
                 );
                 let _ =
                     build_engine::docker_container_start(&next_step._container_id.clone().unwrap())

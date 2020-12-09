@@ -7,6 +7,7 @@ use orbital_headers::code::{GitRepoEntry, GitRepoRemoteBranchHead, GitRepoRemote
 //use orbital_headers::secret::SecretEntry;
 
 use git_meta::git_info;
+use log::warn;
 
 #[derive(Insertable, Debug, PartialEq, Associations, AsChangeset)]
 #[belongs_to(Org)]
@@ -91,9 +92,30 @@ impl From<Repo> for GitRepoEntry {
             build: repo.build_active_state.into(),
             notify: repo.notify_active_state.into(),
             next_build_index: repo.next_build_index,
-            // TODO: FIX THIS SHIT
-            remote_branch_head_refs: None,
-            //remote_branch_head_refs: repo.remote_branch_head_refs,
+            remote_branch_head_refs: {
+                match repo.remote_branch_head_refs {
+                    serde_json::Value::Null => None,
+                    serde_json::Value::Object(map_value) => {
+                        let mut git_branches: Vec<GitRepoRemoteBranchHead> = Vec::new();
+
+                        for (k, v) in map_value {
+                            let branch = GitRepoRemoteBranchHead {
+                                branch: k,
+                                commit: v.to_string(),
+                            };
+
+                            git_branches.push(branch);
+                        }
+                        Some(GitRepoRemoteBranchHeadList {
+                            remote_branch_head_refs: git_branches,
+                        })
+                    }
+                    _ => {
+                        warn!("There was a serde Value other than an Object. Dropping value. ");
+                        None
+                    }
+                }
+            },
             ..Default::default()
         }
     }
@@ -118,7 +140,9 @@ impl From<GitRepoEntry> for Repo {
             remote_branch_head_refs: {
                 match git_repo_entry.remote_branch_head_refs {
                     // TODO: Unpack this shit
-                    Some(branches) => json!([]),
+                    Some(branches) => {
+                        json!([])
+                    }
                     None => json!([]),
                 }
             },

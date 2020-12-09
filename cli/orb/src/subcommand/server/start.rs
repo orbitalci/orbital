@@ -61,6 +61,7 @@ pub async fn subcommand_handler(
                 "git_meta",
                 "hashicorp_stack",
                 "git_url_parse",
+                "git_event",
             ];
 
             env::set_var("RUST_LOG", debug_modules.join(","))

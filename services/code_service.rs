@@ -21,6 +21,7 @@ use log::{debug, info};
 use orbital_agent::build_engine;
 use orbital_database::postgres;
 
+use log::warn;
 use serde_json::json;
 
 /// Implementation of protobuf derived `CodeService` trait
@@ -415,6 +416,14 @@ impl CodeService for OrbitalApi {
 
         let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
 
+        // We want to convert the list of branch refs into serde_json for postgres
+        let mut branch_refs_map = serde_json::Map::new();
+        if let Some(branch_ref_proto) = &unwrapped_request.remote_branch_head_refs {
+            for proto in branch_ref_proto.remote_branch_head_refs.clone() {
+                branch_refs_map.insert(proto.branch, serde_json::Value::String(proto.commit));
+            }
+        }
+
         // FIXME: We're not really doing a whole lot to support updating secrets at the moment
         // Build the NewRepo struct
         let update_repo = postgres::repo::NewRepo {
@@ -427,7 +436,7 @@ impl CodeService for OrbitalApi {
             notify_active_state: repo_db.notify_active_state,
             next_build_index: repo_db.next_build_index,
             // TODO
-            remote_branch_head_refs: json!([]),
+            remote_branch_head_refs: json!(branch_refs_map),
         };
 
         let db_result = postgres::client::repo_update(
@@ -445,11 +454,14 @@ impl CodeService for OrbitalApi {
 
         let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
 
+        // TODO: Build a return value from db_result for remote_branch_head_refs
+        //let remote_branch_head_refs_db = None;
+
         let response = Response::new(GitRepoEntry {
             org: org_db.name,
             git_provider: git_uri_parsed.clone().host.unwrap(),
             name: repo_db.name,
-            user: git_uri_parsed.clone().user.unwrap(),
+            user: git_uri_parsed.clone().user.unwrap_or_default(),
             uri: format!("{}", git_uri_parsed.trim_auth()),
             secret_type: secret_db
                 .clone()
@@ -464,6 +476,30 @@ impl CodeService for OrbitalApi {
                 .unwrap_or(postgres::secret::Secret::default())
                 .name
                 .into(),
+            remote_branch_head_refs: {
+                match repo_db.remote_branch_head_refs {
+                    serde_json::Value::Null => None,
+                    serde_json::Value::Object(map_value) => {
+                        let mut git_branches: Vec<GitRepoRemoteBranchHead> = Vec::new();
+
+                        for (k, v) in map_value {
+                            let branch = GitRepoRemoteBranchHead {
+                                branch: k,
+                                commit: v.to_string(),
+                            };
+
+                            git_branches.push(branch);
+                        }
+                        Some(GitRepoRemoteBranchHeadList {
+                            remote_branch_head_refs: git_branches,
+                        })
+                    }
+                    _ => {
+                        warn!("There was a serde Value other than an Object. Dropping value. ");
+                        None
+                    }
+                }
+            },
             ..Default::default()
         });
 

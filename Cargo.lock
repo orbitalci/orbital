@@ -883,13 +883,14 @@ checksum = "f6503fe142514ca4799d4c26297c4248239fe8838d827db6bd6065c6ed29a6ce"
 
 [[package]]
 name = "git-event"
-version = "0.0.1"
-source = "git+https://github.com/tjtelan/git-event-rs?branch=develop#5f92eb67bc3f3436545c78910cc9310a7c250f26"
+version = "0.1.0"
+source = "git+https://github.com/tjtelan/git-event-rs?branch=develop#2d64d477692b62c2902cebc0c7af9304640f88b0"
 dependencies = [
  "eyre",
  "git-url-parse 0.3.0",
  "git2",
  "git2_credentials",
+ "log",
  "mktemp",
 ]
 
