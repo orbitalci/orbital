@@ -21,13 +21,15 @@ use super::OrbitalApi;
 
 use log::{debug, error, info};
 
+use futures_util::FutureExt;
+
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
 #[tonic::async_trait]
 impl BuildService for OrbitalApi {
     /// Start a build in a container. (Stay focused.)
     ///
-    type BuildStartStream = mpsc::Receiver<Result<BuildRecord, Status>>;
+    type BuildStartStream = tokio_stream::wrappers::ReceiverStream<Result<BuildRecord, Status>>;
     async fn build_start(
         &self,
         request: Request<BuildTarget>,
@@ -86,7 +88,9 @@ impl BuildService for OrbitalApi {
                 };
 
                 debug!("Trying to listen for output. Not don't block if nothing");
-                while let Ok(response) = &build_rx.try_recv() {
+                // FIXME: https://github.com/tokio-rs/tokio/issues/3350
+                //while let Ok(response) = &build_rx.try_recv() {
+                while let Some(Some(response)) = &build_rx.recv().now_or_never() {
                     // TODO: Move this to be set outside the loop so we're not re-assigning so often
                     let mut build_metadata = BuildMetadata {
                         build: Some(unwrapped_request.clone()), // FIXME: We don't re-assign for the stage name
@@ -151,7 +155,9 @@ impl BuildService for OrbitalApi {
             }
         });
 
-        Ok(Response::new(client_rx))
+        Ok(Response::new(tokio_stream::wrappers::ReceiverStream::new(
+            client_rx,
+        )))
     }
 
     async fn build_stop(
@@ -287,7 +293,7 @@ impl BuildService for OrbitalApi {
     //type BuildLogsStream =
     //    Pin<Box<dyn Stream<Item = Result<BuildLogResponse, Status>> + Send + Sync + 'static>>;
 
-    type BuildLogsStream = mpsc::Receiver<Result<BuildLogResponse, Status>>;
+    type BuildLogsStream = tokio_stream::wrappers::ReceiverStream<Result<BuildLogResponse, Status>>;
 
     async fn build_logs(
         &self,
@@ -416,7 +422,9 @@ impl BuildService for OrbitalApi {
             }
         });
 
-        Ok(Response::new(rx))
+        Ok(Response::new(tokio_stream::wrappers::ReceiverStream::new(
+            rx,
+        )))
     }
 
     async fn build_remove(

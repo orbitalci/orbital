@@ -10,7 +10,3 @@ members = [
     "services",
     "models/orbital_database",
 ]
-
-[patch.crates-io]
-tonic = { git = 'https://github.com/hyperium/tonic.git' }
-tonic-build = { git = 'https://github.com/hyperium/tonic.git' }

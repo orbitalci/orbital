@@ -5,11 +5,11 @@ authors = ["Evan Cramer <eccramer@gmail.com>", "T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-bytes = "0.5"
-prost = "0.6"
-prost-derive = "0.6"
-prost-types = "0.6"
-tonic = "^0.3"
+bytes = "^1.0"
+prost = "^0.7"
+prost-derive = "^0.7"
+prost-types = "^0.7"
+tonic = "^0.4"
 
 [build-dependencies]
-tonic-build = "0.3"
+tonic-build = "^0.4"

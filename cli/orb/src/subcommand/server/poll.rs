@@ -33,7 +33,7 @@ use orbital_headers::orbital_types::JobTrigger;
 pub async fn poll_for_new_commits() {
     tokio::spawn(async move {
         info!("Waiting a moment for server to start before polling");
-        time::delay_for(Duration::from_secs(5)).await;
+        time::sleep(Duration::from_secs(5)).await;
 
         loop {
             debug!("Start of poll loop");
@@ -373,7 +373,7 @@ pub async fn poll_for_new_commits() {
             //    time::delay_for(Duration::from_secs(1)).await;
             //}
             // Wait a few seconds before restarting loop
-            time::delay_for(Duration::from_secs(60)).await;
+            time::sleep(Duration::from_secs(60)).await;
         } // End of loop
     });
 }
