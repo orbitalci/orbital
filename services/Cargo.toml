@@ -5,11 +5,12 @@ authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anyhow = "1.0"
-chrono = "0.4"
-futures = "0.3"
-log = "0.4"
-mktemp = "0.4"
+anyhow = "^1.0"
+chrono = "^0.4"
+futures = "^0.3"
+futures-util = "^0.3"
+log = "^0.4"
+mktemp = "^0.4"
 hostname = "^0.3"
 orbital_agent = { path = "../lib/orbital_agent" }
 orbital_exec_runtime = { path = "../lib/exec_runtime" }
@@ -18,15 +19,16 @@ orbital_database = { path = "../models/orbital_database" }
 orbital_git_meta = { path = "../lib/git_meta" }
 orbital_hashicorp_stack = { path = "../lib/hashicorp_stack" }
 orbital_headers = { path = "../models/orbital_headers" }
-prost-types = "0.6"
-thiserror = "1.0"
-tokio = { version = "0.2", features = ["full"] }
-tonic = "^0.3"
-serde_json = "1.0"
+prost-types = "^0.7"
+thiserror = "^1.0"
+tokio = { version = "^1.1", features = ["full"] }
+tokio-stream = "^0.1"
+tonic = "^0.4"
+serde_json = "^1.0"
 
 # For state machine
-git-url-parse = "0.2"
-machine = "0.3"
+git-url-parse = "^0.3"
+machine = "^0.3"
 
 [lib]
 name = "orbital_services"

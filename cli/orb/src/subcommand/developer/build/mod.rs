@@ -68,7 +68,11 @@ pub async fn subcommand_handler(
     let config =
         parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).unwrap();
 
-    let rand_string: String = thread_rng().sample_iter(&Alphanumeric).take(7).collect();
+    let rand_string: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .map(char::from)
+        .take(7)
+        .collect();
     let default_command_w_timeout = vec!["sleep", "2h"];
     let build_container_spec = OrbitalContainerSpec {
         name: Some(generate_unique_build_id(

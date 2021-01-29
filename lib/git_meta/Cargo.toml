@@ -5,11 +5,11 @@ authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anyhow = "1.0"
-git-url-parse = "0.2"
-git2 = "0.13"
-log = "0.4"
-mktemp = "0.4"
+anyhow = "^1.0"
+git-url-parse = "^0.3"
+git2 = "^0.13"
+log = "^0.4"
+mktemp = "^0.4"
 
 [lib]
 name = "git_meta"

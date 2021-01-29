@@ -39,7 +39,11 @@ pub async fn action_handler(
     //let envs_vec = crate::parse_envs_input(&action_option.env);
     //let vols_vec = crate::parse_volumes_input(&action_option.volume);
 
-    let rand_string: String = thread_rng().sample_iter(&Alphanumeric).take(7).collect();
+    let rand_string: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .map(char::from)
+        .take(7)
+        .collect();
 
     let container_name = format!(
         "{}",

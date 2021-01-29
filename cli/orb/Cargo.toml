@@ -6,16 +6,16 @@ edition = "2018"
 default-run = "orb"
 
 [dependencies]
-anyhow = "1.0"
-clap = "2.33"
-env_logger = "0.7"
+anyhow = "^1.0"
+clap = "^2.33"
+env_logger = "^0.8"
 orbital_cli_subcommand = { path = "src/subcommand" }
 orbital_headers = { path = "../../models/orbital_headers" }
 orbital_services = { path = "../../services"}
-structopt = "0.3"
-thiserror = "1.0"
-tokio = { version = "0.2", features = ["full"] }
-tonic = "^0.3"
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.8"
-log = "0.4"
+structopt = "^0.3"
+thiserror = "^1.0"
+tokio = { version = "^1.1", features = ["full"] }
+tonic = "^0.4"
+serde = { version = "^1.0", features = ["derive"] }
+serde_yaml = "^0.8"
+log = "^0.4"
