@@ -12,7 +12,7 @@ use log::debug;
 use orbital_database::postgres::secret::Secret;
 use prettytable::{cell, format, row, Table};
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use std::fs::File;
 use std::io::prelude::*;
 use strum::VariantNames;

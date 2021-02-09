@@ -1,5 +1,5 @@
-use anyhow::Result;
 use chrono::{NaiveDateTime, Utc};
+use color_eyre::eyre::Result;
 use config_parser::OrbitalConfig;
 use git_meta::{GitCommitMeta, GitCredentials, GitRepo};
 use git_url_parse::GitUrl;

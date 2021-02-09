@@ -1,5 +1,5 @@
 use crate::AgentRuntimeError;
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use config_parser;
 use git_meta::GitRepo;
 use log::{debug, info};

@@ -5,7 +5,7 @@ authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anyhow = "^1.0"
+color-eyre = "^0.5"
 chrono = "^0.4"
 diesel = { version = "^1.4", features = ["postgres", "chrono", "serde_json"] }
 log = "^0.4"

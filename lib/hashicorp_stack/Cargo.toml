@@ -5,7 +5,7 @@ authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anyhow = "^1.0"
+color-eyre = "^0.5"
 hashicorp_vault = "^1.1"
 log = "^0.4"
 

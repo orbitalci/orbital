@@ -14,7 +14,7 @@ use log::debug;
 
 use prettytable::{cell, format, row, Table};
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use orbital_database::postgres::org::Org;
 use strum::VariantNames;
 

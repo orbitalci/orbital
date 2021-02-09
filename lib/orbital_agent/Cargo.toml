@@ -14,7 +14,7 @@ mktemp = "^0.4"
 orbital_config_parser = { path = "../config_parser" }
 orbital_hashicorp_stack = { path = "../hashicorp_stack" }
 orbital_exec_runtime = { path = "../exec_runtime" }
-anyhow = "^1.0"
+color-eyre = "^0.5"
 thiserror = "^1.0"
 base64 = "^0.13"
 serde_json = "^1.0"

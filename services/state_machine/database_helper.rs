@@ -1,5 +1,5 @@
 use crate::state_machine::build_context::BuildContext;
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use orbital_database::postgres;
 use orbital_database::postgres::build_stage::{BuildStage, NewBuildStage};
 use orbital_database::postgres::build_summary::{BuildSummary, NewBuildSummary};

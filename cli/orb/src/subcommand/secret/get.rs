@@ -9,7 +9,7 @@ use tonic::Request;
 
 use log::debug;
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use orbital_database::postgres::secret::Secret;
 use prettytable::{cell, format, row, Table};
 use strum::VariantNames;

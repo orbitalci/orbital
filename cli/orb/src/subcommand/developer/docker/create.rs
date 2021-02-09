@@ -1,7 +1,6 @@
 use crate::{developer::docker::SubcommandOption, GlobalOption, SubcommandError};
+use color_eyre::eyre::Result;
 use orbital_exec_runtime::{self, docker, docker::OrbitalContainerSpec};
-//use log::debug;
-use anyhow::Result;
 use structopt::StructOpt;
 
 use rand::distributions::Alphanumeric;

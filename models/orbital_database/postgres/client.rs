@@ -7,7 +7,7 @@ use crate::postgres::schema::{
     build_stage, build_summary, build_target, org, repo, secret, JobState, JobTrigger, SecretType,
 };
 use crate::postgres::secret::{NewSecret, Secret};
-use anyhow::{anyhow, Result};
+use color_eyre::eyre::{eyre, Result};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use hashicorp_stack::orb_vault_path;
@@ -27,7 +27,7 @@ pub fn org_from_id(conn: &PgConnection, id: i32) -> Result<Org> {
 
     match org_check {
         Ok(o) => Ok(o),
-        Err(_e) => Err(anyhow!("Could not retrieve org by id from DB")),
+        Err(_e) => Err(eyre!("Could not retrieve org by id from DB")),
     }
 }
 
@@ -100,13 +100,13 @@ pub fn org_get(conn: &PgConnection, name: &str) -> Result<Org> {
     match &org_check.len() {
         0 => {
             debug!("org not found in db");
-            Err(anyhow!("Org not Found"))
+            Err(eyre!("Org not Found"))
         }
         1 => {
             debug!("org found in db. Returning result.");
             Ok(org_check.pop().unwrap())
         }
-        _ => Err(anyhow!("Found more than one org by the same name in db")),
+        _ => Err(eyre!("Found more than one org by the same name in db")),
     }
 }
 
@@ -331,7 +331,7 @@ pub fn repo_get(conn: &PgConnection, org: &str, name: &str) -> Result<(Org, Repo
 
             Ok((o, r, secret))
         }
-        Err(_e) => Err(anyhow!("{} not found in {} org", name, org)),
+        Err(_e) => Err(eyre!("{} not found in {} org", name, org)),
     }
 }
 
@@ -839,6 +839,6 @@ pub fn is_build_canceled(
             // Build hasn't been queued yet
             Ok(false)
         }
-        Err(_) => Err(anyhow!("Could not retrieve build summary from DB")),
+        Err(_) => Err(eyre!("Could not retrieve build summary from DB")),
     }
 }

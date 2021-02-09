@@ -1,6 +1,5 @@
 use crate::{developer::git::SubcommandOption, GlobalOption};
-//use log::debug;
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use mktemp::Temp;
 use orbital_agent::build_engine;
 use std::fs;

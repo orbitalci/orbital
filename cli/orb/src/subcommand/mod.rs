@@ -87,8 +87,8 @@ impl From<Box<dyn Error>> for SubcommandError {
     }
 }
 
-impl From<anyhow::Error> for SubcommandError {
-    fn from(error: anyhow::Error) -> Self {
+impl From<color_eyre::eyre::Report> for SubcommandError {
+    fn from(error: color_eyre::eyre::Report) -> Self {
         SubcommandError::new(&error.to_string())
     }
 }

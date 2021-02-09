@@ -8,9 +8,9 @@ use orbital_headers::build_meta::{
 
 use orbital_database::postgres::schema::JobState;
 
-use anyhow::Result;
 use chrono::{Duration, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
+use color_eyre::eyre::Result;
 use git_meta::GitRepo;
 use log::debug;
 use orbital_services::ORB_DEFAULT_URI;

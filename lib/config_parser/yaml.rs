@@ -1,5 +1,5 @@
 use super::OrbitalConfig;
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use log::debug;
 use std::path::Path;
 

@@ -1717,8 +1717,8 @@ dependencies = [
 name = "orb"
 version = "0.1.0-alpha.1"
 dependencies = [
- "anyhow",
  "clap",
+ "color-eyre",
  "env_logger",
  "log",
  "orbital_cli_subcommand",
@@ -1736,8 +1736,8 @@ dependencies = [
 name = "orbital_agent"
 version = "0.1.0-alpha.1"
 dependencies = [
- "anyhow",
  "base64 0.13.0",
+ "color-eyre",
  "git-meta",
  "log",
  "mktemp",
@@ -1755,10 +1755,10 @@ dependencies = [
 name = "orbital_cli_subcommand"
 version = "0.1.0-alpha.1"
 dependencies = [
- "anyhow",
  "chrono",
  "chrono-humanize",
  "clap",
+ "color-eyre",
  "env_logger",
  "futures 0.3.12",
  "git-event",
@@ -1797,7 +1797,7 @@ dependencies = [
 name = "orbital_config_parser"
 version = "0.1.0-alpha.1"
 dependencies = [
- "anyhow",
+ "color-eyre",
  "log",
  "serde",
  "serde_yaml",
@@ -1807,8 +1807,8 @@ dependencies = [
 name = "orbital_database"
 version = "0.1.0-alpha.1"
 dependencies = [
- "anyhow",
  "chrono",
+ "color-eyre",
  "diesel",
  "git-url-parse",
  "log",
@@ -1825,8 +1825,8 @@ dependencies = [
 name = "orbital_exec_runtime"
 version = "0.1.0-alpha.1"
 dependencies = [
- "anyhow",
  "base64 0.13.0",
+ "color-eyre",
  "log",
  "serde_json",
  "shiplift",
@@ -1838,7 +1838,7 @@ dependencies = [
 name = "orbital_hashicorp_stack"
 version = "0.1.0-alpha.1"
 dependencies = [
- "anyhow",
+ "color-eyre",
  "hashicorp_vault",
  "log",
 ]
@@ -1859,8 +1859,8 @@ dependencies = [
 name = "orbital_services"
 version = "0.1.0-alpha.1"
 dependencies = [
- "anyhow",
  "chrono",
+ "color-eyre",
  "futures 0.3.12",
  "futures-util",
  "git-meta",

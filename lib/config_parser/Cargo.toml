@@ -5,7 +5,7 @@ authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anyhow = "^1.0"
+color-eyre = "^0.5"
 log = "^0.4"
 serde = { version = "^1.0", features = ["derive"] }
 serde_yaml = "^0.8"

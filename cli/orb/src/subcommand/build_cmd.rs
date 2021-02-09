@@ -18,7 +18,7 @@ use tonic::Request;
 use std::io::Write;
 use termcolor::{BufferWriter, ColorChoice};
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use log::debug;
 use std::path::{Path, PathBuf};
 use std::str;
