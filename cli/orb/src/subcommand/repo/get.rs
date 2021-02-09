@@ -6,7 +6,7 @@ use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoGetRe
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use git_meta::git_info;
+use git_meta::GitRepo;
 use log::debug;
 use std::path::PathBuf;
 
@@ -37,11 +37,7 @@ pub async fn action_handler(
 ) -> Result<()> {
     // Try to parse path for some git info
 
-    let repo_info =
-        match git_info::get_git_info_from_path(&action_option.path.as_path(), &None, &None) {
-            Ok(info) => info,
-            Err(_e) => panic!("Unable to parse path for git repo info"),
-        };
+    let repo_info = GitRepo::open(action_option.path, None, None).expect("Unable to open GitRepo");
 
     let request = match action_option.name {
         Some(name) => Request::new(GitRepoGetRequest {
@@ -57,10 +53,10 @@ pub async fn action_handler(
                 .org
                 .clone()
                 .expect("Please provide an org with request"),
-            git_provider: repo_info.git_url.host.clone().unwrap(),
-            name: repo_info.git_url.name.clone(),
-            user: repo_info.git_url.user.clone().unwrap(),
-            uri: repo_info.git_url.trim_auth().to_string(),
+            git_provider: repo_info.url.host.clone().unwrap(),
+            name: repo_info.url.name.clone(),
+            user: repo_info.url.user.clone().unwrap(),
+            uri: repo_info.url.trim_auth().to_string(),
         }),
     };
 

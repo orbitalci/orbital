@@ -10,7 +10,7 @@ chrono = "^0.4"
 diesel = { version = "^1.4", features = ["postgres", "chrono", "serde_json"] }
 log = "^0.4"
 orbital_hashicorp_stack = { path = "../../lib/hashicorp_stack" }
-orbital_git_meta = { path = "../../lib/git_meta" }
+git-url-parse = "^0.3"
 orbital_headers = { path = "../orbital_headers" }
 prost-types = "^0.7"
 strum = "^0.20"

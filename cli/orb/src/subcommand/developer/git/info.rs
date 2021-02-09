@@ -1,7 +1,7 @@
 use crate::{developer::git::SubcommandOption, GlobalOption};
 //use log::debug;
 use anyhow::Result;
-use git_meta::git_info;
+use git_meta::GitRepo;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -18,10 +18,7 @@ pub async fn action_handler(
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
 ) -> Result<()> {
-    println!(
-        "{:?}",
-        git_info::get_git_info_from_path(&action_option.path, &None, &None)
-    );
+    println!("{:?}", GitRepo::open(action_option.path, None, None));
 
     Ok(())
 }

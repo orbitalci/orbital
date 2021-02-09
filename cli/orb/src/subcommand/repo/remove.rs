@@ -6,7 +6,7 @@ use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoRemov
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use git_meta::git_info;
+use git_meta::GitRepo;
 use log::debug;
 use std::path::PathBuf;
 
@@ -31,18 +31,14 @@ pub async fn action_handler(
     _subcommand_option: SubcommandOption,
     action_option: ActionOption,
 ) -> Result<()> {
-    let repo_info =
-        match git_info::get_git_info_from_path(&action_option.path.as_path(), &None, &None) {
-            Ok(info) => info,
-            Err(_e) => panic!("Unable to parse path for git repo info"),
-        };
+    let repo_info = GitRepo::open(action_option.path, None, None).expect("Unable to open GitRepo");
 
     let request = Request::new(GitRepoRemoveRequest {
         org: action_option.org.clone().unwrap_or_default(),
-        git_provider: repo_info.git_url.host.clone().unwrap(),
-        name: repo_info.git_url.clone().name,
+        git_provider: repo_info.url.host.clone().unwrap(),
+        name: repo_info.url.clone().name,
         //user: ,
-        uri: repo_info.git_url.trim_auth().to_string(),
+        uri: repo_info.url.trim_auth().to_string(),
         //force: ,
         ..Default::default()
     });

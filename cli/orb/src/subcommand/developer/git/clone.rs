@@ -1,7 +1,6 @@
 use crate::{developer::git::SubcommandOption, GlobalOption};
 //use log::debug;
 use anyhow::Result;
-use git_meta::GitCredentials;
 use mktemp::Temp;
 use orbital_agent::build_engine;
 use std::fs;
@@ -24,7 +23,7 @@ pub async fn action_handler(
     let _res = build_engine::clone_repo(
         "https://github.com/alexcrichton/git2-rs",
         action_option.branch.as_deref(),
-        GitCredentials::Public,
+        None,
         &temp_dir.as_path(),
         //)?;
     )

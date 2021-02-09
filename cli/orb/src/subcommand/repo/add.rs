@@ -10,7 +10,7 @@ use orbital_headers::orbital_types::SecretType;
 use orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use git_meta::{git_info, GitCredentials};
+use git_meta::{GitCredentials, GitRepo};
 use git_url_parse::Scheme;
 use log::{debug, info};
 use std::fs::File;
@@ -60,23 +60,20 @@ pub async fn action_handler(
 ) -> Result<()> {
     // Read git repo info from local filesystem.
     // TODO: support adding a repo from a uri
-    let repo_info =
-        match git_info::get_git_info_from_path(&action_option.path.as_path(), &None, &None) {
-            Ok(info) => info,
-            Err(_e) => panic!("Unable to parse path for git repo info"),
-        };
+    let mut repo_info =
+        GitRepo::open(action_option.path, None, None).expect("Unable to open GitRepo");
 
     info!("Adding repo: {:?}", &repo_info);
 
-    let (repo_secret_type, repo_user) = match repo_info.git_url.scheme {
-        Scheme::Ssh => (SecretType::SshKey, repo_info.git_url.user.clone().unwrap()),
-        Scheme::Https => match &repo_info.git_url.token {
+    let (repo_secret_type, repo_user) = match repo_info.url.scheme {
+        Scheme::Ssh => (SecretType::SshKey, repo_info.url.user.clone().unwrap()),
+        Scheme::Https => match &repo_info.url.token {
             Some(_) => (
                 SecretType::BasicAuth,
                 if let Some(user) = action_option.username {
                     user
                 } else {
-                    repo_info.git_url.user.clone().unwrap()
+                    repo_info.url.user.clone().unwrap()
                 },
             ),
             None => (
@@ -93,7 +90,7 @@ pub async fn action_handler(
     let mut auth_content = String::new();
 
     // This is only for getting remote branch info before sending the add repo request
-    let mut git_creds = GitCredentials::Public;
+    //let mut git_creds = None;
 
     if repo_secret_type != SecretType::Unspecified {
         // If private key, load up contents with key
@@ -105,12 +102,14 @@ pub async fn action_handler(
                 let mut file = File::open(p.to_str().expect("No secret filepath given"))?;
                 file.read_to_string(&mut auth_content)?;
 
-                git_creds = GitCredentials::SshKey {
+                let creds = GitCredentials::SshKey {
                     username: repo_user.clone(),
                     public_key: None,
-                    private_key: auth_content.clone(),
+                    private_key: p.clone(),
                     passphrase: None,
                 };
+
+                repo_info = repo_info.with_credentials(Some(creds));
             }
             None => info!("Not using private key auth"),
         };
@@ -122,10 +121,12 @@ pub async fn action_handler(
 
                 auth_content = p;
 
-                git_creds = GitCredentials::BasicAuth {
+                let creds = GitCredentials::UserPassPlaintext {
                     username: repo_user.clone(),
                     password: auth_content.clone(),
-                }
+                };
+
+                repo_info = repo_info.with_credentials(Some(creds));
             }
             None => info!("Not using basic auth"),
         };
@@ -136,12 +137,13 @@ pub async fn action_handler(
     };
 
     info!("Collecting HEAD refs for remote branches");
-    for (branch_name, commit) in
-        git_info::list_remote_branch_head_refs(&action_option.path.as_path(), git_creds)?
+    for (branch_name, commit) in repo_info
+        .get_remote_branch_head_refs(None)
+        .expect("Unable to retrieve branch head refs")
     {
         let remote_ref = GitRepoRemoteBranchHead {
             branch: branch_name,
-            commit: commit,
+            commit: commit.id,
         };
 
         remote_branch_refs.remote_branch_head_refs.push(remote_ref);
@@ -154,9 +156,9 @@ pub async fn action_handler(
             .expect("Please provide an org with request"),
         secret_type: repo_secret_type.into(),
         auth_data: auth_content,
-        git_provider: repo_info.git_url.host.clone().unwrap(),
-        name: repo_info.git_url.name.clone(),
-        uri: repo_info.git_url.trim_auth().to_string(),
+        git_provider: repo_info.url.host.clone().unwrap(),
+        name: repo_info.url.name.clone(),
+        uri: repo_info.url.trim_auth().to_string(),
         user: repo_user,
         alt_check_branch: action_option.alt_branch.unwrap_or_default(),
         skip_check: action_option.skip_check,

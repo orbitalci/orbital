@@ -5,8 +5,8 @@ use git_event;
 use git_url_parse::GitUrl;
 use hex;
 use orbital_headers::code::{
-    code_service_client::CodeServiceClient, GitRepoEntry, GitRepoListRequest, GitRepoListResponse,
-    GitRepoRemoteBranchHead, GitRepoRemoteBranchHeadList, GitRepoUpdateRequest,
+    code_service_client::CodeServiceClient, GitRepoListRequest, GitRepoRemoteBranchHead,
+    GitRepoRemoteBranchHeadList, GitRepoUpdateRequest,
 };
 use orbital_headers::orbital_types::SecretType;
 use orbital_headers::organization::organization_service_client::OrganizationServiceClient;
@@ -22,15 +22,13 @@ use std::fs::File;
 use std::io::prelude::*;
 
 // For starting new build
-use orbital_headers::build_meta::{
-    build_service_client::BuildServiceClient, BuildMetadata, BuildTarget,
-};
+use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
 
 use orbital_headers::orbital_types::JobTrigger;
 
-//use git_meta::{GitCommitContext, GitCredentials};
+use git_meta::GitCredentials;
 
-pub async fn poll_for_new_commits() {
+pub async fn poll_for_new_commits(poll_freq: u8) {
     tokio::spawn(async move {
         info!("Waiting a moment for server to start before polling");
         time::sleep(Duration::from_secs(5)).await;
@@ -62,7 +60,7 @@ pub async fn poll_for_new_commits() {
 
             // Gather all repos per org
 
-            let mut repos_response: Vec<GitRepoEntry> = Vec::new();
+            let mut repos_response;
 
             info!("Looping through orgs to collect their repos");
             for org in orgs {
@@ -106,7 +104,7 @@ pub async fn poll_for_new_commits() {
                     let temp_ssh_privkey =
                         Temp::new_file().expect("Unable to create a new file for ssh key");
 
-                    let git_creds: Option<git_event::GitCredentials> = match r.secret_type.into() {
+                    let git_creds: Option<GitCredentials> = match r.secret_type.into() {
                         SecretType::Unspecified => {
                             None
                         },
@@ -169,9 +167,9 @@ pub async fn poll_for_new_commits() {
                             uri.user = Some(user.clone());
 
 
-                            Some(git_event::GitCredentials::SshKey{
+                            Some(GitCredentials::SshKey{
                                 public_key: None,
-                                private_key: temp_ssh_privkey.as_path().to_str().unwrap().to_string(),
+                                private_key: temp_ssh_privkey.to_path_buf(),
                                 username: user,
                                 passphrase: None,
                             })
@@ -179,7 +177,7 @@ pub async fn poll_for_new_commits() {
                         SecretType::BasicAuth => {
 
                             // TODO: Translate the logic for BasicAuth creds out of vault from build_context.rs
-                            Some(git_event::GitCredentials::UserPassPlaintext {
+                            Some(GitCredentials::UserPassPlaintext {
                                 username: "lfksdjfla".to_string(),
                                 password: "sdklfjdl".to_string(),
                             })
@@ -196,7 +194,7 @@ pub async fn poll_for_new_commits() {
                     let repo_watcher = if let Some(creds) = git_creds {
                         git_event::GitRepoWatchHandler::new(format!("{}", uri))
                             .unwrap()
-                            .with_credentials(creds)
+                            .with_credentials(Some(creds))
                             .with_shallow_clone(true)
                     } else {
                         git_event::GitRepoWatchHandler::new(format!("{}", uri))
@@ -208,7 +206,7 @@ pub async fn poll_for_new_commits() {
 
                     // clone the repo
                     // Fetch the HEADS refs for all branches
-                    let new_repo_ref = repo_watcher.oneshot_report().await.unwrap();
+                    let new_repo_ref = repo_watcher.update_state().await.unwrap();
 
                     // Copy last_known_heads for update in place
                     let mut current_heads: Vec<GitRepoRemoteBranchHead> =
@@ -229,14 +227,11 @@ pub async fn poll_for_new_commits() {
                         let _ = if let Some(b) = last_iter.next() {
                             debug!("DB value of branch: {:?}", b);
 
-                            debug!(
-                                "Value of new commit as String: {:?}",
-                                hex::encode(&head_meta.id)
-                            );
+                            debug!("Value of new commit as String: {:?}", &head_meta.id);
 
                             //assert!(String::from_utf8(head_meta.id.clone()).is_err());
                             // FIXME: This conversion doesn't yet work
-                            let new_commit = hex::encode(&head_meta.id);
+                            let new_commit = head_meta.id;
 
                             if b.commit != new_commit {
                                 info!("There are new commits. Start a new build");
@@ -245,7 +240,12 @@ pub async fn poll_for_new_commits() {
                                 // Update DB with new branch reference
                                 // Update in DB the current head commit of branch
 
-                                // TODO: Find the branch in current_heads, and update the value to the current commit
+                                // Find the branch in current_heads, and update the value to the current commit
+                                current_heads.iter_mut().for_each(|x| {
+                                    if x.branch == branch {
+                                        x.commit = new_commit.clone()
+                                    }
+                                });
 
                                 let db_update_payload = GitRepoUpdateRequest {
                                     org: r.org.clone(),
@@ -274,7 +274,7 @@ pub async fn poll_for_new_commits() {
                                     git_repo: r.name.clone(),
                                     remote_uri: r.uri.clone(),
                                     branch: branch.clone(),
-                                    commit_hash: hex::encode(&head_meta.id),
+                                    commit_hash: new_commit,
                                     //user_envs: None,
                                     trigger: JobTrigger::Poll.into(),
                                     //config: ,
@@ -373,7 +373,7 @@ pub async fn poll_for_new_commits() {
             //    time::delay_for(Duration::from_secs(1)).await;
             //}
             // Wait a few seconds before restarting loop
-            time::sleep(Duration::from_secs(60)).await;
+            time::sleep(Duration::from_secs(poll_freq.into())).await;
         } // End of loop
     });
 }

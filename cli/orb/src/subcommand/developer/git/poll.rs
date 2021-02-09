@@ -1,9 +1,8 @@
 use crate::{developer::git::SubcommandOption, GlobalOption};
 //use log::debug;
 use anyhow::Result;
-use git_meta::{self, GitCredentials};
+use git_meta::{self, GitRepo};
 use mktemp::Temp;
-use std::fs;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt, Clone)]
@@ -20,26 +19,18 @@ pub async fn action_handler(
 ) -> Result<()> {
     let temp_dir = Temp::new_dir().expect("Unable to create test clone dir");
 
-    if let Some(key) = action_option.priv_key {
+    if let Some(_key) = action_option.priv_key {
     } else {
-        let _res = git_meta::clone::shell_shallow_clone(
-            "https://github.com/alexcrichton/git2-rs",
-            None,
-            GitCredentials::Public,
-            &temp_dir.as_path(),
-            //)?;
-        )
-        .unwrap();
+        let _git2repo = GitRepo::new("https://github.com/alexcrichton/git2-rs")
+            .expect("Unable to create GitRepo")
+            .git_clone_shallow(temp_dir.as_path())
+            .expect("Unable to clone repo");
     }
 
+    let repo = GitRepo::open(temp_dir.as_path().into(), None, None)
+        .expect("Unable to open repo directory");
     // do ls-remote to temp_dir
-    println!(
-        "{:?}",
-        git_meta::git_info::list_remote_branch_head_refs(
-            &temp_dir.as_path(),
-            GitCredentials::Public
-        )
-    );
+    println!("{:?}", repo.get_remote_branch_head_refs(None));
 
     Ok(())
 }

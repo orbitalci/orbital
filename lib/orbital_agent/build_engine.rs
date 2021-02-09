@@ -1,7 +1,7 @@
 use crate::AgentRuntimeError;
 use anyhow::Result;
 use config_parser;
-use git_meta;
+use git_meta::GitRepo;
 use log::{debug, info};
 use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
 use std::path::Path;
@@ -13,13 +13,29 @@ use tokio::sync::mpsc;
 pub struct Agent;
 
 /// Create a temporary directory on the host, and clone a repo
-pub fn clone_repo(
-    uri: &str,
-    branch: Option<&str>,
-    credentials: git_meta::GitCredentials,
+pub fn clone_repo<S: AsRef<str>>(
+    uri: S,
+    branch: Option<S>,
+    credentials: Option<git_meta::GitCredentials>,
     target_dir: &Path,
 ) -> Result<()> {
-    git_meta::clone::clone_temp_dir(uri, branch, credentials, target_dir)
+    let git_repo = match (branch, credentials) {
+        (Some(b), Some(c)) => GitRepo::new(uri)
+            .expect("Cannot create GitRepo")
+            .with_branch(b.as_ref().to_string())
+            .with_credentials(Some(c)),
+        (Some(b), None) => GitRepo::new(uri)
+            .expect("Cannot create GitRepo")
+            .with_branch(b.as_ref().to_string()),
+        (None, Some(c)) => GitRepo::new(uri)
+            .expect("Cannot create GitRepo")
+            .with_credentials(Some(c)),
+        (None, None) => GitRepo::new(uri).expect("Cannot create GitRepo"),
+    };
+
+    git_repo.git_clone(target_dir).expect("Failed to clone");
+
+    Ok(())
 }
 
 /// Load orb.yml from a filepath

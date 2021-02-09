@@ -1,12 +1,12 @@
 use crate::postgres::org::Org;
 use crate::postgres::schema::{repo, ActiveState, GitHostType};
 use crate::postgres::secret::Secret;
-use serde_json::{json, Value};
+use serde_json::json;
 
 use orbital_headers::code::{GitRepoEntry, GitRepoRemoteBranchHead, GitRepoRemoteBranchHeadList};
 //use orbital_headers::secret::SecretEntry;
 
-use git_meta::git_info;
+use git_url_parse::GitUrl;
 use log::warn;
 
 #[derive(Insertable, Debug, PartialEq, Associations, AsChangeset)]
@@ -78,7 +78,7 @@ impl Default for Repo {
 // FIXME: Org should be a string, but right now we only have the postgres org id
 impl From<Repo> for GitRepoEntry {
     fn from(repo: Repo) -> Self {
-        let git_uri_parsed = git_info::git_remote_url_parse(&repo.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo.uri.clone()).unwrap();
 
         //
         GitRepoEntry {
@@ -124,7 +124,7 @@ impl From<Repo> for GitRepoEntry {
 // FIXME: This does not correctly set the org id
 impl From<GitRepoEntry> for Repo {
     fn from(git_repo_entry: GitRepoEntry) -> Self {
-        let git_uri_parsed = git_info::git_remote_url_parse(&git_repo_entry.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&git_repo_entry.uri.clone()).unwrap();
 
         Repo {
             id: 0,
@@ -140,7 +140,7 @@ impl From<GitRepoEntry> for Repo {
             remote_branch_head_refs: {
                 match git_repo_entry.remote_branch_head_refs {
                     // TODO: Unpack this shit
-                    Some(branches) => {
+                    Some(_branches) => {
                         json!([])
                     }
                     None => json!([]),
