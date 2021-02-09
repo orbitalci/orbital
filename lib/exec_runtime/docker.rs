@@ -5,7 +5,7 @@ use shiplift::{
 use tokio_01;
 use tokio_01::prelude::{Future, Stream};
 
-use anyhow::{anyhow, Result};
+use color_eyre::eyre::{eyre, Result};
 use log::{debug, error};
 use std::sync::mpsc::channel;
 use std::time::Duration;
@@ -46,8 +46,7 @@ pub fn image_tag_sanitizer(image: &str) -> Result<String> {
             }
         }
         2 => return Ok(image.to_string()),
-        //_ => return Err(anyhow::Error::msg("Failed to clean docker image tag")),
-        _ => return Err(anyhow!("Failed to clean docker image tag")),
+        _ => return Err(eyre!("Failed to clean docker image tag")),
     }
 }
 

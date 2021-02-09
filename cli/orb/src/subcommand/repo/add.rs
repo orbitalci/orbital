@@ -17,7 +17,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use orbital_database::postgres::repo::Repo;
 use prettytable::{cell, format, row, Table};
 

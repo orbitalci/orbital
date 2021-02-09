@@ -8,7 +8,7 @@ use tonic::Request;
 
 use log::debug;
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use orbital_database::postgres::repo::Repo;
 use prettytable::{cell, format, row, Table};
 

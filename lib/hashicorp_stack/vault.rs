@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use color_eyre::eyre::{eyre, Result};
 use hashicorp_vault as vault;
 
 use log::debug;
@@ -11,7 +11,7 @@ pub fn add_secret(vault_host: &str, vault_token: &str, path: &str, data: &str) -
             debug!("Secret was set");
             Ok(())
         }
-        Err(_) => Err(anyhow!("There was an error setting the secret")),
+        Err(_) => Err(eyre!("There was an error setting the secret")),
     }
 }
 
@@ -23,7 +23,7 @@ pub fn get_secret(vault_host: &str, vault_token: &str, path: &str) -> Result<Str
             debug!("Found secret");
             Ok(secret)
         }
-        Err(_e) => Err(anyhow!("There was an error getting the secret")),
+        Err(_e) => Err(eyre!("There was an error getting the secret")),
     }
 }
 
@@ -36,7 +36,7 @@ pub fn update_secret(vault_host: &str, vault_token: &str, path: &str, data: &str
             debug!("Secret was updated");
             Ok(())
         }
-        Err(_e) => Err(anyhow!("There was an error updating the secret")),
+        Err(_e) => Err(eyre!("There was an error updating the secret")),
     }
 }
 
@@ -48,6 +48,6 @@ pub fn remove_secret(vault_host: &str, vault_token: &str, path: &str) -> Result<
             debug!("Found secret and deleted it");
             Ok(())
         }
-        Err(_e) => Err(anyhow!("There was an error deleting the secret")),
+        Err(_e) => Err(eyre!("There was an error deleting the secret")),
     }
 }

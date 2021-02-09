@@ -1,4 +1,4 @@
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use hashicorp_stack::{self, vault};
 use log::debug;
 use std::env;

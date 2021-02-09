@@ -67,8 +67,8 @@ impl From<Box<dyn Error>> for OrbitalServiceError {
     }
 }
 
-impl From<anyhow::Error> for OrbitalServiceError {
-    fn from(error: anyhow::Error) -> Self {
+impl From<color_eyre::eyre::Report> for OrbitalServiceError {
+    fn from(error: color_eyre::eyre::Report) -> Self {
         OrbitalServiceError::new(&error.to_string())
     }
 }

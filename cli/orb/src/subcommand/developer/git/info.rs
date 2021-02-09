@@ -1,6 +1,5 @@
 use crate::{developer::git::SubcommandOption, GlobalOption};
-//use log::debug;
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use git_meta::GitRepo;
 use std::path::PathBuf;
 use structopt::StructOpt;

@@ -4,7 +4,7 @@ use crate::GlobalOption;
 
 use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use git_meta::GitRepo;
 use orbital_services::ORB_DEFAULT_URI;
 use std::io::Write;
