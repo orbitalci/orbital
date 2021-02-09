@@ -42,6 +42,10 @@ pub struct SubcommandOption {
 
     #[structopt(long)]
     debug: bool,
+
+    // The polling frequency, in seconds
+    #[structopt(long, default_value = "60")]
+    poll_freq: u8,
 }
 
 /// Binds a *currently hardcoded* address and starts all services on mutliplexed gRPC server
@@ -73,7 +77,7 @@ pub async fn subcommand_handler(
     // Kick off thread for checking for new commits
     {
         info!("Starting new commit polling");
-        crate::server::poll::poll_for_new_commits().await;
+        crate::server::poll::poll_for_new_commits(local_option.poll_freq).await;
     }
 
     info!("Starting single-node server");

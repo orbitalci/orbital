@@ -28,7 +28,7 @@ use orbital_headers::orbital_types::JobTrigger;
 
 use git_meta::GitCredentials;
 
-pub async fn poll_for_new_commits() {
+pub async fn poll_for_new_commits(poll_freq: u8) {
     tokio::spawn(async move {
         info!("Waiting a moment for server to start before polling");
         time::sleep(Duration::from_secs(5)).await;
@@ -240,7 +240,12 @@ pub async fn poll_for_new_commits() {
                                 // Update DB with new branch reference
                                 // Update in DB the current head commit of branch
 
-                                // TODO: Find the branch in current_heads, and update the value to the current commit
+                                // Find the branch in current_heads, and update the value to the current commit
+                                current_heads.iter_mut().for_each(|x| {
+                                    if x.branch == branch {
+                                        x.commit = new_commit.clone()
+                                    }
+                                });
 
                                 let db_update_payload = GitRepoUpdateRequest {
                                     org: r.org.clone(),
@@ -368,7 +373,7 @@ pub async fn poll_for_new_commits() {
             //    time::delay_for(Duration::from_secs(1)).await;
             //}
             // Wait a few seconds before restarting loop
-            time::sleep(Duration::from_secs(60)).await;
+            time::sleep(Duration::from_secs(poll_freq.into())).await;
         } // End of loop
     });
 }
