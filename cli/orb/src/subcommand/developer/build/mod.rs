@@ -2,7 +2,7 @@ use anyhow::Result;
 use structopt::StructOpt;
 
 use config_parser::yaml as parser;
-use git_meta::git_info;
+use git_meta::GitRepo;
 use orbital_agent::generate_unique_build_id;
 use orbital_exec_runtime::{
     self, docker, docker::OrbitalContainerSpec, parse_envs_input, parse_volumes_input,
@@ -55,8 +55,7 @@ pub async fn subcommand_handler(
 
     // If a path isn't given, then use the current working directory based on env var PWD
     let path = &local_option.path;
-    let git_info =
-        git_info::get_git_info_from_path(path, &None, &None).expect("Could not parse repo");
+    let git_info = GitRepo::open(path.to_path_buf(), None, None).expect("Could not parse repo");
 
     debug!("Git info at path ({:?}): {:?}", &path, &git_info);
 
@@ -77,8 +76,8 @@ pub async fn subcommand_handler(
     let build_container_spec = OrbitalContainerSpec {
         name: Some(generate_unique_build_id(
             "dev-org",
-            &git_info.git_url.name,
-            &git_info.commit_id,
+            &git_info.url.name,
+            &git_info.head.unwrap().id,
             &format!("{}", rand_string),
         )),
         image: config.image,

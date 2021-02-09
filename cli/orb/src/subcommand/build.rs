@@ -1,5 +1,5 @@
 use chrono::Utc;
-use git_meta::git_info;
+use git_meta::GitRepo;
 use std::env;
 use std::path::Path;
 
@@ -19,9 +19,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parent()
         .unwrap();
 
+    let git_repo =
+        GitRepo::open(git_repo_dir.to_path_buf(), None, None).expect("Unable to open git repo");
+
     // Get git version
-    let git_commit =
-        git_info::get_git_info_from_path(&git_repo_dir, &None, &None)?.commit_id[..12].to_string();
+    let git_commit = git_repo.head.expect("No GitCommitMeta found").id[..12].to_string();
 
     // Get build datetime
     let now = Utc::now();

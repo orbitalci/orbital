@@ -5,7 +5,7 @@ use crate::GlobalOption;
 use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
 
 use anyhow::Result;
-use git_meta::git_info;
+use git_meta::GitRepo;
 use orbital_services::ORB_DEFAULT_URI;
 use std::io::Write;
 use std::path::PathBuf;
@@ -49,18 +49,18 @@ pub async fn subcommand_handler(
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     // Path
-    let path = &local_option.path;
+    let path = local_option.path;
 
-    let git_context =
-        git_info::get_git_info_from_path(path, &local_option.branch, &local_option.hash)?;
+    let git_context = GitRepo::open(path, local_option.branch, local_option.hash)
+        .expect("Unable to open GitRepo");
     // Need to figure out how to handle the streaming response
 
     let request = Request::new(BuildTarget {
         org: local_option.org.expect("Please provide an org name"),
-        git_repo: git_context.git_url.name.clone(),
-        remote_uri: git_context.git_url.trim_auth().to_string(),
-        branch: git_context.branch,
-        commit_hash: git_context.commit_id,
+        git_repo: git_context.url.name.clone(),
+        remote_uri: git_context.url.trim_auth().to_string(),
+        branch: git_context.branch.unwrap_or_default(),
+        commit_hash: git_context.head.unwrap().id,
         user_envs: local_option.envs.unwrap_or_default(),
         id: {
             match local_option.id {

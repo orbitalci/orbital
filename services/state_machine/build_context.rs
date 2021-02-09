@@ -1,13 +1,14 @@
 use anyhow::Result;
 use chrono::{NaiveDateTime, Utc};
 use config_parser::OrbitalConfig;
-use git_meta::git_info;
-use git_meta::{GitCommitContext, GitCredentials};
+use git_meta::{GitCommitMeta, GitCredentials, GitRepo};
 use git_url_parse::GitUrl;
 use log::{debug, error, info};
 use orbital_agent::{self, build_engine};
 use orbital_database::postgres;
 use orbital_database::postgres::build_stage::NewBuildStage;
+use std::fs::File;
+use std::io::prelude::*;
 
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_database::postgres::schema::JobTrigger;
@@ -32,6 +33,7 @@ pub struct BuildContext {
     pub repo_name: String,
     pub branch: String,
     pub working_dir: PathBuf,
+    pub private_key: PathBuf,
     pub id: Option<i32>,
     pub hash: Option<String>,
     pub user_envs: Option<Vec<String>>,
@@ -44,7 +46,7 @@ pub struct BuildContext {
     pub build_stage_name: String,
     pub build_cur_stage_logs: String,
     pub _git_creds: Option<GitCredentials>,
-    pub _git_commit_info: Option<GitCommitContext>,
+    pub _git_commit_info: Option<GitCommitMeta>,
     pub _build_config: Option<OrbitalConfig>,
     pub _container_id: Option<String>,
     pub _repo_uri: Option<GitUrl>,
@@ -63,6 +65,7 @@ impl BuildContext {
             repo_name: String::new(),
             branch: String::new(),
             working_dir: PathBuf::new(),
+            private_key: PathBuf::new(),
             id: None,
             hash: None,
             user_envs: None,
@@ -95,8 +98,7 @@ impl BuildContext {
     }
 
     pub fn add_repo_uri(mut self, repo_uri: String) -> Result<BuildContext> {
-        let repo_uri_parsed =
-            git_info::git_remote_url_parse(repo_uri.as_ref()).expect("Could not parse repo uri");
+        let repo_uri_parsed = GitUrl::parse(repo_uri.as_ref()).expect("Could not parse repo uri");
 
         self.repo_name = repo_uri_parsed.name.clone();
 
@@ -132,6 +134,11 @@ impl BuildContext {
 
     pub fn add_working_dir(mut self, working_dir: PathBuf) -> BuildContext {
         self.working_dir = working_dir;
+        self
+    }
+
+    pub fn add_private_key(mut self, private_key: PathBuf) -> BuildContext {
+        self.private_key = private_key;
         self
     }
 
@@ -569,7 +576,7 @@ impl BuildContext {
                 // TODO: Call secret service and get a username
                 info!("No secret needed to clone. Public repo");
 
-                GitCredentials::Public
+                None
             }
             SecretType::SshKey => {
                 info!("SSH key needed to clone");
@@ -624,6 +631,17 @@ impl BuildContext {
 
                 // Write ssh key to temp file
                 info!("Writing incoming ssh key to GitCredentials::SshKey");
+                let mut file = match File::create(&self.private_key) {
+                    Err(why) => panic!("couldn't create {}: {}", &self.private_key.display(), why),
+                    Ok(file) => file,
+                };
+
+                match file.write_all(vault_response["private_key"].as_str().unwrap().as_bytes()) {
+                    Err(why) => {
+                        panic!("couldn't write to {}: {}", &self.private_key.display(), why)
+                    }
+                    Ok(_) => println!("successfully wrote to {}", &self.private_key.display()),
+                }
 
                 let git_creds = GitCredentials::SshKey {
                     username: vault_response["username"]
@@ -632,7 +650,7 @@ impl BuildContext {
                         .unwrap()
                         .to_string(),
                     public_key: None,
-                    private_key: vault_response["private_key"].as_str().unwrap().to_string(),
+                    private_key: self.private_key.clone(),
                     passphrase: None,
                 };
 
@@ -649,7 +667,7 @@ impl BuildContext {
 
                 debug!("Git Creds: {:?}", &git_creds);
 
-                git_creds
+                Some(git_creds)
             }
             SecretType::BasicAuth => {
                 info!("Basic Auth creds needed to clone");
@@ -702,13 +720,13 @@ impl BuildContext {
                         .expect("Unable to read json data from Vault");
 
                 // Replace username with the user from the code service
-                let git_creds = GitCredentials::BasicAuth {
+                let git_creds = GitCredentials::UserPassPlaintext {
                     username: vault_response["username"].as_str().unwrap().to_string(),
                     password: vault_response["password"].as_str().unwrap().to_string(),
                 };
 
                 debug!("Git Creds: {:?}", &git_creds);
-                git_creds
+                Some(git_creds)
             }
             _ => panic!(
                 "We only support public repos, or private repo auth with sshkeys or basic auth"
@@ -716,7 +734,7 @@ impl BuildContext {
         };
 
         // Don't forget to save the cloning creds
-        self._git_creds = Some(git_creds);
+        self._git_creds = git_creds;
 
         Ok(self)
     }
@@ -730,7 +748,7 @@ impl BuildContext {
         let _clone_res = build_engine::clone_repo(
             format!("{}", &self._repo_uri.clone().unwrap()).as_str(),
             Some(&self.branch),
-            self._git_creds.clone().unwrap(),
+            self._git_creds.clone(),
             self.working_dir.as_ref(),
         )
         .expect("Unable to clone repo");
@@ -738,19 +756,29 @@ impl BuildContext {
         //TODO: Add debug here to list files from self.working_dir
 
         // Here we parse the newly cloned repo so we can get the commit message
-        match git_info::get_git_info_from_path(
-            self.working_dir.clone().as_path(),
-            &Some(self.branch.clone()),
-            &Some(self.hash.clone().unwrap()),
-        ) {
-            Ok(git_repo_info) => {
-                self._git_commit_info = Some(git_repo_info);
-            }
-            Err(e) => {
-                error!("Failed to parse metadata from repo");
-                return Err(e);
-            }
-        };
+
+        let git_repo = GitRepo::open(
+            self.working_dir.clone(),
+            Some(self.branch.clone()),
+            self.hash.clone(),
+        )
+        .expect("Unable to open cloned repo");
+
+        self._git_commit_info = git_repo.head;
+
+        //match git_info::get_git_info_from_path(
+        //    self.working_dir.clone().as_path(),
+        //    &Some(self.branch.clone()),
+        //    &Some(self.hash.clone().unwrap()),
+        //) {
+        //    Ok(git_repo_info) => {
+        //        self._git_commit_info = Some(git_repo_info);
+        //    }
+        //    Err(e) => {
+        //        error!("Failed to parse metadata from repo");
+        //        return Err(e);
+        //    }
+        //};
 
         Ok(self)
     }
@@ -824,6 +852,7 @@ impl BuildContext {
             self._git_commit_info
                 .expect("Git commit info unavailable")
                 .message
+                .unwrap_or_default()
         );
 
         let orbital_env_vars_vec = vec![

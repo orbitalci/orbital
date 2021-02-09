@@ -13,9 +13,6 @@ use diesel::prelude::*;
 use hashicorp_stack::orb_vault_path;
 use log::debug;
 use std::env;
-//use orbital_headers::orbital_types;
-use serde_json::json;
-use std::collections::HashMap;
 
 pub fn establish_connection() -> PgConnection {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");

@@ -9,11 +9,14 @@ use orbital_headers::secret::{secret_service_client::SecretServiceClient, Secret
 use crate::{OrbitalServiceError, ServiceType};
 use orbital_headers::orbital_types::*;
 
-use git_meta::git_info;
 use git_meta::GitCredentials;
+use git_url_parse::GitUrl;
 use mktemp::Temp;
 
 use tonic::{Request, Response, Status};
+
+use std::fs::File;
+use std::io::prelude::*;
 
 use super::OrbitalApi;
 
@@ -39,7 +42,7 @@ impl CodeService for OrbitalApi {
         // check if repo is public or private. Do a test checkout
         let test_branch = match &unwrapped_request.alt_check_branch.clone().len() {
             0 => None,
-            _ => Some(unwrapped_request.alt_check_branch.clone()),
+            _ => Some(unwrapped_request.alt_check_branch.clone().to_string()),
         };
 
         // We want to convert the list of branch refs into serde_json for postgres
@@ -50,10 +53,13 @@ impl CodeService for OrbitalApi {
             }
         }
 
+        // Create a temp file for writing private key, just in case
+        let private_key = Temp::new_file().expect("Unable to create temp file for private key");
+
         let (org_db, repo_db, secret_db) = match unwrapped_request.secret_type.clone().into() {
             SecretType::Unspecified => {
                 info!("Adding public repo");
-                let creds = GitCredentials::Public;
+                let creds = None;
 
                 // Temp dir checkout repo
                 match unwrapped_request.skip_check {
@@ -63,7 +69,7 @@ impl CodeService for OrbitalApi {
 
                         let _ = match build_engine::clone_repo(
                             &unwrapped_request.uri,
-                            test_branch.as_deref(),
+                            test_branch.as_ref(),
                             creds.clone(),
                             temp_dir.as_path(),
                         ) {
@@ -95,12 +101,24 @@ impl CodeService for OrbitalApi {
             SecretType::SshKey => {
                 info!("Private repo with ssh key");
 
-                let creds = GitCredentials::SshKey {
+                let mut file = match File::create(&private_key) {
+                    Err(why) => panic!("couldn't create {}: {}", &private_key.display(), why),
+                    Ok(file) => file,
+                };
+
+                match file.write_all(unwrapped_request.clone().auth_data.as_bytes()) {
+                    Err(why) => {
+                        panic!("couldn't write to {}: {}", &private_key.display(), why)
+                    }
+                    Ok(_) => println!("successfully wrote to {}", &private_key.display()),
+                }
+
+                let creds = Some(GitCredentials::SshKey {
                     username: unwrapped_request.clone().user,
                     public_key: None,
-                    private_key: unwrapped_request.clone().auth_data,
+                    private_key: private_key.to_path_buf(),
                     passphrase: None,
-                };
+                });
 
                 // Temp dir checkout repo
                 match unwrapped_request.skip_check {
@@ -194,10 +212,10 @@ impl CodeService for OrbitalApi {
             }
             SecretType::BasicAuth => {
                 info!("Private repo with basic auth");
-                let creds = GitCredentials::BasicAuth {
+                let creds = Some(GitCredentials::UserPassPlaintext {
                     username: unwrapped_request.clone().user.into(),
                     password: unwrapped_request.clone().auth_data.into(),
-                };
+                });
 
                 // Temp dir checkout repo
                 match unwrapped_request.skip_check {
@@ -207,7 +225,7 @@ impl CodeService for OrbitalApi {
 
                         let _ = match build_engine::clone_repo(
                             &unwrapped_request.uri,
-                            test_branch.as_deref(),
+                            test_branch.as_ref(),
                             creds.clone(),
                             temp_dir.as_ref(),
                         ) {
@@ -294,7 +312,7 @@ impl CodeService for OrbitalApi {
             }
         };
 
-        let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
 
         let response = Response::new(GitRepoEntry {
             org: org_db.name,
@@ -342,7 +360,7 @@ impl CodeService for OrbitalApi {
         let repo_db = db_result.1;
         let secret_db = db_result.2;
 
-        let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
 
         // Maybe TODO? Call into Secret service to get a username?
 
@@ -414,7 +432,7 @@ impl CodeService for OrbitalApi {
             None => None,
         };
 
-        let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
 
         // We want to convert the list of branch refs into serde_json for postgres
         let mut branch_refs_map = serde_json::Map::new();
@@ -452,7 +470,7 @@ impl CodeService for OrbitalApi {
         let repo_db = db_result.1;
         let secret_db = db_result.2;
 
-        let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
 
         // TODO: Build a return value from db_result for remote_branch_head_refs
         //let remote_branch_head_refs_db = None;
@@ -531,7 +549,7 @@ impl CodeService for OrbitalApi {
         let repo_db = db_result.1;
         let secret_db = db_result.2;
 
-        let git_uri_parsed = git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
 
         // We use auth_data to hold the name of the secret used by repo
         let response = Response::new(GitRepoEntry {
@@ -575,8 +593,7 @@ impl CodeService for OrbitalApi {
                 .expect("There was a problem listing repo from database")
                 .into_iter()
                 .map(|(org_db, repo_db, secret_db)| {
-                    let git_uri_parsed =
-                        git_info::git_remote_url_parse(&repo_db.uri.clone()).unwrap();
+                    let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
 
                     // Convert remote_branch_head_refs to proto type GitRepoRemoteBranchHeadList
                     let mut branch_head_proto_list = GitRepoRemoteBranchHeadList {

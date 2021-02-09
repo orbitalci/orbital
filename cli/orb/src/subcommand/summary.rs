@@ -11,7 +11,7 @@ use orbital_database::postgres::schema::JobState;
 use anyhow::Result;
 use chrono::{Duration, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
-use git_meta::git_info;
+use git_meta::GitRepo;
 use log::debug;
 use orbital_services::ORB_DEFAULT_URI;
 use prettytable::{cell, format, row, Table};
@@ -60,20 +60,17 @@ pub async fn subcommand_handler(
 ) -> Result<()> {
     let mut client = BuildServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
-    // Path
-    let path = &local_option.path;
-
-    let git_context =
-        git_info::get_git_info_from_path(path, &local_option.branch, &local_option.hash)?;
+    let git_context = GitRepo::open(local_option.path, local_option.branch, local_option.hash)
+        .expect("Unable to open GitRepo");
 
     // Idea: Index should be Option<u32>
     let request = Request::new(BuildSummaryRequest {
         build: Some(BuildTarget {
             org: local_option.org.expect("Please provide an org name"),
-            git_repo: git_context.git_url.clone().name,
-            remote_uri: git_context.git_url.trim_auth().to_string(),
-            branch: git_context.branch,
-            commit_hash: git_context.commit_id,
+            git_repo: git_context.url.clone().name,
+            remote_uri: git_context.url.trim_auth().to_string(),
+            branch: git_context.branch.expect("No branch found"),
+            commit_hash: git_context.head.expect("No commit id found").id,
             ..Default::default()
         }),
         limit: local_option.limit,

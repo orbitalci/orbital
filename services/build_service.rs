@@ -8,7 +8,7 @@ use mktemp::Temp;
 use orbital_database::postgres;
 use orbital_database::postgres::build_summary::NewBuildSummary;
 use orbital_headers::orbital_types::JobState as ProtoJobState;
-use postgres::schema::{JobState, JobTrigger};
+use postgres::schema::JobState;
 use tonic::{Code, Request, Response, Status};
 
 use tokio::sync::mpsc;
@@ -42,7 +42,7 @@ impl BuildService for OrbitalApi {
         info!("build request: {:?}", &unwrapped_request.git_repo);
         debug!("build request details: {:?}", &unwrapped_request);
 
-        let (mut client_tx, client_rx) = mpsc::channel(1);
+        let (client_tx, client_rx) = mpsc::channel(1);
 
         let (build_tx, mut build_rx): (
             mpsc::UnboundedSender<String>,
@@ -51,6 +51,8 @@ impl BuildService for OrbitalApi {
 
         tokio::spawn(async move {
             let git_clone_dir = Temp::new_dir().expect("Unable to create dir for git clone");
+            let private_key =
+                Temp::new_file().expect("Unable to create temp private key file for git clone");
 
             let mut cur_build = BuildContext::new()
                 .add_org(unwrapped_request.org.to_string())
@@ -60,6 +62,7 @@ impl BuildService for OrbitalApi {
                 .add_hash(unwrapped_request.commit_hash.to_string())
                 .add_triggered_by(unwrapped_request.trigger.into())
                 .add_working_dir(git_clone_dir.to_path_buf())
+                .add_private_key(private_key.to_path_buf())
                 .queue()
                 .expect("There was a problem queuing the build");
 
@@ -333,7 +336,7 @@ impl BuildService for OrbitalApi {
 
         drop(pg_conn);
 
-        let (mut tx, rx) = mpsc::channel(4);
+        let (tx, rx) = mpsc::channel(4);
 
         tokio::spawn(async move {
             match build_summary_opt {
