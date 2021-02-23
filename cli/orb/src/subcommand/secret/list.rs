@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{secret::SubcommandOption, GlobalOption};
+use crate::subcommand::{secret::SubcommandOption, GlobalOption};
 
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretListRequest};
 use orbital_services::ORB_DEFAULT_URI;

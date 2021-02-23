@@ -1,4 +1,4 @@
-use crate::{developer::git::SubcommandOption, GlobalOption};
+use crate::subcommand::{developer::git::SubcommandOption, GlobalOption};
 use color_eyre::eyre::Result;
 use git_meta::GitRepo;
 use std::path::PathBuf;

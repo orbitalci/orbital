@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "cli/orb",
-    "cli/orb/src/subcommand",
     "lib/config_parser",
     "lib/exec_runtime",
     "lib/orbital_agent",
@@ -9,3 +8,6 @@ members = [
     "services",
     "models/orbital_database",
 ]
+
+[patch.crates-io]
+git-event = { path = "/home/telant/Documents/git-event-rs" }

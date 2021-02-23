@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{repo::SubcommandOption, GlobalOption};
+use crate::subcommand::{repo::SubcommandOption, GlobalOption};
 
 use orbital_headers::code::{code_service_client::CodeServiceClient, GitRepoRemoveRequest};
 use orbital_services::ORB_DEFAULT_URI;

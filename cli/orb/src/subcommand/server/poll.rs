@@ -191,7 +191,7 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                     //    .unwrap()
                     //    .with_shallow_clone(true);
 
-                    let repo_watcher = if let Some(creds) = git_creds {
+                    let mut repo_watcher = if let Some(creds) = git_creds {
                         git_event::GitRepoWatchHandler::new(format!("{}", uri))
                             .unwrap()
                             .with_credentials(Some(creds))

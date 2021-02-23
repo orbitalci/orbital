@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{org::SubcommandOption, GlobalOption};
+use crate::subcommand::{org::SubcommandOption, GlobalOption};
 
 use orbital_headers::organization::{
     organization_service_client::OrganizationServiceClient, OrgRemoveRequest,

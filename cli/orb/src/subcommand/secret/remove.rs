@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::{secret::SubcommandOption, GlobalOption};
+use crate::subcommand::{secret::SubcommandOption, GlobalOption};
 
 use orbital_database::postgres::schema::SecretType;
 use orbital_headers::secret::{secret_service_client::SecretServiceClient, SecretRemoveRequest};

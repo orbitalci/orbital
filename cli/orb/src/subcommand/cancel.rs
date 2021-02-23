@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use crate::GlobalOption;
+use crate::subcommand::GlobalOption;
 
 use orbital_headers::build_meta::{build_service_client::BuildServiceClient, BuildTarget};
 

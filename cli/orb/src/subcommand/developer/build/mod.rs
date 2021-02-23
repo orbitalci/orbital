@@ -11,7 +11,7 @@ use std::path::Path;
 
 use log::debug;
 
-use crate::{GlobalOption, SubcommandError};
+use crate::subcommand::{GlobalOption, SubcommandError};
 use std::path::PathBuf;
 
 use rand::distributions::Alphanumeric;

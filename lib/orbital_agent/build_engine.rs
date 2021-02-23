@@ -22,11 +22,11 @@ pub fn clone_repo<S: AsRef<str>>(
     let git_repo = match (branch, credentials) {
         (Some(b), Some(c)) => GitRepo::new(uri)
             .expect("Cannot create GitRepo")
-            .with_branch(b.as_ref().to_string())
+            .with_branch(Some(b.as_ref().to_string()))
             .with_credentials(Some(c)),
         (Some(b), None) => GitRepo::new(uri)
             .expect("Cannot create GitRepo")
-            .with_branch(b.as_ref().to_string()),
+            .with_branch(Some(b.as_ref().to_string())),
         (None, Some(c)) => GitRepo::new(uri)
             .expect("Cannot create GitRepo")
             .with_credentials(Some(c)),

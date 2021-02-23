@@ -1,7 +1,7 @@
 use color_eyre::eyre::Result;
 use structopt::StructOpt;
 
-use crate::GlobalOption;
+use crate::subcommand::GlobalOption;
 
 pub mod add;
 pub mod get;

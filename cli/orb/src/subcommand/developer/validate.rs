@@ -4,7 +4,7 @@ use structopt::StructOpt;
 use config_parser::yaml as parser;
 use std::path::PathBuf;
 
-use crate::{GlobalOption, SubcommandError};
+use crate::subcommand::{GlobalOption, SubcommandError};
 
 /// Local options for customizing validation of an Orbital config file
 #[derive(Debug, StructOpt)]

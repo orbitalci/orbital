@@ -1,7 +1,7 @@
 use color_eyre::eyre::Result;
 use structopt::StructOpt;
 
-use crate::{GlobalOption, SubcommandContext};
+use crate::subcommand::{GlobalOption, SubcommandContext};
 
 use std::io;
 

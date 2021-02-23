@@ -3,7 +3,8 @@ use structopt::StructOpt;
 
 extern crate clap;
 
-use subcommand::{self, Subcommand, SubcommandContext};
+mod subcommand;
+use subcommand::{Subcommand, SubcommandContext};
 
 use serde::{Deserialize, Serialize};
 

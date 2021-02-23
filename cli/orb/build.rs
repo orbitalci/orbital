@@ -13,10 +13,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parent()
         .unwrap()
         .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .parent()
         .unwrap();
 
     let git_repo =

@@ -9,7 +9,7 @@ shiplift = "^0.6"
 tokio_01 = { package = "tokio", version = "^0.1" }
 tokio = "^1.1"
 log = "^0.4"
-git-meta = "^0.1" 
+git-meta = "^0.3" 
 mktemp = "^0.4"
 orbital_config_parser = { path = "../config_parser" }
 orbital_hashicorp_stack = { path = "../hashicorp_stack" }

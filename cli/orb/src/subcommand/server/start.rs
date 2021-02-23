@@ -1,7 +1,7 @@
 use color_eyre::eyre::Result;
 use structopt::StructOpt;
 
-use crate::GlobalOption;
+use crate::subcommand::GlobalOption;
 
 use orbital_headers::{
     build_meta::build_service_server::BuildServiceServer,
@@ -77,7 +77,7 @@ pub async fn subcommand_handler(
     // Kick off thread for checking for new commits
     {
         info!("Starting new commit polling");
-        crate::server::poll::poll_for_new_commits(local_option.poll_freq).await;
+        crate::subcommand::server::poll::poll_for_new_commits(local_option.poll_freq).await;
     }
 
     info!("Starting single-node server");
