@@ -2,7 +2,7 @@ use crate::AgentRuntimeError;
 use color_eyre::eyre::Result;
 use config_parser;
 use git_meta::GitRepo;
-use log::{debug, info};
+use log::info;
 use orbital_exec_runtime::docker::{self, OrbitalContainerSpec};
 use std::path::Path;
 
@@ -49,32 +49,21 @@ pub fn load_orb_config_from_str(config: &str) -> Result<config_parser::OrbitalCo
 }
 
 /// Pull a docker image using the host docker engine
-pub fn docker_container_pull(orb_build_spec: &OrbitalContainerSpec) -> Result<()> {
-    match docker::container_pull(&orb_build_spec.image) {
-        Ok(ok) => Ok(ok), // The successful result doesn't matter
-        Err(_) => Err(AgentRuntimeError::new(&format!(
-            "Could not pull image {}",
-            &orb_build_spec.image
-        ))
-        .into()),
-    }
-}
-
-pub async fn docker_container_pull_async(
+pub async fn docker_container_pull(
     orb_build_spec: OrbitalContainerSpec<'_>,
 ) -> Result<mpsc::UnboundedReceiver<Value>> {
-    docker::container_pull_async(orb_build_spec.image.to_string()).await
+    docker::container_pull(orb_build_spec.image.to_string()).await
 }
 
 /// Create a docker container
-pub fn docker_container_create(orb_build_spec: &OrbitalContainerSpec) -> Result<String> {
+pub async fn docker_container_create(orb_build_spec: &OrbitalContainerSpec<'_>) -> Result<String> {
     let timeout_as_seconds = format!("{}s", orb_build_spec.timeout.unwrap().as_secs());
     let default_command_w_timeout = vec!["sleep", &timeout_as_seconds];
 
     let mut orb_build_spec_w_timeout = orb_build_spec.clone();
     orb_build_spec_w_timeout.command = default_command_w_timeout;
 
-    match docker::container_create(orb_build_spec_w_timeout) {
+    match docker::container_create(orb_build_spec_w_timeout).await {
         Ok(container_id) => {
             info!("Created container id: {:?}", container_id);
             Ok(container_id)
@@ -88,8 +77,8 @@ pub fn docker_container_create(orb_build_spec: &OrbitalContainerSpec) -> Result<
 }
 
 /// Start a docker container
-pub fn docker_container_start(container_id: &str) -> Result<()> {
-    match docker::container_start(container_id) {
+pub async fn docker_container_start(container_id: &str) -> Result<()> {
+    match docker::container_start(container_id).await {
         Ok(ok) => Ok(ok), // The successful result doesn't matter
         Err(_) => Err(AgentRuntimeError::new(&format!(
             "Could not start container_id {}",
@@ -100,8 +89,8 @@ pub fn docker_container_start(container_id: &str) -> Result<()> {
 }
 
 /// Stop a docker container
-pub fn docker_container_stop(container_id: &str) -> Result<()> {
-    match docker::container_stop(container_id) {
+pub async fn docker_container_stop(container_id: &str) -> Result<()> {
+    match docker::container_stop(container_id).await {
         Ok(ok) => Ok(ok), // The successful result doesn't matter
         Err(_) => Err(AgentRuntimeError::new(&format!(
             "Could not stop container_id {}",
@@ -112,40 +101,8 @@ pub fn docker_container_stop(container_id: &str) -> Result<()> {
 }
 
 // FIXME: Possibly change this to only run single commands. So timestamping can be handled outside
-// TODO: This will also need to accept some channel to pass to docker::container_exec
 /// Loop over commands, exec into docker container
-pub fn docker_container_exec(container_id: &str, commands: Vec<String>) -> Result<String> {
-    let mut exec_output: Vec<String> = Vec::new();
-
-    for command in commands.iter() {
-        // Build the exec string
-        let wrapped_command = format!("{} | tee -a /proc/1/fd/1", &command);
-
-        let container_command = vec!["/bin/sh", "-c", wrapped_command.as_ref()];
-
-        // Print the command in the output we want to store in database
-        &mut exec_output.push(format!("Command: {:?}\n", &command.clone()));
-        match docker::container_exec(container_id, container_command.clone()) {
-            Ok(output) => {
-                debug!("Command: {:?}", &command);
-                debug!("Output: {:?}", &output);
-                &mut exec_output.extend(output.clone());
-                output
-            }
-            Err(_) => {
-                return Err(AgentRuntimeError::new(&format!(
-                    "Could not exec into container {}",
-                    &container_id
-                ))
-                .into())
-            }
-        };
-    }
-
-    Ok(exec_output.join(""))
-}
-
-pub async fn docker_container_exec_async(
+pub async fn docker_container_exec(
     container_id: String,
     commands: Vec<String>,
 ) -> Result<mpsc::UnboundedReceiver<String>> {
@@ -156,12 +113,11 @@ pub async fn docker_container_exec_async(
             // Build the exec string
             let wrapped_command = format!("{} | tee -a /proc/1/fd/1", command);
 
-            let container_command = vec!["/bin/sh".to_string(), "-c".to_string(), wrapped_command];
+            let container_command = vec!["/bin/sh", "-c", &wrapped_command];
 
-            let mut exec_rx =
-                docker::container_exec_async(container_id.clone(), container_command.clone())
-                    .await
-                    .unwrap();
+            let mut exec_rx = docker::container_exec(container_id.clone(), container_command)
+                .await
+                .unwrap();
 
             tx.send(format!("Command: {:?}\n", &command)).unwrap();
 

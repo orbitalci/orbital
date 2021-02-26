@@ -1,13 +1,11 @@
 use shiplift::{
-    tty::StreamType, ContainerOptions, Docker, ExecContainerOptions, LogsOptions, PullOptions,
+    tty::TtyChunk, ContainerOptions, Docker, ExecContainerOptions, LogsOptions, PullOptions,
 };
 
-use tokio_01;
-use tokio_01::prelude::{Future, Stream};
+use futures::StreamExt;
 
 use color_eyre::eyre::{eyre, Result};
-use log::{debug, error};
-use std::sync::mpsc::channel;
+use log::debug;
 use std::time::Duration;
 
 use serde_json::value::Value;
@@ -18,8 +16,6 @@ pub struct OrbitalContainerSpec<'a> {
     pub name: Option<String>,
     pub image: String,
     pub command: Vec<&'a str>,
-    //pub env_vars: Option<HashMap<String, String>>,
-    //pub volumes: Option<HashMap<String, String>>,
     pub env_vars: Option<Vec<&'a str>>,
     pub volumes: Option<Vec<&'a str>>,
     pub timeout: Option<Duration>,
@@ -52,59 +48,40 @@ pub fn image_tag_sanitizer(image: &str) -> Result<String> {
 
 /// Connect to the docker engine and pull the provided image
 /// if no tag is provided with the image, ":latest" tag will be assumed
-pub fn container_pull(image: &str) -> Result<()> {
+pub async fn container_pull<S: AsRef<str>>(image: S) -> Result<mpsc::UnboundedReceiver<Value>> {
+    let (tx, rx) = mpsc::unbounded_channel();
+
     let docker = Docker::new();
 
-    let img = image_tag_sanitizer(image)?;
+    let img = image_tag_sanitizer(image.as_ref())?;
 
     debug!("Pulling image: {}", img);
 
-    let img_pull = docker
+    let mut stream = docker
         .images()
-        .pull(&PullOptions::builder().image(img.clone()).build())
-        .for_each(|output| {
-            debug!("{:?}", output);
-            Ok(())
-        })
-        .map_err(|e| eprintln!("Error: {}", e));
-    Ok(tokio_01::run(img_pull))
-}
+        .pull(&PullOptions::builder().image(img.clone()).build());
 
-pub async fn container_pull_async(image: String) -> Result<mpsc::UnboundedReceiver<Value>> {
-    let (tx, rx) = mpsc::unbounded_channel();
-
-    tokio::spawn(async move {
-        let docker = Docker::new();
-
-        let img: String = image_tag_sanitizer(&image).expect("Could not sanitize image name");
-
-        debug!("Pulling image: {}", img);
-
-        let img_pull = docker
-            .images()
-            .pull(&PullOptions::builder().image(img.clone()).build())
-            .for_each(move |output| {
+    while let Some(pull_result) = stream.next().await {
+        match pull_result {
+            Ok(output) => {
                 debug!("{:?}", output);
 
                 let _ = match tx.send(output) {
                     Ok(_) => Ok(()),
                     Err(_) => Err(()),
                 };
-
-                Ok(())
-            })
-            .map_err(|e| eprintln!("Error: {}", e));
-        tokio_01::run(img_pull)
-    });
+            }
+            Err(e) => eprintln!("Error: {}", e),
+        }
+    }
 
     Ok(rx)
 }
 
-// TODO: Build a struct so I don't have to mess with so many function calls.
 /// Connect to the docker engine and create a container
 /// Currently assumes that source code gets mounted in container's /orbital-work directory
 /// Returns the id of the container that is created
-pub fn container_create(container_spec: OrbitalContainerSpec) -> Result<String, ()> {
+pub async fn container_create(container_spec: OrbitalContainerSpec<'_>) -> Result<String, ()> {
     let docker = Docker::new();
 
     let env_vec: Vec<&str> = container_spec.env_vars.unwrap_or_default();
@@ -134,73 +111,51 @@ pub fn container_create(container_spec: OrbitalContainerSpec) -> Result<String, 
             .build(),
     };
 
-    let new_container = docker
-        .containers()
-        .create(&container_spec)
-        .map(|info| {
-            debug!("{:?}", info);
-            info
-        })
-        .map_err(|e| {
-            error!("Error: {}", e);
-            e
-        });
-
-    let mut container_runtime =
-        tokio_01::runtime::Runtime::new().expect("Unable to create a runtime");
-
-    // Wait for the container to be created so we can get its container id
-    let container = match container_runtime.block_on(new_container) {
-        Ok(runtime) => runtime,
-        Err(_) => return Err(()),
-    };
-
-    Ok(container.id)
+    match docker.containers().create(&container_spec).await {
+        Ok(info) => Ok(info.id),
+        Err(_e) => Err(()),
+    }
 }
 
 /// Connect to the docker engine and start a created container with a given `container_id`
-pub fn container_start(container_id: &str) -> Result<()> {
+pub async fn container_start(container_id: &str) -> Result<()> {
     let docker = Docker::new();
 
     debug!("Starting the container");
 
-    let start_container = docker
+    match docker
         .containers()
-        .get(&container_id)
+        .get(String::from(container_id))
         .start()
-        .map(|info| {
-            println!("{:?}", info);
-            info
-        })
-        .map_err(|e| eprintln!("Error: {}", e));
-    tokio_01::run(start_container);
-
-    Ok(())
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(_) => Err(eyre!("Could not start container")),
+    }
 }
 
 /// Connect to the docker engine and stop a running container with a given `container_id`
-pub fn container_stop(container_id: &str) -> Result<()> {
+pub async fn container_stop(container_id: &str) -> Result<()> {
     let docker = Docker::new();
-    let stop_container = docker
+    match docker
         .containers()
-        .get(&container_id)
+        .get(String::from(container_id))
         .stop(None)
-        .map(|info| {
-            println!("{:?}", info);
-            info
-        })
-        .map_err(|e| eprintln!("Error: {}", e));
-    tokio_01::run(stop_container);
-    Ok(())
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(_) => Err(eyre!("Could not stop container")),
+    }
 }
 
-// TODO: This will need a mechanism to stream logs out to a client
 /// Connect to the docker engine and execute commands in a running container with a given `container_id`
-pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<String>> {
+pub async fn container_exec<S: AsRef<str>>(
+    container_id: S,
+    command: Vec<&str>,
+) -> Result<mpsc::UnboundedReceiver<String>> {
+    let (tx, rx) = mpsc::unbounded_channel();
     let docker = Docker::new();
 
-    // println!("{:?}", command);
-    // FYI: This might not work on MacOS hosts until https://github.com/softprops/shiplift/issues/155 is fixed
     //println!("Executing commands in the container");
     let options = ExecContainerOptions::builder()
         .cmd(command)
@@ -208,120 +163,64 @@ pub fn container_exec(container_id: &str, command: Vec<&str>) -> Result<Vec<Stri
         .attach_stderr(true)
         .build();
 
-    // open a channel
-    let (tx, rx) = channel();
-
     // send output to channel
-    let exec_container = docker
+    let mut exec_stream = docker
         .containers()
-        .get(&container_id)
-        .exec(&options)
-        .for_each(move |chunk| {
-            match chunk.stream_type {
-                StreamType::StdOut => {
-                    tx.send(chunk.as_string_lossy()).unwrap();
-                    print!("{}", chunk.as_string_lossy())
+        .get(container_id.as_ref())
+        .exec(&options);
+
+    while let Some(exec_result) = exec_stream.next().await {
+        match exec_result {
+            Ok(chunk) => match chunk {
+                TtyChunk::StdOut(bytes) => {
+                    tx.send(std::str::from_utf8(&bytes).unwrap().to_string())
+                        .unwrap();
+                    print!("{}", std::str::from_utf8(&bytes).unwrap().to_string())
                 }
-                StreamType::StdErr => {
-                    tx.send(chunk.as_string_lossy()).unwrap();
-                    eprintln!("{}", chunk.as_string_lossy());
+                TtyChunk::StdErr(bytes) => {
+                    tx.send(std::str::from_utf8(&bytes).unwrap().to_string())
+                        .unwrap();
+                    eprintln!("{}", std::str::from_utf8(&bytes).unwrap().to_string())
                 }
-                StreamType::StdIn => unreachable!(),
-            }
-            Ok(())
-        })
-        .map_err(|e| eprintln!("Error: {}", e));
-
-    tokio_01::run(exec_container);
-
-    let exec_output: Vec<String> = rx.into_iter().collect();
-
-    Ok(exec_output)
-}
-
-pub async fn container_exec_async(
-    container_id: String,
-    command: Vec<String>,
-) -> Result<mpsc::UnboundedReceiver<String>> {
-    let (tx, rx) = mpsc::unbounded_channel();
-
-    tokio::spawn(async move {
-        let docker = Docker::new();
-
-        // println!("{:?}", command);
-        // FYI: This might not work on MacOS hosts until https://github.com/softprops/shiplift/issues/155 is fixed
-        //println!("Executing commands in the container");
-
-        let options = ExecContainerOptions::builder()
-            .cmd(command.iter().map(AsRef::as_ref).collect())
-            .attach_stdout(true)
-            .attach_stderr(true)
-            .build();
-
-        // send output to channel
-        let exec_container = docker
-            .containers()
-            .get(&container_id)
-            .exec(&options)
-            .for_each(move |chunk| {
-                match chunk.stream_type {
-                    StreamType::StdOut => {
-                        let _ = match tx.send(chunk.as_string_lossy()) {
-                            Ok(_) => Ok(()),
-                            Err(_) => Err(()),
-                        };
-
-                        print!("{}", chunk.as_string_lossy())
-                    }
-                    StreamType::StdErr => {
-                        let _ = match tx.send(chunk.as_string_lossy()) {
-                            Ok(_) => Ok(()),
-                            Err(_) => Err(()),
-                        };
-
-                        eprintln!("{}", chunk.as_string_lossy());
-                    }
-                    StreamType::StdIn => unreachable!(),
-                }
-                Ok(())
-            })
-            .map_err(|e| eprintln!("Error: {}", e));
-
-        tokio_01::run(exec_container);
-    });
-
+                TtyChunk::StdIn(_) => unreachable!(),
+            },
+            Err(e) => eprintln!("Error: {}", e),
+        }
+    }
     Ok(rx)
 }
 
-pub async fn container_logs(container_id: String) -> Result<mpsc::UnboundedReceiver<String>> {
+pub async fn container_logs<S: AsRef<str>>(
+    container_id: S,
+) -> Result<mpsc::UnboundedReceiver<String>> {
     let (tx, rx) = mpsc::unbounded_channel();
 
-    tokio::spawn(async move {
-        let docker = Docker::new();
+    let docker = Docker::new();
 
-        // send output to channel
-        let log_container = docker
-            .containers()
-            .get(&container_id)
-            .logs(&LogsOptions::builder().stdout(true).stderr(true).build())
-            .for_each(move |chunk| {
-                match chunk.stream_type {
-                    StreamType::StdOut => {
-                        tx.send(chunk.as_string_lossy()).unwrap();
-                        print!("{}", chunk.as_string_lossy())
-                    }
-                    StreamType::StdErr => {
-                        tx.send(chunk.as_string_lossy()).unwrap();
-                        eprintln!("{}", chunk.as_string_lossy());
-                    }
-                    StreamType::StdIn => unreachable!(),
+    // send output to channel
+    let mut logs_stream = docker
+        .containers()
+        .get(container_id.as_ref())
+        .logs(&LogsOptions::builder().stdout(true).stderr(true).build());
+
+    while let Some(log_result) = logs_stream.next().await {
+        match log_result {
+            Ok(chunk) => match chunk {
+                TtyChunk::StdOut(bytes) => {
+                    tx.send(std::str::from_utf8(&bytes).unwrap().to_string())
+                        .unwrap();
+                    print!("{}", std::str::from_utf8(&bytes).unwrap().to_string())
                 }
-                Ok(())
-            })
-            .map_err(|e| eprintln!("Error: {}", e));
-
-        tokio_01::run(log_container);
-    });
+                TtyChunk::StdErr(bytes) => {
+                    tx.send(std::str::from_utf8(&bytes).unwrap().to_string())
+                        .unwrap();
+                    eprintln!("{}", std::str::from_utf8(&bytes).unwrap().to_string())
+                }
+                TtyChunk::StdIn(_) => unreachable!(),
+            },
+            Err(_e) => eprintln!("Error"),
+        }
+    }
 
     Ok(rx)
 }

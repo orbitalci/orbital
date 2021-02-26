@@ -17,8 +17,8 @@ pub async fn action_handler(
     action_option: ActionOption,
 ) -> Result<()> {
     debug!("Starting container");
-    match docker::container_start(&action_option.container_id) {
-        Ok(container_id) => container_id,
+    match docker::container_start(&action_option.container_id).await {
+        Ok(_) => {}
         Err(_) => {
             return Err(SubcommandError::new(&format!(
                 "Could not start Docker container id  {}",

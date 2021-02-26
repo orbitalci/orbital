@@ -18,7 +18,7 @@ pub async fn action_handler(
 ) -> Result<()> {
     debug!("Stopping container");
     let container_id = action_option.container_id.clone();
-    match docker::container_stop(&container_id) {
+    match docker::container_stop(&container_id).await {
         Ok(container_id) => container_id,
         Err(_) => {
             return Err(SubcommandError::new(&format!(

@@ -296,10 +296,9 @@ impl BuildContext {
                 );
 
                 // I guess here's where I read from the channel?
-                let mut stream =
-                    build_engine::docker_container_pull_async(build_container_spec.clone())
-                        .await
-                        .unwrap();
+                let mut stream = build_engine::docker_container_pull(build_container_spec.clone())
+                    .await
+                    .unwrap();
 
                 while let Some(response) = stream.recv().await {
                     info!("PULL OUTPUT: {:?}", response["status"].clone().as_str());
@@ -313,7 +312,9 @@ impl BuildContext {
                 // Create a new container
                 info!("Creating container");
                 next_step._container_id =
-                    build_engine::docker_container_create(&build_container_spec).ok();
+                    build_engine::docker_container_create(&build_container_spec)
+                        .await
+                        .ok();
 
                 // Start a docker container
                 info!(
@@ -324,6 +325,7 @@ impl BuildContext {
                 );
                 let _ =
                     build_engine::docker_container_start(&next_step._container_id.clone().unwrap())
+                        .await
                         .unwrap();
 
                 let _ = caller_tx.send("Stream: Starting -> Running".to_string());
@@ -390,7 +392,7 @@ impl BuildContext {
                     .clone()
                     .unwrap_or(format!("Stage {}", stage_index.to_string()));
 
-                let mut stream = build_engine::docker_container_exec_async(
+                let mut stream = build_engine::docker_container_exec(
                     next_step._container_id.clone().unwrap(),
                     vec![c.stages[stage_index].command[command_index].clone()],
                 )
@@ -512,6 +514,7 @@ impl BuildContext {
                 let _ = build_engine::docker_container_stop(
                     next_step._container_id.clone().unwrap().as_str(),
                 )
+                .await
                 .unwrap();
 
                 next_step.build_stage_name = "Finishing".to_string();

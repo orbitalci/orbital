@@ -23,6 +23,8 @@ use log::{debug, error, info};
 
 use futures_util::FutureExt;
 
+use tokio::runtime::Runtime;
+
 // TODO: If this bails anytime before the end, we need to attempt some cleanup
 /// Implementation of protobuf derived `BuildService` trait
 #[tonic::async_trait]
@@ -241,8 +243,15 @@ impl BuildService for OrbitalApi {
                     info!("Send a cancel signal for container: {}", &container_name);
 
                     // Probably change the build job state to canceled
-                    let _ = build_engine::docker_container_stop(&container_name)
-                        .expect("Sending Docker container stop failed");
+                    let rt = Runtime::new().unwrap();
+                    let handle = rt.handle().clone();
+
+                    let container_to_stop = container_name.clone();
+                    handle.spawn(async move {
+                        let _ = build_engine::docker_container_stop(container_to_stop.as_ref())
+                            .await
+                            .expect("Sending Docker container stop failed");
+                    });
 
                     // Update summary.build_state to JobState::Canceled
                     let mut new_canceled_summary = summary.clone();

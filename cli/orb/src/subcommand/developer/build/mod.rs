@@ -93,7 +93,7 @@ pub async fn subcommand_handler(
         "Pulling container: {:?}",
         build_container_spec.image.clone()
     );
-    match docker::container_pull(&build_container_spec.image.clone()) {
+    match docker::container_pull(&build_container_spec.image.clone()).await {
         Ok(ok) => ok, // The successful result doesn't matter
         Err(_) => {
             return Err(SubcommandError::new(&format!(
@@ -106,7 +106,7 @@ pub async fn subcommand_handler(
 
     // Create a new container
     debug!("Creating container");
-    let container_id = match docker::container_create(build_container_spec.clone()) {
+    let container_id = match docker::container_create(build_container_spec.clone()).await {
         Ok(container_id) => container_id,
         Err(_) => {
             return Err(SubcommandError::new(&format!(
@@ -119,7 +119,7 @@ pub async fn subcommand_handler(
 
     // Start the new container
 
-    match docker::container_start(&container_id) {
+    match docker::container_start(&container_id).await {
         Ok(container_id) => container_id,
         Err(_) => {
             return Err(SubcommandError::new(&format!(
@@ -134,18 +134,21 @@ pub async fn subcommand_handler(
     // TODO: Make sure tests try to exec w/o starting the container
     // Exec into the new container
     debug!("Sending commands into container");
-    let mut exec_output: Vec<String> = Vec::new();
     for command in config.stages[0].command.clone().iter() {
         // Build the exec string
         let wrapped_command = format!("{} | tee -a /proc/1/fd/1", &command);
 
         let container_command = vec!["/bin/sh", "-c", wrapped_command.as_ref()];
 
-        match docker::container_exec(container_id.as_ref(), container_command.clone()) {
-            Ok(output) => {
+        match docker::container_exec(container_id.clone(), container_command.clone()).await {
+            Ok(mut exec_output) => {
                 debug!("Command: {:?}", &command);
-                debug!("Output: {:?}", &output);
-                &mut exec_output.extend(output);
+                //debug!("Output: {:?}", &output);
+
+                while let Some(output) = exec_output.recv().await {
+                    //tx.send(command_output).unwrap();
+                    print!("Output: {:?}", &output);
+                }
                 ()
             }
             Err(_) => {

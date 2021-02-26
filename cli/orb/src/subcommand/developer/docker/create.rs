@@ -63,7 +63,7 @@ pub async fn action_handler(
         timeout: Some(Duration::from_secs(60 * 30)), // 30 min
     };
 
-    match docker::container_create(build_container_spec) {
+    match docker::container_create(build_container_spec).await {
         Ok(container_id) => {
             println!("{}", container_id);
             Ok(())
