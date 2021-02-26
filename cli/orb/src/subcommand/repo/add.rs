@@ -48,9 +48,13 @@ pub struct ActionOption {
     #[structopt(long)]
     skip_check: bool,
 
-    /// Check clone with provided branch instead of master
+    /// Check clone with provided branch instead of current checkout
     #[structopt(long)]
     alt_branch: Option<String>,
+
+    /// Set canonical branch with provided instead of current checkout
+    #[structopt(long)]
+    canonical_branch: Option<String>,
 }
 
 pub async fn action_handler(
@@ -133,7 +137,7 @@ pub async fn action_handler(
     }
 
     let mut remote_branch_refs = GitRepoRemoteBranchHeadList {
-        remote_branch_head_refs: Vec::new(),
+        remote_branch_heads: Vec::new(),
     };
 
     info!("Collecting HEAD refs for remote branches");
@@ -146,7 +150,7 @@ pub async fn action_handler(
             commit: commit.id,
         };
 
-        remote_branch_refs.remote_branch_head_refs.push(remote_ref);
+        remote_branch_refs.remote_branch_heads.push(remote_ref);
     }
 
     let request = Request::new(GitRepoAddRequest {
@@ -159,17 +163,19 @@ pub async fn action_handler(
         git_provider: repo_info.url.host.clone().unwrap(),
         name: repo_info.url.name.clone(),
         uri: repo_info.url.trim_auth().to_string(),
+        canonical_branch: action_option
+            .canonical_branch
+            .unwrap_or(repo_info.branch.expect("No branch info found")),
         user: repo_user,
         alt_check_branch: action_option.alt_branch.unwrap_or_default(),
         skip_check: action_option.skip_check,
-        remote_branch_head_refs: {
-            if remote_branch_refs.remote_branch_head_refs.len() > 0 {
+        remote_branch_heads: {
+            if remote_branch_refs.remote_branch_heads.len() > 0 {
                 Some(remote_branch_refs)
             } else {
                 None
             }
         },
-        ..Default::default()
     });
 
     debug!("Request for git repo add: {:?}", &request);

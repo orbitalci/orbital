@@ -17,12 +17,13 @@ pub struct NewRepo {
     pub org_id: i32,
     pub name: String,
     pub uri: String,
+    pub canonical_branch: String,
     pub git_host_type: GitHostType,
     pub secret_id: Option<i32>,
     pub build_active_state: ActiveState,
     pub notify_active_state: ActiveState,
     pub next_build_index: i32,
-    pub remote_branch_head_refs: serde_json::Value,
+    pub remote_branch_heads: serde_json::Value,
 }
 
 impl Default for NewRepo {
@@ -31,12 +32,13 @@ impl Default for NewRepo {
             org_id: 0,
             name: "".into(),
             uri: "".into(),
+            canonical_branch: "".into(),
             git_host_type: GitHostType::Generic,
             secret_id: None,
             build_active_state: ActiveState::Enabled,
             notify_active_state: ActiveState::Enabled,
             next_build_index: 1,
-            remote_branch_head_refs: json!([]),
+            remote_branch_heads: json!([]),
         }
     }
 }
@@ -50,12 +52,13 @@ pub struct Repo {
     pub org_id: i32,
     pub name: String,
     pub uri: String,
+    pub canonical_branch: String,
     pub git_host_type: GitHostType,
     pub secret_id: Option<i32>,
     pub build_active_state: ActiveState,
     pub notify_active_state: ActiveState,
     pub next_build_index: i32,
-    pub remote_branch_head_refs: serde_json::Value,
+    pub remote_branch_heads: serde_json::Value,
 }
 
 impl Default for Repo {
@@ -65,12 +68,13 @@ impl Default for Repo {
             org_id: 0,
             name: "".into(),
             uri: "".into(),
+            canonical_branch: "".into(),
             git_host_type: GitHostType::Generic,
             secret_id: None,
             build_active_state: ActiveState::Enabled,
             notify_active_state: ActiveState::Enabled,
             next_build_index: 1,
-            remote_branch_head_refs: json!([]),
+            remote_branch_heads: json!([]),
         }
     }
 }
@@ -87,13 +91,14 @@ impl From<Repo> for GitRepoEntry {
             name: git_uri_parsed.name,
             user: git_uri_parsed.user.unwrap(),
             uri: repo.uri,
+            canonical_branch: repo.canonical_branch,
             //secret_type
             //auth_data:
             build: repo.build_active_state.into(),
             notify: repo.notify_active_state.into(),
             next_build_index: repo.next_build_index,
-            remote_branch_head_refs: {
-                match repo.remote_branch_head_refs {
+            remote_branch_heads: {
+                match repo.remote_branch_heads {
                     serde_json::Value::Null => None,
                     serde_json::Value::Object(map_value) => {
                         let mut git_branches: Vec<GitRepoRemoteBranchHead> = Vec::new();
@@ -107,7 +112,7 @@ impl From<Repo> for GitRepoEntry {
                             git_branches.push(branch);
                         }
                         Some(GitRepoRemoteBranchHeadList {
-                            remote_branch_head_refs: git_branches,
+                            remote_branch_heads: git_branches,
                         })
                     }
                     _ => {
@@ -132,13 +137,14 @@ impl From<GitRepoEntry> for Repo {
             org_id: 0,
             name: git_repo_entry.name.clone(),
             uri: format!("{}", git_uri_parsed),
+            canonical_branch: git_repo_entry.canonical_branch.into(),
             //git_host_type: git_repo_entry.,
             //secret_id: Option<i32>,
             build_active_state: git_repo_entry.build.into(),
             notify_active_state: git_repo_entry.notify.into(),
             next_build_index: git_repo_entry.next_build_index,
-            remote_branch_head_refs: {
-                match git_repo_entry.remote_branch_head_refs {
+            remote_branch_heads: {
+                match git_repo_entry.remote_branch_heads {
                     // TODO: Unpack this shit
                     Some(_branches) => {
                         json!([])

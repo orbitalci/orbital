@@ -90,9 +90,9 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                     // NEED: Last known commit from DB
                     // FIXME: Yikes.
                     let last_known_heads = r
-                        .remote_branch_head_refs
+                        .remote_branch_heads
                         .expect("No last known commits in DB")
-                        .remote_branch_head_refs;
+                        .remote_branch_heads;
 
                     // FIXME: If auth required, gather auth from SecretService
                     // Load up a list of all the repos, and the path to any secrets for cloning
@@ -253,12 +253,13 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                                     name: r.name.clone(),
                                     user: r.user.clone(),
                                     uri: r.uri.clone(),
+                                    canonical_branch: r.canonical_branch.clone(),
                                     secret_type: r.secret_type.clone(),
                                     build: r.build.clone(),
                                     notify: r.notify.clone(),
                                     auth_data: r.auth_data.clone(),
-                                    remote_branch_head_refs: Some(GitRepoRemoteBranchHeadList {
-                                        remote_branch_head_refs: current_heads.clone(),
+                                    remote_branch_heads: Some(GitRepoRemoteBranchHeadList {
+                                        remote_branch_heads: current_heads.clone(),
                                     }),
                                 };
 
@@ -317,12 +318,13 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                                 name: r.name.clone(),
                                 user: r.user.clone(),
                                 uri: r.uri.clone(),
+                                canonical_branch: r.canonical_branch.clone(),
                                 secret_type: r.secret_type.clone(),
                                 build: r.build.clone(),
                                 notify: r.notify.clone(),
                                 auth_data: r.auth_data.clone(),
-                                remote_branch_head_refs: Some(GitRepoRemoteBranchHeadList {
-                                    remote_branch_head_refs: current_heads.clone(),
+                                remote_branch_heads: Some(GitRepoRemoteBranchHeadList {
+                                    remote_branch_heads: current_heads.clone(),
                                 }),
                             };
 

@@ -247,12 +247,13 @@ table! {
         org_id -> Integer,
         name -> Text,
         uri -> Text,
+        canonical_branch -> Text,
         git_host_type -> GitHostTypePGEnum,
         secret_id -> Nullable<Integer>,
         build_active_state -> ActiveStatePGEnum,
         notify_active_state -> ActiveStatePGEnum,
         next_build_index -> Integer,
-        remote_branch_head_refs -> Jsonb,
+        remote_branch_heads -> Jsonb,
     }
 }
 

@@ -50,12 +50,13 @@ pub fn repo_increment_build_index(conn: &PgConnection, repo: Repo) -> Result<Rep
         org_id: repo.org_id,
         name: repo.name.clone(),
         uri: repo.uri,
+        canonical_branch: repo.canonical_branch,
         git_host_type: repo.git_host_type,
         secret_id: repo.secret_id,
         build_active_state: repo.build_active_state,
         notify_active_state: repo.notify_active_state,
         next_build_index: repo.next_build_index + 1,
-        remote_branch_head_refs: repo.remote_branch_head_refs,
+        remote_branch_heads: repo.remote_branch_heads,
     };
 
     let update_result = repo_update(conn, &org_name, &repo.name.clone(), update_repo)?;
@@ -268,11 +269,14 @@ pub fn secret_list(
 
 pub fn repo_add(
     conn: &PgConnection,
+
+    // OrbitalClient
     org: &str,
     name: &str,
     uri: &str,
+    canonical_branch: &str,
     secret: Option<Secret>,
-    branch_refs: serde_json::Value,
+    branches_latest: serde_json::Value,
 ) -> Result<(Org, Repo, Option<Secret>)> {
     let repo_check = repo_get(conn, org, name);
 
@@ -292,8 +296,9 @@ pub fn repo_add(
                     name: name.into(),
                     org_id: org_db.id,
                     uri: uri.into(),
+                    canonical_branch: canonical_branch.into(),
                     secret_id: secret_id,
-                    remote_branch_head_refs: branch_refs,
+                    remote_branch_heads: branches_latest,
                     ..Default::default()
                 })
                 .get_result(conn)

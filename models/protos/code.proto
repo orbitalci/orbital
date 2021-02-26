@@ -12,12 +12,13 @@ message GitRepoEntry {
     string name = 3;
     string user = 4;
     string uri = 5;
-    orbital_types.SecretType secret_type = 6;
-    string auth_data = 7;
-    orbital_types.ActiveState build = 8;
-    orbital_types.ActiveState notify = 9;
-    int32 next_build_index = 10;
-    GitRepoRemoteBranchHeadList remote_branch_head_refs = 11;
+    string canonical_branch = 6;
+    orbital_types.SecretType secret_type = 7;
+    string auth_data = 8;
+    orbital_types.ActiveState build = 9;
+    orbital_types.ActiveState notify = 10;
+    int32 next_build_index = 11;
+    GitRepoRemoteBranchHeadList remote_branch_heads = 12;
 
 }
 
@@ -27,11 +28,12 @@ message GitRepoAddRequest {
     string name = 3;
     string user = 4;
     string uri = 5;
-    orbital_types.SecretType secret_type = 6;
-    string auth_data = 7;
-    bool skip_check = 8;
-    string alt_check_branch = 9;
-    GitRepoRemoteBranchHeadList remote_branch_head_refs = 10;
+    string canonical_branch = 6;
+    orbital_types.SecretType secret_type = 7;
+    string auth_data = 8;
+    bool skip_check = 9;
+    string alt_check_branch = 10;
+    GitRepoRemoteBranchHeadList remote_branch_heads = 11;
 }
 
 message GitRepoGetRequest {
@@ -48,13 +50,15 @@ message GitRepoUpdateRequest {
     string name = 3;
     string user = 4;
     string uri = 5;
-    orbital_types.SecretType secret_type = 6;
-    orbital_types.ActiveState build = 7;
-    orbital_types.ActiveState notify = 8;
-    string auth_data = 9;
-    GitRepoRemoteBranchHeadList remote_branch_head_refs = 10;
+    string canonical_branch = 6;
+    orbital_types.SecretType secret_type = 7;
+    orbital_types.ActiveState build = 8;
+    orbital_types.ActiveState notify = 9;
+    string auth_data = 10;
+    GitRepoRemoteBranchHeadList remote_branch_heads = 11;
 }
 
+// Change uri to url
 message GitRepoRemoveRequest {
     string org = 1;
     string git_provider = 2;
@@ -79,27 +83,13 @@ message GitRepoRemoteBranchHead {
 }
 
 message GitRepoRemoteBranchHeadList {
-    repeated GitRepoRemoteBranchHead remote_branch_head_refs = 1;
+    repeated GitRepoRemoteBranchHead remote_branch_heads = 1;
 }
 
 service CodeService {
-    //rpc GitProviderAdd(GitProviderAddRequest) returns (GitProviderEntry);
-    //rpc GitProviderGet(GitProviderGetRequest) returns (GitProviderEntry);
-    //rpc GitProviderUpdate(GitProviderUpdateRequest) returns (GitProviderEntry);
-    //rpc GitProviderRemove(GitProviderRemoveRequest) returns (GitProviderEntry);
-    //rpc GitProviderList(GitProviderListRequest) returns (GitProviderListResponse);
-
     rpc GitRepoAdd(GitRepoAddRequest) returns (GitRepoEntry);
     rpc GitRepoGet(GitRepoGetRequest) returns (GitRepoEntry);
     rpc GitRepoUpdate(GitRepoUpdateRequest) returns (GitRepoEntry);
     rpc GitRepoRemove(GitRepoRemoveRequest) returns (GitRepoEntry);
     rpc GitRepoList(GitRepoListRequest) returns (GitRepoListResponse);
-
-    // I think I still need things for polling.
-    // They just don't need to be exposed to the user, or at least via config file
-    //rpc AddRepoPollRule() returns ();
-    //rpc GetRepoPollRule() returns ();
-    //rpc UpdateRepoPollRule() returns ();
-    //rpc DeleteRepoPollRule() returns ();
-    //rpc ListRepoPollRule() returns ();
 }
