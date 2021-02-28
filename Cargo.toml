@@ -10,4 +10,5 @@ members = [
 ]
 
 [patch.crates-io]
-git-event = { path = "/home/telant/Documents/git-event-rs" }
+#git-event = { path = "/home/telant/Documents/git-event-rs" }
+#git-meta = { path = "/home/telant/Documents/git-meta-rs" }

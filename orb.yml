@@ -27,19 +27,19 @@ stages:
   #  - docker build -t orb .
 
 
-  trigger_on:
-    repos:
-      - name: git-url-parse 
-        watch-branch: main (default)
-        action:
-          - notify
-          - build orbital>main ENV=somethung
-          - build orbital>dev
-      - name: git-event
-        watch-branch: all
-        action: build orbital>all
-
-      - git-meta
-
-    main=primary branch
+#  trigger_on:
+#    repos:
+#      - name: git-url-parse 
+#        watch-branch: main (default)
+#        action:
+#          - notify
+#          - build orbital>main ENV=somethung
+#          - build orbital>dev
+#      - name: git-event
+#        watch-branch: all
+#        action: build orbital>all
+#
+#      - git-meta
+#
+#    main=primary branch
 
