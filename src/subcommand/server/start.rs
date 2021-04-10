@@ -1,3 +1,4 @@
+use crate::orbital_database::postgres;
 use color_eyre::eyre::Result;
 use structopt::StructOpt;
 
@@ -48,6 +49,9 @@ pub struct SubcommandOption {
     poll_freq: u8,
 }
 
+// This path is confusingly relative to the crate root, and not the current module.
+embed_migrations!("src/orbital_database/postgres/migrations");
+
 /// Binds a *currently hardcoded* address and starts all services on mutliplexed gRPC server
 pub async fn subcommand_handler(
     _global_option: GlobalOption,
@@ -73,6 +77,13 @@ pub async fn subcommand_handler(
     }
 
     let _ = env_logger::try_init();
+
+    // Run migrations
+    //println!("Migrations dir: {:?}", diesel_migrations::find_migrations_directory());
+    let pg_conn = postgres::client::establish_connection();
+    embedded_migrations::run_with_output(&pg_conn, &mut std::io::stdout())
+        .expect("Running DB migrations failed");
+    drop(pg_conn);
 
     // Kick off thread for checking for new commits
     {

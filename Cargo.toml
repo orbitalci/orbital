@@ -4,13 +4,12 @@ version = "0.1.0-alpha.1"
 authors = ["T.J. Telan <t.telan@gmail.com>"]
 edition = "2018"
 default-run = "orb"
+include = [ "**/*.rs", "**/*.proto", "Cargo.toml", "Cargo.lock", "LICENSE.txt"]
 
 [dependencies]
 color-eyre = "^0.5"
 clap = "^2.33"
 env_logger = "^0.8"
-#orbital_headers = { path = "models/orbital_headers" }
-#orbital_services = { path = "services"}
 structopt = "^0.3"
 thiserror = "^1.0"
 tokio = { version = "^1.1", features = ["full"] }
@@ -19,17 +18,10 @@ serde = { version = "^1.0", features = ["derive"] }
 serde_yaml = "^0.8"
 log = "^0.4"
 
-
 # Subcommand
 chrono = "^0.4"
 git2 = "^0.13"
 git-url-parse = "^0.3"
-#orbital_agent = { path = "lib/orbital_agent" }
-#orbital_exec_runtime = { path = "lib/exec_runtime" }
-#orbital_config_parser = { path = "lib/config_parser" }
-#orbital_database = { path = "models/orbital_database" }
-# Temporary. Move into agent runtime
-#orbital_hashicorp_stack = { path = "lib/hashicorp_stack" }
 prettytable-rs = "^0.8"
 strum = "^0.20"
 strum_macros = "^0.20"
@@ -55,48 +47,16 @@ bytes = "^1.0"
 prost = "^0.7"
 prost-derive = "^0.7"
 prost-types = "^0.7"
-#tonic = "^0.4"
 
-#color-eyre = "^0.5"
-#chrono = "^0.4"
 diesel = { version = "^1.4", features = ["postgres", "chrono", "serde_json"] }
-#log = "^0.4"
-#orbital_hashicorp_stack = { path = "../../lib/hashicorp_stack" }
-#git-url-parse = "^0.3"
-#orbital_headers = { path = "../orbital_headers" }
-#prost-types = "^0.7"
-#strum = "^0.20"
-#strum_macros = "^0.20"
-#serde = { version = "^1.0", features = ["derive"] }
-#serde_json = "^1.0"
+diesel_migrations = "^1.4"
 shiplift = "^0.7"
 base64 = "^0.13"
-hashicorp_vault = "^1.1"
-tokio_01 = { package = "tokio", version = "^0.1" }
+hashicorp_vault = "^2.0"
 
-#color-eyre = "^0.5"
-#chrono = "^0.4"
-#futures = "^0.3"
-#futures-util = "^0.3"
-#log = "^0.4"
-#mktemp = "^0.4"
 hostname = "^0.3"
-#orbital_agent = { path = "../lib/orbital_agent" }
-#orbital_exec_runtime = { path = "../lib/exec_runtime" }
-#orbital_config_parser = { path = "../lib/config_parser" }
-#orbital_database = { path = "../models/orbital_database" }
-#git-meta = "^0.3" 
-#orbital_hashicorp_stack = { path = "../lib/hashicorp_stack" }
-#orbital_headers = { path = "../models/orbital_headers" }
-#prost-types = "^0.7"
-#thiserror = "^1.0"
-#tokio = { version = "^1.1", features = ["full"] }
-#tokio-stream = "^0.1"
-#tonic = "^0.4"
-#serde_json = "^1.0"
 
 # For state machine
-#git-url-parse = "^0.3"
 machine = "^0.3"
 
 futures-util = "^0.3"
@@ -107,20 +67,6 @@ tokio-stream = "^0.1"
 git-meta = "^0.3" 
 chrono = "0.4"
 tonic-build = "^0.4"
-
-#[workspace]
-#members = [
-#    "lib/config_parser",
-#    "lib/exec_runtime",
-#    "lib/orbital_agent",
-#    "lib/hashicorp_stack",
-#    "services",
-#    "models/orbital_database",
-#]
-#exclude = [
-#    "lib/orbital_utils",
-#]
-
 
 [patch.crates-io]
 #git-event = { path = "/home/telant/Documents/git-event-rs" }

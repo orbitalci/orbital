@@ -19,6 +19,8 @@ use std::fs::OpenOptions;
 
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 struct OrbCliConfigFile {

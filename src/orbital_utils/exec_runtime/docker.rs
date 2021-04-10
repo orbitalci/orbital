@@ -30,7 +30,6 @@ pub struct OrbitalContainerSpec<'a> {
 /// let tag_provided = container_builder::docker::image_tag_sanitizer("alpine:3").unwrap();
 /// assert_eq!("alpine:3", tag_provided);
 /// ```
-#[doc(test(no_crate_inject))]
 pub fn image_tag_sanitizer(image: &str) -> Result<String> {
     let split = &image.split(":").collect::<Vec<_>>();
 
