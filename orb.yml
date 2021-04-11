@@ -1,8 +1,10 @@
 image: docker
+run_branch: all
 env:
   - GLOBAL=yes
 stages:
   - name: Testing env vars
+    branch: develop
     env:
       - LOCAL=first
     command:
@@ -23,3 +25,21 @@ stages:
   #  command:
   #  - echo Hello world!
   #  - docker build -t orb .
+
+
+#  trigger_on:
+#    repos:
+#      - name: git-url-parse 
+#        watch-branch: main (default)
+#        action:
+#          - notify
+#          - build orbital>main ENV=somethung
+#          - build orbital>dev
+#      - name: git-event
+#        watch-branch: all
+#        action: build orbital>all
+#
+#      - git-meta
+#
+#    main=primary branch
+

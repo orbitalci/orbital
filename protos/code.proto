@@ -1,0 +1,95 @@
+syntax = "proto3";
+package code;
+
+import "orbital_types.proto";
+import "secret.proto";
+
+/// Code repository
+
+message GitRepoEntry {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    string user = 4;
+    string uri = 5;
+    string canonical_branch = 6;
+    orbital_types.SecretType secret_type = 7;
+    string auth_data = 8;
+    orbital_types.ActiveState build = 9;
+    orbital_types.ActiveState notify = 10;
+    int32 next_build_index = 11;
+    GitRepoRemoteBranchHeadList remote_branch_heads = 12;
+
+}
+
+message GitRepoAddRequest {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    string user = 4;
+    string uri = 5;
+    string canonical_branch = 6;
+    orbital_types.SecretType secret_type = 7;
+    string auth_data = 8;
+    bool skip_check = 9;
+    string alt_check_branch = 10;
+    GitRepoRemoteBranchHeadList remote_branch_heads = 11;
+}
+
+message GitRepoGetRequest {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    string user = 4;
+    string uri = 5;
+}
+
+message GitRepoUpdateRequest {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    string user = 4;
+    string uri = 5;
+    string canonical_branch = 6;
+    orbital_types.SecretType secret_type = 7;
+    orbital_types.ActiveState build = 8;
+    orbital_types.ActiveState notify = 9;
+    string auth_data = 10;
+    GitRepoRemoteBranchHeadList remote_branch_heads = 11;
+}
+
+// Change uri to url
+message GitRepoRemoveRequest {
+    string org = 1;
+    string git_provider = 2;
+    string name = 3;
+    string user = 4;
+    string uri = 5;
+    bool force = 6;
+}
+
+message GitRepoListRequest {
+    string org = 1;
+    string git_provider = 2;
+}
+
+message GitRepoListResponse {
+    repeated GitRepoEntry git_repos = 1;
+}
+
+message GitRepoRemoteBranchHead {
+   string branch = 1;
+   string commit = 2; 
+}
+
+message GitRepoRemoteBranchHeadList {
+    repeated GitRepoRemoteBranchHead remote_branch_heads = 1;
+}
+
+service CodeService {
+    rpc GitRepoAdd(GitRepoAddRequest) returns (GitRepoEntry);
+    rpc GitRepoGet(GitRepoGetRequest) returns (GitRepoEntry);
+    rpc GitRepoUpdate(GitRepoUpdateRequest) returns (GitRepoEntry);
+    rpc GitRepoRemove(GitRepoRemoveRequest) returns (GitRepoEntry);
+    rpc GitRepoList(GitRepoListRequest) returns (GitRepoListResponse);
+}

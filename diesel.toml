@@ -8,4 +8,4 @@
 
 # This should arrive w/ diesel-rs/diesel#2163
 #[migrations_directory]
-#file = "models/orbital_database/postgres/migrationsq"
+#file = "src/orbital_database/postgres/migrations"
