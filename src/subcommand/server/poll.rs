@@ -179,10 +179,7 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                         SecretType::BasicAuth => {
 
                             // TODO: Translate the logic for BasicAuth creds out of vault from build_context.rs
-                            Some(GitCredentials::UserPassPlaintext {
-                                username: "lfksdjfla".to_string(),
-                                password: "sdklfjdl".to_string(),
-                            })
+                            unimplemented!("Basic auth not yet implemented")
                         },
                         _ => panic!(
                             "We only support public repos, or private repo auth with sshkeys or basic auth"
@@ -233,7 +230,7 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
 
                             //assert!(String::from_utf8(head_meta.id.clone()).is_err());
                             // FIXME: This conversion doesn't yet work
-                            let new_commit = head_meta.id;
+                            let new_commit = head_meta.id.clone();
 
                             if b.commit != new_commit {
                                 info!("There are new commits. Start a new build");
@@ -270,6 +267,11 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                                     .await
                                     .unwrap()
                                     .into_inner();
+
+                                // Skip triggering a build if commit message contains [skip ci] or [ci skip]
+                                if is_skip_ci_commit(&head_meta) {
+                                    continue;
+                                }
 
                                 // Start a new build
                                 let build_request = Request::new(BuildTarget {
@@ -341,6 +343,11 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                                 repo_update_res
                             );
 
+                            // Skip triggering a build if commit message contains [skip ci] or [ci skip]
+                            if is_skip_ci_commit(&head_meta) {
+                                continue;
+                            }
+
                             // Start a new build
                             let build_request = Request::new(BuildTarget {
                                 org: r.org.clone(),
@@ -380,4 +387,14 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
             time::sleep(Duration::from_secs(poll_freq.into())).await;
         } // End of loop
     });
+}
+
+fn is_skip_ci_commit(head_meta: &git_meta::GitCommitMeta) -> bool {
+    if let Some(commit_msg) = head_meta.message.clone() {
+        if commit_msg.contains("[skip ci]") || commit_msg.contains("[ci skip]") {
+            info!("Skipping build due to commit message");
+            return true;
+        }
+    }
+    false
 }
