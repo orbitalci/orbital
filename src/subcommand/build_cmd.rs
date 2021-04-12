@@ -18,7 +18,7 @@ use tonic::Request;
 use std::io::Write;
 use termcolor::{BufferWriter, ColorChoice};
 
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{eyre, Result};
 use log::debug;
 use std::path::{Path, PathBuf};
 use std::str;
@@ -58,6 +58,10 @@ pub struct SubcommandOption {
     /// Path to local build config file to use instead of the checked in orb.yml
     #[structopt(long, parse(from_os_str))]
     config: Option<PathBuf>,
+
+    /// Pass this flag to build commits with "[skip ci]" or "[ci skip]"
+    #[structopt(long)]
+    force: bool,
 }
 
 /// Generates gRPC `BuildStartRequest` object and connects to *currently hardcoded* gRPC server and sends a request to `BuildService` server.
@@ -81,18 +85,21 @@ pub async fn subcommand_handler(
         .expect("Unable to open GitRepo");
     // If specified, check if commit is in branch
     // If We're in detatched head (commit not in branch) say so
-    //
-    // Open the orb.yml
-    //let _config = parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))?;
 
+    // Open the orb.yml
     let config = match &local_option.config {
         Some(path) => parser::load_orb_yaml(path).expect("Provided config failed validation"),
         None => parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml")))
             .expect("orb.yml failed validation"),
     };
 
-    //let _config =
-    //    parser::load_orb_yaml(Path::new(&format!("{}/{}", &path.display(), "orb.yml"))).unwrap();
+    // Check if commit has [skip ci] or [ci skip]
+    // If so, we will only start a build if we pass `--force`
+    if is_skip_ci_commit(&git_repo.head.clone().expect("No valid git commit found")) {
+        if !local_option.force {
+            return Err(eyre!("Last pushed git commit was skipped due to \"[skip ci]\" or \"[ci skip]\"\nUse `--force` to build"));
+        }
+    }
 
     // Assuming Docker builder... (Stay focused!)
     // Get the docker container image
@@ -232,4 +239,13 @@ pub async fn subcommand_handler(
     table.printstd();
 
     Ok(())
+}
+
+fn is_skip_ci_commit(head_meta: &git_meta::GitCommitMeta) -> bool {
+    if let Some(commit_msg) = head_meta.message.clone() {
+        if commit_msg.contains("[skip ci]") || commit_msg.contains("[ci skip]") {
+            return true;
+        }
+    }
+    false
 }
