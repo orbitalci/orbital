@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 use crate::subcommand::{secret::SubcommandOption, GlobalOption};
 
-use crate::orbital_database::postgres::schema::SecretType;
+//use crate::orbital_database::postgres::schema::SecretType;
 use crate::orbital_headers::secret::{
     secret_service_client::SecretServiceClient, SecretRemoveRequest,
 };
@@ -14,7 +14,6 @@ use log::debug;
 use crate::orbital_database::postgres::secret::Secret;
 use color_eyre::eyre::Result;
 use prettytable::{cell, format, row, Table};
-use strum::VariantNames;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
@@ -22,14 +21,15 @@ pub struct ActionOption {
     /// Name of Orbital org
     #[structopt(long, env = "ORB_DEFAULT_ORG")]
     org: Option<String>,
+    // TODO: Handle these flags
 
-    /// Secret name
-    #[structopt(required = true)]
-    secret_name: String,
+    ///// Secret name
+    //#[structopt(required = true)]
+    //secret_name: String,
 
-    /// Secret Type
-    #[structopt(long, required = true, possible_values = &SecretType::VARIANTS)]
-    secret_type: SecretType,
+    ///// Secret Type
+    //#[structopt(long, required = true, possible_values = &SecretType::VARIANTS)]
+    //secret_type: SecretType,
 }
 
 pub async fn action_handler(

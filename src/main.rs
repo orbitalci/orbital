@@ -1,8 +1,6 @@
 use color_eyre::eyre::Result;
 use structopt::StructOpt;
 
-extern crate clap;
-
 mod subcommand;
 use subcommand::{Subcommand, SubcommandContext};
 

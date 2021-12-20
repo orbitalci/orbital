@@ -25,22 +25,23 @@ pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
     #[structopt(long, parse(from_os_str), env = "PWD")]
     path: PathBuf,
+    // TODO: Handle these flags
 
-    /// Add env vars to build. Comma-separated with no spaces. ex. "key1=var1,key2=var2"
-    #[structopt(long, short)]
-    env: Option<String>,
+    ///// Add env vars to build. Comma-separated with no spaces. ex. "key1=var1,key2=var2"
+    //#[structopt(long, short)]
+    //env: Option<String>,
 
-    /// Add volume mapping from host to container. Comma-separated with no spaces. ex. "/host/path1:/container/path1,/host/path2:/container/path2"
-    #[structopt(long, short)]
-    volume: Option<String>,
+    ///// Add volume mapping from host to container. Comma-separated with no spaces. ex. "/host/path1:/container/path1,/host/path2:/container/path2"
+    //#[structopt(long, short)]
+    //volume: Option<String>,
 
-    /// Use the specified local branch
-    #[structopt(long)]
-    branch: Option<String>,
+    ///// Use the specified local branch
+    //#[structopt(long)]
+    //branch: Option<String>,
 
-    /// Use the specified commit hash
-    #[structopt(long)]
-    hash: Option<String>,
+    ///// Use the specified commit hash
+    //#[structopt(long)]
+    //hash: Option<String>,
 }
 
 /// If `--path` not given, expects current working directory, and parses for git metadata

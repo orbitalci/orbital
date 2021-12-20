@@ -142,6 +142,7 @@ pub async fn action_handler(
 
     info!("Collecting HEAD refs for remote branches");
     for (branch_name, commit) in repo_info
+        .to_info()
         .get_remote_branch_head_refs(None)
         .expect("Unable to retrieve branch head refs")
     {

@@ -7,17 +7,18 @@ pub mod clone;
 pub mod info;
 pub mod poll;
 
-use std::path::PathBuf;
+//use std::path::PathBuf;
 //use log::debug;
 
 /// Local options for customizing git library call
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
-    /// Path to local repo. Defaults to current working directory
-    #[structopt(long, parse(from_os_str), env = "PWD")]
-    path: PathBuf,
+    // TODO: Handle these flags
 
+    ///// Path to local repo. Defaults to current working directory
+    //#[structopt(long, parse(from_os_str), env = "PWD")]
+    //path: PathBuf,
     /// info, clone
     #[structopt(subcommand)]
     action: Action,

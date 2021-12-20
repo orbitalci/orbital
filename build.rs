@@ -25,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // This is some manual walking to the root of the repo. Ew.
     let git_repo_dir = Path::new(&cargo_build_root);
 
+    // This is all to get the commit id
     let git_repo =
         GitRepo::open(git_repo_dir.to_path_buf(), None, None).expect("Unable to open git repo");
 

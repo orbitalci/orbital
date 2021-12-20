@@ -23,6 +23,7 @@ pub async fn action_handler(
     } else {
         let _git2repo = GitRepo::new("https://github.com/alexcrichton/git2-rs")
             .expect("Unable to create GitRepo")
+            .to_clone()
             .git_clone_shallow(temp_dir.as_path())
             .expect("Unable to clone repo");
     }
@@ -30,7 +31,7 @@ pub async fn action_handler(
     let repo = GitRepo::open(temp_dir.as_path().into(), None, None)
         .expect("Unable to open repo directory");
     // do ls-remote to temp_dir
-    println!("{:?}", repo.get_remote_branch_head_refs(None));
+    println!("{:?}", repo.to_info().get_remote_branch_head_refs(None));
 
     Ok(())
 }

@@ -17,7 +17,7 @@ use crate::orbital_services::ORB_DEFAULT_URI;
 
 use log::info;
 use std::env;
-use std::path::PathBuf;
+//use std::path::PathBuf;
 
 // For the service router
 use futures::future::{self, Either, TryFutureExt};
@@ -37,10 +37,11 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
-    /// Path to local repo. Defaults to current working directory
-    #[structopt(long, parse(from_os_str), env = "PWD")]
-    path: PathBuf,
+    // TODO: Handle these flags
 
+    ///// Path to local repo. Defaults to current working directory
+    //#[structopt(long, parse(from_os_str), env = "PWD")]
+    //path: PathBuf,
     #[structopt(long)]
     debug: bool,
 
