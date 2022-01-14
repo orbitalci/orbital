@@ -683,6 +683,8 @@ checksum = "78cc372d058dcf6d5ecd98510e7fbc9e5aec4d21de70f65fea8fecebcd881bd4"
 [[package]]
 name = "git-event"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1eb43f0e35fbe79b04183d2469a604816d8fe09fd3be26d9cf72fa8927990c1"
 dependencies = [
  "chrono",
  "color-eyre",
@@ -696,6 +698,8 @@ dependencies = [
 [[package]]
 name = "git-meta"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0563238cbd360079459dab38d3e8774640875923efc13dbe45f50b3068bc704f"
 dependencies = [
  "chrono",
  "color-eyre",

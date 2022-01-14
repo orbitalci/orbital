@@ -36,8 +36,6 @@ pub async fn action_handler(
             while let Some(output) = exec_output.recv().await {
                 print!("Output: {:?}", &output);
             }
-
-            ()
         }
         Err(_) => {
             return Err(SubcommandError::new(&format!(

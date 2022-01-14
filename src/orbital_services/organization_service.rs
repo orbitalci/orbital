@@ -45,13 +45,13 @@ impl OrganizationService for OrbitalApi {
 
         let pg_conn = postgres::client::establish_connection();
 
-        let mut update_org = postgres::org::NewOrg::default();
-        update_org.active_state = unwrapped_request.active_state.into();
-
-        // Check if we've supplied a new name. Otherwise we should make sure update_org has the same name
-        update_org.name = match &unwrapped_request.update_name.len() {
-            0 => unwrapped_request.name.clone(),
-            _ => unwrapped_request.update_name.clone(),
+        let update_org = postgres::org::NewOrg {
+            active_state: unwrapped_request.active_state.into(),
+            name: match &unwrapped_request.update_name.len() {
+                0 => unwrapped_request.name.clone(),
+                _ => unwrapped_request.update_name.clone(),
+            },
+            ..Default::default()
         };
 
         let db_result = postgres::client::org_update(&pg_conn, &unwrapped_request.name, update_org)

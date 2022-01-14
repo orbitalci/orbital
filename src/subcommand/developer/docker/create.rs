@@ -45,14 +45,11 @@ pub async fn action_handler(
         .take(7)
         .collect();
 
-    let container_name = format!(
-        "{}",
-        orbital_agent::generate_unique_build_id(
-            "test-org",
-            "test-repo",
-            "test-hash",
-            &format!("{}", rand_string),
-        )
+    let container_name = orbital_agent::generate_unique_build_id(
+        "test-org",
+        "test-repo",
+        "test-hash",
+        &rand_string.to_string(),
     );
 
     let build_container_spec = OrbitalContainerSpec {

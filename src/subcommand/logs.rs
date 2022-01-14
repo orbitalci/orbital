@@ -62,12 +62,7 @@ pub async fn subcommand_handler(
         branch: git_context.branch.unwrap_or_default(),
         commit_hash: git_context.head.unwrap().id,
         user_envs: local_option.envs.unwrap_or_default(),
-        id: {
-            match local_option.id {
-                Some(id) => id,
-                None => 0,
-            }
-        },
+        id: local_option.id.unwrap_or(0),
         ..Default::default()
     });
 

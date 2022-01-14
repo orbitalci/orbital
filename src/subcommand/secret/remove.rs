@@ -72,7 +72,7 @@ pub async fn action_handler(
                 "Active State",
             ]);
 
-            let secret = Secret::from(secret_proto.clone());
+            let secret = Secret::from(secret_proto);
 
             table.add_row(row![
                 secret.org_id,

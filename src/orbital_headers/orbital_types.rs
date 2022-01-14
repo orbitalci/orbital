@@ -38,14 +38,14 @@ impl From<String> for JobTrigger {
 impl fmt::Display for JobTrigger {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Unspecified => write!(f, "{}", "Unspecified"),
+            Self::Unspecified => write!(f, "Unspecified"),
             Self::Push => write!(f, "Push"),
-            Self::PullRequest => write!(f, "{}", "PullRequest"),
-            Self::Webhook => write!(f, "{}", "Webhook"),
-            Self::Poll => write!(f, "{}", "Poll"),
-            Self::Manual => write!(f, "{}", "Manual"),
-            Self::SubscribeTrigger => write!(f, "{}", "SubscribeTrigger"),
-            Self::CommitMsgTrigger => write!(f, "{}", "CommitMessage"),
+            Self::PullRequest => write!(f, "PullRequest"),
+            Self::Webhook => write!(f, "Webhook"),
+            Self::Poll => write!(f, "Poll"),
+            Self::Manual => write!(f, "Manual"),
+            Self::SubscribeTrigger => write!(f, "SubscribeTrigger"),
+            Self::CommitMsgTrigger => write!(f, "CommitMessage"),
         }
     }
 }
@@ -122,17 +122,17 @@ impl From<String> for JobState {
 impl fmt::Display for JobState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Unspecified => write!(f, "{}", "Unspecified"),
-            Self::Unknown => write!(f, "{}", "Unknown"),
-            Self::Queued => write!(f, "{}", "Queued"),
-            Self::Starting => write!(f, "{}", "Starting"),
-            Self::Running => write!(f, "{}", "Running"),
-            Self::Finishing => write!(f, "{}", "Finishing"),
-            Self::Canceled => write!(f, "{}", "Canceled"),
-            Self::SystemErr => write!(f, "{}", "SystemErr"),
-            Self::Failed => write!(f, "{}", "Failed"),
-            Self::Done => write!(f, "{}", "Done"),
-            Self::Deleted => write!(f, "{}", "Deleted"),
+            Self::Unspecified => write!(f, "Unspecified"),
+            Self::Unknown => write!(f, "Unknown"),
+            Self::Queued => write!(f, "Queued"),
+            Self::Starting => write!(f, "Starting"),
+            Self::Running => write!(f, "Running"),
+            Self::Finishing => write!(f, "Finishing"),
+            Self::Canceled => write!(f, "Canceled"),
+            Self::SystemErr => write!(f, "SystemErr"),
+            Self::Failed => write!(f, "Failed"),
+            Self::Done => write!(f, "Done"),
+            Self::Deleted => write!(f, "Deleted"),
         }
     }
 }
@@ -185,11 +185,11 @@ impl From<String> for ActiveState {
 impl fmt::Display for ActiveState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Unspecified => write!(f, "{}", "Unspecified"),
-            Self::Enabled => write!(f, "{}", "Enabled"),
-            Self::Disabled => write!(f, "{}", "Disabled"),
-            Self::Unknown => write!(f, "{}", "Unknown"),
-            Self::Deleted => write!(f, "{}", "Deleted"),
+            Self::Unspecified => write!(f, "Unspecified"),
+            Self::Enabled => write!(f, "Enabled"),
+            Self::Disabled => write!(f, "Disabled"),
+            Self::Unknown => write!(f, "Unknown"),
+            Self::Deleted => write!(f, "Deleted"),
         }
     }
 }
@@ -243,17 +243,17 @@ impl From<String> for SecretType {
 impl fmt::Display for SecretType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Unspecified => write!(f, "{}", "Unspecified"),
-            Self::BasicAuth => write!(f, "{}", "BasicAuth"),
-            Self::ApiKey => write!(f, "{}", "ApiKey"),
-            Self::EnvVar => write!(f, "{}", "EnvVar"),
-            Self::File => write!(f, "{}", "File"),
-            Self::SshKey => write!(f, "{}", "SshKey"),
-            Self::DockerRegistry => write!(f, "{}", "DockerRegistry"),
-            Self::NpmRepo => write!(f, "{}", "NpmRepo"),
-            Self::PypiRegistry => write!(f, "{}", "PypiRegistry"),
-            Self::MavenRepo => write!(f, "{}", "MavenRepo"),
-            Self::Kubernetes => write!(f, "{}", "Kubernetes"),
+            Self::Unspecified => write!(f, "Unspecified"),
+            Self::BasicAuth => write!(f, "BasicAuth"),
+            Self::ApiKey => write!(f, "ApiKey"),
+            Self::EnvVar => write!(f, "EnvVar"),
+            Self::File => write!(f, "File"),
+            Self::SshKey => write!(f, "SshKey"),
+            Self::DockerRegistry => write!(f, "DockerRegistry"),
+            Self::NpmRepo => write!(f, "NpmRepo"),
+            Self::PypiRegistry => write!(f, "PypiRegistry"),
+            Self::MavenRepo => write!(f, "MavenRepo"),
+            Self::Kubernetes => write!(f, "Kubernetes"),
         }
     }
 }
@@ -325,10 +325,10 @@ impl From<String> for GitHostType {
 impl fmt::Display for GitHostType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Unspecified => write!(f, "{}", "Unspecified"),
-            Self::Generic => write!(f, "{}", "Generic"),
-            Self::Bitbucket => write!(f, "{}", "Bitbucket"),
-            Self::Github => write!(f, "{}", "Github"),
+            Self::Unspecified => write!(f, "Unspecified"),
+            Self::Generic => write!(f, "Generic"),
+            Self::Bitbucket => write!(f, "Bitbucket"),
+            Self::Github => write!(f, "Github"),
         }
     }
 }
@@ -378,9 +378,9 @@ impl From<String> for NotifyType {
 impl fmt::Display for NotifyType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Unspecified => write!(f, "{}", "Unspecified"),
-            Self::Slack => write!(f, "{}", "Slack"),
-            Self::Webhook => write!(f, "{}", "Webhook"),
+            Self::Unspecified => write!(f, "Unspecified"),
+            Self::Slack => write!(f, "Slack"),
+            Self::Webhook => write!(f, "Webhook"),
         }
     }
 }

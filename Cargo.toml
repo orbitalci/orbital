@@ -71,6 +71,6 @@ git-meta = "^0.5"
 chrono = "0.4"
 tonic-build = "^0.6"
 
-[patch.crates-io]
-git-event = { path = "../git-event-rs" }
-git-meta = { path = "../git-meta-rs" }
+#[patch.crates-io]
+#git-event = { path = "../git-event-rs" }
+#git-meta = { path = "../git-meta-rs" }

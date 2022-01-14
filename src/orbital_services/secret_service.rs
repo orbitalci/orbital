@@ -61,8 +61,8 @@ impl SecretService for OrbitalApi {
         // TODO: We want the vault path available
         let secret_result = SecretEntry {
             id: secret_db.id,
-            org: org_db.name.into(),
-            name: secret_db.name.into(),
+            org: org_db.name,
+            name: secret_db.name,
             secret_type: secret_db.secret_type.into(),
             vault_path: secret_db.vault_path,
             active_state: secret_db.active_state.into(),
@@ -128,7 +128,7 @@ impl SecretService for OrbitalApi {
 
         // TODO: Handle errors
         let _secret = vault::vault_update_secret(
-            &vault_path,
+            vault_path,
             &String::from_utf8_lossy(&unwrapped_request.data),
         );
 
@@ -142,11 +142,9 @@ impl SecretService for OrbitalApi {
         let secret_update = postgres::secret::NewSecret {
             name: unwrapped_request.name.clone(),
             org_id: org.id,
-            secret_type: postgres::schema::SecretType::from(unwrapped_request.secret_type.clone()),
+            secret_type: postgres::schema::SecretType::from(unwrapped_request.secret_type),
             vault_path: vault_path.to_string(),
-            active_state: postgres::schema::ActiveState::from(
-                unwrapped_request.active_state.clone(),
-            ),
+            active_state: postgres::schema::ActiveState::from(unwrapped_request.active_state),
         };
 
         let _db_result = postgres::client::secret_update(

@@ -50,8 +50,8 @@ impl From<OrgEntry> for Org {
         // TODO: Need to convert timestamps from OrgEntry
 
         Org {
-            id: org.id.into(),
-            name: org.name.into(),
+            id: org.id,
+            name: org.name,
             created: NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0),
             last_update: NaiveDateTime::from_timestamp(Utc::now().timestamp(), 0),
             active_state: org.active_state.into(),

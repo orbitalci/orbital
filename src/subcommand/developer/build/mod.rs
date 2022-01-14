@@ -79,7 +79,7 @@ pub async fn subcommand_handler(
             "dev-org",
             &git_info.url.name,
             &git_info.head.unwrap().id,
-            &format!("{}", rand_string),
+            &rand_string.to_string(),
         )),
         image: config.image,
         command: default_command_w_timeout,
@@ -150,7 +150,6 @@ pub async fn subcommand_handler(
                     //tx.send(command_output).unwrap();
                     print!("Output: {:?}", &output);
                 }
-                ()
             }
             Err(_) => {
                 return Err(SubcommandError::new(&format!(

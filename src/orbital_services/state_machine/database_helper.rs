@@ -20,7 +20,7 @@ impl DbHelper {
             &build_context.repo_name,
             &build_context.hash.clone().unwrap_or_default(),
             &build_context.branch,
-            build_context.id.clone().unwrap(),
+            build_context.id.unwrap(),
         )
     }
 
@@ -34,7 +34,7 @@ impl DbHelper {
             &build_context.hash.clone().expect("No repo hash to target"),
             &build_context.branch,
             Some(build_context.user_envs.clone().unwrap_or_default().join("")),
-            build_context.job_trigger.clone(),
+            build_context.job_trigger,
         )
     }
 
@@ -50,7 +50,7 @@ impl DbHelper {
             &build_context.repo_name,
             &build_context.hash.clone().unwrap(),
             &build_context.branch,
-            build_context.id.clone().unwrap(),
+            build_context.id.unwrap(),
             new_build_summary,
         )
     }
@@ -67,7 +67,7 @@ impl DbHelper {
             &build_context.repo_name,
             &build_context.hash.clone().unwrap(),
             &build_context.branch,
-            build_context.id.clone().unwrap(),
+            build_context.id.unwrap(),
             update_summary,
         )
     }
@@ -84,7 +84,7 @@ impl DbHelper {
             &build_context.repo_name,
             &build_context.hash.clone().unwrap(),
             &build_context.branch,
-            build_context.id.clone().unwrap(),
+            build_context.id.unwrap(),
             build_context._db_build_summary_id,
             new_build_stage,
         )
@@ -102,7 +102,7 @@ impl DbHelper {
             &build_context.repo_name,
             &build_context.hash.clone().unwrap(),
             &build_context.branch,
-            build_context.id.clone().unwrap(),
+            build_context.id.unwrap(),
             build_context._db_build_summary_id,
             build_context._db_build_cur_stage_id,
             update_build_stage,

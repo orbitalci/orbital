@@ -59,7 +59,7 @@ impl From<Secret> for SecretEntry {
             org: secret.org_id.to_string(),
             name: secret.name,
             secret_type: secret.secret_type.into(),
-            vault_path: secret.vault_path.into(),
+            vault_path: secret.vault_path,
             active_state: secret.active_state.into(),
             ..Default::default()
         }
@@ -74,9 +74,8 @@ impl From<SecretEntry> for Secret {
             org_id: 0,
             name: secret_entry.name,
             secret_type: secret_entry.secret_type.into(),
-            vault_path: secret_entry.vault_path.into(),
+            vault_path: secret_entry.vault_path,
             active_state: secret_entry.active_state.into(),
-            ..Default::default()
         }
     }
 }

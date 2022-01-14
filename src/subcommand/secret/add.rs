@@ -51,8 +51,8 @@ pub async fn action_handler(
     let mut client = SecretServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(SecretAddRequest {
-        org: action_option.org.unwrap_or_default().into(),
-        name: action_option.secret_name.into(),
+        org: action_option.org.unwrap_or_default(),
+        name: action_option.secret_name,
         secret_type: action_option.secret_type.into(),
         data: contents.into(),
     });

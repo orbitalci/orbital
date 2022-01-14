@@ -7,6 +7,7 @@ arg_enum! {
   /// Copied definition from [https://docs.rs/clap/2.33.0/clap/enum.Shell.html](https://docs.rs/clap/2.33.0/clap/enum.Shell.html)
   #[derive(Debug, StructOpt)]
   #[structopt(rename_all = "kebab-case")]
+  #[allow(clippy::enum_variant_names)]
   pub enum Shell {
       Bash,
       Fish,

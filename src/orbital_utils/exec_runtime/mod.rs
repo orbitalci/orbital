@@ -36,8 +36,7 @@ pub fn get_current_workdir() -> PathBuf {
 pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
     let vols = match kv_csv_parser(user_input) {
         Some(v) => {
-            let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(DOCKER_SOCKET_VOLMAP);
+            let mut new_vec: Vec<&str> = vec![DOCKER_SOCKET_VOLMAP];
             new_vec.extend(v.clone());
             Some(new_vec)
         }
@@ -67,9 +66,9 @@ pub fn kv_csv_parser(kv_str: &Option<String>) -> Option<Vec<&str>> {
     debug!("Parsing Option<String> input: {:?}", &kv_str);
     match kv_str {
         Some(n) => {
-            let kv_vec: Vec<&str> = n.split(",").collect();
-            return Some(kv_vec);
+            let kv_vec: Vec<&str> = n.split(',').collect();
+            Some(kv_vec)
         }
-        None => return None,
+        None => None,
     }
 }

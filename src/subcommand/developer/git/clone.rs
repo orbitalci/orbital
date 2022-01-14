@@ -23,7 +23,7 @@ pub async fn action_handler(
         "https://github.com/alexcrichton/git2-rs",
         action_option.branch.as_deref(),
         None,
-        &temp_dir.as_path(),
+        temp_dir.as_path(),
         //)?;
     )
     .unwrap();

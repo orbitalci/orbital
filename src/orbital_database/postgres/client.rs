@@ -16,7 +16,8 @@ use std::env;
 
 pub fn establish_connection() -> PgConnection {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
+    PgConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
 pub fn org_from_id(conn: &PgConnection, id: i32) -> Result<Org> {
@@ -44,7 +45,7 @@ pub fn secret_from_id(conn: &PgConnection, id: i32) -> Option<Secret> {
 }
 
 pub fn repo_increment_build_index(conn: &PgConnection, repo: Repo) -> Result<Repo> {
-    let org_name = org_from_id(&conn, repo.org_id.clone())?.name;
+    let org_name = org_from_id(conn, repo.org_id)?.name;
 
     let update_repo = NewRepo {
         org_id: repo.org_id,
@@ -59,7 +60,7 @@ pub fn repo_increment_build_index(conn: &PgConnection, repo: Repo) -> Result<Rep
         remote_branch_heads: repo.remote_branch_heads,
     };
 
-    let update_result = repo_update(conn, &org_name, &repo.name.clone(), update_repo)?;
+    let update_result = repo_update(conn, &org_name, &repo.name, update_repo)?;
 
     Ok(update_result.1)
 }
@@ -284,10 +285,7 @@ pub fn repo_add(
         Err(_e) => {
             debug!("repo doesn't exist. Inserting into db.");
 
-            let secret_id = match secret {
-                Some(s) => Some(s.clone().id),
-                None => None,
-            };
+            let secret_id = secret.map(|s| s.id);
 
             let org_db = org_get(conn, org)?;
 
@@ -410,7 +408,7 @@ pub fn build_target_add(
     let (org_db, repo_db, _) = repo_get(conn, org, repo)?;
 
     let build_target = NewBuildTarget {
-        repo_id: repo_db.id.clone(),
+        repo_id: repo_db.id,
         git_hash: hash.to_string(),
         branch: branch.to_string(),
         user_envs,

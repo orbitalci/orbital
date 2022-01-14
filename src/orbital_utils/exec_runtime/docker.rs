@@ -31,7 +31,7 @@ pub struct OrbitalContainerSpec<'a> {
 /// assert_eq!("alpine:3", tag_provided);
 /// ```
 pub fn image_tag_sanitizer(image: &str) -> Result<String> {
-    let split = &image.split(":").collect::<Vec<_>>();
+    let split = &image.split(':').collect::<Vec<_>>();
 
     match split.len() {
         1 => {
@@ -40,8 +40,8 @@ pub fn image_tag_sanitizer(image: &str) -> Result<String> {
                 Ok(format!("{}:latest", image))
             }
         }
-        2 => return Ok(image.to_string()),
-        _ => return Err(eyre!("Failed to clean docker image tag")),
+        2 => Ok(image.to_string()),
+        _ => Err(eyre!("Failed to clean docker image tag")),
     }
 }
 
@@ -174,12 +174,12 @@ pub async fn container_exec<S: AsRef<str>>(
                 TtyChunk::StdOut(bytes) => {
                     tx.send(std::str::from_utf8(&bytes).unwrap().to_string())
                         .unwrap();
-                    print!("{}", std::str::from_utf8(&bytes).unwrap().to_string())
+                    print!("{}", std::str::from_utf8(&bytes).unwrap())
                 }
                 TtyChunk::StdErr(bytes) => {
                     tx.send(std::str::from_utf8(&bytes).unwrap().to_string())
                         .unwrap();
-                    eprintln!("{}", std::str::from_utf8(&bytes).unwrap().to_string())
+                    eprintln!("{}", std::str::from_utf8(&bytes).unwrap())
                 }
                 TtyChunk::StdIn(_) => unreachable!(),
             },
@@ -208,12 +208,12 @@ pub async fn container_logs<S: AsRef<str>>(
                 TtyChunk::StdOut(bytes) => {
                     tx.send(std::str::from_utf8(&bytes).unwrap().to_string())
                         .unwrap();
-                    print!("{}", std::str::from_utf8(&bytes).unwrap().to_string())
+                    print!("{}", std::str::from_utf8(&bytes).unwrap())
                 }
                 TtyChunk::StdErr(bytes) => {
                     tx.send(std::str::from_utf8(&bytes).unwrap().to_string())
                         .unwrap();
-                    eprintln!("{}", std::str::from_utf8(&bytes).unwrap().to_string())
+                    eprintln!("{}", std::str::from_utf8(&bytes).unwrap())
                 }
                 TtyChunk::StdIn(_) => unreachable!(),
             },

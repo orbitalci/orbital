@@ -21,7 +21,7 @@ pub async fn subcommand_handler(
     _global_option: GlobalOption,
     local_option: SubcommandOption,
 ) -> Result<()> {
-    match parser::load_orb_yaml(&local_option.file.as_path()) {
+    match parser::load_orb_yaml(local_option.file.as_path()) {
         Ok(c) => {
             println!("Full config:\n{:?}", c);
 

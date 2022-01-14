@@ -60,21 +60,19 @@ pub async fn subcommand_handler(
 ) -> Result<()> {
     let addr = ORB_DEFAULT_URI.parse().unwrap();
 
-    if local_option.debug {
-        if env::var_os("RUST_LOG").is_none() {
-            let debug_modules = vec![
-                "subcommand::server",
-                "orbital_services",
-                "orbital_agent",
-                "orbital_database",
-                "git_meta",
-                "hashicorp_stack",
-                "git_url_parse",
-                "git_event",
-            ];
+    if local_option.debug && env::var_os("RUST_LOG").is_none() {
+        let debug_modules = vec![
+            "subcommand::server",
+            "orbital_services",
+            "orbital_agent",
+            "orbital_database",
+            "git_meta",
+            "hashicorp_stack",
+            "git_url_parse",
+            "git_event",
+        ];
 
-            env::set_var("RUST_LOG", debug_modules.join(","))
-        }
+        env::set_var("RUST_LOG", debug_modules.join(","))
     }
 
     let _ = env_logger::try_init();
@@ -105,7 +103,7 @@ pub async fn subcommand_handler(
                 .add_service(SecretServiceServer::new(OrbitalApi::default()))
                 .into_service();
 
-            let mut warp = warp.clone();
+            let mut warp = warp;
 
             future::ok::<_, Infallible>(tower::service_fn(
                 move |req: hyper::Request<hyper::Body>| match req.version() {

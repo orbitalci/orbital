@@ -109,7 +109,7 @@ pub async fn action_handler(
                 let creds = GitCredentials::SshKey {
                     username: repo_user.clone(),
                     public_key: None,
-                    private_key: p.clone(),
+                    private_key: p,
                     passphrase: None,
                 };
 
@@ -166,12 +166,12 @@ pub async fn action_handler(
         uri: repo_info.url.trim_auth().to_string(),
         canonical_branch: action_option
             .canonical_branch
-            .unwrap_or(repo_info.branch.expect("No branch info found")),
+            .unwrap_or_else(|| repo_info.branch.expect("No branch info found")),
         user: repo_user,
         alt_check_branch: action_option.alt_branch.unwrap_or_default(),
         skip_check: action_option.skip_check,
         remote_branch_heads: {
-            if remote_branch_refs.remote_branch_heads.len() > 0 {
+            if !remote_branch_refs.remote_branch_heads.is_empty() {
                 Some(remote_branch_refs)
             } else {
                 None

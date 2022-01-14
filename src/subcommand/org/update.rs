@@ -36,8 +36,8 @@ pub async fn action_handler(
         OrganizationServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(OrgUpdateRequest {
-        name: action_option.name.into(),
-        update_name: action_option.update_name.into(),
+        name: action_option.name,
+        update_name: action_option.update_name,
         active_state: action_option.active_state.into(),
     });
 
@@ -61,7 +61,7 @@ pub async fn action_handler(
             // Print the header row
             table.set_titles(row![bc=> "Org Name", "Active", "Created", "Last Update"]);
 
-            let org = Org::from(org_proto.clone());
+            let org = Org::from(org_proto);
             table.add_row(row![
                 org.name,
                 &format!("{:?}", org.active_state,),

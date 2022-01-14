@@ -64,27 +64,20 @@ impl From<BuildStage> for ProtoBuildStage {
             nanos: build_stage.start_time.timestamp_subsec_nanos() as i32,
         });
 
-        let end_time = match build_stage.end_time {
-            Some(end_time) => Some(prost_types::Timestamp {
-                seconds: end_time.timestamp(),
-                nanos: end_time.timestamp_subsec_nanos() as i32,
-            }),
-            None => None,
-        };
+        let end_time = build_stage.end_time.map(|end_time| prost_types::Timestamp {
+            seconds: end_time.timestamp(),
+            nanos: end_time.timestamp_subsec_nanos() as i32,
+        });
 
         ProtoBuildStage {
             id: build_stage.id,
             build_id: build_stage.build_summary_id,
-            stage: build_stage.stage_name.unwrap_or("".to_string()),
+            stage: build_stage.stage_name.unwrap_or_else(|| "".to_string()),
             exit_code: build_stage.exit_code.unwrap_or(-1),
             status: 0,
             start_time,
             end_time,
-            output: build_stage
-                .output
-                .unwrap_or(String::new())
-                .as_bytes()
-                .to_vec(),
+            output: build_stage.output.unwrap_or_default().as_bytes().to_vec(),
         }
     }
 }
