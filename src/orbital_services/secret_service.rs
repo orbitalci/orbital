@@ -45,15 +45,15 @@ impl SecretService for OrbitalApi {
 
         // Add Secret reference into DB
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
-        let db_result = postgres::client::secret_add(
-            &pg_conn,
-            &unwrapped_request.org,
-            &unwrapped_request.name,
-            unwrapped_request.secret_type.into(),
-        )
-        .expect("There was a problem adding secret in database");
+        let db_result = orb_db
+            .secret_add(
+                &unwrapped_request.org,
+                &unwrapped_request.name,
+                unwrapped_request.secret_type.into(),
+            )
+            .expect("There was a problem adding secret in database");
 
         let secret_db = db_result.0;
         let org_db = db_result.1;
@@ -81,15 +81,15 @@ impl SecretService for OrbitalApi {
         let unwrapped_request = request.into_inner();
 
         // Talk to DB to get the secret path
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
-        let db_result = postgres::client::secret_get(
-            &pg_conn,
-            &unwrapped_request.org,
-            &unwrapped_request.name,
-            unwrapped_request.secret_type.into(),
-        )
-        .expect("There was a problem getting secret in database");
+        let db_result = orb_db
+            .secret_get(
+                &unwrapped_request.org,
+                &unwrapped_request.name,
+                unwrapped_request.secret_type.into(),
+            )
+            .expect("There was a problem getting secret in database");
 
         let secret_db = db_result.0;
         let org_db = db_result.1;
@@ -134,9 +134,10 @@ impl SecretService for OrbitalApi {
 
         // Remove Secret reference into DB
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
         // FIXME: Need a cleaner way to get org id for this struct, because we're making duplicate calls to db for org.id
-        let org = postgres::client::org_get(&pg_conn, &unwrapped_request.org)
+        let org = orb_db
+            .org_get(&unwrapped_request.org)
             .expect("Unable to get org from db");
 
         let secret_update = postgres::secret::NewSecret {
@@ -147,13 +148,13 @@ impl SecretService for OrbitalApi {
             active_state: postgres::schema::ActiveState::from(unwrapped_request.active_state),
         };
 
-        let _db_result = postgres::client::secret_update(
-            &pg_conn,
-            &unwrapped_request.org,
-            &unwrapped_request.name,
-            secret_update,
-        )
-        .expect("There was a problem updating secret in database");
+        let _db_result = orb_db
+            .secret_update(
+                &unwrapped_request.org,
+                &unwrapped_request.name,
+                secret_update,
+            )
+            .expect("There was a problem updating secret in database");
 
         let secret_result = SecretEntry {
             org: unwrapped_request.org,
@@ -175,15 +176,15 @@ impl SecretService for OrbitalApi {
 
         // Remove Secret reference into DB
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
-        let db_result = postgres::client::secret_remove(
-            &pg_conn,
-            &unwrapped_request.org,
-            &unwrapped_request.name,
-            unwrapped_request.secret_type.into(),
-        )
-        .expect("There was a problem removing secret in database");
+        let db_result = orb_db
+            .secret_remove(
+                &unwrapped_request.org,
+                &unwrapped_request.name,
+                unwrapped_request.secret_type.into(),
+            )
+            .expect("There was a problem removing secret in database");
 
         // TODO: Handle errors
         debug!(
@@ -207,21 +208,21 @@ impl SecretService for OrbitalApi {
         request: Request<SecretListRequest>,
     ) -> Result<Response<SecretListResponse>, Status> {
         let unwrapped_request = request.into_inner();
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
         let filters: Option<SecretType> = None;
 
         // Convert the Vec<Secret> response into the proto codegen version.
-        let db_result: Vec<SecretEntry> =
-            postgres::client::secret_list(&pg_conn, &unwrapped_request.org, filters)
-                .expect("There was a problem listing secret from database")
-                .into_iter()
-                .map(|(s, o)| {
-                    let mut secret = SecretEntry::from(s);
-                    secret.org = o.name;
-                    secret
-                })
-                .collect();
+        let db_result: Vec<SecretEntry> = orb_db
+            .secret_list(&unwrapped_request.org, filters)
+            .expect("There was a problem listing secret from database")
+            .into_iter()
+            .map(|(s, o)| {
+                let mut secret = SecretEntry::from(s);
+                secret.org = o.name;
+                secret
+            })
+            .collect();
 
         Ok(Response::new(SecretListResponse {
             secret_entries: db_result,

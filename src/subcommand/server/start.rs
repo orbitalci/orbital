@@ -79,10 +79,10 @@ pub async fn subcommand_handler(
 
     // Run migrations
     //println!("Migrations dir: {:?}", diesel_migrations::find_migrations_directory());
-    let pg_conn = postgres::client::establish_connection();
-    embedded_migrations::run_with_output(&pg_conn, &mut std::io::stdout())
+    let orb_db = postgres::client::OrbitalDBClient::new();
+    embedded_migrations::run_with_output(&orb_db.get_conn(), &mut std::io::stdout())
         .expect("Running DB migrations failed");
-    drop(pg_conn);
+    drop(orb_db);
 
     // Kick off thread for checking for new commits
     {

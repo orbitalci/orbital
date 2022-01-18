@@ -16,9 +16,10 @@ impl OrganizationService for OrbitalApi {
         let unwrapped_request = request.into_inner();
         info!("org add request: {:?}", &unwrapped_request.name);
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
-        let db_result = postgres::client::org_add(&pg_conn, &unwrapped_request.name)
+        let db_result = orb_db
+            .org_add(&unwrapped_request.name)
             .expect("There was a problem adding org in database");
 
         Ok(Response::new(db_result.into()))
@@ -28,9 +29,10 @@ impl OrganizationService for OrbitalApi {
         let unwrapped_request = request.into_inner();
         info!("org get request: {:?}", &unwrapped_request.name);
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
-        let db_result = postgres::client::org_get(&pg_conn, &unwrapped_request.name)
+        let db_result = orb_db
+            .org_get(&unwrapped_request.name)
             .expect("There was a problem finding org in database");
 
         Ok(Response::new(db_result.into()))
@@ -43,7 +45,7 @@ impl OrganizationService for OrbitalApi {
         let unwrapped_request = request.into_inner();
         info!("org update request: {:?}", &unwrapped_request.name);
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
         let update_org = postgres::org::NewOrg {
             active_state: unwrapped_request.active_state.into(),
@@ -54,7 +56,8 @@ impl OrganizationService for OrbitalApi {
             ..Default::default()
         };
 
-        let db_result = postgres::client::org_update(&pg_conn, &unwrapped_request.name, update_org)
+        let db_result = orb_db
+            .org_update(&unwrapped_request.name, update_org)
             .expect("There was a problem finding org in database");
 
         Ok(Response::new(db_result.into()))
@@ -67,9 +70,10 @@ impl OrganizationService for OrbitalApi {
         let unwrapped_request = request.into_inner();
         info!("org remove request: {:?}", &unwrapped_request.name);
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
-        let db_result = postgres::client::org_remove(&pg_conn, &unwrapped_request.name)
+        let db_result = orb_db
+            .org_remove(&unwrapped_request.name)
             .expect("There was a problem finding org in database");
 
         Ok(Response::new(db_result.into()))
@@ -78,10 +82,11 @@ impl OrganizationService for OrbitalApi {
     async fn org_list(&self, _request: Request<()>) -> Result<Response<OrgListResponse>, Status> {
         info!("org list request");
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
         // Convert the Vec<Org> response into the proto codegen version.
-        let db_result: Vec<OrgEntry> = postgres::client::org_list(&pg_conn)
+        let db_result: Vec<OrgEntry> = orb_db
+            .org_list()
             .expect("There was a problem finding org in database")
             .into_iter()
             .map(|o| o.into())

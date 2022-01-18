@@ -164,16 +164,14 @@ impl BuildService for OrbitalApi {
     ) -> Result<Response<BuildMetadata>, Status> {
         let unwrapped_request = request.into_inner();
 
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
         // Resolve the build number to latest if build number is 0
         let build_id = match unwrapped_request.id {
             0 => {
-                if let Ok((_, repo, _)) = postgres::client::repo_get(
-                    &pg_conn,
-                    &unwrapped_request.org,
-                    &unwrapped_request.git_repo,
-                ) {
+                if let Ok((_, repo, _)) =
+                    orb_db.repo_get(&unwrapped_request.org, &unwrapped_request.git_repo)
+                {
                     repo.next_build_index - 1
                 } else {
                     panic!("No build id provided. Failed to query DB for latest build id")
@@ -183,8 +181,7 @@ impl BuildService for OrbitalApi {
         };
 
         // Determine if build is cancelable
-        match postgres::client::build_summary_get(
-            &pg_conn,
+        match orb_db.build_summary_get(
             &unwrapped_request.org,
             &unwrapped_request.git_repo,
             &unwrapped_request.commit_hash,
@@ -200,24 +197,24 @@ impl BuildService for OrbitalApi {
                     new_canceled_summary.build_state = JobState::Canceled;
 
                     info!("Updating build state to canceled");
-                    let _build_summary_result_canceled = postgres::client::build_summary_update(
-                        &pg_conn,
-                        &unwrapped_request.org,
-                        &repo.name,
-                        &build_target.git_hash,
-                        &build_target.branch,
-                        build_target.build_index,
-                        NewBuildSummary {
-                            build_target_id: summary.build_target_id,
-                            start_time: summary.start_time,
-                            end_time: Some(NaiveDateTime::from_timestamp(
-                                Utc::now().timestamp(),
-                                0,
-                            )),
-                            build_state: postgres::schema::JobState::Canceled,
-                        },
-                    )
-                    .expect("Unable to update build summary job state to canceled");
+                    let _build_summary_result_canceled = orb_db
+                        .build_summary_update(
+                            &unwrapped_request.org,
+                            &repo.name,
+                            &build_target.git_hash,
+                            &build_target.branch,
+                            build_target.build_index,
+                            NewBuildSummary {
+                                build_target_id: summary.build_target_id,
+                                start_time: summary.start_time,
+                                end_time: Some(NaiveDateTime::from_timestamp(
+                                    Utc::now().timestamp(),
+                                    0,
+                                )),
+                                build_state: postgres::schema::JobState::Canceled,
+                            },
+                        )
+                        .expect("Unable to update build summary job state to canceled");
 
                     Ok(Response::new(BuildMetadata {
                         ..Default::default()
@@ -250,24 +247,24 @@ impl BuildService for OrbitalApi {
                     new_canceled_summary.build_state = JobState::Canceled;
 
                     info!("Updating build state to canceled");
-                    let _build_summary_result_canceled = postgres::client::build_summary_update(
-                        &pg_conn,
-                        &unwrapped_request.org,
-                        &repo.name,
-                        &build_target.git_hash,
-                        &build_target.branch,
-                        build_target.build_index,
-                        NewBuildSummary {
-                            build_target_id: summary.build_target_id,
-                            start_time: summary.start_time,
-                            end_time: Some(NaiveDateTime::from_timestamp(
-                                Utc::now().timestamp(),
-                                0,
-                            )),
-                            build_state: postgres::schema::JobState::Canceled,
-                        },
-                    )
-                    .expect("Unable to update build summary job state to canceled");
+                    let _build_summary_result_canceled = orb_db
+                        .build_summary_update(
+                            &unwrapped_request.org,
+                            &repo.name,
+                            &build_target.git_hash,
+                            &build_target.branch,
+                            build_target.build_index,
+                            NewBuildSummary {
+                                build_target_id: summary.build_target_id,
+                                start_time: summary.start_time,
+                                end_time: Some(NaiveDateTime::from_timestamp(
+                                    Utc::now().timestamp(),
+                                    0,
+                                )),
+                                build_state: postgres::schema::JobState::Canceled,
+                            },
+                        )
+                        .expect("Unable to update build summary job state to canceled");
 
                     Ok(Response::new(BuildMetadata {
                         ..Default::default()
@@ -306,16 +303,14 @@ impl BuildService for OrbitalApi {
 
         // Get repo id from BuildTarget
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
         // Resolve the build number to latest if build number is 0
         let build_id = match unwrapped_request.id {
             0 => {
-                if let Ok((_, repo, _)) = postgres::client::repo_get(
-                    &pg_conn,
-                    &unwrapped_request.org,
-                    &unwrapped_request.git_repo,
-                ) {
+                if let Ok((_, repo, _)) =
+                    orb_db.repo_get(&unwrapped_request.org, &unwrapped_request.git_repo)
+                {
                     repo.next_build_index - 1
                 } else {
                     panic!("No build id provided. Failed to query DB for latest build id")
@@ -324,17 +319,17 @@ impl BuildService for OrbitalApi {
             _ => unwrapped_request.id,
         };
 
-        let (_repo, _build_target, build_summary_opt) = postgres::client::build_summary_get(
-            &pg_conn,
-            &unwrapped_request.org,
-            &unwrapped_request.git_repo,
-            &unwrapped_request.commit_hash,
-            &unwrapped_request.branch,
-            build_id,
-        )
-        .unwrap();
+        let (_repo, _build_target, build_summary_opt) = orb_db
+            .build_summary_get(
+                &unwrapped_request.org,
+                &unwrapped_request.git_repo,
+                &unwrapped_request.commit_hash,
+                &unwrapped_request.branch,
+                build_id,
+            )
+            .unwrap();
 
-        drop(pg_conn);
+        drop(orb_db);
 
         let (tx, rx) = mpsc::channel(4);
 
@@ -385,16 +380,16 @@ impl BuildService for OrbitalApi {
                     }
 
                     _ => {
-                        let pg_conn = postgres::client::establish_connection();
-                        let build_stage_query = postgres::client::build_logs_get(
-                            &pg_conn,
-                            &unwrapped_request.org,
-                            &unwrapped_request.git_repo,
-                            &unwrapped_request.commit_hash,
-                            &unwrapped_request.branch,
-                            Some(build_id),
-                        )
-                        .expect("No build stages found");
+                        let orb_db = postgres::client::OrbitalDBClient::new();
+                        let build_stage_query = orb_db
+                            .build_logs_get(
+                                &unwrapped_request.org,
+                                &unwrapped_request.git_repo,
+                                &unwrapped_request.commit_hash,
+                                &unwrapped_request.branch,
+                                Some(build_id),
+                            )
+                            .expect("No build stages found");
 
                         let mut build_stage_list: Vec<orbital_headers::build_meta::BuildStage> =
                             Vec::new();
@@ -447,15 +442,15 @@ impl BuildService for OrbitalApi {
         debug!("Received request: {:?}", &unwrapped_request);
 
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new();
 
-        let build_summary_db = postgres::client::build_summary_list(
-            &pg_conn,
-            &build_info.org,
-            &build_info.git_repo,
-            unwrapped_request.limit,
-        )
-        .expect("No summary returned");
+        let build_summary_db = orb_db
+            .build_summary_list(
+                &build_info.org,
+                &build_info.git_repo,
+                unwrapped_request.limit,
+            )
+            .expect("No summary returned");
 
         debug!("Summary: {:?}", &build_summary_db);
 
