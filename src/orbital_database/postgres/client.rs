@@ -320,66 +320,74 @@ impl OrbitalDBClient {
         branches_latest: serde_json::Value,
     ) -> Result<(Org, Repo, Option<Secret>)> {
         if let Some(ref org) = self.org {
-            let repo_check = self.repo_get(name);
+            if let Some(ref _repo) = self.repo {
+                let repo_check = self.repo_get();
 
-            match repo_check {
-                Err(_e) => {
-                    debug!("repo doesn't exist. Inserting into db.");
+                match repo_check {
+                    Err(_e) => {
+                        debug!("repo doesn't exist. Inserting into db.");
 
-                    let secret_id = secret.map(|s| s.id);
+                        let secret_id = secret.map(|s| s.id);
 
-                    let org_db = self.org_get(org)?;
+                        let org_db = self.org_get(org)?;
 
-                    let result: Repo = diesel::insert_into(repo::table)
-                        .values(NewRepo {
-                            name: name.into(),
-                            org_id: org_db.id,
-                            uri: uri.into(),
-                            canonical_branch: canonical_branch.into(),
-                            secret_id,
-                            remote_branch_heads: branches_latest,
-                            ..Default::default()
-                        })
-                        .get_result(&self.conn)
-                        .expect("Error saving new repo");
+                        let result: Repo = diesel::insert_into(repo::table)
+                            .values(NewRepo {
+                                name: name.into(),
+                                org_id: org_db.id,
+                                uri: uri.into(),
+                                canonical_branch: canonical_branch.into(),
+                                secret_id,
+                                remote_branch_heads: branches_latest,
+                                ..Default::default()
+                            })
+                            .get_result(&self.conn)
+                            .expect("Error saving new repo");
 
-                    debug!("DB insert result: {:?}", &result);
+                        debug!("DB insert result: {:?}", &result);
 
-                    // Run query again. This time it should pass
-                    self.repo_get(name)
+                        // Run query again. This time it should pass
+                        self.repo_get()
+                    }
+                    Ok((o, r, s)) => {
+                        debug!("repo found in db. Returning result.");
+                        Ok((o, r, s))
+                    }
                 }
-                Ok((o, r, s)) => {
-                    debug!("repo found in db. Returning result.");
-                    Ok((o, r, s))
-                }
+            } else {
+                Err(eyre!("Repo not set"))
             }
         } else {
             Err(eyre!("Org not set"))
         }
     }
 
-    pub fn repo_get(&self, name: &str) -> Result<(Org, Repo, Option<Secret>)> {
+    pub fn repo_get(&self) -> Result<(Org, Repo, Option<Secret>)> {
         if let Some(ref org) = self.org {
-            debug!("Repo get: Org: {}, Name: {}", org, name);
+            if let Some(ref repo) = self.repo {
+                debug!("Repo get: Org: {}, Name: {}", org, repo);
 
-            let query: Result<(Org, Repo), _> = repo::table
+                let query: Result<(Org, Repo), _> = repo::table
         .inner_join(org::table)
         .select((org::all_columns, repo::all_columns))
-        .filter(repo::name.eq(&name))
+        .filter(repo::name.eq(&repo))
         //.filter(secret::id.eq(&secret_id))
         .get_result(&self.conn);
 
-            match query {
-                Ok((o, r)) => {
-                    // If we're using a secret, we should also return it to the requester
-                    let secret = match &r.secret_id {
-                        None => None,
-                        Some(id) => self.secret_from_id(*id),
-                    };
+                match query {
+                    Ok((o, r)) => {
+                        // If we're using a secret, we should also return it to the requester
+                        let secret = match &r.secret_id {
+                            None => None,
+                            Some(id) => self.secret_from_id(*id),
+                        };
 
-                    Ok((o, r, secret))
+                        Ok((o, r, secret))
+                    }
+                    Err(_e) => Err(eyre!("{} not found in {} org", repo, org)),
                 }
-                Err(_e) => Err(eyre!("{} not found in {} org", name, org)),
+            } else {
+                Err(eyre!("No repo set"))
             }
         } else {
             Err(eyre!("No org set"))
@@ -393,35 +401,43 @@ impl OrbitalDBClient {
         update_repo: NewRepo,
     ) -> Result<(Org, Repo, Option<Secret>)> {
         if let Some(ref _org) = self.org {
-            let (org_db, _repo_db, secret_db) = self.repo_get(name)?;
+            if let Some(ref _repo) = self.repo {
+                let (org_db, _repo_db, secret_db) = self.repo_get()?;
 
-            debug!("Right before updating DB row: {:?}", &update_repo);
+                debug!("Right before updating DB row: {:?}", &update_repo);
 
-            let repo_update: Repo = diesel::update(repo::table)
-                .filter(repo::org_id.eq(&org_db.id))
-                .filter(repo::name.eq(&name))
-                .set(update_repo)
-                .get_result(&self.conn)
-                .expect("Error updating repo");
+                let repo_update: Repo = diesel::update(repo::table)
+                    .filter(repo::org_id.eq(&org_db.id))
+                    .filter(repo::name.eq(&name))
+                    .set(update_repo)
+                    .get_result(&self.conn)
+                    .expect("Error updating repo");
 
-            debug!("Result after update: {:?}", &repo_update);
+                debug!("Result after update: {:?}", &repo_update);
 
-            Ok((org_db, repo_update, secret_db))
+                Ok((org_db, repo_update, secret_db))
+            } else {
+                Err(eyre!("No repo set"))
+            }
         } else {
             Err(eyre!("No org set"))
         }
     }
 
     pub fn repo_remove(&self, name: &str) -> Result<(Org, Repo, Option<Secret>)> {
-        let (org_db, repo_db, secret_db) = self.repo_get(name)?;
+        if let Some(ref _repo) = self.repo {
+            let (org_db, repo_db, secret_db) = self.repo_get()?;
 
-        let _repo_delete: Repo = diesel::delete(repo::table)
-            .filter(repo::org_id.eq(&org_db.id))
-            .filter(repo::name.eq(&name))
-            .get_result(&self.conn)
-            .expect("Error deleting repo");
+            let _repo_delete: Repo = diesel::delete(repo::table)
+                .filter(repo::org_id.eq(&org_db.id))
+                .filter(repo::name.eq(&name))
+                .get_result(&self.conn)
+                .expect("Error deleting repo");
 
-        Ok((org_db, repo_db, secret_db))
+            Ok((org_db, repo_db, secret_db))
+        } else {
+            Err(eyre!("No repo set"))
+        }
     }
 
     pub fn repo_list(&self) -> Result<Vec<(Org, Repo, Option<Secret>)>> {
@@ -449,67 +465,73 @@ impl OrbitalDBClient {
 
     pub fn build_target_add(
         &self,
-        repo: &str,
         hash: &str,
         branch: &str,
         user_envs: Option<String>,
         job_trigger: JobTrigger,
     ) -> Result<(Org, Repo, BuildTarget)> {
-        let (org_db, repo_db, _) = self.repo_get(repo)?;
+        if let Some(ref _repo) = self.repo {
+            let (org_db, repo_db, _) = self.repo_get()?;
 
-        let build_target = NewBuildTarget {
-            repo_id: repo_db.id,
-            git_hash: hash.to_string(),
-            branch: branch.to_string(),
-            user_envs,
-            build_index: repo_db.next_build_index,
-            trigger: job_trigger,
-            ..Default::default()
-        };
+            let build_target = NewBuildTarget {
+                repo_id: repo_db.id,
+                git_hash: hash.to_string(),
+                branch: branch.to_string(),
+                user_envs,
+                build_index: repo_db.next_build_index,
+                trigger: job_trigger,
+                ..Default::default()
+            };
 
-        debug!("Build spec to insert: {:?}", &build_target);
+            debug!("Build spec to insert: {:?}", &build_target);
 
-        let result: BuildTarget = diesel::insert_into(build_target::table)
-            .values(build_target)
-            .get_result(&self.conn)
-            .expect("Error saving new build_target");
+            let result: BuildTarget = diesel::insert_into(build_target::table)
+                .values(build_target)
+                .get_result(&self.conn)
+                .expect("Error saving new build_target");
 
-        // Increment repo next_build_target by 1
-        let updated_repo = self.repo_increment_build_index(repo_db)?;
+            // Increment repo next_build_target by 1
+            let updated_repo = self.repo_increment_build_index(repo_db)?;
 
-        Ok((org_db, updated_repo, result))
+            Ok((org_db, updated_repo, result))
+        } else {
+            Err(eyre!("Repo not set"))
+        }
     }
 
     // This should probably return a Vec
     // Consider taking a Repo as input
     pub fn build_target_get(
         &self,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: i32,
     ) -> Result<(Org, Repo, Option<BuildTarget>)> {
         debug!(
         "Build target get request: org {:?} repo: {:?} hash: {:?} branch: {:?} build_index: {:?}",
-        &self.org, &repo, &hash, &branch, &build_index,
+        &self.org, &self.repo, &hash, &branch, &build_index,
     );
 
-        let (org_db, repo_db, _secret_db) = self.repo_get(repo)?;
+        if let Some(ref _repo) = self.repo {
+            let (org_db, repo_db, _secret_db) = self.repo_get()?;
 
-        let result: Result<(Repo, BuildTarget), _> = build_target::table
-            .inner_join(repo::table)
-            .select((repo::all_columns, build_target::all_columns))
-            .filter(build_target::repo_id.eq(repo_db.id))
-            .filter(build_target::branch.eq(branch))
-            .filter(build_target::build_index.eq(build_index))
-            .get_result(&self.conn);
+            let result: Result<(Repo, BuildTarget), _> = build_target::table
+                .inner_join(repo::table)
+                .select((repo::all_columns, build_target::all_columns))
+                .filter(build_target::repo_id.eq(repo_db.id))
+                .filter(build_target::branch.eq(branch))
+                .filter(build_target::build_index.eq(build_index))
+                .get_result(&self.conn);
 
-        match result {
-            Ok((repo, build_target)) => {
-                debug!("BuildTarget found: {:?}", &build_target);
-                Ok((org_db, repo, Some(build_target)))
+            match result {
+                Ok((repo, build_target)) => {
+                    debug!("BuildTarget found: {:?}", &build_target);
+                    Ok((org_db, repo, Some(build_target)))
+                }
+                Err(_e) => Ok((org_db, repo_db, None)),
             }
-            Err(_e) => Ok((org_db, repo_db, None)),
+        } else {
+            Err(eyre!("No repo set"))
         }
     }
 
@@ -570,8 +592,6 @@ impl OrbitalDBClient {
 
     pub fn build_summary_add(
         &self,
-        org: &str,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: i32,
@@ -579,11 +599,11 @@ impl OrbitalDBClient {
     ) -> Result<(Repo, BuildTarget, BuildSummary)> {
         debug!(
         "Build summary add request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
-        &org, &repo, &hash, &branch, &build_index,
+        &self.org, &self.repo, &hash, &branch, &build_index,
     );
 
         let (_org_db, repo_db, build_target_db_opt) =
-            self.build_target_get(repo, hash, branch, build_index)?;
+            self.build_target_get(hash, branch, build_index)?;
 
         let build_target_db = build_target_db_opt.expect("Build target not found");
 
@@ -599,18 +619,17 @@ impl OrbitalDBClient {
 
     pub fn build_summary_get(
         &self,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: i32,
     ) -> Result<(Repo, BuildTarget, Option<BuildSummary>)> {
         debug!(
         "Build summary get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
-        &self.org, &repo, &hash, &branch, &build_index,
+        &self.org, &self.repo, &hash, &branch, &build_index,
     );
 
         let (_org_db, repo_db, build_target_db_opt) =
-            self.build_target_get(repo, hash, branch, build_index)?;
+            self.build_target_get(hash, branch, build_index)?;
 
         let build_target_db = build_target_db_opt.expect("No build target found");
 
@@ -634,8 +653,6 @@ impl OrbitalDBClient {
 
     pub fn build_summary_update(
         &self,
-        org: &str,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: i32,
@@ -643,11 +660,11 @@ impl OrbitalDBClient {
     ) -> Result<(Repo, BuildTarget, BuildSummary)> {
         debug!(
         "Build summary update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} update_summary: {:?}",
-        &org, &repo, &hash, &branch, &build_index, &update_summary,
+        &self.org, &self.repo, &hash, &branch, &build_index, &update_summary,
     );
 
         let (org_db, build_target_db, build_summary_db_opt) =
-            self.build_summary_get(repo, hash, branch, build_index)?;
+            self.build_summary_get(hash, branch, build_index)?;
 
         let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
@@ -665,17 +682,13 @@ impl OrbitalDBClient {
     //}
 
     // TODO: `repo` should be changed to Option<&str> for granularity between all or one repo
-    pub fn build_summary_list(
-        &self,
-        repo: &str,
-        limit: i32,
-    ) -> Result<Vec<(Repo, BuildTarget, BuildSummary)>> {
+    pub fn build_summary_list(&self, limit: i32) -> Result<Vec<(Repo, BuildTarget, BuildSummary)>> {
         debug!(
             "Build summary list request: org {:?} repo: {:?} limit: {:?}",
-            &self.org, &repo, &limit
+            &self.org, &self.repo, &limit
         );
 
-        let (_org_db, repo_db, _secret_db) = self.repo_get(repo)?;
+        let (_org_db, repo_db, _secret_db) = self.repo_get()?;
 
         let result: Vec<(BuildTarget, BuildSummary)> = build_summary::table
             .inner_join(build_target::table)
@@ -696,7 +709,6 @@ impl OrbitalDBClient {
 
     pub fn build_stage_add(
         &self,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: i32,
@@ -705,11 +717,11 @@ impl OrbitalDBClient {
     ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
         debug!(
         "Build stage add request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
-        &self.org, &repo, &hash, &branch, &build_index, &build_summary_id,
+        &self.org, &self.repo, &hash, &branch, &build_index, &build_summary_id,
     );
 
         let (_org_db, build_target_db, build_summary_db_opt) =
-            self.build_summary_get(repo, hash, branch, build_index)?;
+            self.build_summary_get(hash, branch, build_index)?;
 
         let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
@@ -725,7 +737,6 @@ impl OrbitalDBClient {
 
     pub fn build_stage_get(
         &self,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: i32,
@@ -734,11 +745,11 @@ impl OrbitalDBClient {
     ) -> Result<(BuildTarget, BuildSummary, Option<BuildStage>)> {
         debug!(
         "Build stage get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
-        &self.org, &repo, &hash, &branch, &build_index, &build_summary_id,
+        &self.org, &self.repo, &hash, &branch, &build_index, &build_summary_id,
     );
 
         let (_repo_db, build_target_db, build_summary_db_opt) =
-            self.build_summary_get(repo, hash, branch, build_index)?;
+            self.build_summary_get(hash, branch, build_index)?;
 
         let build_summary_db = build_summary_db_opt.expect("No build target found");
 
@@ -763,7 +774,6 @@ impl OrbitalDBClient {
 
     pub fn build_stage_update(
         &self,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: i32,
@@ -773,17 +783,11 @@ impl OrbitalDBClient {
     ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
         debug!(
         "Build stage update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?} build_stage_id {:?} update_stage {:?}",
-        &self.org, &repo, &hash, &branch, &build_index, &build_summary_id, &build_stage_id, &update_stage,
+        &self.org, &self.repo, &hash, &branch, &build_index, &build_summary_id, &build_stage_id, &update_stage,
     );
 
-        let (build_target_db, build_summary_db, build_stage_db_opt) = self.build_stage_get(
-            repo,
-            hash,
-            branch,
-            build_index,
-            build_summary_id,
-            build_stage_id,
-        )?;
+        let (build_target_db, build_summary_db, build_stage_db_opt) =
+            self.build_stage_get(hash, branch, build_index, build_summary_id, build_stage_id)?;
 
         let _build_stage_db = build_stage_db_opt.expect("No build stage found");
 
@@ -802,7 +806,6 @@ impl OrbitalDBClient {
 
     pub fn build_stage_list(
         &self,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: i32,
@@ -810,11 +813,11 @@ impl OrbitalDBClient {
     ) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
         debug!(
         "Build stage list request: org {:?} repo: {:?} hash {:?} branch {:?} build_index {:?} limit: {:?}",
-        &self.org, &repo, &hash, &branch, &build_index, &limit
+        &self.org, &self.repo, &hash, &branch, &build_index, &limit
     );
 
         let (_repo_db, build_target_db, build_summary_db_opt) =
-            self.build_summary_get(repo, hash, branch, build_index)?;
+            self.build_summary_get(hash, branch, build_index)?;
 
         let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
@@ -846,27 +849,20 @@ impl OrbitalDBClient {
 
     pub fn build_logs_get(
         &self,
-        repo: &str,
         hash: &str,
         branch: &str,
         build_index: Option<i32>,
     ) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
-        let (_org_db, repo_db, _secret_db) = self.repo_get(repo)?;
+        let (_org_db, repo_db, _secret_db) = self.repo_get()?;
 
         match build_index {
-            Some(n) => self.build_stage_list(repo, hash, branch, n, 255),
-            None => self.build_stage_list(repo, hash, branch, repo_db.next_build_index - 1, 255),
+            Some(n) => self.build_stage_list(hash, branch, n, 255),
+            None => self.build_stage_list(hash, branch, repo_db.next_build_index - 1, 255),
         }
     }
 
-    pub fn is_build_cancelled(
-        &self,
-        repo: &str,
-        hash: &str,
-        branch: &str,
-        build_index: i32,
-    ) -> Result<bool> {
-        match self.build_summary_get(repo, hash, branch, build_index) {
+    pub fn is_build_cancelled(&self, hash: &str, branch: &str, build_index: i32) -> Result<bool> {
+        match self.build_summary_get(hash, branch, build_index) {
             Ok((_, _, Some(summary))) => match summary.build_state {
                 JobState::Canceled => Ok(true),
                 _ => Ok(false),

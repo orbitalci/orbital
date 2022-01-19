@@ -329,10 +329,12 @@ impl CodeService for OrbitalApi {
         debug!("Git repo get details: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(req.org))
+            .set_repo(Some(req.name));
 
         let db_result = orb_db
-            .repo_get(&req.name)
+            .repo_get()
             .expect("There was a problem getting repo in database");
 
         debug!("repo get db result: {:?}", &db_result);
@@ -389,12 +391,12 @@ impl CodeService for OrbitalApi {
         debug!("Git repo update details: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(req.org.clone()))
+            .set_repo(Some(req.name.clone()));
 
         // Get the current repo
-        let current_repo = orb_db
-            .repo_get(&req.name)
-            .expect("Could not find repo to update");
+        let current_repo = orb_db.repo_get().expect("Could not find repo to update");
 
         let org_db = current_repo.0;
         let repo_db = current_repo.1;

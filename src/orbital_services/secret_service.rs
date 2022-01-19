@@ -45,7 +45,8 @@ impl SecretService for OrbitalApi {
 
         // Add Secret reference into DB
 
-        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
+        let orb_db =
+            postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
 
         let db_result = orb_db
             .secret_add(
@@ -80,7 +81,8 @@ impl SecretService for OrbitalApi {
         let unwrapped_request = request.into_inner();
 
         // Talk to DB to get the secret path
-        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
+        let orb_db =
+            postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
 
         let db_result = orb_db
             .secret_get(
@@ -132,7 +134,8 @@ impl SecretService for OrbitalApi {
 
         // Remove Secret reference into DB
 
-        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
+        let orb_db =
+            postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
         // FIXME: Need a cleaner way to get org id for this struct, because we're making duplicate calls to db for org.id
         let org = orb_db
             .org_get(&unwrapped_request.org)
@@ -147,10 +150,7 @@ impl SecretService for OrbitalApi {
         };
 
         let _db_result = orb_db
-            .secret_update(
-                &unwrapped_request.name,
-                secret_update,
-            )
+            .secret_update(&unwrapped_request.name, secret_update)
             .expect("There was a problem updating secret in database");
 
         let secret_result = SecretEntry {
@@ -173,7 +173,8 @@ impl SecretService for OrbitalApi {
 
         // Remove Secret reference into DB
 
-        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
+        let orb_db =
+            postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
 
         let db_result = orb_db
             .secret_remove(

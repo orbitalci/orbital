@@ -164,13 +164,14 @@ impl BuildService for OrbitalApi {
     ) -> Result<Response<BuildMetadata>, Status> {
         let unwrapped_request = request.into_inner();
 
-        let orb_db =
-            postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(unwrapped_request.org.clone()))
+            .set_repo(Some(unwrapped_request.git_repo.clone()));
 
         // Resolve the build number to latest if build number is 0
         let build_id = match unwrapped_request.id {
             0 => {
-                if let Ok((_, repo, _)) = orb_db.repo_get(&unwrapped_request.git_repo) {
+                if let Ok((_, repo, _)) = orb_db.repo_get() {
                     repo.next_build_index - 1
                 } else {
                     panic!("No build id provided. Failed to query DB for latest build id")
@@ -181,12 +182,11 @@ impl BuildService for OrbitalApi {
 
         // Determine if build is cancelable
         match orb_db.build_summary_get(
-            &unwrapped_request.git_repo,
             &unwrapped_request.commit_hash,
             &unwrapped_request.branch,
             build_id,
         ) {
-            Ok((repo, build_target, Some(summary))) => match summary.build_state {
+            Ok((_repo, build_target, Some(summary))) => match summary.build_state {
                 JobState::Queued => {
                     info!("Stop build before it even gets started");
 
@@ -197,8 +197,6 @@ impl BuildService for OrbitalApi {
                     info!("Updating build state to canceled");
                     let _build_summary_result_canceled = orb_db
                         .build_summary_update(
-                            &unwrapped_request.org,
-                            &repo.name,
                             &build_target.git_hash,
                             &build_target.branch,
                             build_target.build_index,
@@ -222,7 +220,7 @@ impl BuildService for OrbitalApi {
                     // Send build cancelation signal
                     let container_name = orbital_agent::generate_unique_build_id(
                         &unwrapped_request.org,
-                        &unwrapped_request.git_repo,
+                        &unwrapped_request.git_repo.clone(),
                         &unwrapped_request.commit_hash,
                         &format!("{}", build_id),
                     );
@@ -247,8 +245,6 @@ impl BuildService for OrbitalApi {
                     info!("Updating build state to canceled");
                     let _build_summary_result_canceled = orb_db
                         .build_summary_update(
-                            &unwrapped_request.org,
-                            &repo.name,
                             &build_target.git_hash,
                             &build_target.branch,
                             build_target.build_index,
@@ -301,13 +297,14 @@ impl BuildService for OrbitalApi {
 
         // Get repo id from BuildTarget
         // Connect to database. Query for the repo
-        let orb_db =
-            postgres::client::OrbitalDBClient::new().set_org(Some(unwrapped_request.org.clone()));
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(unwrapped_request.org.clone()))
+            .set_repo(Some(unwrapped_request.git_repo.clone()));
 
         // Resolve the build number to latest if build number is 0
         let build_id = match unwrapped_request.id {
             0 => {
-                if let Ok((_, repo, _)) = orb_db.repo_get(&unwrapped_request.git_repo) {
+                if let Ok((_, repo, _)) = orb_db.repo_get() {
                     repo.next_build_index - 1
                 } else {
                     panic!("No build id provided. Failed to query DB for latest build id")
@@ -318,7 +315,6 @@ impl BuildService for OrbitalApi {
 
         let (_repo, _build_target, build_summary_opt) = orb_db
             .build_summary_get(
-                &unwrapped_request.git_repo,
                 &unwrapped_request.commit_hash,
                 &unwrapped_request.branch,
                 build_id,
@@ -376,10 +372,11 @@ impl BuildService for OrbitalApi {
                     }
 
                     _ => {
-                        let orb_db = postgres::client::OrbitalDBClient::new();
+                        let orb_db = postgres::client::OrbitalDBClient::new()
+                            .set_org(Some(unwrapped_request.org))
+                            .set_repo(Some(unwrapped_request.git_repo));
                         let build_stage_query = orb_db
                             .build_logs_get(
-                                &unwrapped_request.git_repo,
                                 &unwrapped_request.commit_hash,
                                 &unwrapped_request.branch,
                                 Some(build_id),
@@ -437,13 +434,12 @@ impl BuildService for OrbitalApi {
         debug!("Received request: {:?}", &unwrapped_request);
 
         // Connect to database. Query for the repo
-        let orb_db = postgres::client::OrbitalDBClient::new();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(build_info.org.clone()))
+            .set_repo(Some(build_info.git_repo.clone()));
 
         let build_summary_db = orb_db
-            .build_summary_list(
-                &build_info.git_repo,
-                unwrapped_request.limit,
-            )
+            .build_summary_list(unwrapped_request.limit)
             .expect("No summary returned");
 
         debug!("Summary: {:?}", &build_summary_db);
