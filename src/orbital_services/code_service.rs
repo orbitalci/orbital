@@ -86,13 +86,12 @@ impl CodeService for OrbitalApi {
                 };
 
                 // Write git repo to DB
-                let orb_db = postgres::client::OrbitalDBClient::new();
+                let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
                 // TODO: We should remove usernames from the uri when we add to the database
                 // This means we're going to need to add usernames to secret service
                 orb_db
                     .repo_add(
-                        &req.org,
                         &req.name,
                         &req.uri,
                         &req.canonical_branch,
@@ -192,12 +191,11 @@ impl CodeService for OrbitalApi {
 
                 // Write git repo to DB
 
-                let orb_db = postgres::client::OrbitalDBClient::new();
+                let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
                 // TODO: Remove username from uri
                 orb_db
                     .repo_add(
-                        &req.org,
                         &req.name,
                         &req.uri,
                         &req.canonical_branch,
@@ -283,12 +281,11 @@ impl CodeService for OrbitalApi {
 
                 // Write git repo to DB
 
-                let orb_db = postgres::client::OrbitalDBClient::new();
+                let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
                 // TODO: Remove username from uri
                 orb_db
                     .repo_add(
-                        &req.org,
                         &req.name,
                         &req.uri,
                         &req.canonical_branch,
@@ -332,10 +329,10 @@ impl CodeService for OrbitalApi {
         debug!("Git repo get details: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let orb_db = postgres::client::OrbitalDBClient::new();
+        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
         let db_result = orb_db
-            .repo_get(&req.org, &req.name)
+            .repo_get(&req.name)
             .expect("There was a problem getting repo in database");
 
         debug!("repo get db result: {:?}", &db_result);
@@ -392,11 +389,11 @@ impl CodeService for OrbitalApi {
         debug!("Git repo update details: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let orb_db = postgres::client::OrbitalDBClient::new();
+        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
         // Get the current repo
         let current_repo = orb_db
-            .repo_get(&req.org, &req.name)
+            .repo_get(&req.name)
             .expect("Could not find repo to update");
 
         let org_db = current_repo.0;
@@ -432,7 +429,7 @@ impl CodeService for OrbitalApi {
         };
 
         let db_result = orb_db
-            .repo_update(&req.org, &req.name, update_repo)
+            .repo_update(&req.name, update_repo)
             .expect("Could not update repo");
 
         // Repeating ourselves to write response with update data
@@ -496,10 +493,10 @@ impl CodeService for OrbitalApi {
         debug!("Git repo remove details: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let orb_db = postgres::client::OrbitalDBClient::new();
+        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
         let db_result = orb_db
-            .repo_remove(&req.org, &req.name)
+            .repo_remove(&req.name)
             .expect("There was a problem removing repo in database");
 
         debug!("repo remove db result: {:?}", &db_result);
@@ -537,10 +534,10 @@ impl CodeService for OrbitalApi {
         info!("Git repo list request: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let orb_db = postgres::client::OrbitalDBClient::new();
+        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
         let db_result: Vec<GitRepoEntry> = orb_db
-            .repo_list(&req.org)
+            .repo_list()
             .expect("There was a problem listing repo from database")
             .into_iter()
             .map(|(org_db, repo_db, secret_db)| {
