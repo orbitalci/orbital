@@ -164,7 +164,7 @@ impl BuildService for OrbitalApi {
     ) -> Result<Response<BuildMetadata>, Status> {
         let unwrapped_request = request.into_inner();
 
-        let orb_db = postgres::client::OrbitalDBClient::new()
+        let mut orb_db = postgres::client::OrbitalDBClient::new()
             .set_org(Some(unwrapped_request.org.clone()))
             .set_repo(Some(unwrapped_request.git_repo.clone()));
 
@@ -181,11 +181,7 @@ impl BuildService for OrbitalApi {
         };
 
         // Determine if build is cancelable
-        match orb_db.build_summary_get(
-            &unwrapped_request.commit_hash,
-            &unwrapped_request.branch,
-            build_id,
-        ) {
+        match orb_db.build_summary_get(build_id) {
             Ok((_repo, build_target, Some(summary))) => match summary.build_state {
                 JobState::Queued => {
                     info!("Stop build before it even gets started");
@@ -195,10 +191,12 @@ impl BuildService for OrbitalApi {
                     new_canceled_summary.build_state = JobState::Canceled;
 
                     info!("Updating build state to canceled");
+
+                    orb_db = orb_db
+                        .set_branch(Some(build_target.branch))
+                        .set_hash(Some(build_target.git_hash));
                     let _build_summary_result_canceled = orb_db
                         .build_summary_update(
-                            &build_target.git_hash,
-                            &build_target.branch,
                             build_target.build_index,
                             NewBuildSummary {
                                 build_target_id: summary.build_target_id,
@@ -243,10 +241,12 @@ impl BuildService for OrbitalApi {
                     new_canceled_summary.build_state = JobState::Canceled;
 
                     info!("Updating build state to canceled");
+
+                    orb_db = orb_db
+                        .set_branch(Some(build_target.branch))
+                        .set_hash(Some(build_target.git_hash));
                     let _build_summary_result_canceled = orb_db
                         .build_summary_update(
-                            &build_target.git_hash,
-                            &build_target.branch,
                             build_target.build_index,
                             NewBuildSummary {
                                 build_target_id: summary.build_target_id,
@@ -299,7 +299,9 @@ impl BuildService for OrbitalApi {
         // Connect to database. Query for the repo
         let orb_db = postgres::client::OrbitalDBClient::new()
             .set_org(Some(unwrapped_request.org.clone()))
-            .set_repo(Some(unwrapped_request.git_repo.clone()));
+            .set_repo(Some(unwrapped_request.git_repo.clone()))
+            .set_branch(Some(unwrapped_request.branch.clone()))
+            .set_hash(Some(unwrapped_request.commit_hash.clone()));
 
         // Resolve the build number to latest if build number is 0
         let build_id = match unwrapped_request.id {
@@ -313,13 +315,7 @@ impl BuildService for OrbitalApi {
             _ => unwrapped_request.id,
         };
 
-        let (_repo, _build_target, build_summary_opt) = orb_db
-            .build_summary_get(
-                &unwrapped_request.commit_hash,
-                &unwrapped_request.branch,
-                build_id,
-            )
-            .unwrap();
+        let (_repo, _build_target, build_summary_opt) = orb_db.build_summary_get(build_id).unwrap();
 
         drop(orb_db);
 
@@ -374,13 +370,11 @@ impl BuildService for OrbitalApi {
                     _ => {
                         let orb_db = postgres::client::OrbitalDBClient::new()
                             .set_org(Some(unwrapped_request.org))
-                            .set_repo(Some(unwrapped_request.git_repo));
+                            .set_repo(Some(unwrapped_request.git_repo))
+                            .set_branch(Some(unwrapped_request.branch.clone()))
+                            .set_hash(Some(unwrapped_request.commit_hash.clone()));
                         let build_stage_query = orb_db
-                            .build_logs_get(
-                                &unwrapped_request.commit_hash,
-                                &unwrapped_request.branch,
-                                Some(build_id),
-                            )
+                            .build_logs_get(Some(build_id))
                             .expect("No build stages found");
 
                         let mut build_stage_list: Vec<orbital_headers::build_meta::BuildStage> =

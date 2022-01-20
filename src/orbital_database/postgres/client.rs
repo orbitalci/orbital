@@ -65,17 +65,17 @@ impl OrbitalDBClient {
     //        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
     //}
 
-    pub fn org_from_id(&self, id: i32) -> Result<Org> {
-        let org_check: Result<Org, _> = org::table
-            .select(org::all_columns)
-            .filter(org::id.eq(id))
-            .get_result(&self.conn);
+    //pub fn org_from_id(&self, id: i32) -> Result<Org> {
+    //    let org_check: Result<Org, _> = org::table
+    //        .select(org::all_columns)
+    //        .filter(org::id.eq(id))
+    //        .get_result(&self.conn);
 
-        match org_check {
-            Ok(o) => Ok(o),
-            Err(_e) => Err(eyre!("Could not retrieve org by id from DB")),
-        }
-    }
+    //    match org_check {
+    //        Ok(o) => Ok(o),
+    //        Err(_e) => Err(eyre!("Could not retrieve org by id from DB")),
+    //    }
+    //}
 
     pub fn secret_from_id(&self, id: i32) -> Option<Secret> {
         let secret_check: Result<Secret, _> = secret::table
@@ -465,35 +465,37 @@ impl OrbitalDBClient {
 
     pub fn build_target_add(
         &self,
-        hash: &str,
-        branch: &str,
         user_envs: Option<String>,
         job_trigger: JobTrigger,
     ) -> Result<(Org, Repo, BuildTarget)> {
-        if let Some(ref _repo) = self.repo {
-            let (org_db, repo_db, _) = self.repo_get()?;
+        if self.repo.is_some() {
+            if let (Some(branch), Some(hash)) = (self.branch.clone(), self.hash.clone()) {
+                let (org_db, repo_db, _) = self.repo_get()?;
 
-            let build_target = NewBuildTarget {
-                repo_id: repo_db.id,
-                git_hash: hash.to_string(),
-                branch: branch.to_string(),
-                user_envs,
-                build_index: repo_db.next_build_index,
-                trigger: job_trigger,
-                ..Default::default()
-            };
+                let build_target = NewBuildTarget {
+                    repo_id: repo_db.id,
+                    git_hash: hash,
+                    branch,
+                    user_envs,
+                    build_index: repo_db.next_build_index,
+                    trigger: job_trigger,
+                    ..Default::default()
+                };
 
-            debug!("Build spec to insert: {:?}", &build_target);
+                debug!("Build spec to insert: {:?}", &build_target);
 
-            let result: BuildTarget = diesel::insert_into(build_target::table)
-                .values(build_target)
-                .get_result(&self.conn)
-                .expect("Error saving new build_target");
+                let result: BuildTarget = diesel::insert_into(build_target::table)
+                    .values(build_target)
+                    .get_result(&self.conn)
+                    .expect("Error saving new build_target");
 
-            // Increment repo next_build_target by 1
-            let updated_repo = self.repo_increment_build_index(repo_db)?;
+                // Increment repo next_build_target by 1
+                let updated_repo = self.repo_increment_build_index(repo_db)?;
 
-            Ok((org_db, updated_repo, result))
+                Ok((org_db, updated_repo, result))
+            } else {
+                Err(eyre!("Branch and/or hash not set"))
+            }
         } else {
             Err(eyre!("Repo not set"))
         }
@@ -501,34 +503,32 @@ impl OrbitalDBClient {
 
     // This should probably return a Vec
     // Consider taking a Repo as input
-    pub fn build_target_get(
-        &self,
-        hash: &str,
-        branch: &str,
-        build_index: i32,
-    ) -> Result<(Org, Repo, Option<BuildTarget>)> {
-        debug!(
+    pub fn build_target_get(&self, build_index: i32) -> Result<(Org, Repo, Option<BuildTarget>)> {
+        if let Some(ref _repo) = self.repo {
+            if let (Some(branch), Some(hash)) = (self.branch.clone(), self.hash.clone()) {
+                debug!(
         "Build target get request: org {:?} repo: {:?} hash: {:?} branch: {:?} build_index: {:?}",
         &self.org, &self.repo, &hash, &branch, &build_index,
     );
+                let (org_db, repo_db, _secret_db) = self.repo_get()?;
 
-        if let Some(ref _repo) = self.repo {
-            let (org_db, repo_db, _secret_db) = self.repo_get()?;
+                let result: Result<(Repo, BuildTarget), _> = build_target::table
+                    .inner_join(repo::table)
+                    .select((repo::all_columns, build_target::all_columns))
+                    .filter(build_target::repo_id.eq(repo_db.id))
+                    .filter(build_target::branch.eq(branch))
+                    .filter(build_target::build_index.eq(build_index))
+                    .get_result(&self.conn);
 
-            let result: Result<(Repo, BuildTarget), _> = build_target::table
-                .inner_join(repo::table)
-                .select((repo::all_columns, build_target::all_columns))
-                .filter(build_target::repo_id.eq(repo_db.id))
-                .filter(build_target::branch.eq(branch))
-                .filter(build_target::build_index.eq(build_index))
-                .get_result(&self.conn);
-
-            match result {
-                Ok((repo, build_target)) => {
-                    debug!("BuildTarget found: {:?}", &build_target);
-                    Ok((org_db, repo, Some(build_target)))
+                match result {
+                    Ok((repo, build_target)) => {
+                        debug!("BuildTarget found: {:?}", &build_target);
+                        Ok((org_db, repo, Some(build_target)))
+                    }
+                    Err(_e) => Ok((org_db, repo_db, None)),
                 }
-                Err(_e) => Ok((org_db, repo_db, None)),
+            } else {
+                Err(eyre!("Branch and/or hash not set"))
             }
         } else {
             Err(eyre!("No repo set"))
@@ -592,18 +592,15 @@ impl OrbitalDBClient {
 
     pub fn build_summary_add(
         &self,
-        hash: &str,
-        branch: &str,
         build_index: i32,
         build_summary: NewBuildSummary,
     ) -> Result<(Repo, BuildTarget, BuildSummary)> {
         debug!(
         "Build summary add request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
-        &self.org, &self.repo, &hash, &branch, &build_index,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index,
     );
 
-        let (_org_db, repo_db, build_target_db_opt) =
-            self.build_target_get(hash, branch, build_index)?;
+        let (_org_db, repo_db, build_target_db_opt) = self.build_target_get(build_index)?;
 
         let build_target_db = build_target_db_opt.expect("Build target not found");
 
@@ -619,17 +616,14 @@ impl OrbitalDBClient {
 
     pub fn build_summary_get(
         &self,
-        hash: &str,
-        branch: &str,
         build_index: i32,
     ) -> Result<(Repo, BuildTarget, Option<BuildSummary>)> {
         debug!(
         "Build summary get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
-        &self.org, &self.repo, &hash, &branch, &build_index,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index,
     );
 
-        let (_org_db, repo_db, build_target_db_opt) =
-            self.build_target_get(hash, branch, build_index)?;
+        let (_org_db, repo_db, build_target_db_opt) = self.build_target_get(build_index)?;
 
         let build_target_db = build_target_db_opt.expect("No build target found");
 
@@ -653,18 +647,16 @@ impl OrbitalDBClient {
 
     pub fn build_summary_update(
         &self,
-        hash: &str,
-        branch: &str,
         build_index: i32,
         update_summary: NewBuildSummary,
     ) -> Result<(Repo, BuildTarget, BuildSummary)> {
         debug!(
         "Build summary update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} update_summary: {:?}",
-        &self.org, &self.repo, &hash, &branch, &build_index, &update_summary,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &update_summary,
     );
 
         let (org_db, build_target_db, build_summary_db_opt) =
-            self.build_summary_get(hash, branch, build_index)?;
+            self.build_summary_get(build_index)?;
 
         let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
@@ -709,19 +701,17 @@ impl OrbitalDBClient {
 
     pub fn build_stage_add(
         &self,
-        hash: &str,
-        branch: &str,
         build_index: i32,
         build_summary_id: i32,
         build_stage: NewBuildStage,
     ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
         debug!(
         "Build stage add request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
-        &self.org, &self.repo, &hash, &branch, &build_index, &build_summary_id,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &build_summary_id,
     );
 
         let (_org_db, build_target_db, build_summary_db_opt) =
-            self.build_summary_get(hash, branch, build_index)?;
+            self.build_summary_get(build_index)?;
 
         let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
@@ -737,19 +727,17 @@ impl OrbitalDBClient {
 
     pub fn build_stage_get(
         &self,
-        hash: &str,
-        branch: &str,
         build_index: i32,
         build_summary_id: i32,
         build_stage_id: i32,
     ) -> Result<(BuildTarget, BuildSummary, Option<BuildStage>)> {
         debug!(
         "Build stage get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
-        &self.org, &self.repo, &hash, &branch, &build_index, &build_summary_id,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &build_summary_id,
     );
 
         let (_repo_db, build_target_db, build_summary_db_opt) =
-            self.build_summary_get(hash, branch, build_index)?;
+            self.build_summary_get(build_index)?;
 
         let build_summary_db = build_summary_db_opt.expect("No build target found");
 
@@ -774,8 +762,6 @@ impl OrbitalDBClient {
 
     pub fn build_stage_update(
         &self,
-        hash: &str,
-        branch: &str,
         build_index: i32,
         build_summary_id: i32,
         build_stage_id: i32,
@@ -783,11 +769,11 @@ impl OrbitalDBClient {
     ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
         debug!(
         "Build stage update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?} build_stage_id {:?} update_stage {:?}",
-        &self.org, &self.repo, &hash, &branch, &build_index, &build_summary_id, &build_stage_id, &update_stage,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &build_summary_id, &build_stage_id, &update_stage,
     );
 
         let (build_target_db, build_summary_db, build_stage_db_opt) =
-            self.build_stage_get(hash, branch, build_index, build_summary_id, build_stage_id)?;
+            self.build_stage_get(build_index, build_summary_id, build_stage_id)?;
 
         let _build_stage_db = build_stage_db_opt.expect("No build stage found");
 
@@ -806,18 +792,16 @@ impl OrbitalDBClient {
 
     pub fn build_stage_list(
         &self,
-        hash: &str,
-        branch: &str,
         build_index: i32,
         limit: i32,
     ) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
         debug!(
         "Build stage list request: org {:?} repo: {:?} hash {:?} branch {:?} build_index {:?} limit: {:?}",
-        &self.org, &self.repo, &hash, &branch, &build_index, &limit
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &limit
     );
 
         let (_repo_db, build_target_db, build_summary_db_opt) =
-            self.build_summary_get(hash, branch, build_index)?;
+            self.build_summary_get(build_index)?;
 
         let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
@@ -849,29 +833,35 @@ impl OrbitalDBClient {
 
     pub fn build_logs_get(
         &self,
-        hash: &str,
-        branch: &str,
         build_index: Option<i32>,
     ) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
-        let (_org_db, repo_db, _secret_db) = self.repo_get()?;
+        if self.branch.is_some() && self.hash.is_some() {
+            let (_org_db, repo_db, _secret_db) = self.repo_get()?;
 
-        match build_index {
-            Some(n) => self.build_stage_list(hash, branch, n, 255),
-            None => self.build_stage_list(hash, branch, repo_db.next_build_index - 1, 255),
+            match build_index {
+                Some(n) => self.build_stage_list(n, 255),
+                None => self.build_stage_list(repo_db.next_build_index - 1, 255),
+            }
+        } else {
+            Err(eyre!("Branch and/or hash not set"))
         }
     }
 
-    pub fn is_build_cancelled(&self, hash: &str, branch: &str, build_index: i32) -> Result<bool> {
-        match self.build_summary_get(hash, branch, build_index) {
-            Ok((_, _, Some(summary))) => match summary.build_state {
-                JobState::Canceled => Ok(true),
-                _ => Ok(false),
-            },
-            Ok((_, _, None)) => {
-                // Build hasn't been queued yet
-                Ok(false)
+    pub fn is_build_cancelled(&self, build_index: i32) -> Result<bool> {
+        if self.branch.is_some() && self.hash.is_some() {
+            match self.build_summary_get(build_index) {
+                Ok((_, _, Some(summary))) => match summary.build_state {
+                    JobState::Canceled => Ok(true),
+                    _ => Ok(false),
+                },
+                Ok((_, _, None)) => {
+                    // Build hasn't been queued yet
+                    Ok(false)
+                }
+                Err(_) => Err(eyre!("Could not retrieve build summary from DB")),
             }
-            Err(_) => Err(eyre!("Could not retrieve build summary from DB")),
+        } else {
+            Err(eyre!("Branch and/or hash not set"))
         }
     }
 }
