@@ -1,6 +1,6 @@
 pub mod docker;
 
-use log::debug;
+use tracing::debug;
 use std::env;
 use std::path::PathBuf;
 

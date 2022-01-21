@@ -9,7 +9,7 @@ use super::OrbitalApi;
 use crate::orbital_database::postgres;
 use crate::orbital_database::postgres::schema::SecretType;
 use crate::orbital_utils::orbital_agent::vault;
-use log::debug;
+use tracing::debug;
 
 /// Implementation of protobuf derived `SecretService` trait
 #[tonic::async_trait]

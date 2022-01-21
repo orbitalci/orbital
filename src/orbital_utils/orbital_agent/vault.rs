@@ -1,6 +1,6 @@
 use crate::orbital_utils::hashicorp_stack::{self, vault};
 use color_eyre::eyre::Result;
-use log::debug;
+use tracing::debug;
 use std::env;
 
 // While we're stuffing json data into Vault, we have to b64 encode/decode or the library calls fail.

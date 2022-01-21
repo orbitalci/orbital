@@ -22,7 +22,7 @@ pub mod server;
 pub mod summary;
 
 use crate::orbital_utils::exec_runtime::{DOCKER_SOCKET_VOLMAP, ORBITAL_CONTAINER_WORKDIR};
-use log::debug;
+use tracing::debug;
 use std::env;
 use std::error::Error;
 use std::fmt;

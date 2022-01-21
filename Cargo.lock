@@ -1541,7 +1541,6 @@ dependencies = [
  "http",
  "http-body 0.4.4",
  "hyper 0.14.16",
- "log",
  "machine",
  "mktemp",
  "pin-project 1.0.8",
@@ -1564,6 +1563,7 @@ dependencies = [
  "tonic",
  "tonic-build",
  "tower",
+ "tracing",
  "warp",
 ]
 

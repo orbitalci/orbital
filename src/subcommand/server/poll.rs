@@ -1,4 +1,4 @@
-use log::{debug, info};
+use tracing::{debug, info};
 use tokio::time::{self, Duration};
 
 use crate::orbital_headers::code::{

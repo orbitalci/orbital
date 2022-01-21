@@ -1,6 +1,6 @@
 use super::OrbitalConfig;
 use color_eyre::eyre::Result;
-use log::debug;
+use tracing::debug;
 use std::path::Path;
 
 /// Load Orbital config file from path, parse with `serde_yaml`, return `Result<OrbitalConfig>`

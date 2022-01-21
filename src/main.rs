@@ -11,7 +11,7 @@ mod orbital_utils;
 
 use serde::{Deserialize, Serialize};
 
-use log::debug;
+use tracing::debug;
 use std::env;
 use std::fs::OpenOptions;
 

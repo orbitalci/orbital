@@ -9,7 +9,7 @@ use crate::orbital_utils::orbital_agent::generate_unique_build_id;
 use git_meta::GitRepo;
 use std::path::Path;
 
-use log::debug;
+use tracing::debug;
 
 use crate::subcommand::{GlobalOption, SubcommandError};
 use std::path::PathBuf;

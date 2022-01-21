@@ -13,7 +13,7 @@ use chrono::{Duration, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
 use color_eyre::eyre::Result;
 use git_meta::GitRepo;
-use log::debug;
+use tracing::debug;
 use prettytable::{cell, format, row, Table};
 use std::path::PathBuf;
 use tonic::Request;

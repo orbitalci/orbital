@@ -1,7 +1,7 @@
 use crate::orbital_utils::exec_runtime::docker;
 use crate::subcommand::{developer::docker::SubcommandOption, GlobalOption, SubcommandError};
 use color_eyre::eyre::Result;
-use log::debug;
+use tracing::debug;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt, Clone)]

@@ -7,7 +7,7 @@ use crate::orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
 use git_meta::GitRepo;
-use log::debug;
+use tracing::debug;
 use std::path::PathBuf;
 
 use crate::orbital_database::postgres::repo::Repo;

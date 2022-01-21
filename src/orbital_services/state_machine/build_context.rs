@@ -6,7 +6,7 @@ use chrono::{NaiveDateTime, Utc};
 use color_eyre::eyre::Result;
 use git_meta::{GitCommitMeta, GitCredentials, GitRepo};
 use git_url_parse::GitUrl;
-use log::{debug, error, info};
+use tracing::{debug, error, info};
 use std::fs::File;
 use std::io::prelude::*;
 

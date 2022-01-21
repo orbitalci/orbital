@@ -3,7 +3,7 @@ use crate::orbital_utils::exec_runtime::docker::{self, OrbitalContainerSpec};
 use crate::orbital_utils::orbital_agent::AgentRuntimeError;
 use color_eyre::eyre::Result;
 use git_meta::GitRepo;
-use log::info;
+use tracing::info;
 use std::path::Path;
 
 use serde_json::value::Value;

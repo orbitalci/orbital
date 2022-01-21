@@ -6,7 +6,7 @@ use crate::orbital_headers::code::{code_service_client::CodeServiceClient, GitRe
 use crate::orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use log::debug;
+use tracing::debug;
 
 use crate::orbital_database::postgres::repo::Repo;
 use color_eyre::eyre::Result;

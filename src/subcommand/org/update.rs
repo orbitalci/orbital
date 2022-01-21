@@ -10,7 +10,7 @@ use tonic::Request;
 
 use crate::orbital_database::postgres::schema::ActiveState;
 
-use log::debug;
+use tracing::debug;
 
 use prettytable::{cell, format, row, Table};
 

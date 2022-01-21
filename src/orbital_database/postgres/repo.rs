@@ -9,7 +9,7 @@ use crate::orbital_headers::code::{
 //use orbital_headers::secret::SecretEntry;
 
 use git_url_parse::GitUrl;
-use log::warn;
+use tracing::warn;
 
 #[derive(Insertable, Debug, PartialEq, Associations, AsChangeset)]
 #[belongs_to(Org)]

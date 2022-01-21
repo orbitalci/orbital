@@ -9,7 +9,7 @@ use crate::orbital_headers::organization::{
 use crate::orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use log::debug;
+use tracing::debug;
 
 use prettytable::{cell, format, row, Table};
 

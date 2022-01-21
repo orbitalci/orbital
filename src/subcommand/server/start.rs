@@ -15,7 +15,7 @@ use crate::orbital_services::OrbitalApi;
 
 use crate::orbital_services::ORB_DEFAULT_URI;
 
-use log::info;
+use tracing::info;
 use std::env;
 //use std::path::PathBuf;
 

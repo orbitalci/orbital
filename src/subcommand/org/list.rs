@@ -6,7 +6,7 @@ use crate::orbital_headers::organization::organization_service_client::Organizat
 use crate::orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use log::debug;
+use tracing::debug;
 
 use prettytable::{cell, format, row, Table};
 

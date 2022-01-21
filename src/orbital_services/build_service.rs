@@ -21,7 +21,7 @@ use super::state_machine::build_state::BuildState;
 use super::OrbitalApi;
 use crate::orbital_utils::orbital_agent;
 
-use log::{debug, error, info};
+use tracing::{debug, error, info};
 
 use futures_util::FutureExt;
 

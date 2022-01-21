@@ -19,7 +19,7 @@ use std::io::Write;
 use termcolor::{BufferWriter, ColorChoice};
 
 use color_eyre::eyre::{eyre, Result};
-use log::debug;
+use tracing::debug;
 use std::path::{Path, PathBuf};
 use std::str;
 

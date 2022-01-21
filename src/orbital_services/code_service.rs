@@ -24,9 +24,9 @@ use super::OrbitalApi;
 
 use crate::orbital_database::postgres;
 use crate::orbital_utils::orbital_agent::build_engine;
-use log::{debug, info};
+use tracing::{debug, info};
 
-use log::warn;
+use tracing::warn;
 use serde_json::json;
 
 /// Implementation of protobuf derived `CodeService` trait

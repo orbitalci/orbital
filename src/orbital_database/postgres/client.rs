@@ -11,7 +11,7 @@ use crate::orbital_utils::hashicorp_stack::orb_vault_path;
 use color_eyre::eyre::{eyre, Result};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use log::debug;
+use tracing::debug;
 use std::env;
 
 pub struct OrbitalDBClient {
