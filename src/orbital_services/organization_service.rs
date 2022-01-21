@@ -2,8 +2,8 @@ use crate::orbital_headers::organization::{
     organization_service_server::OrganizationService, OrgAddRequest, OrgEntry, OrgGetRequest,
     OrgListResponse, OrgRemoveRequest, OrgUpdateRequest,
 };
-use tracing::info;
 use tonic::{Request, Response, Status};
+use tracing::info;
 
 use super::OrbitalApi;
 

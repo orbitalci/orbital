@@ -12,10 +12,10 @@ use tonic::Request;
 
 use git_meta::{GitCredentials, GitRepo};
 use git_url_parse::Scheme;
-use tracing::{debug, info};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use tracing::{debug, info};
 
 use crate::orbital_database::postgres::repo::Repo;
 use color_eyre::eyre::Result;

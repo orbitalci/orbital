@@ -26,8 +26,8 @@ use crate::orbital_database::postgres;
 use crate::orbital_utils::orbital_agent::build_engine;
 use tracing::{debug, info};
 
-use tracing::warn;
 use serde_json::json;
+use tracing::warn;
 
 /// Implementation of protobuf derived `CodeService` trait
 #[tonic::async_trait]

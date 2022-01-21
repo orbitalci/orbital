@@ -1,8 +1,8 @@
 pub mod docker;
 
-use tracing::debug;
 use std::env;
 use std::path::PathBuf;
+use tracing::debug;
 
 /// Default volume mount mapping for host Docker into container for Docker-in-Docker builds
 pub const DOCKER_SOCKET_VOLMAP: &str = "/var/run/docker.sock:/var/run/docker.sock";

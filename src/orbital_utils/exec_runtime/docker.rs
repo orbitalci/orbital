@@ -5,8 +5,8 @@ use shiplift::{
 use futures::StreamExt;
 
 use color_eyre::eyre::{eyre, Result};
-use tracing::debug;
 use std::time::Duration;
+use tracing::debug;
 
 use serde_json::value::Value;
 use tokio::sync::mpsc;

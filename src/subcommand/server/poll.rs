@@ -1,5 +1,5 @@
-use tracing::{debug, info};
 use tokio::time::{self, Duration};
+use tracing::{debug, info};
 
 use crate::orbital_headers::code::{
     code_service_client::CodeServiceClient, GitRepoListRequest, GitRepoRemoteBranchHead,

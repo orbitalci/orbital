@@ -22,11 +22,11 @@ pub mod server;
 pub mod summary;
 
 use crate::orbital_utils::exec_runtime::{DOCKER_SOCKET_VOLMAP, ORBITAL_CONTAINER_WORKDIR};
-use tracing::debug;
 use std::env;
 use std::error::Error;
 use std::fmt;
 use std::path::PathBuf;
+use tracing::debug;
 
 // TODO: I'd like to manage errors like this to keep error text together
 // Getting this error: `(dyn std::error::Error + 'static)` cannot be sent between threads safely

@@ -19,9 +19,9 @@ use std::io::Write;
 use termcolor::{BufferWriter, ColorChoice};
 
 use color_eyre::eyre::{eyre, Result};
-use tracing::debug;
 use std::path::{Path, PathBuf};
 use std::str;
+use tracing::debug;
 
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]

@@ -6,9 +6,9 @@ use chrono::{NaiveDateTime, Utc};
 use color_eyre::eyre::Result;
 use git_meta::{GitCommitMeta, GitCredentials, GitRepo};
 use git_url_parse::GitUrl;
-use tracing::{debug, error, info};
 use std::fs::File;
 use std::io::prelude::*;
+use tracing::{debug, error, info};
 
 use crate::orbital_database::postgres::build_summary::NewBuildSummary;
 use crate::orbital_database::postgres::schema::JobTrigger;

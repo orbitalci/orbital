@@ -11,9 +11,9 @@ mod orbital_utils;
 
 use serde::{Deserialize, Serialize};
 
-use tracing::debug;
 use std::env;
 use std::fs::OpenOptions;
+use tracing::debug;
 
 #[macro_use]
 extern crate diesel;
