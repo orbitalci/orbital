@@ -7,7 +7,7 @@ default-run = "orb"
 include = [ "**/*.rs", "**/*.proto", "Cargo.toml", "Cargo.lock", "LICENSE.txt"]
 
 [dependencies]
-color-eyre = "^0.5"
+color-eyre = "^0.6"
 env_logger = "^0.9"
 structopt = "^0.3"
 thiserror = "^1.0"
