@@ -6,9 +6,9 @@ use chrono::{NaiveDateTime, Utc};
 use color_eyre::eyre::Result;
 use git_meta::{GitCommitMeta, GitCredentials, GitRepo};
 use git_url_parse::GitUrl;
-use log::{debug, error, info};
 use std::fs::File;
 use std::io::prelude::*;
+use tracing::{debug, error, info};
 
 use crate::orbital_database::postgres::build_summary::NewBuildSummary;
 use crate::orbital_database::postgres::schema::JobTrigger;
@@ -285,7 +285,7 @@ impl BuildContext {
                         &next_step.org,
                         &next_step.repo_name,
                         &next_step.hash.clone().unwrap(),
-                        &format!("{}", next_step.id.clone().unwrap()),
+                        &format!("{}", next_step.id.unwrap()),
                     )),
                     image: next_step._build_config.clone().unwrap().image,
                     command: Vec::new(), // TODO: Populate this field
@@ -396,7 +396,7 @@ impl BuildContext {
                 next_step.build_stage_name = c.stages[stage_index]
                     .name
                     .clone()
-                    .unwrap_or(format!("Stage {}", stage_index.to_string()));
+                    .unwrap_or(format!("Stage {}", stage_index));
 
                 let mut stream = build_engine::docker_container_exec(
                     next_step._container_id.clone().unwrap(),
@@ -499,7 +499,6 @@ impl BuildContext {
                             start_time: next_step.build_start_time,
                             end_time: next_step.build_end_time,
                             build_state: postgres::schema::JobState::Finishing,
-                            ..Default::default()
                         },
                     )
                     .expect("Unable to update build summary job state to finishing");
@@ -536,7 +535,6 @@ impl BuildContext {
                         start_time: next_step.build_start_time,
                         end_time: next_step.build_end_time,
                         build_state: postgres::schema::JobState::Done,
-                        ..Default::default()
                     },
                 )
                 .expect("Unable to update build summary job state to done");
@@ -609,16 +607,14 @@ impl BuildContext {
                         .clone()
                         .unwrap()
                         .host
-                        .clone()
                         .expect("No host defined"),
                     &self._repo_uri.clone().unwrap().name,
                 );
 
                 let secret_service_request = Request::new(SecretGetRequest {
-                    org: self.org.clone().into(),
+                    org: self.org.clone(),
                     name: secret_name,
                     secret_type: SecretType::SshKey.into(),
-                    ..Default::default()
                 });
 
                 debug!("Secret request: {:?}", &secret_service_request);
@@ -699,16 +695,14 @@ impl BuildContext {
                         .clone()
                         .unwrap()
                         .host
-                        .clone()
                         .expect("No host defined"),
                     &self._repo_uri.clone().unwrap().name,
                 );
 
                 let secret_service_request = Request::new(SecretGetRequest {
-                    org: self.org.clone().into(),
+                    org: self.org.clone(),
                     name: secret_name,
                     secret_type: SecretType::BasicAuth.into(),
-                    ..Default::default()
                 });
 
                 debug!("Secret request: {:?}", &secret_service_request);
@@ -851,7 +845,7 @@ impl BuildContext {
 
         let orb_commit_short_env = format!(
             "ORBITAL_COMMIT_SHORT={}",
-            self.hash.clone().expect("Git hash info unavailable")[0..6].to_string()
+            &self.hash.clone().expect("Git hash info unavailable")[0..6]
         );
 
         let orb_commit_message = format!(

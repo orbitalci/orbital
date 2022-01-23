@@ -21,7 +21,7 @@ use super::state_machine::build_state::BuildState;
 use super::OrbitalApi;
 use crate::orbital_utils::orbital_agent;
 
-use log::{debug, error, info};
+use tracing::{debug, error, info};
 
 use futures_util::FutureExt;
 
@@ -60,7 +60,7 @@ impl BuildService for OrbitalApi {
 
             let mut cur_build = BuildContext::new()
                 .add_org(unwrapped_request.org.to_string())
-                .add_repo_uri(unwrapped_request.clone().remote_uri.to_string())
+                .add_repo_uri(unwrapped_request.clone().remote_uri)
                 .expect("Could not parse repo uri")
                 .add_branch(unwrapped_request.branch.to_string())
                 .add_hash(unwrapped_request.commit_hash.to_string())
@@ -70,7 +70,7 @@ impl BuildService for OrbitalApi {
                 .queue()
                 .expect("There was a problem queuing the build");
 
-            if unwrapped_request.config.clone().len() > 0 {
+            if !unwrapped_request.config.clone().is_empty() {
                 cur_build = cur_build
                     .clone()
                     .add_build_config_from_string(unwrapped_request.config.clone())
@@ -107,36 +107,27 @@ impl BuildService for OrbitalApi {
                     };
 
                     // Set our build ID for the client to correctly print out
-                    build_metadata.id = match cur_build.id {
-                        Some(id) => id,
-                        None => 0,
-                    };
+                    build_metadata.id = cur_build.id.unwrap_or(0);
 
                     // TODO: Be more mindful about re-assigning timestamps
                     // Set timestamps
-                    build_metadata.queue_time = match cur_build.queue_time {
-                        Some(t) => Some(prost_types::Timestamp {
+                    build_metadata.queue_time =
+                        cur_build.queue_time.map(|t| prost_types::Timestamp {
                             seconds: t.timestamp(),
                             nanos: t.timestamp_subsec_nanos() as i32,
-                        }),
-                        None => None,
-                    };
+                        });
 
-                    build_metadata.start_time = match cur_build.build_start_time {
-                        Some(t) => Some(prost_types::Timestamp {
+                    build_metadata.start_time =
+                        cur_build.build_start_time.map(|t| prost_types::Timestamp {
                             seconds: t.timestamp(),
                             nanos: t.timestamp_subsec_nanos() as i32,
-                        }),
-                        None => None,
-                    };
+                        });
 
-                    build_metadata.end_time = match cur_build.build_end_time {
-                        Some(t) => Some(prost_types::Timestamp {
+                    build_metadata.end_time =
+                        cur_build.build_end_time.map(|t| prost_types::Timestamp {
                             seconds: t.timestamp(),
                             nanos: t.timestamp_subsec_nanos() as i32,
-                        }),
-                        None => None,
-                    };
+                        });
 
                     let mut build_record = BuildRecord {
                         build_metadata: Some(build_metadata.clone()),
@@ -173,16 +164,14 @@ impl BuildService for OrbitalApi {
     ) -> Result<Response<BuildMetadata>, Status> {
         let unwrapped_request = request.into_inner();
 
-        let pg_conn = postgres::client::establish_connection();
+        let mut orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(unwrapped_request.org.clone()))
+            .set_repo(Some(unwrapped_request.git_repo.clone()));
 
         // Resolve the build number to latest if build number is 0
         let build_id = match unwrapped_request.id {
             0 => {
-                if let Ok((_, repo, _)) = postgres::client::repo_get(
-                    &pg_conn,
-                    &unwrapped_request.org,
-                    &unwrapped_request.git_repo,
-                ) {
+                if let Ok((_, repo, _)) = orb_db.repo_get() {
                     repo.next_build_index - 1
                 } else {
                     panic!("No build id provided. Failed to query DB for latest build id")
@@ -192,15 +181,8 @@ impl BuildService for OrbitalApi {
         };
 
         // Determine if build is cancelable
-        match postgres::client::build_summary_get(
-            &pg_conn,
-            &unwrapped_request.org,
-            &unwrapped_request.git_repo,
-            &unwrapped_request.commit_hash,
-            &unwrapped_request.branch,
-            build_id,
-        ) {
-            Ok((repo, build_target, Some(summary))) => match summary.build_state {
+        match orb_db.build_summary_get(build_id) {
+            Ok((_repo, build_target, Some(summary))) => match summary.build_state {
                 JobState::Queued => {
                     info!("Stop build before it even gets started");
 
@@ -209,25 +191,24 @@ impl BuildService for OrbitalApi {
                     new_canceled_summary.build_state = JobState::Canceled;
 
                     info!("Updating build state to canceled");
-                    let _build_summary_result_canceled = postgres::client::build_summary_update(
-                        &pg_conn,
-                        &unwrapped_request.org,
-                        &repo.name,
-                        &build_target.git_hash,
-                        &build_target.branch,
-                        build_target.build_index,
-                        NewBuildSummary {
-                            build_target_id: summary.build_target_id,
-                            start_time: summary.start_time,
-                            end_time: Some(NaiveDateTime::from_timestamp(
-                                Utc::now().timestamp(),
-                                0,
-                            )),
-                            build_state: postgres::schema::JobState::Canceled,
-                            ..Default::default()
-                        },
-                    )
-                    .expect("Unable to update build summary job state to canceled");
+
+                    orb_db = orb_db
+                        .set_branch(Some(build_target.branch))
+                        .set_hash(Some(build_target.git_hash));
+                    let _build_summary_result_canceled = orb_db
+                        .build_summary_update(
+                            build_target.build_index,
+                            NewBuildSummary {
+                                build_target_id: summary.build_target_id,
+                                start_time: summary.start_time,
+                                end_time: Some(NaiveDateTime::from_timestamp(
+                                    Utc::now().timestamp(),
+                                    0,
+                                )),
+                                build_state: postgres::schema::JobState::Canceled,
+                            },
+                        )
+                        .expect("Unable to update build summary job state to canceled");
 
                     Ok(Response::new(BuildMetadata {
                         ..Default::default()
@@ -237,7 +218,7 @@ impl BuildService for OrbitalApi {
                     // Send build cancelation signal
                     let container_name = orbital_agent::generate_unique_build_id(
                         &unwrapped_request.org,
-                        &unwrapped_request.git_repo,
+                        &unwrapped_request.git_repo.clone(),
                         &unwrapped_request.commit_hash,
                         &format!("{}", build_id),
                     );
@@ -248,7 +229,7 @@ impl BuildService for OrbitalApi {
                     let rt = Runtime::new().unwrap();
                     let handle = rt.handle().clone();
 
-                    let container_to_stop = container_name.clone();
+                    let container_to_stop = container_name;
                     handle.spawn(async move {
                         let _ = build_engine::docker_container_stop(container_to_stop.as_ref())
                             .await
@@ -260,25 +241,24 @@ impl BuildService for OrbitalApi {
                     new_canceled_summary.build_state = JobState::Canceled;
 
                     info!("Updating build state to canceled");
-                    let _build_summary_result_canceled = postgres::client::build_summary_update(
-                        &pg_conn,
-                        &unwrapped_request.org,
-                        &repo.name,
-                        &build_target.git_hash,
-                        &build_target.branch,
-                        build_target.build_index,
-                        NewBuildSummary {
-                            build_target_id: summary.build_target_id,
-                            start_time: summary.start_time,
-                            end_time: Some(NaiveDateTime::from_timestamp(
-                                Utc::now().timestamp(),
-                                0,
-                            )),
-                            build_state: postgres::schema::JobState::Canceled,
-                            ..Default::default()
-                        },
-                    )
-                    .expect("Unable to update build summary job state to canceled");
+
+                    orb_db = orb_db
+                        .set_branch(Some(build_target.branch))
+                        .set_hash(Some(build_target.git_hash));
+                    let _build_summary_result_canceled = orb_db
+                        .build_summary_update(
+                            build_target.build_index,
+                            NewBuildSummary {
+                                build_target_id: summary.build_target_id,
+                                start_time: summary.start_time,
+                                end_time: Some(NaiveDateTime::from_timestamp(
+                                    Utc::now().timestamp(),
+                                    0,
+                                )),
+                                build_state: postgres::schema::JobState::Canceled,
+                            },
+                        )
+                        .expect("Unable to update build summary job state to canceled");
 
                     Ok(Response::new(BuildMetadata {
                         ..Default::default()
@@ -317,16 +297,16 @@ impl BuildService for OrbitalApi {
 
         // Get repo id from BuildTarget
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(unwrapped_request.org.clone()))
+            .set_repo(Some(unwrapped_request.git_repo.clone()))
+            .set_branch(Some(unwrapped_request.branch.clone()))
+            .set_hash(Some(unwrapped_request.commit_hash.clone()));
 
         // Resolve the build number to latest if build number is 0
         let build_id = match unwrapped_request.id {
             0 => {
-                if let Ok((_, repo, _)) = postgres::client::repo_get(
-                    &pg_conn,
-                    &unwrapped_request.org,
-                    &unwrapped_request.git_repo,
-                ) {
+                if let Ok((_, repo, _)) = orb_db.repo_get() {
                     repo.next_build_index - 1
                 } else {
                     panic!("No build id provided. Failed to query DB for latest build id")
@@ -335,93 +315,48 @@ impl BuildService for OrbitalApi {
             _ => unwrapped_request.id,
         };
 
-        let (_repo, _build_target, build_summary_opt) = postgres::client::build_summary_get(
-            &pg_conn,
-            &unwrapped_request.org,
-            &unwrapped_request.git_repo,
-            &unwrapped_request.commit_hash,
-            &unwrapped_request.branch,
-            build_id,
-        )
-        .unwrap();
+        let (_repo, _build_target, build_summary_opt) = orb_db.build_summary_get(build_id).unwrap();
 
-        drop(pg_conn);
+        drop(orb_db);
 
         let (tx, rx) = mpsc::channel(4);
 
         tokio::spawn(async move {
-            match build_summary_opt {
-                Some(summary) => {
-                    match summary.build_state {
-                        JobState::Queued | JobState::Running => {
-                            let container_name = orbital_agent::generate_unique_build_id(
-                                &unwrapped_request.org,
-                                &unwrapped_request.git_repo,
-                                &unwrapped_request.commit_hash,
-                                &format!("{}", build_id),
-                            );
+            if let Some(summary) = build_summary_opt {
+                match summary.build_state {
+                    JobState::Queued | JobState::Running => {
+                        let container_name = orbital_agent::generate_unique_build_id(
+                            &unwrapped_request.org,
+                            &unwrapped_request.git_repo,
+                            &unwrapped_request.commit_hash,
+                            &format!("{}", build_id),
+                        );
 
-                            let mut stream =
-                                build_engine::docker_container_logs(container_name.clone())
-                                    .await
-                                    .unwrap();
+                        let mut stream =
+                            build_engine::docker_container_logs(container_name.clone())
+                                .await
+                                .unwrap();
 
-                            while let Some(response) = stream.recv().await {
-                                let mut container_logs = BuildStage {
-                                    ..Default::default()
-                                };
+                        while let Some(response) = stream.recv().await {
+                            let mut container_logs = BuildStage {
+                                ..Default::default()
+                            };
 
-                                println!("LOGS OUTPUT: {:?}", response.clone().as_str());
+                            println!("LOGS OUTPUT: {:?}", response.clone().as_str());
 
-                                // Adding newlines
+                            // Adding newlines
 
-                                let output = response.clone().as_bytes().to_owned();
-                                container_logs.output = output;
-
-                                let build_record = BuildRecord {
-                                    build_metadata: None,
-                                    build_output: vec![container_logs],
-                                };
-
-                                //
-                                let build_log_response = BuildLogResponse {
-                                    id: build_id,
-                                    records: vec![build_record],
-                                };
-
-                                let _ = match tx.send(Ok(build_log_response)).await {
-                                    Ok(_) => Ok(()),
-                                    Err(mpsc::error::SendError(_)) => Err(()),
-                                };
-                            }
-                        }
-
-                        _ => {
-                            let pg_conn = postgres::client::establish_connection();
-                            let build_stage_query = postgres::client::build_logs_get(
-                                &pg_conn,
-                                &unwrapped_request.org,
-                                &unwrapped_request.git_repo,
-                                &unwrapped_request.commit_hash,
-                                &unwrapped_request.branch,
-                                Some(build_id),
-                            )
-                            .expect("No build stages found");
-
-                            let mut build_stage_list: Vec<orbital_headers::build_meta::BuildStage> =
-                                Vec::new();
-                            for (_target, _summary, stage) in build_stage_query {
-                                build_stage_list.push(stage.into());
-                            }
+                            let output = response.clone().as_bytes().to_owned();
+                            container_logs.output = output;
 
                             let build_record = BuildRecord {
                                 build_metadata: None,
-                                build_output: build_stage_list,
+                                build_output: vec![container_logs],
                             };
 
                             //
                             let build_log_response = BuildLogResponse {
-                                id: build_record.build_output[0].build_id,
+                                id: build_id,
                                 records: vec![build_record],
                             };
 
@@ -431,8 +366,40 @@ impl BuildService for OrbitalApi {
                             };
                         }
                     }
+
+                    _ => {
+                        let orb_db = postgres::client::OrbitalDBClient::new()
+                            .set_org(Some(unwrapped_request.org))
+                            .set_repo(Some(unwrapped_request.git_repo))
+                            .set_branch(Some(unwrapped_request.branch.clone()))
+                            .set_hash(Some(unwrapped_request.commit_hash.clone()));
+                        let build_stage_query = orb_db
+                            .build_logs_get(Some(build_id))
+                            .expect("No build stages found");
+
+                        let mut build_stage_list: Vec<orbital_headers::build_meta::BuildStage> =
+                            Vec::new();
+                        for (_target, _summary, stage) in build_stage_query {
+                            build_stage_list.push(stage.into());
+                        }
+
+                        let build_record = BuildRecord {
+                            build_metadata: None,
+                            build_output: build_stage_list,
+                        };
+
+                        //
+                        let build_log_response = BuildLogResponse {
+                            id: build_record.build_output[0].build_id,
+                            records: vec![build_record],
+                        };
+
+                        let _ = match tx.send(Ok(build_log_response)).await {
+                            Ok(_) => Ok(()),
+                            Err(mpsc::error::SendError(_)) => Err(()),
+                        };
+                    }
                 }
-                None => (),
             }
         });
 
@@ -461,15 +428,13 @@ impl BuildService for OrbitalApi {
         debug!("Received request: {:?}", &unwrapped_request);
 
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(build_info.org.clone()))
+            .set_repo(Some(build_info.git_repo.clone()));
 
-        let build_summary_db = postgres::client::build_summary_list(
-            &pg_conn,
-            &build_info.org,
-            &build_info.git_repo,
-            unwrapped_request.limit,
-        )
-        .expect("No summary returned");
+        let build_summary_db = orb_db
+            .build_summary_list(unwrapped_request.limit)
+            .expect("No summary returned");
 
         debug!("Summary: {:?}", &build_summary_db);
 
@@ -496,20 +461,14 @@ impl BuildService for OrbitalApi {
                     seconds: target.queue_time.timestamp(),
                     nanos: target.queue_time.timestamp_subsec_nanos() as i32,
                 }),
-                start_time: match summary.start_time {
-                    Some(start_time) => Some(prost_types::Timestamp {
-                        seconds: start_time.timestamp(),
-                        nanos: start_time.timestamp_subsec_nanos() as i32,
-                    }),
-                    None => None,
-                },
-                end_time: match summary.end_time {
-                    Some(end_time) => Some(prost_types::Timestamp {
-                        seconds: end_time.timestamp(),
-                        nanos: end_time.timestamp_subsec_nanos() as i32,
-                    }),
-                    None => None,
-                },
+                start_time: summary.start_time.map(|start_time| prost_types::Timestamp {
+                    seconds: start_time.timestamp(),
+                    nanos: start_time.timestamp_subsec_nanos() as i32,
+                }),
+                end_time: summary.end_time.map(|end_time| prost_types::Timestamp {
+                    seconds: end_time.timestamp(),
+                    nanos: end_time.timestamp_subsec_nanos() as i32,
+                }),
                 build_state: summary.build_state.into(),
             })
             .collect();

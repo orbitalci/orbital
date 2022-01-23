@@ -12,10 +12,10 @@ use tonic::Request;
 
 use git_meta::{GitCredentials, GitRepo};
 use git_url_parse::Scheme;
-use log::{debug, info};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use tracing::{debug, info};
 
 use crate::orbital_database::postgres::repo::Repo;
 use color_eyre::eyre::Result;
@@ -109,7 +109,7 @@ pub async fn action_handler(
                 let creds = GitCredentials::SshKey {
                     username: repo_user.clone(),
                     public_key: None,
-                    private_key: p.clone(),
+                    private_key: p,
                     passphrase: None,
                 };
 
@@ -142,6 +142,7 @@ pub async fn action_handler(
 
     info!("Collecting HEAD refs for remote branches");
     for (branch_name, commit) in repo_info
+        .to_info()
         .get_remote_branch_head_refs(None)
         .expect("Unable to retrieve branch head refs")
     {
@@ -165,12 +166,12 @@ pub async fn action_handler(
         uri: repo_info.url.trim_auth().to_string(),
         canonical_branch: action_option
             .canonical_branch
-            .unwrap_or(repo_info.branch.expect("No branch info found")),
+            .unwrap_or_else(|| repo_info.branch.expect("No branch info found")),
         user: repo_user,
         alt_check_branch: action_option.alt_branch.unwrap_or_default(),
         skip_check: action_option.skip_check,
         remote_branch_heads: {
-            if remote_branch_refs.remote_branch_heads.len() > 0 {
+            if !remote_branch_refs.remote_branch_heads.is_empty() {
                 Some(remote_branch_refs)
             } else {
                 None

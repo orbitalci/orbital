@@ -25,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // This is some manual walking to the root of the repo. Ew.
     let git_repo_dir = Path::new(&cargo_build_root);
 
+    // This is all to get the commit id
     let git_repo =
         GitRepo::open(git_repo_dir.to_path_buf(), None, None).expect("Unable to open git repo");
 
@@ -36,12 +37,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //});
 
     // Get git version
-    let git_commit = git_repo.head.expect("No GitCommitMeta found").id[..12].to_string();
+    let git_commit = git_repo.head.expect("No GitCommitMeta found").id;
 
     // Get build datetime
     let now = Utc::now();
 
-    let version_string = format!("{} ({}) {}", package_version, git_commit, now.to_rfc3339());
+    let version_string = format!("{} {} {}", package_version, git_commit, now.to_rfc3339());
 
     println!("cargo:rustc-env=BUILD_VERSION={}", version_string);
 

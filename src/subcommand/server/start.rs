@@ -15,9 +15,9 @@ use crate::orbital_services::OrbitalApi;
 
 use crate::orbital_services::ORB_DEFAULT_URI;
 
-use log::info;
 use std::env;
-use std::path::PathBuf;
+use tracing::info;
+//use std::path::PathBuf;
 
 // For the service router
 use futures::future::{self, Either, TryFutureExt};
@@ -37,10 +37,11 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab_case")]
 pub struct SubcommandOption {
-    /// Path to local repo. Defaults to current working directory
-    #[structopt(long, parse(from_os_str), env = "PWD")]
-    path: PathBuf,
+    // TODO: Handle these flags
 
+    ///// Path to local repo. Defaults to current working directory
+    //#[structopt(long, parse(from_os_str), env = "PWD")]
+    //path: PathBuf,
     #[structopt(long)]
     debug: bool,
 
@@ -59,31 +60,29 @@ pub async fn subcommand_handler(
 ) -> Result<()> {
     let addr = ORB_DEFAULT_URI.parse().unwrap();
 
-    if local_option.debug {
-        if env::var_os("RUST_LOG").is_none() {
-            let debug_modules = vec![
-                "subcommand::server",
-                "orbital_services",
-                "orbital_agent",
-                "orbital_database",
-                "git_meta",
-                "hashicorp_stack",
-                "git_url_parse",
-                "git_event",
-            ];
+    if local_option.debug && env::var_os("RUST_LOG").is_none() {
+        let debug_modules = vec![
+            "subcommand::server",
+            "orbital_services",
+            "orbital_agent",
+            "orbital_database",
+            "git_meta",
+            "hashicorp_stack",
+            "git_url_parse",
+            "git_event",
+        ];
 
-            env::set_var("RUST_LOG", debug_modules.join(","))
-        }
+        env::set_var("RUST_LOG", debug_modules.join(","))
     }
 
     let _ = env_logger::try_init();
 
     // Run migrations
     //println!("Migrations dir: {:?}", diesel_migrations::find_migrations_directory());
-    let pg_conn = postgres::client::establish_connection();
-    embedded_migrations::run_with_output(&pg_conn, &mut std::io::stdout())
+    let orb_db = postgres::client::OrbitalDBClient::new();
+    embedded_migrations::run_with_output(&orb_db.get_conn(), &mut std::io::stdout())
         .expect("Running DB migrations failed");
-    drop(pg_conn);
+    drop(orb_db);
 
     // Kick off thread for checking for new commits
     {
@@ -104,7 +103,7 @@ pub async fn subcommand_handler(
                 .add_service(SecretServiceServer::new(OrbitalApi::default()))
                 .into_service();
 
-            let mut warp = warp.clone();
+            let mut warp = warp;
 
             future::ok::<_, Infallible>(tower::service_fn(
                 move |req: hyper::Request<hyper::Body>| match req.version() {

@@ -1,4 +1,4 @@
-use log::debug;
+use tracing::debug;
 
 /// Hashicorp Vault helper module
 pub mod vault;

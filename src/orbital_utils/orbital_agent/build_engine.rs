@@ -3,8 +3,8 @@ use crate::orbital_utils::exec_runtime::docker::{self, OrbitalContainerSpec};
 use crate::orbital_utils::orbital_agent::AgentRuntimeError;
 use color_eyre::eyre::Result;
 use git_meta::GitRepo;
-use log::info;
 use std::path::Path;
+use tracing::info;
 
 use serde_json::value::Value;
 use tokio::sync::mpsc;
@@ -33,7 +33,10 @@ pub fn clone_repo<S: AsRef<str>>(
         (None, None) => GitRepo::new(uri).expect("Cannot create GitRepo"),
     };
 
-    git_repo.git_clone(target_dir).expect("Failed to clone");
+    git_repo
+        .to_clone()
+        .git_clone(target_dir)
+        .expect("Failed to clone");
 
     Ok(())
 }

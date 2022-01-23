@@ -24,10 +24,10 @@ use super::OrbitalApi;
 
 use crate::orbital_database::postgres;
 use crate::orbital_utils::orbital_agent::build_engine;
-use log::{debug, info};
+use tracing::{debug, info};
 
-use log::warn;
 use serde_json::json;
+use tracing::warn;
 
 /// Implementation of protobuf derived `CodeService` trait
 #[tonic::async_trait]
@@ -44,7 +44,7 @@ impl CodeService for OrbitalApi {
         // check if repo is public or private. Do a test checkout
         let branch = match &req.alt_check_branch.clone().len() {
             0 => None,
-            _ => Some(req.alt_check_branch.clone().to_string()),
+            _ => Some(req.alt_check_branch.clone()),
         };
 
         // We want to convert the list of branch refs into serde_json for postgres
@@ -58,7 +58,7 @@ impl CodeService for OrbitalApi {
         // Create a temp file for writing private key, just in case
         let private_key = Temp::new_file().expect("Unable to create temp file for private key");
 
-        let (org_db, repo_db, secret_db) = match req.secret_type.clone().into() {
+        let (org_db, repo_db, secret_db) = match req.secret_type.into() {
             SecretType::Unspecified => {
                 info!("Adding public repo");
                 let creds = None;
@@ -72,7 +72,7 @@ impl CodeService for OrbitalApi {
                         let _ = match build_engine::clone_repo(
                             &req.uri,
                             branch.as_ref(),
-                            creds.clone(),
+                            creds,
                             temp_dir.as_path(),
                         ) {
                             Ok(_) => {
@@ -86,20 +86,19 @@ impl CodeService for OrbitalApi {
                 };
 
                 // Write git repo to DB
-                let pg_conn = postgres::client::establish_connection();
+                let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
                 // TODO: We should remove usernames from the uri when we add to the database
                 // This means we're going to need to add usernames to secret service
-                postgres::client::repo_add(
-                    &pg_conn,
-                    &req.org,
-                    &req.name,
-                    &req.uri,
-                    &req.canonical_branch,
-                    None,
-                    json!(branch_heads),
-                )
-                .expect("There was a problem adding repo in database")
+                orb_db
+                    .repo_add(
+                        &req.name,
+                        &req.uri,
+                        &req.canonical_branch,
+                        None,
+                        json!(branch_heads),
+                    )
+                    .expect("There was a problem adding repo in database")
             }
             SecretType::SshKey => {
                 info!("Private repo with ssh key");
@@ -172,7 +171,7 @@ impl CodeService for OrbitalApi {
 
                 let request = Request::new(SecretAddRequest {
                     org: org_name.into(),
-                    name: secret_name.into(),
+                    name: secret_name,
                     secret_type: SecretType::from(req.secret_type).into(),
                     data: auth_info.to_string().into_bytes(),
                 });
@@ -192,25 +191,24 @@ impl CodeService for OrbitalApi {
 
                 // Write git repo to DB
 
-                let pg_conn = postgres::client::establish_connection();
+                let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
                 // TODO: Remove username from uri
-                postgres::client::repo_add(
-                    &pg_conn,
-                    &req.org,
-                    &req.name,
-                    &req.uri,
-                    &req.canonical_branch,
-                    Some(secret.clone()),
-                    json!(branch_heads),
-                )
-                .expect("There was a problem adding repo in database")
+                orb_db
+                    .repo_add(
+                        &req.name,
+                        &req.uri,
+                        &req.canonical_branch,
+                        Some(secret),
+                        json!(branch_heads),
+                    )
+                    .expect("There was a problem adding repo in database")
             }
             SecretType::BasicAuth => {
                 info!("Private repo with basic auth");
                 let creds = Some(GitCredentials::UserPassPlaintext {
-                    username: req.clone().user.into(),
-                    password: req.clone().auth_data.into(),
+                    username: req.clone().user,
+                    password: req.clone().auth_data,
                 });
 
                 // Temp dir checkout repo
@@ -263,7 +261,7 @@ impl CodeService for OrbitalApi {
                 // TODO: auth_data does not have a representation for userpass
                 let request = Request::new(SecretAddRequest {
                     org: org_name.into(),
-                    name: secret_name.into(),
+                    name: secret_name,
                     secret_type: SecretType::from(req.secret_type).into(),
                     data: auth_info.to_string().into_bytes(),
                 });
@@ -283,19 +281,18 @@ impl CodeService for OrbitalApi {
 
                 // Write git repo to DB
 
-                let pg_conn = postgres::client::establish_connection();
+                let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
                 // TODO: Remove username from uri
-                postgres::client::repo_add(
-                    &pg_conn,
-                    &req.org,
-                    &req.name,
-                    &req.uri,
-                    &req.canonical_branch,
-                    None,
-                    json!(branch_heads),
-                )
-                .expect("There was a problem adding repo in database")
+                orb_db
+                    .repo_add(
+                        &req.name,
+                        &req.uri,
+                        &req.canonical_branch,
+                        None,
+                        json!(branch_heads),
+                    )
+                    .expect("There was a problem adding repo in database")
             }
             _ => {
                 debug!("Raw secret type: {:?}", req.secret_type.clone());
@@ -303,7 +300,7 @@ impl CodeService for OrbitalApi {
             }
         };
 
-        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri).unwrap();
 
         let response = Response::new(GitRepoEntry {
             org: org_db.name,
@@ -312,19 +309,11 @@ impl CodeService for OrbitalApi {
             user: git_uri_parsed.user.clone().unwrap_or_default(),
             uri: format!("{}", git_uri_parsed.trim_auth()),
             canonical_branch: repo_db.canonical_branch,
-            secret_type: secret_db
-                .clone()
-                .unwrap_or(postgres::secret::Secret::default())
-                .secret_type
-                .into(),
+            secret_type: secret_db.clone().unwrap_or_default().secret_type.into(),
             build: repo_db.build_active_state.into(),
             notify: repo_db.notify_active_state.into(),
-            next_build_index: repo_db.next_build_index.into(),
-            auth_data: secret_db
-                .clone()
-                .unwrap_or(postgres::secret::Secret::default())
-                .name
-                .into(),
+            next_build_index: repo_db.next_build_index,
+            auth_data: secret_db.unwrap_or_default().name,
             remote_branch_heads: None,
         });
 
@@ -340,9 +329,12 @@ impl CodeService for OrbitalApi {
         debug!("Git repo get details: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(req.org))
+            .set_repo(Some(req.name));
 
-        let db_result = postgres::client::repo_get(&pg_conn, &req.org, &req.name)
+        let db_result = orb_db
+            .repo_get()
             .expect("There was a problem getting repo in database");
 
         debug!("repo get db result: {:?}", &db_result);
@@ -351,7 +343,7 @@ impl CodeService for OrbitalApi {
         let repo_db = db_result.1;
         let secret_db = db_result.2;
 
-        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri).unwrap();
 
         // Maybe TODO? Call into Secret service to get a username?
 
@@ -377,19 +369,11 @@ impl CodeService for OrbitalApi {
             name: repo_db.name,
             //user: git_uri_parsed.user.unwrap(), // I think we're going to let the build service handle this
             uri: format!("{}", git_uri_parsed.trim_auth()),
-            secret_type: secret_db
-                .clone()
-                .unwrap_or(postgres::secret::Secret::default())
-                .secret_type
-                .into(),
+            secret_type: secret_db.clone().unwrap_or_default().secret_type.into(),
             build: repo_db.build_active_state.into(),
             notify: repo_db.notify_active_state.into(),
-            next_build_index: repo_db.next_build_index.into(),
-            auth_data: secret_db
-                .clone()
-                .unwrap_or(postgres::secret::Secret::default())
-                .name
-                .into(),
+            next_build_index: repo_db.next_build_index,
+            auth_data: secret_db.unwrap_or_default().name,
             remote_branch_heads: Some(branch_head_proto_list),
             ..Default::default()
         });
@@ -407,22 +391,20 @@ impl CodeService for OrbitalApi {
         debug!("Git repo update details: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(req.org.clone()))
+            .set_repo(Some(req.name.clone()));
 
         // Get the current repo
-        let current_repo = postgres::client::repo_get(&pg_conn, &req.org, &req.name)
-            .expect("Could not find repo to update");
+        let current_repo = orb_db.repo_get().expect("Could not find repo to update");
 
         let org_db = current_repo.0;
         let repo_db = current_repo.1;
         let secret_db = current_repo.2;
 
-        let secret_id = match &secret_db {
-            Some(s) => Some(s.id),
-            None => None,
-        };
+        let secret_id = secret_db.as_ref().map(|s| s.id);
 
-        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri).unwrap();
 
         // We want to convert the list of branch refs into serde_json for postgres
         let mut branch_heads = serde_json::Map::new();
@@ -448,7 +430,8 @@ impl CodeService for OrbitalApi {
             remote_branch_heads: json!(branch_heads),
         };
 
-        let db_result = postgres::client::repo_update(&pg_conn, &req.org, &req.name, update_repo)
+        let db_result = orb_db
+            .repo_update(&req.name, update_repo)
             .expect("Could not update repo");
 
         // Repeating ourselves to write response with update data
@@ -456,7 +439,7 @@ impl CodeService for OrbitalApi {
         let repo_db = db_result.1;
         let secret_db = db_result.2;
 
-        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri).unwrap();
 
         // TODO: Build a return value from db_result for branch_heads
         //let branch_heads_db = None;
@@ -467,19 +450,11 @@ impl CodeService for OrbitalApi {
             name: repo_db.name,
             user: git_uri_parsed.clone().user.unwrap_or_default(),
             uri: format!("{}", git_uri_parsed.trim_auth()),
-            secret_type: secret_db
-                .clone()
-                .unwrap_or(postgres::secret::Secret::default())
-                .secret_type
-                .into(),
+            secret_type: secret_db.clone().unwrap_or_default().secret_type.into(),
             build: repo_db.build_active_state.into(),
             notify: repo_db.notify_active_state.into(),
-            next_build_index: repo_db.next_build_index.into(),
-            auth_data: secret_db
-                .clone()
-                .unwrap_or(postgres::secret::Secret::default())
-                .name
-                .into(),
+            next_build_index: repo_db.next_build_index,
+            auth_data: secret_db.unwrap_or_default().name,
             remote_branch_heads: {
                 match repo_db.remote_branch_heads {
                     serde_json::Value::Null => None,
@@ -520,9 +495,10 @@ impl CodeService for OrbitalApi {
         debug!("Git repo remove details: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
-        let db_result = postgres::client::repo_remove(&pg_conn, &req.org, &req.name)
+        let db_result = orb_db
+            .repo_remove(&req.name)
             .expect("There was a problem removing repo in database");
 
         debug!("repo remove db result: {:?}", &db_result);
@@ -531,7 +507,7 @@ impl CodeService for OrbitalApi {
         let repo_db = db_result.1;
         let secret_db = db_result.2;
 
-        let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo_db.uri).unwrap();
 
         // We use auth_data to hold the name of the secret used by repo
         let response = Response::new(GitRepoEntry {
@@ -540,19 +516,11 @@ impl CodeService for OrbitalApi {
             name: repo_db.name,
             user: git_uri_parsed.clone().user.unwrap_or_default(),
             uri: format!("{}", git_uri_parsed.trim_auth()),
-            secret_type: secret_db
-                .clone()
-                .unwrap_or(postgres::secret::Secret::default())
-                .secret_type
-                .into(),
+            secret_type: secret_db.clone().unwrap_or_default().secret_type.into(),
             build: repo_db.build_active_state.into(),
             notify: repo_db.notify_active_state.into(),
-            next_build_index: repo_db.next_build_index.into(),
-            auth_data: secret_db
-                .clone()
-                .unwrap_or(postgres::secret::Secret::default())
-                .name
-                .into(),
+            next_build_index: repo_db.next_build_index,
+            auth_data: secret_db.unwrap_or_default().name,
             ..Default::default()
         });
 
@@ -568,13 +536,14 @@ impl CodeService for OrbitalApi {
         info!("Git repo list request: {:?}", &req);
 
         // Connect to database. Query for the repo
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new().set_org(Some(req.org));
 
-        let db_result: Vec<GitRepoEntry> = postgres::client::repo_list(&pg_conn, &req.org)
+        let db_result: Vec<GitRepoEntry> = orb_db
+            .repo_list()
             .expect("There was a problem listing repo from database")
             .into_iter()
             .map(|(org_db, repo_db, secret_db)| {
-                let git_uri_parsed = GitUrl::parse(&repo_db.uri.clone()).unwrap();
+                let git_uri_parsed = GitUrl::parse(&repo_db.uri).unwrap();
 
                 // Convert branch_heads to proto type GitRepoRemoteBranchHeadList
                 let mut branch_head_proto_list = GitRepoRemoteBranchHeadList {
@@ -595,29 +564,22 @@ impl CodeService for OrbitalApi {
                     org: org_db.name,
                     git_provider: git_uri_parsed.clone().host.unwrap(),
                     name: repo_db.name,
-                    user: git_uri_parsed.clone().user.unwrap_or_default().to_string(),
+                    user: git_uri_parsed.clone().user.unwrap_or_default(),
                     uri: format!("{}", &git_uri_parsed.trim_auth()),
-                    secret_type: secret_db
-                        .clone()
-                        .unwrap_or(postgres::secret::Secret::default())
-                        .secret_type
-                        .into(),
+                    secret_type: secret_db.clone().unwrap_or_default().secret_type.into(),
                     build: repo_db.build_active_state.into(),
                     notify: repo_db.notify_active_state.into(),
-                    next_build_index: repo_db.next_build_index.into(),
-                    auth_data: secret_db
-                        .clone()
-                        .unwrap_or(postgres::secret::Secret::default())
-                        .name
-                        .into(),
+                    next_build_index: repo_db.next_build_index,
+                    auth_data: secret_db.unwrap_or_default().name,
                     remote_branch_heads: Some(branch_head_proto_list),
                     ..Default::default()
                 }
             })
             .collect();
 
-        let mut git_repos = GitRepoListResponse::default();
-        git_repos.git_repos = db_result;
+        let git_repos = GitRepoListResponse {
+            git_repos: db_result,
+        };
         debug!("Response: {:?}", &git_repos);
         Ok(Response::new(git_repos))
     }

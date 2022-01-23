@@ -2,37 +2,36 @@
 name = "orb"
 version = "0.1.0-alpha.1"
 authors = ["T.J. Telan <t.telan@gmail.com>"]
-edition = "2018"
+edition = "2021"
 default-run = "orb"
 include = [ "**/*.rs", "**/*.proto", "Cargo.toml", "Cargo.lock", "LICENSE.txt"]
 
 [dependencies]
-color-eyre = "^0.5"
-clap = "^2.33"
-env_logger = "^0.8"
+color-eyre = "^0.6"
+env_logger = "^0.9"
 structopt = "^0.3"
 thiserror = "^1.0"
 tokio = { version = "^1.1", features = ["full"] }
-tonic = "^0.4"
+tonic = "^0.6"
 serde = { version = "^1.0", features = ["derive"] }
 serde_yaml = "^0.8"
-log = "^0.4"
+tracing = "0.1"
 
 # Subcommand
 chrono = "^0.4"
 git2 = "^0.13"
-git-url-parse = "^0.3"
+git-url-parse = "^0.4"
 prettytable-rs = "^0.8"
-strum = "^0.20"
-strum_macros = "^0.20"
+strum = "^0.23"
+strum_macros = "^0.23"
 termcolor = "^1.1"
 rand = "^0.8"
 mktemp = "0.4"
 serde_json = "^1.0"
-git-event = "^0.3"
-git-meta = "^0.3" 
+git-event = "^0.4"
+git-meta = "^0.6" 
 hex = "^0.4"
-chrono-humanize = "^0.1"
+chrono-humanize = "^0.2"
 
 # Web server
 hyper = "^0.14"
@@ -44,14 +43,18 @@ futures = { version = "^0.3", default-features = false, features = ["alloc"] }
 tower = "^0.4"
 
 bytes = "^1.0"
-prost = "^0.7"
-prost-derive = "^0.7"
-prost-types = "^0.7"
+prost = "^0.9"
+prost-derive = "^0.9"
+prost-types = "^0.9"
 
+# TODO: Replace diesel w/ sqlx for postgres support
+# Make postgres support optional for now. Eventually choosing db engine w/ be handled in runtime
 diesel = { version = "^1.4", features = ["postgres", "chrono", "serde_json"] }
 diesel_migrations = "^1.4"
 shiplift = "^0.7"
 base64 = "^0.13"
+
+# TODO: Make this optional. Feature flag w/ Vault
 hashicorp_vault = "^2.0"
 
 hostname = "^0.3"
@@ -64,10 +67,10 @@ tokio-stream = "^0.1"
 
 
 [build-dependencies]
-git-meta = "^0.3" 
+git-meta = "^0.6" 
 chrono = "0.4"
-tonic-build = "^0.4"
+tonic-build = "^0.6"
 
-[patch.crates-io]
-#git-event = { path = "/home/telant/Documents/git-event-rs" }
-#git-meta = { path = "/home/telant/Documents/git-meta-rs" }
+#[patch.crates-io]
+#git-event = { path = "../git-event-rs" }
+#git-meta = { path = "../git-meta-rs" }

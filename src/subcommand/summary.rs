@@ -13,10 +13,10 @@ use chrono::{Duration, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
 use color_eyre::eyre::Result;
 use git_meta::GitRepo;
-use log::debug;
 use prettytable::{cell, format, row, Table};
 use std::path::PathBuf;
 use tonic::Request;
+use tracing::debug;
 
 /// Local options for customizing summary request
 #[derive(Debug, StructOpt)]
@@ -127,7 +127,7 @@ pub async fn subcommand_handler(
                             )
                         ),
                     },
-                    None => format!("---"),
+                    None => "---".to_string(),
                 };
 
                 let start_time = match &summary.start_time {
@@ -144,7 +144,7 @@ pub async fn subcommand_handler(
                             )
                         ),
                     },
-                    None => format!("---"),
+                    None => "---".to_string(),
                 };
 
                 let end_time = match &summary.end_time {
@@ -161,7 +161,7 @@ pub async fn subcommand_handler(
                             )
                         ),
                     },
-                    None => format!("---"),
+                    None => "---".to_string(),
                 };
 
                 table.add_row(row![

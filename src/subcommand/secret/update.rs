@@ -9,7 +9,7 @@ use crate::orbital_headers::secret::{
 use crate::orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use log::debug;
+use tracing::debug;
 
 use crate::orbital_database::postgres::secret::Secret;
 use prettytable::{cell, format, row, Table};
@@ -52,7 +52,7 @@ pub async fn action_handler(
 
     let request = Request::new(SecretUpdateRequest {
         org: action_option.org.unwrap_or_default(),
-        name: action_option.secret_name.into(),
+        name: action_option.secret_name,
         secret_type: action_option.secret_type.into(),
         data: contents.into(),
         ..Default::default()
@@ -86,7 +86,7 @@ pub async fn action_handler(
                 "Active State",
             ]);
 
-            let secret = Secret::from(secret_proto.clone());
+            let secret = Secret::from(secret_proto);
 
             table.add_row(row![
                 secret.org_id,

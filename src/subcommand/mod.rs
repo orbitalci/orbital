@@ -22,13 +22,11 @@ pub mod server;
 pub mod summary;
 
 use crate::orbital_utils::exec_runtime::{DOCKER_SOCKET_VOLMAP, ORBITAL_CONTAINER_WORKDIR};
-use log::debug;
 use std::env;
 use std::error::Error;
 use std::fmt;
 use std::path::PathBuf;
-
-use git2;
+use tracing::debug;
 
 // TODO: I'd like to manage errors like this to keep error text together
 // Getting this error: `(dyn std::error::Error + 'static)` cannot be sent between threads safely
@@ -142,9 +140,8 @@ pub fn parse_envs_input(user_input: &Option<String>) -> Option<Vec<&str>> {
 pub fn parse_volumes_input(user_input: &Option<String>) -> Option<Vec<&str>> {
     let vols = match kv_csv_parser(user_input) {
         Some(v) => {
-            let mut new_vec: Vec<&str> = Vec::new();
-            new_vec.push(DOCKER_SOCKET_VOLMAP);
-            new_vec.extend(v.clone());
+            let mut new_vec: Vec<&str> = vec![DOCKER_SOCKET_VOLMAP];
+            new_vec.extend(&v.clone());
             Some(new_vec)
         }
         None => {
@@ -220,7 +217,7 @@ pub struct GlobalOption {
 //lazy_static::lazy_static! {
 //    static ref BUILD_VERSION: String = env!("BUILD_VERSION").to_string();
 //}
-const BUILD_VERSION: &'static str = env!("BUILD_VERSION");
+const BUILD_VERSION: &str = env!("BUILD_VERSION");
 
 /// Represents a single-parsed command line invocation from user
 #[derive(Debug, StructOpt)]

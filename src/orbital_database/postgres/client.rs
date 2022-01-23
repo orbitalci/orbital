@@ -11,839 +11,857 @@ use crate::orbital_utils::hashicorp_stack::orb_vault_path;
 use color_eyre::eyre::{eyre, Result};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use log::debug;
 use std::env;
+use tracing::debug;
 
-pub fn establish_connection() -> PgConnection {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
+pub struct OrbitalDBClient {
+    conn: PgConnection,
+    org: Option<String>,
+    repo: Option<String>,
+    branch: Option<String>,
+    hash: Option<String>,
 }
 
-pub fn org_from_id(conn: &PgConnection, id: i32) -> Result<Org> {
-    let org_check: Result<Org, _> = org::table
-        .select(org::all_columns)
-        .filter(org::id.eq(id))
-        .get_result(conn);
-
-    match org_check {
-        Ok(o) => Ok(o),
-        Err(_e) => Err(eyre!("Could not retrieve org by id from DB")),
-    }
-}
-
-pub fn secret_from_id(conn: &PgConnection, id: i32) -> Option<Secret> {
-    let secret_check: Result<Secret, _> = secret::table
-        .select(secret::all_columns)
-        .filter(secret::id.eq(id))
-        .get_result(conn);
-
-    match secret_check {
-        Ok(o) => Some(o),
-        Err(_e) => None,
-    }
-}
-
-pub fn repo_increment_build_index(conn: &PgConnection, repo: Repo) -> Result<Repo> {
-    let org_name = org_from_id(&conn, repo.org_id.clone())?.name;
-
-    let update_repo = NewRepo {
-        org_id: repo.org_id,
-        name: repo.name.clone(),
-        uri: repo.uri,
-        canonical_branch: repo.canonical_branch,
-        git_host_type: repo.git_host_type,
-        secret_id: repo.secret_id,
-        build_active_state: repo.build_active_state,
-        notify_active_state: repo.notify_active_state,
-        next_build_index: repo.next_build_index + 1,
-        remote_branch_heads: repo.remote_branch_heads,
-    };
-
-    let update_result = repo_update(conn, &org_name, &repo.name.clone(), update_repo)?;
-
-    Ok(update_result.1)
-}
-
-pub fn org_add(conn: &PgConnection, name: &str) -> Result<Org> {
-    // Only insert if there are no other orgs by this name
-    let org_check: Result<Org, _> = org::table
-        .select(org::all_columns)
-        .filter(org::name.eq(&name))
-        .order_by(org::id)
-        .get_result(conn);
-
-    match org_check {
-        Err(_e) => {
-            debug!("org doesn't exist. Inserting into db.");
-            Ok(diesel::insert_into(org::table)
-                .values(NewOrg {
-                    name: name.to_string(),
-                    ..Default::default()
-                })
-                .get_result(conn)
-                .expect("Error saving new org"))
-        }
-        Ok(o) => {
-            debug!("org found in db. Returning result.");
-            Ok(o)
+impl OrbitalDBClient {
+    pub fn new() -> Self {
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        Self {
+            conn: PgConnection::establish(&database_url)
+                .unwrap_or_else(|_| panic!("Error connecting to {}", database_url)),
+            org: None,
+            repo: None,
+            branch: None,
+            hash: None,
         }
     }
-}
 
-pub fn org_get(conn: &PgConnection, name: &str) -> Result<Org> {
-    let mut org_check: Vec<Org> = org::table
-        .select(org::all_columns)
-        .filter(org::name.eq(&name))
-        .order_by(org::id)
-        .load(conn)
-        .expect("Error querying for org");
-
-    match &org_check.len() {
-        0 => {
-            debug!("org not found in db");
-            Err(eyre!("Org not Found"))
-        }
-        1 => {
-            debug!("org found in db. Returning result.");
-            Ok(org_check.pop().unwrap())
-        }
-        _ => Err(eyre!("Found more than one org by the same name in db")),
+    pub fn get_conn(&self) -> PgConnection {
+        let conn = OrbitalDBClient::new();
+        conn.conn
     }
-}
 
-pub fn org_update(conn: &PgConnection, name: &str, update_org: NewOrg) -> Result<Org> {
-    let org_update: Org = diesel::update(org::table)
-        .filter(org::name.eq(&name))
-        .set(update_org)
-        .get_result(conn)
-        .expect("Error updating org");
+    pub fn set_org(mut self, org_name: Option<String>) -> Self {
+        self.org = org_name;
+        self
+    }
 
-    debug!("Result after update: {:?}", &org_update);
+    pub fn set_repo(mut self, repo_name: Option<String>) -> Self {
+        self.repo = repo_name;
+        self
+    }
 
-    Ok(org_update)
-}
+    pub fn set_branch(mut self, branch_name: Option<String>) -> Self {
+        self.branch = branch_name;
+        self
+    }
 
-pub fn org_remove(conn: &PgConnection, name: &str) -> Result<Org> {
-    let org_delete: Org = diesel::delete(org::table)
-        .filter(org::name.eq(&name))
-        .get_result(conn)
-        .expect("Error deleting org");
+    pub fn set_hash(mut self, hash: Option<String>) -> Self {
+        self.hash = hash;
+        self
+    }
+    //pub fn establish_connection() -> PgConnection {
+    //    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    //    PgConnection::establish(&database_url)
+    //        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+    //}
 
-    Ok(org_delete)
-}
+    //pub fn org_from_id(&self, id: i32) -> Result<Org> {
+    //    let org_check: Result<Org, _> = org::table
+    //        .select(org::all_columns)
+    //        .filter(org::id.eq(id))
+    //        .get_result(&self.conn);
 
-pub fn org_list(conn: &PgConnection) -> Result<Vec<Org>> {
-    let query: Vec<Org> = org::table
-        .select(org::all_columns)
-        .order_by(org::id)
-        .load(conn)
-        .expect("Error getting all order records");
+    //    match org_check {
+    //        Ok(o) => Ok(o),
+    //        Err(_e) => Err(eyre!("Could not retrieve org by id from DB")),
+    //    }
+    //}
 
-    Ok(query)
-}
+    pub fn secret_from_id(&self, id: i32) -> Option<Secret> {
+        let secret_check: Result<Secret, _> = secret::table
+            .select(secret::all_columns)
+            .filter(secret::id.eq(id))
+            .get_result(&self.conn);
 
-pub fn secret_add(
-    conn: &PgConnection,
-    org: &str,
-    name: &str,
-    secret_type: SecretType,
-) -> Result<(Secret, Org)> {
-    let query_result: Result<(Secret, Org), _> = secret::table
-        .inner_join(org::table)
-        .select((secret::all_columns, org::all_columns))
-        .filter(secret::name.eq(&name))
-        .filter(org::name.eq(&org))
-        .get_result(conn);
-
-    match query_result {
-        Err(_e) => {
-            debug!("secret doesn't exist. Inserting into db.");
-
-            let org_db = org_get(conn, org).expect("Unable to find org");
-
-            let secret_db = diesel::insert_into(secret::table)
-                .values(NewSecret {
-                    name: name.to_string(),
-                    org_id: org_db.id,
-                    secret_type,
-                    vault_path: orb_vault_path(
-                        &org_db.name,
-                        name,
-                        format!("{:?}", &secret_type).as_str(),
-                    ),
-                    ..Default::default()
-                })
-                .get_result(conn)
-                .expect("Error saving new secret");
-
-            Ok((secret_db, org_db))
-        }
-        Ok((secret_db, org_db)) => {
-            debug!("secret found in db. Returning result.");
-            Ok((secret_db, org_db))
+        match secret_check {
+            Ok(o) => Some(o),
+            Err(_e) => None,
         }
     }
-}
 
-pub fn secret_get(
-    conn: &PgConnection,
-    org: &str,
-    name: &str,
-    _secret_type: SecretType,
-) -> Result<(Secret, Org)> {
-    let query_result: (Secret, Org) = secret::table
-        .inner_join(org::table)
-        .select((secret::all_columns, org::all_columns))
-        .filter(secret::name.eq(&name))
-        .filter(org::name.eq(&org))
-        .first(conn)
-        .expect("Error querying for secret");
+    pub fn repo_increment_build_index(&self, repo: Repo) -> Result<Repo> {
+        //let _org_name = self.org_from_id(repo.org_id)?.name;
 
-    debug!("Secret get result: \n {:?}", &query_result);
+        let update_repo = NewRepo {
+            org_id: repo.org_id,
+            name: repo.name.clone(),
+            uri: repo.uri,
+            canonical_branch: repo.canonical_branch,
+            git_host_type: repo.git_host_type,
+            secret_id: repo.secret_id,
+            build_active_state: repo.build_active_state,
+            notify_active_state: repo.notify_active_state,
+            next_build_index: repo.next_build_index + 1,
+            remote_branch_heads: repo.remote_branch_heads,
+        };
 
-    Ok(query_result)
-}
+        let update_result = self.repo_update(&repo.name, update_repo)?;
 
-pub fn secret_update(
-    conn: &PgConnection,
-    org: &str,
-    name: &str,
-    update_secret: NewSecret,
-) -> Result<Secret> {
-    let org_db = org_get(conn, org).expect("Unable to find org");
+        Ok(update_result.1)
+    }
 
-    let secret_update: Secret = diesel::update(secret::table)
-        .filter(secret::org_id.eq(&org_db.id))
-        .filter(secret::name.eq(&name))
-        .set(update_secret)
-        .get_result(conn)
-        .expect("Error updating secret");
+    pub fn org_add(&self, name: &str) -> Result<Org> {
+        // Only insert if there are no other orgs by this name
+        let org_check: Result<Org, _> = org::table
+            .select(org::all_columns)
+            .filter(org::name.eq(&name))
+            .order_by(org::id)
+            .get_result(&self.conn);
 
-    debug!("Result after update: {:?}", &secret_update);
+        match org_check {
+            Err(_e) => {
+                debug!("org doesn't exist. Inserting into db.");
+                Ok(diesel::insert_into(org::table)
+                    .values(NewOrg {
+                        name: name.to_string(),
+                        ..Default::default()
+                    })
+                    .get_result(&self.conn)
+                    .expect("Error saving new org"))
+            }
+            Ok(o) => {
+                debug!("org found in db. Returning result.");
+                Ok(o)
+            }
+        }
+    }
 
-    Ok(secret_update)
-}
+    pub fn org_get(&self, name: &str) -> Result<Org> {
+        let mut org_check: Vec<Org> = org::table
+            .select(org::all_columns)
+            .filter(org::name.eq(&name))
+            .order_by(org::id)
+            .load(&self.conn)
+            .expect("Error querying for org");
 
-pub fn secret_remove(
-    conn: &PgConnection,
-    org: &str,
-    name: &str,
-    _secret_type: SecretType,
-) -> Result<Secret> {
-    let org_db = org_get(conn, org).expect("Unable to find org");
+        match &org_check.len() {
+            0 => {
+                debug!("org not found in db");
+                Err(eyre!("Org not Found"))
+            }
+            1 => {
+                debug!("org found in db. Returning result.");
+                Ok(org_check.pop().unwrap())
+            }
+            _ => Err(eyre!("Found more than one org by the same name in db")),
+        }
+    }
 
-    let secret_delete: Secret = diesel::delete(secret::table)
-        .filter(secret::org_id.eq(&org_db.id))
-        .filter(secret::name.eq(&name))
-        .get_result(conn)
-        .expect("Error deleting secret");
+    pub fn org_update(&self, name: &str, update_org: NewOrg) -> Result<Org> {
+        let org_update: Org = diesel::update(org::table)
+            .filter(org::name.eq(&name))
+            .set(update_org)
+            .get_result(&self.conn)
+            .expect("Error updating org");
 
-    Ok(secret_delete)
-}
+        debug!("Result after update: {:?}", &org_update);
 
-pub fn secret_list(
-    conn: &PgConnection,
-    org: &str,
-    filter: Option<SecretType>,
-) -> Result<Vec<(Secret, Org)>> {
-    let query_result: Vec<(Secret, Org)> = match filter {
-        None => secret::table
-            .inner_join(org::table)
-            .select((secret::all_columns, org::all_columns))
-            .filter(org::name.eq(&org))
-            .load(conn)
-            .expect("Error getting all secret records"),
-        Some(_f) => secret::table
+        Ok(org_update)
+    }
+
+    pub fn org_remove(&self, name: &str) -> Result<Org> {
+        let org_delete: Org = diesel::delete(org::table)
+            .filter(org::name.eq(&name))
+            .get_result(&self.conn)
+            .expect("Error deleting org");
+
+        Ok(org_delete)
+    }
+
+    pub fn org_list(&self) -> Result<Vec<Org>> {
+        let query: Vec<Org> = org::table
+            .select(org::all_columns)
+            .order_by(org::id)
+            .load(&self.conn)
+            .expect("Error getting all order records");
+
+        Ok(query)
+    }
+
+    pub fn secret_add(&self, name: &str, secret_type: SecretType) -> Result<(Secret, Org)> {
+        if let Some(ref org) = self.org {
+            let query_result: Result<(Secret, Org), _> = secret::table
+                .inner_join(org::table)
+                .select((secret::all_columns, org::all_columns))
+                .filter(secret::name.eq(&name))
+                .filter(org::name.eq(&org))
+                .get_result(&self.conn);
+
+            match query_result {
+                Err(_e) => {
+                    debug!("secret doesn't exist. Inserting into db.");
+
+                    let org_db = self.org_get(org).expect("Unable to find org");
+
+                    let secret_db = diesel::insert_into(secret::table)
+                        .values(NewSecret {
+                            name: name.to_string(),
+                            org_id: org_db.id,
+                            secret_type,
+                            vault_path: orb_vault_path(
+                                &org_db.name,
+                                name,
+                                format!("{:?}", &secret_type).as_str(),
+                            ),
+                            ..Default::default()
+                        })
+                        .get_result(&self.conn)
+                        .expect("Error saving new secret");
+
+                    Ok((secret_db, org_db))
+                }
+                Ok((secret_db, org_db)) => {
+                    debug!("secret found in db. Returning result.");
+                    Ok((secret_db, org_db))
+                }
+            }
+        } else {
+            Err(eyre!("Org not set"))
+        }
+    }
+
+    pub fn secret_get(&self, name: &str, _secret_type: SecretType) -> Result<(Secret, Org)> {
+        if let Some(ref org) = self.org {
+            let query_result: (Secret, Org) = secret::table
+                .inner_join(org::table)
+                .select((secret::all_columns, org::all_columns))
+                .filter(secret::name.eq(&name))
+                .filter(org::name.eq(&org))
+                .first(&self.conn)
+                .expect("Error querying for secret");
+
+            debug!("Secret get result: \n {:?}", &query_result);
+
+            Ok(query_result)
+        } else {
+            Err(eyre!("Org not set"))
+        }
+    }
+
+    pub fn secret_update(&self, name: &str, update_secret: NewSecret) -> Result<Secret> {
+        if let Some(ref org) = self.org {
+            let org_db = self.org_get(org).expect("Unable to find org");
+
+            let secret_update: Secret = diesel::update(secret::table)
+                .filter(secret::org_id.eq(&org_db.id))
+                .filter(secret::name.eq(&name))
+                .set(update_secret)
+                .get_result(&self.conn)
+                .expect("Error updating secret");
+
+            debug!("Result after update: {:?}", &secret_update);
+
+            Ok(secret_update)
+        } else {
+            Err(eyre!("Org not set"))
+        }
+    }
+
+    pub fn secret_remove(&self, name: &str, _secret_type: SecretType) -> Result<Secret> {
+        if let Some(ref org) = self.org {
+            let org_db = self.org_get(org).expect("Unable to find org");
+
+            let secret_delete: Secret = diesel::delete(secret::table)
+                .filter(secret::org_id.eq(&org_db.id))
+                .filter(secret::name.eq(&name))
+                .get_result(&self.conn)
+                .expect("Error deleting secret");
+
+            Ok(secret_delete)
+        } else {
+            Err(eyre!("Org not set"))
+        }
+    }
+
+    pub fn secret_list(&self, filter: Option<SecretType>) -> Result<Vec<(Secret, Org)>> {
+        if let Some(ref org) = self.org {
+            let query_result: Vec<(Secret, Org)> = match filter {
+                None => secret::table
+                    .inner_join(org::table)
+                    .select((secret::all_columns, org::all_columns))
+                    .filter(org::name.eq(&org))
+                    .load(&self.conn)
+                    .expect("Error getting all secret records"),
+                Some(_f) => secret::table
             .inner_join(org::table)
             .select((secret::all_columns, org::all_columns))
             .filter(org::name.eq(&org))
             //.filter(secret::secret_type.eq(SecretType::from(f))) // Not working yet.
-            .load(conn)
+            .load(&self.conn)
             .expect("Error getting all secret records"),
-    };
-
-    debug!("Secret list result: \n {:?}", &query_result);
-
-    Ok(query_result)
-}
-
-pub fn repo_add(
-    conn: &PgConnection,
-
-    // OrbitalClient
-    org: &str,
-    name: &str,
-    uri: &str,
-    canonical_branch: &str,
-    secret: Option<Secret>,
-    branches_latest: serde_json::Value,
-) -> Result<(Org, Repo, Option<Secret>)> {
-    let repo_check = repo_get(conn, org, name);
-
-    match repo_check {
-        Err(_e) => {
-            debug!("repo doesn't exist. Inserting into db.");
-
-            let secret_id = match secret {
-                Some(s) => Some(s.clone().id),
-                None => None,
             };
 
-            let org_db = org_get(conn, org)?;
+            debug!("Secret list result: \n {:?}", &query_result);
 
-            let result: Repo = diesel::insert_into(repo::table)
-                .values(NewRepo {
-                    name: name.into(),
-                    org_id: org_db.id,
-                    uri: uri.into(),
-                    canonical_branch: canonical_branch.into(),
-                    secret_id,
-                    remote_branch_heads: branches_latest,
-                    ..Default::default()
-                })
-                .get_result(conn)
-                .expect("Error saving new repo");
-
-            debug!("DB insert result: {:?}", &result);
-
-            // Run query again. This time it should pass
-            repo_get(conn, org, name)
-        }
-        Ok((o, r, s)) => {
-            debug!("repo found in db. Returning result.");
-            Ok((o, r, s))
+            Ok(query_result)
+        } else {
+            Err(eyre!("Org not set"))
         }
     }
-}
 
-pub fn repo_get(conn: &PgConnection, org: &str, name: &str) -> Result<(Org, Repo, Option<Secret>)> {
-    debug!("Repo get: Org: {}, Name: {}", org, name);
+    pub fn repo_add(
+        &self,
 
-    let query: Result<(Org, Repo), _> = repo::table
+        // OrbitalClient
+        name: &str,
+        uri: &str,
+        canonical_branch: &str,
+        secret: Option<Secret>,
+        branches_latest: serde_json::Value,
+    ) -> Result<(Org, Repo, Option<Secret>)> {
+        if let Some(ref org) = self.org {
+            if let Some(ref _repo) = self.repo {
+                let repo_check = self.repo_get();
+
+                match repo_check {
+                    Err(_e) => {
+                        debug!("repo doesn't exist. Inserting into db.");
+
+                        let secret_id = secret.map(|s| s.id);
+
+                        let org_db = self.org_get(org)?;
+
+                        let result: Repo = diesel::insert_into(repo::table)
+                            .values(NewRepo {
+                                name: name.into(),
+                                org_id: org_db.id,
+                                uri: uri.into(),
+                                canonical_branch: canonical_branch.into(),
+                                secret_id,
+                                remote_branch_heads: branches_latest,
+                                ..Default::default()
+                            })
+                            .get_result(&self.conn)
+                            .expect("Error saving new repo");
+
+                        debug!("DB insert result: {:?}", &result);
+
+                        // Run query again. This time it should pass
+                        self.repo_get()
+                    }
+                    Ok((o, r, s)) => {
+                        debug!("repo found in db. Returning result.");
+                        Ok((o, r, s))
+                    }
+                }
+            } else {
+                Err(eyre!("Repo not set"))
+            }
+        } else {
+            Err(eyre!("Org not set"))
+        }
+    }
+
+    pub fn repo_get(&self) -> Result<(Org, Repo, Option<Secret>)> {
+        if let Some(ref org) = self.org {
+            if let Some(ref repo) = self.repo {
+                debug!("Repo get: Org: {}, Name: {}", org, repo);
+
+                let query: Result<(Org, Repo), _> = repo::table
         .inner_join(org::table)
         .select((org::all_columns, repo::all_columns))
-        .filter(repo::name.eq(&name))
+        .filter(repo::name.eq(&repo))
         //.filter(secret::id.eq(&secret_id))
-        .get_result(conn);
+        .get_result(&self.conn);
 
-    match query {
-        Ok((o, r)) => {
-            // If we're using a secret, we should also return it to the requester
-            let secret = match &r.secret_id {
-                None => None,
-                Some(id) => secret_from_id(conn, *id),
-            };
+                match query {
+                    Ok((o, r)) => {
+                        // If we're using a secret, we should also return it to the requester
+                        let secret = match &r.secret_id {
+                            None => None,
+                            Some(id) => self.secret_from_id(*id),
+                        };
 
-            Ok((o, r, secret))
+                        Ok((o, r, secret))
+                    }
+                    Err(_e) => Err(eyre!("{} not found in {} org", repo, org)),
+                }
+            } else {
+                Err(eyre!("No repo set"))
+            }
+        } else {
+            Err(eyre!("No org set"))
         }
-        Err(_e) => Err(eyre!("{} not found in {} org", name, org)),
     }
-}
 
-// You should update your secret with secret_update()
-pub fn repo_update(
-    conn: &PgConnection,
-    org: &str,
-    name: &str,
-    update_repo: NewRepo,
-) -> Result<(Org, Repo, Option<Secret>)> {
-    let (org_db, _repo_db, secret_db) = repo_get(conn, org, name)?;
+    // You should update your secret with secret_update()
+    pub fn repo_update(
+        &self,
+        name: &str,
+        update_repo: NewRepo,
+    ) -> Result<(Org, Repo, Option<Secret>)> {
+        if let Some(ref _org) = self.org {
+            if let Some(ref _repo) = self.repo {
+                let (org_db, _repo_db, secret_db) = self.repo_get()?;
 
-    debug!("Right before updating DB row: {:?}", &update_repo);
+                debug!("Right before updating DB row: {:?}", &update_repo);
 
-    let repo_update: Repo = diesel::update(repo::table)
-        .filter(repo::org_id.eq(&org_db.id))
-        .filter(repo::name.eq(&name))
-        .set(update_repo)
-        .get_result(conn)
-        .expect("Error updating repo");
+                let repo_update: Repo = diesel::update(repo::table)
+                    .filter(repo::org_id.eq(&org_db.id))
+                    .filter(repo::name.eq(&name))
+                    .set(update_repo)
+                    .get_result(&self.conn)
+                    .expect("Error updating repo");
 
-    debug!("Result after update: {:?}", &repo_update);
+                debug!("Result after update: {:?}", &repo_update);
 
-    Ok((org_db, repo_update, secret_db))
-}
+                Ok((org_db, repo_update, secret_db))
+            } else {
+                Err(eyre!("No repo set"))
+            }
+        } else {
+            Err(eyre!("No org set"))
+        }
+    }
 
-pub fn repo_remove(
-    conn: &PgConnection,
-    org: &str,
-    name: &str,
-) -> Result<(Org, Repo, Option<Secret>)> {
-    let (org_db, repo_db, secret_db) = repo_get(conn, org, name)?;
+    pub fn repo_remove(&self, name: &str) -> Result<(Org, Repo, Option<Secret>)> {
+        if let Some(ref _repo) = self.repo {
+            let (org_db, repo_db, secret_db) = self.repo_get()?;
 
-    let _repo_delete: Repo = diesel::delete(repo::table)
-        .filter(repo::org_id.eq(&org_db.id))
-        .filter(repo::name.eq(&name))
-        .get_result(conn)
-        .expect("Error deleting repo");
+            let _repo_delete: Repo = diesel::delete(repo::table)
+                .filter(repo::org_id.eq(&org_db.id))
+                .filter(repo::name.eq(&name))
+                .get_result(&self.conn)
+                .expect("Error deleting repo");
 
-    Ok((org_db, repo_db, secret_db))
-}
+            Ok((org_db, repo_db, secret_db))
+        } else {
+            Err(eyre!("No repo set"))
+        }
+    }
 
-pub fn repo_list(conn: &PgConnection, org: &str) -> Result<Vec<(Org, Repo, Option<Secret>)>> {
-    let query: Vec<(Org, Repo)> = repo::table
-        .inner_join(org::table)
-        .select((org::all_columns, repo::all_columns))
-        .filter(org::name.eq(org))
-        .load(conn)
-        .expect("Error selecting all repo");
+    pub fn repo_list(&self) -> Result<Vec<(Org, Repo, Option<Secret>)>> {
+        if let Some(ref org) = self.org {
+            let query: Vec<(Org, Repo)> = repo::table
+                .inner_join(org::table)
+                .select((org::all_columns, repo::all_columns))
+                .filter(org::name.eq(org))
+                .load(&self.conn)
+                .expect("Error selecting all repo");
 
-    let map_result: Vec<(Org, Repo, Option<Secret>)> = query
-        .into_iter()
-        .map(|(o, r)| match r.clone().secret_id {
-            None => (o, r, None),
-            Some(id) => (o, r, secret_from_id(conn, id)),
-        })
-        .collect();
+            let map_result: Vec<(Org, Repo, Option<Secret>)> = query
+                .into_iter()
+                .map(|(o, r)| match r.clone().secret_id {
+                    None => (o, r, None),
+                    Some(id) => (o, r, self.secret_from_id(id)),
+                })
+                .collect();
 
-    Ok(map_result)
-}
+            Ok(map_result)
+        } else {
+            Err(eyre!("Org not set"))
+        }
+    }
 
-pub fn build_target_add(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    user_envs: Option<String>,
-    job_trigger: JobTrigger,
-) -> Result<(Org, Repo, BuildTarget)> {
-    let (org_db, repo_db, _) = repo_get(conn, org, repo)?;
+    pub fn build_target_add(
+        &self,
+        user_envs: Option<String>,
+        job_trigger: JobTrigger,
+    ) -> Result<(Org, Repo, BuildTarget)> {
+        if self.repo.is_some() {
+            if let (Some(branch), Some(hash)) = (self.branch.clone(), self.hash.clone()) {
+                let (org_db, repo_db, _) = self.repo_get()?;
 
-    let build_target = NewBuildTarget {
-        repo_id: repo_db.id.clone(),
-        git_hash: hash.to_string(),
-        branch: branch.to_string(),
-        user_envs,
-        build_index: repo_db.next_build_index,
-        trigger: job_trigger,
-        ..Default::default()
-    };
+                let build_target = NewBuildTarget {
+                    repo_id: repo_db.id,
+                    git_hash: hash,
+                    branch,
+                    user_envs,
+                    build_index: repo_db.next_build_index,
+                    trigger: job_trigger,
+                    ..Default::default()
+                };
 
-    debug!("Build spec to insert: {:?}", &build_target);
+                debug!("Build spec to insert: {:?}", &build_target);
 
-    let result: BuildTarget = diesel::insert_into(build_target::table)
-        .values(build_target)
-        .get_result(conn)
-        .expect("Error saving new build_target");
+                let result: BuildTarget = diesel::insert_into(build_target::table)
+                    .values(build_target)
+                    .get_result(&self.conn)
+                    .expect("Error saving new build_target");
 
-    // Increment repo next_build_target by 1
-    let updated_repo = repo_increment_build_index(conn, repo_db)?;
+                // Increment repo next_build_target by 1
+                let updated_repo = self.repo_increment_build_index(repo_db)?;
 
-    Ok((org_db, updated_repo, result))
-}
+                Ok((org_db, updated_repo, result))
+            } else {
+                Err(eyre!("Branch and/or hash not set"))
+            }
+        } else {
+            Err(eyre!("Repo not set"))
+        }
+    }
 
-// This should probably return a Vec
-// Consider taking a Repo as input
-pub fn build_target_get(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-) -> Result<(Org, Repo, Option<BuildTarget>)> {
-    debug!(
+    // This should probably return a Vec
+    // Consider taking a Repo as input
+    pub fn build_target_get(&self, build_index: i32) -> Result<(Org, Repo, Option<BuildTarget>)> {
+        if let Some(ref _repo) = self.repo {
+            if let (Some(branch), Some(hash)) = (self.branch.clone(), self.hash.clone()) {
+                debug!(
         "Build target get request: org {:?} repo: {:?} hash: {:?} branch: {:?} build_index: {:?}",
-        &org, &repo, &hash, &branch, &build_index,
+        &self.org, &self.repo, &hash, &branch, &build_index,
     );
+                let (org_db, repo_db, _secret_db) = self.repo_get()?;
 
-    let (org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
+                let result: Result<(Repo, BuildTarget), _> = build_target::table
+                    .inner_join(repo::table)
+                    .select((repo::all_columns, build_target::all_columns))
+                    .filter(build_target::repo_id.eq(repo_db.id))
+                    .filter(build_target::branch.eq(branch))
+                    .filter(build_target::build_index.eq(build_index))
+                    .get_result(&self.conn);
 
-    let result: Result<(Repo, BuildTarget), _> = build_target::table
-        .inner_join(repo::table)
-        .select((repo::all_columns, build_target::all_columns))
-        .filter(build_target::repo_id.eq(repo_db.id))
-        .filter(build_target::branch.eq(branch))
-        .filter(build_target::build_index.eq(build_index))
-        .get_result(conn);
-
-    match result {
-        Ok((repo, build_target)) => {
-            debug!("BuildTarget found: {:?}", &build_target);
-            Ok((org_db, repo, Some(build_target)))
+                match result {
+                    Ok((repo, build_target)) => {
+                        debug!("BuildTarget found: {:?}", &build_target);
+                        Ok((org_db, repo, Some(build_target)))
+                    }
+                    Err(_e) => Ok((org_db, repo_db, None)),
+                }
+            } else {
+                Err(eyre!("Branch and/or hash not set"))
+            }
+        } else {
+            Err(eyre!("No repo set"))
         }
-        Err(_e) => Ok((org_db, repo_db, None)),
     }
-}
 
-//pub fn build_target_update(
-//    conn: &PgConnection,
-//    org: &str,
-//    repo: &str,
-//    hash: &str,
-//    branch: &str,
-//    build_index: i32,
-//    update_build_target: NewBuildTarget,
-//) -> Result<(Org, Repo, BuildTarget)> {
-//    let (org_db, repo_db, build_target_db_opt) =
-//        build_target_get(conn, org, repo, hash, branch, build_index)?;
-//
-//    let build_target_db = build_target_db_opt.expect("No build target found");
-//
-//    let result: BuildTarget = diesel::update(build_target::table)
-//        .filter(build_target::id.eq(build_target_db.id))
-//        .set(update_build_target)
-//        .get_result(conn)
-//        .expect("Error updating build target");
-//
-//    Ok((org_db, repo_db, result))
-//}
+    //pub fn build_target_update(
+    //    &self,
+    //    org: &str,
+    //    repo: &str,
+    //    hash: &str,
+    //    branch: &str,
+    //    build_index: i32,
+    //    update_build_target: NewBuildTarget,
+    //) -> Result<(Org, Repo, BuildTarget)> {
+    //    let (org_db, repo_db, build_target_db_opt) =
+    //        build_target_get(conn, org, repo, hash, branch, build_index)?;
+    //
+    //    let build_target_db = build_target_db_opt.expect("No build target found");
+    //
+    //    let result: BuildTarget = diesel::update(build_target::table)
+    //        .filter(build_target::id.eq(build_target_db.id))
+    //        .set(update_build_target)
+    //        .get_result(&self.conn)
+    //        .expect("Error updating build target");
+    //
+    //    Ok((org_db, repo_db, result))
+    //}
 
-//pub fn build_target_remove() {
-//    unimplemented!();
-//}
-//
-//pub fn build_target_list(
-//    conn: &PgConnection,
-//    org: &str,
-//    repo: &str,
-//    limit: i32,
-//) -> Result<Vec<(Org, Repo, BuildTarget)>> {
-//    debug!(
-//        "Build target list request: org {:?} repo: {:?} limit: {:?}",
-//        &org, &repo, &limit
-//    );
-//
-//    let (org_db, _repo_db, _secret_db) = repo_get(conn, org, repo)?;
-//
-//    let result: Vec<(Repo, BuildTarget)> = build_target::table
-//        .inner_join(repo::table)
-//        .select((repo::all_columns, build_target::all_columns))
-//        .limit(limit.into())
-//        .load(conn)
-//        .expect("Error saving new build_target");
-//
-//    let map_result: Vec<(Org, Repo, BuildTarget)> = result
-//        .into_iter()
-//        .map(|(r, b)| (org_db.clone(), r, b))
-//        .collect();
-//
-//    Ok(map_result)
-//}
+    //pub fn build_target_remove() {
+    //    unimplemented!();
+    //}
+    //
+    //pub fn build_target_list(
+    //    &self,
+    //    org: &str,
+    //    repo: &str,
+    //    limit: i32,
+    //) -> Result<Vec<(Org, Repo, BuildTarget)>> {
+    //    debug!(
+    //        "Build target list request: org {:?} repo: {:?} limit: {:?}",
+    //        &org, &repo, &limit
+    //    );
+    //
+    //    let (org_db, _repo_db, _secret_db) = repo_get(conn, org, repo)?;
+    //
+    //    let result: Vec<(Repo, BuildTarget)> = build_target::table
+    //        .inner_join(repo::table)
+    //        .select((repo::all_columns, build_target::all_columns))
+    //        .limit(limit.into())
+    //        .load(&self.conn)
+    //        .expect("Error saving new build_target");
+    //
+    //    let map_result: Vec<(Org, Repo, BuildTarget)> = result
+    //        .into_iter()
+    //        .map(|(r, b)| (org_db.clone(), r, b))
+    //        .collect();
+    //
+    //    Ok(map_result)
+    //}
 
-pub fn build_summary_add(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-    build_summary: NewBuildSummary,
-) -> Result<(Repo, BuildTarget, BuildSummary)> {
-    debug!(
+    pub fn build_summary_add(
+        &self,
+        build_index: i32,
+        build_summary: NewBuildSummary,
+    ) -> Result<(Repo, BuildTarget, BuildSummary)> {
+        debug!(
         "Build summary add request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
-        &org, &repo, &hash, &branch, &build_index,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index,
     );
 
-    let (_org_db, repo_db, build_target_db_opt) =
-        build_target_get(conn, org, repo, hash, branch, build_index)?;
+        let (_org_db, repo_db, build_target_db_opt) = self.build_target_get(build_index)?;
 
-    let build_target_db = build_target_db_opt.expect("Build target not found");
+        let build_target_db = build_target_db_opt.expect("Build target not found");
 
-    debug!("Build summary to insert: {:?}", &build_summary);
+        debug!("Build summary to insert: {:?}", &build_summary);
 
-    let result: BuildSummary = diesel::insert_into(build_summary::table)
-        .values(build_summary)
-        .get_result(conn)
-        .expect("Error saving new build_summary");
+        let result: BuildSummary = diesel::insert_into(build_summary::table)
+            .values(build_summary)
+            .get_result(&self.conn)
+            .expect("Error saving new build_summary");
 
-    Ok((repo_db, build_target_db, result))
-}
+        Ok((repo_db, build_target_db, result))
+    }
 
-pub fn build_summary_get(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-) -> Result<(Repo, BuildTarget, Option<BuildSummary>)> {
-    debug!(
+    pub fn build_summary_get(
+        &self,
+        build_index: i32,
+    ) -> Result<(Repo, BuildTarget, Option<BuildSummary>)> {
+        debug!(
         "Build summary get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?}",
-        &org, &repo, &hash, &branch, &build_index,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index,
     );
 
-    let (_org_db, repo_db, build_target_db_opt) =
-        build_target_get(conn, org, repo, hash, branch, build_index)?;
+        let (_org_db, repo_db, build_target_db_opt) = self.build_target_get(build_index)?;
 
-    let build_target_db = build_target_db_opt.expect("No build target found");
+        let build_target_db = build_target_db_opt.expect("No build target found");
 
-    let result: Result<(BuildTarget, BuildSummary), _> = build_summary::table
-        .inner_join(build_target::table)
-        .select((build_target::all_columns, build_summary::all_columns))
-        .filter(build_summary::build_target_id.eq(build_target_db.id))
-        .get_result(conn);
+        let result: Result<(BuildTarget, BuildSummary), _> = build_summary::table
+            .inner_join(build_target::table)
+            .select((build_target::all_columns, build_summary::all_columns))
+            .filter(build_summary::build_target_id.eq(build_target_db.id))
+            .get_result(&self.conn);
 
-    match result {
-        Ok((build_target, build_summary)) => {
-            debug!("Build summary was found: {:?}", &build_summary);
-            Ok((repo_db, build_target, Some(build_summary)))
-        }
-        Err(_e) => {
-            debug!("Build summary NOT found");
-            Ok((repo_db, build_target_db, None))
+        match result {
+            Ok((build_target, build_summary)) => {
+                debug!("Build summary was found: {:?}", &build_summary);
+                Ok((repo_db, build_target, Some(build_summary)))
+            }
+            Err(_e) => {
+                debug!("Build summary NOT found");
+                Ok((repo_db, build_target_db, None))
+            }
         }
     }
-}
 
-pub fn build_summary_update(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-    update_summary: NewBuildSummary,
-) -> Result<(Repo, BuildTarget, BuildSummary)> {
-    debug!(
+    pub fn build_summary_update(
+        &self,
+        build_index: i32,
+        update_summary: NewBuildSummary,
+    ) -> Result<(Repo, BuildTarget, BuildSummary)> {
+        debug!(
         "Build summary update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} update_summary: {:?}",
-        &org, &repo, &hash, &branch, &build_index, &update_summary,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &update_summary,
     );
 
-    let (org_db, build_target_db, build_summary_db_opt) =
-        build_summary_get(conn, org, repo, hash, branch, build_index)?;
+        let (org_db, build_target_db, build_summary_db_opt) =
+            self.build_summary_get(build_index)?;
 
-    let build_summary_db = build_summary_db_opt.expect("No build summary found");
+        let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
-    let result: BuildSummary = diesel::update(build_summary::table)
-        .filter(build_summary::id.eq(build_summary_db.id))
-        .set(update_summary)
-        .get_result(conn)
-        .expect("Error updating build summary");
+        let result: BuildSummary = diesel::update(build_summary::table)
+            .filter(build_summary::id.eq(build_summary_db.id))
+            .set(update_summary)
+            .get_result(&self.conn)
+            .expect("Error updating build summary");
 
-    Ok((org_db, build_target_db, result))
-}
+        Ok((org_db, build_target_db, result))
+    }
 
-//pub fn build_summary_remove() {
-//    unimplemented!();
-//}
+    //pub fn build_summary_remove() {
+    //    unimplemented!();
+    //}
 
-// TODO: `repo` should be changed to Option<&str> for granularity between all or one repo
-pub fn build_summary_list(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    limit: i32,
-) -> Result<Vec<(Repo, BuildTarget, BuildSummary)>> {
-    debug!(
-        "Build summary list request: org {:?} repo: {:?} limit: {:?}",
-        &org, &repo, &limit
-    );
+    // TODO: `repo` should be changed to Option<&str> for granularity between all or one repo
+    pub fn build_summary_list(&self, limit: i32) -> Result<Vec<(Repo, BuildTarget, BuildSummary)>> {
+        debug!(
+            "Build summary list request: org {:?} repo: {:?} limit: {:?}",
+            &self.org, &self.repo, &limit
+        );
 
-    let (_org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
+        let (_org_db, repo_db, _secret_db) = self.repo_get()?;
 
-    let result: Vec<(BuildTarget, BuildSummary)> = build_summary::table
-        .inner_join(build_target::table)
-        .select((build_target::all_columns, build_summary::all_columns))
-        .filter(build_target::repo_id.eq(repo_db.id))
-        .order(build_summary::id.desc())
-        .limit(limit.into())
-        .load(conn)
-        .expect("Error listing build summaries");
+        let result: Vec<(BuildTarget, BuildSummary)> = build_summary::table
+            .inner_join(build_target::table)
+            .select((build_target::all_columns, build_summary::all_columns))
+            .filter(build_target::repo_id.eq(repo_db.id))
+            .order(build_summary::id.desc())
+            .limit(limit.into())
+            .load(&self.conn)
+            .expect("Error listing build summaries");
 
-    let map_result: Vec<(Repo, BuildTarget, BuildSummary)> = result
-        .into_iter()
-        .map(|(build_target, build_summary)| (repo_db.clone(), build_target, build_summary))
-        .collect();
+        let map_result: Vec<(Repo, BuildTarget, BuildSummary)> = result
+            .into_iter()
+            .map(|(build_target, build_summary)| (repo_db.clone(), build_target, build_summary))
+            .collect();
 
-    Ok(map_result)
-}
+        Ok(map_result)
+    }
 
-pub fn build_stage_add(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-    build_summary_id: i32,
-    build_stage: NewBuildStage,
-) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
-    debug!(
+    pub fn build_stage_add(
+        &self,
+        build_index: i32,
+        build_summary_id: i32,
+        build_stage: NewBuildStage,
+    ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
+        debug!(
         "Build stage add request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
-        &org, &repo, &hash, &branch, &build_index, &build_summary_id,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &build_summary_id,
     );
 
-    let (_org_db, build_target_db, build_summary_db_opt) =
-        build_summary_get(conn, org, repo, hash, branch, build_index)?;
+        let (_org_db, build_target_db, build_summary_db_opt) =
+            self.build_summary_get(build_index)?;
 
-    let build_summary_db = build_summary_db_opt.expect("No build summary found");
+        let build_summary_db = build_summary_db_opt.expect("No build summary found");
 
-    debug!("Build stage to insert: {:?}", &build_stage);
+        debug!("Build stage to insert: {:?}", &build_stage);
 
-    let result: BuildStage = diesel::insert_into(build_stage::table)
-        .values(build_stage)
-        .get_result(conn)
-        .expect("Error saving new build_stage");
+        let result: BuildStage = diesel::insert_into(build_stage::table)
+            .values(build_stage)
+            .get_result(&self.conn)
+            .expect("Error saving new build_stage");
 
-    Ok((build_target_db, build_summary_db, result))
-}
+        Ok((build_target_db, build_summary_db, result))
+    }
 
-pub fn build_stage_get(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-    build_summary_id: i32,
-    build_stage_id: i32,
-) -> Result<(BuildTarget, BuildSummary, Option<BuildStage>)> {
-    debug!(
+    pub fn build_stage_get(
+        &self,
+        build_index: i32,
+        build_summary_id: i32,
+        build_stage_id: i32,
+    ) -> Result<(BuildTarget, BuildSummary, Option<BuildStage>)> {
+        debug!(
         "Build stage get request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?}",
-        &org, &repo, &hash, &branch, &build_index, &build_summary_id,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &build_summary_id,
     );
 
-    let (_repo_db, build_target_db, build_summary_db_opt) =
-        build_summary_get(conn, org, repo, hash, branch, build_index)?;
+        let (_repo_db, build_target_db, build_summary_db_opt) =
+            self.build_summary_get(build_index)?;
 
-    let build_summary_db = build_summary_db_opt.expect("No build target found");
+        let build_summary_db = build_summary_db_opt.expect("No build target found");
 
-    let result: Result<(BuildSummary, BuildStage), _> = build_stage::table
-        .inner_join(build_summary::table)
-        .select((build_summary::all_columns, build_stage::all_columns))
-        .filter(build_summary::build_target_id.eq(build_target_db.id))
-        .filter(build_stage::id.eq(build_stage_id))
-        .get_result(conn);
+        let result: Result<(BuildSummary, BuildStage), _> = build_stage::table
+            .inner_join(build_summary::table)
+            .select((build_summary::all_columns, build_stage::all_columns))
+            .filter(build_summary::build_target_id.eq(build_target_db.id))
+            .filter(build_stage::id.eq(build_stage_id))
+            .get_result(&self.conn);
 
-    match result {
-        Ok((build_summary, build_stage)) => {
-            debug!("Build stage was found: {:?}", &build_summary);
-            Ok((build_target_db, build_summary, Some(build_stage)))
-        }
-        Err(_e) => {
-            debug!("Build stage NOT found");
-            Ok((build_target_db, build_summary_db, None))
+        match result {
+            Ok((build_summary, build_stage)) => {
+                debug!("Build stage was found: {:?}", &build_summary);
+                Ok((build_target_db, build_summary, Some(build_stage)))
+            }
+            Err(_e) => {
+                debug!("Build stage NOT found");
+                Ok((build_target_db, build_summary_db, None))
+            }
         }
     }
-}
 
-pub fn build_stage_update(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-    build_summary_id: i32,
-    build_stage_id: i32,
-    update_stage: NewBuildStage,
-) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
-    debug!(
+    pub fn build_stage_update(
+        &self,
+        build_index: i32,
+        build_summary_id: i32,
+        build_stage_id: i32,
+        update_stage: NewBuildStage,
+    ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
+        debug!(
         "Build stage update request: org: {:?} repo {:?} hash: {:?} branch {:?} build_index: {:?} build_summary_id {:?} build_stage_id {:?} update_stage {:?}",
-        &org, &repo, &hash, &branch, &build_index, &build_summary_id, &build_stage_id, &update_stage,
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &build_summary_id, &build_stage_id, &update_stage,
     );
 
-    let (build_target_db, build_summary_db, build_stage_db_opt) = build_stage_get(
-        conn,
-        org,
-        repo,
-        hash,
-        branch,
-        build_index,
-        build_summary_id,
-        build_stage_id,
-    )?;
+        let (build_target_db, build_summary_db, build_stage_db_opt) =
+            self.build_stage_get(build_index, build_summary_id, build_stage_id)?;
 
-    let _build_stage_db = build_stage_db_opt.expect("No build stage found");
+        let _build_stage_db = build_stage_db_opt.expect("No build stage found");
 
-    let result: BuildStage = diesel::update(build_stage::table)
-        .filter(build_stage::id.eq(build_stage_id))
-        .set(update_stage)
-        .get_result(conn)
-        .expect("Error updating build stage");
+        let result: BuildStage = diesel::update(build_stage::table)
+            .filter(build_stage::id.eq(build_stage_id))
+            .set(update_stage)
+            .get_result(&self.conn)
+            .expect("Error updating build stage");
 
-    Ok((build_target_db, build_summary_db, result))
-}
-
-//pub fn build_stage_remove() {
-//    unimplemented!();
-//}
-
-pub fn build_stage_list(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-    limit: i32,
-) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
-    debug!(
-        "Build stage list request: org {:?} repo: {:?} hash {:?} branch {:?} build_index {:?} limit: {:?}",
-        &org, &repo, &hash, &branch, &build_index, &limit
-    );
-
-    let (_repo_db, build_target_db, build_summary_db_opt) =
-        build_summary_get(conn, org, repo, hash, branch, build_index)?;
-
-    let build_summary_db = build_summary_db_opt.expect("No build summary found");
-
-    let result: Vec<(BuildSummary, BuildStage)> = build_stage::table
-        .inner_join(build_summary::table)
-        .select((build_summary::all_columns, build_stage::all_columns))
-        .filter(build_summary::build_target_id.eq(build_target_db.id))
-        .filter(build_stage::build_summary_id.eq(build_summary_db.id))
-        .order(build_stage::id.asc())
-        .limit(limit.into())
-        .load(conn)
-        .expect("Error listing build stages");
-
-    debug!(
-        "Found {} stages for build id {}",
-        &result.len(),
-        build_index
-    );
-
-    let map_result: Vec<(BuildTarget, BuildSummary, BuildStage)> = result
-        .into_iter()
-        .map(|(build_summary, build_stage)| (build_target_db.clone(), build_summary, build_stage))
-        .collect();
-
-    Ok(map_result)
-}
-
-pub fn build_logs_get(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: Option<i32>,
-) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
-    let (_org_db, repo_db, _secret_db) = repo_get(conn, org, repo)?;
-
-    match build_index {
-        Some(n) => build_stage_list(conn, org, repo, hash, branch, n, 255),
-        None => build_stage_list(
-            conn,
-            org,
-            repo,
-            hash,
-            branch,
-            repo_db.next_build_index - 1,
-            255,
-        ),
+        Ok((build_target_db, build_summary_db, result))
     }
-}
 
-pub fn is_build_canceled(
-    conn: &PgConnection,
-    org: &str,
-    repo: &str,
-    hash: &str,
-    branch: &str,
-    build_index: i32,
-) -> Result<bool> {
-    match build_summary_get(conn, org, repo, hash, branch, build_index) {
-        Ok((_, _, Some(summary))) => match summary.build_state {
-            JobState::Canceled => Ok(true),
-            _ => Ok(false),
-        },
-        Ok((_, _, None)) => {
-            // Build hasn't been queued yet
-            Ok(false)
+    //pub fn build_stage_remove() {
+    //    unimplemented!();
+    //}
+
+    pub fn build_stage_list(
+        &self,
+        build_index: i32,
+        limit: i32,
+    ) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
+        debug!(
+        "Build stage list request: org {:?} repo: {:?} hash {:?} branch {:?} build_index {:?} limit: {:?}",
+        &self.org, &self.repo, &self.hash, &self.branch, &build_index, &limit
+    );
+
+        let (_repo_db, build_target_db, build_summary_db_opt) =
+            self.build_summary_get(build_index)?;
+
+        let build_summary_db = build_summary_db_opt.expect("No build summary found");
+
+        let result: Vec<(BuildSummary, BuildStage)> = build_stage::table
+            .inner_join(build_summary::table)
+            .select((build_summary::all_columns, build_stage::all_columns))
+            .filter(build_summary::build_target_id.eq(build_target_db.id))
+            .filter(build_stage::build_summary_id.eq(build_summary_db.id))
+            .order(build_stage::id.asc())
+            .limit(limit.into())
+            .load(&self.conn)
+            .expect("Error listing build stages");
+
+        debug!(
+            "Found {} stages for build id {}",
+            &result.len(),
+            build_index
+        );
+
+        let map_result: Vec<(BuildTarget, BuildSummary, BuildStage)> = result
+            .into_iter()
+            .map(|(build_summary, build_stage)| {
+                (build_target_db.clone(), build_summary, build_stage)
+            })
+            .collect();
+
+        Ok(map_result)
+    }
+
+    pub fn build_logs_get(
+        &self,
+        build_index: Option<i32>,
+    ) -> Result<Vec<(BuildTarget, BuildSummary, BuildStage)>> {
+        if self.branch.is_some() && self.hash.is_some() {
+            let (_org_db, repo_db, _secret_db) = self.repo_get()?;
+
+            match build_index {
+                Some(n) => self.build_stage_list(n, 255),
+                None => self.build_stage_list(repo_db.next_build_index - 1, 255),
+            }
+        } else {
+            Err(eyre!("Branch and/or hash not set"))
         }
-        Err(_) => Err(eyre!("Could not retrieve build summary from DB")),
+    }
+
+    pub fn is_build_cancelled(&self, build_index: i32) -> Result<bool> {
+        if self.branch.is_some() && self.hash.is_some() {
+            match self.build_summary_get(build_index) {
+                Ok((_, _, Some(summary))) => match summary.build_state {
+                    JobState::Canceled => Ok(true),
+                    _ => Ok(false),
+                },
+                Ok((_, _, None)) => {
+                    // Build hasn't been queued yet
+                    Ok(false)
+                }
+                Err(_) => Err(eyre!("Could not retrieve build summary from DB")),
+            }
+        } else {
+            Err(eyre!("Branch and/or hash not set"))
+        }
     }
 }

@@ -9,7 +9,7 @@ use crate::orbital_utils::orbital_agent::generate_unique_build_id;
 use git_meta::GitRepo;
 use std::path::Path;
 
-use log::debug;
+use tracing::debug;
 
 use crate::subcommand::{GlobalOption, SubcommandError};
 use std::path::PathBuf;
@@ -25,22 +25,23 @@ pub struct SubcommandOption {
     /// Path to local repo. Defaults to current working directory
     #[structopt(long, parse(from_os_str), env = "PWD")]
     path: PathBuf,
+    // TODO: Handle these flags
 
-    /// Add env vars to build. Comma-separated with no spaces. ex. "key1=var1,key2=var2"
-    #[structopt(long, short)]
-    env: Option<String>,
+    ///// Add env vars to build. Comma-separated with no spaces. ex. "key1=var1,key2=var2"
+    //#[structopt(long, short)]
+    //env: Option<String>,
 
-    /// Add volume mapping from host to container. Comma-separated with no spaces. ex. "/host/path1:/container/path1,/host/path2:/container/path2"
-    #[structopt(long, short)]
-    volume: Option<String>,
+    ///// Add volume mapping from host to container. Comma-separated with no spaces. ex. "/host/path1:/container/path1,/host/path2:/container/path2"
+    //#[structopt(long, short)]
+    //volume: Option<String>,
 
-    /// Use the specified local branch
-    #[structopt(long)]
-    branch: Option<String>,
+    ///// Use the specified local branch
+    //#[structopt(long)]
+    //branch: Option<String>,
 
-    /// Use the specified commit hash
-    #[structopt(long)]
-    hash: Option<String>,
+    ///// Use the specified commit hash
+    //#[structopt(long)]
+    //hash: Option<String>,
 }
 
 /// If `--path` not given, expects current working directory, and parses for git metadata
@@ -78,7 +79,7 @@ pub async fn subcommand_handler(
             "dev-org",
             &git_info.url.name,
             &git_info.head.unwrap().id,
-            &format!("{}", rand_string),
+            &rand_string.to_string(),
         )),
         image: config.image,
         command: default_command_w_timeout,
@@ -149,7 +150,6 @@ pub async fn subcommand_handler(
                     //tx.send(command_output).unwrap();
                     print!("Output: {:?}", &output);
                 }
-                ()
             }
             Err(_) => {
                 return Err(SubcommandError::new(&format!(

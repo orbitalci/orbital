@@ -1,5 +1,5 @@
-use log::{debug, info};
 use tokio::time::{self, Duration};
+use tracing::{debug, info};
 
 use crate::orbital_headers::code::{
     code_service_client::CodeServiceClient, GitRepoListRequest, GitRepoRemoteBranchHead,
@@ -131,10 +131,9 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                             );
 
                             let secret_service_request = Request::new(SecretGetRequest {
-                                org: org.clone().into(),
+                                org: org.clone(),
                                 name: secret_name,
                                 secret_type: SecretType::SshKey.into(),
-                                ..Default::default()
                             });
 
                             debug!("Secret request: {:?}", &secret_service_request);
@@ -208,8 +207,7 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                     let new_repo_ref = repo_watcher.update_state().await.unwrap();
 
                     // Copy last_known_heads for update in place
-                    let mut current_heads: Vec<GitRepoRemoteBranchHead> =
-                        last_known_heads.iter().map(|x| x.clone()).collect();
+                    let mut current_heads: Vec<GitRepoRemoteBranchHead> = last_known_heads.to_vec();
 
                     // TODO: We may want to process this in parallel (for busy repos)
                     // Loop through the newest HEADS and compare to the DB last known
@@ -253,9 +251,9 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                                     user: r.user.clone(),
                                     uri: r.uri.clone(),
                                     canonical_branch: r.canonical_branch.clone(),
-                                    secret_type: r.secret_type.clone(),
-                                    build: r.build.clone(),
-                                    notify: r.notify.clone(),
+                                    secret_type: r.secret_type,
+                                    build: r.build,
+                                    notify: r.notify,
                                     auth_data: r.auth_data.clone(),
                                     remote_branch_heads: Some(GitRepoRemoteBranchHeadList {
                                         remote_branch_heads: current_heads.clone(),
@@ -323,9 +321,9 @@ pub async fn poll_for_new_commits(poll_freq: u8) {
                                 user: r.user.clone(),
                                 uri: r.uri.clone(),
                                 canonical_branch: r.canonical_branch.clone(),
-                                secret_type: r.secret_type.clone(),
-                                build: r.build.clone(),
-                                notify: r.notify.clone(),
+                                secret_type: r.secret_type,
+                                build: r.build,
+                                notify: r.notify,
                                 auth_data: r.auth_data.clone(),
                                 remote_branch_heads: Some(GitRepoRemoteBranchHeadList {
                                     remote_branch_heads: current_heads.clone(),

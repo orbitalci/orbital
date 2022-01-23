@@ -1,7 +1,7 @@
 use color_eyre::eyre::{eyre, Result};
 use hashicorp_vault as vault;
 
-use log::debug;
+use tracing::debug;
 
 pub fn add_secret(vault_host: &str, vault_token: &str, path: &str, data: &str) -> Result<()> {
     let client = vault::Client::new(vault_host, vault_token).unwrap();

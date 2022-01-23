@@ -19,9 +19,9 @@ use std::io::Write;
 use termcolor::{BufferWriter, ColorChoice};
 
 use color_eyre::eyre::{eyre, Result};
-use log::debug;
 use std::path::{Path, PathBuf};
 use std::str;
+use tracing::debug;
 
 /// Local options for customizing build start request
 #[derive(Debug, StructOpt)]
@@ -95,10 +95,10 @@ pub async fn subcommand_handler(
 
     // Check if commit has [skip ci] or [ci skip]
     // If so, we will only start a build if we pass `--force`
-    if is_skip_ci_commit(&git_repo.head.clone().expect("No valid git commit found")) {
-        if !local_option.force {
-            return Err(eyre!("Last pushed git commit was skipped due to \"[skip ci]\" or \"[ci skip]\"\nUse `--force` to build"));
-        }
+    if is_skip_ci_commit(&git_repo.head.clone().expect("No valid git commit found"))
+        && !local_option.force
+    {
+        return Err(eyre!("Last pushed git commit was skipped due to \"[skip ci]\" or \"[ci skip]\"\nUse `--force` to build"));
     }
 
     // Assuming Docker builder... (Stay focused!)
@@ -151,18 +151,15 @@ pub async fn subcommand_handler(
         }
 
         if !local_option.no_follow {
-            match response.build_output.clone().pop() {
-                Some(build_output) => {
-                    //writeln!(&mut buffer, "{:?}", response.clone())?;
-                    write!(
-                        &mut buffer,
-                        "[{}] {}",
-                        build_output.stage.to_string(),
-                        str::from_utf8(&build_output.output)?
-                    )?;
-                    bufwtr.print(&buffer)?;
-                }
-                None => (),
+            if let Some(build_output) = response.build_output.clone().pop() {
+                //writeln!(&mut buffer, "{:?}", response.clone())?;
+                write!(
+                    &mut buffer,
+                    "[{}] {}",
+                    build_output.stage,
+                    str::from_utf8(&build_output.output)?
+                )?;
+                bufwtr.print(&buffer)?;
             };
         } else {
             break;
@@ -203,7 +200,7 @@ pub async fn subcommand_handler(
             "{:?}",
             NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
         ),
-        None => format!("---"),
+        None => "---".to_string(),
     };
 
     let start_time = match &build_metadata.start_time {
@@ -211,7 +208,7 @@ pub async fn subcommand_handler(
             "{:?}",
             NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
         ),
-        None => format!("---"),
+        None => "---".to_string(),
     };
 
     let end_time = match &build_metadata.end_time {
@@ -219,7 +216,7 @@ pub async fn subcommand_handler(
             "{:?}",
             NaiveDateTime::from_timestamp(t.seconds, t.nanos as u32)
         ),
-        None => format!("---"),
+        None => "---".to_string(),
     };
 
     table.add_row(row![

@@ -1,8 +1,6 @@
 use color_eyre::eyre::Result;
 use structopt::StructOpt;
 
-extern crate clap;
-
 mod subcommand;
 use subcommand::{Subcommand, SubcommandContext};
 
@@ -13,9 +11,9 @@ mod orbital_utils;
 
 use serde::{Deserialize, Serialize};
 
-use log::debug;
 use std::env;
 use std::fs::OpenOptions;
+use tracing::debug;
 
 #[macro_use]
 extern crate diesel;

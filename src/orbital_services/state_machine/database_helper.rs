@@ -11,30 +11,26 @@ pub struct DbHelper;
 
 impl DbHelper {
     pub fn is_build_cancelled(build_context: &BuildContext) -> Result<bool> {
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(build_context.org.to_string()))
+            .set_repo(Some(build_context.repo_name.to_string()))
+            .set_branch(Some(build_context.branch.to_string()))
+            .set_hash(build_context.hash.clone());
 
         // TODO: Need to make "cancelled" the consistent spelling...
-        postgres::client::is_build_canceled(
-            &pg_conn,
-            &build_context.org,
-            &build_context.repo_name,
-            &build_context.hash.clone().unwrap_or_default(),
-            &build_context.branch,
-            build_context.id.clone().unwrap(),
-        )
+        orb_db.is_build_cancelled(build_context.id.unwrap())
     }
 
     pub fn build_target_add(build_context: &BuildContext) -> Result<(Org, Repo, BuildTarget)> {
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(build_context.org.to_string()))
+            .set_repo(Some(build_context.repo_name.to_string()))
+            .set_branch(Some(build_context.branch.to_string()))
+            .set_hash(build_context.hash.clone());
 
-        postgres::client::build_target_add(
-            &pg_conn,
-            &build_context.org,
-            &build_context.repo_name,
-            &build_context.hash.clone().expect("No repo hash to target"),
-            &build_context.branch,
+        orb_db.build_target_add(
             Some(build_context.user_envs.clone().unwrap_or_default().join("")),
-            build_context.job_trigger.clone(),
+            build_context.job_trigger,
         )
     }
 
@@ -42,49 +38,40 @@ impl DbHelper {
         build_context: &BuildContext,
         new_build_summary: NewBuildSummary,
     ) -> Result<(Repo, BuildTarget, BuildSummary)> {
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(build_context.org.to_string()))
+            .set_repo(Some(build_context.repo_name.to_string()))
+            .set_branch(Some(build_context.branch.to_string()))
+            .set_hash(build_context.hash.clone());
 
-        postgres::client::build_summary_add(
-            &pg_conn,
-            &build_context.org,
-            &build_context.repo_name,
-            &build_context.hash.clone().unwrap(),
-            &build_context.branch,
-            build_context.id.clone().unwrap(),
-            new_build_summary,
-        )
+        orb_db.build_summary_add(build_context.id.unwrap(), new_build_summary)
     }
 
     pub fn build_summary_update(
         build_context: &BuildContext,
         update_summary: NewBuildSummary,
     ) -> Result<(Repo, BuildTarget, BuildSummary)> {
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(build_context.org.to_string()))
+            .set_repo(Some(build_context.repo_name.to_string()))
+            .set_branch(Some(build_context.branch.to_string()))
+            .set_hash(build_context.hash.clone());
 
-        postgres::client::build_summary_update(
-            &pg_conn,
-            &build_context.org,
-            &build_context.repo_name,
-            &build_context.hash.clone().unwrap(),
-            &build_context.branch,
-            build_context.id.clone().unwrap(),
-            update_summary,
-        )
+        orb_db.build_summary_update(build_context.id.unwrap(), update_summary)
     }
 
     pub fn build_stage_add(
         build_context: &BuildContext,
         new_build_stage: NewBuildStage,
     ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(build_context.org.to_string()))
+            .set_repo(Some(build_context.repo_name.to_string()))
+            .set_branch(Some(build_context.branch.to_string()))
+            .set_hash(build_context.hash.clone());
 
-        postgres::client::build_stage_add(
-            &pg_conn,
-            &build_context.org,
-            &build_context.repo_name,
-            &build_context.hash.clone().unwrap(),
-            &build_context.branch,
-            build_context.id.clone().unwrap(),
+        orb_db.build_stage_add(
+            build_context.id.unwrap(),
             build_context._db_build_summary_id,
             new_build_stage,
         )
@@ -94,15 +81,14 @@ impl DbHelper {
         build_context: &BuildContext,
         update_build_stage: NewBuildStage,
     ) -> Result<(BuildTarget, BuildSummary, BuildStage)> {
-        let pg_conn = postgres::client::establish_connection();
+        let orb_db = postgres::client::OrbitalDBClient::new()
+            .set_org(Some(build_context.org.to_string()))
+            .set_repo(Some(build_context.repo_name.to_string()))
+            .set_branch(Some(build_context.branch.to_string()))
+            .set_hash(build_context.hash.clone());
 
-        postgres::client::build_stage_update(
-            &pg_conn,
-            &build_context.org,
-            &build_context.repo_name,
-            &build_context.hash.clone().unwrap(),
-            &build_context.branch,
-            build_context.id.clone().unwrap(),
+        orb_db.build_stage_update(
+            build_context.id.unwrap(),
             build_context._db_build_summary_id,
             build_context._db_build_cur_stage_id,
             update_build_stage,

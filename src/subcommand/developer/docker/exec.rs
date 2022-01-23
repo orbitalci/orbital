@@ -1,8 +1,8 @@
 use crate::orbital_utils::exec_runtime::docker;
 use crate::subcommand::{developer::docker::SubcommandOption, GlobalOption, SubcommandError};
 use color_eyre::eyre::Result;
-use log::debug;
 use structopt::StructOpt;
+use tracing::debug;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(rename_all = "kebab_case")]
@@ -36,8 +36,6 @@ pub async fn action_handler(
             while let Some(output) = exec_output.recv().await {
                 print!("Output: {:?}", &output);
             }
-
-            ()
         }
         Err(_) => {
             return Err(SubcommandError::new(&format!(

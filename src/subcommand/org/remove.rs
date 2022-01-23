@@ -9,7 +9,7 @@ use crate::orbital_headers::organization::{
 use crate::orbital_services::ORB_DEFAULT_URI;
 use tonic::Request;
 
-use log::debug;
+use tracing::debug;
 
 use prettytable::{cell, format, row, Table};
 
@@ -33,8 +33,8 @@ pub async fn action_handler(
         OrganizationServiceClient::connect(format!("http://{}", ORB_DEFAULT_URI)).await?;
 
     let request = Request::new(OrgRemoveRequest {
-        name: action_option.name.into(),
-        force: action_option.force.into(),
+        name: action_option.name,
+        force: action_option.force,
     });
     debug!("Request for org remove: {:?}", &request);
 
@@ -56,7 +56,7 @@ pub async fn action_handler(
             // Print the header row
             table.set_titles(row![bc=> "Org Name", "Active", "Created", "Last Update"]);
 
-            let org = Org::from(org_proto.clone());
+            let org = Org::from(org_proto);
             table.add_row(row![
                 org.name,
                 &format!(

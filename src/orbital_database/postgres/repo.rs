@@ -9,7 +9,7 @@ use crate::orbital_headers::code::{
 //use orbital_headers::secret::SecretEntry;
 
 use git_url_parse::GitUrl;
-use log::warn;
+use tracing::warn;
 
 #[derive(Insertable, Debug, PartialEq, Associations, AsChangeset)]
 #[belongs_to(Org)]
@@ -84,7 +84,7 @@ impl Default for Repo {
 // FIXME: Org should be a string, but right now we only have the postgres org id
 impl From<Repo> for GitRepoEntry {
     fn from(repo: Repo) -> Self {
-        let git_uri_parsed = GitUrl::parse(&repo.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&repo.uri).unwrap();
 
         //
         GitRepoEntry {
@@ -131,7 +131,7 @@ impl From<Repo> for GitRepoEntry {
 // FIXME: This does not correctly set the org id
 impl From<GitRepoEntry> for Repo {
     fn from(git_repo_entry: GitRepoEntry) -> Self {
-        let git_uri_parsed = GitUrl::parse(&git_repo_entry.uri.clone()).unwrap();
+        let git_uri_parsed = GitUrl::parse(&git_repo_entry.uri).unwrap();
 
         Repo {
             id: 0,
@@ -139,7 +139,7 @@ impl From<GitRepoEntry> for Repo {
             org_id: 0,
             name: git_repo_entry.name.clone(),
             uri: format!("{}", git_uri_parsed),
-            canonical_branch: git_repo_entry.canonical_branch.into(),
+            canonical_branch: git_repo_entry.canonical_branch,
             //git_host_type: git_repo_entry.,
             //secret_id: Option<i32>,
             build_active_state: git_repo_entry.build.into(),
