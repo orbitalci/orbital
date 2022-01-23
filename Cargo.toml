@@ -29,7 +29,7 @@ rand = "^0.8"
 mktemp = "0.4"
 serde_json = "^1.0"
 git-event = "^0.4"
-git-meta = "^0.5" 
+git-meta = "^0.6" 
 hex = "^0.4"
 chrono-humanize = "^0.2"
 
@@ -67,7 +67,7 @@ tokio-stream = "^0.1"
 
 
 [build-dependencies]
-git-meta = "^0.5" 
+git-meta = "^0.6" 
 chrono = "0.4"
 tonic-build = "^0.6"
 
